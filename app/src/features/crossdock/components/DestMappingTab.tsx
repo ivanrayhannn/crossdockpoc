@@ -43,7 +43,7 @@ function exportMappingExcel(rows: Part[], per: string) {
 }
 
 export function DestMappingTab({ state }: { state: CrossdockState }) {
-  const { parts, q, setQ, resetQ, ro, expand, editDest, draftDests, toggleExpand, startEditDest, cancelEditDest, patchDraft, saveDest, syncPart, syncAll, openFor } = state;
+  const { parts, q, setQ, resetQ, ro, expand, editDest, draftDests, toggleExpand, startEditDest, cancelEditDest, patchDraft, saveDest, syncAll } = state;
 
   const destRowsSrc = useMemo(
     () =>
@@ -124,19 +124,12 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
           <span style={{ fontSize: 12.5, fontWeight: 600 }}>Mapping destinasi per part</span>
           <span style={{ fontSize: 12, color: 'var(--color-neutral-600)' }}>{destMeta2}</span>
           <span style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-            <button className="btn btn-secondary" onClick={() => syncAll('gt')} style={{ fontSize: 12, padding: '4px 12px' }}>
+            <button className="btn btn-secondary" onClick={syncAll} style={{ fontSize: 12, padding: '4px 12px' }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                 <path d="M21 12a9 9 0 1 1-3-6.7" />
                 <path d="M21 4v5h-5" />
               </svg>
-              Sync GT
-            </button>
-            <button className="btn btn-secondary" onClick={() => syncAll('pole')} style={{ fontSize: 12, padding: '4px 12px' }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                <path d="M21 12a9 9 0 1 1-3-6.7" />
-                <path d="M21 4v5h-5" />
-              </svg>
-              Sync POLE
+              Sync
             </button>
             <button className="btn btn-primary" onClick={() => exportMappingExcel(destRowsSrc, q.per)} style={{ fontSize: 12, padding: '4px 12px' }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
@@ -175,9 +168,7 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
                   onStartEdit={() => startEditDest(p.p)}
                   onCancelEdit={cancelEditDest}
                   onSave={saveDest}
-                  onSync={() => syncPart(p.p)}
                   onPatchDraft={patchDraft}
-                  onOpenPart={() => openFor(p.p, 'part')}
                 />
               ))}
             </tbody>
@@ -205,12 +196,10 @@ interface DestRowProps {
   onStartEdit: () => void;
   onCancelEdit: () => void;
   onSave: () => void;
-  onSync: () => void;
   onPatchDraft: (fn: (d: DestAllocation[]) => void) => void;
-  onOpenPart: () => void;
 }
 
-function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStartEdit, onCancelEdit, onSave, onSync, onPatchDraft, onOpenPart }: DestRowProps) {
+function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStartEdit, onCancelEdit, onSave, onPatchDraft }: DestRowProps) {
   const m = num(p.mc);
   const a = p.dests.reduce((x, d) => x + num(d.al), 0);
   const sb = syncBadge(p.gt, p.pole);
@@ -225,7 +214,6 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
   const mapFg = m && a !== m ? 'var(--color-accent-800)' : 'var(--color-text)';
 
   const editViewDisp = ro || isEditing || !edok ? 'none' : 'inline-flex';
-  const syncBtnDisp = edok && !isEditing ? 'inline-flex' : 'none';
   const roPerDisp = !edok && !ro ? 'inline-flex' : 'none';
   const editingDisp = isEditing ? 'inline-flex' : 'none';
   const splitDisp = isEditing && dList.length > 1 ? 'inline-flex' : 'none';
@@ -297,9 +285,6 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
             <button className="btn btn-secondary" onClick={onToggleExpand} style={{ fontSize: 12, padding: '4px 12px', whiteSpace: 'nowrap', borderColor: mapBd, color: mapFg }}>
               Mapping
             </button>
-            <button className="btn btn-secondary" onClick={onOpenPart} style={{ fontSize: 12, padding: '4px 12px', whiteSpace: 'nowrap' }}>
-              {ro ? 'Lihat' : 'Edit'}
-            </button>
           </span>
         </td>
       </tr>
@@ -335,9 +320,6 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
               </span>
               <button className="btn btn-ghost" onClick={splitEven} style={{ display: splitDisp, color: 'var(--color-accent-700)', fontSize: 12, padding: '4px 10px' }}>
                 Bagi rata
-              </button>
-              <button className="btn btn-secondary" onClick={onSync} style={{ display: syncBtnDisp, fontSize: 12, padding: '4px 12px' }}>
-                Sync ulang
               </button>
               <button className="btn btn-secondary" onClick={onStartEdit} style={{ display: editViewDisp, fontSize: 12, padding: '4px 14px' }}>
                 Edit mapping

@@ -114,14 +114,8 @@ export function useCrossdockState() {
     setDraftDests(null);
   }, [editDest, draftDests]);
 
-  const syncPart = useCallback((pid: string) => {
-    setParts((prevParts) =>
-      prevParts.map((p) => (p.p === pid && p.per === CUR_PER ? { ...p, gt: true, pole: true, dt: NOW } : p)),
-    );
-  }, []);
-
-  const syncAll = useCallback((kind: 'gt' | 'pole') => {
-    setParts((prevParts) => prevParts.map((p) => (p.per === CUR_PER ? { ...p, [kind]: true, dt: NOW } : p)));
+  const syncAll = useCallback(() => {
+    setParts((prevParts) => prevParts.map((p) => (p.per === CUR_PER ? { ...p, gt: true, pole: true, dt: NOW } : p)));
   }, []);
 
   const closeModal = useCallback(() => {
@@ -169,7 +163,6 @@ export function useCrossdockState() {
     cancelEditDest,
     patchDraft,
     saveDest,
-    syncPart,
     syncAll,
     closeModal,
     commit,
