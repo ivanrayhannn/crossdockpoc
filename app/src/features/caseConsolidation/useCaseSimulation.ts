@@ -5,6 +5,7 @@ import { EMPTY_QUERY } from './deliveryPlan';
 import type { DpQuery } from './deliveryPlan';
 
 export type ViewKey = 'dp' | 'sim';
+export type SimulationRole = 'sup' | 'ds' | 'proc';
 
 const STEP_MS = 240;
 
@@ -14,6 +15,7 @@ export function useCaseSimulation() {
   const [step, setStep] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [view, setView] = useState<ViewKey>('dp');
+  const [role, setRole] = useState<SimulationRole>('sup');
   const [nextId, setNextId] = useState(() => presetInputs('a').orders.length + 1);
 
   // Delivery Plan navigation/filter state.
@@ -136,6 +138,8 @@ export function useCaseSimulation() {
     playing,
     view,
     setView,
+    role,
+    setRole,
     applyPreset,
     reset,
     setPcs,

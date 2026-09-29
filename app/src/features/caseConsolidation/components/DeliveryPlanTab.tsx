@@ -16,7 +16,8 @@ const th: React.CSSProperties = {
 const td: React.CSSProperties = { padding: '0 12px', height: 38, borderBottom: '1px solid #eef1f5' };
 
 export function DeliveryPlanTab({ state }: { state: CaseSimulationState }) {
-  const { inputs, part, model, dpPage, dpFilter, setDpFilter, dpQuery, dpSel, dpVariable, dpSearch, dpReset, dpSelect, dpBack, dpToggleVariable, dpClearVariable } = state;
+  const { inputs, part, model, role, dpPage, dpFilter, setDpFilter, dpQuery, dpSel, dpVariable, dpSearch, dpReset, dpSelect, dpBack, dpToggleVariable, dpClearVariable } = state;
+  const canSeeOrderDetail = role !== 'sup';
 
   const dp = useMemo(
     () => buildDeliveryPlan({ orders: inputs.orders, pcs: inputs.pcs, part, model, query: dpQuery, sel: dpSel, variable: dpVariable }),
@@ -46,7 +47,7 @@ export function DeliveryPlanTab({ state }: { state: CaseSimulationState }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 16px', borderBottom: '1px solid #e3e6ea' }}>
             <span style={{ fontSize: 14, fontWeight: 700 }}>PO Released · Detail</span>
             <span style={{ fontSize: 12, color: 'var(--color-neutral-600)' }}>Cases in this PO</span>
-            <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--color-neutral-600)' }}>Click a case to filter Detail in Detail</span>
+            {canSeeOrderDetail && <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--color-neutral-600)' }}>Click a case to filter Detail in Detail</span>}
           </div>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
@@ -64,9 +65,9 @@ export function DeliveryPlanTab({ state }: { state: CaseSimulationState }) {
               {dp.caseRows.map((r) => (
                 <tr
                   key={r.v}
-                  onClick={() => !r.waiting && dpToggleVariable(r.v)}
-                  className={r.waiting ? undefined : 'row-hover'}
-                  style={{ cursor: r.waiting ? 'default' : 'pointer', background: r.selected ? 'var(--color-accent-100)' : '#fff' }}
+                  onClick={() => canSeeOrderDetail && !r.waiting && dpToggleVariable(r.v)}
+                  className={!canSeeOrderDetail || r.waiting ? undefined : 'row-hover'}
+                  style={{ cursor: canSeeOrderDetail && !r.waiting ? 'pointer' : 'default', background: r.selected ? 'var(--color-accent-100)' : '#fff' }}
                 >
                   <td style={{ ...td, paddingLeft: 14 }}>
                     <span style={{ display: 'inline-grid', placeItems: 'center', width: 22, height: 22, borderRadius: 999, background: 'var(--color-accent-200)', color: 'var(--color-accent-800)', fontSize: 11.5, fontWeight: 700 }}>
@@ -80,7 +81,7 @@ export function DeliveryPlanTab({ state }: { state: CaseSimulationState }) {
                   <td style={{ ...td, height: 44 }}>
                     <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                       <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, width: 74 }}>{r.caseNo}</span>
-                      <CaseHoles holes={r.holes} size={20} fontSize={7.5} gap={4} pad="4px 8px" />
+                      {canSeeOrderDetail && <CaseHoles holes={r.holes} size={20} fontSize={7.5} gap={4} pad="4px 8px" />}
                     </span>
                   </td>
                   <td style={{ ...td, textAlign: 'right' }}>
@@ -101,7 +102,7 @@ export function DeliveryPlanTab({ state }: { state: CaseSimulationState }) {
           </table>
         </div>
 
-        <div style={{ background: '#fff', border: '1px solid #e3e6ea', borderRadius: 6, overflow: 'hidden' }}>
+        {canSeeOrderDetail && <div style={{ background: '#fff', border: '1px solid #e3e6ea', borderRadius: 6, overflow: 'hidden' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 16px', borderBottom: '1px solid #e3e6ea' }}>
             <span style={{ fontSize: 14, fontWeight: 700 }}>Detail in Detail</span>
             <span style={{ fontSize: 12, color: 'var(--color-neutral-600)' }}>Customer orders per case · {dp.orderMeta}</span>
@@ -148,7 +149,7 @@ export function DeliveryPlanTab({ state }: { state: CaseSimulationState }) {
               ))}
             </tbody>
           </table>
-        </div>
+        </div>}
       </div>
     );
   }

@@ -3,7 +3,7 @@ import type { CaseSimulationState } from '../useCaseSimulation';
 import { Stepper } from './Stepper';
 
 export function OptionsBar({ state }: { state: CaseSimulationState }) {
-  const { inputs, part, setPart, setPcs, setMaxC, applyPreset, reset, stepOne, fillAll, togglePlay, playing, done, model } = state;
+  const { inputs, part, setPart, setPcs, setMaxC, applyPreset, reset, stepOne, fillAll, togglePlay, playing, done, model, role, setRole } = state;
   const disabled = done || !model.rel;
 
   return (
@@ -33,7 +33,41 @@ export function OptionsBar({ state }: { state: CaseSimulationState }) {
         <span style={{ fontSize: 14, fontWeight: 700 }}>Simulation options</span>
         <span style={{ fontSize: 12, color: 'var(--color-neutral-600)' }}>For testing scenarios only. Not part of the real screen.</span>
       </div>
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 14, padding: '12px 16px', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 18, padding: '12px 16px', flexWrap: 'wrap' }}>
+        <div className="field">
+          <label>View as</label>
+          <span style={{ display: 'flex', padding: 2, borderRadius: 6, background: 'var(--color-neutral-200)' }}>
+            {[
+              ['sup', 'Supplier'],
+              ['ds', 'Demand Supply'],
+              ['proc', 'Procurement'],
+            ].map(([key, label]) => {
+              const active = role === key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setRole(key as typeof role)}
+                  style={{
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                    fontFamily: 'var(--font-body)',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    padding: '6px 11px',
+                    border: 0,
+                    borderRadius: 4,
+                    background: active ? '#fff' : 'transparent',
+                    color: active ? 'var(--color-accent-800)' : 'var(--color-neutral-700)',
+                    boxShadow: active ? '0 1px 3px rgba(20,40,70,.15)' : 'none',
+                  }}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </span>
+        </div>
         <div className="field">
           <label>Part No</label>
           <input className="input" value={part} onChange={(e) => setPart(e.target.value)} style={{ width: 130, fontFamily: 'var(--font-mono)' }} />
@@ -46,8 +80,8 @@ export function OptionsBar({ state }: { state: CaseSimulationState }) {
           <label>Max Case/Day</label>
           <Stepper value={inputs.maxC} onDec={() => setMaxC((n) => n - 1)} onInc={() => setMaxC((n) => n + 1)} />
         </div>
-        <span style={{ fontSize: 11.5, color: 'var(--color-neutral-600)', maxWidth: 230, lineHeight: 1.35, paddingBottom: 2 }}>
-          Applies to every PO day. Extra cases wait for the next PO.
+        <span style={{ fontSize: 11.5, color: 'var(--color-neutral-600)', maxWidth: 260, lineHeight: 1.35, paddingBottom: 2 }}>
+          Max Case/Day applies to every PO day. Extra cases wait for the next PO.
         </span>
         <span style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
           <span style={{ display: 'inline-flex', border: '1px solid var(--color-neutral-400)', borderRadius: 4, overflow: 'hidden' }}>

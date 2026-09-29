@@ -4,7 +4,7 @@ import { Breadcrumb } from './components/shell/Breadcrumb';
 import { AsnCreationPage } from './features/asnCreation/AsnCreationPage';
 import { CaseConsolidationPage } from './features/caseConsolidation/CaseConsolidationPage';
 import { CrossdockMasterSettingPage } from './features/crossdock/CrossdockMasterSettingPage';
-import { routeFromHash, hashForRoute } from './routes';
+import { hashForRoute, routeFromHash } from './routes';
 import type { RouteKey } from './routes';
 
 function App() {
