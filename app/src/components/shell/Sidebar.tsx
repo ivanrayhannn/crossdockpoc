@@ -13,7 +13,6 @@ const NAV_GROUPS: [string, string[]][] = [
 ];
 
 export function Sidebar({ activeItem, onNavigate }: { activeItem: string; onNavigate: (route: RouteKey) => void }) {
-  const openGroup = NAV_GROUPS.find(([, items]) => items.includes(activeItem))?.[0] ?? 'Master';
   return (
     <aside
       style={{
@@ -71,7 +70,6 @@ export function Sidebar({ activeItem, onNavigate }: { activeItem: string; onNavi
 
       <nav style={{ padding: '8px 8px 20px' }}>
         {NAV_GROUPS.map(([label, items]) => {
-          const open = label === openGroup;
           return (
             <div key={label}>
               <div
@@ -84,16 +82,15 @@ export function Sidebar({ activeItem, onNavigate }: { activeItem: string; onNavi
                   fontSize: 13.5,
                   borderRadius: 6,
                   marginTop: 2,
-                  background: open ? '#f1f5f9' : 'transparent',
                 }}
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9aa6b3" strokeWidth="2">
                   <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
                 </svg>
                 <span style={{ flex: 1, fontWeight: 600 }}>{label}</span>
-                <span style={{ color: '#aab4bf', fontSize: 12, transform: `rotate(${open ? -90 : 0}deg)` }}>›</span>
+                <span style={{ color: '#aab4bf', fontSize: 12, transform: 'rotate(-90deg)' }}>›</span>
               </div>
-              <div style={{ padding: '2px 0 4px 4px', display: open ? 'block' : 'none' }}>
+              <div style={{ padding: '2px 0 4px 4px' }}>
                 {items.map((item) => {
                   const active = item === activeItem;
                   const route = ROUTE_BY_NAV_ITEM[item];
