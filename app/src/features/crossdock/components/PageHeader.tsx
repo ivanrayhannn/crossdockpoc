@@ -1,12 +1,15 @@
+import type { TabView } from '../../../types';
+
 interface PageHeaderProps {
   roleLabel: string;
   ro: boolean;
-  showPartActions: boolean;
+  view: TabView;
   onAddPart: () => void;
   onOpenUpload: () => void;
+  onSync: () => void;
 }
 
-export function PageHeader({ roleLabel, ro, showPartActions, onAddPart, onOpenUpload }: PageHeaderProps) {
+export function PageHeader({ roleLabel, ro, view, onAddPart, onOpenUpload, onSync }: PageHeaderProps) {
   return (
     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 24, padding: '20px 28px 0' }}>
       <div>
@@ -26,7 +29,7 @@ export function PageHeader({ roleLabel, ro, showPartActions, onAddPart, onOpenUp
         </div>
       </div>
       <div style={{ marginLeft: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10 }}>
-        {showPartActions && (
+        {view === 'part' && (
           <div style={{ display: 'flex', gap: 8 }}>
             {!ro && (
               <button className="btn btn-primary" onClick={onAddPart} style={{ fontSize: 13 }}>
@@ -44,6 +47,17 @@ export function PageHeader({ roleLabel, ro, showPartActions, onAddPart, onOpenUp
             )}
             <button className="btn btn-secondary" style={{ fontSize: 13 }}>
               Export Excel
+            </button>
+          </div>
+        )}
+        {view === 'dest' && (
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn btn-secondary" onClick={onSync} style={{ fontSize: 13 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <path d="M21 12a9 9 0 1 1-3-6.7" />
+                <path d="M21 4v5h-5" />
+              </svg>
+              Sync
             </button>
           </div>
         )}

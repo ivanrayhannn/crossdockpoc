@@ -8,8 +8,6 @@ const DONE: StepStyle = { bg: 'var(--color-accent-2-200)', fg: 'var(--color-acce
 const ACTIVE: StepStyle = { bg: 'var(--color-accent)', fg: '#fff', bd: 'var(--color-accent)', icon: '' };
 const IDLE: StepStyle = { bg: 'var(--color-neutral-100)', fg: 'var(--color-neutral-600)', bd: 'var(--color-neutral-400)', icon: '' };
 
-const YEARS = ['2025', '2026', '2027'];
-
 function StepBadge({ n, style }: { n: number; style: StepStyle }) {
   return (
     <span
@@ -41,9 +39,8 @@ export function PartModal({ state }: { state: CrossdockState }) {
   const inputBg = ro ? 'var(--color-neutral-200)' : 'var(--color-neutral-100)';
 
   const s1 = f.p ? DONE : ACTIVE;
-  const s2 = pc ? DONE : f.p ? ACTIVE : IDLE;
-  const s3 = pc && mc ? DONE : pc ? ACTIVE : IDLE;
-  const s4 = pc && mc ? DONE : IDLE;
+  const s2 = pc && mc ? DONE : f.p ? ACTIVE : IDLE;
+  const s3 = pc && mc ? DONE : IDLE;
 
   const maxLocked = ro || !pc;
   const maxBg = ro || !pc ? 'var(--color-neutral-200)' : 'var(--color-neutral-100)';
@@ -53,7 +50,7 @@ export function PartModal({ state }: { state: CrossdockState }) {
   const totalFormula = pc && mc ? `${fmt(pc)} pcs/case × ${fmt(mc)} case/day` : !pc ? 'menunggu Pcs/Case' : 'menunggu Max Case/Day';
 
   const saveDisabled = !f.p || !pc || !mc;
-  const saveTitle = !f.p ? 'Part No wajib diisi' : !pc ? 'Isi Pcs/Case dulu (langkah 2)' : !mc ? 'Isi Max Case/Day (langkah 3)' : 'Simpan data part';
+  const saveTitle = !f.p ? 'Part No wajib diisi' : !pc ? 'Isi Pcs/Case dulu (langkah 2)' : !mc ? 'Isi Max Case/Day (langkah 2)' : 'Simpan data part';
 
   const partTitle = editId ? (ro ? 'Data part' : 'Edit data part') : 'Tambah part';
 
@@ -132,22 +129,6 @@ export function PartModal({ state }: { state: CrossdockState }) {
                   />
                 </div>
                 <div className="field">
-                  <label>Year</label>
-                  <select
-                    className="input"
-                    value={f.effYear || YEARS[1]}
-                    onChange={(e) => patch((x) => { x.effYear = e.target.value; })}
-                    disabled={inputRO}
-                    style={{ background: inputBg, appearance: 'none' }}
-                  >
-                    {YEARS.map((y) => (
-                      <option key={y} value={y}>
-                        {y}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="field">
                   <label>Minimum MAD</label>
                   <input
                     className="input"
@@ -163,66 +144,60 @@ export function PartModal({ state }: { state: CrossdockState }) {
             </div>
           </div>
 
-          {/* Step 2 — Pcs/Case */}
+          {/* Step 2 — Pcs/Case & Max Case/Day */}
           <div style={{ display: 'flex', gap: 14 }}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 'none', width: 28 }}>
               <StepBadge n={2} style={s2} />
               <span style={{ width: 2, flex: 1, background: 'var(--color-neutral-300)', margin: '4px 0' }} />
             </div>
             <div style={{ flex: 1, paddingBottom: 18 }}>
-              <div style={{ fontSize: 13.5, fontWeight: 700, margin: '4px 0 1px' }}>Isi Pcs/Case</div>
-              <div style={{ fontSize: 11.5, color: 'var(--color-neutral-600)', marginBottom: 10 }}>Berapa pcs dalam satu case.</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <input
-                  className="input"
-                  value={String(f.pc)}
-                  onChange={(e) => patch((x) => { x.pc = e.target.value; })}
-                  readOnly={inputRO}
-                  placeholder="0"
-                  style={{ width: 150, textAlign: 'right', fontSize: 15, fontVariantNumeric: 'tabular-nums', background: inputBg }}
-                />
-                <span style={{ fontSize: 12.5, color: 'var(--color-neutral-700)' }}>pcs per case</span>
+              <div style={{ fontSize: 13.5, fontWeight: 700, margin: '4px 0 1px' }}>Isi Pcs/Case & Max Case/Day</div>
+              <div style={{ fontSize: 11.5, color: 'var(--color-neutral-600)', marginBottom: 10 }}>Berapa pcs dalam satu case, lalu kapasitas maksimum satu part per hari. Dibagi ke destinasi lewat pop-up Mapping.</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <input
+                      className="input"
+                      value={String(f.pc)}
+                      onChange={(e) => patch((x) => { x.pc = e.target.value; })}
+                      readOnly={inputRO}
+                      placeholder="0"
+                      style={{ width: 150, textAlign: 'right', fontSize: 15, fontVariantNumeric: 'tabular-nums', background: inputBg }}
+                    />
+                    <span style={{ fontSize: 12.5, color: 'var(--color-neutral-700)' }}>pcs per case</span>
+                  </div>
+                </div>
+                <div style={{ opacity: pc ? 1 : 0.55 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <input
+                      className="input"
+                      value={String(f.mc)}
+                      onChange={(e) => patch((x) => { x.mc = e.target.value; })}
+                      readOnly={maxLocked}
+                      placeholder="0"
+                      title={maxTitle}
+                      style={{ width: 150, textAlign: 'right', fontSize: 15, fontVariantNumeric: 'tabular-nums', background: maxBg }}
+                    />
+                    <span style={{ fontSize: 12.5, color: 'var(--color-neutral-700)' }}>case per hari</span>
+                    {!pc && !ro && (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11.5, color: 'var(--color-neutral-700)', padding: '3px 10px', borderRadius: 999, background: 'var(--color-neutral-200)' }}>
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round">
+                          <rect x="4" y="10.5" width="16" height="11" rx="3" />
+                          <path d="M8 10.5V7a4 4 0 0 1 8 0v3.5" />
+                        </svg>
+                        Isi Pcs/Case dulu
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Step 3 — Max Case/Day */}
-          <div style={{ display: 'flex', gap: 14, opacity: pc ? 1 : 0.55 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 'none', width: 28 }}>
-              <StepBadge n={3} style={s3} />
-              <span style={{ width: 2, flex: 1, background: 'var(--color-neutral-300)', margin: '4px 0' }} />
-            </div>
-            <div style={{ flex: 1, paddingBottom: 18 }}>
-              <div style={{ fontSize: 13.5, fontWeight: 700, margin: '4px 0 1px' }}>Isi Max Case/Day</div>
-              <div style={{ fontSize: 11.5, color: 'var(--color-neutral-600)', marginBottom: 10 }}>Kapasitas maksimum satu part per hari. Dibagi ke destinasi lewat pop-up Mapping.</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <input
-                  className="input"
-                  value={String(f.mc)}
-                  onChange={(e) => patch((x) => { x.mc = e.target.value; })}
-                  readOnly={maxLocked}
-                  placeholder="0"
-                  title={maxTitle}
-                  style={{ width: 150, textAlign: 'right', fontSize: 15, fontVariantNumeric: 'tabular-nums', background: maxBg }}
-                />
-                <span style={{ fontSize: 12.5, color: 'var(--color-neutral-700)' }}>case per hari</span>
-                {!pc && !ro && (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11.5, color: 'var(--color-neutral-700)', padding: '3px 10px', borderRadius: 999, background: 'var(--color-neutral-200)' }}>
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round">
-                      <rect x="4" y="10.5" width="16" height="11" rx="3" />
-                      <path d="M8 10.5V7a4 4 0 0 1 8 0v3.5" />
-                    </svg>
-                    Isi Pcs/Case dulu
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Step 4 — total */}
+          {/* Step 3 — total */}
           <div style={{ display: 'flex', gap: 14 }}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 'none', width: 28 }}>
-              <span style={{ width: 28, height: 28, borderRadius: 999, display: 'grid', placeItems: 'center', background: s4.bg, color: s4.fg, border: `1.5px solid ${s4.bd}` }}>
+              <span style={{ width: 28, height: 28, borderRadius: 999, display: 'grid', placeItems: 'center', background: s3.bg, color: s3.fg, border: `1.5px solid ${s3.bd}` }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
                   <line x1="5" y1="12" x2="19" y2="12" />
                   <line x1="5" y1="7" x2="19" y2="7" />

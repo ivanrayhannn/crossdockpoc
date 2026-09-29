@@ -38,8 +38,6 @@ export interface Part {
   pole: boolean;
   /** Date this part's data takes effect. Set from the add/edit form. */
   effDate?: string;
-  /** Effective year, picked separately from effDate on the add/edit form. */
-  effYear?: string;
 }
 
 export interface PartQuery {

@@ -7,7 +7,7 @@ import type { CrossdockState } from '../useCrossdockState';
 const th: React.CSSProperties = {
   textAlign: 'left',
   padding: '0 12px',
-  fontSize: 10,
+  fontSize: 9,
   letterSpacing: '.07em',
   textTransform: 'uppercase',
   color: 'var(--color-neutral-700)',
@@ -18,7 +18,7 @@ const th: React.CSSProperties = {
 const td: React.CSSProperties = {
   padding: '0 12px',
   borderBottom: '1px solid var(--color-divider)',
-  height: 44,
+  height: 40,
 };
 
 function exportMappingExcel(rows: Part[], per: string) {
@@ -43,7 +43,7 @@ function exportMappingExcel(rows: Part[], per: string) {
 }
 
 export function DestMappingTab({ state }: { state: CrossdockState }) {
-  const { parts, q, setQ, resetQ, ro, expand, editDest, draftDests, toggleExpand, startEditDest, cancelEditDest, patchDraft, saveDest, syncAll } = state;
+  const { parts, q, setQ, resetQ, ro, expand, editDest, draftDests, toggleExpand, startEditDest, cancelEditDest, patchDraft, saveDest } = state;
 
   const destRowsSrc = useMemo(
     () =>
@@ -124,13 +124,6 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
           <span style={{ fontSize: 12.5, fontWeight: 600 }}>Mapping destinasi per part</span>
           <span style={{ fontSize: 12, color: 'var(--color-neutral-600)' }}>{destMeta2}</span>
           <span style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-            <button className="btn btn-secondary" onClick={syncAll} style={{ fontSize: 12, padding: '4px 12px' }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                <path d="M21 12a9 9 0 1 1-3-6.7" />
-                <path d="M21 4v5h-5" />
-              </svg>
-              Sync
-            </button>
             <button className="btn btn-primary" onClick={() => exportMappingExcel(destRowsSrc, q.per)} style={{ fontSize: 12, padding: '4px 12px' }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                 <path d="M12 3v12M7 10l5 5 5-5M5 21h14" />
@@ -141,10 +134,10 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
         </div>
 
         {destRowsSrc.length > 0 && (
-          <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: 13 }}>
+          <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: 12 }}>
             <thead>
               <tr>
-                <th style={{ ...th, padding: '0 16px', width: 150, height: 34 }}>Part Number</th>
+                <th style={{ ...th, padding: '0 16px', width: 150, height: 32 }}>Part Number</th>
                 <th style={th}>Part Name</th>
                 <th style={{ ...th, width: 124 }}>Periode</th>
                 <th style={{ ...th, textAlign: 'right', width: 86 }}>Pcs/Case</th>
@@ -152,7 +145,6 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
                 <th style={{ ...th, textAlign: 'right', width: 110 }}>Pcs/Day</th>
                 <th style={{ ...th, textAlign: 'right', width: 150 }}>Percentage</th>
                 <th style={{ ...th, width: 120 }}>Sync Status</th>
-                <th style={{ width: 150, background: 'var(--color-surface)', borderBottom: '1px solid var(--color-neutral-400)' }} />
               </tr>
             </thead>
             <tbody>
@@ -210,8 +202,6 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
   const dUnder = dAlloc < m;
   const share = m ? `${Math.round((a / m) * 100)}%` : '—';
   const sharePct = m ? Math.min(100, Math.round((a / m) * 100)) : 0;
-  const mapBd = m && a !== m ? 'var(--color-accent)' : 'var(--color-divider)';
-  const mapFg = m && a !== m ? 'var(--color-accent-800)' : 'var(--color-text)';
 
   const editViewDisp = ro || isEditing || !edok ? 'none' : 'inline-flex';
   const roPerDisp = !edok && !ro ? 'inline-flex' : 'none';
@@ -242,7 +232,7 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
                 <polyline points="9 6 15 12 9 18" />
               </svg>
             </button>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 13, fontWeight: 600 }}>{p.p}</span>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 600 }}>{p.p}</span>
           </span>
         </td>
         <td style={td}>{p.n}</td>
@@ -252,7 +242,7 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
               display: 'inline-flex',
               alignItems: 'center',
               gap: 6,
-              fontSize: 11.5,
+              fontSize: 10.5,
               fontWeight: 700,
               padding: '2px 10px',
               borderRadius: 999,
@@ -264,7 +254,6 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
             <span style={{ width: 5, height: 5, borderRadius: 999, background: edok ? 'var(--color-accent-800)' : 'var(--color-neutral-700)' }} />
             {p.per}
           </span>
-          <span style={{ display: 'block', fontSize: 10, color: 'var(--color-neutral-600)', marginTop: 2 }}>{edok ? 'Editable' : 'Read-only'}</span>
         </td>
         <td style={{ ...td, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmt(p.pc)}</td>
         <td style={{ ...td, textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: 600 }}>{fmt(a)}</td>
@@ -274,22 +263,15 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
             <span style={{ width: 64, height: 5, borderRadius: 999, background: 'var(--color-neutral-300)', overflow: 'hidden' }}>
               <span style={{ display: 'block', height: 5, borderRadius: 999, background: 'var(--color-accent)', width: `${sharePct}%` }} />
             </span>
-            <span style={{ fontSize: 12, color: 'var(--color-neutral-800)', fontVariantNumeric: 'tabular-nums', width: 44, textAlign: 'right', fontWeight: 600 }}>{share}</span>
+            <span style={{ fontSize: 11, color: 'var(--color-neutral-800)', fontVariantNumeric: 'tabular-nums', width: 40, textAlign: 'right', fontWeight: 600 }}>{share}</span>
           </span>
         </td>
         <td style={td}>
-          <span style={{ display: 'inline-flex', fontSize: 11, fontWeight: 700, padding: '2px 9px', borderRadius: 999, background: sb.bg, color: sb.fg, whiteSpace: 'nowrap' }}>{sb.t}</span>
-        </td>
-        <td style={{ ...td, textAlign: 'right' }}>
-          <span style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
-            <button className="btn btn-secondary" onClick={onToggleExpand} style={{ fontSize: 12, padding: '4px 12px', whiteSpace: 'nowrap', borderColor: mapBd, color: mapFg }}>
-              Mapping
-            </button>
-          </span>
+          <span style={{ display: 'inline-flex', fontSize: 10, fontWeight: 700, padding: '2px 9px', borderRadius: 999, background: sb.bg, color: sb.fg, whiteSpace: 'nowrap' }}>{sb.t}</span>
         </td>
       </tr>
       <tr style={{ display: isOpen ? 'table-row' : 'none' }}>
-        <td colSpan={9} style={{ padding: '0 16px 16px 46px', borderBottom: '1px solid var(--color-divider)', background: 'var(--color-surface)', position: 'relative' }}>
+        <td colSpan={8} style={{ padding: '0 16px 16px 46px', borderBottom: '1px solid var(--color-divider)', background: 'var(--color-surface)', position: 'relative' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '11px 0 10px' }}>
             <span style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--color-accent-2-800)' }}>Mapping destinasi</span>
             <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', padding: '1px 7px', borderRadius: 999, background: 'var(--color-accent-2-200)', color: 'var(--color-accent-2-800)' }}>
