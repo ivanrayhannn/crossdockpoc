@@ -16,13 +16,39 @@ const th: React.CSSProperties = {
 const td: React.CSSProperties = { padding: '0 12px', height: 38, borderBottom: '1px solid #eef1f5' };
 
 export function DeliveryPlanTab({ state }: { state: CaseSimulationState }) {
-  const { inputs, part, model, role, dpPage, dpFilter, setDpFilter, dpQuery, dpSel, dpVariable, dpSearch, dpReset, dpSelect, dpBack, dpToggleVariable, dpClearVariable } = state;
+  const {
+    inputs,
+    part,
+    model,
+    role,
+    dpPage,
+    dpFilter,
+    setDpFilter,
+    dpQuery,
+    dpSel,
+    dpVariable,
+    dpSearch,
+    dpReset,
+    dpSelect,
+    dpBack,
+    dpToggleVariable,
+    dpClearVariable,
+    asnSelection,
+    asnByCase,
+    toggleAsnCase,
+    toggleAsnCases,
+    clearAsnSelection,
+    openAsnDraft,
+  } = state;
   const canSeeOrderDetail = role !== 'sup';
 
   const dp = useMemo(
     () => buildDeliveryPlan({ orders: inputs.orders, pcs: inputs.pcs, part, model, query: dpQuery, sel: dpSel, variable: dpVariable }),
     [inputs.orders, inputs.pcs, part, model, dpQuery, dpSel, dpVariable],
   );
+  const selectableIds = dp.caseRows.filter((r) => !r.waiting && !asnByCase[r.caseNo]).map((r) => r.caseNo);
+  const selectedIds = selectableIds.filter((id) => asnSelection[id]);
+  const allSelected = selectableIds.length > 0 && selectedIds.length === selectableIds.length;
 
   if (dpPage === 'detail') {
     return (
@@ -52,6 +78,14 @@ export function DeliveryPlanTab({ state }: { state: CaseSimulationState }) {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
               <tr style={{ background: 'var(--color-surface)' }}>
+                {canSeeOrderDetail && (
+                  <th
+                    onClick={() => toggleAsnCases(selectableIds, !allSelected)}
+                    style={{ width: 40, paddingLeft: 16, borderBottom: '1px solid #e3e6ea', cursor: selectableIds.length ? 'pointer' : 'default' }}
+                  >
+                    <input type="checkbox" checked={allSelected} disabled={!selectableIds.length} readOnly style={{ accentColor: 'var(--color-accent)', width: 16, height: 16, margin: 0, pointerEvents: 'none' }} />
+                  </th>
+                )}
                 <th style={{ width: 44, borderBottom: '1px solid #e3e6ea' }} />
                 <th style={{ ...th, width: 150 }}>Delivery Plan (PO)</th>
                 <th style={{ ...th, width: 100 }}>Part No</th>
@@ -69,6 +103,18 @@ export function DeliveryPlanTab({ state }: { state: CaseSimulationState }) {
                   className={!canSeeOrderDetail || r.waiting ? undefined : 'row-hover'}
                   style={{ cursor: canSeeOrderDetail && !r.waiting ? 'pointer' : 'default', background: r.selected ? 'var(--color-accent-100)' : '#fff' }}
                 >
+                  {canSeeOrderDetail && (
+                    <td style={{ ...td, paddingLeft: 14, paddingRight: 0, borderLeft: `3px solid ${asnSelection[r.caseNo] ? 'var(--color-accent)' : 'transparent'}` }}>
+                      <input
+                        type="checkbox"
+                        checked={!!asnSelection[r.caseNo] || !!asnByCase[r.caseNo]}
+                        disabled={r.waiting || !!asnByCase[r.caseNo]}
+                        onClick={(event) => event.stopPropagation()}
+                        onChange={() => toggleAsnCase(r.caseNo)}
+                        style={{ accentColor: 'var(--color-accent)', width: 16, height: 16, margin: 0 }}
+                      />
+                    </td>
+                  )}
                   <td style={{ ...td, paddingLeft: 14 }}>
                     <span style={{ display: 'inline-grid', placeItems: 'center', width: 22, height: 22, borderRadius: 999, background: 'var(--color-accent-200)', color: 'var(--color-accent-800)', fontSize: 11.5, fontWeight: 700 }}>
                       {r.v}
@@ -101,6 +147,38 @@ export function DeliveryPlanTab({ state }: { state: CaseSimulationState }) {
             </tbody>
           </table>
         </div>
+
+        {canSeeOrderDetail && (
+          <div style={{ position: 'sticky', bottom: 0, zIndex: 20, display: 'flex', alignItems: 'center', gap: 16, padding: '12px 16px', background: '#fff', border: '1px solid #e3e6ea', borderRadius: 6, boxShadow: '0 -6px 18px rgba(20,40,70,.08)' }}>
+            <span
+              style={{
+                display: 'inline-grid',
+                placeItems: 'center',
+                minWidth: 30,
+                height: 30,
+                padding: '0 8px',
+                borderRadius: 999,
+                background: selectedIds.length ? 'var(--color-accent)' : 'var(--color-neutral-200)',
+                color: selectedIds.length ? '#fff' : 'var(--color-neutral-600)',
+                fontWeight: 700,
+                fontVariantNumeric: 'tabular-nums',
+              }}
+            >
+              {selectedIds.length}
+            </span>
+            <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.3 }}>
+              <span style={{ fontSize: 13.5, fontWeight: 700 }}>{selectedIds.length ? `${selectedIds.length} case${selectedIds.length > 1 ? 's' : ''} selected · ${selectedIds.length * inputs.pcs} pcs` : 'No case selected'}</span>
+              <span style={{ fontSize: 12, color: 'var(--color-neutral-600)' }}>{selectedIds.length ? `${dp.selLabel} · ready to group into one ASN` : 'Tick cases or a whole PO. Cases already in an ASN are locked.'}</span>
+            </span>
+            <span style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+              <button className="btn btn-secondary" onClick={clearAsnSelection} disabled={!selectedIds.length}>Clear selection</button>
+              <button className="btn btn-primary" onClick={openAsnDraft} disabled={!selectedIds.length}>
+                Group into 1 ASN
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 6 15 12 9 18" /></svg>
+              </button>
+            </span>
+          </div>
+        )}
 
         {canSeeOrderDetail && <div style={{ background: '#fff', border: '1px solid #e3e6ea', borderRadius: 6, overflow: 'hidden' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 16px', borderBottom: '1px solid #e3e6ea' }}>

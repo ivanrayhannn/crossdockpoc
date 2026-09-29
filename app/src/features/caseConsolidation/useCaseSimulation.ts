@@ -4,7 +4,7 @@ import type { Order, PresetKey, SimInputs } from './simulation';
 import { EMPTY_QUERY } from './deliveryPlan';
 import type { DpQuery } from './deliveryPlan';
 
-export type ViewKey = 'dp' | 'sim';
+export type ViewKey = 'dp' | 'sim' | 'asn';
 export type SimulationRole = 'sup' | 'ds' | 'proc';
 
 const STEP_MS = 240;
@@ -15,7 +15,7 @@ export function useCaseSimulation() {
   const [step, setStep] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [view, setView] = useState<ViewKey>('dp');
-  const [role, setRole] = useState<SimulationRole>('sup');
+  const [role, setRoleValue] = useState<SimulationRole>('sup');
   const [nextId, setNextId] = useState(() => presetInputs('a').orders.length + 1);
 
   // Delivery Plan navigation/filter state.
@@ -24,6 +24,13 @@ export function useCaseSimulation() {
   const [dpQuery, setDpQuery] = useState<DpQuery | null>(null);
   const [dpSel, setDpSel] = useState<string | null>(null);
   const [dpVariable, setDpVariable] = useState<string | null>(null);
+
+  // ASN draft state is intentionally kept in this simulation so users can
+  // group cases directly from a delivery-plan detail.
+  const [asnSelection, setAsnSelection] = useState<Record<string, boolean>>({});
+  const [asnByCase, setAsnByCase] = useState<Record<string, string>>({});
+  const [asnDeliveryDate, setAsnDeliveryDate] = useState(defaultDeliveryDate);
+  const [submittedAsn, setSubmittedAsn] = useState<{ no: string; ids: string[]; deliveryDate: string } | null>(null);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const stop = useCallback(() => {
@@ -126,6 +133,63 @@ export function useCaseSimulation() {
   }, []);
   const dpToggleVariable = useCallback((v: string) => setDpVariable((cur) => (cur === v ? null : v)), []);
   const dpClearVariable = useCallback(() => setDpVariable(null), []);
+  const setRole = useCallback((next: SimulationRole) => {
+    setRoleValue(next);
+    setDpVariable(null);
+  }, []);
+
+  const toggleAsnCase = useCallback(
+    (id: string) => {
+      if (asnByCase[id]) return;
+      setAsnSelection((prev) => {
+        const next = { ...prev };
+        if (next[id]) delete next[id];
+        else next[id] = true;
+        return next;
+      });
+    },
+    [asnByCase],
+  );
+  const toggleAsnCases = useCallback(
+    (ids: string[], select: boolean) => {
+      setAsnSelection((prev) => {
+        const next = { ...prev };
+        ids.filter((id) => !asnByCase[id]).forEach((id) => {
+          if (select) next[id] = true;
+          else delete next[id];
+        });
+        return next;
+      });
+    },
+    [asnByCase],
+  );
+  const clearAsnSelection = useCallback(() => setAsnSelection({}), []);
+  const openAsnDraft = useCallback(() => {
+    if (!Object.keys(asnSelection).length) return;
+    window.scrollTo(0, 0);
+    setSubmittedAsn(null);
+    setView('asn');
+  }, [asnSelection]);
+  const backToDeliveryPlan = useCallback(() => {
+    window.scrollTo(0, 0);
+    setView('dp');
+    setDpPage('detail');
+  }, []);
+  const submitAsn = useCallback(() => {
+    const ids = Object.keys(asnSelection);
+    if (!ids.length || !asnDeliveryDate) return;
+    const no = `ASN-50221-${asnDeliveryDate.replaceAll('-', '').slice(2)}-001`;
+    setAsnByCase((prev) => ({ ...prev, ...Object.fromEntries(ids.map((id) => [id, no])) }));
+    setSubmittedAsn({ no, ids, deliveryDate: asnDeliveryDate });
+    setAsnSelection({});
+  }, [asnDeliveryDate, asnSelection]);
+  const removeFromAsnDraft = useCallback((id: string) => {
+    setAsnSelection((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  }, []);
 
   return {
     inputs,
@@ -162,7 +226,25 @@ export function useCaseSimulation() {
     dpBack,
     dpToggleVariable,
     dpClearVariable,
+    asnSelection,
+    asnByCase,
+    asnDeliveryDate,
+    setAsnDeliveryDate,
+    submittedAsn,
+    toggleAsnCase,
+    toggleAsnCases,
+    clearAsnSelection,
+    openAsnDraft,
+    backToDeliveryPlan,
+    submitAsn,
+    removeFromAsnDraft,
   };
+}
+
+function defaultDeliveryDate() {
+  const date = new Date();
+  date.setDate(date.getDate() + 1);
+  return date.toISOString().slice(0, 10);
 }
 
 function addDayIso(iso: string) {

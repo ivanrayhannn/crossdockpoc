@@ -1,4 +1,5 @@
 import { DeliveryPlanTab } from './components/DeliveryPlanTab';
+import { AsnDraftTab } from './components/AsnDraftTab';
 import { OptionsBar } from './components/OptionsBar';
 import { VisualSimulationTab } from './components/VisualSimulationTab';
 import { useCaseSimulation } from './useCaseSimulation';
@@ -52,7 +53,7 @@ export function CaseConsolidationPage() {
         ))}
       </div>
 
-      {view === 'sim' ? <VisualSimulationTab state={state} /> : <DeliveryPlanTab state={state} />}
+      {view === 'sim' ? <VisualSimulationTab state={state} /> : view === 'asn' ? <AsnDraftTab state={state} /> : <DeliveryPlanTab state={state} />}
     </div>
   );
 }
