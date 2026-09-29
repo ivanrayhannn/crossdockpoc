@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { AppShell } from './components/shell/AppShell';
 import { Breadcrumb } from './components/shell/Breadcrumb';
+import { AsnCreationPage } from './features/asnCreation/AsnCreationPage';
 import { CaseConsolidationPage } from './features/caseConsolidation/CaseConsolidationPage';
 import { CrossdockMasterSettingPage } from './features/crossdock/CrossdockMasterSettingPage';
 import { routeFromHash, hashForRoute } from './routes';
@@ -24,6 +25,14 @@ function App() {
     return (
       <AppShell activeItem="Case Consolidation Simulation" onNavigate={navigate} breadcrumb={<Breadcrumb group="ASN" label="Case Consolidation Simulation" />}>
         <CaseConsolidationPage />
+      </AppShell>
+    );
+  }
+
+  if (route === 'asn-creation') {
+    return (
+      <AppShell activeItem="ASN Creation" onNavigate={navigate} breadcrumb={<Breadcrumb group="ASN" label="ASN Creation" />}>
+        <AsnCreationPage />
       </AppShell>
     );
   }
