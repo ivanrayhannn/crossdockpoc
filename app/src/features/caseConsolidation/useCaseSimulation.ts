@@ -15,7 +15,8 @@ export function useCaseSimulation() {
   const [step, setStep] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [view, setView] = useState<ViewKey>('dp');
-  const [role, setRoleValue] = useState<SimulationRole>('sup');
+  // Case selection and ASN grouping are the Demand Supply workflow shown by default.
+  const [role, setRoleValue] = useState<SimulationRole>('ds');
   const [nextId, setNextId] = useState(() => presetInputs('a').orders.length + 1);
 
   // Delivery Plan navigation/filter state.
