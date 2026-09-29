@@ -49,6 +49,7 @@ export interface DpOrderRow {
   qty: number;
   total: number;
   no: string;
+  destination: string;
   od: string;
   caseNo: string;
 }
@@ -132,7 +133,8 @@ export function buildDeliveryPlan({ orders, pcs, part, model, query: q, sel, var
         part,
         qty: o.rem,
         total: o.qty,
-        no: `${o.no} · ${DEST[o.dest].name}`,
+        no: o.no,
+        destination: `${DEST[o.dest].name} · ${DEST[o.dest].code}`,
         od: shortD(o.date),
         caseNo: o.rem < o.qty ? 'rest in PO' : '-',
       })),
@@ -178,7 +180,8 @@ export function buildDeliveryPlan({ orders, pcs, part, model, query: q, sel, var
         part,
         qty: r.n,
         total: r.o.qty,
-        no: `${r.o.no} · ${DEST[r.o.dest].name}`,
+        no: r.o.no,
+        destination: `${DEST[r.o.dest].name} · ${DEST[r.o.dest].code}`,
         od: shortD(r.o.date),
         caseNo: caseNo(c.n),
       }),

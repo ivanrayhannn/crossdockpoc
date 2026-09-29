@@ -14,6 +14,8 @@ const th: React.CSSProperties = {
   whiteSpace: 'nowrap',
 };
 const td: React.CSSProperties = { padding: '0 12px', height: 38, borderBottom: '1px solid #eef1f5' };
+const detailTh: React.CSSProperties = { ...th, padding: '7px 10px', fontSize: 9.5 };
+const detailTd: React.CSSProperties = { ...td, padding: '0 10px', height: 34, fontSize: 12 };
 
 export function DeliveryPlanTab({ state }: { state: CaseSimulationState }) {
   const {
@@ -191,35 +193,37 @@ export function DeliveryPlanTab({ state }: { state: CaseSimulationState }) {
               </button>
             )}
           </div>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
             <thead>
               <tr style={{ background: 'var(--color-surface)' }}>
-                <th style={{ ...th, width: 150 }}>Delivery Plan (PO)</th>
-                <th style={{ ...th, width: 130 }}>Case No</th>
-                <th style={{ ...th, width: 100 }}>Part No</th>
-                <th style={{ ...th, width: 80, textAlign: 'right' }}>Qty</th>
-                <th style={{ ...th, width: 100, textAlign: 'right' }}>Customer Qty</th>
-                <th style={{ ...th, width: 150 }}>CUSTOMER ORDER</th>
-                <th style={{ ...th, width: 120 }}>CUSTOMER DATE</th>
-                <th style={th}>Variable</th>
+                <th style={{ ...detailTh, width: 125 }}>Delivery Plan (PO)</th>
+                <th style={{ ...detailTh, width: 110 }}>Case No</th>
+                <th style={{ ...detailTh, width: 85 }}>Part No</th>
+                <th style={{ ...detailTh, width: 60, textAlign: 'right' }}>Qty</th>
+                <th style={{ ...detailTh, width: 85, textAlign: 'right' }}>Customer Qty</th>
+                <th style={{ ...detailTh, width: 125 }}>Customer Order</th>
+                <th style={{ ...detailTh, width: 150 }}>Destination</th>
+                <th style={{ ...detailTh, width: 100 }}>Customer Date</th>
+                <th style={{ ...detailTh, width: 65 }}>Variable</th>
               </tr>
             </thead>
             <tbody>
               {dp.orderRows.map((o, i) => (
                 <tr key={i}>
-                  <td style={{ ...td, fontVariantNumeric: 'tabular-nums' }}>{o.date}</td>
-                  <td style={{ ...td, fontFamily: 'var(--font-mono)', color: 'var(--color-neutral-700)' }}>{o.caseNo}</td>
-                  <td style={{ ...td, fontWeight: 600 }}>{o.part}</td>
-                  <td style={{ ...td, textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: 700 }}>{o.qty}</td>
-                  <td style={{ ...td, textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--color-neutral-700)' }}>{o.total}</td>
-                  <td style={td}>
+                  <td style={{ ...detailTd, fontVariantNumeric: 'tabular-nums' }}>{o.date}</td>
+                  <td style={{ ...detailTd, fontFamily: 'var(--font-mono)', color: 'var(--color-neutral-700)' }}>{o.caseNo}</td>
+                  <td style={{ ...detailTd, fontWeight: 600 }}>{o.part}</td>
+                  <td style={{ ...detailTd, textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: 700 }}>{o.qty}</td>
+                  <td style={{ ...detailTd, textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--color-neutral-700)' }}>{o.total}</td>
+                  <td style={detailTd}>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}>
                       <span style={{ width: 10, height: 10, borderRadius: 999, background: o.color }} />
                       <span style={{ fontFamily: 'var(--font-mono)' }}>{o.no}</span>
                     </span>
                   </td>
-                  <td style={{ ...td, fontVariantNumeric: 'tabular-nums' }}>{o.od}</td>
-                  <td style={td}>
+                  <td style={detailTd}>{o.destination}</td>
+                  <td style={{ ...detailTd, fontVariantNumeric: 'tabular-nums' }}>{o.od}</td>
+                  <td style={detailTd}>
                     <span style={{ display: 'inline-grid', placeItems: 'center', width: 22, height: 22, borderRadius: 999, background: 'var(--color-accent-200)', color: 'var(--color-accent-800)', fontSize: 11.5, fontWeight: 700 }}>
                       {o.v}
                     </span>
