@@ -1,6 +1,9 @@
+import { ROUTE_BY_NAV_ITEM } from '../../routes';
+import type { RouteKey } from '../../routes';
+
 const NAV_GROUPS: [string, string[]][] = [
   ['Ordering', ['Service Part Order']],
-  ['ASN', ['Case Label Printing', 'ASN Creation', 'Delivery Note Creation', 'ASN Inquiry']],
+  ['ASN', ['Case Label Printing', 'ASN Creation', 'Delivery Note Creation', 'Case Consolidation Simulation', 'ASN Inquiry']],
   ['Transfer Posting', ['Stock Inquiry']],
   ['Timeline', ['Timeline']],
   ['Master', ['Sub Supplier Maintenance', 'Part Master Maintenance', 'Crossdock Master Setting']],
@@ -9,10 +12,8 @@ const NAV_GROUPS: [string, string[]][] = [
   ['Inventory Taking', ['Intak Period Maintenance', 'Yellow Line and CY Stock']],
 ];
 
-const ACTIVE_ITEM = 'Crossdock Master Setting';
-const OPEN_GROUP = 'Master';
-
-export function Sidebar() {
+export function Sidebar({ activeItem, onNavigate }: { activeItem: string; onNavigate: (route: RouteKey) => void }) {
+  const openGroup = NAV_GROUPS.find(([, items]) => items.includes(activeItem))?.[0] ?? 'Master';
   return (
     <aside
       style={{
@@ -70,7 +71,7 @@ export function Sidebar() {
 
       <nav style={{ padding: '8px 8px 20px' }}>
         {NAV_GROUPS.map(([label, items]) => {
-          const open = label === OPEN_GROUP;
+          const open = label === openGroup;
           return (
             <div key={label}>
               <div
@@ -94,10 +95,12 @@ export function Sidebar() {
               </div>
               <div style={{ padding: '2px 0 4px 4px', display: open ? 'block' : 'none' }}>
                 {items.map((item) => {
-                  const active = item === ACTIVE_ITEM;
+                  const active = item === activeItem;
+                  const route = ROUTE_BY_NAV_ITEM[item];
                   return (
                     <div
                       key={item}
+                      onClick={route ? () => onNavigate(route) : undefined}
                       style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -109,6 +112,7 @@ export function Sidebar() {
                         background: active ? '#dc3545' : 'transparent',
                         color: active ? '#fff' : '#5a6672',
                         fontWeight: active ? 600 : 400,
+                        cursor: route ? 'pointer' : 'default',
                       }}
                     >
                       <span style={{ width: 5, height: 5, borderRadius: 999, background: active ? '#fff' : '#c1c9d2' }} />

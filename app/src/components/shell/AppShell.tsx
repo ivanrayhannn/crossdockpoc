@@ -1,22 +1,23 @@
 import type { ReactNode } from 'react';
-import { BreadcrumbBar } from './BreadcrumbBar';
+import type { RouteKey } from '../../routes';
 import { Footer } from './Footer';
 import { Sidebar } from './Sidebar';
 import { TopHeader } from './TopHeader';
 
 interface AppShellProps {
-  roleLabel: string;
-  onSwitchRole?: () => void;
+  activeItem: string;
+  onNavigate: (route: RouteKey) => void;
+  breadcrumb: ReactNode;
   children: ReactNode;
 }
 
-export function AppShell({ roleLabel, onSwitchRole, children }: AppShellProps) {
+export function AppShell({ activeItem, onNavigate, breadcrumb, children }: AppShellProps) {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#eef1f5' }}>
-      <Sidebar />
+      <Sidebar activeItem={activeItem} onNavigate={onNavigate} />
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
         <TopHeader />
-        <BreadcrumbBar roleLabel={roleLabel} onSwitchRole={onSwitchRole} />
+        {breadcrumb}
         <main style={{ flex: 1, background: '#eef1f5', paddingBottom: 8 }}>{children}</main>
         <Footer />
       </div>
