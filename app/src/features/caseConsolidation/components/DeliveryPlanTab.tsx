@@ -128,7 +128,7 @@ export function DeliveryPlanTab({ state }: { state: CaseSimulationState }) {
                   <td style={{ ...td, height: 44 }}>
                     <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                       <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, width: 74 }}>{r.caseNo}</span>
-                      {canSeeOrderDetail && <CaseHoles holes={r.holes} size={20} fontSize={7.5} gap={4} pad="4px 8px" />}
+                      {canSeeOrderDetail && <CaseHoles holes={r.holes} size={20} fontSize={7.5} gap={4} pad="4px 8px" wrap={false} />}
                     </span>
                   </td>
                   <td style={{ ...td, textAlign: 'right' }}>

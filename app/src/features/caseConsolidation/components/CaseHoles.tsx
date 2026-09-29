@@ -3,9 +3,24 @@ import type { Hole } from '../deliveryPlan';
 import type { CaseHole } from '../visual';
 
 /** Round "case tray" with one hole per piece — the packing-crate visual used across this feature. */
-export function CaseHoles({ holes, size = 28, fontSize = 9, gap = 8, pad = '9px 14px' }: { holes: (Hole | CaseHole)[]; size?: number; fontSize?: number; gap?: number; pad?: string }) {
+export function CaseHoles({
+  holes,
+  size = 28,
+  fontSize = 9,
+  gap = 8,
+  pad = '9px 14px',
+  wrap = true,
+}: {
+  holes: (Hole | CaseHole)[];
+  size?: number;
+  fontSize?: number;
+  gap?: number;
+  pad?: string;
+  /** Keep compact case-label trays on one line inside a table. */
+  wrap?: boolean;
+}) {
   return (
-    <span style={{ flex: 1, display: 'flex', flexWrap: 'wrap', gap, padding: pad, borderRadius: 999, background: '#e9e1d4', boxShadow: 'inset 0 2px 5px rgba(80,50,20,.22)' }}>
+    <span style={{ flex: wrap ? 1 : 'none', display: 'flex', flexWrap: wrap ? 'wrap' : 'nowrap', width: wrap ? undefined : 'max-content', gap, padding: pad, borderRadius: 999, background: '#e9e1d4', boxShadow: 'inset 0 2px 5px rgba(80,50,20,.22)' }}>
       {holes.map((h, i) => {
         const scale = 'scale' in h ? h.scale : 1;
         const shadow = 'shadow' in h ? h.shadow : '0 1px 2px rgba(0,0,0,.25)';
