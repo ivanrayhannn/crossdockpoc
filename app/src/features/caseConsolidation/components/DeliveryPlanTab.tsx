@@ -41,6 +41,7 @@ export function DeliveryPlanTab({ state }: { state: CaseSimulationState }) {
     openAsnDraft,
   } = state;
   const canSeeOrderDetail = role !== 'sup';
+  const canSelectAsnCases = true;
 
   const dp = useMemo(
     () => buildDeliveryPlan({ orders: inputs.orders, pcs: inputs.pcs, part, model, query: dpQuery, sel: dpSel, variable: dpVariable }),
@@ -78,7 +79,7 @@ export function DeliveryPlanTab({ state }: { state: CaseSimulationState }) {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
               <tr style={{ background: 'var(--color-surface)' }}>
-                {canSeeOrderDetail && (
+                {canSelectAsnCases && (
                   <th
                     onClick={() => toggleAsnCases(selectableIds, !allSelected)}
                     style={{ width: 40, paddingLeft: 16, borderBottom: '1px solid #e3e6ea', cursor: selectableIds.length ? 'pointer' : 'default' }}
@@ -103,7 +104,7 @@ export function DeliveryPlanTab({ state }: { state: CaseSimulationState }) {
                   className={!canSeeOrderDetail || r.waiting ? undefined : 'row-hover'}
                   style={{ cursor: canSeeOrderDetail && !r.waiting ? 'pointer' : 'default', background: r.selected ? 'var(--color-accent-100)' : '#fff' }}
                 >
-                  {canSeeOrderDetail && (
+                  {canSelectAsnCases && (
                     <td style={{ ...td, paddingLeft: 14, paddingRight: 0, borderLeft: `3px solid ${asnSelection[r.caseNo] ? 'var(--color-accent)' : 'transparent'}` }}>
                       <input
                         type="checkbox"
@@ -148,7 +149,7 @@ export function DeliveryPlanTab({ state }: { state: CaseSimulationState }) {
           </table>
         </div>
 
-        {canSeeOrderDetail && (
+        {canSelectAsnCases && (
           <div style={{ position: 'sticky', bottom: 0, zIndex: 20, display: 'flex', alignItems: 'center', gap: 16, padding: '12px 16px', background: '#fff', border: '1px solid #e3e6ea', borderRadius: 6, boxShadow: '0 -6px 18px rgba(20,40,70,.08)' }}>
             <span
               style={{
