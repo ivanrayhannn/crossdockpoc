@@ -12,6 +12,9 @@ const NAV_GROUPS: [string, string[]][] = [
   ['Inventory Taking', ['Intak Period Maintenance', 'Yellow Line and CY Stock']],
 ];
 
+/** Nav items that are new in this build, flagged with a "New" badge until they're familiar. */
+const NEW_ITEMS = new Set(['Crossdock Master Setting', 'Case Consolidation Simulation']);
+
 export function Sidebar({ activeItem, onNavigate }: { activeItem: string; onNavigate: (route: RouteKey) => void }) {
   return (
     <aside
@@ -112,8 +115,24 @@ export function Sidebar({ activeItem, onNavigate }: { activeItem: string; onNavi
                         cursor: route ? 'pointer' : 'default',
                       }}
                     >
-                      <span style={{ width: 5, height: 5, borderRadius: 999, background: active ? '#fff' : '#c1c9d2' }} />
-                      {item}
+                      <span style={{ width: 5, height: 5, borderRadius: 999, background: active ? '#fff' : '#c1c9d2', flexShrink: 0 }} />
+                      <span style={{ flex: 1, minWidth: 0 }}>{item}</span>
+                      {NEW_ITEMS.has(item) && (
+                        <span
+                          style={{
+                            fontSize: 9,
+                            fontWeight: 700,
+                            letterSpacing: '.04em',
+                            padding: '1px 6px',
+                            borderRadius: 999,
+                            flexShrink: 0,
+                            background: active ? 'rgba(255,255,255,.25)' : '#dc3545',
+                            color: '#fff',
+                          }}
+                        >
+                          NEW
+                        </span>
+                      )}
                     </div>
                   );
                 })}
