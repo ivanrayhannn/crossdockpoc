@@ -98,19 +98,46 @@ export function AsnDraftTab({ state }: { state: CaseSimulationState }) {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
               <tr style={{ background: 'var(--color-surface)' }}>
-                <th style={{ ...th, width: 56, paddingLeft: 16 }}>Seq</th><th style={{ ...th, width: 120 }}>Case No</th><th style={{ ...th, width: 80 }}>PO No</th><th style={{ ...th, width: 100 }}>Part No</th><th style={{ ...th, width: 160 }}>Destination</th><th style={{ ...th, textAlign: 'right' }}>Qty</th><th style={{ ...th, width: 80, textAlign: 'right', paddingRight: 16 }}>Action</th>
+                <th style={{ ...th, width: 56, paddingLeft: 16 }}>Seq</th>
+                <th style={{ ...th, width: 120 }}>Case No</th>
+                <th style={{ ...th, width: 80 }}>PO No</th>
+                <th style={{ ...th, width: 100 }}>Part No</th>
+                <th style={{ ...th, width: 160 }}>Destination</th>
+                <th style={{ ...th, textAlign: 'right' }}>Qty</th>
+                <th style={{ ...th, width: 80, textAlign: 'right', paddingRight: 16 }}>Action</th>
               </tr>
             </thead>
             <tbody>
-              <tr style={{ background: 'var(--color-surface)' }}><td colSpan={7} style={{ padding: '7px 16px', borderBottom: '1px solid #e3e6ea' }}><strong>{part}</strong><span style={{ marginLeft: 10, fontSize: 12, color: 'var(--color-neutral-600)' }}>{plural(draft.length, 'case')} · {totalQty} pcs</span></td></tr>
+              <tr style={{ background: 'var(--color-surface)' }}>
+                <td colSpan={7} style={{ padding: '7px 16px', borderBottom: '1px solid #e3e6ea' }}>
+                  <strong>{part}</strong>
+                  <span style={{ marginLeft: 10, fontSize: 12, color: 'var(--color-neutral-600)' }}>
+                    {plural(draft.length, 'case')} · {totalQty} pcs
+                  </span>
+                </td>
+              </tr>
               {draft.map((item, index) => (
                 <tr key={item.id}>
                   <td style={{ ...td, paddingLeft: 16, color: 'var(--color-neutral-600)', fontVariantNumeric: 'tabular-nums' }}>{String(index + 1).padStart(2, '0')}</td>
                   <td style={{ ...td, fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{item.id}</td>
                   <td style={{ ...td, fontFamily: 'var(--font-mono)', color: 'var(--color-accent-800)', fontWeight: 600 }}>{item.po}</td>
-                  <td style={{ ...td, fontWeight: 600 }}>{item.part}</td><td style={td}>{item.destination}</td><td style={{ ...td, textAlign: 'right', fontWeight: 700 }}>{item.qty}</td>
+                  <td style={{ ...td, fontWeight: 600 }}>{item.part}</td>
+                  <td style={td}>{item.destination}</td>
+                  <td style={{ ...td, textAlign: 'right', fontWeight: 700 }}>{item.qty}</td>
                   <td style={{ ...td, textAlign: 'right', paddingRight: 16 }}>
-                    {!readOnly && <button type="button" onClick={() => removeFromAsnDraft(item.id)} title="Remove from ASN" className="remove-btn-hover" style={{ cursor: 'pointer', border: 0, background: 'transparent', width: 30, height: 30, borderRadius: 4, color: 'var(--color-danger)' }}>⌫</button>}
+                    {!readOnly && (
+                      <button
+                        type="button"
+                        onClick={() => removeFromAsnDraft(item.id)}
+                        title="Remove from ASN"
+                        className="remove-btn-hover"
+                        style={{ cursor: 'pointer', border: 0, background: 'transparent', width: 30, height: 30, borderRadius: 4, display: 'grid', placeItems: 'center', color: 'var(--color-danger)' }}
+                      >
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6" />
+                        </svg>
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
