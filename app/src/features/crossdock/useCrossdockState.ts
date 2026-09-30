@@ -8,9 +8,9 @@ const DEFAULT_Q: PartQuery = {
   name: '',
   dest: 'Thailand',
   st: 'all',
-  sync: 'all',
+  sync: 'notsync',
   per: CUR_PER,
-  sort: 'default',
+  sort: 'dt_desc',
 };
 
 const NOW = '12-Aug-2026 09:30';
@@ -114,8 +114,9 @@ export function useCrossdockState() {
     setDraftDests(null);
   }, [editDest, draftDests]);
 
-  const syncAll = useCallback(() => {
-    setParts((prevParts) => prevParts.map((p) => (p.per === CUR_PER ? { ...p, gt: true, pole: true, dt: NOW } : p)));
+  const syncParts = useCallback((ids: string[]) => {
+    const idSet = new Set(ids);
+    setParts((prevParts) => prevParts.map((p) => (idSet.has(p.p) ? { ...p, synced: true, dt: NOW } : p)));
   }, []);
 
   const closeModal = useCallback(() => {
@@ -163,7 +164,7 @@ export function useCrossdockState() {
     cancelEditDest,
     patchDraft,
     saveDest,
-    syncAll,
+    syncParts,
     closeModal,
     commit,
     addPart,

@@ -25,7 +25,7 @@ function exportMappingExcel(rows: Part[], per: string) {
   let x = '<table border="1"><tr><th>Part No</th><th>Part Name</th><th>Periode</th><th>Pcs/Case</th><th>Sync Status</th><th>Dest Code</th><th>Case/Day</th><th>Pcs/Day</th><th>Percentage</th></tr>';
   rows.forEach((p) => {
     const a = p.dests.reduce((s, d) => s + num(d.al), 0);
-    const sb = syncBadge(p.gt, p.pole).t;
+    const sb = syncBadge(p.synced).t;
     const ds = p.dests.length ? p.dests : [{ d: '', cd: '', al: 0, st: 'Active' as const }];
     ds.forEach((d) => {
       const code = d.cd || DCODE[d.d] || '';
@@ -43,7 +43,7 @@ function exportMappingExcel(rows: Part[], per: string) {
 }
 
 export function DestMappingTab({ state }: { state: CrossdockState }) {
-  const { parts, q, setQ, resetQ, ro, expand, editDest, draftDests, toggleExpand, startEditDest, cancelEditDest, patchDraft, saveDest } = state;
+  const { parts, q, setQ, resetQ, ro, expand, editDest, draftDests, toggleExpand, startEditDest, cancelEditDest, patchDraft, saveDest, syncParts } = state;
 
   const destRowsSrc = useMemo(
     () =>
@@ -51,14 +51,17 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
         (p) =>
           (q.per === 'all' || p.per === q.per) &&
           (!q.part || p.p.toLowerCase().includes(q.part.toLowerCase())) &&
-          (q.sync === 'all' ||
-            (q.sync === 'gt' && p.gt && !p.pole) ||
-            (q.sync === 'pole' && p.pole && !p.gt) ||
-            (q.sync === 'both' && p.gt && p.pole) ||
-            (q.sync === 'notsync' && !p.gt && !p.pole)),
+          (q.sync === 'all' || (q.sync === 'sync' && p.synced) || (q.sync === 'notsync' && !p.synced)),
       ),
     [parts, q],
   );
+
+  const unsyncedCount = destRowsSrc.filter((p) => !p.synced).length;
+
+  const numberOptions = useMemo(() => {
+    const seen = new Set<string>();
+    return parts.filter((p) => (seen.has(p.p) ? false : (seen.add(p.p), true)));
+  }, [parts]);
 
   const destMeta2 = `${destRowsSrc.length} part · ${fmt(destRowsSrc.reduce((a, p) => a + p.dests.reduce((x, d) => x + num(d.al), 0), 0))} case/day`;
 
@@ -72,36 +75,53 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 13, flexWrap: 'wrap' }}>
           <div className="field" style={{ width: 190 }}>
             <label>
-              Periode kalkulasi <span style={{ color: 'var(--color-neutral-500)', textTransform: 'none', letterSpacing: 0 }}>({q.per === CUR_PER ? 'berjalan' : q.per === 'all' ? 'semua' : 'lampau'})</span>
+              Calculation period <span style={{ color: 'var(--color-neutral-500)', textTransform: 'none', letterSpacing: 0 }}>({q.per === CUR_PER ? 'ongoing' : q.per === 'all' ? 'all' : 'past'})</span>
             </label>
             <select className="input" value={q.per} onChange={(e) => setQ((prev) => ({ ...prev, per: e.target.value }))} style={{ appearance: 'none' }}>
-              <option value="all">Semua periode</option>
+              <option value="all">All periods</option>
               {PERIODS.map((per) => (
                 <option key={per} value={per}>
                   {per}
-                  {per === CUR_PER ? ' (berjalan)' : ''}
+                  {per === CUR_PER ? ' (ongoing)' : ''}
                 </option>
               ))}
             </select>
           </div>
-          <div className="field" style={{ width: 220 }}>
+          <div className="field" style={{ width: 260 }}>
             <label>Part Number</label>
-            <input
-              className="input"
-              value={q.part}
-              onChange={(e) => setQ((prev) => ({ ...prev, part: e.target.value }))}
-              placeholder="mis. PART-B"
-              style={{ fontFamily: 'var(--font-mono)', fontSize: 13 }}
-            />
+            <div style={{ position: 'relative' }}>
+              <input
+                className="input"
+                value={q.part}
+                onChange={(e) => setQ((prev) => ({ ...prev, part: e.target.value }))}
+                placeholder="mis. PART-B"
+                list="dest-part-number-options"
+                role="combobox"
+                style={{ paddingLeft: 34, fontFamily: 'var(--font-mono)', fontSize: 13 }}
+              />
+              <datalist id="dest-part-number-options">
+                {numberOptions.map((part) => <option key={part.p} value={part.p} />)}
+              </datalist>
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="var(--color-neutral-600)"
+                strokeWidth="2.75"
+                strokeLinecap="round"
+                style={{ position: 'absolute', left: 13, top: 11 }}
+              >
+                <circle cx="11" cy="11" r="7" />
+                <line x1="16.5" y1="16.5" x2="21" y2="21" />
+              </svg>
+            </div>
           </div>
           <div className="field" style={{ width: 210 }}>
-            <label>Status sync</label>
+            <label>Sync Status</label>
             <select className="input" value={q.sync} onChange={(e) => setQ((prev) => ({ ...prev, sync: e.target.value as typeof prev.sync }))} style={{ appearance: 'none' }}>
-              <option value="all">Semua</option>
+              <option value="sync">Sync</option>
               <option value="notsync">Not Sync</option>
-              <option value="gt">Sync GT</option>
-              <option value="pole">Sync POLE</option>
-              <option value="both">Both Sync</option>
             </select>
           </div>
           <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
@@ -124,6 +144,18 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
           <span style={{ fontSize: 12.5, fontWeight: 600 }}>Mapping destinasi per part</span>
           <span style={{ fontSize: 12, color: 'var(--color-neutral-600)' }}>{destMeta2}</span>
           <span style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+            <button
+              className="btn btn-secondary"
+              onClick={() => syncParts(destRowsSrc.filter((p) => !p.synced).map((p) => p.p))}
+              disabled={!unsyncedCount}
+              style={{ fontSize: 12, padding: '4px 12px' }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <path d="M21 12a9 9 0 1 1-3-6.7" />
+                <path d="M21 4v5h-5" />
+              </svg>
+              Sync{unsyncedCount ? ` (${unsyncedCount})` : ''}
+            </button>
             <button className="btn btn-primary" onClick={() => exportMappingExcel(destRowsSrc, q.per)} style={{ fontSize: 12, padding: '4px 12px' }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                 <path d="M12 3v12M7 10l5 5 5-5M5 21h14" />
@@ -194,7 +226,7 @@ interface DestRowProps {
 function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStartEdit, onCancelEdit, onSave, onPatchDraft }: DestRowProps) {
   const m = num(p.mc);
   const a = p.dests.reduce((x, d) => x + num(d.al), 0);
-  const sb = syncBadge(p.gt, p.pole);
+  const sb = syncBadge(p.synced);
   const edok = p.per === CUR_PER && !ro;
   const dList = isEditing && draftDests ? draftDests : p.dests;
   const dAlloc = dList.reduce((x, d) => x + num(d.al), 0);
@@ -307,10 +339,10 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
                 Edit mapping
               </button>
               <button className="btn btn-ghost" onClick={onCancelEdit} style={{ display: editingDisp, fontSize: 12, padding: '4px 12px' }}>
-                Batal
+                Cancel
               </button>
               <button className="btn btn-primary" onClick={onSave} disabled={dOver || !dList.length} style={{ display: editingDisp, fontSize: 12, padding: '4px 16px' }}>
-                Simpan
+                Save
               </button>
             </span>
           </div>

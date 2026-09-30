@@ -49,6 +49,7 @@ export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHist
         (!q.name || p.n.toLowerCase().includes(q.name.toLowerCase())) &&
         (q.st === 'all' || p.st === (q.st === 'active' ? 'Active' : 'Inactive')),
     );
+    if (q.sort === 'default' || q.sort === 'pn_asc') return [...filtered].sort((a, b) => a.p.localeCompare(b.p));
     if (q.sort === 'dt_desc') return [...filtered].sort((a, b) => parseDt(b.dt) - parseDt(a.dt));
     if (q.sort === 'dt_asc') return [...filtered].sort((a, b) => parseDt(a.dt) - parseDt(b.dt));
     return filtered;
@@ -60,8 +61,13 @@ export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHist
 
   const empty = parts.length === 0;
   const noResult = !empty && rowsSrc.length === 0;
-  const activeCrit = [q.part && 'Part No', q.name && 'Part Name', q.st !== 'all' && 'Status'].filter(Boolean);
-  const critSummary = activeCrit.length ? `Aktif: ${activeCrit.join(', ')}` : 'Kosongkan semua untuk menampilkan seluruh part';
+  const numberOptions = useMemo(() => {
+    const latestByNumber = new Map<string, Part>();
+    [...parts]
+      .sort((a, b) => parseDt(b.dt) - parseDt(a.dt))
+      .forEach((part) => latestByNumber.set(part.p, part));
+    return [...latestByNumber.values()];
+  }, [parts]);
   const incompleteCount = rowsSrc.filter((p) => !p.dests.length || p.dests.reduce((a, d) => a + num(d.al), 0) !== num(p.mc)).length;
 
   const totalPages = Math.max(1, Math.ceil(rowsSrc.length / pageSize));
@@ -88,11 +94,10 @@ export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHist
 
   return (
     <>
-      <div style={{ padding: '16px 28px 0' }}>
+      <div style={{ position: 'sticky', top: 0, zIndex: 10, padding: '16px 28px 0', background: '#eef1f5' }}>
         <div style={{ border: '1px solid var(--color-divider)', borderRadius: 8, background: 'var(--color-neutral-100)', padding: '14px 16px 16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 11 }}>
             <span style={{ fontSize: 10.5, fontWeight: 600, letterSpacing: '.04em', textTransform: 'uppercase' }}>Search criteria</span>
-            <span style={{ fontSize: 12, color: 'var(--color-neutral-600)' }}>{critSummary}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 13 }}>
             <div className="field" style={{ width: 260 }}>
@@ -103,8 +108,13 @@ export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHist
                   value={q.part}
                   onChange={(e) => setQ((prev) => ({ ...prev, part: e.target.value }))}
                   placeholder="mis. PART-B"
+                  list="part-number-options"
+                  role="combobox"
                   style={{ paddingLeft: 34, fontFamily: 'var(--font-mono)', fontSize: 13 }}
                 />
+                <datalist id="part-number-options">
+                  {numberOptions.map((part) => <option key={part.p} value={part.p} />)}
+                </datalist>
                 <svg
                   width="14"
                   height="14"
@@ -129,7 +139,7 @@ export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHist
               <div className="seg" style={{ width: '100%' }}>
                 <label className="seg-opt" style={{ flex: 1, justifyContent: 'center' }}>
                   <input type="radio" name="qst" checked={q.st === 'all'} onChange={() => setQ((prev) => ({ ...prev, st: 'all' }))} />
-                  Semua
+                  All
                 </label>
                 <label className="seg-opt" style={{ flex: 1, justifyContent: 'center' }}>
                   <input type="radio" name="qst" checked={q.st === 'active'} onChange={() => setQ((prev) => ({ ...prev, st: 'active' }))} />
@@ -145,8 +155,8 @@ export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHist
               <label>Urutkan</label>
               <select className="input" value={q.sort} onChange={(e) => setQ((prev) => ({ ...prev, sort: e.target.value as typeof prev.sort }))} style={{ appearance: 'none' }}>
                 <option value="default">Default</option>
-                <option value="dt_desc">Last Update — Terbaru</option>
-                <option value="dt_asc">Last Update — Terlama</option>
+                <option value="dt_desc">Newer to Older</option>
+                <option value="dt_asc">Older to Newer</option>
               </select>
             </div>
             <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
@@ -196,11 +206,12 @@ export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHist
           </div>
 
           {!empty && !noResult && (
-            <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: 12.5, tableLayout: 'fixed' }}>
+            <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', minWidth: 1060, borderCollapse: 'separate', borderSpacing: 0, fontSize: 12.5, tableLayout: 'fixed' }}>
               <thead>
                 <tr>
                   <th style={{ ...th, padding: '0 10px 0 16px', width: 130 }}>Part Number</th>
-                  <th style={{ ...th, width: 'auto' }}>Part Name</th>
+                  <th style={{ ...th, width: 220 }}>Part Name</th>
                   <th style={{ ...th, textAlign: 'right', width: 90 }}>Min MAD</th>
                   <th style={{ ...th, textAlign: 'right', width: 86 }}>Pcs/Case</th>
                   <th style={{ ...th, textAlign: 'right', width: 104 }}>Max Case/Day</th>
@@ -218,7 +229,7 @@ export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHist
                       <td style={{ ...td, padding: '0 10px 0 16px', overflow: 'hidden', borderLeft: `3px solid ${r.mark}` }}>
                         <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12.5, fontWeight: 600 }}>{p.p}</span>
                       </td>
-                      <td style={{ ...td, overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.n}</td>
+                      <td style={{ ...td, overflow: 'hidden', textOverflow: 'ellipsis' }} title={p.n}>{p.n}</td>
                       <td style={{ ...td, textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: r.minMadFg, fontWeight: r.minMadW }}>{r.minMad}</td>
                       <td style={{ ...td, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmt(p.pc)}</td>
                       <td style={{ ...td, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmt(p.mc)}</td>
@@ -255,6 +266,7 @@ export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHist
                 })}
               </tbody>
             </table>
+            </div>
           )}
 
           {noResult && (

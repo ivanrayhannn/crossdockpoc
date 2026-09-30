@@ -99,8 +99,7 @@ interface SeedPart {
   dt: string;
   dests: { d: string; al: number; st: 'Active' | 'Inactive' }[];
   per: string;
-  gt: boolean;
-  pole: boolean;
+  synced: boolean;
 }
 
 const SEED: SeedPart[] = [
@@ -108,49 +107,49 @@ const SEED: SeedPart[] = [
     p: 'PART-A', n: 'Dummy Part A', pc: 60, mc: 24, st: 'Active', cat: 'Crossdock',
     mad: [1180, 1240, 1310, 1290, 1420, 1380], minMad: 800, by: 'A. Wibowo', dt: '05-Aug-2026 09:12',
     dests: [{ d: 'Thailand', al: 12, st: 'Active' }, { d: 'Jepang', al: 8, st: 'Active' }, { d: 'Vietnam', al: 4, st: 'Active' }],
-    per: 'Sep 2026', gt: true, pole: true,
+    per: 'Sep 2026', synced: true,
   },
   {
     p: 'PART-B', n: 'Dummy Part B', pc: 12, mc: 40, st: 'Active', cat: 'Crossdock',
     mad: [640, 700, 720, 810, 760, 790], minMad: 500, by: 'R. Pratama', dt: '11-Aug-2026 16:41',
     dests: [{ d: 'Jepang', al: 25, st: 'Active' }, { d: 'Vietnam', al: 15, st: 'Active' }],
-    per: 'Aug 2026', gt: true, pole: false,
+    per: 'Aug 2026', synced: false,
   },
   {
     p: 'PART-C', n: 'Dummy Part C', pc: 10, mc: 30, st: 'Active', cat: 'Crossdock',
     mad: [220, 260, 240, 300, 280, 310], minMad: 200, by: 'R. Pratama', dt: '12-Aug-2026 08:05',
     dests: [{ d: 'Vietnam', al: 18, st: 'Active' }],
-    per: 'Sep 2026', gt: false, pole: false,
+    per: 'Sep 2026', synced: false,
   },
   {
     p: 'PART-D', n: 'Dummy Part D', pc: 24, mc: 36, st: 'Active', cat: 'Crossdock',
     mad: [980, 1020, 940, 1100, 1060, 1150], minMad: 800, by: 'A. Wibowo', dt: '05-Aug-2026 09:12',
     dests: [{ d: 'Thailand', al: 20, st: 'Active' }, { d: 'Jepang', al: 16, st: 'Active' }],
-    per: 'Aug 2026', gt: false, pole: true,
+    per: 'Aug 2026', synced: false,
   },
   {
     p: 'PART-E', n: 'Dummy Part E', pc: 4, mc: 45, st: 'Active', cat: 'Non-Crossdock',
     mad: [140, 120, 90, 110, 80, 60], minMad: 200, by: 'S. Hartono', dt: '05-Aug-2026 09:12',
     dests: [{ d: 'Jepang', al: 25, st: 'Active' }, { d: 'Thailand', al: 20, st: 'Active' }],
-    per: 'Aug 2026', gt: true, pole: true,
+    per: 'Aug 2026', synced: true,
   },
   {
     p: 'PART-F', n: 'Dummy Part F', pc: 40, mc: 26, st: 'Active', cat: 'Crossdock',
     mad: [480, 520, 560, 540, 610, 650], minMad: 400, by: 'R. Pratama', dt: '08-Aug-2026 11:03',
     dests: [{ d: 'Vietnam', al: 12, st: 'Active' }, { d: 'Thailand', al: 8, st: 'Active' }, { d: 'Jepang', al: 6, st: 'Inactive' }],
-    per: 'Sep 2026', gt: true, pole: false,
+    per: 'Sep 2026', synced: false,
   },
   {
     p: 'PART-G', n: 'Dummy Part G', pc: 50, mc: 22, st: 'Active', cat: 'Non-Crossdock',
     mad: [60, 40, 70, 30, 20, 10], minMad: 150, by: 'R. Pratama', dt: '12-Aug-2026 08:11',
     dests: [],
-    per: 'Sep 2026', gt: false, pole: false,
+    per: 'Sep 2026', synced: false,
   },
   {
     p: 'PART-H', n: 'Dummy Part H', pc: 10, mc: 32, st: 'Inactive', cat: 'Crossdock',
     mad: [860, 900, 840, 780, 820, 800], minMad: 600, by: 'S. Hartono', dt: '05-Aug-2026 09:12',
     dests: [{ d: 'Thailand', al: 20, st: 'Active' }, { d: 'Jepang', al: 12, st: 'Inactive' }],
-    per: 'Sep 2026', gt: true, pole: true,
+    per: 'Sep 2026', synced: true,
   },
 ];
 
@@ -169,8 +168,7 @@ function generateBulkParts(): SeedPart[] {
     const madBase = rng.int(80, 1400);
     const mad = Array.from({ length: 6 }, () => Math.max(0, madBase + rng.int(-140, 140)));
     const per = rng.chance(0.6) ? CUR_PER : 'Aug 2026';
-    const gt = rng.chance(0.55);
-    const pole = rng.chance(0.5);
+    const synced = rng.chance(0.45);
     const by = rng.pick(EDITORS);
     const dtMonth = per === CUR_PER ? 8 : 7; // Sep-period parts were last touched in Aug; Aug-period parts in Jul
     const dt = fmtDate(new Date(2026, dtMonth, rng.int(1, 27), rng.int(8, 17), rng.int(0, 59)));
@@ -191,7 +189,7 @@ function generateBulkParts(): SeedPart[] {
     out.push({
       p: `PART-${id}`,
       n: `Dummy Part ${id}`,
-      pc, mc, st, cat, mad, minMad, by, dt, dests, per, gt, pole,
+      pc, mc, st, cat, mad, minMad, by, dt, dests, per, synced,
     });
   }
   return out;
@@ -254,8 +252,11 @@ export function cloneSeedParts(): Part[] {
 }
 
 export function blankPart(): Part {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const effDate = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
   return {
     p: '', n: '', pc: '', mc: '', st: 'Active', cat: 'Crossdock', mad: [], minMad: '',
-    per: CUR_PER, gt: false, pole: false, by: 'D. Anggraini', dt: 'sekarang', dests: [],
+    per: CUR_PER, synced: false, by: 'D. Anggraini', dt: 'sekarang', dests: [], effDate,
   };
 }

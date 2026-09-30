@@ -16,7 +16,7 @@ const ACTIVE_ITEM = 'Crossdock Master Setting';
 
 export function CrossdockMasterSettingPage({ onNavigate }: { onNavigate: (route: RouteKey) => void }) {
   const state = useCrossdockState();
-  const { parts, q, setQ, resetQ, ro, role, setRole, switchRole, view, modal, addPart, openUpload, openFor, syncAll } = state;
+  const { parts, q, setQ, resetQ, ro, role, setRole, switchRole, view, modal, addPart, openUpload, openFor } = state;
 
   if (!role) {
     return (
@@ -30,7 +30,7 @@ export function CrossdockMasterSettingPage({ onNavigate }: { onNavigate: (route:
 
   return (
     <AppShell activeItem={ACTIVE_ITEM} onNavigate={onNavigate} breadcrumb={<BreadcrumbBar roleLabel={roleLabel} onSwitchRole={switchRole} />}>
-      <PageHeader roleLabel={roleLabel} ro={ro} view={view} onAddPart={addPart} onOpenUpload={openUpload} onSync={syncAll} />
+      <PageHeader ro={ro} view={view} onAddPart={addPart} onOpenUpload={openUpload} />
       <ViewTabs view={view} />
 
       {view === 'part' && (

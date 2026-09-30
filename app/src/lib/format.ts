@@ -31,9 +31,7 @@ export interface SyncBadge {
   fg: string;
 }
 
-export function syncBadge(gt: boolean, pole: boolean): SyncBadge {
-  if (gt && pole) return { t: 'Both Sync', bg: 'var(--color-accent-2-200)', fg: 'var(--color-accent-2-800)' };
-  if (gt) return { t: 'Sync GT', bg: 'var(--color-accent-200)', fg: 'var(--color-accent-800)' };
-  if (pole) return { t: 'Sync POLE', bg: 'var(--color-accent-200)', fg: 'var(--color-accent-800)' };
+export function syncBadge(synced: boolean): SyncBadge {
+  if (synced) return { t: 'Sync', bg: 'var(--color-accent-2-200)', fg: 'var(--color-accent-2-800)' };
   return { t: 'Not Sync', bg: 'var(--color-danger-bg)', fg: 'var(--color-danger)' };
 }

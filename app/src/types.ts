@@ -32,10 +32,8 @@ export interface Part {
   dests: DestAllocation[];
   /** Calculation period this part's mapping belongs to, e.g. "Sep 2026". */
   per: string;
-  /** Synced to GT. */
-  gt: boolean;
-  /** Synced to POLE. */
-  pole: boolean;
+  /** Whether this part's mapping has been synced. */
+  synced: boolean;
   /** Date this part's data takes effect. Set from the add/edit form. */
   effDate?: string;
 }
@@ -45,11 +43,11 @@ export interface PartQuery {
   name: string;
   dest: string;
   st: 'all' | 'active' | 'inactive';
-  sync: 'all' | 'notsync' | 'gt' | 'pole' | 'both';
+  sync: 'all' | 'notsync' | 'sync';
   /** Calculation period filter for "Mapping per Destinasi", e.g. "Sep 2026", or 'all'. */
   per: string;
   /** Last Update sort order for Daftar Part. */
-  sort: 'default' | 'dt_desc' | 'dt_asc';
+  sort: 'default' | 'pn_asc' | 'dt_desc' | 'dt_asc';
 }
 
 export type ModalKind = 'part' | 'upload' | 'history' | null;
