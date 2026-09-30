@@ -91,7 +91,7 @@ interface SeedPart {
   n: string;
   pc: number;
   mc: number;
-  st: 'Active' | 'Inactive';
+  st: 'Candidate' | 'Active' | 'Inactive';
   cat: 'Crossdock' | 'Non-Crossdock';
   mad: number[];
   minMad: number;
@@ -151,6 +151,16 @@ const SEED: SeedPart[] = [
     dests: [{ d: 'Thailand', al: 20, st: 'Active' }, { d: 'Jepang', al: 12, st: 'Inactive' }],
     per: 'Sep 2026', synced: true,
   },
+  {
+    p: 'PART-I', n: 'Dummy Part I', pc: 15, mc: 20, st: 'Candidate', cat: 'Crossdock',
+    mad: [], minMad: 300, by: 'D. Anggraini', dt: '20-Aug-2026 10:05',
+    dests: [], per: 'Sep 2026', synced: false,
+  },
+  {
+    p: 'PART-J', n: 'Dummy Part J', pc: 8, mc: 18, st: 'Candidate', cat: 'Crossdock',
+    mad: [], minMad: 250, by: 'L. Kusuma', dt: '24-Aug-2026 14:22',
+    dests: [], per: 'Sep 2026', synced: false,
+  },
 ];
 
 /** Fabricates PART-009..PART-050 so the Daftar Part list has ~50 rows (2 pages
@@ -161,19 +171,20 @@ function generateBulkParts(): SeedPart[] {
   for (let i = 9; i <= 50; i++) {
     const id = String(i).padStart(3, '0');
     const cat: SeedPart['cat'] = rng.chance(0.7) ? 'Crossdock' : 'Non-Crossdock';
-    const st: SeedPart['st'] = rng.chance(0.85) ? 'Active' : 'Inactive';
+    const st: SeedPart['st'] = rng.chance(0.08) ? 'Candidate' : rng.chance(0.85) ? 'Active' : 'Inactive';
     const pc = rng.int(4, 60);
     const mc = rng.int(15, 50);
     const minMad = rng.int(100, 900);
     const madBase = rng.int(80, 1400);
-    const mad = Array.from({ length: 6 }, () => Math.max(0, madBase + rng.int(-140, 140)));
+    // Candidate parts have no MAD history yet and haven't been mapped to any destination.
+    const mad = st === 'Candidate' ? [] : Array.from({ length: 6 }, () => Math.max(0, madBase + rng.int(-140, 140)));
     const per = rng.chance(0.6) ? CUR_PER : 'Aug 2026';
     const synced = rng.chance(0.45);
     const by = rng.pick(EDITORS);
     const dtMonth = per === CUR_PER ? 8 : 7; // Sep-period parts were last touched in Aug; Aug-period parts in Jul
     const dt = fmtDate(new Date(2026, dtMonth, rng.int(1, 27), rng.int(8, 17), rng.int(0, 59)));
 
-    const destCount = rng.pick([0, 1, 1, 2, 2, 2, 3]);
+    const destCount = st === 'Candidate' ? 0 : rng.pick([0, 1, 1, 2, 2, 2, 3]);
     const chosen = [...DESTS].sort(() => rng.int(0, 1) - 0.5).slice(0, destCount);
     const mode = rng.pick(['match', 'under', 'over']);
     const target = mode === 'match' ? mc : mode === 'under' ? Math.max(0, mc - rng.int(2, 10)) : mc + rng.int(2, 10);
@@ -206,33 +217,36 @@ function genHistoryFor(part: SeedPart): HistoryEvent[] {
   const genesisDate = new Date(2026, 5, rng.int(1, 27), rng.int(8, 17), rng.int(0, 59));
   const events: { date: Date; t: string; f: string; o: string; n: string; by: string }[] = [];
 
-  events.push({ date: genesisDate, t: 'Part didaftarkan', f: 'Status', o: '—', n: 'Active', by: rng.pick(EDITORS) });
+  // Every part starts life as Candidate — Active/Inactive only exist once
+  // there is at least one MAD reading to compare against Min MAD.
+  events.push({ date: genesisDate, t: 'Part didaftarkan', f: 'Status', o: '—', n: 'Candidate', by: rng.pick(EDITORS) });
 
   const dayBetween = () => new Date(2026, rng.int(6, monthCap), rng.int(1, 26), rng.int(8, 17), rng.int(0, 59));
 
-  const pcChanged = rng.chance(0.5);
-  const mcChanged = rng.chance(0.55);
-  const minMadChanged = rng.chance(0.4);
-  const stChanged = part.st === 'Inactive' ? true : rng.chance(0.15);
+  // A part still in Candidate has no MAD history yet, so nothing else has
+  // happened to it — its only event is the registration above.
+  if (part.st !== 'Candidate') {
+    const pcChanged = rng.chance(0.5);
+    const mcChanged = rng.chance(0.55);
+    const minMadChanged = rng.chance(0.4);
 
-  if (pcChanged) {
-    const oldPc = Math.max(1, part.pc + (rng.chance(0.5) ? 1 : -1) * rng.int(2, 10));
-    events.push({ date: dayBetween(), t: 'Pcs/Case diubah', f: 'Pcs/Case', o: String(oldPc), n: String(part.pc), by: rng.pick(EDITORS) });
-  }
+    if (pcChanged) {
+      const oldPc = Math.max(1, part.pc + (rng.chance(0.5) ? 1 : -1) * rng.int(2, 10));
+      events.push({ date: dayBetween(), t: 'Pcs/Case diubah', f: 'Pcs/Case', o: String(oldPc), n: String(part.pc), by: rng.pick(EDITORS) });
+    }
 
-  if (mcChanged) {
-    const oldMc = Math.max(5, part.mc + (rng.chance(0.5) ? 1 : -1) * rng.int(2, 12));
-    events.push({ date: dayBetween(), t: 'Max Case/Day diubah', f: 'Max Case/Day', o: String(oldMc), n: String(part.mc), by: rng.pick(EDITORS) });
-  }
+    if (mcChanged) {
+      const oldMc = Math.max(5, part.mc + (rng.chance(0.5) ? 1 : -1) * rng.int(2, 12));
+      events.push({ date: dayBetween(), t: 'Max Case/Day diubah', f: 'Max Case/Day', o: String(oldMc), n: String(part.mc), by: rng.pick(EDITORS) });
+    }
 
-  if (minMadChanged) {
-    const oldMinMad = Math.max(50, part.minMad + (rng.chance(0.5) ? 1 : -1) * rng.int(50, 200));
-    events.push({ date: dayBetween(), t: 'Min MAD diubah', f: 'Min MAD', o: String(oldMinMad), n: String(part.minMad), by: rng.pick(EDITORS) });
-  }
+    if (minMadChanged) {
+      const oldMinMad = Math.max(50, part.minMad + (rng.chance(0.5) ? 1 : -1) * rng.int(50, 200));
+      events.push({ date: dayBetween(), t: 'Min MAD diubah', f: 'Min MAD', o: String(oldMinMad), n: String(part.minMad), by: rng.pick(EDITORS) });
+    }
 
-  if (stChanged) {
-    const o = part.st === 'Inactive' ? 'Active' : 'Inactive';
-    events.push({ date: dayBetween(), t: 'Status diubah', f: 'Status', o, n: part.st, by: rng.pick(EDITORS) });
+    // The move out of Candidate, driven by average MAD vs Min MAD.
+    events.push({ date: dayBetween(), t: 'Status diubah', f: 'Status', o: 'Candidate', n: part.st, by: rng.pick(EDITORS) });
   }
 
   events.sort((a, b) => a.date.getTime() - b.date.getTime());
@@ -256,7 +270,7 @@ export function blankPart(): Part {
   tomorrow.setDate(tomorrow.getDate() + 1);
   const effDate = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
   return {
-    p: '', n: '', pc: '', mc: '', st: 'Active', cat: 'Crossdock', mad: [], minMad: '',
+    p: '', n: '', pc: '', mc: '', st: 'Candidate', cat: 'Crossdock', mad: [], minMad: '',
     per: CUR_PER, synced: false, by: 'D. Anggraini', dt: 'sekarang', dests: [], effDate,
   };
 }

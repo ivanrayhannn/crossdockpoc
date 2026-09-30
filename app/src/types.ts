@@ -1,4 +1,7 @@
-export type PartStatus = 'Active' | 'Inactive';
+/** Candidate = just registered, no MAD history yet. Active/Inactive are
+ * derived from average MAD vs Min MAD once history exists, though the
+ * Setting Part form still exposes Status as an editable field. */
+export type PartStatus = 'Candidate' | 'Active' | 'Inactive';
 export type PartCategory = 'Crossdock' | 'Non-Crossdock';
 
 export interface DestAllocation {
@@ -42,7 +45,7 @@ export interface PartQuery {
   part: string;
   name: string;
   dest: string;
-  st: 'all' | 'active' | 'inactive';
+  st: 'all' | 'active' | 'inactive' | 'candidate';
   sync: 'all' | 'notsync' | 'sync';
   /** Calculation period filter for "Mapping per Destinasi", e.g. "Sep 2026", or 'all'. */
   per: string;

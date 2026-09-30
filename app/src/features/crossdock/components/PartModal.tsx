@@ -1,6 +1,12 @@
 import { MASTER_PARTS } from '../../../data/seed';
 import { fmt, num } from '../../../lib/format';
+import type { PartStatus } from '../../../types';
 import type { CrossdockState } from '../useCrossdockState';
+
+function todayStr(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
 
 type StepStyle = { bg: string; fg: string; bd: string; icon: string };
 
@@ -50,6 +56,10 @@ export function PartModal({ state }: { state: CrossdockState }) {
 
   const saveDisabled = !f.p || !pc || !mc;
   const saveTitle = !f.p ? 'Part No wajib diisi' : !pc ? 'Isi Pcs/Case dulu (langkah 2)' : !mc ? 'Isi Max Case/Day (langkah 2)' : 'Simpan data part';
+
+  // Effective Start Date only moves while the part is still a Candidate —
+  // once it's Active/Inactive that date has already taken effect.
+  const effDateLocked = inputRO || f.st !== 'Candidate';
 
   const partTitle = editId ? (ro ? 'Data part' : 'Edit data part') : 'Add Part Candidate Crossdock';
 
@@ -120,9 +130,11 @@ export function PartModal({ state }: { state: CrossdockState }) {
                     className="input"
                     type="date"
                     value={f.effDate || ''}
+                    min={todayStr()}
                     onChange={(e) => patch((x) => { x.effDate = e.target.value; })}
-                    disabled={inputRO}
-                    style={{ background: inputBg }}
+                    disabled={effDateLocked}
+                    title={effDateLocked && !inputRO ? 'Hanya bisa diubah selama status masih Candidate' : undefined}
+                    style={{ background: effDateLocked ? 'var(--color-neutral-200)' : inputBg }}
                   />
                 </div>
                 <div className="field">
@@ -135,6 +147,20 @@ export function PartModal({ state }: { state: CrossdockState }) {
                     placeholder="0"
                     style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums', background: inputBg }}
                   />
+                </div>
+                <div className="field">
+                  <label>Status</label>
+                  <select
+                    className="input"
+                    value={f.st}
+                    onChange={(e) => patch((x) => { x.st = e.target.value as PartStatus; })}
+                    disabled={inputRO}
+                    style={{ background: inputBg, appearance: 'none' }}
+                  >
+                    <option value="Candidate">Candidate</option>
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
                 </div>
               </div>
             </div>

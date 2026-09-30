@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { fmt, madAvg, num, parseDt } from '../../../lib/format';
-import type { Part, PartQuery } from '../../../types';
+import type { Part, PartQuery, PartStatus } from '../../../types';
+
+const STATUS_STYLE: Record<PartStatus, { bg: string; fg: string }> = {
+  Active: { bg: 'var(--color-accent-2-200)', fg: 'var(--color-accent-2-800)' },
+  Candidate: { bg: 'var(--color-accent-200)', fg: 'var(--color-accent-800)' },
+  Inactive: { bg: 'var(--color-neutral-200)', fg: 'var(--color-neutral-700)' },
+};
 
 interface PartListTabProps {
   parts: Part[];
@@ -50,7 +56,7 @@ export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHist
       (p) =>
         (!q.part || p.p.toLowerCase().includes(q.part.toLowerCase())) &&
         (!q.name || p.n.toLowerCase().includes(q.name.toLowerCase())) &&
-        (q.st === 'all' || p.st === (q.st === 'active' ? 'Active' : 'Inactive')),
+        (q.st === 'all' || p.st.toLowerCase() === q.st),
     );
     if (q.sort === 'default' || q.sort === 'pn_asc') return [...filtered].sort((a, b) => a.p.localeCompare(b.p));
     if (q.sort === 'dt_desc') return [...filtered].sort((a, b) => parseDt(b.dt) - parseDt(a.dt));
@@ -83,15 +89,16 @@ export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHist
     const m = num(p.mc);
     const incomplete = !p.dests.length || a !== m;
     const avg = madAvg(p.mad);
-    const below = avg < num(p.minMad);
+    // Candidate parts have no MAD history yet, so the Min MAD warning doesn't apply.
+    const below = p.st !== 'Candidate' && avg < num(p.minMad);
     return {
       p,
       minMad: fmt(num(p.minMad)),
       minMadFg: below ? 'var(--color-warn-fg)' : 'var(--color-neutral-800)',
       minMadW: below ? 700 : 400,
       mark: incomplete ? 'var(--color-accent)' : 'transparent',
-      stBg: p.st === 'Active' ? 'var(--color-accent-2-200)' : 'var(--color-neutral-200)',
-      stFg: p.st === 'Active' ? 'var(--color-accent-2-800)' : 'var(--color-neutral-700)',
+      stBg: STATUS_STYLE[p.st].bg,
+      stFg: STATUS_STYLE[p.st].fg,
     };
   });
 
@@ -137,12 +144,16 @@ export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHist
               <label>Part Name</label>
               <input className="input" value={q.name} onChange={(e) => setQ((prev) => ({ ...prev, name: e.target.value }))} placeholder="Nama part" />
             </div>
-            <div className="field" style={{ width: 250 }}>
+            <div className="field" style={{ width: 320 }}>
               <label>Status</label>
               <div className="seg" style={{ width: '100%' }}>
                 <label className="seg-opt" style={{ flex: 1, justifyContent: 'center' }}>
                   <input type="radio" name="qst" checked={q.st === 'all'} onChange={() => setQ((prev) => ({ ...prev, st: 'all' }))} />
                   All
+                </label>
+                <label className="seg-opt" style={{ flex: 1, justifyContent: 'center' }}>
+                  <input type="radio" name="qst" checked={q.st === 'candidate'} onChange={() => setQ((prev) => ({ ...prev, st: 'candidate' }))} />
+                  Candidate
                 </label>
                 <label className="seg-opt" style={{ flex: 1, justifyContent: 'center' }}>
                   <input type="radio" name="qst" checked={q.st === 'active'} onChange={() => setQ((prev) => ({ ...prev, st: 'active' }))} />
