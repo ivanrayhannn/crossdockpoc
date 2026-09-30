@@ -2,17 +2,6 @@ import { useMemo } from 'react';
 import { caseNo, DEST, niceD, plural } from '../simulation';
 import type { CaseSimulationState } from '../useCaseSimulation';
 
-const th: React.CSSProperties = {
-  textAlign: 'left',
-  padding: '8px 12px',
-  fontSize: 10.5,
-  letterSpacing: '.05em',
-  textTransform: 'uppercase',
-  color: 'var(--color-neutral-700)',
-  borderBottom: '1px solid #e3e6ea',
-};
-const td: React.CSSProperties = { padding: '0 12px', height: 40, borderBottom: '1px solid #eef1f5' };
-
 interface DraftCase {
   id: string;
   po: string;
@@ -47,112 +36,126 @@ export function AsnDraftTab({ state }: { state: CaseSimulationState }) {
   const deliveryDate = submittedAsn?.deliveryDate ?? asnDeliveryDate;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, paddingBottom: 28 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <button className="btn btn-secondary" onClick={backToDeliveryPlan} style={{ fontSize: 12.5, padding: '5px 12px' }}>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 6 9 12 15 18" /></svg>
+    <div className="pb-4">
+      <div className="d-flex align-items-center flex-wrap mb-2">
+        <button type="button" className="btn btn-outline-secondary btn-sm mr-3" onClick={backToDeliveryPlan}>
+          <svg className="mr-1" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 6 9 12 15 18" />
+          </svg>
           Back to PO Released · Detail
         </button>
-        <h1 style={{ fontSize: 22 }}>{readOnly ? asnNo : 'ASN Draft'}</h1>
-        <span style={{ fontSize: 11.5, fontWeight: 700, padding: '2px 10px', borderRadius: 999, background: readOnly ? 'var(--color-accent-2-200)' : 'var(--color-neutral-200)', color: readOnly ? 'var(--color-accent-2-800)' : 'var(--color-neutral-700)' }}>
-          {readOnly ? 'Submitted' : 'Draft'}
-        </span>
+        <h1 className="h3 mb-0 mr-2">{readOnly ? asnNo : 'ASN Draft'}</h1>
+        <span className={`badge ${readOnly ? 'badge-success' : 'badge-secondary'}`}>{readOnly ? 'Submitted' : 'Draft'}</span>
       </div>
 
       {readOnly && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 16px', borderRadius: 6, background: 'var(--color-accent-2-200)', border: '1px solid var(--color-accent-2-300)', color: 'var(--color-accent-2-800)', fontSize: 13 }}>
+        <div className="alert alert-success" role="alert">
           <strong>{asnNo} submitted.</strong> {plural(draft.length, 'case')} are locked. Delivery {niceD(deliveryDate)}.
         </div>
       )}
 
-      <div style={{ background: '#fff', border: '1px solid #e3e6ea', borderRadius: 6, display: 'grid', gridTemplateColumns: 'repeat(3,minmax(0,1fr))' }}>
+      <div className="row">
         <SummaryCell label="ASN No" value={asnNo} note={readOnly ? 'submitted' : 'auto · assigned on submit'} mono />
         <SummaryCell label="Supplier · Plant" value="50221 · P01" note="PT Dummy Supplier Indonesia" mono />
         <SummaryCell label="Cases · Qty" value={`${plural(draft.length, 'case')} · ${totalQty} pcs`} note="" />
       </div>
 
-      <div style={{ background: '#fff', border: '1px solid #e3e6ea', borderRadius: 6, overflow: 'hidden' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 16px', borderBottom: '1px solid #e3e6ea', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 14, fontWeight: 700 }}>Case list in this ASN</span>
-          <span style={{ fontSize: 12, color: 'var(--color-neutral-600)' }}>Grouped by Part No</span>
-          <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, fontWeight: 600, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap' }}>
-              Delivery Date <span style={{ color: 'var(--color-accent-700)', marginLeft: -5 }}>*</span>
-              <input className="input" type="date" value={deliveryDate} onChange={(event) => setAsnDeliveryDate(event.target.value)} disabled={readOnly} style={{ width: 150, padding: '5px 9px' }} />
+      <div className="card mb-2">
+        <div className="card-header d-flex align-items-center flex-wrap">
+          <h6 className="mb-0 mr-2">Case list in this ASN</h6>
+          <small className="text-muted">Grouped by Part No</small>
+          <div className="ml-auto d-flex align-items-center flex-wrap">
+            <label htmlFor="asn-delivery-date" className="small font-weight-bold mb-0 mr-2 text-nowrap">
+              Delivery Date <span className="text-danger">*</span>
             </label>
-            <span style={{ width: 1, height: 22, background: '#e3e6ea' }} />
+            <input
+              id="asn-delivery-date"
+              className="form-control form-control-sm mr-3"
+              type="date"
+              value={deliveryDate}
+              onChange={(event) => setAsnDeliveryDate(event.target.value)}
+              disabled={readOnly}
+              style={{ width: 150 }}
+            />
             {!readOnly && (
-              <button className="btn btn-secondary" onClick={backToDeliveryPlan}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+              <button type="button" className="btn btn-outline-secondary btn-sm mr-2" onClick={backToDeliveryPlan}>
+                <svg className="mr-1" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
                 Add cases
               </button>
             )}
-            <button className="btn btn-secondary" disabled={!draft.length}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14" /></svg>
+            <button type="button" className="btn btn-outline-secondary btn-sm" disabled={!draft.length}>
+              <svg className="mr-1" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 3v12M7 10l5 5 5-5M5 21h14" />
+              </svg>
               Download All Case Labels
             </button>
-          </span>
+          </div>
         </div>
 
         {draft.length ? (
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-            <thead>
-              <tr style={{ background: 'var(--color-surface)' }}>
-                <th style={{ ...th, width: 56, paddingLeft: 16 }}>Seq</th>
-                <th style={{ ...th, width: 120 }}>Case No</th>
-                <th style={{ ...th, width: 80 }}>PO No</th>
-                <th style={{ ...th, width: 100 }}>Part No</th>
-                <th style={{ ...th, width: 160 }}>Destination</th>
-                <th style={{ ...th, textAlign: 'right' }}>Qty</th>
-                <th style={{ ...th, width: 80, textAlign: 'right', paddingRight: 16 }}>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr style={{ background: 'var(--color-surface)' }}>
-                <td colSpan={7} style={{ padding: '7px 16px', borderBottom: '1px solid #e3e6ea' }}>
-                  <strong>{part}</strong>
-                  <span style={{ marginLeft: 10, fontSize: 12, color: 'var(--color-neutral-600)' }}>
-                    {plural(draft.length, 'case')} · {totalQty} pcs
-                  </span>
-                </td>
-              </tr>
-              {draft.map((item, index) => (
-                <tr key={item.id}>
-                  <td style={{ ...td, paddingLeft: 16, color: 'var(--color-neutral-600)', fontVariantNumeric: 'tabular-nums' }}>{String(index + 1).padStart(2, '0')}</td>
-                  <td style={{ ...td, fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{item.id}</td>
-                  <td style={{ ...td, fontFamily: 'var(--font-mono)', color: 'var(--color-accent-800)', fontWeight: 600 }}>{item.po}</td>
-                  <td style={{ ...td, fontWeight: 600 }}>{item.part}</td>
-                  <td style={td}>{item.destination}</td>
-                  <td style={{ ...td, textAlign: 'right', fontWeight: 700 }}>{item.qty}</td>
-                  <td style={{ ...td, textAlign: 'right', paddingRight: 16 }}>
-                    {!readOnly && (
-                      <button
-                        type="button"
-                        onClick={() => removeFromAsnDraft(item.id)}
-                        title="Remove from ASN"
-                        className="remove-btn-hover"
-                        style={{ cursor: 'pointer', border: 0, background: 'transparent', width: 30, height: 30, borderRadius: 4, display: 'grid', placeItems: 'center', color: 'var(--color-danger)' }}
-                      >
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6" />
-                        </svg>
-                      </button>
-                    )}
+          <div className="table-responsive">
+            <table className="table table-sm table-hover text-nowrap mb-0">
+              <thead className="thead-light">
+                <tr>
+                  <th style={{ width: 64 }}>Seq</th>
+                  <th style={{ width: 120 }}>Case No</th>
+                  <th style={{ width: 90 }}>PO No</th>
+                  <th style={{ width: 110 }}>Part No</th>
+                  <th style={{ width: 170 }}>Destination</th>
+                  <th className="text-right">Qty</th>
+                  <th className="text-right" style={{ width: 80 }}>
+                    Action
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="table-light">
+                  <td colSpan={7}>
+                    <strong>{part}</strong>
+                    <small className="text-muted ml-2">
+                      {plural(draft.length, 'case')} · {totalQty} pcs
+                    </small>
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+                {draft.map((item, index) => (
+                  <tr key={item.id}>
+                    <td className="align-middle text-muted">{String(index + 1).padStart(2, '0')}</td>
+                    <td className="align-middle text-monospace font-weight-bold">{item.id}</td>
+                    <td className="align-middle text-monospace font-weight-bold text-primary">{item.po}</td>
+                    <td className="align-middle font-weight-bold">{item.part}</td>
+                    <td className="align-middle">{item.destination}</td>
+                    <td className="align-middle text-right font-weight-bold">{item.qty}</td>
+                    <td className="align-middle text-right">
+                      {!readOnly && (
+                        <button type="button" className="btn btn-sm btn-outline-danger border-0" onClick={() => removeFromAsnDraft(item.id)} title="Remove from ASN" aria-label={`Remove ${item.id} from ASN`}>
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6" />
+                          </svg>
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         ) : (
-          <div style={{ padding: '36px 20px', textAlign: 'center', fontSize: 13, color: 'var(--color-neutral-700)' }}>No cases in this ASN. Go back and select at least one case.</div>
+          <div className="card-body text-center text-muted py-5">No cases in this ASN. Go back and select at least one case.</div>
         )}
       </div>
 
       {!readOnly && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'flex-end' }}>
-          <span style={{ marginRight: 'auto', fontSize: 12, color: 'var(--color-neutral-600)' }}>1 ASN can contain several POs; each case holds one part.</span>
-          <button className="btn btn-secondary" onClick={backToDeliveryPlan}>Cancel</button>
-          <button className="btn btn-primary" onClick={submitAsn} disabled={!draft.length || !deliveryDate}>Submit ASN</button>
+        <div className="d-flex align-items-center justify-content-end">
+          <small className="text-muted mr-auto">1 ASN can contain several POs; each case holds one part.</small>
+          <button type="button" className="btn btn-outline-secondary mr-2" onClick={backToDeliveryPlan}>
+            Cancel
+          </button>
+          <button type="button" className="btn btn-primary" onClick={submitAsn} disabled={!draft.length || !deliveryDate}>
+            Submit ASN
+          </button>
         </div>
       )}
     </div>
@@ -161,10 +164,14 @@ export function AsnDraftTab({ state }: { state: CaseSimulationState }) {
 
 function SummaryCell({ label, value, note, mono = false }: { label: string; value: string; note: string; mono?: boolean }) {
   return (
-    <div style={{ padding: '12px 18px', borderRight: '1px solid #e3e6ea', display: 'flex', flexDirection: 'column', gap: 3 }}>
-      <div style={{ fontSize: 10, letterSpacing: '.05em', textTransform: 'uppercase', color: 'var(--color-neutral-700)', fontWeight: 600 }}>{label}</div>
-      <div style={{ fontFamily: mono ? 'var(--font-mono)' : undefined, fontWeight: 700, fontSize: 14 }}>{value}</div>
-      <div style={{ fontSize: 11.5, color: 'var(--color-neutral-600)' }}>{note}</div>
+    <div className="col-md-4 mb-2">
+      <div className="card h-100">
+        <div className="card-body py-2">
+          <div className="small text-muted text-uppercase font-weight-bold">{label}</div>
+          <div className={`font-weight-bold${mono ? ' text-monospace' : ''}`}>{value}</div>
+          <small className="text-muted">{note}</small>
+        </div>
+      </div>
     </div>
   );
 }

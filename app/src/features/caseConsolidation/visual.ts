@@ -38,8 +38,8 @@ export function buildOrderRows(model: Model, placed: number, done: boolean): Ord
     const active = !done && next?.o.id === o.id;
     const color = colorOf(o.ci);
     const dots: Dot[] = idx
-      .map((g) => (g < placed ? { bg: 'transparent', bd: 'var(--color-neutral-300)' } : { bg: color, bd: color }))
-      .concat(Array.from({ length: pn }, () => ({ bg: 'oklch(0.97 0.03 80)', bd: 'oklch(0.72 0.12 70)' })));
+      .map((g) => (g < placed ? { bg: 'transparent', bd: '#dee2e6' } : { bg: color, bd: color }))
+      .concat(Array.from({ length: pn }, () => ({ bg: '#fff3cd', bd: 'var(--warning)' })));
     let note = idx.length ? `${relSet.join('+')} → ${posSet.join(' + ')}` : '';
     if (!done && moved && moved < idx.length) note = `${moved}/${idx.length} packed`;
     if (pn) note = `${note ? `${note} · ` : ''}${pn} remaining`;
@@ -54,10 +54,13 @@ export interface CaseHole {
   scale: number;
 }
 
+/** Bootstrap 4 contextual variant name, used as `badge-{v}`, `text-{v}` or `var(--{v})`. */
+export type Variant = 'primary' | 'secondary' | 'success' | 'warning';
+
 export interface ReleaseCase {
   caseNo: string;
   status: string;
-  statusFg: string;
+  statusClass: string;
   holes: CaseHole[];
 }
 
@@ -74,8 +77,7 @@ export interface ReleaseRow {
   date: string;
   calc: string;
   splitText: string;
-  splitBg: string;
-  splitFg: string;
+  splitVariant: Variant;
   pos: ReleasePo[];
 }
 
@@ -86,8 +88,7 @@ export function buildReleaseRows(model: Model, placed: number, done: boolean, pc
     date: niceD(r.t),
     calc: `available ${plural(r.avail, 'case')}${r.backlogIn ? ` (backlog ${r.backlogIn} + new ${r.freshC})` : ''} · Max Case/Day ${r.cap}${r.take ? '' : ' · no PO'}`,
     splitText: r.left ? `Backlog ${plural(r.left, 'case')}` : 'No backlog',
-    splitBg: r.left ? 'oklch(0.95 0.05 80)' : 'var(--color-accent-2-200)',
-    splitFg: r.left ? 'oklch(0.42 0.1 65)' : 'var(--color-accent-2-800)',
+    splitVariant: r.left ? 'warning' : 'success',
     pos: r.pos.map((p) => {
       const ords = [...new Set(p.cases.flatMap((c) => seq.slice(c.start, c.start + pcs).map((x) => x.o.no)))];
       return {
@@ -100,7 +101,7 @@ export function buildReleaseRows(model: Model, placed: number, done: boolean, pc
           return {
             caseNo: caseNo(c.n),
             status: `${DEST[c.dest].name} · ${shortD(c.od)}`,
-            statusFg: addDay(c.od) < p.date ? 'oklch(0.45 0.11 65)' : filled === pcs ? 'var(--color-accent-2-800)' : 'var(--color-neutral-600)',
+            statusClass: addDay(c.od) < p.date ? 'text-warning-dark' : filled === pcs ? 'text-success' : 'text-muted',
             holes: Array.from({ length: pcs }, (_, j) => {
               const g = c.start + j;
               const on = g < placed;
@@ -141,41 +142,42 @@ export interface KpiTile {
   k: string;
   v: string;
   s: string;
-  c: string;
+  variant: Variant;
 }
 
 export function buildKpis(model: Model, pcs: number): KpiTile[] {
   const { sorted, rel, caseCount, poCount, pendingQty } = model;
   const total = sorted.reduce((a, o) => a + o.qty, 0);
   return [
-    { k: 'Customer order qty', v: `${total} pcs`, s: `${plural(sorted.length, 'order')} · multiple of ${pcs} per destination`, c: 'var(--color-neutral-400)' },
-    { k: 'In supplier PO', v: `${rel} pcs`, s: `${plural(caseCount, 'case')} · FIFO`, c: 'var(--color-accent-2-300)' },
-    { k: 'Supplier PO', v: `${poCount} PO`, s: '1 PO per day · D+1', c: 'var(--color-accent)' },
+    { k: 'Customer order qty', v: `${total} pcs`, s: `${plural(sorted.length, 'order')} · multiple of ${pcs} per destination`, variant: 'secondary' },
+    { k: 'In supplier PO', v: `${rel} pcs`, s: `${plural(caseCount, 'case')} · FIFO`, variant: 'success' },
+    { k: 'Supplier PO', v: `${poCount} PO`, s: '1 PO per day · D+1', variant: 'primary' },
     {
       k: 'Remaining',
       v: `${pendingQty} pcs`,
       s: pendingQty ? `${plural(Math.ceil(pendingQty / pcs), 'case')} · next PO or manual PO` : 'all orders in a PO',
-      c: 'oklch(0.8 0.1 75)',
+      variant: 'warning',
     },
   ];
 }
 
 export interface AllocRow {
-  topBd: string;
+  /** First row of a PO — drawn with a heavier top rule. */
+  groupStart: boolean;
   rel: string;
   po: string;
   poDate: string;
   poQty: string;
   caseNo: string;
-  caseFg: string;
+  caseClass: string;
   part: string;
   no: string;
   date: string;
   qty: number;
   color: string;
-  bg: string;
+  rowClass: string;
   note: string;
-  noteFg: string;
+  noteClass: string;
 }
 
 export function buildAllocationRows(model: Model, placed: number, done: boolean, part: string, pcs: number): AllocRow[] {
@@ -197,21 +199,21 @@ export function buildAllocationRows(model: Model, placed: number, done: boolean,
           const poFirst = i === 0 && ci === 0;
           const relFirst = poFirst && pi === 0;
           rows.push({
-            topBd: poFirst ? '2px solid var(--color-neutral-400)' : '0',
+            groupStart: poFirst,
             rel: relFirst ? r.no : '',
             po: poFirst ? p.no : '',
             poDate: poFirst ? niceD(p.date) : '',
             poQty: poFirst ? `${p.cases.length * pcs} pcs` : '',
             caseNo: i === 0 ? caseNo(c.n) : '',
-            caseFg: 'var(--color-accent-800)',
+            caseClass: 'text-primary',
             part,
             no: x.o.no,
             date: niceD(x.o.date),
             qty: x.n,
             color: colorOf(x.o.ci),
-            bg: 'var(--color-neutral-100)',
+            rowClass: '',
             note: x.n !== x.o.qty ? `${x.n} of ${x.o.qty} pcs${posOf.length > 1 ? ` · order spans ${posOf.join(' + ')}` : ''}` : '',
-            noteFg: posOf.length > 1 ? 'var(--color-accent-700)' : 'var(--color-neutral-600)',
+            noteClass: posOf.length > 1 ? 'text-primary' : 'text-muted',
           });
         });
       });
@@ -223,21 +225,21 @@ export function buildAllocationRows(model: Model, placed: number, done: boolean,
     [...byId.values()].forEach((o, i) => {
       const pn = pending.filter((x) => x.id === o.id).length;
       rows.push({
-        topBd: i === 0 ? '2px solid var(--color-neutral-400)' : '0',
+        groupStart: i === 0,
         rel: i === 0 ? '—' : '',
         po: i === 0 ? 'Not released' : '',
         poDate: '',
         poQty: '',
         caseNo: '',
-        caseFg: 'oklch(0.45 0.11 65)',
+        caseClass: 'text-warning-dark',
         part,
         no: o.no,
         date: niceD(o.date),
         qty: pn,
         color: colorOf(o.ci),
-        bg: 'oklch(0.985 0.015 80)',
+        rowClass: 'table-warning',
         note: `Remaining ${pn} of ${o.qty} pcs · waits for the next PO or a manual PO`,
-        noteFg: 'oklch(0.45 0.11 65)',
+        noteClass: 'text-warning-dark',
       });
     });
   }

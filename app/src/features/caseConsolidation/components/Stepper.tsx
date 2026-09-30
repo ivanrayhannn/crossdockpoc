@@ -1,34 +1,30 @@
-/** The "− value +" pill used for Pcs/Case, Max Case/Day, and per-order quantity. */
+/** The "− value +" input group used for Pcs/Case, Max Case/Day, and per-order quantity. */
 export function Stepper({
   value,
   onDec,
   onInc,
+  label,
   size = 'md',
 }: {
   value: number;
   onDec: () => void;
   onInc: () => void;
+  label: string;
   size?: 'md' | 'sm';
 }) {
-  const btnSize = size === 'md' ? 32 : 26;
-  const valWidth = size === 'md' ? 44 : 30;
-  const fontSize = size === 'md' ? 16 : 14;
-  const valFontSize = size === 'md' ? 14 : 12.5;
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', border: '1px solid var(--color-neutral-400)', borderRadius: 4, overflow: 'hidden', background: 'var(--color-neutral-100)' }}>
-      <button
-        onClick={onDec}
-        style={{ cursor: 'pointer', border: 0, background: 'var(--color-neutral-200)', width: btnSize, height: btnSize, fontSize, color: 'var(--color-neutral-800)' }}
-      >
-        −
-      </button>
-      <span style={{ width: valWidth, textAlign: 'center', fontWeight: 700, fontVariantNumeric: 'tabular-nums', fontSize: valFontSize }}>{value}</span>
-      <button
-        onClick={onInc}
-        style={{ cursor: 'pointer', border: 0, background: 'var(--color-neutral-200)', width: btnSize, height: btnSize, fontSize, color: 'var(--color-neutral-800)' }}
-      >
-        +
-      </button>
-    </span>
+    <div className={`input-group${size === 'sm' ? ' input-group-sm' : ''}`} style={{ width: size === 'sm' ? 92 : 112 }}>
+      <div className="input-group-prepend">
+        <button type="button" className="btn btn-outline-secondary" onClick={onDec} aria-label={`Decrease ${label}`}>
+          −
+        </button>
+      </div>
+      <input type="text" className="form-control bg-white text-center font-weight-bold px-0" value={value} readOnly aria-label={label} />
+      <div className="input-group-append">
+        <button type="button" className="btn btn-outline-secondary" onClick={onInc} aria-label={`Increase ${label}`}>
+          +
+        </button>
+      </div>
+    </div>
   );
 }

@@ -3,20 +3,6 @@ import { buildDeliveryPlan } from '../deliveryPlan';
 import type { CaseSimulationState } from '../useCaseSimulation';
 import { CaseHoles } from './CaseHoles';
 
-const th: React.CSSProperties = {
-  textAlign: 'left',
-  padding: '8px 12px',
-  fontSize: 10.5,
-  letterSpacing: '.05em',
-  textTransform: 'uppercase',
-  color: 'var(--color-neutral-700)',
-  borderBottom: '1px solid #e3e6ea',
-  whiteSpace: 'nowrap',
-};
-const td: React.CSSProperties = { padding: '0 12px', height: 38, borderBottom: '1px solid #eef1f5' };
-const detailTh: React.CSSProperties = { ...th, padding: '7px 10px', fontSize: 9.5 };
-const detailTd: React.CSSProperties = { ...td, padding: '0 10px', height: 34, fontSize: 12 };
-
 export function DeliveryPlanTab({ state }: { state: CaseSimulationState }) {
   const {
     inputs,
@@ -54,258 +40,307 @@ export function DeliveryPlanTab({ state }: { state: CaseSimulationState }) {
 
   if (dpPage === 'detail') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', background: '#fff', border: '1px solid #e3e6ea', borderRadius: 6 }}>
-          <button className="btn btn-secondary" onClick={dpBack} style={{ fontSize: 12.5, padding: '5px 12px' }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="15 6 9 12 15 18" />
-            </svg>
-            Back to Delivery Plan
-          </button>
-          <span style={{ fontSize: 13, color: 'var(--color-neutral-600)' }}>
-            Delivery Plan <span style={{ color: 'var(--color-neutral-400)' }}>/</span>{' '}
-            <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--color-accent-800)' }}>{dp.selLabel}</span>
-          </span>
-          <span style={{ marginLeft: 'auto', fontSize: 12.5, color: 'var(--color-neutral-700)' }}>
-            {dp.selDate} · {dp.meta}
-          </span>
-        </div>
-
-        <div style={{ background: '#fff', border: '1px solid #e3e6ea', borderRadius: 6, overflow: 'hidden' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 16px', borderBottom: '1px solid #e3e6ea' }}>
-            <span style={{ fontSize: 14, fontWeight: 700 }}>PO Released · Detail</span>
-            <span style={{ fontSize: 12, color: 'var(--color-neutral-600)' }}>Cases in this PO</span>
-            {canSeeOrderDetail && <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--color-neutral-600)' }}>Click a case to filter Detail in Detail</span>}
-          </div>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-            <thead>
-              <tr style={{ background: 'var(--color-surface)' }}>
-                <th
-                  onClick={() => toggleAsnCases(selectableIds, !allSelected)}
-                  style={{ width: 40, paddingLeft: 16, borderBottom: '1px solid #e3e6ea', cursor: selectableIds.length ? 'pointer' : 'default' }}
-                >
-                  <input type="checkbox" checked={allSelected} disabled={!selectableIds.length} readOnly style={{ accentColor: 'var(--color-accent)', width: 16, height: 16, margin: 0, pointerEvents: 'none' }} />
-                </th>
-                <th style={{ width: 44, borderBottom: '1px solid #e3e6ea' }} />
-                <th style={{ ...th, width: 150 }}>Delivery Plan (PO)</th>
-                <th style={{ ...th, width: 100 }}>Part No</th>
-                <th style={{ ...th, width: 80, textAlign: 'right' }}>Qty</th>
-                <th style={{ ...th, width: 90 }}>PO No</th>
-                <th style={th}>Case No</th>
-                <th style={{ ...th, width: 200, textAlign: 'right' }}>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {dp.caseRows.map((r) => (
-                <tr
-                  key={r.v}
-                  onClick={() => canSeeOrderDetail && !r.waiting && dpToggleVariable(r.v)}
-                  className={!canSeeOrderDetail || r.waiting ? undefined : 'row-hover'}
-                  style={{ cursor: canSeeOrderDetail && !r.waiting ? 'pointer' : 'default', background: r.selected ? 'var(--color-accent-100)' : '#fff' }}
-                >
-                  <td style={{ ...td, paddingLeft: 14, paddingRight: 0, borderLeft: `3px solid ${asnSelection[r.caseNo] ? 'var(--color-accent)' : 'transparent'}` }}>
-                    <input
-                      type="checkbox"
-                      checked={!!asnSelection[r.caseNo] || !!asnByCase[r.caseNo]}
-                      disabled={r.waiting || !!asnByCase[r.caseNo]}
-                      onClick={(event) => event.stopPropagation()}
-                      onChange={() => toggleAsnCase(r.caseNo)}
-                      style={{ accentColor: 'var(--color-accent)', width: 16, height: 16, margin: 0 }}
-                    />
-                  </td>
-                  <td style={{ ...td, paddingLeft: 14 }}>
-                    <span style={{ display: 'inline-grid', placeItems: 'center', width: 22, height: 22, borderRadius: 999, background: 'var(--color-accent-200)', color: 'var(--color-accent-800)', fontSize: 11.5, fontWeight: 700 }}>
-                      {r.v}
-                    </span>
-                  </td>
-                  <td style={{ ...td, fontVariantNumeric: 'tabular-nums' }}>{r.date}</td>
-                  <td style={{ ...td, fontWeight: 600 }}>{r.part}</td>
-                  <td style={{ ...td, textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: 700 }}>{r.qty}</td>
-                  <td style={{ ...td, fontFamily: 'var(--font-mono)' }}>{r.po}</td>
-                  <td style={{ ...td, height: 44 }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, width: 74 }}>{r.caseNo}</span>
-                      {canSeeOrderDetail && <CaseHoles holes={r.holes} size={20} fontSize={7.5} gap={4} pad="4px 8px" wrap={false} />}
-                    </span>
-                  </td>
-                  <td style={{ ...td, textAlign: 'right' }}>
-                    {r.waiting ? (
-                      <span style={{ fontSize: 12, fontWeight: 600, color: 'oklch(0.45 0.11 65)' }}>Waiting – case not full</span>
-                    ) : (
-                      <button className="btn btn-secondary" onClick={(e) => e.stopPropagation()} style={{ fontSize: 12, padding: '4px 11px' }}>
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M12 3v12M7 10l5 5 5-5M5 21h14" />
-                        </svg>
-                        Download Case Label
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <div style={{ position: 'sticky', bottom: 0, zIndex: 20, display: 'flex', alignItems: 'center', gap: 16, padding: '12px 16px', background: '#fff', border: '1px solid #e3e6ea', borderRadius: 6, boxShadow: '0 -6px 18px rgba(20,40,70,.08)' }}>
-          <span
-            style={{
-              display: 'inline-grid',
-              placeItems: 'center',
-              minWidth: 30,
-              height: 30,
-              padding: '0 8px',
-              borderRadius: 999,
-              background: selectedIds.length ? 'var(--color-accent)' : 'var(--color-neutral-200)',
-              color: selectedIds.length ? '#fff' : 'var(--color-neutral-600)',
-              fontWeight: 700,
-              fontVariantNumeric: 'tabular-nums',
-            }}
-          >
-            {selectedIds.length}
-          </span>
-          <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.3 }}>
-            <span style={{ fontSize: 13.5, fontWeight: 700 }}>{selectedIds.length ? `${selectedIds.length} case${selectedIds.length > 1 ? 's' : ''} selected · ${selectedIds.length * inputs.pcs} pcs` : 'No case selected'}</span>
-            <span style={{ fontSize: 12, color: 'var(--color-neutral-600)' }}>{selectedIds.length ? `${dp.selLabel} · ready to group into one ASN` : 'Tick cases or a whole PO. Cases already in an ASN are locked.'}</span>
-          </span>
-          <span style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-            <button className="btn btn-secondary" onClick={clearAsnSelection} disabled={!selectedIds.length}>Clear selection</button>
-            <button className="btn btn-primary" onClick={openAsnDraft} disabled={!selectedIds.length}>
-              Group into 1 ASN
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 6 15 12 9 18" /></svg>
+      <>
+        <div className="card mb-2">
+          <div className="card-body py-2 d-flex align-items-center flex-wrap">
+            <button type="button" className="btn btn-outline-secondary btn-sm mr-3" onClick={dpBack}>
+              <svg className="mr-1" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 6 9 12 15 18" />
+              </svg>
+              Back to Delivery Plan
             </button>
-          </span>
+            <nav aria-label="breadcrumb">
+              <ol className="breadcrumb bg-transparent p-0 mb-0">
+                <li className="breadcrumb-item">Delivery Plan</li>
+                <li className="breadcrumb-item active text-monospace font-weight-bold" aria-current="page">
+                  {dp.selLabel}
+                </li>
+              </ol>
+            </nav>
+            <small className="text-muted ml-auto">
+              {dp.selDate} · {dp.meta}
+            </small>
+          </div>
+        </div>
+
+        <div className="card mb-2">
+          <div className="card-header d-flex align-items-center flex-wrap">
+            <h6 className="mb-0 mr-2">PO Released · Detail</h6>
+            <small className="text-muted">Cases in this PO</small>
+            {canSeeOrderDetail && <small className="text-muted ml-auto">Click a case to filter Detail in Detail</small>}
+          </div>
+          <div className="table-responsive">
+            <table className="table table-sm table-hover text-nowrap mb-0">
+              <thead className="thead-light">
+                <tr>
+                  <th style={{ width: 48 }}>
+                    <div className="custom-control custom-checkbox">
+                      <input
+                        type="checkbox"
+                        className="custom-control-input"
+                        id="asn-select-all"
+                        checked={allSelected}
+                        disabled={!selectableIds.length}
+                        onChange={() => toggleAsnCases(selectableIds, !allSelected)}
+                      />
+                      <label className="custom-control-label" htmlFor="asn-select-all">
+                        <span className="sr-only">Select all cases</span>
+                      </label>
+                    </div>
+                  </th>
+                  <th style={{ width: 48 }} />
+                  <th style={{ width: 150 }}>Delivery Plan (PO)</th>
+                  <th style={{ width: 100 }}>Part No</th>
+                  <th className="text-right" style={{ width: 80 }}>
+                    Qty
+                  </th>
+                  <th style={{ width: 90 }}>PO No</th>
+                  <th>Case No</th>
+                  <th className="text-right" style={{ width: 200 }}>
+                    Action
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {dp.caseRows.map((r) => {
+                  const checkId = `asn-case-${r.caseNo}`;
+                  return (
+                    <tr
+                      key={r.v}
+                      onClick={() => canSeeOrderDetail && !r.waiting && dpToggleVariable(r.v)}
+                      className={r.selected ? 'table-primary' : undefined}
+                      style={{ cursor: canSeeOrderDetail && !r.waiting ? 'pointer' : 'default' }}
+                    >
+                      <td className="align-middle" style={{ boxShadow: asnSelection[r.caseNo] ? 'inset 3px 0 0 var(--primary)' : undefined }}>
+                        <div className="custom-control custom-checkbox" onClick={(e) => e.stopPropagation()}>
+                          <input
+                            type="checkbox"
+                            className="custom-control-input"
+                            id={checkId}
+                            checked={!!asnSelection[r.caseNo] || !!asnByCase[r.caseNo]}
+                            disabled={r.waiting || !!asnByCase[r.caseNo]}
+                            onChange={() => toggleAsnCase(r.caseNo)}
+                          />
+                          <label className="custom-control-label" htmlFor={checkId}>
+                            <span className="sr-only">Select {r.caseNo}</span>
+                          </label>
+                        </div>
+                      </td>
+                      <td className="align-middle">
+                        <span className="badge badge-pill badge-primary">{r.v}</span>
+                      </td>
+                      <td className="align-middle">{r.date}</td>
+                      <td className="align-middle font-weight-bold">{r.part}</td>
+                      <td className="align-middle text-right font-weight-bold">{r.qty}</td>
+                      <td className="align-middle text-monospace">{r.po}</td>
+                      <td className="align-middle">
+                        <span className="d-flex align-items-center">
+                          <span className="text-monospace font-weight-bold mr-3" style={{ width: 74 }}>
+                            {r.caseNo}
+                          </span>
+                          {canSeeOrderDetail && <CaseHoles holes={r.holes} size={20} fontSize={7.5} gap={4} pad="4px 8px" wrap={false} />}
+                        </span>
+                      </td>
+                      <td className="align-middle text-right">
+                        {r.waiting ? (
+                          <span className="badge badge-warning">Waiting – case not full</span>
+                        ) : (
+                          <button type="button" className="btn btn-outline-secondary btn-sm" onClick={(e) => e.stopPropagation()}>
+                            <svg className="mr-1" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M12 3v12M7 10l5 5 5-5M5 21h14" />
+                            </svg>
+                            Download Case Label
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="card shadow mb-2" style={{ position: 'sticky', bottom: 0, zIndex: 20 }}>
+          <div className="card-body py-2 d-flex align-items-center flex-wrap">
+            <span className={`badge badge-pill mr-3 ${selectedIds.length ? 'badge-primary' : 'badge-secondary'}`} style={{ fontSize: 13, minWidth: 28 }}>
+              {selectedIds.length}
+            </span>
+            <div className="mr-3">
+              <div className="font-weight-bold">
+                {selectedIds.length ? `${selectedIds.length} case${selectedIds.length > 1 ? 's' : ''} selected · ${selectedIds.length * inputs.pcs} pcs` : 'No case selected'}
+              </div>
+              <small className="text-muted">{selectedIds.length ? `${dp.selLabel} · ready to group into one ASN` : 'Tick cases or a whole PO. Cases already in an ASN are locked.'}</small>
+            </div>
+            <div className="ml-auto">
+              <button type="button" className="btn btn-outline-secondary btn-sm mr-2" onClick={clearAsnSelection} disabled={!selectedIds.length}>
+                Clear selection
+              </button>
+              <button type="button" className="btn btn-primary btn-sm" onClick={openAsnDraft} disabled={!selectedIds.length}>
+                Group into 1 ASN
+                <svg className="ml-1" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="9 6 15 12 9 18" />
+                </svg>
+              </button>
+            </div>
+          </div>
         </div>
 
         {canSeeOrderDetail && (
-          <div style={{ background: '#fff', border: '1px solid #e3e6ea', borderRadius: 6, overflow: 'hidden' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 16px', borderBottom: '1px solid #e3e6ea' }}>
-              <span style={{ fontSize: 14, fontWeight: 700 }}>Detail in Detail</span>
-              <span style={{ fontSize: 12, color: 'var(--color-neutral-600)' }}>Customer orders per case · {dp.orderMeta}</span>
+          <div className="card">
+            <div className="card-header d-flex align-items-center flex-wrap">
+              <h6 className="mb-0 mr-2">Detail in Detail</h6>
+              <small className="text-muted">Customer orders per case · {dp.orderMeta}</small>
               {dp.canClear && (
-                <button className="btn btn-secondary" onClick={dpClearVariable} style={{ marginLeft: 'auto', fontSize: 12, padding: '4px 11px' }}>
+                <button type="button" className="btn btn-outline-secondary btn-sm ml-auto" onClick={dpClearVariable}>
                   Show all cases
                 </button>
               )}
             </div>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-              <thead>
-                <tr style={{ background: 'var(--color-surface)' }}>
-                  <th style={{ ...detailTh, width: 125 }}>Delivery Plan (PO)</th>
-                  <th style={{ ...detailTh, width: 110 }}>Case No</th>
-                  <th style={{ ...detailTh, width: 85 }}>Part No</th>
-                  <th style={{ ...detailTh, width: 60, textAlign: 'right' }}>Qty</th>
-                  <th style={{ ...detailTh, width: 85, textAlign: 'right' }}>Customer Qty</th>
-                  <th style={{ ...detailTh, width: 125 }}>Customer Order</th>
-                  <th style={{ ...detailTh, width: 150 }}>Destination</th>
-                  <th style={{ ...detailTh, width: 100 }}>Customer Date</th>
-                  <th style={{ ...detailTh, width: 65 }}>Variable</th>
-                </tr>
-              </thead>
-              <tbody>
-                {dp.orderRows.map((o, i) => (
-                  <tr key={i}>
-                    <td style={{ ...detailTd, fontVariantNumeric: 'tabular-nums' }}>{o.date}</td>
-                    <td style={{ ...detailTd, fontFamily: 'var(--font-mono)', color: 'var(--color-neutral-700)' }}>{o.caseNo}</td>
-                    <td style={{ ...detailTd, fontWeight: 600 }}>{o.part}</td>
-                    <td style={{ ...detailTd, textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: 700 }}>{o.qty}</td>
-                    <td style={{ ...detailTd, textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--color-neutral-700)' }}>{o.total}</td>
-                    <td style={detailTd}>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}>
-                        <span style={{ width: 10, height: 10, borderRadius: 999, background: o.color }} />
-                        <span style={{ fontFamily: 'var(--font-mono)' }}>{o.no}</span>
-                      </span>
-                    </td>
-                    <td style={detailTd}>{o.destination}</td>
-                    <td style={{ ...detailTd, fontVariantNumeric: 'tabular-nums' }}>{o.od}</td>
-                    <td style={detailTd}>
-                      <span style={{ display: 'inline-grid', placeItems: 'center', width: 22, height: 22, borderRadius: 999, background: 'var(--color-accent-200)', color: 'var(--color-accent-800)', fontSize: 11.5, fontWeight: 700 }}>
-                        {o.v}
-                      </span>
-                    </td>
+            <div className="table-responsive">
+              <table className="table table-sm table-hover text-nowrap mb-0">
+                <thead className="thead-light">
+                  <tr>
+                    <th style={{ width: 125 }}>Delivery Plan (PO)</th>
+                    <th style={{ width: 110 }}>Case No</th>
+                    <th style={{ width: 85 }}>Part No</th>
+                    <th className="text-right" style={{ width: 60 }}>
+                      Qty
+                    </th>
+                    <th className="text-right" style={{ width: 110 }}>
+                      Customer Qty
+                    </th>
+                    <th style={{ width: 125 }}>Customer Order</th>
+                    <th style={{ width: 150 }}>Destination</th>
+                    <th style={{ width: 110 }}>Customer Date</th>
+                    <th style={{ width: 80 }}>Variable</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {dp.orderRows.map((o, i) => (
+                    <tr key={i}>
+                      <td>{o.date}</td>
+                      <td className="text-monospace text-muted">{o.caseNo}</td>
+                      <td className="font-weight-bold">{o.part}</td>
+                      <td className="text-right font-weight-bold">{o.qty}</td>
+                      <td className="text-right text-muted">{o.total}</td>
+                      <td>
+                        <span className="d-inline-flex align-items-center">
+                          <span className="d-inline-block rounded-circle mr-2" style={{ width: 10, height: 10, background: o.color }} />
+                          <span className="text-monospace">{o.no}</span>
+                        </span>
+                      </td>
+                      <td>{o.destination}</td>
+                      <td>{o.od}</td>
+                      <td>
+                        <span className="badge badge-pill badge-primary">{o.v}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
-      </div>
+      </>
     );
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <div style={{ background: '#fff', border: '1px solid #e3e6ea', borderRadius: 6 }}>
-        <div style={{ padding: '10px 16px', borderBottom: '1px solid #e3e6ea', fontSize: 14, fontWeight: 700 }}>Searching Criteria</div>
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 14, padding: '12px 16px', flexWrap: 'wrap' }}>
-          <div className="field">
-            <label>Delivery Plan · From</label>
-            <input className="input" type="date" value={dpFilter.from} onChange={(e) => setDpFilter((f) => ({ ...f, from: e.target.value }))} style={{ width: 160 }} />
+    <>
+      <div className="card mb-2">
+        <div className="card-header">
+          <h6 className="mb-0">Searching Criteria</h6>
+        </div>
+        <div className="card-body pb-1">
+          <div className="form-row align-items-end">
+            <div className="form-group col-auto">
+              <label htmlFor="dp-from" className="d-block small text-muted mb-1">
+                Delivery Plan · From
+              </label>
+              <input id="dp-from" className="form-control" type="date" value={dpFilter.from} onChange={(e) => setDpFilter((f) => ({ ...f, from: e.target.value }))} style={{ width: 150 }} />
+            </div>
+            <div className="form-group col-auto">
+              <label htmlFor="dp-to" className="d-block small text-muted mb-1">
+                To
+              </label>
+              <input id="dp-to" className="form-control" type="date" value={dpFilter.to} onChange={(e) => setDpFilter((f) => ({ ...f, to: e.target.value }))} style={{ width: 150 }} />
+            </div>
+            <div className="form-group col-auto">
+              <label htmlFor="dp-po" className="d-block small text-muted mb-1">
+                PO Number
+              </label>
+              <input
+                id="dp-po"
+                className="form-control text-monospace"
+                value={dpFilter.po}
+                onChange={(e) => setDpFilter((f) => ({ ...f, po: e.target.value }))}
+                placeholder="e.g. PO3"
+                style={{ width: 130 }}
+              />
+            </div>
+            <div className="form-group col-auto">
+              <label htmlFor="dp-status" className="d-block small text-muted mb-1">
+                Status
+              </label>
+              <select id="dp-status" className="custom-select" value={dpFilter.st} onChange={(e) => setDpFilter((f) => ({ ...f, st: e.target.value as typeof f.st }))} style={{ width: 140 }}>
+                <option value="all">All</option>
+                <option value="po">PO released</option>
+                <option value="rem">Not released</option>
+              </select>
+            </div>
+            <div className="form-group col-auto ml-auto">
+              <button type="button" className="btn btn-outline-secondary mr-2" onClick={dpReset}>
+                Reset
+              </button>
+              <button type="button" className="btn btn-primary" onClick={dpSearch}>
+                <svg className="mr-1" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <circle cx="11" cy="11" r="7" />
+                  <line x1="16.5" y1="16.5" x2="21" y2="21" />
+                </svg>
+                Search
+              </button>
+            </div>
           </div>
-          <div className="field">
-            <label>To</label>
-            <input className="input" type="date" value={dpFilter.to} onChange={(e) => setDpFilter((f) => ({ ...f, to: e.target.value }))} style={{ width: 160 }} />
-          </div>
-          <div className="field">
-            <label>PO Number</label>
-            <input className="input" value={dpFilter.po} onChange={(e) => setDpFilter((f) => ({ ...f, po: e.target.value }))} placeholder="e.g. PO3" style={{ width: 150, fontFamily: 'var(--font-mono)' }} />
-          </div>
-          <div className="field">
-            <label>Status</label>
-            <select className="input" value={dpFilter.st} onChange={(e) => setDpFilter((f) => ({ ...f, st: e.target.value as typeof f.st }))} style={{ width: 170, appearance: 'none' }}>
-              <option value="all">All</option>
-              <option value="po">PO released</option>
-              <option value="rem">Not released</option>
-            </select>
-          </div>
-          <span style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-            <button className="btn btn-secondary" onClick={dpReset}>
-              Reset
-            </button>
-            <button className="btn btn-primary" onClick={dpSearch}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                <circle cx="11" cy="11" r="7" />
-                <line x1="16.5" y1="16.5" x2="21" y2="21" />
-              </svg>
-              Search
-            </button>
-          </span>
         </div>
       </div>
 
-      <div style={{ background: '#fff', border: '1px solid #e3e6ea', borderRadius: 6, overflow: 'hidden' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 16px', borderBottom: '1px solid #e3e6ea' }}>
-          <span style={{ fontSize: 14, fontWeight: 700 }}>Delivery Plan</span>
-          <span style={{ fontSize: 12, color: 'var(--color-neutral-600)' }}>Header · 1 row per PO</span>
-          <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--color-neutral-600)' }}>Click a PO to open its detail</span>
+      <div className="card">
+        <div className="card-header d-flex align-items-center flex-wrap">
+          <h6 className="mb-0 mr-2">Delivery Plan</h6>
+          <small className="text-muted">Header · 1 row per PO</small>
+          <small className="text-muted ml-auto">Click a PO to open its detail</small>
         </div>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-          <thead>
-            <tr style={{ background: 'var(--color-surface)' }}>
-              <th style={{ ...th, width: 200 }}>Delivery Plan (PO)</th>
-              <th style={{ ...th, width: 180 }}>PO Number</th>
-              <th style={{ ...th, width: 200 }}>ASN Number</th>
-              <th style={th}>Cases</th>
-            </tr>
-          </thead>
-          <tbody>
-            {dp.header.map((r) => (
-              <tr key={r.key} onClick={() => dpSelect(r.key)} className="row-hover" style={{ cursor: 'pointer', background: '#fff' }}>
-                <td style={{ ...td, borderLeft: `3px solid ${r.remaining ? 'oklch(0.72 0.12 70)' : 'transparent'}`, fontVariantNumeric: 'tabular-nums', fontWeight: 600 }}>{r.date}</td>
-                <td style={{ ...td, fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--color-accent-800)' }}>{r.po}</td>
-                <td style={{ ...td, fontFamily: 'var(--font-mono)' }}>{r.asn}</td>
-                <td style={{ ...td, color: 'var(--color-neutral-700)' }}>{r.cases}</td>
-              </tr>
-            ))}
-            {!dp.header.length && (
+        <div className="table-responsive">
+          <table className="table table-sm table-hover text-nowrap mb-0">
+            <thead className="thead-light">
               <tr>
-                <td colSpan={4} style={{ padding: 16, fontSize: 12.5, color: 'var(--color-neutral-600)' }}>
-                  No delivery plan matches this search.
-                </td>
+                <th style={{ width: 200 }}>Delivery Plan (PO)</th>
+                <th style={{ width: 180 }}>PO Number</th>
+                <th style={{ width: 200 }}>ASN Number</th>
+                <th>Cases</th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {dp.header.map((r) => (
+                <tr key={r.key} onClick={() => dpSelect(r.key)} className={r.remaining ? 'table-warning' : undefined} style={{ cursor: 'pointer' }}>
+                  <td className="font-weight-bold">{r.date}</td>
+                  <td className="text-monospace font-weight-bold text-primary">{r.po}</td>
+                  <td className="text-monospace">{r.asn}</td>
+                  <td className="text-muted">{r.cases}</td>
+                </tr>
+              ))}
+              {!dp.header.length && (
+                <tr>
+                  <td colSpan={4} className="text-muted">
+                    No delivery plan matches this search.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
