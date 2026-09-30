@@ -27,6 +27,9 @@ const th: React.CSSProperties = {
   overflow: 'hidden',
   textOverflow: 'ellipsis',
   height: 34,
+  position: 'sticky',
+  top: 0,
+  zIndex: 1,
 };
 
 const td: React.CSSProperties = {
@@ -206,7 +209,7 @@ export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHist
           </div>
 
           {!empty && !noResult && (
-            <div style={{ overflowX: 'auto' }}>
+            <div style={{ overflowX: 'auto', overflowY: 'auto', maxHeight: 560 }}>
             <table style={{ width: '100%', minWidth: 1060, borderCollapse: 'separate', borderSpacing: 0, fontSize: 12.5, tableLayout: 'fixed' }}>
               <thead>
                 <tr>
@@ -218,7 +221,7 @@ export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHist
                   <th style={{ ...th, textAlign: 'right', width: 104 }}>Total Pcs/Day</th>
                   <th style={{ ...th, width: 84 }}>Status</th>
                   <th style={{ ...th, width: 128 }}>Last Update</th>
-                  <th style={{ width: 112, background: 'var(--color-surface)', borderBottom: '1px solid var(--color-neutral-400)' }} />
+                  <th style={{ width: 112, background: 'var(--color-surface)', borderBottom: '1px solid var(--color-neutral-400)', position: 'sticky', top: 0, zIndex: 1 }} />
                 </tr>
               </thead>
               <tbody>

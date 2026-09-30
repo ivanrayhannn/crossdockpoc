@@ -13,6 +13,9 @@ const th: React.CSSProperties = {
   color: 'var(--color-neutral-700)',
   background: 'var(--color-surface)',
   borderBottom: '1px solid var(--color-neutral-400)',
+  position: 'sticky',
+  top: 0,
+  zIndex: 1,
 };
 
 const td: React.CSSProperties = {
@@ -62,8 +65,6 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
     const seen = new Set<string>();
     return parts.filter((p) => (seen.has(p.p) ? false : (seen.add(p.p), true)));
   }, [parts]);
-
-  const destMeta2 = `${destRowsSrc.length} part · ${fmt(destRowsSrc.reduce((a, p) => a + p.dests.reduce((x, d) => x + num(d.al), 0), 0))} case/day`;
 
   return (
     <div style={{ padding: '16px 28px 0', display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -142,7 +143,6 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
       <div style={{ border: '1px solid var(--color-divider)', borderRadius: 8, background: 'var(--color-neutral-100)', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '10px 16px', borderBottom: '1px solid var(--color-divider)' }}>
           <span style={{ fontSize: 12.5, fontWeight: 600 }}>Mapping destinasi per part</span>
-          <span style={{ fontSize: 12, color: 'var(--color-neutral-600)' }}>{destMeta2}</span>
           <span style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
             <button
               className="btn btn-secondary"
@@ -166,37 +166,39 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
         </div>
 
         {destRowsSrc.length > 0 && (
-          <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: 12 }}>
-            <thead>
-              <tr>
-                <th style={{ ...th, padding: '0 16px', width: 150, height: 32 }}>Part Number</th>
-                <th style={th}>Part Name</th>
-                <th style={{ ...th, width: 124 }}>Periode</th>
-                <th style={{ ...th, textAlign: 'right', width: 86 }}>Pcs/Case</th>
-                <th style={{ ...th, textAlign: 'right', width: 128 }}>Total Case/Day</th>
-                <th style={{ ...th, textAlign: 'right', width: 110 }}>Pcs/Day</th>
-                <th style={{ ...th, textAlign: 'right', width: 150 }}>Percentage</th>
-                <th style={{ ...th, width: 120 }}>Sync Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {destRowsSrc.map((p) => (
-                <DestRow
-                  key={p.p}
-                  p={p}
-                  ro={ro}
-                  isOpen={!!expand[p.p] || editDest === p.p}
-                  isEditing={editDest === p.p}
-                  draftDests={editDest === p.p ? draftDests : null}
-                  onToggleExpand={() => toggleExpand(p.p)}
-                  onStartEdit={() => startEditDest(p.p)}
-                  onCancelEdit={cancelEditDest}
-                  onSave={saveDest}
-                  onPatchDraft={patchDraft}
-                />
-              ))}
-            </tbody>
-          </table>
+          <div style={{ maxHeight: 560, overflowY: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: 12 }}>
+              <thead>
+                <tr>
+                  <th style={{ ...th, padding: '0 16px', width: 150, height: 32 }}>Part Number</th>
+                  <th style={th}>Part Name</th>
+                  <th style={{ ...th, width: 124 }}>Periode</th>
+                  <th style={{ ...th, textAlign: 'right', width: 86 }}>Pcs/Case</th>
+                  <th style={{ ...th, textAlign: 'right', width: 128 }}>Total Case/Day</th>
+                  <th style={{ ...th, textAlign: 'right', width: 110 }}>Pcs/Day</th>
+                  <th style={{ ...th, textAlign: 'right', width: 150 }}>Percentage</th>
+                  <th style={{ ...th, width: 120 }}>Sync Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {destRowsSrc.map((p) => (
+                  <DestRow
+                    key={p.p}
+                    p={p}
+                    ro={ro}
+                    isOpen={!!expand[p.p] || editDest === p.p}
+                    isEditing={editDest === p.p}
+                    draftDests={editDest === p.p ? draftDests : null}
+                    onToggleExpand={() => toggleExpand(p.p)}
+                    onStartEdit={() => startEditDest(p.p)}
+                    onCancelEdit={cancelEditDest}
+                    onSave={saveDest}
+                    onPatchDraft={patchDraft}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
 
         {destRowsSrc.length === 0 && (
