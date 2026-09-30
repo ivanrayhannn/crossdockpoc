@@ -2,6 +2,7 @@ import { MASTER_PARTS } from '../../../data/seed';
 import { fmt, num } from '../../../lib/format';
 import type { PartStatus } from '../../../types';
 import type { CrossdockState } from '../useCrossdockState';
+import { PartNoCombobox } from './PartNoCombobox';
 
 function todayStr(): string {
   const d = new Date();
@@ -61,6 +62,10 @@ export function PartModal({ state }: { state: CrossdockState }) {
   // once it's Active/Inactive that date has already taken effect.
   const effDateLocked = inputRO || f.st !== 'Candidate';
 
+  // A newly added part always starts as Candidate; the status only becomes
+  // editable once the part exists.
+  const statusLocked = inputRO || !editId;
+
   const partTitle = editId ? (ro ? 'Data part' : 'Edit data part') : 'Add Part Candidate Crossdock';
 
   const usedIds = new Set(parts.map((p) => p.p));
@@ -91,6 +96,21 @@ export function PartModal({ state }: { state: CrossdockState }) {
             <div style={{ flex: 1, paddingBottom: 14 }}>
               <div style={{ fontSize: 12, fontWeight: 700, margin: '2px 0 1px' }}>Part Candidate</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div className="field" style={{ gridColumn: '1 / -1' }}>
+                  <label>Status</label>
+                  <select
+                    className="input"
+                    value={f.st}
+                    onChange={(e) => patch((x) => { x.st = e.target.value as PartStatus; })}
+                    disabled={statusLocked}
+                    title={!editId ? 'Part baru otomatis berstatus Candidate' : undefined}
+                    style={{ background: statusLocked ? 'var(--color-neutral-200)' : inputBg, appearance: 'none' }}
+                  >
+                    <option value="Candidate">Candidate</option>
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
+                </div>
                 <div className="field">
                   <label>
                     Part No <span style={{ color: 'var(--color-accent-700)' }}>*</span>
@@ -98,26 +118,18 @@ export function PartModal({ state }: { state: CrossdockState }) {
                   {editId ? (
                     <input className="input" value={f.p} disabled style={{ fontFamily: 'var(--font-mono)', fontSize: 12, background: inputBg }} />
                   ) : (
-                    <select
-                      className="input"
+                    <PartNoCombobox
                       value={f.p}
-                      onChange={(e) => {
-                        const sel = MASTER_PARTS.find((m) => m.no === e.target.value);
-                        patch((x) => {
-                          x.p = e.target.value;
-                          x.n = sel ? sel.name : '';
-                        });
-                      }}
+                      options={availableMaster}
                       disabled={inputRO}
-                      style={{ fontFamily: 'var(--font-mono)', fontSize: 10, background: inputBg, appearance: 'none' }}
-                    >
-                      <option value="">Select Part from Part Master</option>
-                      {availableMaster.map((m) => (
-                        <option key={m.no} value={m.no}>
-                          {m.no} — {m.name}
-                        </option>
-                      ))}
-                    </select>
+                      background={inputBg}
+                      onSelect={(opt) =>
+                        patch((x) => {
+                          x.p = opt ? opt.no : '';
+                          x.n = opt ? opt.name : '';
+                        })
+                      }
+                    />
                   )}
                 </div>
                 <div className="field">
@@ -147,20 +159,6 @@ export function PartModal({ state }: { state: CrossdockState }) {
                     placeholder="0"
                     style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums', background: inputBg }}
                   />
-                </div>
-                <div className="field">
-                  <label>Status</label>
-                  <select
-                    className="input"
-                    value={f.st}
-                    onChange={(e) => patch((x) => { x.st = e.target.value as PartStatus; })}
-                    disabled={inputRO}
-                    style={{ background: inputBg, appearance: 'none' }}
-                  >
-                    <option value="Candidate">Candidate</option>
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
-                  </select>
                 </div>
               </div>
             </div>

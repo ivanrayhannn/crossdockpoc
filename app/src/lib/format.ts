@@ -1,3 +1,5 @@
+import type { SyncStatus } from '../types';
+
 /** Formats a number with thousands separators; non-numeric input renders as "0". */
 export function fmt(v: number | string | undefined | null): string {
   const n = typeof v === 'number' ? v : Number(v);
@@ -31,7 +33,8 @@ export interface SyncBadge {
   fg: string;
 }
 
-export function syncBadge(synced: boolean): SyncBadge {
-  if (synced) return { t: 'Sync', bg: 'var(--color-accent-2-200)', fg: 'var(--color-accent-2-800)' };
-  return { t: 'Not Sync', bg: 'var(--color-danger-bg)', fg: 'var(--color-danger)' };
+export function syncBadge(status: SyncStatus): SyncBadge {
+  if (status === 1) return { t: 'Success', bg: 'var(--color-accent-2-200)', fg: 'var(--color-accent-2-800)' };
+  if (status === 2) return { t: 'Failed', bg: 'var(--color-danger-bg)', fg: 'var(--color-danger)' };
+  return { t: 'No Sync', bg: 'var(--color-neutral-200)', fg: 'var(--color-neutral-700)' };
 }

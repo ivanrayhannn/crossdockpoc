@@ -106,7 +106,8 @@ export function useCrossdockState() {
       if (!editDest || !draftDests) return prevParts;
       return prevParts.map((p) =>
         p.p === editDest
-          ? { ...p, dests: draftDests.map((d) => ({ ...d, al: num(d.al) })), by: EDITOR, dt: NOW }
+          // A mapping edit invalidates whatever was last synced, so it drops back to No Sync.
+          ? { ...p, dests: draftDests.map((d) => ({ ...d, al: num(d.al) })), by: EDITOR, dt: NOW, syncStatus: 0 }
           : p,
       );
     });
@@ -116,7 +117,7 @@ export function useCrossdockState() {
 
   const syncParts = useCallback((ids: string[]) => {
     const idSet = new Set(ids);
-    setParts((prevParts) => prevParts.map((p) => (idSet.has(p.p) ? { ...p, synced: true, dt: NOW } : p)));
+    setParts((prevParts) => prevParts.map((p) => (idSet.has(p.p) ? { ...p, syncStatus: 1, dt: NOW } : p)));
   }, []);
 
   const closeModal = useCallback(() => {
@@ -128,7 +129,8 @@ export function useCrossdockState() {
   /** Commits the in-progress form to the parts list and closes the modal. */
   const commit = useCallback(() => {
     if (!form) return;
-    const f: Part = { ...form, pc: num(form.pc), mc: num(form.mc), minMad: num(form.minMad), by: EDITOR, dt: NOW };
+    // Any change at the part-number level invalidates the current mapping sync.
+    const f: Part = { ...form, pc: num(form.pc), mc: num(form.mc), minMad: num(form.minMad), by: EDITOR, dt: NOW, syncStatus: 0 };
     setParts((prevParts) => (editId ? prevParts.map((p) => (p.p === editId ? f : p)) : [f, ...prevParts]));
     setModal(null);
     setForm(null);

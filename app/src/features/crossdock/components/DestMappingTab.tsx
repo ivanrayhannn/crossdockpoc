@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { CUR_PER, DCODE, DOTS, PERIODS } from '../../../data/seed';
+import { CUR_PER, DCODE, DOTS, MASTER_DESTS, PERIODS } from '../../../data/seed';
 import { fmt, num, syncBadge } from '../../../lib/format';
 import type { DestAllocation, Part } from '../../../types';
 import type { CrossdockState } from '../useCrossdockState';
@@ -28,7 +28,7 @@ function exportMappingExcel(rows: Part[], per: string) {
   let x = '<table border="1"><tr><th>Part No</th><th>Part Name</th><th>Periode</th><th>Pcs/Case</th><th>Sync Status</th><th>Dest Code</th><th>Case/Day</th><th>Pcs/Day</th><th>Percentage</th></tr>';
   rows.forEach((p) => {
     const a = p.dests.reduce((s, d) => s + num(d.al), 0);
-    const sb = syncBadge(p.synced).t;
+    const sb = syncBadge(p.syncStatus).t;
     const ds = p.dests.length ? p.dests : [{ d: '', cd: '', al: 0, st: 'Active' as const }];
     ds.forEach((d) => {
       const code = d.cd || DCODE[d.d] || '';
@@ -52,14 +52,20 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
     () =>
       parts.filter(
         (p) =>
+          // Mapping per Destinasi only ever works with parts Procurement has marked Active.
+          p.st === 'Active' &&
           (q.per === 'all' || p.per === q.per) &&
           (!q.part || p.p.toLowerCase().includes(q.part.toLowerCase())) &&
-          (q.sync === 'all' || (q.sync === 'sync' && p.synced) || (q.sync === 'notsync' && !p.synced)),
+          (q.sync === 'all' ||
+            (q.sync === 'notsync' && p.syncStatus === 0) ||
+            (q.sync === 'success' && p.syncStatus === 1) ||
+            (q.sync === 'failed' && p.syncStatus === 2)),
       ),
     [parts, q],
   );
 
-  const unsyncedCount = destRowsSrc.filter((p) => !p.synced).length;
+  // Sync only ever targets rows that aren't already a confirmed success.
+  const syncableCount = destRowsSrc.filter((p) => p.syncStatus === 0 || p.syncStatus === 2).length;
 
   const numberOptions = useMemo(() => {
     const seen = new Set<string>();
@@ -121,8 +127,10 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
           <div className="field" style={{ width: 210 }}>
             <label>Sync Status</label>
             <select className="input" value={q.sync} onChange={(e) => setQ((prev) => ({ ...prev, sync: e.target.value as typeof prev.sync }))} style={{ appearance: 'none' }}>
-              <option value="sync">Sync</option>
-              <option value="notsync">Not Sync</option>
+              <option value="all">All</option>
+              <option value="notsync">No Sync</option>
+              <option value="success">Success</option>
+              <option value="failed">Failed</option>
             </select>
           </div>
           <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
@@ -146,15 +154,15 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
           <span style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
             <button
               className="btn btn-secondary"
-              onClick={() => syncParts(destRowsSrc.filter((p) => !p.synced).map((p) => p.p))}
-              disabled={!unsyncedCount}
+              onClick={() => syncParts(destRowsSrc.filter((p) => p.syncStatus === 0 || p.syncStatus === 2).map((p) => p.p))}
+              disabled={!syncableCount}
               style={{ fontSize: 12, padding: '4px 12px' }}
             >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                 <path d="M21 12a9 9 0 1 1-3-6.7" />
                 <path d="M21 4v5h-5" />
               </svg>
-              Sync{unsyncedCount ? ` (${unsyncedCount})` : ''}
+              Sync{syncableCount ? ` (${syncableCount})` : ''}
             </button>
             <button className="btn btn-primary" onClick={() => exportMappingExcel(destRowsSrc, q.per)} style={{ fontSize: 12, padding: '4px 12px' }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
@@ -228,7 +236,7 @@ interface DestRowProps {
 function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStartEdit, onCancelEdit, onSave, onPatchDraft }: DestRowProps) {
   const m = num(p.mc);
   const a = p.dests.reduce((x, d) => x + num(d.al), 0);
-  const sb = syncBadge(p.synced);
+  const sb = syncBadge(p.syncStatus);
   const edok = p.per === CUR_PER && !ro;
   const dList = isEditing && draftDests ? draftDests : p.dests;
   const dAlloc = dList.reduce((x, d) => x + num(d.al), 0);
@@ -381,14 +389,24 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
                         <td style={{ padding: '0 16px', height: 44, borderBottom: '1px solid var(--color-divider)' }}>
                           <span style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
                             <span style={{ width: 7, height: 7, borderRadius: 999, background: dot }} />
-                            <input
+                            <select
                               className="input"
-                              value={d.cd || DCODE[d.d] || ''}
-                              onChange={(e) => onPatchDraft((x) => { x[i].cd = e.target.value; })}
-                              readOnly={!isEditing}
-                              placeholder="kode"
-                              style={{ width: 118, minHeight: 32, padding: '2px 11px', fontSize: 13, fontFamily: 'var(--font-mono)', fontWeight: 600, background: inputBg }}
-                            />
+                              value={d.d}
+                              onChange={(e) => onPatchDraft((x) => {
+                                const sel = MASTER_DESTS.find((m) => m.name === e.target.value);
+                                x[i].d = e.target.value;
+                                x[i].cd = sel ? sel.code : '';
+                              })}
+                              disabled={!isEditing}
+                              style={{ width: 150, minHeight: 32, padding: '2px 8px', fontSize: 13, fontFamily: 'var(--font-mono)', fontWeight: 600, background: inputBg, appearance: 'none' }}
+                            >
+                              <option value="">Pilih destinasi</option>
+                              {MASTER_DESTS.filter((m) => m.name === d.d || !dList.some((row, ri) => ri !== i && row.d === m.name)).map((m) => (
+                                <option key={m.name} value={m.name}>
+                                  {m.code} — {m.name}
+                                </option>
+                              ))}
+                            </select>
                           </span>
                         </td>
                         <td style={{ padding: '0 14px', borderBottom: '1px solid var(--color-divider)', textAlign: 'right' }}>
@@ -450,7 +468,7 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
                   </svg>
                   Tambah destinasi
                 </button>
-                <span style={{ fontSize: 12, color: 'var(--color-neutral-600)' }}>Baris baru — ketik kode destinasi manual di kolom Destinasi (CD).</span>
+                <span style={{ fontSize: 12, color: 'var(--color-neutral-600)' }}>Baris baru — pilih destinasi dari master destinasi di kolom Destinasi (CD).</span>
               </div>
             )}
           </div>

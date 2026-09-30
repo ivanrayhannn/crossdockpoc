@@ -4,6 +4,10 @@
 export type PartStatus = 'Candidate' | 'Active' | 'Inactive';
 export type PartCategory = 'Crossdock' | 'Non-Crossdock';
 
+/** 0 = No sync, 1 = Success, 2 = Failed. Resets to 0 whenever the part's
+ * identity (Setting Part) or its destination mapping is edited. */
+export type SyncStatus = 0 | 1 | 2;
+
 export interface DestAllocation {
   /** Destination name, e.g. "Thailand". Empty string for a manually-added
    * row where only the destination code (cd) has been typed in. */
@@ -35,8 +39,8 @@ export interface Part {
   dests: DestAllocation[];
   /** Calculation period this part's mapping belongs to, e.g. "Sep 2026". */
   per: string;
-  /** Whether this part's mapping has been synced. */
-  synced: boolean;
+  /** Sync status of this part's destination mapping. */
+  syncStatus: SyncStatus;
   /** Date this part's data takes effect. Set from the add/edit form. */
   effDate?: string;
 }
@@ -46,7 +50,7 @@ export interface PartQuery {
   name: string;
   dest: string;
   st: 'all' | 'active' | 'inactive' | 'candidate';
-  sync: 'all' | 'notsync' | 'sync';
+  sync: 'all' | 'notsync' | 'success' | 'failed';
   /** Calculation period filter for "Mapping per Destinasi", e.g. "Sep 2026", or 'all'. */
   per: string;
   /** Last Update sort order for Daftar Part. */
