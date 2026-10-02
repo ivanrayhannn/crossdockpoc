@@ -11,7 +11,7 @@ import { UploadModal } from './components/UploadModal';
 import { ViewTabs } from './components/ViewTabs';
 import { useCrossdockState } from './useCrossdockState';
 
-const ROLE_LABEL = { procurement: 'Procurement', ds: 'Tim D/S' } as const;
+const ROLE_LABEL = { procurement: 'Procurement', ds: 'D/S Team' } as const;
 const ACTIVE_ITEM = 'Crossdock Master Setting';
 
 export function CrossdockMasterSettingPage({ onNavigate }: { onNavigate: (route: RouteKey) => void }) {
@@ -20,7 +20,7 @@ export function CrossdockMasterSettingPage({ onNavigate }: { onNavigate: (route:
 
   if (!role) {
     return (
-      <AppShell activeItem={ACTIVE_ITEM} onNavigate={onNavigate} breadcrumb={<BreadcrumbBar roleLabel="Belum dipilih" />}>
+      <AppShell activeItem={ACTIVE_ITEM} onNavigate={onNavigate} breadcrumb={<BreadcrumbBar roleLabel="Not selected" />}>
         <RoleGate onSelect={setRole} />
       </AppShell>
     );

@@ -16,7 +16,7 @@ export function BreadcrumbBar({ roleLabel, onSwitchRole }: { roleLabel: string; 
         </span>
         {onSwitchRole && (
           <button onClick={onSwitchRole} className="btn btn-secondary" style={{ fontSize: 11.5, padding: '3px 11px' }}>
-            Ganti role
+            Switch role
           </button>
         )}
       </span>

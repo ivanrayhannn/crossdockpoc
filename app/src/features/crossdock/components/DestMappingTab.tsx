@@ -25,7 +25,7 @@ const td: React.CSSProperties = {
 };
 
 function exportMappingExcel(rows: Part[], per: string) {
-  let x = '<table border="1"><tr><th>Part No</th><th>Part Name</th><th>Periode</th><th>Pcs/Case</th><th>Sync Status</th><th>Dest Code</th><th>Case/Day</th><th>Pcs/Day</th><th>Percentage</th></tr>';
+  let x = '<table border="1"><tr><th>Part No</th><th>Part Name</th><th>Period</th><th>Pcs/Case</th><th>Sync Status</th><th>Dest Code</th><th>Case/Day</th><th>Pcs/Day</th><th>Percentage</th></tr>';
   rows.forEach((p) => {
     const a = p.dests.reduce((s, d) => s + num(d.al), 0);
     const sb = syncBadge(p.syncStatus).t;
@@ -52,7 +52,7 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
     () =>
       parts.filter(
         (p) =>
-          // Mapping per Destinasi only ever works with parts Procurement has marked Active.
+          // Mapping per Destination only ever works with parts Procurement has marked Active.
           p.st === 'Active' &&
           (q.per === 'all' || p.per === q.per) &&
           (!q.part || p.p.toLowerCase().includes(q.part.toLowerCase())) &&
@@ -77,7 +77,7 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
       <div style={{ border: '1px solid var(--color-divider)', borderRadius: 8, background: 'var(--color-neutral-100)', padding: '14px 16px 16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 11 }}>
           <span style={{ fontSize: 10.5, fontWeight: 600, letterSpacing: '.04em', textTransform: 'uppercase' }}>Search criteria</span>
-          <span style={{ fontSize: 12, color: 'var(--color-neutral-600)' }}>Mapping case/day per destinasi untuk tiap part, per periode kalkulasi</span>
+          <span style={{ fontSize: 12, color: 'var(--color-neutral-600)' }}>Case/day mapping per destination for each part, per calculation period</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 13, flexWrap: 'wrap' }}>
           <div className="field" style={{ width: 190 }}>
@@ -101,7 +101,7 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
                 className="input"
                 value={q.part}
                 onChange={(e) => setQ((prev) => ({ ...prev, part: e.target.value }))}
-                placeholder="mis. PART-B"
+                placeholder="e.g. PART-B"
                 list="dest-part-number-options"
                 role="combobox"
                 style={{ paddingLeft: 34, fontFamily: 'var(--font-mono)', fontSize: 13 }}
@@ -150,7 +150,7 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
 
       <div style={{ border: '1px solid var(--color-divider)', borderRadius: 8, background: 'var(--color-neutral-100)', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '10px 16px', borderBottom: '1px solid var(--color-divider)' }}>
-          <span style={{ fontSize: 12.5, fontWeight: 600 }}>Mapping destinasi per part</span>
+          <span style={{ fontSize: 12.5, fontWeight: 600 }}>Destination mapping per part</span>
           <span style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
             <button
               className="btn btn-secondary"
@@ -180,7 +180,7 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
                 <tr>
                   <th style={{ ...th, padding: '0 16px', width: 150, height: 32 }}>Part Number</th>
                   <th style={th}>Part Name</th>
-                  <th style={{ ...th, width: 124 }}>Periode</th>
+                  <th style={{ ...th, width: 124 }}>Period</th>
                   <th style={{ ...th, textAlign: 'right', width: 86 }}>Pcs/Case</th>
                   <th style={{ ...th, textAlign: 'right', width: 128 }}>Total Case/Day</th>
                   <th style={{ ...th, textAlign: 'right', width: 110 }}>Pcs/Day</th>
@@ -211,8 +211,8 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
 
         {destRowsSrc.length === 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '48px 24px 52px' }}>
-            <h3 style={{ fontSize: 18, margin: '0 0 5px' }}>Tidak ada part pada filter ini</h3>
-            <p style={{ fontSize: 12.5, maxWidth: 400, color: 'var(--color-neutral-700)', margin: 0 }}>Ubah periode atau status sync, atau tekan Reset untuk menampilkan seluruh part.</p>
+            <h3 style={{ fontSize: 18, margin: '0 0 5px' }}>No parts match these filters</h3>
+            <p style={{ fontSize: 12.5, maxWidth: 400, color: 'var(--color-neutral-700)', margin: 0 }}>Change the period or sync status, or press Reset to show all parts.</p>
           </div>
         )}
       </div>
@@ -267,7 +267,7 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
           <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <button
               onClick={onToggleExpand}
-              title="Detail destinasi"
+              title="Destination details"
               style={{ cursor: 'pointer', border: 0, background: 'transparent', width: 20, height: 20, flex: 'none', display: 'grid', placeItems: 'center', color: 'var(--color-neutral-700)' }}
             >
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" style={{ transform: `rotate(${isOpen ? 90 : 0}deg)`, transition: 'transform .12s' }}>
@@ -315,9 +315,9 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
       <tr style={{ display: isOpen ? 'table-row' : 'none' }}>
         <td colSpan={8} style={{ padding: '0 16px 16px 46px', borderBottom: '1px solid var(--color-divider)', background: 'var(--color-surface)', position: 'relative' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '11px 0 10px' }}>
-            <span style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--color-accent-2-800)' }}>Mapping destinasi</span>
+            <span style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--color-accent-2-800)' }}>Destination mapping</span>
             <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', padding: '1px 7px', borderRadius: 999, background: 'var(--color-accent-2-200)', color: 'var(--color-accent-2-800)' }}>
-              Tim D/S
+              D/S Team
             </span>
             <span
               style={{
@@ -333,17 +333,17 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
               }}
             >
               <span style={{ width: 6, height: 6, borderRadius: 999, background: dOver ? 'var(--color-danger)' : dUnder ? 'var(--color-neutral-700)' : 'var(--color-accent-2-800)' }} />
-              {fmt(dAlloc)} / {fmt(m)} case/day terpakai
+              {fmt(dAlloc)} / {fmt(m)} case/day used
             </span>
             <span style={{ fontSize: 11.5, color: dOver ? 'var(--color-danger)' : 'var(--color-neutral-700)', fontVariantNumeric: 'tabular-nums' }}>
-              {!dList.length ? 'belum ada destinasi' : dOver ? `kelebihan ${fmt(dAlloc - m)} case/day` : dUnder ? `sisa ${fmt(m - dAlloc)} case/day` : 'kapasitas terbagi penuh'}
+              {!dList.length ? 'no destination yet' : dOver ? `${fmt(dAlloc - m)} case/day over` : dUnder ? `${fmt(m - dAlloc)} case/day left` : 'capacity fully allocated'}
             </span>
             <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 7 }}>
               <span style={{ display: roPerDisp, alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: 'var(--color-neutral-200)', color: 'var(--color-neutral-700)' }}>
-                Periode lampau — read only
+                Past period — read only
               </span>
               <button className="btn btn-ghost" onClick={splitEven} style={{ display: splitDisp, color: 'var(--color-accent-700)', fontSize: 12, padding: '4px 10px' }}>
-                Bagi rata
+                Split evenly
               </button>
               <button className="btn btn-secondary" onClick={onStartEdit} style={{ display: editViewDisp, fontSize: 12, padding: '4px 14px' }}>
                 Edit mapping
@@ -363,7 +363,7 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
                 <thead>
                   <tr>
                     <th style={{ textAlign: 'left', padding: '7px 16px', fontSize: 9.5, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--color-neutral-700)', background: 'var(--color-surface)', borderBottom: '1px solid var(--color-neutral-400)' }}>
-                      Destinasi (CD)
+                      Destination (CD)
                     </th>
                     <th style={{ textAlign: 'right', padding: '7px 14px', width: 160, fontSize: 9.5, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--color-neutral-700)', background: 'var(--color-surface)', borderBottom: '1px solid var(--color-neutral-400)' }}>
                       Case/Day
@@ -400,7 +400,7 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
                               disabled={!isEditing}
                               style={{ width: 150, minHeight: 32, padding: '2px 8px', fontSize: 13, fontFamily: 'var(--font-mono)', fontWeight: 600, background: inputBg, appearance: 'none' }}
                             >
-                              <option value="">Pilih destinasi</option>
+                              <option value="">Select destination</option>
                               {MASTER_DESTS.filter((m) => m.name === d.d || !dList.some((row, ri) => ri !== i && row.d === m.name)).map((m) => (
                                 <option key={m.name} value={m.name}>
                                   {m.code} — {m.name}
@@ -431,7 +431,7 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
                           {isEditing && (
                             <button
                               onClick={() => onPatchDraft((x) => { x.splice(i, 1); })}
-                              title="Hapus destinasi"
+                              title="Remove destination"
                               className="remove-btn-hover"
                               style={{ cursor: 'pointer', border: 0, background: 'transparent', width: 30, height: 30, borderRadius: 8, display: 'grid', placeItems: 'center', color: 'var(--color-danger)' }}
                             >
@@ -450,8 +450,8 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
 
             {dList.length === 0 && (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '24px 20px', gap: 3 }}>
-                <div style={{ fontSize: 13.5, fontWeight: 700 }}>Belum ada destinasi</div>
-                <div style={{ fontSize: 12, color: 'var(--color-neutral-700)', maxWidth: 380 }}>Klik Edit mapping lalu tambahkan minimal satu destinasi agar part ikut kalkulasi volume.</div>
+                <div style={{ fontSize: 13.5, fontWeight: 700 }}>No destination yet</div>
+                <div style={{ fontSize: 12, color: 'var(--color-neutral-700)', maxWidth: 380 }}>Click Edit mapping and add at least one destination so the part is included in the volume calculation.</div>
               </div>
             )}
 
@@ -466,9 +466,9 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
                     <line x1="12" y1="5" x2="12" y2="19" />
                     <line x1="5" y1="12" x2="19" y2="12" />
                   </svg>
-                  Tambah destinasi
+                  Add destination
                 </button>
-                <span style={{ fontSize: 12, color: 'var(--color-neutral-600)' }}>Baris baru — pilih destinasi dari master destinasi di kolom Destinasi (CD).</span>
+                <span style={{ fontSize: 12, color: 'var(--color-neutral-600)' }}>New row — pick a destination from the destination master in the Destination (CD) column.</span>
               </div>
             )}
           </div>
@@ -481,7 +481,7 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
                 <circle cx="12" cy="12" r="9" />
               </svg>
               <span>
-                Alokasi {fmt(dAlloc)} case/day melebihi Max Case/Day ({fmt(m)}). Turunkan salah satu destinasi.
+                Allocation of {fmt(dAlloc)} case/day exceeds Max Case/Day ({fmt(m)}). Reduce one of the destinations.
               </span>
             </div>
           )}

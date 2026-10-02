@@ -51,12 +51,12 @@ export function PartModal({ state }: { state: CrossdockState }) {
 
   const maxLocked = ro || !pc;
   const maxBg = ro || !pc ? 'var(--color-neutral-200)' : 'var(--color-neutral-100)';
-  const maxTitle = !pc ? 'Isi Pcs/Case terlebih dahulu' : 'Kapasitas maksimum case per hari';
+  const maxTitle = !pc ? 'Enter Pcs/Case first' : 'Maximum cases per day';
   const totalPcsDay = pc && mc ? fmt(pc * mc) : '—';
   const totalFg = pc && mc ? 'var(--color-text)' : 'var(--color-neutral-500)';
 
   const saveDisabled = !f.p || !pc || !mc;
-  const saveTitle = !f.p ? 'Part No wajib diisi' : !pc ? 'Isi Pcs/Case dulu (langkah 2)' : !mc ? 'Isi Max Case/Day (langkah 2)' : 'Simpan data part';
+  const saveTitle = !f.p ? 'Part No is required' : !pc ? 'Enter Pcs/Case first (step 2)' : !mc ? 'Enter Max Case/Day (step 2)' : 'Save part data';
 
   // Effective Start Date only moves while the part is still a Candidate —
   // once it's Active/Inactive that date has already taken effect.
@@ -66,7 +66,7 @@ export function PartModal({ state }: { state: CrossdockState }) {
   // editable once the part exists.
   const statusLocked = inputRO || !editId;
 
-  const partTitle = editId ? (ro ? 'Data part' : 'Edit data part') : 'Add Part Candidate Crossdock';
+  const partTitle = editId ? (ro ? 'Part data' : 'Edit part data') : 'Add Part Candidate Crossdock';
 
   const usedIds = new Set(parts.map((p) => p.p));
   const availableMaster = MASTER_PARTS.filter((m) => !usedIds.has(m.no) || m.no === f.p);
@@ -78,7 +78,7 @@ export function PartModal({ state }: { state: CrossdockState }) {
           <div style={{ flex: 1, minWidth: 0 }}>
             <h3 style={{ fontSize: 17, margin: '0 0 2px' }}>{partTitle}</h3>
           </div>
-          <button onClick={closeModal} title="Tutup" style={{ flex: 'none', cursor: 'pointer', border: 0, background: 'var(--color-neutral-200)', width: 26, height: 26, borderRadius: 999, display: 'grid', placeItems: 'center' }}>
+          <button onClick={closeModal} title="Close" style={{ flex: 'none', cursor: 'pointer', border: 0, background: 'var(--color-neutral-200)', width: 26, height: 26, borderRadius: 999, display: 'grid', placeItems: 'center' }}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
               <line x1="5" y1="5" x2="19" y2="19" />
               <line x1="19" y1="5" x2="5" y2="19" />
@@ -103,7 +103,7 @@ export function PartModal({ state }: { state: CrossdockState }) {
                     value={f.st}
                     onChange={(e) => patch((x) => { x.st = e.target.value as PartStatus; })}
                     disabled={statusLocked}
-                    title={!editId ? 'Part baru otomatis berstatus Candidate' : undefined}
+                    title={!editId ? 'New parts are automatically Candidate' : undefined}
                     style={{ background: statusLocked ? 'var(--color-neutral-200)' : inputBg, appearance: 'none' }}
                   >
                     <option value="Candidate">Candidate</option>
@@ -145,7 +145,7 @@ export function PartModal({ state }: { state: CrossdockState }) {
                     min={todayStr()}
                     onChange={(e) => patch((x) => { x.effDate = e.target.value; })}
                     disabled={effDateLocked}
-                    title={effDateLocked && !inputRO ? 'Hanya bisa diubah selama status masih Candidate' : undefined}
+                    title={effDateLocked && !inputRO ? 'Can only be changed while the status is still Candidate' : undefined}
                     style={{ background: effDateLocked ? 'var(--color-neutral-200)' : inputBg }}
                   />
                 </div>
@@ -171,7 +171,7 @@ export function PartModal({ state }: { state: CrossdockState }) {
               <span style={{ width: 2, flex: 1, background: 'var(--color-neutral-300)', margin: '4px 0' }} />
             </div>
             <div style={{ flex: 1, paddingBottom: 14 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, margin: '2px 0 8px' }}>Isi Pcs/Case & Max Case/Day</div>
+              <div style={{ fontSize: 12, fontWeight: 700, margin: '2px 0 8px' }}>Fill in Pcs/Case & Max Case/Day</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 <div className="field">
                   <label>Pcs/Case</label>

@@ -1,32 +1,32 @@
 import type { HistoryEvent, Part } from '../types';
 
-export const DESTS = ['Thailand', 'Jepang', 'Vietnam'];
+export const DESTS = ['Thailand', 'Japan', 'Vietnam'];
 
 export const DOTS: Record<string, string> = {
   Thailand: 'var(--color-accent)',
-  Jepang: 'var(--color-accent-2-500)',
+  Japan: 'var(--color-accent-2-500)',
   Vietnam: 'var(--color-neutral-500)',
 };
 
 export const DCODE: Record<string, string> = {
   Thailand: '123',
-  Jepang: '456',
+  Japan: '456',
   Vietnam: '789',
 };
 
 /** Master destination catalog — populates the destination dropdown when
- * adding a row in "Mapping per Destinasi" (Tambah destinasi). */
+ * adding a row in "Mapping per Destination" (Add destination). */
 export const MASTER_DESTS: { code: string; name: string }[] = DESTS.map((name) => ({ code: DCODE[name], name }));
 
 export const CUR_PER = 'Sep 2026';
 
 /** Periods available in the simulated data, oldest first — drives the
- * "Periode" filter on the Mapping per Destinasi sub-screen. */
+ * "Period" filter on the Mapping per Destination sub-screen. */
 export const PERIODS = ['Aug 2026', 'Sep 2026'];
 
 const EDITORS = ['A. Wibowo', 'R. Pratama', 'S. Hartono', 'D. Anggraini', 'L. Kusuma', 'M. Santoso', 'F. Rahman', 'N. Puspita'];
 
-/** Dummy master-part catalog for the "Tambah part" Part No dropdown — Part
+/** Dummy master-part catalog for the "Add part" Part No dropdown — Part
  * Name auto-fills from whichever entry is picked. */
 export const MASTER_PARTS: { no: string; name: string }[] = [
   { no: 'PART-M01', name: 'Bracket Mounting M01' },
@@ -88,7 +88,7 @@ function makeRng(seed: number) {
   };
 }
 
-export const MONTHS = ['Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu'];
+export const MONTHS = ['Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'];
 
 interface SeedPart {
   p: string;
@@ -110,13 +110,13 @@ const SEED: SeedPart[] = [
   {
     p: 'PART-A', n: 'Dummy Part A', pc: 60, mc: 24, st: 'Active', cat: 'Crossdock',
     mad: [1180, 1240, 1310, 1290, 1420, 1380], minMad: 800, by: 'A. Wibowo', dt: '05-Aug-2026 09:12',
-    dests: [{ d: 'Thailand', al: 12, st: 'Active' }, { d: 'Jepang', al: 8, st: 'Active' }, { d: 'Vietnam', al: 4, st: 'Active' }],
+    dests: [{ d: 'Thailand', al: 12, st: 'Active' }, { d: 'Japan', al: 8, st: 'Active' }, { d: 'Vietnam', al: 4, st: 'Active' }],
     per: 'Sep 2026', syncStatus: 1,
   },
   {
     p: 'PART-B', n: 'Dummy Part B', pc: 12, mc: 40, st: 'Active', cat: 'Crossdock',
     mad: [640, 700, 720, 810, 760, 790], minMad: 500, by: 'R. Pratama', dt: '11-Aug-2026 16:41',
-    dests: [{ d: 'Jepang', al: 25, st: 'Active' }, { d: 'Vietnam', al: 15, st: 'Active' }],
+    dests: [{ d: 'Japan', al: 25, st: 'Active' }, { d: 'Vietnam', al: 15, st: 'Active' }],
     per: 'Aug 2026', syncStatus: 0,
   },
   {
@@ -128,19 +128,19 @@ const SEED: SeedPart[] = [
   {
     p: 'PART-D', n: 'Dummy Part D', pc: 24, mc: 36, st: 'Active', cat: 'Crossdock',
     mad: [980, 1020, 940, 1100, 1060, 1150], minMad: 800, by: 'A. Wibowo', dt: '05-Aug-2026 09:12',
-    dests: [{ d: 'Thailand', al: 20, st: 'Active' }, { d: 'Jepang', al: 16, st: 'Active' }],
+    dests: [{ d: 'Thailand', al: 20, st: 'Active' }, { d: 'Japan', al: 16, st: 'Active' }],
     per: 'Aug 2026', syncStatus: 0,
   },
   {
     p: 'PART-E', n: 'Dummy Part E', pc: 4, mc: 45, st: 'Active', cat: 'Non-Crossdock',
     mad: [140, 120, 90, 110, 80, 60], minMad: 200, by: 'S. Hartono', dt: '05-Aug-2026 09:12',
-    dests: [{ d: 'Jepang', al: 25, st: 'Active' }, { d: 'Thailand', al: 20, st: 'Active' }],
+    dests: [{ d: 'Japan', al: 25, st: 'Active' }, { d: 'Thailand', al: 20, st: 'Active' }],
     per: 'Aug 2026', syncStatus: 1,
   },
   {
     p: 'PART-F', n: 'Dummy Part F', pc: 40, mc: 26, st: 'Active', cat: 'Crossdock',
     mad: [480, 520, 560, 540, 610, 650], minMad: 400, by: 'R. Pratama', dt: '08-Aug-2026 11:03',
-    dests: [{ d: 'Vietnam', al: 12, st: 'Active' }, { d: 'Thailand', al: 8, st: 'Active' }, { d: 'Jepang', al: 6, st: 'Inactive' }],
+    dests: [{ d: 'Vietnam', al: 12, st: 'Active' }, { d: 'Thailand', al: 8, st: 'Active' }, { d: 'Japan', al: 6, st: 'Inactive' }],
     per: 'Sep 2026', syncStatus: 2,
   },
   {
@@ -152,7 +152,7 @@ const SEED: SeedPart[] = [
   {
     p: 'PART-H', n: 'Dummy Part H', pc: 10, mc: 32, st: 'Inactive', cat: 'Crossdock',
     mad: [860, 900, 840, 780, 820, 800], minMad: 600, by: 'S. Hartono', dt: '05-Aug-2026 09:12',
-    dests: [{ d: 'Thailand', al: 20, st: 'Active' }, { d: 'Jepang', al: 12, st: 'Inactive' }],
+    dests: [{ d: 'Thailand', al: 20, st: 'Active' }, { d: 'Japan', al: 12, st: 'Inactive' }],
     per: 'Sep 2026', syncStatus: 1,
   },
   {
@@ -167,7 +167,7 @@ const SEED: SeedPart[] = [
   },
 ];
 
-/** Fabricates PART-009..PART-050 so the Daftar Part list has ~50 rows (2 pages
+/** Fabricates PART-009..PART-050 so the Part List has ~50 rows (2 pages
  * at 25/page) to exercise pagination and per-period filtering realistically. */
 function generateBulkParts(): SeedPart[] {
   const rng = makeRng(20260901);
@@ -223,7 +223,7 @@ function genHistoryFor(part: SeedPart): HistoryEvent[] {
 
   // Every part starts life as Candidate — Active/Inactive only exist once
   // there is at least one MAD reading to compare against Min MAD.
-  events.push({ date: genesisDate, t: 'Part didaftarkan', f: 'Status', o: '—', n: 'Candidate', by: rng.pick(EDITORS) });
+  events.push({ date: genesisDate, t: 'Part registered', f: 'Status', o: '—', n: 'Candidate', by: rng.pick(EDITORS) });
 
   const dayBetween = () => new Date(2026, rng.int(6, monthCap), rng.int(1, 26), rng.int(8, 17), rng.int(0, 59));
 
@@ -236,21 +236,21 @@ function genHistoryFor(part: SeedPart): HistoryEvent[] {
 
     if (pcChanged) {
       const oldPc = Math.max(1, part.pc + (rng.chance(0.5) ? 1 : -1) * rng.int(2, 10));
-      events.push({ date: dayBetween(), t: 'Pcs/Case diubah', f: 'Pcs/Case', o: String(oldPc), n: String(part.pc), by: rng.pick(EDITORS) });
+      events.push({ date: dayBetween(), t: 'Pcs/Case changed', f: 'Pcs/Case', o: String(oldPc), n: String(part.pc), by: rng.pick(EDITORS) });
     }
 
     if (mcChanged) {
       const oldMc = Math.max(5, part.mc + (rng.chance(0.5) ? 1 : -1) * rng.int(2, 12));
-      events.push({ date: dayBetween(), t: 'Max Case/Day diubah', f: 'Max Case/Day', o: String(oldMc), n: String(part.mc), by: rng.pick(EDITORS) });
+      events.push({ date: dayBetween(), t: 'Max Case/Day changed', f: 'Max Case/Day', o: String(oldMc), n: String(part.mc), by: rng.pick(EDITORS) });
     }
 
     if (minMadChanged) {
       const oldMinMad = Math.max(50, part.minMad + (rng.chance(0.5) ? 1 : -1) * rng.int(50, 200));
-      events.push({ date: dayBetween(), t: 'Min MAD diubah', f: 'Min MAD', o: String(oldMinMad), n: String(part.minMad), by: rng.pick(EDITORS) });
+      events.push({ date: dayBetween(), t: 'Min MAD changed', f: 'Min MAD', o: String(oldMinMad), n: String(part.minMad), by: rng.pick(EDITORS) });
     }
 
     // The move out of Candidate, driven by average MAD vs Min MAD.
-    events.push({ date: dayBetween(), t: 'Status diubah', f: 'Status', o: 'Candidate', n: part.st, by: rng.pick(EDITORS) });
+    events.push({ date: dayBetween(), t: 'Status changed', f: 'Status', o: 'Candidate', n: part.st, by: rng.pick(EDITORS) });
   }
 
   events.sort((a, b) => a.date.getTime() - b.date.getTime());
@@ -275,6 +275,6 @@ export function blankPart(): Part {
   const effDate = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
   return {
     p: '', n: '', pc: '', mc: '', st: 'Candidate', cat: 'Crossdock', mad: [], minMad: '',
-    per: CUR_PER, syncStatus: 0, by: 'D. Anggraini', dt: 'sekarang', dests: [], effDate,
+    per: CUR_PER, syncStatus: 0, by: 'D. Anggraini', dt: 'now', dests: [], effDate,
   };
 }

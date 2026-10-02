@@ -18,7 +18,7 @@ export function HistoryModal({ state }: { state: CrossdockState }) {
           </div>
           <button
             onClick={closeModal}
-            title="Tutup"
+            title="Close"
             style={{ marginLeft: 'auto', cursor: 'pointer', border: 0, background: 'var(--color-neutral-200)', width: 32, height: 32, borderRadius: 999, display: 'grid', placeItems: 'center' }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
@@ -28,7 +28,7 @@ export function HistoryModal({ state }: { state: CrossdockState }) {
           </button>
         </div>
 
-        {hist.length === 0 && <p style={{ fontSize: 12.5, color: 'var(--color-neutral-700)', margin: '0 0 18px' }}>Belum ada riwayat perubahan untuk part ini.</p>}
+        {hist.length === 0 && <p style={{ fontSize: 12.5, color: 'var(--color-neutral-700)', margin: '0 0 18px' }}>No change history for this part yet.</p>}
 
         {hist.map((h, i) => (
           <div key={i} style={{ display: 'flex', gap: 14 }}>
@@ -57,7 +57,7 @@ export function HistoryModal({ state }: { state: CrossdockState }) {
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
           <button className="btn btn-primary" onClick={closeModal}>
-            Tutup
+            Close
           </button>
         </div>
       </div>

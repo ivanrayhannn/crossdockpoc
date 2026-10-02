@@ -1,16 +1,16 @@
 import type { UserRole } from '../../../types';
 
 const ROLES: { key: UserRole; title: string; desc: string; menu: string }[] = [
-  { key: 'procurement', title: 'Procurement', desc: 'Kelola identitas part: Part No, Pcs/Case, Max Case/Day, Min MAD.', menu: 'Daftar Part' },
-  { key: 'ds', title: 'Tim D/S', desc: 'Bagi Max Case/Day tiap part ke destinasi (Thailand, Jepang, Vietnam).', menu: 'Mapping per Destinasi' },
+  { key: 'procurement', title: 'Procurement', desc: 'Manage part identity: Part No, Pcs/Case, Max Case/Day, Min MAD.', menu: 'Part List' },
+  { key: 'ds', title: 'D/S Team', desc: "Split each part's Max Case/Day across destinations (Thailand, Japan, Vietnam).", menu: 'Mapping per Destination' },
 ];
 
 export function RoleGate({ onSelect }: { onSelect: (role: UserRole) => void }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '72px 24px', gap: 6 }}>
-      <h2 style={{ fontSize: 22, margin: '0 0 4px' }}>Pilih role untuk simulasi</h2>
+      <h2 style={{ fontSize: 22, margin: '0 0 4px' }}>Select a role for the simulation</h2>
       <p style={{ fontSize: 13, color: 'var(--color-neutral-700)', margin: '0 0 30px', maxWidth: 480, textAlign: 'center' }}>
-        Dummy simulasi — role menentukan sub-menu apa yang tampil. Procurement hanya melihat Daftar Part, Tim D/S hanya melihat Mapping per Destinasi.
+        Simulation dummy — the role decides which sub-menu is shown. Procurement only sees Part List, D/S Team only sees Mapping per Destination.
       </p>
       <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', justifyContent: 'center' }}>
         {ROLES.map((r) => (

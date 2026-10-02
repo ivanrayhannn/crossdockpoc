@@ -86,7 +86,7 @@ export function PartNoCombobox({ value, options, disabled, background, onSelect 
         autoComplete="off"
         value={query}
         disabled={disabled}
-        placeholder="Ketik atau pilih Part No"
+        placeholder="Type or select Part No"
         onChange={(e) => {
           setQuery(e.target.value);
           setHi(0);
@@ -134,7 +134,7 @@ export function PartNoCombobox({ value, options, disabled, background, onSelect 
             boxShadow: 'var(--shadow-md)',
           }}
         >
-          {filtered.length === 0 && <li style={{ padding: '8px 10px', fontSize: 12, color: 'var(--color-neutral-600)' }}>Part tidak ditemukan</li>}
+          {filtered.length === 0 && <li style={{ padding: '8px 10px', fontSize: 12, color: 'var(--color-neutral-600)' }}>Part not found</li>}
           {filtered.map((o, i) => (
             <li
               key={o.no}

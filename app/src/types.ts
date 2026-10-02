@@ -13,7 +13,7 @@ export interface DestAllocation {
    * row where only the destination code (cd) has been typed in. */
   d: string;
   /** Destination code override — used for manually-added rows in the
-   * "Mapping per Destinasi" inline editor. */
+   * "Mapping per Destination" inline editor. */
   cd?: string;
   /** Allocation, case/day. String while an input is mid-edit. */
   al: number | string;
@@ -51,9 +51,9 @@ export interface PartQuery {
   dest: string;
   st: 'all' | 'active' | 'inactive' | 'candidate';
   sync: 'all' | 'notsync' | 'success' | 'failed';
-  /** Calculation period filter for "Mapping per Destinasi", e.g. "Sep 2026", or 'all'. */
+  /** Calculation period filter for "Mapping per Destination", e.g. "Sep 2026", or 'all'. */
   per: string;
-  /** Last Update sort order for Daftar Part. */
+  /** Last Update sort order for Part List. */
   sort: 'default' | 'pn_asc' | 'dt_desc' | 'dt_asc';
 }
 

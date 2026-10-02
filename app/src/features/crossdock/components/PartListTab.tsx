@@ -117,7 +117,7 @@ export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHist
                   className="input"
                   value={q.part}
                   onChange={(e) => setQ((prev) => ({ ...prev, part: e.target.value }))}
-                  placeholder="mis. PART-B"
+                  placeholder="e.g. PART-B"
                   list="part-number-options"
                   role="combobox"
                   style={{ paddingLeft: 34, fontFamily: 'var(--font-mono)', fontSize: 13 }}
@@ -142,31 +142,19 @@ export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHist
             </div>
             <div className="field" style={{ width: 260 }}>
               <label>Part Name</label>
-              <input className="input" value={q.name} onChange={(e) => setQ((prev) => ({ ...prev, name: e.target.value }))} placeholder="Nama part" />
-            </div>
-            <div className="field" style={{ width: 320 }}>
-              <label>Status</label>
-              <div className="seg" style={{ width: '100%' }}>
-                <label className="seg-opt" style={{ flex: 1, justifyContent: 'center' }}>
-                  <input type="radio" name="qst" checked={q.st === 'all'} onChange={() => setQ((prev) => ({ ...prev, st: 'all' }))} />
-                  All
-                </label>
-                <label className="seg-opt" style={{ flex: 1, justifyContent: 'center' }}>
-                  <input type="radio" name="qst" checked={q.st === 'candidate'} onChange={() => setQ((prev) => ({ ...prev, st: 'candidate' }))} />
-                  Candidate
-                </label>
-                <label className="seg-opt" style={{ flex: 1, justifyContent: 'center' }}>
-                  <input type="radio" name="qst" checked={q.st === 'active'} onChange={() => setQ((prev) => ({ ...prev, st: 'active' }))} />
-                  Active
-                </label>
-                <label className="seg-opt" style={{ flex: 1, justifyContent: 'center' }}>
-                  <input type="radio" name="qst" checked={q.st === 'inactive'} onChange={() => setQ((prev) => ({ ...prev, st: 'inactive' }))} />
-                  Inactive
-                </label>
-              </div>
+              <input className="input" value={q.name} onChange={(e) => setQ((prev) => ({ ...prev, name: e.target.value }))} placeholder="Part name" />
             </div>
             <div className="field" style={{ width: 200 }}>
-              <label>Urutkan</label>
+              <label>Status</label>
+              <select className="input" value={q.st} onChange={(e) => setQ((prev) => ({ ...prev, st: e.target.value as typeof prev.st }))} style={{ appearance: 'none' }}>
+                <option value="all">All</option>
+                <option value="candidate">Candidate</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+            <div className="field" style={{ width: 200 }}>
+              <label>Sort by</label>
               <select className="input" value={q.sort} onChange={(e) => setQ((prev) => ({ ...prev, sort: e.target.value as typeof prev.sort }))} style={{ appearance: 'none' }}>
                 <option value="default">Default</option>
                 <option value="dt_desc">Newer to Older</option>
@@ -192,9 +180,9 @@ export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHist
       <div style={{ padding: '14px 28px 0' }}>
         <div style={{ border: '1px solid var(--color-divider)', borderRadius: 8, background: 'var(--color-neutral-100)', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '10px 16px', borderBottom: '1px solid var(--color-divider)' }}>
-            <span style={{ fontSize: 12.5, fontWeight: 600 }}>Part terdaftar</span>
+            <span style={{ fontSize: 12.5, fontWeight: 600 }}>Registered parts</span>
             <span style={{ fontSize: 11.5, color: 'var(--color-neutral-600)', fontVariantNumeric: 'tabular-nums' }}>
-              {rowsSrc.length} part · {incompleteCount} mapping belum lengkap
+              {rowsSrc.length} {rowsSrc.length === 1 ? 'part' : 'parts'} · {incompleteCount} incomplete {incompleteCount === 1 ? 'mapping' : 'mappings'}
             </span>
             {ro && (
               <span
@@ -214,7 +202,7 @@ export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHist
                   <rect x="4" y="10.5" width="16" height="11" rx="3" />
                   <path d="M8 10.5V7a4 4 0 0 1 8 0v3.5" />
                 </svg>
-                Read-only — hanya role Procurement yang bisa mengubah
+                Read-only — only the Procurement role can edit
               </span>
             )}
           </div>
@@ -260,7 +248,7 @@ export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHist
                       <td style={{ ...td, padding: '0 10px' }}>
                         <span style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
                           <button className="btn btn-secondary" onClick={() => onOpenPart(p.p)} style={{ fontSize: 12, padding: '4px 12px', whiteSpace: 'nowrap' }}>
-                            {ro ? 'Lihat' : 'Edit'}
+                            {ro ? 'View' : 'Edit'}
                           </button>
                           <button
                             onClick={() => onOpenHistory(p.p)}
@@ -285,8 +273,8 @@ export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHist
 
           {noResult && (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '48px 24px 52px' }}>
-              <h3 style={{ fontSize: 18, margin: '0 0 5px' }}>Tidak ada part yang cocok</h3>
-              <p style={{ fontSize: 12.5, maxWidth: 380, color: 'var(--color-neutral-700)', margin: '0 0 13px' }}>Longgarkan kriteria pencarian atau reset semua filter.</p>
+              <h3 style={{ fontSize: 18, margin: '0 0 5px' }}>No matching parts</h3>
+              <p style={{ fontSize: 12.5, maxWidth: 380, color: 'var(--color-neutral-700)', margin: '0 0 13px' }}>Loosen the search criteria or reset all filters.</p>
               <button className="btn btn-secondary" onClick={resetQ} style={{ fontSize: 13 }}>
                 Reset filter
               </button>
@@ -303,16 +291,16 @@ export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHist
                   <polyline points="9 14 12 11 15 14" />
                 </svg>
               </span>
-              <h3 style={{ fontSize: 21, margin: '0 0 6px' }}>Belum ada part crossdock terdaftar</h3>
+              <h3 style={{ fontSize: 21, margin: '0 0 6px' }}>No crossdock parts registered yet</h3>
               <p style={{ fontSize: 13, maxWidth: 430, color: 'var(--color-neutral-700)', margin: '0 0 17px' }}>
-                Mulai dari template Excel, atau daftarkan satu part lalu mapping Max Case/Day-nya ke Thailand, Jepang dan Vietnam.
+                Start from the Excel template, or register a single part and map its Max Case/Day to Thailand, Japan and Vietnam.
               </p>
               <div style={{ display: 'flex', gap: 9 }}>
                 <button className="btn btn-primary" onClick={onOpenUpload}>
                   Upload Excel
                 </button>
                 <button className="btn btn-secondary" onClick={onAddPart}>
-                  Tambah satu part
+                  Add one part
                 </button>
               </div>
             </div>
@@ -320,7 +308,7 @@ export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHist
 
           {!empty && !noResult && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 13, padding: '9px 16px', borderTop: '1px solid var(--color-divider)', fontSize: 12 }}>
-              <span style={{ color: 'var(--color-neutral-700)' }}>Baris per halaman</span>
+              <span style={{ color: 'var(--color-neutral-700)' }}>Rows per page</span>
               <select className="input" value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} style={{ width: 72, minHeight: 28, fontSize: 12, padding: '2px 10px' }}>
                 {PAGE_SIZE_OPTIONS.map((n) => (
                   <option key={n} value={n}>
@@ -329,7 +317,7 @@ export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHist
                 ))}
               </select>
               <span style={{ marginLeft: 'auto', color: 'var(--color-neutral-700)', fontVariantNumeric: 'tabular-nums' }}>
-                {pageStart + 1}–{Math.min(pageStart + pageSize, rowsSrc.length)} dari {rowsSrc.length} part · halaman {pageClamped}/{totalPages}
+                {pageStart + 1}–{Math.min(pageStart + pageSize, rowsSrc.length)} of {rowsSrc.length} {rowsSrc.length === 1 ? 'part' : 'parts'} · page {pageClamped}/{totalPages}
               </span>
               <span style={{ display: 'flex', gap: 3 }}>
                 <button className="btn btn-secondary" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={pageClamped <= 1} style={{ fontSize: 12, padding: '3px 11px' }}>

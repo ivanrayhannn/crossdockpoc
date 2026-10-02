@@ -1,8 +1,8 @@
 import type { TabView } from '../../../types';
 
 const INFO: Record<TabView, { label: string; badge: string }> = {
-  part: { label: 'Daftar Part', badge: 'Procurement' },
-  dest: { label: 'Mapping per Destinasi', badge: 'Tim D/S' },
+  part: { label: 'Part List', badge: 'Procurement' },
+  dest: { label: 'Mapping per Destination', badge: 'D/S Team' },
 };
 
 /** Only one sub-menu is ever reachable per role, so this is a wayfinding

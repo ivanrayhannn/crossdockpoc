@@ -19,7 +19,7 @@ export function madAvg(m: number[] | undefined): number {
 const MON_IDX: Record<string, number> = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
 
 /** Parses the app's "DD-Mon-YYYY HH:MM" timestamp string into a sortable
- * epoch value; unparsable/placeholder values (e.g. "sekarang") sort as now. */
+ * epoch value; unparsable/placeholder values (e.g. "now") sort as now. */
 export function parseDt(s: string): number {
   const m = /^(\d{2})-(\w{3})-(\d{4}) (\d{2}):(\d{2})$/.exec(s);
   if (!m) return Date.now();
