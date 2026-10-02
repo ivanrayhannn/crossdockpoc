@@ -35,8 +35,8 @@ export function useCrossdockState() {
 
   // No auth backend in this build — always full read/write access.
   const ro = false;
-  // Sub-menu is a straight function of the chosen role: Procurement only ever
-  // sees Part List, D/S only ever sees Mapping per Destination.
+  // Prototype-only preview switch: the real system opens exactly one sub-menu
+  // (Part List or Mapping per Destination) according to the logged-in account.
   const view: TabView = role === 'ds' ? 'dest' : 'part';
   const switchRole = useCallback(() => setRole(null), []);
 

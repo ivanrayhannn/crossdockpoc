@@ -11,7 +11,7 @@ import { UploadModal } from './components/UploadModal';
 import { ViewTabs } from './components/ViewTabs';
 import { useCrossdockState } from './useCrossdockState';
 
-const ROLE_LABEL = { procurement: 'Procurement', ds: 'D/S Team' } as const;
+const SUB_MENU_LABEL = { procurement: 'Part List', ds: 'Mapping per Destination' } as const;
 const ACTIVE_ITEM = 'Crossdock Master Setting';
 
 export function CrossdockMasterSettingPage({ onNavigate }: { onNavigate: (route: RouteKey) => void }) {
@@ -20,16 +20,16 @@ export function CrossdockMasterSettingPage({ onNavigate }: { onNavigate: (route:
 
   if (!role) {
     return (
-      <AppShell activeItem={ACTIVE_ITEM} onNavigate={onNavigate} breadcrumb={<BreadcrumbBar roleLabel="Not selected" />}>
+      <AppShell activeItem={ACTIVE_ITEM} onNavigate={onNavigate} breadcrumb={<BreadcrumbBar simLabel="none" />}>
         <RoleGate onSelect={setRole} />
       </AppShell>
     );
   }
 
-  const roleLabel = ROLE_LABEL[role];
+  const simLabel = SUB_MENU_LABEL[role];
 
   return (
-    <AppShell activeItem={ACTIVE_ITEM} onNavigate={onNavigate} breadcrumb={<BreadcrumbBar roleLabel={roleLabel} onSwitchRole={switchRole} />}>
+    <AppShell activeItem={ACTIVE_ITEM} onNavigate={onNavigate} breadcrumb={<BreadcrumbBar simLabel={simLabel} onSwitch={switchRole} />}>
       <PageHeader ro={ro} view={view} onAddPart={addPart} onOpenUpload={openUpload} />
       <ViewTabs view={view} />
 

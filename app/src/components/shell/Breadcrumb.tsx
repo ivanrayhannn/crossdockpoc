@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-/** Generic "Home / group / label" trail, with an optional right-aligned slot (used by BreadcrumbBar for the role switcher). */
+/** Generic "Home / group / label" trail, with an optional right-aligned slot (used by BreadcrumbBar for the prototype sub-menu switch). */
 export function Breadcrumb({ group, label, right }: { group: string; label: string; right?: ReactNode }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 24px', background: '#fff', borderBottom: '1px solid #e3e6ea' }}>

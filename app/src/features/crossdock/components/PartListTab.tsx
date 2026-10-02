@@ -202,7 +202,7 @@ export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHist
                   <rect x="4" y="10.5" width="16" height="11" rx="3" />
                   <path d="M8 10.5V7a4 4 0 0 1 8 0v3.5" />
                 </svg>
-                Read-only — only the Procurement role can edit
+                Read-only — you do not have permission to edit
               </span>
             )}
           </div>

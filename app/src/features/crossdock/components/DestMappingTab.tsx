@@ -52,7 +52,7 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
     () =>
       parts.filter(
         (p) =>
-          // Mapping per Destination only ever works with parts Procurement has marked Active.
+          // Mapping per Destination only ever works with parts that are marked Active.
           p.st === 'Active' &&
           (q.per === 'all' || p.per === q.per) &&
           (!q.part || p.p.toLowerCase().includes(q.part.toLowerCase())) &&
@@ -316,9 +316,6 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
         <td colSpan={8} style={{ padding: '0 16px 16px 46px', borderBottom: '1px solid var(--color-divider)', background: 'var(--color-surface)', position: 'relative' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '11px 0 10px' }}>
             <span style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--color-accent-2-800)' }}>Destination mapping</span>
-            <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', padding: '1px 7px', borderRadius: 999, background: 'var(--color-accent-2-200)', color: 'var(--color-accent-2-800)' }}>
-              D/S Team
-            </span>
             <span
               style={{
                 display: 'inline-flex',
