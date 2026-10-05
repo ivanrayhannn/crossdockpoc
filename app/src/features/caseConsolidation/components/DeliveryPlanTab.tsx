@@ -32,8 +32,8 @@ export function DeliveryPlanTab({ state }: { state: CaseSimulationState }) {
   const canSeeOrderDetail = role !== 'sup';
 
   const dp = useMemo(
-    () => buildDeliveryPlan({ orders: inputs.orders, pcs: inputs.pcs, part, model, query: dpQuery, sel: dpSel, variable: dpVariable }),
-    [inputs.orders, inputs.pcs, part, model, dpQuery, dpSel, dpVariable],
+    () => buildDeliveryPlan({ orders: inputs.orders, pcs: inputs.pcs, part, model, query: dpQuery, sel: dpSel, variable: dpVariable, asnByCase }),
+    [inputs.orders, inputs.pcs, part, model, dpQuery, dpSel, dpVariable, asnByCase],
   );
   // One ASN = one Customer Order Date, so the selection is always the whole sequence.
   const selectedIds = Object.keys(asnSelection);
@@ -53,21 +53,22 @@ export function DeliveryPlanTab({ state }: { state: CaseSimulationState }) {
             <nav aria-label="breadcrumb">
               <ol className="breadcrumb bg-transparent p-0 mb-0">
                 <li className="breadcrumb-item">Delivery Plan</li>
+                <li className="breadcrumb-item">Customer Order Date</li>
                 <li className="breadcrumb-item active text-monospace font-weight-bold" aria-current="page">
                   {dp.selLabel}
                 </li>
               </ol>
             </nav>
             <small className="text-muted ml-auto">
-              {dp.selDate} · {dp.meta}
+              {dp.selPoNos} · {dp.meta}
             </small>
           </div>
         </div>
 
         <div className="card mb-2">
           <div className="card-header d-flex align-items-center flex-wrap">
-            <h6 className="mb-0 mr-2">PO Released · Detail</h6>
-            <small className="text-muted">Cases in this PO</small>
+            <h6 className="mb-0 mr-2">Customer Order Date · Detail</h6>
+            <small className="text-muted">All cases of this order date, across its POs</small>
             {canSeeOrderDetail && <small className="text-muted ml-auto">Click a case to filter Detail in Detail</small>}
           </div>
           <div className="table-responsive">
@@ -76,13 +77,12 @@ export function DeliveryPlanTab({ state }: { state: CaseSimulationState }) {
                 <tr>
                   <th style={{ width: 48 }} />
                   <th style={{ width: 48 }} />
-                  <th style={{ width: 150 }}>Delivery Plan (PO)</th>
+                  <th style={{ width: 150 }}>PO Date</th>
                   <th style={{ width: 100 }}>Part No</th>
                   <th className="text-right" style={{ width: 80 }}>
                     Qty
                   </th>
                   <th style={{ width: 90 }}>PO No</th>
-                  <th style={{ width: 170 }}>Customer Order Date</th>
                   <th>Case No</th>
                   <th className="text-right" style={{ width: 200 }}>
                     Action
@@ -93,17 +93,17 @@ export function DeliveryPlanTab({ state }: { state: CaseSimulationState }) {
                 {dp.caseRows.map((r) => {
                   const checkId = `asn-case-${r.caseNo}`;
                   const inAsn = !!asnByCase[r.caseNo];
-                  const otherDate = !!selectedSeq && selectedSeq.od !== r.od;
-                  const blocked = r.waiting || inAsn || !r.seqComplete || otherDate;
+                  const otherDate = !!selectedSeq && selectedSeq.od !== dp.selOd;
+                  const blocked = r.waiting || inAsn || !dp.selComplete || otherDate;
                   const hint = r.waiting
                     ? 'Not released yet'
                     : inAsn
                       ? 'Already in an ASN'
-                      : !r.seqComplete
-                        ? `Order date ${r.odLabel} is not fully paired with a PO yet · view only`
+                      : !dp.selComplete
+                        ? `Order date ${dp.selLabel} is not fully paired with a PO yet · view only`
                         : otherDate
                           ? 'One ASN = one Customer Order Date. Clear the current selection first'
-                          : `Select all cases of order date ${r.odLabel}`;
+                          : `Select all cases of order date ${dp.selLabel}`;
                   return (
                     <tr
                       key={r.v}
@@ -133,16 +133,6 @@ export function DeliveryPlanTab({ state }: { state: CaseSimulationState }) {
                       <td className="align-middle font-weight-bold">{r.part}</td>
                       <td className="align-middle text-right font-weight-bold">{r.qty}</td>
                       <td className="align-middle text-monospace">{r.po}</td>
-                      <td className="align-middle">
-                        {r.waiting ? (
-                          '-'
-                        ) : (
-                          <>
-                            {r.odLabel}
-                            <span className={`badge ml-2 ${r.seqComplete ? 'badge-success' : 'badge-warning'}`}>{r.seqComplete ? 'Complete' : 'View only'}</span>
-                          </>
-                        )}
-                      </td>
                       <td className="align-middle">
                         <span className="d-flex align-items-center">
                           <span className="text-monospace font-weight-bold mr-3" style={{ width: 74 }}>
@@ -217,7 +207,7 @@ export function DeliveryPlanTab({ state }: { state: CaseSimulationState }) {
               <table className="table table-sm table-hover text-nowrap mb-0">
                 <thead className="thead-light">
                   <tr>
-                    <th style={{ width: 125 }}>Delivery Plan (PO)</th>
+                    <th style={{ width: 125 }}>PO Date</th>
                     <th style={{ width: 110 }}>Case No</th>
                     <th style={{ width: 85 }}>Part No</th>
                     <th className="text-right" style={{ width: 60 }}>
@@ -228,7 +218,7 @@ export function DeliveryPlanTab({ state }: { state: CaseSimulationState }) {
                     </th>
                     <th style={{ width: 125 }}>Customer Order</th>
                     <th style={{ width: 150 }}>Destination</th>
-                    <th style={{ width: 110 }}>Customer Date</th>
+                    <th style={{ width: 130 }}>Customer Order Date</th>
                     <th style={{ width: 80 }}>Variable</th>
                   </tr>
                 </thead>
@@ -272,7 +262,7 @@ export function DeliveryPlanTab({ state }: { state: CaseSimulationState }) {
           <div className="form-row align-items-end">
             <div className="form-group col-auto">
               <label htmlFor="dp-from" className="d-block small text-muted mb-1">
-                Delivery Plan · From
+                Customer Order Date · From
               </label>
               <input id="dp-from" className="form-control" type="date" value={dpFilter.from} onChange={(e) => setDpFilter((f) => ({ ...f, from: e.target.value }))} style={{ width: 150 }} />
             </div>
@@ -301,8 +291,8 @@ export function DeliveryPlanTab({ state }: { state: CaseSimulationState }) {
               </label>
               <select id="dp-status" className="custom-select" value={dpFilter.st} onChange={(e) => setDpFilter((f) => ({ ...f, st: e.target.value as typeof f.st }))} style={{ width: 140 }}>
                 <option value="all">All</option>
-                <option value="po">PO released</option>
-                <option value="rem">Not released</option>
+                <option value="complete">Complete (ready for ASN)</option>
+                <option value="view">View only</option>
               </select>
             </div>
             <div className="form-group col-auto ml-auto">
@@ -324,33 +314,39 @@ export function DeliveryPlanTab({ state }: { state: CaseSimulationState }) {
       <div className="card">
         <div className="card-header d-flex align-items-center flex-wrap">
           <h6 className="mb-0 mr-2">Delivery Plan</h6>
-          <small className="text-muted">Header · 1 row per PO</small>
-          <small className="text-muted ml-auto">Click a PO to open its detail</small>
+          <small className="text-muted">Header · 1 row per Customer Order Date</small>
+          <small className="text-muted ml-auto">Click a row to open its POs and cases</small>
         </div>
         <div className="table-responsive">
           <table className="table table-sm table-hover text-nowrap mb-0">
             <thead className="thead-light">
               <tr>
-                <th style={{ width: 200 }}>Delivery Plan (PO)</th>
-                <th style={{ width: 180 }}>PO Number</th>
+                <th style={{ width: 200 }}>Customer Order Date</th>
+                <th style={{ width: 260 }}>PO (PO Date)</th>
                 <th style={{ width: 200 }}>ASN Number</th>
-                <th style={{ width: 280 }}>Customer Order Date</th>
+                <th style={{ width: 150 }}>Status</th>
                 <th>Cases</th>
               </tr>
             </thead>
             <tbody>
               {dp.header.map((r) => (
-                <tr key={r.key} onClick={() => dpSelect(r.key)} className={r.remaining ? 'table-warning' : undefined} style={{ cursor: 'pointer' }}>
+                <tr key={r.key} onClick={() => dpSelect(r.key)} className={r.complete ? undefined : 'table-warning'} style={{ cursor: 'pointer' }}>
                   <td className="font-weight-bold">{r.date}</td>
-                  <td className="text-monospace font-weight-bold text-primary">{r.po}</td>
+                  <td>
+                    {r.pos.length ? (
+                      r.pos.map((p) => (
+                        <span key={p.no} className="mr-3">
+                          <span className="text-monospace font-weight-bold text-primary">{p.no}</span>
+                          <small className="text-muted ml-1">{p.date}</small>
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-muted">-</span>
+                    )}
+                  </td>
                   <td className="text-monospace">{r.asn}</td>
                   <td>
-                    {r.sequences.map((q) => (
-                      <span key={q.label} className="mr-2">
-                        {q.label}
-                        <span className={`badge ml-1 ${q.complete ? 'badge-success' : 'badge-warning'}`}>{q.complete ? 'Complete' : 'View only'}</span>
-                      </span>
-                    ))}
+                    <span className={`badge ${r.complete ? 'badge-success' : 'badge-warning'}`}>{r.complete ? 'Complete' : 'View only'}</span>
                   </td>
                   <td className="text-muted">{r.cases}</td>
                 </tr>
