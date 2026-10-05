@@ -1,4 +1,4 @@
-import { addDay, caseNo, colorOf, DEST, niceD, plural, shortD, shortOrder } from './simulation';
+import { addDay, buildSequences, caseNo, colorOf, DEST, niceD, plural, shortD, shortOrder } from './simulation';
 import type { Model, Order, SortedOrder } from './simulation';
 
 export interface DpQuery {
@@ -18,6 +18,12 @@ export interface Hole {
   lbl: string;
 }
 
+export interface DpSequenceTag {
+  /** Short Customer Order Date, e.g. "15-Sep". */
+  label: string;
+  complete: boolean;
+}
+
 export interface DpHeaderRow {
   /** PO number, or REM_KEY for the not-released row. */
   key: string;
@@ -25,6 +31,8 @@ export interface DpHeaderRow {
   po: string;
   asn: string;
   cases: string;
+  /** Customer Order Dates that have cases in this PO. */
+  sequences: DpSequenceTag[];
   remaining: boolean;
 }
 
@@ -39,6 +47,12 @@ export interface DpCaseRow {
   holes: Hole[];
   selected: boolean;
   waiting: boolean;
+  /** Customer Order Date (ISO) this case belongs to; '' while waiting. */
+  od: string;
+  /** Short Customer Order Date for display. */
+  odLabel: string;
+  /** False while part of the order date is still not paired with a PO (view only). */
+  seqComplete: boolean;
 }
 
 export interface DpOrderRow {
@@ -79,6 +93,8 @@ interface Args {
 
 export function buildDeliveryPlan({ orders, pcs, part, model, query: q, sel, variable: vf }: Args): DeliveryPlanData {
   const { releases, seq } = model;
+  const sequences = buildSequences(model);
+  const seqOf = (od: string) => sequences.find((q) => q.od === od);
   const pos =
     q.st === 'rem'
       ? []
@@ -102,10 +118,11 @@ export function buildDeliveryPlan({ orders, pcs, part, model, query: q, sel, var
     po: p.no,
     asn: '-',
     cases: `${p.cases.length} case · ${p.cases.length * pcs} pcs`,
+    sequences: [...new Set(p.cases.map((c) => c.od))].map((od) => ({ label: shortD(od), complete: !!seqOf(od)?.complete })),
     remaining: false,
   }));
   if (remQty) {
-    header.push({ key: REM_KEY, date: 'Not released', po: '-', asn: '-', cases: `${plural(remOrders.length, 'order')} · ${remQty} pcs remaining`, remaining: true });
+    header.push({ key: REM_KEY, date: 'Not released', po: '-', asn: '-', cases: `${plural(remOrders.length, 'order')} · ${remQty} pcs remaining`, sequences: [], remaining: true });
   }
 
   if (isRem && remQty) {
@@ -125,6 +142,9 @@ export function buildDeliveryPlan({ orders, pcs, part, model, query: q, sel, var
         holes: g.list.flatMap((o) => Array.from({ length: o.rem }, () => ({ bg: colorOf(o.ci), lbl: shortOrder(o) }))),
         selected: false,
         waiting: true,
+        od: '',
+        odLabel: '-',
+        seqComplete: false,
       })),
       orderRows: remOrders.map((o) => ({
         v: '–',
@@ -162,6 +182,9 @@ export function buildDeliveryPlan({ orders, pcs, part, model, query: q, sel, var
     holes: c.pieces.map((x) => ({ bg: colorOf(x.o.ci), lbl: shortOrder(x.o) })),
     selected: vf === c.v,
     waiting: false,
+    od: c.od,
+    odLabel: shortD(c.od),
+    seqComplete: !!seqOf(c.od)?.complete,
   }));
 
   const orderRows: DpOrderRow[] = [];

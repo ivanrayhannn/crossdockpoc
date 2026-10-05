@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { buildDeliveryPlan } from '../deliveryPlan';
+import { niceD, plural } from '../simulation';
 import type { CaseSimulationState } from '../useCaseSimulation';
 import { CaseHoles } from './CaseHoles';
 
@@ -24,7 +25,7 @@ export function DeliveryPlanTab({ state }: { state: CaseSimulationState }) {
     asnSelection,
     asnByCase,
     toggleAsnCase,
-    toggleAsnCases,
+    sequenceOfCase,
     clearAsnSelection,
     openAsnDraft,
   } = state;
@@ -34,9 +35,9 @@ export function DeliveryPlanTab({ state }: { state: CaseSimulationState }) {
     () => buildDeliveryPlan({ orders: inputs.orders, pcs: inputs.pcs, part, model, query: dpQuery, sel: dpSel, variable: dpVariable }),
     [inputs.orders, inputs.pcs, part, model, dpQuery, dpSel, dpVariable],
   );
-  const selectableIds = dp.caseRows.filter((r) => !r.waiting && !asnByCase[r.caseNo]).map((r) => r.caseNo);
-  const selectedIds = selectableIds.filter((id) => asnSelection[id]);
-  const allSelected = selectableIds.length > 0 && selectedIds.length === selectableIds.length;
+  // One ASN = one Customer Order Date, so the selection is always the whole sequence.
+  const selectedIds = Object.keys(asnSelection);
+  const selectedSeq = selectedIds.length ? sequenceOfCase.get(selectedIds[0]) : undefined;
 
   if (dpPage === 'detail') {
     return (
@@ -73,21 +74,7 @@ export function DeliveryPlanTab({ state }: { state: CaseSimulationState }) {
             <table className="table table-sm table-hover text-nowrap mb-0">
               <thead className="thead-light">
                 <tr>
-                  <th style={{ width: 48 }}>
-                    <div className="custom-control custom-checkbox">
-                      <input
-                        type="checkbox"
-                        className="custom-control-input"
-                        id="asn-select-all"
-                        checked={allSelected}
-                        disabled={!selectableIds.length}
-                        onChange={() => toggleAsnCases(selectableIds, !allSelected)}
-                      />
-                      <label className="custom-control-label" htmlFor="asn-select-all">
-                        <span className="sr-only">Select all cases</span>
-                      </label>
-                    </div>
-                  </th>
+                  <th style={{ width: 48 }} />
                   <th style={{ width: 48 }} />
                   <th style={{ width: 150 }}>Delivery Plan (PO)</th>
                   <th style={{ width: 100 }}>Part No</th>
@@ -95,6 +82,7 @@ export function DeliveryPlanTab({ state }: { state: CaseSimulationState }) {
                     Qty
                   </th>
                   <th style={{ width: 90 }}>PO No</th>
+                  <th style={{ width: 170 }}>Customer Order Date</th>
                   <th>Case No</th>
                   <th className="text-right" style={{ width: 200 }}>
                     Action
@@ -104,6 +92,18 @@ export function DeliveryPlanTab({ state }: { state: CaseSimulationState }) {
               <tbody>
                 {dp.caseRows.map((r) => {
                   const checkId = `asn-case-${r.caseNo}`;
+                  const inAsn = !!asnByCase[r.caseNo];
+                  const otherDate = !!selectedSeq && selectedSeq.od !== r.od;
+                  const blocked = r.waiting || inAsn || !r.seqComplete || otherDate;
+                  const hint = r.waiting
+                    ? 'Not released yet'
+                    : inAsn
+                      ? 'Already in an ASN'
+                      : !r.seqComplete
+                        ? `Order date ${r.odLabel} is not fully paired with a PO yet · view only`
+                        : otherDate
+                          ? 'One ASN = one Customer Order Date. Clear the current selection first'
+                          : `Select all cases of order date ${r.odLabel}`;
                   return (
                     <tr
                       key={r.v}
@@ -118,10 +118,10 @@ export function DeliveryPlanTab({ state }: { state: CaseSimulationState }) {
                             className="custom-control-input"
                             id={checkId}
                             checked={!!asnSelection[r.caseNo] || !!asnByCase[r.caseNo]}
-                            disabled={r.waiting || !!asnByCase[r.caseNo]}
+                            disabled={blocked}
                             onChange={() => toggleAsnCase(r.caseNo)}
                           />
-                          <label className="custom-control-label" htmlFor={checkId}>
+                          <label className="custom-control-label" htmlFor={checkId} title={hint}>
                             <span className="sr-only">Select {r.caseNo}</span>
                           </label>
                         </div>
@@ -133,6 +133,16 @@ export function DeliveryPlanTab({ state }: { state: CaseSimulationState }) {
                       <td className="align-middle font-weight-bold">{r.part}</td>
                       <td className="align-middle text-right font-weight-bold">{r.qty}</td>
                       <td className="align-middle text-monospace">{r.po}</td>
+                      <td className="align-middle">
+                        {r.waiting ? (
+                          '-'
+                        ) : (
+                          <>
+                            {r.odLabel}
+                            <span className={`badge ml-2 ${r.seqComplete ? 'badge-success' : 'badge-warning'}`}>{r.seqComplete ? 'Complete' : 'View only'}</span>
+                          </>
+                        )}
+                      </td>
                       <td className="align-middle">
                         <span className="d-flex align-items-center">
                           <span className="text-monospace font-weight-bold mr-3" style={{ width: 74 }}>
@@ -168,9 +178,15 @@ export function DeliveryPlanTab({ state }: { state: CaseSimulationState }) {
             </span>
             <div className="mr-3">
               <div className="font-weight-bold">
-                {selectedIds.length ? `${selectedIds.length} case${selectedIds.length > 1 ? 's' : ''} selected · ${selectedIds.length * inputs.pcs} pcs` : 'No case selected'}
+                {selectedSeq
+                  ? `Order date ${niceD(selectedSeq.od)} · ${plural(selectedIds.length, 'case')} · ${selectedIds.length * inputs.pcs} pcs`
+                  : 'No case selected'}
               </div>
-              <small className="text-muted">{selectedIds.length ? `${dp.selLabel} · ready to group into one ASN` : 'Tick cases or a whole PO. Cases already in an ASN are locked.'}</small>
+              <small className="text-muted">
+                {selectedSeq
+                  ? `${selectedSeq.poNos.join(', ')} · all cases of this order date go into one ASN`
+                  : 'Tick a case of a Complete order date to select all its cases. One ASN = one Customer Order Date. Cases already in an ASN are locked.'}
+              </small>
             </div>
             <div className="ml-auto">
               <button type="button" className="btn btn-outline-secondary btn-sm mr-2" onClick={clearAsnSelection} disabled={!selectedIds.length}>
@@ -318,6 +334,7 @@ export function DeliveryPlanTab({ state }: { state: CaseSimulationState }) {
                 <th style={{ width: 200 }}>Delivery Plan (PO)</th>
                 <th style={{ width: 180 }}>PO Number</th>
                 <th style={{ width: 200 }}>ASN Number</th>
+                <th style={{ width: 280 }}>Customer Order Date</th>
                 <th>Cases</th>
               </tr>
             </thead>
@@ -327,12 +344,20 @@ export function DeliveryPlanTab({ state }: { state: CaseSimulationState }) {
                   <td className="font-weight-bold">{r.date}</td>
                   <td className="text-monospace font-weight-bold text-primary">{r.po}</td>
                   <td className="text-monospace">{r.asn}</td>
+                  <td>
+                    {r.sequences.map((q) => (
+                      <span key={q.label} className="mr-2">
+                        {q.label}
+                        <span className={`badge ml-1 ${q.complete ? 'badge-success' : 'badge-warning'}`}>{q.complete ? 'Complete' : 'View only'}</span>
+                      </span>
+                    ))}
+                  </td>
                   <td className="text-muted">{r.cases}</td>
                 </tr>
               ))}
               {!dp.header.length && (
                 <tr>
-                  <td colSpan={4} className="text-muted">
+                  <td colSpan={5} className="text-muted">
                     No delivery plan matches this search.
                   </td>
                 </tr>

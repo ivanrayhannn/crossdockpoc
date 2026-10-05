@@ -147,6 +147,18 @@ export interface Model {
   pendingQty: number;
   poCount: number;
   caseCount: number;
+  /** Customer Order Dates that still have something not paired with a PO (waiting cases or loose pcs). */
+  openDates: string[];
+}
+
+/** All cases of one Customer Order Date. An ASN must hold a whole sequence, never part of it. */
+export interface Sequence {
+  /** Customer Order Date (ISO). */
+  od: string;
+  caseNos: string[];
+  poNos: string[];
+  /** True once every order of this date is paired with a released PO, so an ASN can be created. */
+  complete: boolean;
 }
 
 interface QueuedCase {
@@ -216,5 +228,22 @@ export function buildModel({ orders, pcs, maxC, capOv }: Pick<SimInputs, 'orders
     .slice(qi)
     .flatMap((c) => c.pieces)
     .concat(DORD.flatMap((dc) => carry[dc] ?? []));
-  return { sorted, releases, seq, rel: seq.length, pending, pendingQty: pending.length, poCount: poN, caseCount: cN };
+  const openDates = [...new Set([...queue.slice(qi).map((c) => c.od), ...pending.map((o) => o.date)])];
+  return { sorted, releases, seq, rel: seq.length, pending, pendingQty: pending.length, poCount: poN, caseCount: cN, openDates };
+}
+
+/** Group released cases by Customer Order Date, even when that date was split over several POs. */
+export function buildSequences({ releases, openDates }: Pick<Model, 'releases' | 'openDates'>): Sequence[] {
+  const byDate = new Map<string, Sequence>();
+  releases.forEach((r) =>
+    r.pos.forEach((po) =>
+      po.cases.forEach((c) => {
+        const q = byDate.get(c.od) ?? { od: c.od, caseNos: [], poNos: [], complete: !openDates.includes(c.od) };
+        q.caseNos.push(caseNo(c.n));
+        if (!q.poNos.includes(po.no)) q.poNos.push(po.no);
+        byDate.set(c.od, q);
+      }),
+    ),
+  );
+  return [...byDate.values()].sort((a, b) => (a.od < b.od ? -1 : 1));
 }

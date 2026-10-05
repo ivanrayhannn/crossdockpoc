@@ -12,7 +12,7 @@ interface DraftCase {
 
 /** ASN draft reached directly from a selected delivery-plan case. */
 export function AsnDraftTab({ state }: { state: CaseSimulationState }) {
-  const { model, part, inputs, asnSelection, asnDeliveryDate, setAsnDeliveryDate, submittedAsn, backToDeliveryPlan, submitAsn, removeFromAsnDraft } = state;
+  const { model, part, inputs, asnSelection, asnDeliveryDate, setAsnDeliveryDate, submittedAsn, backToDeliveryPlan, submitAsn, sequenceOfCase } = state;
   const readOnly = !!submittedAsn;
   const selectedIds = submittedAsn?.ids ?? Object.keys(asnSelection);
   const cases = useMemo<DraftCase[]>(
@@ -32,6 +32,8 @@ export function AsnDraftTab({ state }: { state: CaseSimulationState }) {
   );
   const draft = cases.filter((item) => selectedIds.includes(item.id));
   const totalQty = draft.reduce((total, item) => total + item.qty, 0);
+  const sequence = draft.length ? sequenceOfCase.get(draft[0].id) : undefined;
+  const sequenceNote = sequence ? `Order date ${niceD(sequence.od)} · ${sequence.poNos.join(', ')}` : '';
   const asnNo = submittedAsn?.no ?? `ASN-50221-${asnDeliveryDate.replaceAll('-', '').slice(2)}-001`;
   const deliveryDate = submittedAsn?.deliveryDate ?? asnDeliveryDate;
 
@@ -54,10 +56,17 @@ export function AsnDraftTab({ state }: { state: CaseSimulationState }) {
         </div>
       )}
 
+      {!readOnly && sequence && (
+        <div className="alert alert-info py-2" role="alert">
+          <strong>One ASN = one Customer Order Date.</strong> All {plural(sequence.caseNos.length, 'case')} of order date {niceD(sequence.od)}
+          {sequence.poNos.length > 1 ? ` (spread over ${sequence.poNos.join(', ')})` : ''} are included and cannot be split into another ASN.
+        </div>
+      )}
+
       <div className="row">
         <SummaryCell label="ASN No" value={asnNo} note={readOnly ? 'submitted' : 'auto · assigned on submit'} mono />
         <SummaryCell label="Supplier · Plant" value="50221 · P01" note="PT Dummy Supplier Indonesia" mono />
-        <SummaryCell label="Cases · Qty" value={`${plural(draft.length, 'case')} · ${totalQty} pcs`} note="" />
+        <SummaryCell label="Cases · Qty" value={`${plural(draft.length, 'case')} · ${totalQty} pcs`} note={sequenceNote} />
       </div>
 
       <div className="card mb-2">
@@ -77,15 +86,6 @@ export function AsnDraftTab({ state }: { state: CaseSimulationState }) {
               disabled={readOnly}
               style={{ width: 150 }}
             />
-            {!readOnly && (
-              <button type="button" className="btn btn-outline-secondary btn-sm mr-2" onClick={backToDeliveryPlan}>
-                <svg className="mr-1" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round">
-                  <line x1="12" y1="5" x2="12" y2="19" />
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
-                Add cases
-              </button>
-            )}
             <button type="button" className="btn btn-outline-secondary btn-sm" disabled={!draft.length}>
               <svg className="mr-1" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 3v12M7 10l5 5 5-5M5 21h14" />
@@ -106,14 +106,11 @@ export function AsnDraftTab({ state }: { state: CaseSimulationState }) {
                   <th style={{ width: 110 }}>Part No</th>
                   <th style={{ width: 170 }}>Destination</th>
                   <th className="text-right">Qty</th>
-                  <th className="text-right" style={{ width: 80 }}>
-                    Action
-                  </th>
                 </tr>
               </thead>
               <tbody>
                 <tr className="table-light">
-                  <td colSpan={7}>
+                  <td colSpan={6}>
                     <strong>{part}</strong>
                     <small className="text-muted ml-2">
                       {plural(draft.length, 'case')} · {totalQty} pcs
@@ -128,15 +125,6 @@ export function AsnDraftTab({ state }: { state: CaseSimulationState }) {
                     <td className="align-middle font-weight-bold">{item.part}</td>
                     <td className="align-middle">{item.destination}</td>
                     <td className="align-middle text-right font-weight-bold">{item.qty}</td>
-                    <td className="align-middle text-right">
-                      {!readOnly && (
-                        <button type="button" className="btn btn-sm btn-outline-danger border-0" onClick={() => removeFromAsnDraft(item.id)} title="Remove from ASN" aria-label={`Remove ${item.id} from ASN`}>
-                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6" />
-                          </svg>
-                        </button>
-                      )}
-                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -149,7 +137,7 @@ export function AsnDraftTab({ state }: { state: CaseSimulationState }) {
 
       {!readOnly && (
         <div className="d-flex align-items-center justify-content-end">
-          <small className="text-muted mr-auto">1 ASN can contain several POs; each case holds one part.</small>
+          <small className="text-muted mr-auto">1 ASN holds one Customer Order Date, which can span several POs; each case holds one part.</small>
           <button type="button" className="btn btn-outline-secondary mr-2" onClick={backToDeliveryPlan}>
             Cancel
           </button>

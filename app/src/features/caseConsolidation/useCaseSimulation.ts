@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { buildModel, presetInputs } from './simulation';
+import { buildModel, buildSequences, presetInputs } from './simulation';
 import type { Order, PresetKey, SimInputs } from './simulation';
 import { EMPTY_QUERY } from './deliveryPlan';
 import type { DpQuery } from './deliveryPlan';
@@ -41,6 +41,8 @@ export function useCaseSimulation() {
   useEffect(() => stop, [stop]);
 
   const model = useMemo(() => buildModel(inputs), [inputs]);
+  const sequences = useMemo(() => buildSequences(model), [model]);
+  const sequenceOfCase = useMemo(() => new Map(sequences.flatMap((q) => q.caseNos.map((id) => [id, q] as const))), [sequences]);
   const placed = Math.min(step, model.rel);
   const done = placed >= model.rel;
 
@@ -139,30 +141,17 @@ export function useCaseSimulation() {
     setDpVariable(null);
   }, []);
 
+  /**
+   * One ASN holds exactly one Customer Order Date. Ticking a case selects every case of that
+   * date (in all its POs); unticking any of them clears the whole sequence.
+   */
   const toggleAsnCase = useCallback(
     (id: string) => {
-      if (asnByCase[id]) return;
-      setAsnSelection((prev) => {
-        const next = { ...prev };
-        if (next[id]) delete next[id];
-        else next[id] = true;
-        return next;
-      });
+      const q = sequenceOfCase.get(id);
+      if (!q?.complete || asnByCase[id]) return;
+      setAsnSelection((prev) => (prev[id] ? {} : Object.fromEntries(q.caseNos.map((n) => [n, true]))));
     },
-    [asnByCase],
-  );
-  const toggleAsnCases = useCallback(
-    (ids: string[], select: boolean) => {
-      setAsnSelection((prev) => {
-        const next = { ...prev };
-        ids.filter((id) => !asnByCase[id]).forEach((id) => {
-          if (select) next[id] = true;
-          else delete next[id];
-        });
-        return next;
-      });
-    },
-    [asnByCase],
+    [asnByCase, sequenceOfCase],
   );
   const clearAsnSelection = useCallback(() => setAsnSelection({}), []);
   const openAsnDraft = useCallback(() => {
@@ -178,25 +167,22 @@ export function useCaseSimulation() {
   }, []);
   const submitAsn = useCallback(() => {
     const ids = Object.keys(asnSelection);
-    if (!ids.length || !asnDeliveryDate) return;
+    const q = ids.length ? sequenceOfCase.get(ids[0]) : undefined;
+    // The whole order date must go in one ASN: reject partial or mixed selections.
+    if (!q?.complete || ids.length !== q.caseNos.length || !q.caseNos.every((id) => asnSelection[id]) || !asnDeliveryDate) return;
     const no = `ASN-50221-${asnDeliveryDate.replaceAll('-', '').slice(2)}-001`;
     setAsnByCase((prev) => ({ ...prev, ...Object.fromEntries(ids.map((id) => [id, no])) }));
     setSubmittedAsn({ no, ids, deliveryDate: asnDeliveryDate });
     setAsnSelection({});
-  }, [asnDeliveryDate, asnSelection]);
-  const removeFromAsnDraft = useCallback((id: string) => {
-    setAsnSelection((prev) => {
-      const next = { ...prev };
-      delete next[id];
-      return next;
-    });
-  }, []);
+  }, [asnDeliveryDate, asnSelection, sequenceOfCase]);
 
   return {
     inputs,
     part,
     setPart,
     model,
+    sequences,
+    sequenceOfCase,
     step,
     placed,
     done,
@@ -233,12 +219,10 @@ export function useCaseSimulation() {
     setAsnDeliveryDate,
     submittedAsn,
     toggleAsnCase,
-    toggleAsnCases,
     clearAsnSelection,
     openAsnDraft,
     backToDeliveryPlan,
     submitAsn,
-    removeFromAsnDraft,
   };
 }
 
