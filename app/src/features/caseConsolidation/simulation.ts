@@ -12,7 +12,11 @@ export interface Order {
   date: string;
   dest: DestKey;
   qty: number;
+  /** Part number for this customer-order line. Multiple lines may share `no`. */
+  part?: string;
 }
+
+export const partNoOf = (o: Pick<Order, 'part'>) => o.part?.trim() || 'Part 2';
 
 /** An order plus its index in the unsorted list (used to pick a stable colour). */
 export interface SortedOrder extends Order {
@@ -43,11 +47,26 @@ export const addDay = (iso: string) => {
   return t.toISOString().slice(0, 10);
 };
 export const caseNo = (n: number) => `50221X${String(n).padStart(2, '0')}`;
-export const plural = (n: number, w: string) => `${n} ${w}${n > 1 ? 's' : ''}`;
+/** ASN number for a delivery date (ISO), e.g. "2026-09-18" -> "ASN-50221-260918-001". */
+export const asnNoFor = (deliveryDate: string) => `ASN-50221-${deliveryDate.replaceAll('-', '').slice(2)}-001`;
+export const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? '' : 's'}`;
 /** "Order 12" -> "O12" */
 export const shortOrder = (o: { no: string }) => `O${o.no.replace(/\D/g, '')}`;
 
 const isoD = (n: number) => `2026-09-${String(n).padStart(2, '0')}`;
+
+function multiPartScenarioOrders(prefix: string, partLines: { part: string; dest: DestKey }[]): Order[] {
+  return Array.from({ length: 5 }, (_, dateIndex) => dateIndex).flatMap((dateIndex) =>
+    partLines.map((line, partIndex) => ({
+      id: dateIndex * partLines.length + partIndex + 1,
+      no: `${prefix}${String(dateIndex + 1).padStart(3, '0')}`,
+      date: isoD(15 + dateIndex),
+      dest: line.dest,
+      qty: 6,
+      part: line.part,
+    })),
+  );
+}
 
 const SEED: Order[] = [
   { id: 1, no: 'Order 1', date: '2026-09-15', dest: 'VN', qty: 2 },
@@ -65,7 +84,7 @@ const SEED: Order[] = [
   { id: 13, no: 'Order 13', date: '2026-09-17', dest: 'TH', qty: 3 },
 ];
 
-export type PresetKey = 'a' | 'b';
+export type PresetKey = 'a' | 'b' | 'c' | 'd';
 
 export interface SimInputs {
   preset: PresetKey;
@@ -91,6 +110,30 @@ export const PRESETS: Record<PresetKey, Preset> = {
     orders: Array.from({ length: 10 }, (_, i) => ({ id: i + 1, no: `Order ${i + 1}`, date: isoD(15 + i), dest: 'VN' as const, qty: 12 })),
   },
   b: { label: '3 destinations', maxC: 2, capOv: {}, orders: SEED },
+  c: {
+    label: '1 destination · 4 parts · 5 days',
+    maxC: 4,
+    capOv: {},
+    orders: multiPartScenarioOrders('CO-10', [
+      { part: 'P-1001', dest: 'VN' },
+      { part: 'P-1002', dest: 'VN' },
+      { part: 'P-1003', dest: 'VN' },
+      { part: 'P-1004', dest: 'VN' },
+    ]),
+  },
+  d: {
+    label: '3 destinations · 6 parts · 5 days',
+    maxC: 4,
+    capOv: {},
+    orders: multiPartScenarioOrders('CO-20', [
+      { part: 'P-3001', dest: 'VN' },
+      { part: 'P-3002', dest: 'VN' },
+      { part: 'P-3003', dest: 'JP' },
+      { part: 'P-3004', dest: 'JP' },
+      { part: 'P-3005', dest: 'TH' },
+      { part: 'P-3006', dest: 'TH' },
+    ]),
+  },
 };
 
 export const PRESET_KEYS = Object.keys(PRESETS) as PresetKey[];
@@ -163,6 +206,8 @@ export interface Sequence {
 
 interface QueuedCase {
   od: string;
+  /** First PO day this case can go into (Order Date + 1). */
+  ready: string;
   dest: DestKey;
   pieces: SortedOrder[];
 }
@@ -187,7 +232,7 @@ export function buildModel({ orders, pcs, maxC, capOv }: Pick<SimInputs, 'orders
       const pool = (carry[dc] ?? []).concat(fresh);
       if (!pool.length) return;
       const nC = Math.floor(pool.length / pcs);
-      for (let c = 0; c < nC; c++) queue.push({ od: d, dest: dc, pieces: pool.slice(c * pcs, (c + 1) * pcs) });
+      for (let c = 0; c < nC; c++) queue.push({ od: d, ready: addDay(d), dest: dc, pieces: pool.slice(c * pcs, (c + 1) * pcs) });
       carry[dc] = pool.slice(nC * pcs);
     }),
   );
@@ -204,9 +249,13 @@ export function buildModel({ orders, pcs, maxC, capOv }: Pick<SimInputs, 'orders
     const end = addDay(dates[dates.length - 1]);
     while (t <= end) {
       const cap = capOv[t] ?? maxC;
-      const open = queue.slice(qi);
-      const avail = open.filter((c) => addDay(c.od) <= t).length;
-      const backlogIn = open.filter((c) => addDay(c.od) < t).length;
+      // The queue is ordered by order date, so the cases available today are a prefix of what is left.
+      let avail = 0;
+      let backlogIn = 0;
+      for (let i = qi; i < queue.length && queue[i].ready <= t; i++) {
+        avail++;
+        if (queue[i].ready < t) backlogIn++;
+      }
       const take = Math.min(cap, avail);
       const r: Release = { no: `PO day ${++n}`, t, cap, avail, backlogIn, freshC: avail - backlogIn, take, left: avail - take, over: t in capOv, pos: [] };
       if (take) {

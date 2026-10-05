@@ -1,8 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { buildModel, buildSequences, presetInputs } from './simulation';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { addDay, asnNoFor, buildModel, buildSequences, presetInputs } from './simulation';
 import type { Order, PresetKey, SimInputs } from './simulation';
 import { EMPTY_QUERY } from './deliveryPlan';
 import type { DpQuery } from './deliveryPlan';
+import { ritsFor } from './rit';
+import type { Rit } from './rit';
 
 export type ViewKey = 'dp' | 'sim' | 'asn';
 export type SimulationRole = 'sup' | 'ds' | 'proc';
@@ -10,61 +12,61 @@ export type SimulationRole = 'sup' | 'ds' | 'proc';
 const STEP_MS = 240;
 
 export function useCaseSimulation() {
-  const [inputs, setInputs] = useState<SimInputs>(() => presetInputs('a'));
-  const [part, setPart] = useState('Part 2');
+  const [inputs, setInputs] = useState<SimInputs>(() => presetInputs('c'));
   const [step, setStep] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [view, setView] = useState<ViewKey>('dp');
   // Case selection and ASN grouping are the Demand Supply workflow shown by default.
-  const [role, setRoleValue] = useState<SimulationRole>('ds');
-  const [nextId, setNextId] = useState(() => presetInputs('a').orders.length + 1);
+  const [role, setRole] = useState<SimulationRole>('ds');
 
   // Delivery Plan navigation/filter state.
   const [dpPage, setDpPage] = useState<'list' | 'detail'>('list');
   const [dpFilter, setDpFilter] = useState<DpQuery>(EMPTY_QUERY);
-  const [dpQuery, setDpQuery] = useState<DpQuery | null>(null);
+  const [dpQuery, setDpQuery] = useState<DpQuery>(EMPTY_QUERY);
   const [dpSel, setDpSel] = useState<string | null>(null);
-  const [dpVariable, setDpVariable] = useState<string | null>(null);
 
   // ASN draft state is intentionally kept in this simulation so users can
   // group cases directly from a delivery-plan detail.
   const [asnSelection, setAsnSelection] = useState<Record<string, boolean>>({});
   const [asnByCase, setAsnByCase] = useState<Record<string, string>>({});
   const [asnDeliveryDate, setAsnDeliveryDate] = useState(defaultDeliveryDate);
-  const [submittedAsn, setSubmittedAsn] = useState<{ no: string; ids: string[]; deliveryDate: string } | null>(null);
-
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const stop = useCallback(() => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    timerRef.current = null;
-  }, []);
-  useEffect(() => stop, [stop]);
+  const [asnRitNo, setAsnRit] = useState('');
+  const [submittedAsn, setSubmittedAsn] = useState<{ no: string; ids: string[]; deliveryDate: string; rit: Rit } | null>(null);
+  // Rits depend on the chosen delivery date; the first one is picked until the user chooses another.
+  const asnRits = useMemo(() => ritsFor(asnDeliveryDate), [asnDeliveryDate]);
+  const asnRit = asnRits.find((r) => r.no === asnRitNo) ?? asnRits[0];
 
   const model = useMemo(() => buildModel(inputs), [inputs]);
   const sequences = useMemo(() => buildSequences(model), [model]);
   const sequenceOfCase = useMemo(() => new Map(sequences.flatMap((q) => q.caseNos.map((id) => [id, q] as const))), [sequences]);
   const placed = Math.min(step, model.rel);
   const done = placed >= model.rel;
+  // The timer stops by itself once everything is placed.
+  const running = playing && !done;
+  useEffect(() => {
+    if (!running) return;
+    const timer = setInterval(() => setStep((n) => n + 1), STEP_MS);
+    return () => clearInterval(timer);
+  }, [running]);
 
-  /** Reset the simulation playhead whenever the inputs (orders/pcs/capacity) change. */
-  const edit = useCallback(
-    (fn: (s: SimInputs) => SimInputs) => {
-      stop();
-      setPlaying(false);
-      setStep(0);
-      setInputs(fn);
-    },
-    [stop],
-  );
+  /**
+   * Every input change (orders/pcs/capacity/preset) rebuilds the cases, and case numbers are just
+   * their position, so the playhead and everything derived from old case numbers (Delivery Plan
+   * selection, ASN draft, submitted ASNs) are reset together.
+   */
+  const edit = useCallback((fn: (s: SimInputs) => SimInputs) => {
+    setPlaying(false);
+    setStep(0);
+    setInputs(fn);
+    setDpSel(null);
+    setDpPage('list');
+    setAsnSelection({});
+    setAsnByCase({});
+    setSubmittedAsn(null);
+    setView((v) => (v === 'asn' ? 'dp' : v));
+  }, []);
 
-  const applyPreset = useCallback(
-    (k: PresetKey) => {
-      const next = presetInputs(k);
-      edit(() => next);
-      setNextId(next.orders.length + 1);
-    },
-    [edit],
-  );
+  const applyPreset = useCallback((k: PresetKey) => edit(() => presetInputs(k)), [edit]);
 
   const reset = useCallback(() => edit((s) => presetInputs(s.preset)), [edit]);
 
@@ -76,82 +78,52 @@ export function useCaseSimulation() {
     [edit],
   );
   const removeOrder = useCallback((id: number) => edit((s) => ({ ...s, orders: s.orders.filter((o) => o.id !== id) })), [edit]);
-  const addOrder = useCallback(() => {
-    edit((s) => {
-      const last = [...s.orders].sort((a, b) => (a.date < b.date ? -1 : 1)).pop();
-      const id = nextId;
-      const order: Order = { id, no: `Order ${id}`, date: last ? addDayIso(last.date) : '2026-09-15', dest: 'VN', qty: s.pcs };
-      return { ...s, orders: [...s.orders, order] };
-    });
-    setNextId((n) => n + 1);
-  }, [edit, nextId]);
+  const addOrder = useCallback(
+    () =>
+      edit((s) => {
+        const lastDate = s.orders.reduce((max, o) => (o.date > max ? o.date : max), '');
+        const id = Math.max(0, ...s.orders.map((o) => o.id)) + 1;
+        const order: Order = { id, no: `Order ${id}`, date: lastDate ? addDay(lastDate) : '2026-09-15', dest: 'VN', qty: s.pcs, part: `Part ${String(id).padStart(3, '0')}` };
+        return { ...s, orders: [...s.orders, order] };
+      }),
+    [edit],
+  );
 
   const stepOne = useCallback(() => setStep((n) => Math.min(model.rel, n + 1)), [model.rel]);
   const fillAll = useCallback(() => {
-    stop();
     setPlaying(false);
     setStep(model.rel);
-  }, [model.rel, stop]);
-
-  const togglePlay = useCallback(() => {
-    if (playing) {
-      stop();
-      setPlaying(false);
-      return;
-    }
-    setPlaying(true);
-    timerRef.current = setInterval(() => {
-      setStep((n) => {
-        if (n >= model.rel) {
-          stop();
-          setPlaying(false);
-          return n;
-        }
-        return n + 1;
-      });
-    }, STEP_MS);
-  }, [model.rel, playing, stop]);
+  }, [model.rel]);
+  const togglePlay = useCallback(() => setPlaying((p) => !p), []);
 
   const dpSearch = useCallback(() => {
     setDpQuery({ ...dpFilter });
     setDpSel(null);
-    setDpVariable(null);
     setDpPage('list');
   }, [dpFilter]);
   const dpReset = useCallback(() => {
-    setDpQuery(null);
+    setDpQuery(EMPTY_QUERY);
     setDpFilter(EMPTY_QUERY);
     setDpSel(null);
-    setDpVariable(null);
     setDpPage('list');
   }, []);
   const dpSelect = useCallback((key: string) => {
     setDpSel(key);
-    setDpVariable(null);
     setDpPage('detail');
   }, []);
-  const dpBack = useCallback(() => {
-    setDpPage('list');
-    setDpVariable(null);
-  }, []);
-  const dpToggleVariable = useCallback((v: string) => setDpVariable((cur) => (cur === v ? null : v)), []);
-  const dpClearVariable = useCallback(() => setDpVariable(null), []);
-  const setRole = useCallback((next: SimulationRole) => {
-    setRoleValue(next);
-    setDpVariable(null);
-  }, []);
+  const dpBack = useCallback(() => setDpPage('list'), []);
 
   /**
-   * One ASN holds exactly one Customer Order Date. Ticking a case selects every case of that
-   * date (in all its POs); unticking any of them clears the whole sequence.
+   * One ASN holds exactly one Customer Order Date. Ticking a date selects every case of it
+   * (in all its POs); unticking clears the selection.
    */
-  const toggleAsnCase = useCallback(
-    (id: string) => {
-      const q = sequenceOfCase.get(id);
-      if (!q?.complete || asnByCase[id]) return;
-      setAsnSelection((prev) => (prev[id] ? {} : Object.fromEntries(q.caseNos.map((n) => [n, true]))));
+  const toggleAsnDate = useCallback(
+    (od: string) => {
+      const q = sequences.find((x) => x.od === od);
+      if (!q?.complete || q.caseNos.every((id) => asnByCase[id])) return;
+      setAsnSelection((prev) => (q.caseNos.every((id) => prev[id]) ? {} : Object.fromEntries(q.caseNos.map((n) => [n, true]))));
     },
-    [asnByCase, sequenceOfCase],
+    [asnByCase, sequences],
   );
   const clearAsnSelection = useCallback(() => setAsnSelection({}), []);
   const openAsnDraft = useCallback(() => {
@@ -163,30 +135,28 @@ export function useCaseSimulation() {
   const backToDeliveryPlan = useCallback(() => {
     window.scrollTo(0, 0);
     setView('dp');
-    setDpPage('detail');
+    setDpPage('list');
   }, []);
   const submitAsn = useCallback(() => {
     const ids = Object.keys(asnSelection);
     const q = ids.length ? sequenceOfCase.get(ids[0]) : undefined;
     // The whole order date must go in one ASN: reject partial or mixed selections.
-    if (!q?.complete || ids.length !== q.caseNos.length || !q.caseNos.every((id) => asnSelection[id]) || !asnDeliveryDate) return;
-    const no = `ASN-50221-${asnDeliveryDate.replaceAll('-', '').slice(2)}-001`;
+    if (!q?.complete || ids.length !== q.caseNos.length || !q.caseNos.every((id) => asnSelection[id]) || !asnDeliveryDate || !asnRit) return;
+    const no = asnNoFor(asnDeliveryDate);
     setAsnByCase((prev) => ({ ...prev, ...Object.fromEntries(ids.map((id) => [id, no])) }));
-    setSubmittedAsn({ no, ids, deliveryDate: asnDeliveryDate });
+    setSubmittedAsn({ no, ids, deliveryDate: asnDeliveryDate, rit: asnRit });
     setAsnSelection({});
-  }, [asnDeliveryDate, asnSelection, sequenceOfCase]);
+  }, [asnDeliveryDate, asnRit, asnSelection, sequenceOfCase]);
 
   return {
     inputs,
-    part,
-    setPart,
     model,
     sequences,
     sequenceOfCase,
     step,
     placed,
     done,
-    playing,
+    playing: running,
     view,
     setView,
     role,
@@ -204,21 +174,21 @@ export function useCaseSimulation() {
     dpPage,
     dpFilter,
     setDpFilter,
-    dpQuery: dpQuery ?? EMPTY_QUERY,
+    dpQuery,
     dpSel,
-    dpVariable,
     dpSearch,
     dpReset,
     dpSelect,
     dpBack,
-    dpToggleVariable,
-    dpClearVariable,
     asnSelection,
     asnByCase,
     asnDeliveryDate,
+    asnRits,
+    asnRit,
+    setAsnRit,
     setAsnDeliveryDate,
     submittedAsn,
-    toggleAsnCase,
+    toggleAsnDate,
     clearAsnSelection,
     openAsnDraft,
     backToDeliveryPlan,
@@ -226,16 +196,11 @@ export function useCaseSimulation() {
   };
 }
 
+/** Tomorrow in the user's local time (toISOString would shift it by the UTC offset). */
 function defaultDeliveryDate() {
-  const date = new Date();
-  date.setDate(date.getDate() + 1);
-  return date.toISOString().slice(0, 10);
-}
-
-function addDayIso(iso: string) {
-  const t = new Date(`${iso}T00:00:00Z`);
-  t.setUTCDate(t.getUTCDate() + 1);
-  return t.toISOString().slice(0, 10);
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 export type CaseSimulationState = ReturnType<typeof useCaseSimulation>;

@@ -3,7 +3,7 @@
    allocation-result table. Kept separate from simulation.ts (the pure
    packing/release model) so the components stay thin. */
 
-import { addDay, caseNo, colorOf, DEST, niceD, plural, shortD, shortOrder } from './simulation';
+import { addDay, caseNo, colorOf, DEST, niceD, partNoOf, plural, shortD, shortOrder } from './simulation';
 import type { Model, SeqItem, SortedOrder } from './simulation';
 
 export interface Dot {
@@ -14,6 +14,7 @@ export interface Dot {
 export interface OrderRow {
   id: number;
   no: string;
+  part: string;
   date: string;
   qty: number;
   color: string;
@@ -43,7 +44,7 @@ export function buildOrderRows(model: Model, placed: number, done: boolean): Ord
     let note = idx.length ? `${relSet.join('+')} → ${posSet.join(' + ')}` : '';
     if (!done && moved && moved < idx.length) note = `${moved}/${idx.length} packed`;
     if (pn) note = `${note ? `${note} · ` : ''}${pn} remaining`;
-    return { id: o.id, no: `${o.no} · ${o.dest}`, date: o.date, qty: o.qty, color, dots, note, active, isPending: pn > 0 };
+    return { id: o.id, no: o.no, part: partNoOf(o), date: o.date, qty: o.qty, color, dots, note, active, isPending: pn > 0 };
   });
 }
 
@@ -148,8 +149,9 @@ export interface KpiTile {
 export function buildKpis(model: Model, pcs: number): KpiTile[] {
   const { sorted, rel, caseCount, poCount, pendingQty } = model;
   const total = sorted.reduce((a, o) => a + o.qty, 0);
+  const customerOrderCount = new Set(sorted.map((o) => o.no)).size;
   return [
-    { k: 'Customer order qty', v: `${total} pcs`, s: `${plural(sorted.length, 'order')} · multiple of ${pcs} per destination`, variant: 'secondary' },
+    { k: 'Customer order qty', v: `${total} pcs`, s: `${plural(customerOrderCount, 'customer order')} · ${plural(sorted.length, 'part line')}`, variant: 'secondary' },
     { k: 'In supplier PO', v: `${rel} pcs`, s: `${plural(caseCount, 'case')} · FIFO`, variant: 'success' },
     { k: 'Supplier PO', v: `${poCount} PO`, s: '1 PO per day · D+1', variant: 'primary' },
     {
@@ -180,7 +182,7 @@ export interface AllocRow {
   noteClass: string;
 }
 
-export function buildAllocationRows(model: Model, placed: number, done: boolean, part: string, pcs: number): AllocRow[] {
+export function buildAllocationRows(model: Model, placed: number, done: boolean, pcs: number): AllocRow[] {
   const { releases, seq, pending } = model;
   const rows: AllocRow[] = [];
   releases.forEach((r) => {
@@ -206,7 +208,7 @@ export function buildAllocationRows(model: Model, placed: number, done: boolean,
             poQty: poFirst ? `${p.cases.length * pcs} pcs` : '',
             caseNo: i === 0 ? caseNo(c.n) : '',
             caseClass: 'text-primary',
-            part,
+            part: partNoOf(x.o),
             no: x.o.no,
             date: niceD(x.o.date),
             qty: x.n,
@@ -232,7 +234,7 @@ export function buildAllocationRows(model: Model, placed: number, done: boolean,
         poQty: '',
         caseNo: '',
         caseClass: 'text-warning-dark',
-        part,
+        part: partNoOf(o),
         no: o.no,
         date: niceD(o.date),
         qty: pn,

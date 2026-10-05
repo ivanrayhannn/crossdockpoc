@@ -25,7 +25,7 @@ export function CaseConsolidationPage() {
           released automatically with PO Date = Order Date + 1, holding all destinations. A PO can take at most Max Case/Day cases. Cases that do not fit wait in a FIFO
           backlog and go into the next PO first, so they use up the quota of later orders. Changing Max Case/Day does not add cases to a PO that is already released; it
           only applies to the next PO. One ASN covers exactly one Customer Order Date, even when that date is spread over several POs: until every order of the date is paired
-          with a PO it stays view only, and once complete all its cases must go into the same ASN. Whatever is left at the end is shown as remaining and can be handled with a manual PO.
+          with a PO it stays Waiting Released, and once it is Ready to ASN all its cases must go into the same ASN. Whatever is left at the end is shown as remaining and can be handled with a manual PO.
         </p>
 
         <OptionsBar state={state} />

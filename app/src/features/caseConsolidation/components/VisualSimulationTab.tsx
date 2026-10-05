@@ -18,14 +18,14 @@ function PoField({ label, width, children }: { label: string; width?: number; ch
 }
 
 export function VisualSimulationTab({ state }: { state: CaseSimulationState }) {
-  const { model, placed, done, inputs, part, updateOrder, removeOrder, addOrder } = state;
+  const { model, placed, done, inputs, updateOrder, removeOrder, addOrder } = state;
   const pcs = inputs.pcs;
 
   const orderRows = useMemo(() => buildOrderRows(model, placed, done), [model, placed, done]);
   const releaseRows = useMemo(() => buildReleaseRows(model, placed, done, pcs), [model, placed, done, pcs]);
   const waiting = useMemo(() => buildWaiting(model), [model]);
   const kpis = useMemo(() => buildKpis(model, pcs), [model, pcs]);
-  const allocRows = useMemo(() => buildAllocationRows(model, placed, done, part, pcs), [model, placed, done, part, pcs]);
+  const allocRows = useMemo(() => buildAllocationRows(model, placed, done, pcs), [model, placed, done, pcs]);
 
   const total = model.sorted.reduce((a, o) => a + o.qty, 0);
   const progress = `${placed} / ${model.rel} pcs packed`;
@@ -38,7 +38,7 @@ export function VisualSimulationTab({ state }: { state: CaseSimulationState }) {
           <div className="card">
             <div className="card-header d-flex align-items-center flex-wrap">
               <h6 className="mb-0 mr-2">Customer orders</h6>
-              <small className="text-muted">1 order per date · oldest first · total {total} pcs</small>
+              <small className="text-muted">A Customer Order can have multiple part numbers · total {total} pcs</small>
               <button type="button" className="btn btn-outline-primary btn-sm ml-auto" onClick={addOrder}>
                 + Add order
               </button>
@@ -75,7 +75,16 @@ export function VisualSimulationTab({ state }: { state: CaseSimulationState }) {
                       </svg>
                     </button>
                   </div>
-                  <div className="d-flex flex-wrap align-items-center mt-1" style={{ gap: 3, paddingLeft: 18 }}>
+                  <div className="d-flex flex-wrap align-items-center mt-1" style={{ gap: 4, paddingLeft: 18 }}>
+                    <label className="small text-muted mb-0" htmlFor={`part-${o.id}`}>Part No</label>
+                    <input
+                      id={`part-${o.id}`}
+                      className="form-control form-control-sm text-monospace"
+                      value={o.part}
+                      onChange={(e) => updateOrder(o.id, (ord) => ({ ...ord, part: e.target.value }))}
+                      aria-label={`Part number for ${o.no}`}
+                      style={{ width: 100 }}
+                    />
                     {o.dots.map((d, i) => (
                       <span key={i} className="d-inline-block rounded-circle" style={{ width: 11, height: 11, background: d.bg, border: `2px solid ${d.bd}` }} />
                     ))}

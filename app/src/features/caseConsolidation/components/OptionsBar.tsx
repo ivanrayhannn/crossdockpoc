@@ -9,7 +9,7 @@ const ROLES = [
 ] as const;
 
 export function OptionsBar({ state }: { state: CaseSimulationState }) {
-  const { inputs, part, setPart, setPcs, setMaxC, applyPreset, reset, stepOne, fillAll, togglePlay, playing, done, model, role, setRole } = state;
+  const { inputs, setPcs, setMaxC, applyPreset, reset, stepOne, fillAll, togglePlay, playing, done, model, role, setRole } = state;
   const disabled = done || !model.rel;
 
   return (
@@ -23,7 +23,7 @@ export function OptionsBar({ state }: { state: CaseSimulationState }) {
           Simulation only
         </span>
         <h6 className="mb-0 mr-2">Simulation options</h6>
-        <small className="text-muted">For testing scenarios only, not part of the real screen. Max Case/Day applies to every PO day; extra cases wait for the next PO.</small>
+        <small className="text-muted">For testing scenarios only, not part of the real screen. Customer Orders can share a number across multiple Part Nos; Max Case/Day applies to every PO day.</small>
       </div>
 
       <div className="card-body py-2">
@@ -37,13 +37,6 @@ export function OptionsBar({ state }: { state: CaseSimulationState }) {
                 </button>
               ))}
             </div>
-          </div>
-
-          <div className="form-group col-auto mb-0">
-            <label htmlFor="cc-part-no" className="d-block small text-muted mb-1">
-              Part No
-            </label>
-            <input id="cc-part-no" className="form-control form-control-sm text-monospace" value={part} onChange={(e) => setPart(e.target.value)} style={{ width: 100 }} />
           </div>
 
           <div className="form-group col-auto mb-0">
