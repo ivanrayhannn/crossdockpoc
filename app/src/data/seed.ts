@@ -261,10 +261,14 @@ function genHistoryFor(part: SeedPart): HistoryEvent[] {
 
 export const HIST_BY_PART: Record<string, HistoryEvent[]> = Object.fromEntries(ALL_SEED.map((p) => [p.p, genHistoryFor(p)]));
 
+/** Placeholder Effective Start Date for the seed parts, which have no real one. */
+const SEED_EFF_DATE = '2026-01-01';
+
 /** Fresh copy of the seed data, as the mockup's clone() did. */
 export function cloneSeedParts(): Part[] {
   return ALL_SEED.map((p) => ({
     ...p,
+    effDate: SEED_EFF_DATE,
     dests: p.dests.map((d) => ({ ...d, cd: DCODE[d.d] || '' })),
   }));
 }

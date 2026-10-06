@@ -215,7 +215,15 @@ export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHist
                   return (
                     <tr key={p.p} className="row-hover">
                       <td style={{ ...td, padding: '0 10px 0 16px', overflow: 'hidden' }}>
-                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12.5, fontWeight: 600 }}>{p.p}</span>
+                        <button
+                          type="button"
+                          className="link-btn"
+                          onClick={() => onOpenPart(p.p)}
+                          title={ro ? 'View part data' : 'Edit part data'}
+                          style={{ fontFamily: 'var(--font-mono)', fontSize: 12.5, fontWeight: 600 }}
+                        >
+                          {p.p}
+                        </button>
                       </td>
                       <td style={{ ...td, overflow: 'hidden', textOverflow: 'ellipsis' }} title={p.n}>{p.n}</td>
                       <td style={{ ...td, textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: r.minMadFg, fontWeight: r.minMadW }}>{r.minMad}</td>

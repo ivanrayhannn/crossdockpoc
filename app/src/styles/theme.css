@@ -231,6 +231,16 @@ a:hover {
 .row-hover:hover {
   background: var(--color-neutral-200);
 }
+.link-btn {
+  cursor: pointer;
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--color-accent-700);
+}
+.link-btn:hover {
+  text-decoration: underline;
+}
 .icon-btn-hover:hover {
   background: var(--color-accent-200);
 }

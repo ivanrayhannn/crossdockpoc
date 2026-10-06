@@ -58,8 +58,10 @@ export function PartModal({ state }: { state: CrossdockState }) {
   const saveDisabled = !f.p || !pc || !mc;
   const saveTitle = !f.p ? 'Part No is required' : !pc ? 'Enter Pcs/Case first (step 2)' : !mc ? 'Enter Max Case/Day (step 2)' : 'Save part data';
 
-  // Effective Start Date is set once when the part is added; editing keeps the original value.
-  const effDateLocked = inputRO || !!editId;
+  // Effective Start Date stays editable while the saved part is still a Candidate; once it is
+  // Active/Inactive the date has taken effect and is locked. A new part (Add form) is always open.
+  const savedStatus = editId ? parts.find((p) => p.p === editId)?.st : undefined;
+  const effDateLocked = inputRO || (!!editId && savedStatus !== 'Candidate');
 
   // A newly added part always starts as Candidate; the status only becomes
   // editable once the part exists.
@@ -136,7 +138,7 @@ export function PartModal({ state }: { state: CrossdockState }) {
                   <label>
                     Part Name <span style={{ color: 'var(--color-accent-700)' }}>*</span>
                   </label>
-                  <input className="input" value={f.n} disabled placeholder="Select Part No field" style={{ background: inputBg }} />
+                  <input className="input" value={f.n} disabled placeholder="Select Part No field" style={{ background: 'var(--color-neutral-200)' }} />
                 </div>
                 <div className="field">
                   <label>Effective Start Date</label>
@@ -147,7 +149,7 @@ export function PartModal({ state }: { state: CrossdockState }) {
                     min={todayStr()}
                     onChange={(e) => patch((x) => { x.effDate = e.target.value; })}
                     disabled={effDateLocked}
-                    title={effDateLocked && !inputRO ? 'Effective Start Date cannot be changed after the part is added' : undefined}
+                    title={effDateLocked && !inputRO ? 'Can only be changed while the status is still Candidate' : undefined}
                     style={{ background: effDateLocked ? 'var(--color-neutral-200)' : inputBg }}
                   />
                 </div>
