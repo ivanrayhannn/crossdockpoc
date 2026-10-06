@@ -11,12 +11,13 @@ interface Props {
   options: PartOption[];
   disabled?: boolean;
   background: string;
+  placeholder?: string;
   /** Called with the picked option, or null once the user edits the text and the previous pick no longer applies. */
   onSelect: (option: PartOption | null) => void;
 }
 
 /** Type-to-filter Part No picker. The input only ever holds the Part No itself. */
-export function PartNoCombobox({ value, options, disabled, background, onSelect }: Props) {
+export function PartNoCombobox({ value, options, disabled, background, placeholder = 'Type or select Part No', onSelect }: Props) {
   const [query, setQuery] = useState(value);
   const [open, setOpen] = useState(false);
   const [hi, setHi] = useState(0);
@@ -86,7 +87,7 @@ export function PartNoCombobox({ value, options, disabled, background, onSelect 
         autoComplete="off"
         value={query}
         disabled={disabled}
-        placeholder="Type or select Part No"
+        placeholder={placeholder}
         onChange={(e) => {
           setQuery(e.target.value);
           setHi(0);

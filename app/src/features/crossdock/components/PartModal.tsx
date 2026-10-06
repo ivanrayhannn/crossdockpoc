@@ -58,9 +58,8 @@ export function PartModal({ state }: { state: CrossdockState }) {
   const saveDisabled = !f.p || !pc || !mc;
   const saveTitle = !f.p ? 'Part No is required' : !pc ? 'Enter Pcs/Case first (step 2)' : !mc ? 'Enter Max Case/Day (step 2)' : 'Save part data';
 
-  // Effective Start Date only moves while the part is still a Candidate —
-  // once it's Active/Inactive that date has already taken effect.
-  const effDateLocked = inputRO || f.st !== 'Candidate';
+  // Effective Start Date is set once when the part is added; editing keeps the original value.
+  const effDateLocked = inputRO || !!editId;
 
   // A newly added part always starts as Candidate; the status only becomes
   // editable once the part exists.
@@ -123,6 +122,7 @@ export function PartModal({ state }: { state: CrossdockState }) {
                       options={availableMaster}
                       disabled={inputRO}
                       background={inputBg}
+                      placeholder="Select Part Number"
                       onSelect={(opt) =>
                         patch((x) => {
                           x.p = opt ? opt.no : '';
@@ -133,8 +133,10 @@ export function PartModal({ state }: { state: CrossdockState }) {
                   )}
                 </div>
                 <div className="field">
-                  <label>Part Name</label>
-                  <input className="input" value={f.n} disabled placeholder="autofill" style={{ background: inputBg }} />
+                  <label>
+                    Part Name <span style={{ color: 'var(--color-accent-700)' }}>*</span>
+                  </label>
+                  <input className="input" value={f.n} disabled placeholder="Select Part No field" style={{ background: inputBg }} />
                 </div>
                 <div className="field">
                   <label>Effective Start Date</label>
@@ -145,7 +147,7 @@ export function PartModal({ state }: { state: CrossdockState }) {
                     min={todayStr()}
                     onChange={(e) => patch((x) => { x.effDate = e.target.value; })}
                     disabled={effDateLocked}
-                    title={effDateLocked && !inputRO ? 'Can only be changed while the status is still Candidate' : undefined}
+                    title={effDateLocked && !inputRO ? 'Effective Start Date cannot be changed after the part is added' : undefined}
                     style={{ background: effDateLocked ? 'var(--color-neutral-200)' : inputBg }}
                   />
                 </div>

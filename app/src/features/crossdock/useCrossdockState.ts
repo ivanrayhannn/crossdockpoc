@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { blankPart, cloneSeedParts, CUR_PER } from '../../data/seed';
-import { num } from '../../lib/format';
+import { nowStamp, num } from '../../lib/format';
 import type { DestAllocation, ModalKind, Part, PartQuery, TabView, UserRole } from '../../types';
 
 const DEFAULT_Q: PartQuery = {
@@ -13,8 +13,14 @@ const DEFAULT_Q: PartQuery = {
   sort: 'dt_desc',
 };
 
-const NOW = '12-Aug-2026 09:30';
 const EDITOR = 'D. Anggraini';
+
+/** Shown in the success popup after a part is saved from the Add/Edit form. */
+export interface SaveNotice {
+  mode: 'add' | 'edit';
+  part: string;
+  name: string;
+}
 
 /** Deep-ish clone of a part's destination list, so edits inside a modal/draft
  * never mutate the committed `parts` array until explicitly saved. */
@@ -32,6 +38,7 @@ export function useCrossdockState() {
   const [editDest, setEditDest] = useState<string | null>(null);
   const [draftDests, setDraftDests] = useState<DestAllocation[] | null>(null);
   const [q, setQ] = useState<PartQuery>(DEFAULT_Q);
+  const [notice, setNotice] = useState<SaveNotice | null>(null);
 
   // No auth backend in this build — always full read/write access.
   const ro = false;
@@ -107,7 +114,7 @@ export function useCrossdockState() {
       return prevParts.map((p) =>
         p.p === editDest
           // A mapping edit invalidates whatever was last synced, so it drops back to No Sync.
-          ? { ...p, dests: draftDests.map((d) => ({ ...d, al: num(d.al) })), by: EDITOR, dt: NOW, syncStatus: 0 }
+          ? { ...p, dests: draftDests.map((d) => ({ ...d, al: num(d.al) })), by: EDITOR, dt: nowStamp(), syncStatus: 0 }
           : p,
       );
     });
@@ -117,7 +124,7 @@ export function useCrossdockState() {
 
   const syncParts = useCallback((ids: string[]) => {
     const idSet = new Set(ids);
-    setParts((prevParts) => prevParts.map((p) => (idSet.has(p.p) ? { ...p, syncStatus: 1, dt: NOW } : p)));
+    setParts((prevParts) => prevParts.map((p) => (idSet.has(p.p) ? { ...p, syncStatus: 1, dt: nowStamp() } : p)));
   }, []);
 
   const closeModal = useCallback(() => {
@@ -130,12 +137,18 @@ export function useCrossdockState() {
   const commit = useCallback(() => {
     if (!form) return;
     // Any change at the part-number level invalidates the current mapping sync.
-    const f: Part = { ...form, pc: num(form.pc), mc: num(form.mc), minMad: num(form.minMad), by: EDITOR, dt: NOW, syncStatus: 0 };
-    setParts((prevParts) => (editId ? prevParts.map((p) => (p.p === editId ? f : p)) : [f, ...prevParts]));
+    const f: Part = { ...form, pc: num(form.pc), mc: num(form.mc), minMad: num(form.minMad), by: EDITOR, dt: nowStamp(), syncStatus: 0 };
+    // The saved part goes to the top of the list, whether it was added or edited.
+    setParts((prevParts) => [f, ...prevParts.filter((p) => p.p !== f.p)]);
+    // Show it right away: drop filters that could hide it and sort newest first.
+    setQ((prev) => ({ ...prev, part: '', name: '', st: 'all', sort: 'dt_desc' }));
+    setNotice({ mode: editId ? 'edit' : 'add', part: f.p, name: f.n });
     setModal(null);
     setForm(null);
     setEditId(null);
   }, [form, editId]);
+
+  const dismissNotice = useCallback(() => setNotice(null), []);
 
   const addPart = useCallback(() => openFor(null, 'part'), [openFor]);
   const openUpload = useCallback(() => setModal('upload'), []);
@@ -158,6 +171,8 @@ export function useCrossdockState() {
     draftDests,
     q,
     setQ,
+    notice,
+    dismissNotice,
     ro,
     openFor,
     patch,

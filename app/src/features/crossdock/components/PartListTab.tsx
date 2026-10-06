@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { fmt, madAvg, num, parseDt } from '../../../lib/format';
 import type { Part, PartQuery, PartStatus } from '../../../types';
+import { selectParts } from '../partList';
 
 const STATUS_STYLE: Record<PartStatus, { bg: string; fg: string }> = {
   Active: { bg: 'var(--color-accent-2-200)', fg: 'var(--color-accent-2-800)' },
@@ -51,18 +52,7 @@ export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHist
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
 
-  const rowsSrc = useMemo(() => {
-    const filtered = parts.filter(
-      (p) =>
-        (!q.part || p.p.toLowerCase().includes(q.part.toLowerCase())) &&
-        (!q.name || p.n.toLowerCase().includes(q.name.toLowerCase())) &&
-        (q.st === 'all' || p.st.toLowerCase() === q.st),
-    );
-    if (q.sort === 'default' || q.sort === 'pn_asc') return [...filtered].sort((a, b) => a.p.localeCompare(b.p));
-    if (q.sort === 'dt_desc') return [...filtered].sort((a, b) => parseDt(b.dt) - parseDt(a.dt));
-    if (q.sort === 'dt_asc') return [...filtered].sort((a, b) => parseDt(a.dt) - parseDt(b.dt));
-    return filtered;
-  }, [parts, q]);
+  const rowsSrc = useMemo(() => selectParts(parts, q), [parts, q]);
 
   useEffect(() => {
     setPage(1);
@@ -85,9 +75,6 @@ export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHist
   const pageSrc = rowsSrc.slice(pageStart, pageStart + pageSize);
 
   const rows = pageSrc.map((p) => {
-    const a = p.dests.reduce((x, d) => x + num(d.al), 0);
-    const m = num(p.mc);
-    const incomplete = !p.dests.length || a !== m;
     const avg = madAvg(p.mad);
     // Candidate parts have no MAD history yet, so the Min MAD warning doesn't apply.
     const below = p.st !== 'Candidate' && avg < num(p.minMad);
@@ -96,7 +83,6 @@ export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHist
       minMad: fmt(num(p.minMad)),
       minMadFg: below ? 'var(--color-warn-fg)' : 'var(--color-neutral-800)',
       minMadW: below ? 700 : 400,
-      mark: incomplete ? 'var(--color-accent)' : 'transparent',
       stBg: STATUS_STYLE[p.st].bg,
       stFg: STATUS_STYLE[p.st].fg,
     };
@@ -228,7 +214,7 @@ export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHist
                   const p = r.p;
                   return (
                     <tr key={p.p} className="row-hover">
-                      <td style={{ ...td, padding: '0 10px 0 16px', overflow: 'hidden', borderLeft: `3px solid ${r.mark}` }}>
+                      <td style={{ ...td, padding: '0 10px 0 16px', overflow: 'hidden' }}>
                         <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12.5, fontWeight: 600 }}>{p.p}</span>
                       </td>
                       <td style={{ ...td, overflow: 'hidden', textOverflow: 'ellipsis' }} title={p.n}>{p.n}</td>

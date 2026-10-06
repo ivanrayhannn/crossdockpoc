@@ -5,9 +5,10 @@ interface PageHeaderProps {
   view: TabView;
   onAddPart: () => void;
   onOpenUpload: () => void;
+  onExport: () => void;
 }
 
-export function PageHeader({ ro, view, onAddPart, onOpenUpload }: PageHeaderProps) {
+export function PageHeader({ ro, view, onAddPart, onOpenUpload, onExport }: PageHeaderProps) {
   return (
     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 24, padding: '20px 28px 0' }}>
       <div>
@@ -37,7 +38,7 @@ export function PageHeader({ ro, view, onAddPart, onOpenUpload }: PageHeaderProp
                 Upload Excel
               </button>
             )}
-            <button className="btn btn-secondary" style={{ fontSize: 13 }}>
+            <button className="btn btn-secondary" onClick={onExport} style={{ fontSize: 13 }}>
               Export Excel
             </button>
           </div>

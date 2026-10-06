@@ -27,6 +27,13 @@ export function parseDt(s: string): number {
   return new Date(Number(yyyy), MON_IDX[mon] ?? 0, Number(dd), Number(hh), Number(mi)).getTime();
 }
 
+/** Current local time in the app's "DD-Mon-YYYY HH:MM" timestamp format. */
+export function nowStamp(d: Date = new Date()): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const mon = Object.keys(MON_IDX)[d.getMonth()];
+  return `${pad(d.getDate())}-${mon}-${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 export interface SyncBadge {
   t: string;
   bg: string;
