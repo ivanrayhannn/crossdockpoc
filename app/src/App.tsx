@@ -3,6 +3,7 @@ import { AppShell } from './components/shell/AppShell';
 import { Breadcrumb } from './components/shell/Breadcrumb';
 import { AsnCreationPage } from './features/asnCreation/AsnCreationPage';
 import { CaseConsolidationPage } from './features/caseConsolidation/CaseConsolidationPage';
+import { CandidatePartFlowPage } from './features/candidatePartFlow/CandidatePartFlowPage';
 import { CrossdockMasterSettingPage } from './features/crossdock/CrossdockMasterSettingPage';
 import { hashForRoute, routeFromHash } from './routes';
 import type { RouteKey } from './routes';
@@ -33,6 +34,14 @@ function App() {
     return (
       <AppShell activeItem="ASN Creation" onNavigate={navigate} breadcrumb={<Breadcrumb group="ASN" label="ASN Creation" />}>
         <AsnCreationPage />
+      </AppShell>
+    );
+  }
+
+  if (route === 'candidate-flow') {
+    return (
+      <AppShell activeItem="Candidate Part Batch Flow" onNavigate={navigate} breadcrumb={<Breadcrumb group="Common" label="Candidate Part Batch Flow" />}>
+        <CandidatePartFlowPage />
       </AppShell>
     );
   }

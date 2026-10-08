@@ -1,0 +1,1652 @@
+<!doctype html>
+<html lang="id" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Upload ke Master Candidate Part</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500&family=Source+Sans+3:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: orientation diagram on top, then a simulator with the user's screen on the left and the batch's work on the right, then tables, rules and open decisions.
+   Tokens follow the app's own theme.css (NSP enterprise theme: blue accent, olive success, Source Sans 3 / Roboto Mono). */
+:root {
+  --bg: #eef1f5;
+  --panel: #ffffff;
+  --soft: #f6f8fb;
+  --text: #1a1a1a;
+  --muted: #5c5c5c;
+  --line: rgba(20, 40, 70, 0.14);
+  --accent: #4a90d9;
+  --accent-ink: #2f5f94;
+  --accent-strong: #2f5f94;
+  --accent-soft: #eaf2fb;
+  --accent-line: #b1cdee;
+  --bg-lane: #2c3a4d;
+  --bg-lane-ink: #ffffff;
+  --ok-bg: #dbe4c9;
+  --ok-ink: #414a30;
+  --ok-line: #aebb8f;
+  --bad-bg: #fbe3df;
+  --bad-ink: #9c2f22;
+  --bad-line: #eab1a9;
+  --warn-bg: #fbefc9;
+  --warn-ink: #7a4f0a;
+  --warn-line: #e6cc83;
+  --mono: 'Roboto Mono', ui-monospace, Menlo, Consolas, monospace;
+  --sans: 'Source Sans 3', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --shadow: 0 1px 2px rgba(46, 43, 37, 0.12), 0 6px 18px rgba(46, 43, 37, 0.06);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12171e; --panel: #1a212b; --soft: #212a36; --text: #e8ecf1; --muted: #a6b0bd; --line: rgba(190, 210, 235, 0.16);
+    --accent: #6aa8e6; --accent-ink: #9cc6f2; --accent-strong: #3a7ac2; --accent-soft: #1e2d40; --accent-line: #35557c;
+    --bg-lane: #3a4a60; --bg-lane-ink: #f2f5f9;
+    --ok-bg: #2a3322; --ok-ink: #c9d8a8; --ok-line: #4d5c37;
+    --bad-bg: #3a1f1c; --bad-ink: #f0a99f; --bad-line: #6b3530;
+    --warn-bg: #3a3017; --warn-ink: #f0d58a; --warn-line: #6b5a25;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 18px rgba(0, 0, 0, 0.25);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12171e; --panel: #1a212b; --soft: #212a36; --text: #e8ecf1; --muted: #a6b0bd; --line: rgba(190, 210, 235, 0.16);
+  --accent: #6aa8e6; --accent-ink: #9cc6f2; --accent-strong: #3a7ac2; --accent-soft: #1e2d40; --accent-line: #35557c;
+  --bg-lane: #3a4a60; --bg-lane-ink: #f2f5f9;
+  --ok-bg: #2a3322; --ok-ink: #c9d8a8; --ok-line: #4d5c37;
+  --bad-bg: #3a1f1c; --bad-ink: #f0a99f; --bad-line: #6b3530;
+  --warn-bg: #3a3017; --warn-ink: #f0d58a; --warn-line: #6b5a25;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 18px rgba(0, 0, 0, 0.25);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 15px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 1280px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 64px; display: flex; flex-direction: column; gap: 28px; }
+h1, h2, h3, h4 { font-weight: 700; letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
+p { margin: 0; }
+code, .mono { font-family: var(--mono); font-size: 0.86em; }
+.num { font-variant-numeric: tabular-nums; }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* header */
+.eyebrow { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-ink); font-weight: 600; }
+.hero { display: flex; flex-direction: column; gap: 8px; max-width: 78ch; }
+.hero h1 { font-size: clamp(26px, 4vw, 36px); }
+.hero p { color: var(--muted); font-size: 16px; }
+
+/* section chrome */
+.sec { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.sec > h2 { font-size: 20px; }
+.sec > .lead { color: var(--muted); max-width: 80ch; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); min-width: 0; }
+
+/* overview diagram */
+.ov { display: grid; grid-template-columns: minmax(0, 1.25fr) 40px minmax(0, 1fr) 40px minmax(0, 0.9fr); align-items: stretch; gap: 0; }
+.ov-col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.ov-arrow { display: grid; place-items: center; color: var(--muted); font-size: 22px; }
+.ov-card { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+.ov-card h3 { font-size: 15px; }
+.door { display: flex; align-items: center; gap: 8px; font-size: 13.5px; padding: 6px 10px; border-radius: 6px; background: var(--soft); border: 1px solid var(--line); color: var(--muted); }
+.door.hot { background: var(--accent-soft); border-color: var(--accent); color: var(--text); font-weight: 600; }
+.door small { margin-left: auto; font-weight: 500; color: var(--accent-ink); font-size: 11.5px; letter-spacing: 0.02em; white-space: nowrap; }
+.ov-table { border-color: var(--accent); border-width: 2px; padding: 14px; justify-content: center; }
+.ov-table .tname { font-family: var(--mono); font-weight: 500; font-size: 14px; word-break: break-word; }
+.ov-table p, .ov-card p { font-size: 13px; color: var(--muted); }
+@media (max-width: 860px) {
+  .ov { grid-template-columns: 1fr; gap: 6px; }
+  .ov-arrow { transform: rotate(90deg); height: 28px; }
+}
+
+/* controls */
+.controls { display: flex; flex-wrap: wrap; gap: 14px 26px; padding: 14px 16px; align-items: flex-end; }
+.ctl { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.ctl[hidden] { display: none; }
+.ctl > span { font-size: 11.5px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--soft); flex-wrap: wrap; }
+.seg button { border: 0; background: transparent; padding: 7px 13px; font-size: 14px; border-right: 1px solid var(--line); }
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed="true"] { background: var(--accent-strong); color: #fff; font-weight: 600; }
+.seg button:disabled { opacity: 0.45; cursor: not-allowed; }
+.seg button:not([aria-pressed="true"]):not(:disabled):hover { background: var(--accent-soft); }
+
+/* stepper */
+.stepper { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(var(--n, 6), minmax(0, 1fr)); gap: 8px; }
+.stepper li { min-width: 0; }
+.stp { width: 100%; height: 100%; text-align: left; border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 9px 11px; display: flex; flex-direction: column; gap: 4px; }
+.stp:hover { border-color: var(--accent); }
+.stp[aria-current="step"] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft), 0 0 0 3px var(--accent); }
+.stp.done .stp-n { background: var(--accent-strong); color: #fff; }
+.stp.skipped { opacity: 0.55; }
+.stp-top { display: flex; align-items: center; gap: 7px; }
+.stp-n { width: 22px; height: 22px; border-radius: 50%; background: var(--soft); border: 1px solid var(--line); display: grid; place-items: center; font-size: 12px; font-weight: 700; flex: none; }
+.stp[aria-current="step"] .stp-n { background: var(--accent-strong); border-color: var(--accent-strong); color: #fff; }
+.stp-t { font-size: 13.5px; font-weight: 600; line-height: 1.25; }
+.lane { display: inline-block; font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 700; padding: 1px 7px; border-radius: 999px; width: fit-content; }
+.lane.screen { background: var(--accent-soft); color: var(--accent-ink); border: 1px solid var(--accent-line); }
+.lane.batch { background: var(--bg-lane); color: var(--bg-lane-ink); }
+@media (max-width: 980px) { .stepper { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .stepper { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* stage */
+.stage { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 16px; align-items: start; }
+@media (max-width: 960px) { .stage { grid-template-columns: minmax(0, 1fr); } }
+.pane { display: flex; flex-direction: column; min-width: 0; }
+.pane-h { display: flex; align-items: center; gap: 10px; padding: 11px 16px; border-bottom: 1px solid var(--line); }
+.pane-h h3 { font-size: 15px; }
+.pane-b { padding: 16px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.nav { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.btn { border: 1px solid var(--line); background: var(--panel); border-radius: 7px; padding: 7px 14px; font-size: 14px; font-weight: 600; }
+.btn:hover:not(:disabled) { border-color: var(--accent); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn.primary { background: var(--accent-strong); border-color: var(--accent-strong); color: #fff; }
+.btn.primary:hover:not(:disabled) { filter: brightness(1.06); }
+.nav .hint { margin-left: auto; font-size: 13px; color: var(--muted); }
+
+/* mock app modal */
+.mock { background: var(--soft); border-radius: 8px; padding: 14px; border: 1px dashed var(--line); }
+.modal { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
+.modal h4 { font-size: 17px; }
+.modal .sub { font-size: 12.5px; color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.chip { font-family: var(--mono); font-size: 11px; padding: 2px 8px; border-radius: 999px; background: var(--soft); border: 1px solid var(--line); }
+.drop { border: 2px dashed var(--accent-line); border-radius: 8px; padding: 16px; display: flex; gap: 12px; align-items: center; background: var(--accent-soft); }
+.drop.empty { border-color: var(--line); background: var(--soft); }
+.fileico { width: 34px; height: 40px; border-radius: 4px; background: var(--ok-bg); color: var(--ok-ink); display: grid; place-items: center; font-weight: 700; font-size: 11px; flex: none; border: 1px solid var(--ok-line); }
+.drop b { display: block; font-size: 14px; word-break: break-all; }
+.drop span { font-size: 12.5px; color: var(--muted); }
+.mrow { display: flex; gap: 8px; justify-content: flex-end; align-items: center; flex-wrap: wrap; }
+.mbtn { font-size: 13px; padding: 6px 13px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); font-weight: 600; cursor: default; }
+.mbtn.p { background: var(--accent-strong); border-color: var(--accent-strong); color: #fff; }
+.mbtn.click { box-shadow: 0 0 0 3px var(--accent-soft), 0 0 0 4px var(--accent); }
+.mlink { margin-right: auto; font-size: 12.5px; color: var(--accent-ink); font-weight: 600; }
+.proc { display: flex; flex-direction: column; gap: 10px; padding: 14px; background: var(--soft); border-radius: 8px; }
+.proc-l { display: flex; gap: 10px; align-items: center; font-weight: 600; font-size: 14px; }
+.spin { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--accent-line); border-top-color: var(--accent); animation: sp 0.9s linear infinite; flex: none; }
+@keyframes sp { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spin { animation: none; border-top-color: var(--accent-line); } }
+.bar { height: 8px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--accent-strong); }
+.kv { font-size: 12.5px; color: var(--muted); }
+.kv b { color: var(--text); font-family: var(--mono); font-weight: 500; }
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.tile { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: var(--panel); }
+.tile small { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; }
+.tile b { font-size: 22px; font-variant-numeric: tabular-nums; }
+.banner { padding: 10px 12px; border-radius: 8px; font-size: 13.5px; border: 1px solid; }
+.banner.ok { background: var(--ok-bg); color: var(--ok-ink); border-color: var(--ok-line); }
+.banner.bad { background: var(--bad-bg); color: var(--bad-ink); border-color: var(--bad-line); }
+.banner.warn { background: var(--warn-bg); color: var(--warn-ink); border-color: var(--warn-line); }
+.banner.info { background: var(--accent-soft); color: var(--text); border-color: var(--accent-line); }
+.sub-h { font-size: 11.5px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+
+/* generic tables */
+.tw { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; vertical-align: top; }
+th { background: var(--soft); font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 700; position: sticky; top: 0; }
+tr:last-child td { border-bottom: 0; }
+td.r, th.r { text-align: right; font-variant-numeric: tabular-nums; }
+td.txt { white-space: normal; min-width: 220px; }
+td.mono, .mono { font-family: var(--mono); font-size: 12px; }
+.pill { display: inline-block; font-size: 11.5px; font-weight: 700; padding: 1px 8px; border-radius: 999px; border: 1px solid; }
+.pill.ok { background: var(--ok-bg); color: var(--ok-ink); border-color: var(--ok-line); }
+.pill.bad { background: var(--bad-bg); color: var(--bad-ink); border-color: var(--bad-line); }
+.pill.warn { background: var(--warn-bg); color: var(--warn-ink); border-color: var(--warn-line); }
+.pill.neutral { background: var(--soft); color: var(--muted); border-color: var(--line); }
+.pill.blue { background: var(--accent-soft); color: var(--accent-ink); border-color: var(--accent-line); }
+tr.new td { background: var(--ok-bg); color: var(--ok-ink); }
+tr.del td { background: var(--bad-bg); color: var(--bad-ink); text-decoration: line-through; }
+td.chg { background: var(--warn-bg); color: var(--warn-ink); font-weight: 700; }
+tr.rowerr td { background: var(--bad-bg); }
+tr.rowok td:first-child { box-shadow: inset 3px 0 0 var(--ok-line); }
+tr.rowerr td:first-child { box-shadow: inset 3px 0 0 var(--bad-ink); }
+.legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+.legend i { display: inline-block; width: 11px; height: 11px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; border: 1px solid var(--line); }
+
+/* right pane */
+.what { font-size: 15px; }
+.acts { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; counter-reset: a; }
+.acts li { counter-increment: a; display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 8px; font-size: 14px; }
+.acts li::before { content: counter(a); width: 20px; height: 20px; border-radius: 4px; background: var(--soft); border: 1px solid var(--line); font-size: 11.5px; font-weight: 700; display: grid; place-items: center; margin-top: 1px; }
+.acts li.dim { color: var(--muted); }
+.refs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12.5px; color: var(--muted); }
+.refs a { font-weight: 700; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--warn-line); background: var(--warn-bg); color: var(--warn-ink); text-decoration: none; }
+.checks { display: flex; flex-direction: column; gap: 6px; }
+.check { display: flex; gap: 8px; align-items: baseline; font-size: 14px; }
+.check .ic { font-weight: 700; width: 18px; flex: none; text-align: center; }
+.check.ok .ic { color: var(--ok-ink); }
+.check.bad .ic { color: var(--bad-ink); }
+.check.bad { color: var(--bad-ink); }
+.rules { display: flex; flex-wrap: wrap; gap: 6px; }
+.rl { font-size: 12.5px; padding: 2px 9px; border-radius: 6px; border: 1px solid var(--line); background: var(--soft); display: inline-flex; gap: 6px; align-items: baseline; }
+.rl b { font-family: var(--mono); font-weight: 500; }
+.rl.bad { background: var(--bad-bg); border-color: var(--bad-line); color: var(--bad-ink); }
+.rl.ok b::after { content: " ✓"; color: var(--ok-ink); }
+.ops { display: flex; flex-direction: column; gap: 4px; max-height: 230px; overflow: auto; }
+.op { display: grid; grid-template-columns: 62px minmax(0, 1fr); gap: 8px; font-size: 13px; align-items: baseline; }
+.op .t { font-family: var(--mono); font-size: 11.5px; font-weight: 500; text-align: center; border-radius: 4px; padding: 1px 0; border: 1px solid; }
+.op .t.INSERT { background: var(--ok-bg); color: var(--ok-ink); border-color: var(--ok-line); }
+.op .t.UPDATE { background: var(--warn-bg); color: var(--warn-ink); border-color: var(--warn-line); }
+.op .t.DELETE { background: var(--bad-bg); color: var(--bad-ink); border-color: var(--bad-line); }
+.op span.d { overflow-wrap: anywhere; }
+.skipnote { color: var(--muted); font-size: 14px; padding: 10px 12px; border: 1px dashed var(--line); border-radius: 8px; background: var(--soft); }
+
+/* data tables area */
+.tables { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 16px; }
+.tbl-h { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+.tbl-h h3 { font-size: 14px; font-family: var(--mono); font-weight: 500; }
+.tbl-h span { font-size: 12.5px; color: var(--muted); }
+.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 960px) { .two { grid-template-columns: minmax(0, 1fr); } }
+.tw.max { max-height: 360px; overflow: auto; }
+.split { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); }
+@media (max-width: 960px) { .split { grid-template-columns: minmax(0, 1fr); } }
+.tg { font-family: var(--mono); font-size: 10.5px; padding: 0 6px; margin-right: 6px; border-radius: 4px; background: var(--soft); border: 1px solid var(--line); color: var(--muted); }
+.cmp td:first-child { font-weight: 600; min-width: 150px; }
+.cmp td { white-space: normal; min-width: 200px; }
+.cmp tr.dyn td { background: var(--accent-soft); }
+.rec { padding: 12px 14px; font-size: 14px; }
+.xl { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--panel); }
+.xl-bar { display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: #1d6f42; color: #fff; font-size: 12.5px; font-weight: 600; }
+.xl-bar span { overflow-wrap: anywhere; }
+.xl-bar i { width: 14px; height: 14px; border-radius: 3px; background: #fff; color: #1d6f42; font-style: normal; font-size: 10px; display: grid; place-items: center; flex: none; }
+.xl-scroll { overflow: auto; max-height: 320px; }
+.xl table { font-size: 12px; }
+.xl th, .xl td { border: 1px solid var(--line); padding: 3px 8px; }
+.xl th.cn { background: var(--soft); text-align: center; color: var(--muted); font-weight: 600; text-transform: none; letter-spacing: 0; position: static; }
+.xl th.rn { background: var(--soft); text-align: center; color: var(--muted); font-weight: 600; width: 34px; position: static; }
+.xl td.hd { font-weight: 700; background: var(--accent-soft); }
+.xl td.kv-k { font-weight: 700; background: var(--soft); }
+.xl td.xc-ok { background: var(--ok-bg); color: var(--ok-ink); font-weight: 700; }
+.xl td.xc-bad { background: var(--bad-bg); color: var(--bad-ink); font-weight: 700; }
+.xl td.xc-warn { background: var(--warn-bg); color: var(--warn-ink); font-weight: 700; }
+.xl td.xc-new { background: var(--accent-soft); color: var(--accent-ink); font-weight: 700; }
+.xl td.xc-lock { background: #e9edf2; color: #4a5563; font-weight: 700; }
+.xl-tabs { display: flex; gap: 0; border-top: 1px solid var(--line); background: var(--soft); flex-wrap: wrap; }
+.xl-tabs button { border: 0; border-right: 1px solid var(--line); background: transparent; padding: 5px 14px; font-size: 12.5px; }
+.xl-tabs button[aria-pressed="true"] { background: var(--panel); font-weight: 700; box-shadow: inset 0 -2px 0 #1d6f42; }
+.xl-note { font-size: 13px; color: var(--muted); }
+.cyc { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.cyc-i { padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; position: relative; }
+.cyc-i h3 { font-size: 15px; }
+.cyc-i p { font-size: 13.5px; color: var(--muted); }
+.cyc-i .tagrow { display: flex; gap: 6px; flex-wrap: wrap; margin-top: auto; }
+.cyc-i.hot { border-color: var(--accent); }
+@media (max-width: 960px) { .cyc { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .cyc { grid-template-columns: minmax(0, 1fr); } }
+.keytag { display: inline-block; margin-left: 4px; padding: 0 5px; border-radius: 4px; font-size: 9.5px; letter-spacing: 0.04em; background: var(--accent-soft); color: var(--accent-ink); border: 1px solid var(--accent-line); vertical-align: 1px; }
+.keytag.fk { background: var(--warn-bg); color: var(--warn-ink); border-color: var(--warn-line); }
+.er { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 12px; align-items: center; }
+.er-box { border: 1px solid var(--accent); border-radius: 8px; padding: 10px 12px; background: var(--accent-soft); min-width: 0; }
+.er-box h4 { font-family: var(--mono); font-weight: 500; font-size: 13px; margin-bottom: 6px; word-break: break-word; }
+.er-box div { font-size: 12.5px; color: var(--muted); }
+.er-link { text-align: center; font-size: 12px; color: var(--warn-ink); font-weight: 700; line-height: 1.35; }
+.er-link i { display: block; font-style: normal; font-size: 18px; color: var(--muted); letter-spacing: 1px; }
+@media (max-width: 760px) { .er { grid-template-columns: minmax(0, 1fr); } .er-link i { transform: rotate(90deg); display: inline-block; } }
+
+/* reference sections */
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+.dcard { padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; scroll-margin-top: 16px; }
+.dcard:target { border-color: var(--warn-ink); box-shadow: 0 0 0 2px var(--warn-bg); }
+.dcard .dh { display: flex; gap: 10px; align-items: baseline; }
+.dcard .did { font-family: var(--mono); font-weight: 500; font-size: 12px; padding: 1px 8px; border-radius: 999px; background: var(--warn-bg); color: var(--warn-ink); border: 1px solid var(--warn-line); flex: none; }
+.dcard h3 { font-size: 15.5px; }
+.dcard p { font-size: 14px; }
+.dcard .alt { color: var(--muted); }
+.dcard .use { font-size: 12.5px; color: var(--muted); }
+.def { padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.def h3 { font-family: var(--mono); font-weight: 500; font-size: 14px; }
+.def p { font-size: 13px; color: var(--muted); }
+.note { font-size: 13px; color: var(--muted); max-width: 90ch; }
+.foot { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 14px; }
+</style>
+
+<style>html { color-scheme: light; } body { margin: 0; } [hidden] { display: none !important; } img { max-width: 100%; }</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="eyebrow">Crossdock Master Setting · Validasi alur batch</div>
+    <h1>Dari calculation, upload, dan add sampai Master Candidate Part</h1>
+    <p>Halaman ini hanya untuk validasi. Pilih sumber data (batch calculation bulanan, upload Part List, atau upload Mapping), lalu jalankan langkah demi langkah. Kiri: apa yang dilihat user di screen. Kanan: apa yang dikerjakan batch di belakangnya dan isi tabel pada saat itu. Semua nama tabel, kolom, dan pesan adalah <b>usulan</b>. Hal yang butuh keputusan Anda ditandai <a href="#decisions" style="color:var(--warn-ink);font-weight:700">D1 sampai D18</a>.</p>
+  </header>
+
+  <section class="sec" aria-labelledby="ov-h">
+    <h2 id="ov-h">Tiga pintu masuk ke master</h2>
+    <div class="ov">
+      <div class="ov-col">
+        <div class="panel ov-card">
+          <h3>Batch calculation bulanan <span class="pill neutral" style="font-weight:600">Scheduler</span></h3>
+          <div class="door hot">Tulis hasil calculation ke kedua tabel <small>baru, dibahas di sini</small></div>
+        </div>
+        <div class="panel ov-card">
+          <h3>Part List <span class="pill neutral" style="font-weight:600">Procurement</span></h3>
+          <div class="door">Add / Edit part, tombol Save <small>sudah ada</small></div>
+          <div class="door hot">Upload Excel (flag A / E), adjustment opsional <small>dibahas di sini</small></div>
+        </div>
+        <div class="panel ov-card">
+          <h3>Mapping per Destination <span class="pill neutral" style="font-weight:600">D/S</span></h3>
+          <div class="door">Edit mapping, tombol Save <small>sudah ada</small></div>
+          <div class="door hot">Upload Excel (mapping), adjustment opsional <small>baru, usulan</small></div>
+        </div>
+      </div>
+      <div class="ov-arrow" aria-hidden="true">→</div>
+      <div class="ov-col" id="ov-mid"></div>
+      <div class="ov-arrow" aria-hidden="true">→</div>
+      <div class="ov-col">
+        <div class="panel ov-card">
+          <h3>Sync</h3>
+          <p>D/S menekan tombol Sync untuk baris No Sync / Failed. Di luar cakupan batch upload.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="cyc-h">
+    <h2 id="cyc-h">Siklus satu periode</h2>
+    <p class="lead">Urutan yang saya tangkap dari penjelasan Anda. Batch calculation yang mengisi data lebih dulu, adjustment oleh user datang sesudahnya dan sifatnya opsional.</p>
+    <div class="cyc">
+      <div class="panel cyc-i hot"><h3>1. Awal periode</h3><p>Batch membaca hasil calculation dan menulis data periode baru ke MASTER_CANDIDATE_PART dan MASTER_CANDIDATE_PART_DEST. Hanya part yang ada di result dan berstatus Active.</p><div class="tagrow"><span class="pill blue">Simulasi: Batch calculation</span></div></div>
+      <div class="panel cyc-i hot"><h3>2. Selama periode</h3><p>Procurement dan D/S boleh menyesuaikan lewat Add, Edit, atau Upload Excel di Part List dan Mapping per Destination. Tidak wajib.</p><div class="tagrow"><span class="pill blue">Simulasi: Upload Part List / Mapping</span></div></div>
+      <div class="panel cyc-i"><h3>3. Sync</h3><p>D/S menekan Sync untuk baris No Sync atau Failed. Di luar cakupan batch ini.</p></div>
+      <div class="panel cyc-i"><h3>4. Periode berikutnya</h3><p>Batch calculation jalan lagi. Data periode ini menjadi read-only (BR-13) dan tetap bisa dilihat.</p></div>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="sim-h">
+    <h2 id="sim-h">Simulasi proses</h2>
+
+    <div class="panel controls">
+      <div class="ctl"><span id="l-src">Sumber data</span>
+        <div class="seg" role="group" aria-labelledby="l-src" id="seg-src">
+          <button type="button" data-k="src" data-v="calc">Batch calculation bulanan</button>
+          <button type="button" data-k="src" data-v="part">Upload Part List</button>
+          <button type="button" data-k="src" data-v="map">Upload Mapping</button>
+        </div>
+      </div>
+      <div class="ctl" id="ctl-sc2" hidden><span id="l-sc2">Hasil calculation</span>
+        <div class="seg" role="group" aria-labelledby="l-sc2" id="seg-sc2">
+          <button type="button" data-k="sc" data-v="chg">Ada perubahan</button>
+          <button type="button" data-k="sc" data-v="nochg">Tanpa perubahan</button>
+        </div>
+      </div>
+      <div class="ctl" id="ctl-sc"><span id="l-sc">Isi file</span>
+        <div class="seg" role="group" aria-labelledby="l-sc" id="seg-sc">
+          <button type="button" data-k="sc" data-v="clean">File bersih</button>
+          <button type="button" data-k="sc" data-v="errors">Ada baris error</button>
+          <button type="button" data-k="sc" data-v="template">Template salah</button>
+        </div>
+      </div>
+      <div class="ctl" id="ctl-st"><span id="l-st">Struktur tabel <a href="#d1" style="color:var(--warn-ink)">D1</a></span>
+        <div class="seg" role="group" aria-labelledby="l-st" id="seg-st">
+          <button type="button" data-k="st" data-v="one">1 tabel</button>
+          <button type="button" data-k="st" data-v="two">2 tabel</button>
+        </div>
+      </div>
+      <div class="ctl" id="ctl-mode"><span id="l-mode">Jika ada baris error <a href="#d2" style="color:var(--warn-ink)">D2</a></span>
+        <div class="seg" role="group" aria-labelledby="l-mode" id="seg-mode">
+          <button type="button" data-k="mode" data-v="all">Tolak seluruh file</button>
+          <button type="button" data-k="mode" data-v="partial">Simpan baris yang valid</button>
+        </div>
+      </div>
+    </div>
+
+    <ol class="stepper" id="stepper" aria-label="Langkah proses"></ol>
+
+    <div class="stage">
+      <div class="panel pane">
+        <div class="pane-h"><span class="lane screen">Screen</span><h3 id="left-h">Yang dilihat user</h3></div>
+        <div class="pane-b" id="left"></div>
+      </div>
+      <div class="panel pane">
+        <div class="pane-h"><span class="lane batch" id="lane-r">Batch</span><h3 id="right-h">Yang terjadi di background</h3></div>
+        <div class="pane-b" id="right"></div>
+      </div>
+    </div>
+
+    <div class="nav">
+      <button type="button" class="btn" id="prev">← Sebelumnya</button>
+      <button type="button" class="btn primary" id="next">Langkah berikutnya →</button>
+      <button type="button" class="btn" id="reset">Ulangi dari awal</button>
+      <span class="hint" id="hint"></span>
+    </div>
+
+    <div class="panel tables" id="tables"></div>
+  </section>
+
+  <section class="sec" aria-labelledby="exp-h">
+    <h2 id="exp-h">Hasil tombol Export Excel</h2>
+    <p class="lead">Dua sub-menu Crossdock Master Setting masing-masing punya tombol Export Excel. Part List dan Mapping per Destination menghasilkan file dengan 2 sheet. Sheet hasil download mengikuti data dan kriteria pencarian di screen. Sheet Upload kosong untuk periode lampau atau semua periode. Untuk periode berjalan, sheet Upload berisi mapping part Active; part_no dan total_case_day terkunci, sedangkan dest_code dan case_day dapat diubah atau ditambah lewat baris baru.</p>
+    <div class="panel" style="padding:14px 16px;display:flex;flex-direction:column;gap:12px" id="exp-box"></div>
+  </section>
+
+  <section class="sec" aria-labelledby="rules-h">
+    <h2 id="rules-h">Aturan validasi dan pesan (usulan)</h2>
+    <p class="lead">Dipakai batch upload di langkah 3 dan 4 (hasilnya jadi isi UPLOAD_ERROR), dan batch calculation di langkah 2 (hasilnya jadi isi BATCH_RUN_DETAIL). Aturan yang bersumber dari FSD ditulis dengan nomor BR-nya. Teks pesan Bahasa Inggris mengikuti gaya MSG di FSD.</p>
+    <div class="tw"><table id="rules-t"></table></div>
+  </section>
+
+  <section class="sec" aria-labelledby="def-h">
+    <h2 id="def-h">Struktur tabel (usulan, nama fisik TBD)</h2>
+    <div class="cards" id="defs"></div>
+  </section>
+
+  <section class="sec" aria-labelledby="cmp-h">
+    <h2 id="cmp-h">1 tabel dibanding 2 tabel</h2>
+    <p class="lead">Baris biru mengikuti skenario upload yang sedang dipilih di simulasi. Batch calculation selalu memakai 2 tabel.</p>
+    <div class="tw"><table class="cmp" id="cmp"></table></div>
+    <div class="panel rec" id="rec"></div>
+  </section>
+
+  <section class="sec" id="decisions" aria-labelledby="dec-h">
+    <h2 id="dec-h">Perlu konfirmasi Anda sebelum dokumen batch dibuat</h2>
+    <p class="lead">Simulasi di atas memakai pilihan pertama di setiap kartu (khusus D1 ada toggle untuk melihat keduanya). Kalau ada yang berbeda dari rencana Anda, bilang saja nomornya.</p>
+    <div class="cards" id="dcards"></div>
+  </section>
+
+  <p class="foot">Sumber: FSD Crossdock Master Setting v0.2 (aturan BR-01 sampai BR-18, template upload di sheet 9, OP-02, OP-03, OP-06, OP-14) dan prototype di repo ini. Tanggal simulasi diset 13-Sep-2026 dengan periode berjalan Sep 2026 supaya sama dengan data prototype. Data part adalah dummy.</p>
+</div>
+
+<script>
+/* ============ DATA ============ */
+var TODAY = '13-Sep-2026', CUR = 'Sep 2026';
+var DEST = { '123': 'Thailand', '456': 'Japan', '789': 'Vietnam' };
+var PART_MASTER = { 'PART-M01': 'Bracket Mounting M01', 'PART-M02': 'Gasket Seal M02', 'PART-M03': 'Sensor Housing M03' };
+var MON = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
+
+function R(part, dest, pcs, max, mad, eff, status, cs, sync) {
+  return { part: part, period: CUR, dest: dest, pcs: pcs, max: max, mad: mad, eff: eff, status: status, cs: cs, sync: sync, up: '' };
+}
+var BASE = [
+  R('PART-A', '123', 60, 24, 800, '01-Aug-2026', 'Active', 12, 1),
+  R('PART-A', '456', 60, 24, 800, '01-Aug-2026', 'Active', 8, 1),
+  R('PART-A', '789', 60, 24, 800, '01-Aug-2026', 'Active', 4, 1),
+  R('PART-C', '456', 10, 30, 200, '01-Aug-2026', 'Active', 12, 0),
+  R('PART-C', '789', 10, 30, 200, '01-Aug-2026', 'Active', 18, 0),
+  R('PART-G', '', 50, 22, 150, '01-Aug-2026', 'Active', 0, 0),
+  R('PART-I', '', 15, 20, 300, '15-Sep-2026', 'Candidate', 0, 0)
+];
+
+var PART_NAMES = { 'PART-A': 'Dummy Part A', 'PART-C': 'Dummy Part C', 'PART-G': 'Dummy Part G', 'PART-I': 'Dummy Part I' };
+var TOMORROW = '14-Sep-2026';
+var HEAD = {
+  part: ['part_no', 'minimum_mad', 'pcs_case', 'max_case_day', 'status', 'flag_add_edit', 'effective_start_date'],
+  map: ['part_no', 'dest_code', 'case_day', 'total_case_day']
+};
+var FILES = {
+  part: {
+    clean: { name: 'part_list_13Sep.xlsx', kb: 18, sheets: ['Part List', 'Upload'], head: HEAD.part, rows: [
+      ['PART-M01', 300, 20, 15, '', 'A', '14-Sep-2026'],
+      ['PART-M02', 500, 12, 40, '', 'A', '16-Sep-2026'],
+      ['PART-I', 300, 15, 18, 'Candidate', 'E', '20-Sep-2026'],
+      ['PART-A', 800, 60, 30, '', 'E', ''],
+      ['PART-C', 200, 10, 30, 'Active', 'E', '']
+    ] },
+    errors: { name: 'part_list_13Sep.xlsx', kb: 19, sheets: ['Part List', 'Upload'], head: HEAD.part, rows: [
+      ['PART-M01', 300, 20, 15, '', 'A', '14-Sep-2026'],
+      ['PART-I', 300, 15, 18, 'Candidate', 'E', '20-Sep-2026'],
+      ['PART-A', 800, 60, 24, '', 'A', '14-Sep-2026'],
+      ['PART-M03', 300, 0, 15, '', 'A', '14-Sep-2026'],
+      ['PART-M02', 500, 12, 40, '', 'A', ''],
+      ['PART-C', 200, 10, 30, '', 'E', '20-Sep-2026'],
+      ['PART-Z99', 100, 10, 10, '', 'E', ''],
+      ['PART-G', 150, 50, 22, 'Inactive', 'E', '']
+    ] },
+    template: { name: 'part_list_13Sep.xlsx', kb: 14, sheets: ['Part List'], head: ['Part Number', 'Part Name', 'Min MAD', 'Pcs/Case', 'Max Case/Day', 'Total Pcs/Day', 'Status', 'Last Update'], rows: [
+      ['PART-A', 'Dummy Part A', 800, 60, 24, 1440, 'Active', '05-Aug-2026 09:12 · A. Wibowo'],
+      ['PART-C', 'Dummy Part C', 200, 10, 30, 300, 'Active', '12-Aug-2026 08:05 · R. Pratama']
+    ] }
+  },
+  map: {
+    clean: { name: 'mapping_Sep2026.xlsx', kb: 16, sheets: ['Mapping per Destination', 'Upload'], head: HEAD.map, rows: [
+      ['PART-A', '123', 12, 24], ['PART-A', '456', 8, 24], ['PART-A', '789', 4, 24],
+      ['PART-C', '123', 15, 30], ['PART-C', '789', 15, 30],
+      ['PART-G', '123', 22, 22]
+    ] },
+    errors: { name: 'mapping_Sep2026.xlsx', kb: 17, sheets: ['Mapping per Destination', 'Upload'], head: HEAD.map, rows: [
+      ['PART-A', '123', 10, 24], ['PART-A', '456', 8, 24], ['PART-A', '789', 6, 24],
+      ['PART-C', '123', 25, 30], ['PART-C', '789', 15, 30],
+      ['PART-G', '999', 22, 22], ['PART-G', '456', '', 22],
+      ['PART-I', '123', 5, 20]
+    ] },
+    template: { name: 'mapping_Sep2026.xlsx', kb: 21, sheets: ['Mapping per Destination'], head: ['Period', 'Part Number', 'Destination Code', 'Dest Case/Day'], rows: [
+      ['Sep 2026', 'PART-A', '123', 12], ['Sep 2026', 'PART-A', '456', 8]
+    ] }
+  }
+};
+
+var MSG = {
+  'FL-01': 'File must be an .xlsx file.',
+  'FL-02': 'File size exceeds 5 MB.',
+  'FL-03': 'File has more than 5,000 data rows.',
+  'FL-04': 'File has no data rows.',
+  'FL-05': "Required column '{c}' not found. Download the template again.",
+  'FL-06': 'Sheet "Upload" not found. Only the Upload sheet is read, download the file again.',
+  'PL-01': 'flag_add_edit must be A (Add) or E (Edit).',
+  'PL-02': 'Part No not found in the part master.',
+  'PL-03a': 'Part No is already registered. Use flag E.',
+  'PL-03b': 'Part No is not registered. Use flag A.',
+  'PL-04': '{c} must be a whole number (greater than 0 for pcs_case and max_case_day).',
+  'PL-09a': 'Status cannot be changed by upload. Leave it blank or keep the current value.',
+  'PL-09b': 'Status of a new part is always Candidate. Leave it blank.',
+  'PL-05': 'Effective Start Date is required while the part status is Candidate (always for a new part) and must be today or later.',
+  'PL-06': 'Effective Start Date can only be changed while the part status is Candidate.',
+  'PL-07': 'Part No appears more than once in the file.',
+  'PL-08': 'Max Case/Day ({n}) is below the Case/Day already mapped ({m}).',
+  'MP-01': 'Only the ongoing period (' + CUR + ') can be uploaded.',
+  'MP-02': 'Part No is not registered or its status is not Active.',
+  'MP-03': 'Destination code {c} not found in the destination master.',
+  'MP-04': 'Destination {c} appears more than once for this part.',
+  'MP-05': 'case_day must be a whole number greater than 0.',
+  'MP-06': 'Total allocation of {n} case/day exceeds Total Case/Day ({m}). Reduce one of the destinations.',
+  'CR-01': 'No calculation result found for period {p}.',
+  'CR-02': 'Part No is not registered in Master Candidate Part.',
+  'CR-03': 'Part status is {s}. Only Active parts are processed.',
+  'CR-04': 'pcs_case and max_case_day must be whole numbers greater than 0.',
+  'CR-05': 'Destination code {c} not found in the destination master.',
+  'CR-06': 'Allocation of {n} case/day exceeds Max Case/Day ({m}).'
+};
+function msg(id, v) {
+  var t = MSG[id] || id;
+  if (v) for (var k in v) t = t.replace('{' + k + '}', v[k]);
+  return t;
+}
+
+/* ============ LOGIC (pure, no DOM) ============ */
+function dateVal(s) { var m = /^(\d{2})-(\w{3})-(\d{4})$/.exec(s || ''); return m ? new Date(+m[3], MON[m[2]], +m[1]).getTime() : NaN; }
+function isInt(v, min) { return typeof v === 'number' ? Number.isInteger(v) && v >= min : /^\d+$/.test(String(v)) && +v >= min; }
+function clone(rows) { return rows.map(function (r) { return Object.assign({}, r); }); }
+function tableRows(tbl, part) { return tbl.filter(function (r) { return r.part === part && r.period === CUR; }); }
+function sumCs(rows) { return rows.reduce(function (s, r) { return s + (+r.cs || 0); }, 0); }
+
+function fileChecks(f, source) {
+  var checks = [
+    { ok: /\.xlsx$/i.test(f.name), id: 'FL-01', label: 'File is .xlsx', note: f.name },
+    { ok: f.kb <= 5120, id: 'FL-02', label: 'Size is 5 MB or less', note: f.kb + ' KB' },
+    { ok: f.rows.length <= 5000, id: 'FL-03', label: 'Rows are 5,000 or fewer', note: f.rows.length + ' rows' },
+    { ok: f.rows.length > 0, id: 'FL-04', label: 'File has data rows', note: f.rows.length + ' rows' }
+  ];
+  var sheetOk = true;
+  {
+    sheetOk = f.sheets.indexOf('Upload') >= 0;
+    checks.push({ ok: sheetOk, id: 'FL-06', label: 'Sheet "Upload" exists (other sheets are ignored)', note: 'sheets: ' + f.sheets.join(', ') });
+  }
+  var missing = sheetOk ? HEAD[source].filter(function (c) { return f.head.indexOf(c) < 0; }) : [];
+  checks.push({ ok: !missing.length, id: 'FL-05', label: 'Header has every template column (extra columns are ignored)', note: !sheetOk ? 'not checked (no Upload sheet)' : missing.length ? 'missing: ' + missing.join(', ') : 'all ' + HEAD[source].length + ' columns found', missing: missing });
+  return checks;
+}
+
+function validatePart(rows, tbl) {
+  var seen = {}, blank = function (v) { return v === '' || v == null; };
+  return rows.map(function (r, i) {
+    var pn = r[0], mad = r[1], pcs = r[2], max = r[3], st = r[4], flag = r[5], eff = r[6], e = [];
+    var cur = tableRows(tbl, pn), reg = cur.length > 0, known = reg || PART_MASTER[pn], isAdd = flag === 'A';
+    if (flag !== 'A' && flag !== 'E') e.push({ col: 'flag_add_edit', id: 'PL-01' });
+    if (!known) e.push({ col: 'part_no', id: 'PL-02' });
+    else {
+      if (isAdd && reg) e.push({ col: 'part_no', id: 'PL-03a' });
+      if (flag === 'E' && !reg) e.push({ col: 'part_no', id: 'PL-03b' });
+    }
+    if (seen[pn]) e.push({ col: 'part_no', id: 'PL-07' });
+    seen[pn] = true;
+    [['minimum_mad', mad, 0], ['pcs_case', pcs, 1], ['max_case_day', max, 1]].forEach(function (c) {
+      if (blank(c[1]) || !isInt(c[1], c[2])) e.push({ col: c[0], id: 'PL-04', v: { c: c[0] } });
+    });
+    if (isAdd) { if (!blank(st) && st !== 'Candidate') e.push({ col: 'status', id: 'PL-09b' }); }
+    else if (!blank(st) && reg && st !== cur[0].status) e.push({ col: 'status', id: 'PL-09a' });
+    var needEff = isAdd || (flag === 'E' && reg && cur[0].status === 'Candidate');
+    if (needEff && (blank(eff) || ((isAdd || eff !== cur[0].eff) && !(dateVal(eff) >= dateVal(TODAY))))) e.push({ col: 'effective_start_date', id: 'PL-05' });
+    if (flag === 'E' && reg && !blank(eff) && eff !== cur[0].eff && cur[0].status !== 'Candidate') e.push({ col: 'effective_start_date', id: 'PL-06' });
+    if (flag === 'E' && reg && !blank(max) && isInt(max, 1) && +max < sumCs(cur)) e.push({ col: 'max_case_day', id: 'PL-08', v: { n: max, m: sumCs(cur) } });
+    return { n: i + 2, cells: r, errs: e, group: pn };
+  });
+}
+
+function validateMap(rows, tbl) {
+  var seen = {}, sums = {};
+  var res = rows.map(function (r, i) {
+    var pn = r[0], d = String(r[1]), cs = r[2], e = [];
+    var cur = tableRows(tbl, pn);
+    if (!cur.length || cur[0].status !== 'Active') e.push({ col: 'part_no', id: 'MP-02' });
+    // Placeholder row of an Active part that has no mapping yet: both cells blank = nothing to save for this part.
+    if (d === '' && (cs === '' || cs == null)) return { n: i + 2, cells: r, errs: e, group: pn, blank: true };
+    if (!DEST[d]) e.push({ col: 'dest_code', id: 'MP-03', v: { c: d } });
+    var k = pn + '|' + d;
+    if (seen[k]) e.push({ col: 'dest_code', id: 'MP-04', v: { c: d } });
+    seen[k] = true;
+    if (!isInt(cs, 1)) e.push({ col: 'case_day', id: 'MP-05' });
+    else sums[pn] = (sums[pn] || 0) + +cs;
+    return { n: i + 2, cells: r, errs: e, group: pn };
+  });
+  res.forEach(function (x) {
+    var cur = tableRows(tbl, x.group);
+    if (x.blank) return;
+    var total = cur.length ? cur[0].max : 0;
+    if (cur.length && cur[0].status === 'Active' && sums[x.group] > total && !x.errs.some(function (e) { return e.id === 'MP-02'; }))
+      x.errs.push({ col: 'case_day', id: 'MP-06', v: { n: sums[x.group], m: total } });
+  });
+  return res;
+}
+
+/* Which rows get written. Part List: the row is the unit. Mapping: the part is the unit, because a part's destinations are replaced as a set. */
+function applyWrite(source, rows, results, tbl, uploadId) {
+  var out = clone(tbl);
+  var okRows = results.filter(function (x) { return !x.errs.length && !x.held; });
+  if (source === 'part') {
+    var has = function (v) { return v !== '' && v != null; };
+    okRows.forEach(function (x) {
+      var c = x.cells, pn = c[0], flag = c[5];
+      if (flag === 'A') {
+        out.push({ part: pn, period: CUR, dest: '', pcs: +c[2], max: +c[3], mad: +c[1], eff: c[6], status: 'Candidate', cs: 0, sync: 0, up: uploadId, name: PART_MASTER[pn] });
+      } else {
+        var rowsP = out.filter(function (r) { return r.part === pn && r.period === CUR; }), r0 = rowsP[0];
+        var nv = { mad: has(c[1]) ? +c[1] : r0.mad, pcs: has(c[2]) ? +c[2] : r0.pcs, max: has(c[3]) ? +c[3] : r0.max, status: r0.status, eff: has(c[6]) && r0.status === 'Candidate' ? c[6] : r0.eff };
+        var changed = ['mad', 'pcs', 'max', 'status', 'eff'].some(function (k) { return String(nv[k]) !== String(r0[k]); });
+        if (changed) rowsP.forEach(function (r) { r.mad = nv.mad; r.pcs = nv.pcs; r.max = nv.max; r.status = nv.status; r.eff = nv.eff; r.sync = 0; r.up = uploadId; });
+      }
+    });
+  } else {
+    var parts = {};
+    okRows.forEach(function (x) { if (!x.blank) (parts[x.group] = parts[x.group] || []).push(x.cells); });
+    Object.keys(parts).forEach(function (pn) {
+      var cur = out.filter(function (r) { return r.part === pn && r.period === CUR; });
+      var proto = cur[0], oldSet = {}, newSet = {};
+      cur.forEach(function (r) { if (r.dest) oldSet[r.dest] = r.cs; });
+      parts[pn].forEach(function (c) { newSet[String(c[1])] = +c[2]; });
+      var same = Object.keys(newSet).length === Object.keys(oldSet).length && Object.keys(newSet).every(function (d) { return oldSet[d] === newSet[d]; });
+      if (same) return;
+      out = out.filter(function (r) { return !(r.part === pn && r.period === CUR); });
+      parts[pn].forEach(function (c) {
+        out.push({ part: pn, period: CUR, dest: String(c[1]), pcs: proto.pcs, max: proto.max, mad: proto.mad, eff: proto.eff, status: proto.status, cs: +c[2], sync: 0, up: uploadId });
+      });
+    });
+  }
+  return out;
+}
+
+var FIELDS = ['cs', 'pcs', 'max', 'mad', 'eff', 'status', 'sync', 'up'];
+function keyOf(r) { return r.part + '|' + r.period + '|' + r.dest; }
+function diff(before, after) {
+  var bm = {}, am = {}, ops = [], view = [];
+  before.forEach(function (r) { bm[keyOf(r)] = r; });
+  after.forEach(function (r) { am[keyOf(r)] = r; });
+  after.forEach(function (r) {
+    var b = bm[keyOf(r)];
+    if (!b) { ops.push({ t: 'INSERT', key: r, d: 'case_day ' + r.cs + ', pcs_case ' + r.pcs + ', max_case_day ' + r.max + ', status ' + r.status + ', sync_status 0' + (r.name ? ' · part_name "' + r.name + '" from part master' : '') }); view.push(Object.assign({}, r, { _f: 'new', _chg: [] })); return; }
+    var chg = FIELDS.filter(function (f) { return String(b[f]) !== String(r[f]); });
+    if (chg.length) ops.push({ t: 'UPDATE', key: r, d: chg.map(function (f) { return FLABEL[f] + ' ' + show(b[f]) + ' → ' + show(r[f]); }).join(', ') });
+    view.push(Object.assign({}, r, { _f: chg.length ? 'upd' : '', _chg: chg }));
+  });
+  before.forEach(function (r) {
+    if (!am[keyOf(r)]) { ops.push({ t: 'DELETE', key: r, d: r.dest ? 'destination no longer in the file (case_day was ' + r.cs + ')' : 'placeholder row without destination, replaced by the mapped rows' }); view.push(Object.assign({}, r, { _f: 'del', _chg: [] })); }
+  });
+  var order = { INSERT: 0, UPDATE: 1, DELETE: 2 };
+  ops.sort(function (a, b) { return a.key.part < b.key.part ? -1 : a.key.part > b.key.part ? 1 : order[a.t] - order[b.t]; });
+  view.sort(function (a, b) { return a.part < b.part ? -1 : a.part > b.part ? 1 : (a.dest < b.dest ? -1 : a.dest > b.dest ? 1 : 0); });
+  return { ops: ops, view: view };
+}
+var FLABEL = { cs: 'case_day', pcs: 'pcs_case', max: 'max_case_day', mad: 'min_mad', eff: 'effective_start_date', status: 'part_status', total: 'total_pcs_day', sync: 'sync_status', up: 'last_upload_id' };
+function show(v) { return v === '' || v == null ? '(blank)' : v; }
+
+function project(rows) {
+  var heads = {}, det = [], order = [];
+  rows.forEach(function (r) {
+    var k = r.part + '|' + r.period;
+    if (!heads[k]) { heads[k] = { part: r.part, period: r.period, pcs: r.pcs, max: r.max, mad: r.mad, eff: r.eff, status: r.status, sync: r.sync, up: r.up, name: PART_NAMES[r.part] || PART_MASTER[r.part] || r.name, total: r.pcs * r.max }; order.push(k); }
+    if (r.dest) det.push({ part: r.part, period: r.period, dest: r.dest, cs: r.cs });
+  });
+  return { head: order.map(function (k) { return heads[k]; }), det: det };
+}
+function diffT(before, after, keyFn, fields, table, insDesc, delDesc) {
+  var bm = {}, am = {}, ops = [], view = [];
+  before.forEach(function (r) { bm[keyFn(r)] = r; });
+  after.forEach(function (r) { am[keyFn(r)] = r; });
+  after.forEach(function (r) {
+    var b = bm[keyFn(r)];
+    if (!b) { ops.push({ t: 'INSERT', tbl: table, key: r, d: insDesc(r) }); view.push(Object.assign({}, r, { _f: 'new', _chg: [] })); return; }
+    var chg = fields.filter(function (f) { return String(b[f]) !== String(r[f]); });
+    if (chg.length) ops.push({ t: 'UPDATE', tbl: table, key: r, d: chg.map(function (f) { return FLABEL[f] + ' ' + show(b[f]) + ' → ' + show(r[f]); }).join(', ') });
+    view.push(Object.assign({}, r, { _f: chg.length ? 'upd' : '', _chg: chg }));
+  });
+  before.forEach(function (r) {
+    if (!am[keyFn(r)]) { ops.push({ t: 'DELETE', tbl: table, key: r, d: delDesc(r) }); view.push(Object.assign({}, r, { _f: 'del', _chg: [] })); }
+  });
+  view.sort(function (a, b) { return a.part < b.part ? -1 : a.part > b.part ? 1 : ((a.dest || '') < (b.dest || '') ? -1 : (a.dest || '') > (b.dest || '') ? 1 : 0); });
+  return { ops: ops, view: view };
+}
+var T_HEAD = 'MASTER_CANDIDATE_PART', T_DET = 'MASTER_CANDIDATE_PART_DEST';
+function finish2(m) {
+  var pb = project(BASE), pa = project(m.after);
+  var dh = diffT(pb.head, pa.head, function (r) { return r.part + '|' + r.period; }, ['mad', 'pcs', 'max', 'total', 'eff', 'status', 'sync', 'up'], T_HEAD,
+    function (r) { return 'part_name "' + r.name + '" (from TB_M_PART_MASTER), min_mad ' + r.mad + ', pcs_case ' + r.pcs + ', max_case_day ' + r.max + ', total_pcs_day ' + r.total + ', effective_start_date ' + r.eff + ', status ' + r.status + ', sync_status 0'; },
+    function () { return 'part removed'; });
+  var dd = diffT(pb.det, pa.det, function (r) { return r.part + '|' + r.period + '|' + r.dest; }, ['cs'], T_DET,
+    function (r) { return 'case_day ' + r.cs; },
+    function (r) { return 'destination no longer in the file (case_day was ' + r.cs + ')'; });
+  var rank = { INSERT: 0, UPDATE: 1, DELETE: 2 };
+  var ops = dh.ops.concat(dd.ops).sort(function (a, b) {
+    if (a.tbl !== b.tbl) return a.tbl === T_HEAD ? -1 : 1;
+    return a.key.part < b.key.part ? -1 : a.key.part > b.key.part ? 1 : rank[a.t] - rank[b.t];
+  });
+  m.two = { ops: ops, headView: dh.view, detView: dd.view, before: pb };
+  m.noChange = 0;
+  if (m.committed) m.noChange = m.results.filter(function (x) { return !x.errs.length && !m.ops.some(function (o) { return o.key.part === x.group; }); }).length;
+  return m;
+}
+function tally(ops, tbl) {
+  var c = { INSERT: 0, UPDATE: 0, DELETE: 0 };
+  ops.forEach(function (o) { if (!tbl || o.tbl === tbl) c[o.t]++; });
+  return c;
+}
+function simulate(source, sc, mode, st) {
+  var f = FILES[source][sc], id = 'UPL-20260913-0007';
+  var checks = fileChecks(f, source), fileOk = checks.every(function (c) { return c.ok; });
+  var m = { st: st || 'one', source: source, sc: sc, mode: mode, file: f, id: id, checks: checks, fileOk: fileOk, results: [], errors: [], committed: false, after: BASE, ops: [], view: BASE.map(function (r) { return Object.assign({}, r, { _f: '', _chg: [] }); }) };
+  if (!fileOk) {
+    m.status = 'REJECTED';
+    m.errors = [];
+    checks.filter(function (c) { return !c.ok; }).forEach(function (c) {
+      (c.missing || [null]).forEach(function (col) { m.errors.push({ row: 1, col: col || 'file', id: c.id, text: msg(c.id, { c: col }) }); });
+    });
+    m.total = f.rows.length; m.saved = 0; m.errCount = m.errors.length; m.notSaved = 0;
+    return finish2(m);
+  }
+  m.results = (source === 'part' ? validatePart : validateMap)(f.rows, BASE);
+  var badGroups = {};
+  m.results.forEach(function (x) { if (x.errs.length) badGroups[x.group] = true; });
+  if (source === 'map') m.results.forEach(function (x) { if (!x.errs.length && badGroups[x.group]) x.held = true; });
+  m.results.forEach(function (x) { x.errs.forEach(function (e) { m.errors.push({ row: x.n, col: e.col, id: e.id, text: msg(e.id, e.v) }); }); });
+  m.total = m.results.length;
+  m.errRows = m.results.filter(function (x) { return x.errs.length; }).length;
+  m.errCount = m.errors.length;
+  var anyErr = m.errRows > 0;
+  var validRows = m.results.filter(function (x) { return !x.errs.length && !x.held; }).length;
+  if (!anyErr) { m.status = 'COMPLETED'; m.committed = true; }
+  else if (mode === 'partial' && validRows > 0) { m.status = 'PARTIAL'; m.committed = true; }
+  else { m.status = 'REJECTED'; }
+  if (m.committed) {
+    m.after = applyWrite(source, f.rows, m.results, BASE, id);
+    var d = diff(BASE, m.after); m.ops = d.ops; m.view = d.view;
+    m.saved = validRows;
+  } else m.saved = 0;
+  m.notSaved = m.status === 'REJECTED' ? validRows : 0;
+  m.held = m.results.filter(function (x) { return x.held; }).length;
+  return finish2(m);
+}
+
+/* ---------- Monthly calculation batch ---------- */
+var CPER = 'Oct 2026';
+var PORDER = { 'Sep 2026': 0, 'Oct 2026': 1 };
+function RC(part, dest, pcs, max, status, cs, sync, src) { return { part: part, period: CUR, dest: dest, pcs: pcs, max: max, status: status, cs: cs, sync: sync, src: src || 'CALC' }; }
+var CBASE = [
+  RC('PART-A', '123', 60, 24, 'Active', 12, 1), RC('PART-A', '456', 60, 24, 'Active', 8, 1), RC('PART-A', '789', 60, 24, 'Active', 4, 1),
+  RC('PART-C', '456', 10, 30, 'Active', 12, 0, 'SCREEN'), RC('PART-C', '789', 10, 30, 'Active', 18, 0, 'SCREEN'),
+  RC('PART-D', '123', 24, 36, 'Active', 20, 1), RC('PART-D', '456', 24, 36, 'Active', 16, 1),
+  RC('PART-G', '', 50, 22, 'Active', 0, 0),
+  RC('PART-H', '123', 10, 32, 'Inactive', 32, 1),
+  RC('PART-I', '', 15, 20, 'Candidate', 0, 0)
+];
+var CRES = {
+  chg: [
+    [CPER, 'PART-A', 60, 28, '123', 14], [CPER, 'PART-A', 60, 28, '456', 9], [CPER, 'PART-A', 60, 28, '789', 5],
+    [CPER, 'PART-C', 12, 30, '456', 12], [CPER, 'PART-C', 12, 30, '789', 18],
+    [CPER, 'PART-G', 50, 22, '123', 22],
+    [CPER, 'PART-H', 10, 32, '123', 32],
+    [CPER, 'PART-I', 15, 20, '123', 10],
+    [CPER, 'PART-Z99', 10, 10, '123', 10]
+  ],
+  nochg: [
+    [CPER, 'PART-A', 60, 24, '123', 12], [CPER, 'PART-A', 60, 24, '456', 8], [CPER, 'PART-A', 60, 24, '789', 4],
+    [CPER, 'PART-C', 10, 30, '456', 12], [CPER, 'PART-C', 10, 30, '789', 18],
+    [CPER, 'PART-I', 15, 20, '123', 10]
+  ]
+};
+function flagFree(r) { return Object.assign({}, r, { _f: '', _chg: [] }); }
+function pcmp(a, b) {
+  if (a.part !== b.part) return a.part < b.part ? -1 : 1;
+  if (a.period !== b.period) return PORDER[a.period] - PORDER[b.period];
+  var x = a.dest || '', y = b.dest || '';
+  return x < y ? -1 : x > y ? 1 : 0;
+}
+function cproject(rows) {
+  var heads = {}, order = [], det = [];
+  rows.forEach(function (r) {
+    var k = r.part + '|' + r.period;
+    if (!heads[k]) { heads[k] = { part: r.part, period: r.period, pcs: r.pcs, max: r.max, status: r.status, sync: r.sync, src: r.src, name: PART_NAMES[r.part] || PART_MASTER[r.part], total: r.pcs * r.max }; order.push(k); }
+    if (r.dest) det.push({ part: r.part, period: r.period, dest: r.dest, cs: r.cs });
+  });
+  return { head: order.map(function (k) { return heads[k]; }), det: det };
+}
+function simulateCalc(sc) {
+  var res = CRES[sc];
+  var m = { sc: sc, res: res, period: CPER, prev: CUR, runId: 'RUN-20261001-0001', items: [], notInResult: [] };
+  var order = [], by = {};
+  res.forEach(function (r) { if (!by[r[1]]) { by[r[1]] = []; order.push(r[1]); } by[r[1]].push(r); });
+  var pb = cproject(CBASE);
+  order.forEach(function (pn) {
+    var rows = by[pn], prevH = pb.head.filter(function (h) { return h.part === pn; })[0];
+    var it = { part: pn, rows: rows, status: prevH ? prevH.status : null, reasons: [] };
+    if (!prevH) it.reasons.push({ id: 'CR-02' });
+    else if (prevH.status !== 'Active') it.reasons.push({ id: 'CR-03', v: { s: prevH.status } });
+    else {
+      var pcs = rows[0][2], max = rows[0][3];
+      if (!isInt(pcs, 1) || !isInt(max, 1)) it.reasons.push({ id: 'CR-04' });
+      rows.forEach(function (r) { if (!DEST[r[4]]) it.reasons.push({ id: 'CR-05', v: { c: r[4] } }); });
+      var tot = rows.reduce(function (a, r) { return a + (+r[5] || 0); }, 0);
+      if (isInt(max, 1) && tot > +max) it.reasons.push({ id: 'CR-06', v: { n: tot, m: max } });
+    }
+    it.ok = !it.reasons.length;
+    if (it.ok) {
+      var hc = [];
+      if (+prevH.pcs !== +rows[0][2]) hc.push('pcs_case ' + prevH.pcs + ' → ' + rows[0][2]);
+      if (+prevH.max !== +rows[0][3]) hc.push('max_case_day ' + prevH.max + ' → ' + rows[0][3]);
+      var pd = {}, nd = {}, dc = [];
+      pb.det.forEach(function (d) { if (d.part === pn) pd[d.dest] = d.cs; });
+      rows.forEach(function (r) { nd[r[4]] = +r[5]; });
+      Object.keys(nd).forEach(function (d) { if (!(d in pd)) dc.push(d + ': new ' + nd[d]); else if (pd[d] !== nd[d]) dc.push(d + ': ' + pd[d] + ' → ' + nd[d]); });
+      Object.keys(pd).forEach(function (d) { if (!(d in nd)) dc.push(d + ': removed (was ' + pd[d] + ')'); });
+      it.hdrChg = hc; it.detChg = dc; it.changed = hc.length > 0 || dc.length > 0;
+    }
+    m.items.push(it);
+  });
+  pb.head.forEach(function (h) { if (h.status === 'Active' && !by[h.part]) m.notInResult.push(h.part); });
+  var nh = [], ndet = [], ops = [];
+  m.items.forEach(function (it) {
+    if (!it.ok) return;
+    var ph = pb.head.filter(function (h) { return h.part === it.part; })[0], r0 = it.rows[0];
+    var sync = it.changed ? 0 : ph.sync;
+    nh.push({ part: it.part, period: CPER, pcs: r0[2], max: r0[3], status: 'Active', sync: sync, src: 'CALC', name: PART_NAMES[it.part] || PART_MASTER[it.part], total: r0[2] * r0[3], _f: 'new', _chg: [] });
+    ops.push({ t: 'INSERT', tbl: T_HEAD, key: { part: it.part, dest: '' }, d: 'part_name "' + (PART_NAMES[it.part] || '') + '" (from TB_M_PART_MASTER), total_pcs_day ' + (r0[2] * r0[3]) + ', pcs_case ' + r0[2] + (+ph.pcs !== +r0[2] ? ' (was ' + ph.pcs + ')' : ' (no change)') + ', max_case_day ' + r0[3] + (+ph.max !== +r0[3] ? ' (was ' + ph.max + ')' : ' (no change)') + ', sync_status ' + sync + (it.changed ? ' (changed, so No Sync)' : ' (copied from ' + CUR + ')') + ', last_source CALC' });
+    it.rows.forEach(function (r) {
+      var old = pb.det.filter(function (d) { return d.part === it.part && d.dest === r[4]; })[0];
+      ndet.push({ part: it.part, period: CPER, dest: r[4], cs: +r[5], _f: 'new', _chg: [] });
+      ops.push({ t: 'INSERT', tbl: T_DET, key: { part: it.part, dest: r[4] }, d: 'case_day ' + r[5] + (old ? (old.cs !== +r[5] ? ' (was ' + old.cs + ')' : ' (no change)') : ' (new destination)') });
+    });
+  });
+  m.ops = ops;
+  m.before = pb;
+  m.headView = pb.head.map(flagFree).concat(nh).sort(pcmp);
+  m.detView = pb.det.map(flagFree).concat(ndet).sort(pcmp);
+  m.read = m.items.length;
+  m.done = m.items.filter(function (i) { return i.ok; }).length;
+  m.skip = m.read - m.done;
+  m.chg = m.items.filter(function (i) { return i.ok && i.changed; }).length;
+  m.same = m.done - m.chg;
+  m.skipNotActive = m.items.filter(function (i) { return !i.ok && i.reasons.every(function (r) { return r.id === 'CR-03'; }); }).length;
+  m.skipError = m.skip - m.skipNotActive;
+  m.status = !m.read ? 'NO_DATA' : m.skipError ? 'PARTIAL' : 'COMPLETED';
+  return m;
+}
+
+/* ---------- Result report (xlsx) ---------- */
+function buildReport(m) {
+  var type = m.source === 'part' ? 'PART_LIST' : 'MAPPING';
+  var rep = { file: 'UploadResult_' + type + '_' + m.id + '.xlsx', sheets: {}, order: ['summary', 'result'] };
+  var modeLabel = m.mode === 'all' ? 'Reject the whole file' : 'Save valid rows only';
+  var tables = !m.committed ? 'none' : (m.st === 'two' ? T_HEAD + ': ' + tally(m.two.ops, T_HEAD).INSERT + ' insert, ' + tally(m.two.ops, T_HEAD).UPDATE + ' update · ' + T_DET + ': ' + tally(m.two.ops, T_DET).INSERT + ' insert, ' + tally(m.two.ops, T_DET).UPDATE + ' update, ' + tally(m.two.ops, T_DET).DELETE + ' delete' : T_HEAD + ': ' + tally(m.ops).INSERT + ' insert, ' + tally(m.ops).UPDATE + ' update, ' + tally(m.ops).DELETE + ' delete');
+  rep.sheets.summary = { title: 'Summary', note: 'Ringkasan satu upload. Isinya sama dengan satu baris UPLOAD_LOG ditambah penjelasan hasilnya.', kv: [
+    ['Upload ID', m.id], ['Upload type', type], ['File name', m.file.name], ['Uploaded by', 'D. Anggraini'], ['Uploaded at', '13-Sep-2026 10:15'], ['Finished at', '13-Sep-2026 10:16'],
+    ['Status', m.status], ['If errors are found', modeLabel], ['Total rows', m.fileOk ? m.total : '-'], ['Saved', m.saved - (m.noChange || 0)], ['No change (skipped)', m.noChange || 0],
+    [m.fileOk ? 'Rows with error' : 'File errors', m.fileOk ? m.errRows : m.errCount], ['Valid but not saved', m.notSaved || 0], ['Tables written', tables]
+  ] };
+  if (!m.fileOk) {
+    rep.sheets.result = { title: 'Result', note: 'File ditolak sebelum baris dibaca, jadi daftar ini hanya berisi masalah pada file. Unduh template lagi.', head: ['row_no', 'column', 'message_id', 'error_message'], rows: m.errors.map(function (e) { return [e.row, e.col, e.id, e.text]; }) };
+    return rep;
+  }
+  var head = m.file.head.concat(['result', 'action', 'error_column', 'message_id', 'error_message']);
+  var actionFor = function (x) {
+    var ops = m.st === 'two' ? m.two.ops : m.ops;
+    if (m.source === 'part') {
+      var u = ops.filter(function (o) { return o.key.part === x.group; });
+      return !u.length ? 'NO CHANGE' : x.cells[5] === 'A' ? 'INSERT' : 'UPDATE';
+    }
+    var o = ops.filter(function (q) { return q.key.part === x.group && q.key.dest === String(x.cells[1]) && (m.st !== 'two' || q.tbl === T_DET); })[0];
+    return o ? o.t : 'NO CHANGE';
+  };
+  var unsaved = [];
+  var ops0 = m.st === 'two' ? m.two.ops : m.ops;
+  var rows = m.results.map(function (x) {
+    var st = x.errs.length ? 'ERROR' : x.held ? 'HELD' : m.committed ? 'SAVED' : 'NOT SAVED';
+    var saved = st === 'SAVED';
+    var act = saved ? actionFor(x) : '';
+    if (saved && act === 'NO CHANGE' && !ops0.some(function (o) { return o.key.part === x.group; })) st = 'NO CHANGE';
+    var errText = x.errs.map(function (e) { return msg(e.id, e.v); }).join(' | ');
+    if (st === 'HELD') errText = 'Held because another row of ' + x.group + ' has an error. Upload all rows of this part again.';
+    if (st === 'NOT SAVED') errText = 'Valid, but not saved because the file was rejected.';
+    if (!saved) unsaved.push(x.cells.concat([errText]));
+    return x.cells.concat([st, act, x.errs.map(function (e) { return e.col; }).join(', '), x.errs.map(function (e) { return e.id.replace(/[ab]$/, ''); }).join(', '), errText]);
+  });
+  rep.sheets.result = { title: 'Result', note: 'Semua baris file, urutan sama. Kolom template di kiri tidak diubah. Kolom hasil ditambahkan di kanan. Nomor baris Excel sama dengan row_no di UPLOAD_ERROR.', head: head, rows: rows };
+  if (unsaved.length) {
+    rep.sheets.reupload = { title: 'Re-upload', note: 'Hanya baris yang belum tersimpan, dalam format template. Perbaiki, hapus kolom error_message kalau mau (kolom tambahan diabaikan), lalu upload ulang. Baris SAVED tidak ada di sini, supaya tidak ditolak sebagai sudah terdaftar.', head: m.file.head.concat(['error_message']), rows: unsaved };
+    rep.order.push('reupload');
+  }
+  if (m.committed) {
+    var ops = m.st === 'two' ? m.two.ops : m.ops;
+    rep.sheets.changes = { title: 'Changes', note: 'Apa yang benar-benar berubah di master. Dipakai untuk memeriksa hasil upload tanpa membuka database.', head: ['table', 'operation', 'part_no', 'dest_code', 'change'], rows: ops.map(function (o) { return [m.st === 'two' ? o.tbl : T_HEAD, o.t, o.key.part, o.key.dest || '', o.d]; }) };
+    rep.order.push('changes');
+  }
+  return rep;
+}
+
+/*__UI__*/
+/* ============ UI ============ */
+var S = { src: 'calc', sc: 'chg', mode: 'all', st: 'two', step: 0, sheet: 'summary', exp: 'part', xsheet: 'part', expPeriod: CUR, expPart: 'all', expSync: 'all' };
+var STEPS = [
+  { t: 'User memilih file dan klik Validate file', lane: 'screen' },
+  { t: 'File diterima, job dibuat', lane: 'batch' },
+  { t: 'Batch: cek level file', lane: 'batch' },
+  { t: 'Batch: validasi per baris', lane: 'batch' },
+  { t: 'Batch: tulis ke master', lane: 'batch' },
+  { t: 'Hasil tampil di screen', lane: 'screen' }
+];
+function $(id) { return document.getElementById(id); }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function plural(n, w) { return n + ' ' + w + (n === 1 ? '' : 's'); }
+
+function isSkipped(m, i) { return !m.fileOk && (i === 3); }
+function logState(m, step) {
+  if (step < 1) return null;
+  var l = { id: m.id, type: m.source === 'part' ? 'PART_LIST' : 'MAPPING', file: m.file.name, status: 'RECEIVED', total: '', ok: '', err: '' };
+  var final = step >= 4 || (!m.fileOk && step >= 3);
+  if (final) { l.status = m.status; l.total = m.fileOk ? m.total : ''; l.ok = m.saved; l.err = m.fileOk ? m.errRows : m.errCount; }
+  else if (step >= 2) { l.status = 'PROCESSING'; if (step === 3) l.total = m.total; }
+  return l;
+}
+function statusPill(s) {
+  var c = { COMPLETED: 'ok', PARTIAL: 'warn', REJECTED: 'bad', RECEIVED: 'neutral', PROCESSING: 'blue', RUNNING: 'blue', NO_DATA: 'bad' }[s] || 'neutral';
+  return '<span class="pill ' + c + '">' + esc(s) + '</span>';
+}
+
+function modalFrame(m, body, foot) {
+  var title = m.source === 'part' ? 'Upload Excel — part settings' : 'Upload Excel — destination mapping';
+  var sub = m.source === 'part'
+    ? 'One row = one part. Only the "Upload" sheet is read. Parts that are not listed stay unchanged. flag_add_edit: A = Add (new part), E = Edit (registered part).'
+    : 'One row = one destination of one part. Only the "Upload" sheet is read. Parts that are not listed stay unchanged. The rows of a listed part replace its whole mapping.';
+  return '<div class="mock"><div class="modal"><div><h4>' + title + '</h4><p class="sub">' + sub + '</p></div>' + body + (foot || '') + '</div></div>';
+}
+function dropBox(m, withFile) {
+  if (!withFile) return '';
+  return '<div class="drop"><div class="fileico">XLSX</div><div><b>' + esc(m.file.name) + '</b><span>' + m.file.kb + ' KB · ' + plural(m.file.rows.length, 'row') + (m.source === 'part' ? ' · sheets: ' + m.file.sheets.join(', ') : '') + '</span></div></div>';
+}
+
+function left(m, step) {
+  var h = '';
+  var cols = '<div class="chips">' + HEAD[m.source].map(function (c) { return '<span class="chip">' + c + '</span>'; }).join('') + '</div>';
+  if (step === 0) {
+    h = modalFrame(m, '<div><div class="sub-h" style="margin-bottom:6px">Template columns</div>' + cols + '</div>' + dropBox(m, true),
+      '<div class="mrow"><span class="mlink">Download template .xlsx</span><span class="mbtn">Close</span><span class="mbtn p click">Validate file</span></div>');
+    h += '<p class="kv">User memilih file lalu menekan <b>Validate file</b>. Di prototype tombol ini baru menutup modal (OP-02).</p>';
+  } else if (step === 1) {
+    h = modalFrame(m, dropBox(m, true) + '<div class="proc"><div class="proc-l"><i class="spin"></i>File received. Waiting for validation…</div><div class="kv">Upload ID <b>' + m.id + '</b> · Status <b>RECEIVED</b></div></div>',
+      '<div class="mrow"><span class="mbtn">Close</span><span class="mbtn p" style="opacity:.5">Validate file</span></div>');
+    h += '<p class="kv">Screen langsung mendapat Upload ID dan mulai membaca status dari UPLOAD_LOG secara berkala. User boleh menutup modal, prosesnya tetap jalan.</p>';
+  } else if (step === 2) {
+    h = modalFrame(m, dropBox(m, true) + '<div class="proc"><div class="proc-l"><i class="spin"></i>Checking file…</div><div class="kv">Upload ID <b>' + m.id + '</b> · Status <b>PROCESSING</b></div></div>');
+  } else if (step === 3) {
+    var skipped = !m.fileOk;
+    h = modalFrame(m, dropBox(m, true) + (skipped
+      ? '<div class="proc"><div class="proc-l"><i class="spin"></i>Finishing…</div><div class="kv">Upload ID <b>' + m.id + '</b> · Status <b>PROCESSING</b></div></div>'
+      : '<div class="proc"><div class="proc-l"><i class="spin"></i>Validating rows… ' + m.total + ' of ' + m.total + '</div><div class="bar"><i style="width:100%"></i></div><div class="kv">Upload ID <b>' + m.id + '</b> · Status <b>PROCESSING</b></div></div>'));
+  } else if (step === 4) {
+    h = modalFrame(m, dropBox(m, true) + '<div class="proc"><div class="proc-l"><i class="spin"></i>' + (m.committed ? 'Saving to master…' : 'Finishing…') + '</div><div class="kv">Upload ID <b>' + m.id + '</b> · Status <b>PROCESSING</b></div></div>');
+  } else {
+    h = resultModal(m);
+  }
+  return h;
+}
+
+function resultModal(m) {
+  var banner, tiles;
+  if (m.status === 'COMPLETED') banner = '<div class="banner ok"><b>Upload completed.</b> ' + plural(m.saved - m.noChange, 'row') + ' saved to Master Candidate Part.' + (m.noChange ? ' ' + plural(m.noChange, 'row') + ' had no change and was skipped.' : '') + '</div>';
+  else if (m.status === 'PARTIAL') banner = '<div class="banner warn"><b>Upload completed with errors.</b> ' + plural(m.saved - m.noChange, 'row') + ' saved, ' + (m.noChange ? plural(m.noChange, 'row') + ' unchanged, ' : '') + plural(m.total - m.saved, 'row') + ' not saved. Download the result report, fix the rows on its Re-upload sheet and upload them again.</div>';
+  else if (!m.fileOk) banner = '<div class="banner bad"><b>Upload rejected.</b> The file does not match the template. No data was saved.</div>';
+  else banner = '<div class="banner bad"><b>Upload rejected.</b> ' + plural(m.errCount, 'error') + ' found. No data was saved' + (m.notSaved ? ', including ' + plural(m.notSaved, 'valid row') : '') + '. Fix the errors and upload again.</div>';
+  tiles = '<div class="tiles"><div class="tile"><small>Total rows</small><b>' + (m.fileOk ? m.total : '–') + '</b></div><div class="tile"><small>Saved</small><b>' + (m.saved - m.noChange) + '</b></div><div class="tile"><small>No change</small><b>' + m.noChange + '</b></div><div class="tile"><small>' + (m.fileOk ? 'Rows with error' : 'File errors') + '</small><b>' + (m.fileOk ? m.errRows : m.errCount) + '</b></div></div>';
+  var errTbl = '';
+  if (m.errors.length) {
+    errTbl = '<div class="tw" style="max-height:200px;overflow:auto"><table><thead><tr><th class="r">Row</th><th>Column</th><th>Message</th></tr></thead><tbody>' +
+      m.errors.map(function (e) { return '<tr><td class="r">' + e.row + '</td><td class="mono">' + esc(e.col) + '</td><td class="txt">' + esc(e.text) + '</td></tr>'; }).join('') + '</tbody></table></div>';
+  }
+  var foot = '<div class="mrow">' + '<span class="mlink">Download result report .xlsx</span>' + '<span class="mbtn p">Close</span></div>';
+  var h = modalFrame(m, banner + tiles + errTbl, foot);
+  if (m.committed) h += refreshed(m);
+  else h += '<p class="kv">Setelah modal ditutup, daftar di screen tidak berubah karena master tidak disentuh.</p>';
+  return h;
+}
+
+function refreshed(m) {
+  var touched = {};
+  m.ops.forEach(function (o) { touched[o.key.part] = true; });
+  var rows = m.after.filter(function (r) { return touched[r.part]; });
+  var byPart = {};
+  rows.forEach(function (r) { (byPart[r.part] = byPart[r.part] || []).push(r); });
+  var parts = Object.keys(byPart).sort();
+  var syncPill = '<span class="pill neutral">No Sync</span>';
+  var head, body;
+  if (m.source === 'part') {
+    head = '<tr><th>Part Number</th><th class="r">Min MAD</th><th class="r">Pcs/Case</th><th class="r">Max Case/Day</th><th>Status</th><th>Sync</th></tr>';
+    body = parts.map(function (p) { var r = byPart[p][0]; return '<tr><td class="mono">' + p + '</td><td class="r">' + r.mad + '</td><td class="r">' + r.pcs + '</td><td class="r">' + r.max + '</td><td>' + esc(r.status) + '</td><td>' + syncPill + '</td></tr>'; }).join('');
+  } else {
+    head = '<tr><th>Part Number</th><th>Destinations (case/day)</th><th class="r">Total</th><th class="r">Max</th><th>Sync</th></tr>';
+    body = parts.map(function (p) {
+      var rs = byPart[p], tot = sumCs(rs);
+      return '<tr><td class="mono">' + p + '</td><td>' + rs.filter(function (r) { return r.dest; }).map(function (r) { return r.dest + ': ' + r.cs; }).join(' · ') + '</td><td class="r">' + tot + '</td><td class="r">' + rs[0].max + '</td><td>' + syncPill + '</td></tr>';
+    }).join('');
+  }
+  return '<div><div class="sub-h" style="margin-bottom:6px">' + (m.source === 'part' ? 'Part List' : 'Mapping per Destination') + ' setelah refresh (hanya part yang berubah)</div><div class="tw"><table><thead>' + head + '</thead><tbody>' + body + '</tbody></table></div></div>';
+}
+
+function acts(list) { return '<ol class="acts">' + list.map(function (a) { return '<li' + (a.dim ? ' class="dim"' : '') + '><span>' + a.h + '</span></li>'; }).join('') + '</ol>'; }
+function refs(ids) { return '<div class="refs">Butuh keputusan: ' + ids.map(function (i) { return '<a href="#' + i.toLowerCase() + '">' + i + '</a>'; }).join('') + '</div>'; }
+function tplTable(source) {
+  var rows = source === 'part'
+    ? [['part_no', 'Part Number', 'Required'], ['minimum_mad', 'Minimum MAD', 'Required'], ['pcs_case', 'Pieces per case', 'Required'], ['max_case_day', 'Max Case/Day', 'Required'], ['status', 'Candidate / Active / Inactive', 'Add: leave blank (always Candidate). Edit: cannot be changed, leave blank or keep the current value'], ['flag_add_edit', 'A = Add, E = Edit', 'Required'], ['effective_start_date', 'DD-Mon-YYYY', 'Required while status is Candidate (always for Add). Only a Candidate part can change it. Other statuses: keep the current value']]
+    : [['part_no', 'Part Number', 'Read-only. Active parts only'], ['dest_code', '123 / 456 / 789', 'Editable. From the destination master; add a row for a new destination. Blank only on the placeholder row of a part with no mapping yet'], ['case_day', 'Case/Day for this destination', 'Editable. Whole number > 0. Leave both dest_code and case_day blank on a placeholder row to skip the part'], ['total_case_day', 'Total Case/Day of the part', 'Read-only. Max Case/Day set in Part List; the sum after edits must not exceed it. It can only be raised in Part List']];
+  return '<div class="tw"><table><thead><tr><th>Column</th><th>Content</th><th>Rule</th></tr></thead><tbody>' +
+    rows.map(function (r) { return '<tr><td class="mono">' + r[0] + '</td><td>' + r[1] + '</td><td class="txt">' + r[2] + '</td></tr>'; }).join('') + '</tbody></table></div>';
+}
+
+function right(m, step) {
+  var h = '';
+  if (step === 0) {
+    h += '<p class="what"><b>Trigger.</b> User menekan <b>Validate file</b>. Screen mengirim file, jenis upload (<span class="mono">' + (m.source === 'part' ? 'PART_LIST' : 'MAPPING') + '</span>) dan user ID ke server. Belum ada yang berubah di database.</p>';
+    h += '<div class="sub-h">Template yang dibaca batch</div>' + tplTable(m.source);
+    if (m.source === 'map') h += '<div class="banner info"><b>Hanya sheet "Upload" yang dibaca.</b> File Mapping berasal dari Export Excel 2 sheet. Part yang tidak ada di sheet Upload tidak berubah. Part yang ada di sheet Upload mengganti seluruh mapping lamanya (<a href="#d4" style="color:var(--accent-ink);font-weight:700">D4</a>); jika isinya sama dengan master, baris dilewati (NO CHANGE). part_no dan total_case_day read-only; dest_code dan case_day editable. total_case_day adalah Total Case/Day part dari Part List (Max Case/Day), jadi jumlah case_day semua destinasi per part tidak boleh melebihinya dan total hanya bisa ditambah lewat Part List. Part Active yang belum punya mapping selalu ada di sheet sebagai baris kosong untuk diisi; dibiarkan kosong berarti tidak berubah. Kolom period tidak ada: hanya periode berjalan yang bisa diubah (BR-13).</div>';
+    else h += '<div class="banner info"><b>Hanya sheet "Upload" yang dibaca.</b> File berasal dari Export Excel Part List (2 sheet: hasil download dan Upload). Part yang tidak ada di sheet Upload berarti tidak berubah. Part Name dan Total Pcs/Day tidak ada di template: Part Name diambil dari <span class="mono">TB_M_PART_MASTER</span> lewat part_no dan Total Pcs/Day dihitung batch setelah Validate file. Keduanya disimpan di MASTER_CANDIDATE_PART.</div>';
+    h += refs(m.source === 'part' ? ['D16', 'D17', 'D18'] : ['D4', 'D15']);
+  } else if (step === 1) {
+    h += '<p class="what">Server menyimpan file lebih dulu, baru memproses. Supaya screen tidak menunggu proses yang bisa lama untuk 5,000 baris.</p>';
+    h += acts([
+      { h: 'Simpan file ke upload storage (lokasi <span class="mono">TBD</span>).' },
+      { h: 'Buat 1 baris <b>UPLOAD_LOG</b> dengan status <span class="mono">RECEIVED</span>, upload_type, file_name, uploaded_by, uploaded_at.' },
+      { h: 'Panggil batch dengan parameter tunggal <span class="mono">upload_id</span>, secara asynchronous.' },
+      { h: 'Kembalikan <span class="mono">upload_id</span> ke screen. Screen membaca status dari UPLOAD_LOG tiap beberapa detik.' }
+    ]);
+    h += refs(['D3']);
+  } else if (step === 2) {
+    h += '<p class="what">Pemeriksaan yang cukup dibaca dari file saja, sebelum satu baris pun dibuka.</p>';
+    h += acts([{ h: 'Ubah status UPLOAD_LOG menjadi <span class="mono">PROCESSING</span>, isi started_at.' }, { h: 'Jalankan pemeriksaan di bawah. Satu saja gagal, file ditolak dan baris tidak diperiksa.' }]);
+    h += '<div class="checks">' + m.checks.map(function (c) { return '<div class="check ' + (c.ok ? 'ok' : 'bad') + '"><span class="ic">' + (c.ok ? '✓' : '✗') + '</span><span><b class="mono">' + c.id + '</b> ' + esc(c.label) + ' <span style="color:var(--muted)">· ' + esc(c.note) + '</span></span></div>'; }).join('') + '</div>';
+    if (!m.fileOk) h += '<div class="banner bad">Status UPLOAD_LOG menjadi <b>REJECTED</b>. Langkah 4 dan 5 dilewati, proses langsung ke langkah 6.</div>';
+  } else if (step === 3) {
+    if (!m.fileOk) { h += '<div class="skipnote">Dilewati. File sudah ditolak di langkah 3, jadi tidak ada baris yang divalidasi.</div>'; }
+    else {
+      h += '<p class="what">Batch membaca baris satu per satu, memeriksa semua aturan, dan mencatat <b>semua</b> error (bukan berhenti di error pertama) ke UPLOAD_ERROR.</p>';
+      h += rulesUsed(m);
+      h += rowGrid(m);
+      h += '<div class="legend"><span>Hasil: <b>' + (m.total - m.errRows - (m.held || 0)) + ' valid</b> · <b>' + m.errRows + ' error</b>' + (m.held ? ' · <b>' + m.held + ' ditahan</b> (part yang sama punya baris error)' : '') + '</span></div>';
+      if (m.st === 'two' && m.source === 'map') h += '<div class="banner info"><b>MP-02 sekaligus menjaga FK.</b> Detail destination hanya boleh dibuat untuk part yang sudah ada di ' + T_HEAD + '. Part yang tidak ada di sana ditolak sebelum menyentuh tabel.</div>';
+      h += refs(m.source === 'part' ? ['D5', 'D7'] : ['D2', 'D4']);
+    }
+  } else if (step === 4) {
+    if (!m.fileOk) h += '<div class="skipnote">Dilewati. Tidak ada yang ditulis ke MASTER_CANDIDATE_PART. Result report yang berisi daftar masalah file tetap dibuat di akhir proses.</div>';
+    else if (!m.committed) {
+      h += '<p class="what">Ada error dan mode <b>Tolak seluruh file</b> aktif, jadi batch <b>tidak menulis apa pun</b> ke master.</p>';
+      h += acts([{ h: 'MASTER_CANDIDATE_PART tidak disentuh' + (m.notSaved ? ' (' + plural(m.notSaved, 'baris valid') + ' ikut tidak disimpan)' : '') + '.' }, { h: 'UPLOAD_LOG: status <span class="mono">REJECTED</span>, total_rows ' + m.total + ', success_rows 0, error_rows ' + m.errRows + '.' }, { h: 'Buat <b>result report .xlsx</b> dan simpan ke storage, isi <span class="mono">result_file_path</span> di UPLOAD_LOG.' }]);
+      h += refs(['D2']);
+    } else {
+      var two = m.st === 'two', ops = two ? m.two.ops : m.ops;
+      h += '<p class="what">' + (m.mode === 'partial' && m.errRows ? 'Mode <b>Simpan baris yang valid</b>: hanya ' + (m.source === 'map' ? 'part' : 'baris') + ' yang lolos yang ditulis.' : 'Semua baris lolos, ditulis dalam satu transaksi.') + '</p>';
+      var writeAct, syncAct;
+      if (!two) {
+        writeAct = m.source === 'part' ? 'Add: <b>INSERT</b> baris baru, status <span class="mono">Candidate</span>, dest_code kosong, total_pcs_day = pcs_case × max_case_day (dihitung batch setelah Validate file), part_name diambil dari <span class="mono">TB_M_PART_MASTER</span> lewat part_no. Keduanya disimpan. Edit: <b>UPDATE</b> hanya Min MAD, Pcs/Case, Max Case/Day dan Effective Date (hanya bila status Candidate) yang berbeda dari master, di semua baris part itu. Status tidak bisa diubah. Edit tanpa perubahan dilewati (NO CHANGE) dan tidak mengubah Sync Status.' : 'Per part: baris destination lama diganti dengan isi file. Yang ada di file tapi belum ada: <b>INSERT</b>. Yang berubah: <b>UPDATE</b>. Yang tidak ada di file: <b>DELETE</b>. Part yang isinya sama dengan master dilewati (NO CHANGE) tanpa mengubah Sync Status.';
+        syncAct = 'Setiap baris yang disentuh: <span class="mono">sync_status = 0</span> (BR-09), isi updated_by, updated_dt, last_upload_id.';
+      } else {
+        writeAct = m.source === 'part' ? 'Add: <b>INSERT</b> 1 baris ke <b>' + T_HEAD + '</b>, status <span class="mono">Candidate</span>, total_pcs_day = pcs_case × max_case_day (dihitung batch setelah Validate file), part_name diambil dari <span class="mono">TB_M_PART_MASTER</span> lewat part_no. Keduanya disimpan. Edit: <b>UPDATE</b> 1 baris part itu, hanya Min MAD, Pcs/Case, Max Case/Day dan Effective Date (hanya bila status Candidate) yang berbeda dari master, total_pcs_day dihitung ulang. Status tidak bisa diubah. Edit tanpa perubahan dilewati (NO CHANGE) dan tidak mengubah Sync Status. Tabel <b>' + T_DET + '</b> tidak disentuh.' : 'Per part: baris di <b>' + T_DET + '</b> diganti sesuai file (<b>INSERT</b> / <b>UPDATE</b> / <b>DELETE</b>). Lalu baris part di <b>' + T_HEAD + '</b> di-<b>UPDATE</b>. Part yang isinya sama dengan master dilewati (NO CHANGE).';
+        syncAct = 'Di <b>' + T_HEAD + '</b>, tiap part yang disentuh: <span class="mono">sync_status = 0</span> (BR-09), updated_by, updated_dt, <span class="mono">last_source = UPLOAD</span>, last_upload_id. Sync Status hanya ada di satu tempat.';
+      }
+      h += acts([
+        { h: 'Mulai transaksi' + (two ? ' (satu transaksi untuk kedua tabel)' : '') + '.' },
+        { h: writeAct },
+        { h: syncAct },
+        two ? { h: m.source === 'part' ? 'FK tidak terlibat: Part List hanya menulis header, dan tidak ada DELETE part.' : 'Urutan mengikuti FK: header part sudah ada (part Active), jadi detail boleh ditulis lebih dulu, header di-UPDATE sesudahnya. Tidak ada DELETE header, jadi tidak ada detail yatim.' } : null,
+        { h: 'Catat history per field yang berubah (nilai lama → baru).' },
+        { h: 'UPDATE UPLOAD_LOG: status <span class="mono">' + m.status + '</span>, success_rows ' + m.saved + ', error_rows ' + m.errRows + ', finished_at.' },
+        { h: 'Buat <b>result report .xlsx</b> (isinya di langkah 6), simpan ke storage, isi <span class="mono">result_file_path</span> di UPLOAD_LOG.' },
+        { h: 'Commit.' }
+      ].filter(Boolean));
+      var tl = function (t) { return t.INSERT + ' insert, ' + t.UPDATE + ' update, ' + t.DELETE + ' delete'; };
+      h += '<div class="sub-h">Perubahan · ' + (two ? 'PART: ' + tl(tally(ops, T_HEAD)) + ' · PART_DEST: ' + tl(tally(ops, T_DET)) : tl(tally(ops))) + '</div>';
+      h += '<div class="ops">' + ops.map(function (o) { return '<div class="op"><span class="t ' + o.t + '">' + o.t + '</span><span class="d">' + (two ? '<span class="tg">' + (o.tbl === T_HEAD ? 'PART' : 'PART_DEST') + '</span>' : '') + '<b class="mono">' + o.key.part + '</b>' + (o.key.dest ? ' · dest ' + o.key.dest : (two ? '' : ' · no dest')) + ' — ' + esc(o.d) + '</span></div>'; }).join('') + '</div>';
+      h += refs(m.source === 'part' ? ['D1', 'D5', 'D6', 'D8', 'D16', 'D17'] : ['D1', 'D4', 'D6', 'D8']);
+    }
+  } else {
+    h += '<p class="what">Screen membaca <b>UPLOAD_LOG</b> (ringkasan) dan <b>UPLOAD_ERROR</b> (daftar error), lalu menampilkan hasilnya.</p>';
+    h += acts([
+      { h: 'Status akhir <span class="mono">' + m.status + '</span> menghentikan polling dan membuka modal hasil.' },
+      { h: 'Tombol <b>Download result report</b> mengambil file yang sudah dibuat batch di langkah 5 (path di <span class="mono">result_file_path</span>). File ini selalu ada, bukan hanya saat ada error.' },
+      { h: m.committed ? 'Setelah modal ditutup, daftar di-refresh dari MASTER_CANDIDATE_PART. Baris yang berubah tampil sebagai <b>No Sync</b>, siap di-Sync oleh D/S.' : 'Daftar tidak berubah.' }
+    ]);
+    h += reportPreview(m);
+    h += refs(['D14']);
+  }
+  return h;
+}
+
+function rulesUsed(m) {
+  var ids = m.source === 'part' ? ['PL-01', 'PL-02', 'PL-03a', 'PL-04', 'PL-05', 'PL-06', 'PL-07', 'PL-08', 'PL-09a'] : ['MP-02', 'MP-03', 'MP-04', 'MP-05', 'MP-06'];
+  var cnt = {}; m.errors.forEach(function (e) { cnt[e.id] = (cnt[e.id] || 0) + 1; });
+  cnt['PL-03a'] = (cnt['PL-03a'] || 0) + (cnt['PL-03b'] || 0);
+  cnt['PL-09a'] = (cnt['PL-09a'] || 0) + (cnt['PL-09b'] || 0);
+  return '<div class="rules">' + ids.map(function (id) { var c = cnt[id] || 0; return '<span class="rl ' + (c ? 'bad' : 'ok') + '"><b>' + id.replace(/[ab]$/, '') + '</b>' + (c ? c + ' error' + (c > 1 ? 's' : '') : '') + '</span>'; }).join('') + '</div>';
+}
+function rowGrid(m) {
+  var head = '<tr><th class="r">Row</th><th>Result</th>' + m.file.head.map(function (c) { return '<th>' + c + '</th>'; }).join('') + '</tr>';
+  var body = m.results.map(function (x) {
+    var bad = x.errs.length, cls = bad ? 'rowerr' : 'rowok';
+    var res = bad ? x.errs.map(function (e) { return '<div><span class="pill bad">' + e.id.replace(/[ab]$/, '') + '</span> ' + esc(msg(e.id, e.v)) + '</div>'; }).join('')
+      : x.held ? '<span class="pill warn">Held</span> another row of ' + esc(x.group) + ' failed' : '<span class="pill ok">Valid</span>';
+    return '<tr class="' + cls + '"><td class="r">' + x.n + '</td><td class="txt">' + res + '</td>' + x.cells.map(function (c) { return '<td class="mono">' + esc(c) + '</td>'; }).join('') + '</tr>';
+  }).join('');
+  return '<div class="tw" style="max-height:340px;overflow:auto"><table><thead>' + head + '</thead><tbody>' + body + '</tbody></table></div>';
+}
+
+var ONE_COLS = [['part', 'part_no'], ['period', 'period'], ['dest', 'dest_code'], ['cs', 'case_day', 1], ['pcs', 'pcs_case', 1], ['max', 'max_case_day', 1], ['mad', 'min_mad', 1], ['eff', 'effective_start_date'], ['status', 'part_status'], ['sync', 'sync_status', 1], ['up', 'last_upload_id']];
+var HEAD_COLS = [['part', 'part_no', 0, 'PK'], ['period', 'period', 0, 'PK'], ['name', 'part_name'], ['mad', 'min_mad', 1], ['pcs', 'pcs_case', 1], ['max', 'max_case_day', 1], ['total', 'total_pcs_day', 1], ['eff', 'effective_start_date'], ['status', 'part_status'], ['sync', 'sync_status', 1], ['up', 'last_upload_id']];
+var DET_COLS = [['part', 'part_no', 0, 'PK·FK'], ['period', 'period', 0, 'PK·FK'], ['dest', 'dest_code', 0, 'PK'], ['cs', 'case_day', 1]];
+function flagless(r) { return Object.assign({}, r, { _f: '', _chg: [] }); }
+
+function dataTable(name, tag, cols, rows, note) {
+  var head = '<tr>' + cols.map(function (c) { return '<th class="' + (c[2] ? 'r' : '') + '">' + c[1] + (c[3] ? '<span class="keytag' + (c[3].indexOf('FK') >= 0 ? ' fk' : '') + '">' + c[3] + '</span>' : '') + '</th>'; }).join('') + '</tr>';
+  var body = rows.map(function (r) {
+    return '<tr class="' + (r._f === 'new' ? 'new' : r._f === 'del' ? 'del' : '') + '">' + cols.map(function (c) {
+      var v = r[c[0]]; if (c[0] === 'sync') v = v === 0 ? '0 No Sync' : v === 1 ? '1 Success' : '2 Failed';
+      var chg = r._chg && r._chg.indexOf(c[0]) >= 0 && r._f === 'upd';
+      return '<td class="' + (c[2] ? 'r ' : '') + (chg ? 'chg' : '') + (c[0] === 'part' || c[0] === 'dest' || c[0] === 'up' ? ' mono' : '') + '">' + (v === '' || v == null ? '<span style="color:var(--muted)">·</span>' : esc(v)) + '</td>';
+    }).join('') + '</tr>';
+  }).join('');
+  var n = rows.filter(function (r) { return r._f !== 'del'; }).length;
+  return '<div style="min-width:0"><div class="tbl-h"><h3>' + name + '</h3><span>' + (tag ? tag + ' · ' : '') + n + ' baris · ' + note + '</span></div><div class="tw max"><table><thead>' + head + '</thead><tbody>' + (body || '<tr><td colspan="' + cols.length + '" style="color:var(--muted)">Kosong.</td></tr>') + '</tbody></table></div></div>';
+}
+function masterTables(m, step) {
+  var showAfter = step >= 4 && m.committed;
+  var note = step < 4 ? 'keadaan sebelum upload, belum ada yang berubah' : !m.committed ? 'tidak ada perubahan' : step === 4 ? 'hijau = baru, kuning = berubah, coret = dihapus' : 'keadaan akhir, hijau = baru, kuning = berubah';
+  function pick(view, base) { return showAfter ? view.filter(function (r) { return r._f !== 'del' || step === 4; }) : base.map(flagless); }
+  if (m.st === 'two') {
+    var detTouched = m.two.ops.some(function (o) { return o.tbl === T_DET; });
+    var detNote = showAfter && !detTouched ? 'tidak disentuh oleh upload ini' : note;
+    return '<div class="two split">' +
+      dataTable(T_HEAD, 'Part List', HEAD_COLS, pick(m.two.headView, m.two.before.head), note) +
+      dataTable(T_DET, 'Mapping per Destination', DET_COLS, pick(m.two.detView, m.two.before.det), detNote) + '</div>';
+  }
+  return dataTable(T_HEAD, 'Part List + Mapping', ONE_COLS, pick(m.view, BASE), note);
+}
+function logTable(m, step) {
+  var l = logState(m, step);
+  var head = '<tr><th>upload_id</th><th>type</th><th>file_name</th><th>status</th><th class="r">total</th><th class="r">ok</th><th class="r">err</th></tr>';
+  var body = l ? '<tr><td class="mono">' + l.id + '</td><td class="mono">' + l.type + '</td><td>' + esc(l.file) + '</td><td>' + statusPill(l.status) + '</td><td class="r">' + l.total + '</td><td class="r">' + l.ok + '</td><td class="r">' + l.err + '</td></tr>' : '<tr><td colspan="7" style="color:var(--muted)">Belum ada baris. Dibuat di langkah 2.</td></tr>';
+  return '<div><div class="tbl-h"><h3>UPLOAD_LOG</h3><span>1 baris per upload</span></div><div class="tw"><table><thead>' + head + '</thead><tbody>' + body + '</tbody></table></div></div>';
+}
+function errTable(m, step) {
+  var show = step >= (m.fileOk ? 3 : 2);
+  var errs = show ? m.errors : [];
+  var head = '<tr><th>upload_id</th><th class="r">row_no</th><th>column</th><th>message_id</th><th>message</th></tr>';
+  var body = errs.length ? errs.map(function (e) { return '<tr><td class="mono">' + m.id + '</td><td class="r">' + e.row + '</td><td class="mono">' + esc(e.col) + '</td><td class="mono">' + e.id + '</td><td class="txt">' + esc(e.text) + '</td></tr>'; }).join('')
+    : '<tr><td colspan="5" style="color:var(--muted)">' + (!show ? 'Belum ada baris. Terisi saat pemeriksaan di langkah 3 dan 4.' : 'Kosong. Tidak ada error.') + '</td></tr>';
+  return '<div><div class="tbl-h"><h3>UPLOAD_ERROR</h3><span>' + errs.length + ' baris</span></div><div class="tw max" style="max-height:230px"><table><thead>' + head + '</thead><tbody>' + body + '</tbody></table></div></div>';
+}
+
+function stepCount() { return S.src === 'calc' ? CALC_STEPS.length : STEPS.length; }
+function drawStepper(steps, step, skippedFn) {
+  $('stepper').style.setProperty('--n', steps.length);
+  $('stepper').innerHTML = steps.map(function (s, i) {
+    var cls = (i < step ? 'done ' : '') + (skippedFn(i) ? 'skipped' : '');
+    return '<li><button type="button" class="stp ' + cls + '" data-step="' + i + '"' + (i === step ? ' aria-current="step"' : '') + '><span class="stp-top"><span class="stp-n">' + (i + 1) + '</span><span class="lane ' + s.lane + '">' + (s.lane === 'screen' ? 'Screen' : 'Batch') + '</span></span><span class="stp-t">' + s.t + '</span></button></li>';
+  }).join('');
+}
+function render() {
+  var calc = S.src === 'calc';
+  document.querySelectorAll('.seg button').forEach(function (b) { b.setAttribute('aria-pressed', String(S[b.dataset.k] === b.dataset.v)); });
+  $('ctl-sc').hidden = calc; $('ctl-sc2').hidden = !calc; $('ctl-st').hidden = calc; $('ctl-mode').hidden = calc;
+  if (calc) { renderCalc(); return; }
+  var m = simulate(S.src, S.sc, S.mode, S.st), step = S.step;
+  $('left-h').textContent = 'Yang dilihat user';
+  // controls
+  var modeSeg = $('seg-mode').querySelectorAll('button');
+  var modeRelevant = S.sc === 'errors';
+  modeSeg.forEach(function (b) { b.disabled = !modeRelevant; });
+  $('seg-mode').title = modeRelevant ? '' : 'Hanya berpengaruh pada skenario "Ada baris error"';
+  drawStepper(STEPS, step, function (i) { return isSkipped(m, i) || (i === 4 && !m.fileOk); });
+  renderStatic(m);
+  $('left').innerHTML = left(m, step);
+  var lane = STEPS[step].lane;
+  $('lane-r').className = 'lane ' + (lane === 'screen' ? 'screen' : 'batch');
+  $('lane-r').textContent = lane === 'screen' ? 'Screen' : 'Batch';
+  $('right-h').textContent = 'Langkah ' + (step + 1) + ' · ' + STEPS[step].t;
+  $('right').innerHTML = right(m, step);
+  $('tables').innerHTML = masterTables(m, step) + '<div class="two">' + logTable(m, step) + errTable(m, step) + '</div>';
+  $('prev').disabled = step === 0;
+  $('next').disabled = step === STEPS.length - 1;
+  $('hint').textContent = 'Langkah ' + (step + 1) + ' dari ' + STEPS.length;
+}
+
+document.addEventListener('click', function (e) {
+  var b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.k) {
+    S[b.dataset.k] = b.dataset.v;
+    if (b.dataset.k === 'src') S.sc = b.dataset.v === 'calc' ? 'chg' : (S.sc === 'chg' || S.sc === 'nochg' ? 'clean' : S.sc);
+    S.step = 0; render(); return;
+  }
+  if (b.dataset.exp) { S.exp = b.dataset.exp; S.xsheet = b.dataset.exp === 'map' ? 'map' : 'part'; renderExport(); return; }
+  if (b.dataset.expPeriod) { S.expPeriod = b.dataset.expPeriod; renderExport(); return; }
+  if (b.dataset.expPart) { S.expPart = b.dataset.expPart; renderExport(); return; }
+  if (b.dataset.expSync) { S.expSync = b.dataset.expSync; renderExport(); return; }
+  if (b.dataset.xsheet) { S.xsheet = b.dataset.xsheet; renderExport(); return; }
+  if (b.dataset.sheet) { S.sheet = b.dataset.sheet; render(); return; }
+  if (b.dataset.step) { S.step = +b.dataset.step; render(); return; }
+  if (b.id === 'next' && S.step < stepCount() - 1) { S.step++; render(); }
+  if (b.id === 'prev' && S.step > 0) { S.step--; render(); }
+  if (b.id === 'reset') { S.step = 0; render(); }
+});
+
+/* ============ RESULT REPORT PREVIEW ============ */
+function colLetter(i) { var s = ''; i++; while (i > 0) { var r = (i - 1) % 26; s = String.fromCharCode(65 + r) + s; i = Math.floor((i - 1) / 26); } return s; }
+function xlCls(h, v) {
+  if (h === 'result') return v === 'SAVED' ? 'xc-ok' : v === 'ERROR' ? 'xc-bad' : v === 'NO CHANGE' ? '' : 'xc-warn';
+  if (h === 'operation' || h === 'action') return v === 'INSERT' ? 'xc-ok' : v === 'UPDATE' ? 'xc-warn' : v === 'DELETE' ? 'xc-bad' : '';
+  if (h === 'error_message' || h === 'error_column' || h === 'message_id') return v ? 'xc-bad' : '';
+  return '';
+}
+function reportPreview(m) {
+  var r = buildReport(m);
+  if (!r.sheets[S.sheet]) S.sheet = 'summary';
+  var sh = r.sheets[S.sheet], grid;
+  if (sh.kv) {
+    var cols = '<tr><th class="rn"></th><th class="cn">A</th><th class="cn">B</th></tr>';
+    grid = cols + sh.kv.map(function (kv, i) { var st = kv[0] === 'Status' ? ' ' + (kv[1] === 'COMPLETED' ? 'xc-ok' : kv[1] === 'PARTIAL' ? 'xc-warn' : 'xc-bad') : ''; return '<tr><th class="rn">' + (i + 1) + '</th><td class="kv-k">' + esc(kv[0]) + '</td><td class="' + st.trim() + '">' + esc(kv[1]) + '</td></tr>'; }).join('');
+  } else {
+    var letters = '<tr><th class="rn"></th>' + sh.head.map(function (_, i) { return '<th class="cn">' + colLetter(i) + '</th>'; }).join('') + '</tr>';
+    var hrow = '<tr><th class="rn">1</th>' + sh.head.map(function (c) { return '<td class="hd">' + esc(c) + '</td>'; }).join('') + '</tr>';
+    grid = letters + hrow + sh.rows.map(function (row, ri) { return '<tr><th class="rn">' + (ri + 2) + '</th>' + row.map(function (c, ci) { var cl = xlCls(sh.head[ci], c); return '<td class="' + cl + '">' + esc(c) + '</td>'; }).join('') + '</tr>'; }).join('');
+  }
+  var tabs = r.order.map(function (k) { return '<button type="button" data-sheet="' + k + '" aria-pressed="' + (k === S.sheet) + '">' + r.sheets[k].title + '</button>'; }).join('');
+  return '<div class="sub-h">Isi file yang di-download</div><div class="xl"><div class="xl-bar"><i>X</i><span>' + esc(r.file) + '</span></div><div class="xl-scroll"><table>' + grid + '</table></div><div class="xl-tabs">' + tabs + '</div></div><p class="xl-note">' + esc(sh.note) + '</p>';
+}
+
+/* ============ EXPORT EXCEL PREVIEW ============ */
+var PNAME = { 'PART-A': 'Dummy Part A', 'PART-C': 'Dummy Part C', 'PART-G': 'Dummy Part G', 'PART-I': 'Dummy Part I' };
+var PUPD = { 'PART-A': '05-Aug-2026 09:12 · A. Wibowo', 'PART-C': '12-Aug-2026 08:05 · R. Pratama', 'PART-G': '12-Aug-2026 08:11 · R. Pratama', 'PART-I': '20-Aug-2026 10:05 · D. Anggraini' };
+var MAP_ARCHIVE = BASE.map(function (r) {
+  var row = Object.assign({}, r, { period: 'Aug 2026' });
+  if (row.part === 'PART-A' && row.dest === '123') row.cs = 11;
+  return row;
+});
+function groupParts(sourceRows, byPeriod) {
+  sourceRows = sourceRows || BASE;
+  var order = [], by = {};
+  sourceRows.forEach(function (r) {
+    var k = byPeriod ? r.period + '|' + r.part : r.part;
+    if (!by[k]) { by[k] = { part: r.part, period: r.period, rows: [] }; order.push(k); }
+    by[k].rows.push(r);
+  });
+  return order.map(function (k) { return by[k]; });
+}
+function exportPart() {
+  var g = groupParts();
+  var info = { key: 'part', title: 'Part List', note: 'Sheet pertama: hasil download. Satu baris per part, mengikuti filter dan urutan yang aktif di layar. Hanya informasi, tidak dibaca saat upload. Effective Date sekarang ikut ditampilkan.',
+    head: ['Part Number', 'Part Name', 'Min MAD', 'Pcs/Case', 'Max Case/Day', 'Total Pcs/Day', 'Status', 'Effective Date', 'Last Update'],
+    rows: g.map(function (x) { var r = x.rows[0]; return [x.part, PNAME[x.part], r.mad, r.pcs, r.max, r.pcs * r.max, r.status, r.eff, PUPD[x.part]]; }) };
+  var up = { key: 'upload', title: 'Upload', note: 'Sheet kedua: satu-satunya sheet yang dibaca saat upload. Sudah terisi nilai sekarang dengan flag E. Ubah nilai yang perlu (status tidak bisa diubah), hapus baris yang tidak berubah (atau biarkan, akan dilewati), jangan kosongkan sel wajib, dan tambah baris baru dengan flag A (status kosong, otomatis Candidate).',
+    head: ['part_no', 'minimum_mad', 'pcs_case', 'max_case_day', 'status', 'flag_add_edit', 'effective_start_date'],
+    rows: g.map(function (x) { var r = x.rows[0]; return [x.part, r.mad, r.pcs, r.max, r.status, 'E', r.eff]; }) };
+  return { file: 'Crossdock_Part_List_20260913.xlsx', sheets: [info, up] };
+}
+function exportMap(period) {
+  var periodRows = period === 'all' ? MAP_ARCHIVE.concat(BASE) : (period === CUR ? BASE : MAP_ARCHIVE);
+  var searchGroups = groupParts(periodRows, true).filter(function (g) {
+    var sync = g.rows[0].sync === 1 ? 'Success' : g.rows[0].sync === 2 ? 'Failed' : 'No Sync';
+    return (g.period !== CUR || g.rows[0].status === 'Active') &&
+      (S.expPart === 'all' || g.part === S.expPart) &&
+      (S.expSync === 'all' || S.expSync === sync);
+  });
+  var uploadGroups = period === CUR ? searchGroups.filter(function (g) { return g.period === CUR && g.rows[0].status === 'Active'; }) : [];
+  var head = ['Period', 'Part Number', 'Part Name', 'Pcs/Case', 'Total Case/Day', 'Pcs/Day', 'Percentage', 'Sync Status', 'Destination Code', 'Destination', 'Dest Case/Day', 'Dest Pcs/Day', 'Dest Percentage'];
+  var pct = function (n, of) { return of ? Math.round(n / of * 100) + '%' : ''; };
+  var rows = [];
+  searchGroups.forEach(function (g) {
+    var r0 = g.rows[0], alloc = sumCs(g.rows), dests = g.rows.filter(function (r) { return r.dest; });
+    var sync = r0.sync === 1 ? 'Success' : r0.sync === 2 ? 'Failed' : 'No Sync';
+    var head6 = [r0.period, g.part, PNAME[g.part], r0.pcs, alloc, r0.pcs * alloc, pct(alloc, r0.max), sync];
+    if (!dests.length) rows.push(head6.concat(['', '', '', '', '']));
+    else dests.forEach(function (d) { rows.push(head6.concat([d.dest, DEST[d.dest], d.cs, r0.pcs * d.cs, pct(d.cs, alloc)])); });
+  });
+  var upNote = period === CUR
+    ? 'Sheet kedua: satu-satunya sheet yang dibaca saat upload. Berisi hasil kriteria pencarian periode berjalan (' + CUR + ') untuk part yang statusnya Active di Part List. total_case_day adalah Total Case/Day part yang diatur di Part List (Max Case/Day); nilainya read-only dan diulang pada setiap baris part. Total tidak bisa ditambah lewat Mapping, hanya lewat Part List. Hanya dest_code dan case_day yang boleh diubah. Tambahkan baris untuk destination baru. Jumlah case_day seluruh destination setelah perubahan tidak boleh melebihi total_case_day. Part Active yang belum punya mapping (PART-G) selalu muncul sebagai satu baris dengan dest_code dan case_day kosong untuk diisi; kalau dibiarkan kosong, part itu tidak berubah. Part yang barisnya ada di sini: seluruh mapping lamanya diganti isi sheet. Part yang tidak ada di sheet tidak berubah.'
+    : 'Sheet kedua tetap menampilkan header template, tetapi tidak memiliki baris data karena kriteria Calculation Period bukan periode berjalan. Data periode lampau bersifat read-only dan tidak disiapkan untuk upload.';
+  var up = { key: 'upload', title: 'Upload', note: upNote,
+    head: ['part_no', 'dest_code', 'case_day', 'total_case_day'], rows: [] };
+  uploadGroups.forEach(function (g) {
+    var limit = g.rows[0].max, dests = g.rows.filter(function (r) { return r.dest; });
+    if (!dests.length) up.rows.push([g.part, '', '', limit]);
+    else dests.forEach(function (d) { up.rows.push([g.part, d.dest, d.cs, limit]); });
+  });
+  var periodFile = period === 'all' ? 'All_periods' : period.replace(' ', '_');
+  var periodLabel = period === 'all' ? 'all periods' : period;
+  var partLabel = S.expPart === 'all' ? 'all parts' : S.expPart;
+  var syncLabel = S.expSync === 'all' ? 'all sync statuses' : S.expSync;
+  return { file: 'Crossdock_Mapping_per_Destination_' + periodFile + '_20260913.xlsx', sheets: [{ key: 'map', title: 'Mapping per Destination', note: 'Sheet pertama: hasil download mengikuti kriteria pencarian di screen. Kriteria yang disimulasikan: Calculation Period ' + periodLabel + ', Part Number ' + partLabel + ', Sync Status ' + syncLabel + '. Untuk periode berjalan, hanya part Active yang ditampilkan; periode lampau mengikuti hasil pencarian dan tetap read-only. Hanya informasi, tidak dibaca saat upload.', head: head, rows: rows }, up] };
+}
+var CMP_PART = [
+  ['part_no', 'part_no', 'Sama.'],
+  ['minimum_mad', 'minimum_mad', 'Sama. Nilai dari Min MAD.'],
+  ['pcs_case', 'pcs_case', 'Sama.'],
+  ['max_case_day', 'max_case_day', 'Sama.'],
+  ['status', 'status', 'Sama. Add: dikosongkan, otomatis Candidate. Edit: tidak bisa diubah.'],
+  ['flag_add_edit', 'flag_add_edit', 'Sama. A = Add, E = Edit. Sudah terisi E untuk part yang ada.'],
+  ['effective_start_date', 'effective_start_date', 'Sama. Wajib bila status Candidate (selalu untuk Add). Part berstatus lain: biarkan nilai sekarang.']
+];
+var CMP_MAP = [
+  ['Read-only key', 'part_no', 'Identitas part; tidak diedit. Hanya part Active.'],
+  ['Editable', 'dest_code', 'Kode dari master destinasi (123 / 456 / 789). Tambahkan baris untuk destination baru.'],
+  ['Editable', 'case_day', 'Alokasi case/day destination; bilangan bulat > 0.'],
+  ['Read-only limit', 'total_case_day', 'Total Case/Day part dari Part List (Max Case/Day). Jumlah setelah perubahan untuk setiap part harus <= nilai ini. Total hanya bisa ditambah lewat Part List.']
+];
+function exportBox() {
+  var part = S.exp !== 'map', ex = part ? exportPart() : exportMap(S.expPeriod), cmp = part ? CMP_PART : CMP_MAP;
+  var sh = ex.sheets.filter(function (k) { return k.key === S.xsheet; })[0] || ex.sheets[0];
+  var letters = '<tr><th class="rn"></th>' + sh.head.map(function (_, i) { return '<th class="cn">' + colLetter(i) + '</th>'; }).join('') + '</tr>';
+  var hrow = '<tr><th class="rn">1</th>' + sh.head.map(function (c) { return '<td class="hd">' + esc(c) + '</td>'; }).join('') + '</tr>';
+  var body = sh.rows.map(function (row, ri) {
+    return '<tr><th class="rn">' + (ri + 2) + '</th>' + row.map(function (c, ci) {
+      var h = sh.head[ci], cl = (h === 'Status' || h === 'status') ? (c === 'Active' ? 'xc-ok' : 'xc-new') : h === 'Sync Status' ? (c === 'Success' ? 'xc-ok' : '') : '';
+      var locked = sh.key === 'upload' && (h === 'part_no' || h === 'total_case_day');
+      return '<td class="' + cl + (locked ? ' xc-lock' : '') + (typeof c === 'number' ? ' r' : '') + '"' + (locked ? ' title="Read-only in the Upload sheet"' : '') + '>' + esc(c) + '</td>';
+    }).join('') + '</tr>';
+  }).join('');
+  var tabs = ex.sheets.map(function (k) { return '<button type="button" data-xsheet="' + k.key + '" aria-pressed="' + (k === sh) + '">' + k.title + '</button>'; }).join('');
+  var grid = '<div class="xl"><div class="xl-bar"><i>X</i><span>' + esc(ex.file) + '</span></div><div class="xl-scroll"><table>' + letters + hrow + body + '</table></div><div class="xl-tabs">' + tabs + '</div></div>';
+  var criteria = part ? '' : '<div style="display:flex;flex-wrap:wrap;gap:10px 16px"><div class="ctl"><span>Search criteria · Calculation period</span><div class="seg" role="group" aria-label="Kriteria periode Mapping"><button type="button" data-exp-period="all" aria-pressed="' + (S.expPeriod === 'all') + '">Semua periode</button><button type="button" data-exp-period="Aug 2026" aria-pressed="' + (S.expPeriod === 'Aug 2026') + '">Aug 2026 · bulan lalu</button><button type="button" data-exp-period="' + CUR + '" aria-pressed="' + (S.expPeriod === CUR) + '">' + CUR + ' · periode berjalan</button></div></div><div class="ctl"><span>Part Number</span><div class="seg" role="group" aria-label="Kriteria Part Number"><button type="button" data-exp-part="all" aria-pressed="' + (S.expPart === 'all') + '">Semua</button><button type="button" data-exp-part="PART-A" aria-pressed="' + (S.expPart === 'PART-A') + '">PART-A</button><button type="button" data-exp-part="PART-C" aria-pressed="' + (S.expPart === 'PART-C') + '">PART-C</button><button type="button" data-exp-part="PART-G" aria-pressed="' + (S.expPart === 'PART-G') + '">PART-G</button><button type="button" data-exp-part="PART-I" aria-pressed="' + (S.expPart === 'PART-I') + '">PART-I</button></div></div><div class="ctl"><span>Sync Status</span><div class="seg" role="group" aria-label="Kriteria Sync Status"><button type="button" data-exp-sync="all" aria-pressed="' + (S.expSync === 'all') + '">All</button><button type="button" data-exp-sync="No Sync" aria-pressed="' + (S.expSync === 'No Sync') + '">No Sync</button><button type="button" data-exp-sync="Success" aria-pressed="' + (S.expSync === 'Success') + '">Success</button><button type="button" data-exp-sync="Failed" aria-pressed="' + (S.expSync === 'Failed') + '">Failed</button></div></div></div>';
+  var seg = '<div class="seg" role="group" aria-label="Pilih export"><button type="button" data-exp="part" aria-pressed="' + part + '">Part List (2 sheet)</button><button type="button" data-exp="map" aria-pressed="' + !part + '">Mapping per Destination (2 sheet)</button></div>';
+  var rows = cmp.map(function (c) {
+    return '<tr><td class="mono">' + c[0] + '</td><td>' + (c[1] ? '<span class="mono">' + esc(c[1]) + '</span>' : '<span class="pill bad">tidak ada</span>') + '</td><td class="txt">' + esc(c[2]) + '</td></tr>';
+  }).join('');
+  var verdict = part
+    ? '<div class="banner ok"><b>Sheet Upload sama dengan template.</b> Hanya sheet ini yang dibaca saat upload, sheet Part List boleh dibiarkan. Part Name diambil dari TB_M_PART_MASTER dan Total Pcs/Day dihitung setelah Validate file, keduanya disimpan di MASTER_CANDIDATE_PART.</div>'
+    : (S.expPeriod === CUR
+      ? '<div class="banner ok"><b>Sheet Upload untuk periode berjalan.</b> Hanya sheet ini yang dibaca. total_case_day read-only dan berisi Total Case/Day part dari Part List (Max Case/Day). Hanya dest_code dan case_day yang bisa diedit; tambah baris untuk destination baru. Part Active tanpa mapping selalu muncul sebagai baris kosong untuk diisi. Jumlah case_day semua destination per part setelah perubahan wajib <= total_case_day. Part yang tidak ada di sheet tidak berubah. Part yang ada di sheet: seluruh mapping lamanya diganti isi sheet (D4). Period tidak ada di template karena upload hanya mengubah periode berjalan (BR-13).</div>'
+      : '<div class="banner info"><b>Sheet Upload kosong untuk periode ini.</b> Kriteria yang dipilih bukan periode berjalan, jadi tidak ada baris data yang disiapkan untuk upload. Sheet Mapping per Destination tetap menampilkan hasil pencarian periode lampau/all periods.</div>');
+  return criteria + seg + '<div class="xl-note">' + esc(sh.note) + '</div>' + grid +
+    '<div class="sub-h">Dibandingkan dengan template upload ' + (part ? 'Part List' : 'Mapping') + ' (sheet Upload)</div>' +
+    '<div class="tw"><table><thead><tr><th>Jenis kolom</th><th>Header di sheet Upload</th><th>Catatan</th></tr></thead><tbody>' + rows + '</tbody></table></div>' + verdict + refs(part ? ['D16', 'D17', 'D18'] : ['D4', 'D15']);
+}
+function renderExport() { $('exp-box').innerHTML = exportBox(); }
+
+/* ============ MONTHLY CALCULATION BATCH (UI) ============ */
+var CALC_STEPS = [
+  { t: 'Scheduler memicu batch', lane: 'batch' },
+  { t: 'Baca hasil calculation, pilih part', lane: 'batch' },
+  { t: 'Bandingkan dengan periode lalu', lane: 'batch' },
+  { t: 'Tulis ke dua tabel', lane: 'batch' },
+  { t: 'Hasil tampil di screen', lane: 'screen' }
+];
+var CHEAD_COLS = [['part', 'part_no', 0, 'PK'], ['period', 'period', 0, 'PK'], ['name', 'part_name'], ['pcs', 'pcs_case', 1], ['max', 'max_case_day', 1], ['total', 'total_pcs_day', 1], ['status', 'part_status'], ['sync', 'sync_status', 1], ['src', 'last_source']];
+
+function calcLeft(m, step) {
+  if (step < 4) {
+    var stat = ['Starting…', 'Reading calculation result…', 'Comparing with ' + m.prev + '…', 'Writing to master…'][step];
+    return '<div class="mock"><div class="modal"><div><h4>Job monitor</h4><p class="sub">Batch dijalankan scheduler. Tidak ada layar yang dipakai user pada langkah ini.</p></div>' +
+      '<div class="tw"><table><tbody><tr><td>Job</td><td class="mono">CALC_RESULT_UPDATE (nama TBD)</td></tr><tr><td>Trigger</td><td>Scheduler · awal periode (jadwal TBD)</td></tr><tr><td>Period</td><td class="mono">' + m.period + '</td></tr><tr><td>Previous period</td><td class="mono">' + m.prev + '</td></tr><tr><td>Run ID</td><td class="mono">' + m.runId + '</td></tr></tbody></table></div>' +
+      '<div class="proc"><div class="proc-l"><i class="spin"></i>' + stat + '</div><div class="kv">Status <b>RUNNING</b></div></div></div></div>' +
+      '<p class="kv">Nama job, jadwal, dan lokasi hasil calculation belum ditentukan, jadi saya tandai TBD.</p>';
+  }
+  var parts = m.items.filter(function (i) { return i.ok; });
+  var mapRows = parts.map(function (it) {
+    var hd = m.headView.filter(function (h) { return h.part === it.part && h.period === m.period; })[0];
+    var tot = it.rows.reduce(function (a, r) { return a + (+r[5] || 0); }, 0);
+    var sb = hd.sync === 1 ? '<span class="pill ok">Success</span>' : '<span class="pill neutral">No Sync</span>';
+    return '<tr><td class="mono">' + it.part + '</td><td><span class="pill blue">' + m.period + '</span></td><td class="r">' + hd.pcs + '</td><td class="r">' + tot + ' / ' + hd.max + '</td><td>' + sb + '</td></tr>';
+  }).join('');
+  var listRows = parts.map(function (it) {
+    var hd = m.headView.filter(function (h) { return h.part === it.part && h.period === m.period; })[0];
+    return '<tr><td class="mono">' + it.part + '</td><td class="r">' + hd.pcs + '</td><td class="r">' + hd.max + '</td><td>Active</td><td>System batch</td></tr>';
+  }).join('');
+  var empty = '<tr><td colspan="5" style="color:var(--muted)">No parts were processed.</td></tr>';
+  return '<div><div class="sub-h" style="margin-bottom:6px">Mapping per Destination · Calculation period ' + m.period + ' (ongoing)</div><div class="tw"><table><thead><tr><th>Part Number</th><th>Period</th><th class="r">Pcs/Case</th><th class="r">Case/Day</th><th>Sync Status</th></tr></thead><tbody>' + (mapRows || empty) + '</tbody></table></div></div>' +
+    '<div><div class="sub-h" style="margin-bottom:6px">Part List</div><div class="tw"><table><thead><tr><th>Part Number</th><th class="r">Pcs/Case</th><th class="r">Max Case/Day</th><th>Status</th><th>Last update by</th></tr></thead><tbody>' + (listRows || empty) + '</tbody></table></div></div>' +
+    '<div class="banner info">Dari sini user boleh menyesuaikan (opsional): Edit atau Upload Excel di Part List, Edit mapping atau Upload Excel di Mapping per Destination. Alurnya ada di simulasi Upload.</div>';
+}
+
+function calcRules(m) {
+  var cnt = {};
+  m.items.forEach(function (it) { it.reasons.forEach(function (r) { cnt[r.id] = (cnt[r.id] || 0) + 1; }); });
+  return '<div class="rules">' + ['CR-02', 'CR-03', 'CR-04', 'CR-05', 'CR-06'].map(function (id) { var c = cnt[id] || 0; return '<span class="rl ' + (c ? 'bad' : 'ok') + '"><b>' + id + '</b>' + (c ? c + ' part' : '') + '</span>'; }).join('') + '</div>';
+}
+
+function calcRight(m, step) {
+  var h = '';
+  if (step === 0) {
+    h += '<p class="what"><b>Trigger.</b> Scheduler menjalankan batch di awal periode dengan parameter <span class="mono">period = ' + m.period + '</span>. Tidak ada user dan tidak ada file.</p>';
+    h += acts([
+      { h: 'Buat 1 baris <b>BATCH_RUN_LOG</b>: run_id, batch_name, period, trigger <span class="mono">SCHEDULER</span>, status <span class="mono">RUNNING</span>, started_at.' },
+      { h: 'Pastikan hasil calculation untuk period ini ada (<span class="mono">CR-01</span>). Kalau kosong, status <span class="mono">NO_DATA</span> dan batch selesai tanpa menulis apa pun.' },
+      { h: 'Lanjut membaca hasil calculation.' }
+    ]);
+    h += '<div class="banner info">Proses calculation sendiri belum dijelaskan. Batch ini hanya <b>membaca hasilnya</b> dari tabel hasil calculation (nama <span class="mono">TBD</span>) dengan isi per part: pcs_case, max_case_day, dan alokasi case/day per destination.</div>';
+    h += refs(['D10']);
+  } else if (step === 1) {
+    h += '<p class="what">Hanya part yang <b>ada di result</b> dan berstatus <b>Active</b> yang diproses. Part lain dicatat di log dan tidak menghentikan batch.</p>';
+    h += calcRules(m);
+    var rows = m.items.map(function (it) {
+      var res = it.ok ? '<span class="pill ok">Processed</span>' : it.reasons.map(function (r) { return '<div><span class="pill bad">' + r.id + '</span> ' + esc(msg(r.id, r.v)) + '</div>'; }).join('');
+      return '<tr class="' + (it.ok ? 'rowok' : 'rowerr') + '"><td class="mono">' + it.part + '</td><td>Yes</td><td>' + esc(it.status || 'not registered') + '</td><td class="txt">' + res + '</td></tr>';
+    }).join('') + m.notInResult.map(function (pn) {
+      return '<tr><td class="mono">' + pn + '</td><td>No</td><td>Active</td><td class="txt"><span class="pill neutral">Not processed</span> Active part is not in the result.</td></tr>';
+    }).join('');
+    h += '<div class="tw"><table><thead><tr><th>Part</th><th>In result</th><th>Master status</th><th>Decision</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+    h += '<div class="legend"><span>Dibaca <b>' + m.read + ' part</b> · diproses <b>' + m.done + '</b> · dilewati <b>' + m.skip + '</b> (' + m.skipNotActive + ' bukan Active, ' + m.skipError + ' karena error) · Active tidak ada di result <b>' + m.notInResult.length + '</b></span></div>';
+    h += refs(['D13']);
+  } else if (step === 2) {
+    h += '<p class="what">Untuk tiap part yang diproses, batch membandingkan hasil calculation dengan data periode ' + m.prev + '. Hasilnya menentukan <b>Sync Status</b> baris baru.</p>';
+    var cr = m.items.filter(function (i) { return i.ok; }).map(function (it) {
+      return '<tr><td class="mono">' + it.part + '</td><td class="txt">' + (it.hdrChg.length ? esc(it.hdrChg.join(', ')) : '<span style="color:var(--muted)">no change</span>') + '</td><td class="txt">' + (it.detChg.length ? esc(it.detChg.join(' · ')) : '<span style="color:var(--muted)">no change</span>') + '</td><td>' + (it.changed ? '<span class="pill warn">Changed</span>' : '<span class="pill neutral">No change</span>') + '</td></tr>';
+    }).join('');
+    h += '<div class="tw"><table><thead><tr><th>Part</th><th>PART (pcs_case, max_case_day)</th><th>PART_DEST (case_day)</th><th>Result</th></tr></thead><tbody>' + (cr || '<tr><td colspan="4" style="color:var(--muted)">Tidak ada part yang diproses.</td></tr>') + '</tbody></table></div>';
+    h += '<div class="legend"><span><b>' + m.chg + ' berubah</b> · <b>' + m.same + ' tanpa perubahan</b></span></div>';
+    h += '<div class="banner info">Perubahan di sini yang akan memicu kerja "calculation" lain yang Anda sebut belum dijelaskan. Bila nanti ada langkah tambahan sebelum menulis, tempatnya di antara langkah ini dan langkah 4.</div>';
+    h += refs(['D11']);
+  } else if (step === 3) {
+    h += '<p class="what">Batch menulis <b>baris periode baru</b> ke kedua tabel dalam satu transaksi. Baris periode ' + m.prev + ' tidak disentuh, jadi tetap menjadi riwayat.</p>';
+    h += acts([
+      { h: 'Mulai transaksi (satu transaksi untuk kedua tabel).' },
+      { h: '<b>INSERT</b> 1 baris ke <b>' + T_HEAD + '</b> per part yang diproses: pcs_case dan max_case_day dari result, part_name dari <span class="mono">TB_M_PART_MASTER</span>, total_pcs_day dihitung, <span class="mono">last_source = CALC</span>.' },
+      { h: '<b>INSERT</b> 1 baris ke <b>' + T_DET + '</b> per destination di result (alokasi case/day).' },
+      { h: 'Sync Status: part yang berubah <span class="mono">0</span> (No Sync). Part tanpa perubahan menyalin status periode ' + m.prev + '.' },
+      { h: 'Catat history dan UPDATE BATCH_RUN_LOG: status <span class="mono">' + m.status + '</span>, jumlah dibaca, diproses, dilewati, finished_at. Status PARTIAL hanya bila ada part dilewati karena error, bukan karena bukan Active.' },
+      { h: 'Commit.' }
+    ]);
+    var c = tally(m.ops, null);
+    h += '<div class="sub-h">Perubahan · ' + c.INSERT + ' insert (PART: ' + tally(m.ops, T_HEAD).INSERT + ', PART_DEST: ' + tally(m.ops, T_DET).INSERT + ')</div>';
+    h += '<div class="ops">' + m.ops.map(function (o) { return '<div class="op"><span class="t ' + o.t + '">' + o.t + '</span><span class="d"><span class="tg">' + (o.tbl === T_HEAD ? 'PART' : 'PART_DEST') + '</span><b class="mono">' + o.key.part + '</b>' + (o.key.dest ? ' · dest ' + o.key.dest : '') + ' — ' + esc(o.d) + '</span></div>'; }).join('') + '</div>';
+    h += refs(['D10', 'D11', 'D12']);
+  } else {
+    h += '<p class="what">Tidak ada yang ditampilkan ke user oleh batch itu sendiri. Hasilnya terlihat saat user membuka screen.</p>';
+    h += acts([
+      { h: 'BATCH_RUN_LOG berstatus <span class="mono">' + m.status + '</span> bisa dilihat di Log Monitoring.' },
+      { h: 'Mapping per Destination membuka periode <b>' + m.period + '</b> sebagai periode berjalan. Baris No Sync muncul pada filter bawaan.' },
+      { h: 'Periode ' + m.prev + ' menjadi read-only (BR-13).' },
+      { h: 'Adjustment oleh user (opsional) mengubah baris periode ' + m.period + ' dan mengembalikan Sync Status ke No Sync. Alurnya sama dengan simulasi Upload.' }
+    ]);
+  }
+  return h;
+}
+
+function resTable(m, step) {
+  var show = step >= 1, okp = {};
+  m.items.forEach(function (i) { okp[i.part] = i.ok; });
+  var head = '<tr><th>period</th><th>part_no</th><th class="r">pcs_case</th><th class="r">max_case_day</th><th>dest_code</th><th class="r">case_day</th></tr>';
+  var body = show ? m.res.map(function (r) { return '<tr class="' + (okp[r[1]] ? 'rowok' : 'rowerr') + '"><td>' + r[0] + '</td><td class="mono">' + r[1] + '</td><td class="r">' + r[2] + '</td><td class="r">' + r[3] + '</td><td class="mono">' + r[4] + '</td><td class="r">' + r[5] + '</td></tr>'; }).join('') : '<tr><td colspan="6" style="color:var(--muted)">Dibaca di langkah 2.</td></tr>';
+  return '<div style="min-width:0"><div class="tbl-h"><h3>CALCULATION_RESULT</h3><span>input, baca saja, nama TBD · ' + (show ? m.res.length + ' baris' : 'belum dibaca') + '</span></div><div class="tw max"><table><thead>' + head + '</thead><tbody>' + body + '</tbody></table></div></div>';
+}
+function runLogTables(m, step) {
+  var fin = step >= 3, st = fin ? m.status : 'RUNNING';
+  var log = '<tr><td class="mono">' + m.runId + '</td><td>' + m.period + '</td><td>' + statusPill(st) + '</td><td class="r">' + (step >= 1 ? m.read : '') + '</td><td class="r">' + (fin ? m.done : '') + '</td><td class="r">' + (fin ? m.skip : '') + '</td></tr>';
+  var det = step >= 1 ? m.items.filter(function (i) { return !i.ok; }).reduce(function (a, it) { return a.concat(it.reasons.map(function (r) { return { part: it.part, id: r.id, text: msg(r.id, r.v) }; })); }, []).concat(m.notInResult.map(function (pn) { return { part: pn, id: 'INFO', text: 'Active part is not in the result, not processed.' }; })) : [];
+  var dbody = det.length ? det.map(function (d) { return '<tr><td class="mono">' + d.part + '</td><td class="mono">' + d.id + '</td><td class="txt">' + esc(d.text) + '</td></tr>'; }).join('') : '<tr><td colspan="3" style="color:var(--muted)">' + (step >= 1 ? 'Kosong.' : 'Terisi saat langkah 2.') + '</td></tr>';
+  return '<div style="display:flex;flex-direction:column;gap:16px;min-width:0"><div><div class="tbl-h"><h3>BATCH_RUN_LOG</h3><span>1 baris per run</span></div><div class="tw"><table><thead><tr><th>run_id</th><th>period</th><th>status</th><th class="r">read</th><th class="r">done</th><th class="r">skipped</th></tr></thead><tbody>' + log + '</tbody></table></div></div>' +
+    '<div><div class="tbl-h"><h3>BATCH_RUN_DETAIL</h3><span>part yang dilewati dan info</span></div><div class="tw max" style="max-height:230px"><table><thead><tr><th>part_no</th><th>rule</th><th>message</th></tr></thead><tbody>' + dbody + '</tbody></table></div></div></div>';
+}
+function calcTables(m, step) {
+  var after = step >= 3;
+  var note = after ? 'hijau = baris periode ' + m.period + ' yang baru, periode ' + m.prev + ' tidak diubah' : 'keadaan sebelum batch (periode ' + m.prev + ')';
+  var hv = after ? m.headView : m.before.head.map(flagFree);
+  var dv = after ? m.detView : m.before.det.map(flagFree);
+  return '<div class="two split">' + dataTable(T_HEAD, 'Part List', CHEAD_COLS, hv, note) + dataTable(T_DET, 'Mapping per Destination', DET_COLS, dv, note) + '</div>' +
+    '<div class="two">' + resTable(m, step) + runLogTables(m, step) + '</div>';
+}
+function renderCalc() {
+  var m = simulateCalc(S.sc === 'nochg' ? 'nochg' : 'chg'), step = S.step;
+  drawStepper(CALC_STEPS, step, function () { return false; });
+  renderStatic({ st: 'two', source: 'calc', sc: S.sc, mode: 'all' });
+  $('left-h').textContent = step < 4 ? 'Yang dilihat operator (job monitor)' : 'Yang dilihat user setelah batch';
+  $('left').innerHTML = calcLeft(m, step);
+  var lane = CALC_STEPS[step].lane;
+  $('lane-r').className = 'lane ' + (lane === 'screen' ? 'screen' : 'batch');
+  $('lane-r').textContent = lane === 'screen' ? 'Screen' : 'Batch';
+  $('right-h').textContent = 'Langkah ' + (step + 1) + ' · ' + CALC_STEPS[step].t;
+  $('right').innerHTML = calcRight(m, step);
+  $('tables').innerHTML = calcTables(m, step);
+  $('prev').disabled = step === 0;
+  $('next').disabled = step === CALC_STEPS.length - 1;
+  $('hint').textContent = 'Langkah ' + (step + 1) + ' dari ' + CALC_STEPS.length;
+}
+
+/* ============ STATIC SECTIONS ============ */
+var RULES = [
+  ['FL-01', 'Both', 'File is .xlsx', '–'],
+  ['FL-02', 'Both', 'Size is 5 MB or less', 'FSD sheet 9'],
+  ['FL-03', 'Both', 'At most 5,000 data rows', 'FSD sheet 9'],
+  ['FL-04', 'Both', 'File has at least 1 data row', 'new'],
+  ['FL-05', 'Both', 'Header contains every template column. Extra columns are ignored so the result report can be uploaded again', 'new'],
+  ['FL-06', 'Both', 'Sheet "Upload" exists. Other sheets of the file are ignored', 'new'],
+  ['PL-01', 'Part List', 'flag_add_edit is A (Add) or E (Edit)', 'FSD sheet 9, D16'],
+  ['PL-02', 'Part List', 'part_no exists in the part master', 'BR-03'],
+  ['PL-03', 'Part List', 'Add: part not yet registered. Edit: part already registered', 'BR-03, BR-07'],
+  ['PL-04', 'Part List', 'minimum_mad (≥ 0), pcs_case and max_case_day (> 0) are required whole numbers on every row, Add or Edit. Editable at any status', 'BR-04, OP-07, D16'],
+  ['PL-05', 'Part List', 'effective_start_date is required when the status is Candidate (always for Add) and must be today or later when new or changed', 'BR-06, OP-09, D16'],
+  ['PL-06', 'Part List', 'Edit: effective_start_date can only be changed while status is Candidate', 'BR-06'],
+  ['PL-07', 'Part List', 'part_no appears once in the file', 'new'],
+  ['PL-08', 'Part List', 'Edit: max_case_day not below the case/day already mapped', 'new, D5'],
+  ['PL-09', 'Part List', 'Status: Add must be blank (always Candidate). Edit: cannot be changed, so blank or equal to the current status', 'new, D16'],
+  ['MP-02', 'Mapping', 'part is registered and Active', 'BR-12'],
+  ['MP-03', 'Mapping', 'dest_code exists in the destination master', 'FSD master data'],
+  ['MP-04', 'Mapping', 'a destination appears once per part', 'BR-14'],
+  ['MP-05', 'Mapping', 'case_day is a required whole number > 0 when dest_code is filled. Blank cells are not allowed, except a placeholder row (dest_code and case_day both blank) of a part with no mapping yet, which is skipped', 'OP-07'],
+  ['MP-06', 'Mapping', 'Sum of case_day across all destinations for a part does not exceed its Total Case/Day (max_case_day set in Part List, shown locked as total_case_day)', 'BR-16, MSG-11'],
+  ['CR-01', 'Calc batch', 'calculation result exists for the period (otherwise status NO_DATA)', 'new'],
+  ['CR-02', 'Calc batch', 'part in the result is registered in Master Candidate Part', 'new'],
+  ['CR-03', 'Calc batch', 'part status is Active (Candidate and Inactive are skipped)', 'BR-12'],
+  ['CR-04', 'Calc batch', 'pcs_case and max_case_day are whole numbers > 0', 'OP-07'],
+  ['CR-05', 'Calc batch', 'dest_code exists in the destination master', 'FSD master data'],
+  ['CR-06', 'Calc batch', 'total allocation per part does not exceed max_case_day', 'BR-16']
+];
+$('rules-t').innerHTML = '<thead><tr><th>Rule</th><th>Applies to</th><th>Check</th><th>Message</th><th>Source</th></tr></thead><tbody>' + RULES.map(function (r) {
+  var id = MSG[r[0]] ? r[0] : r[0] + 'a';
+  var txt = MSG[id] ? MSG[id].replace('{c}', 'column').replace('{n}', 'N').replace('{m}', 'M').replace('{s}', 'status').replace('{p}', 'period') : '';
+  if (MSG[r[0] + 'b']) txt += ' / ' + MSG[r[0] + 'b'];
+  return '<tr><td class="mono">' + r[0] + '</td><td>' + r[1] + '</td><td class="txt">' + r[2] + '</td><td class="txt">' + esc(txt) + '</td><td>' + r[3] + '</td></tr>';
+}).join('') + '</tbody>';
+
+function chipHtml(list) { return '<div class="chips">' + list.map(function (c) { return '<span class="chip">' + c + '</span>'; }).join('') + '</div>'; }
+function defCard(name, text, cols) { return '<div class="panel def"><h3>' + name + '</h3><p>' + text + '</p>' + chipHtml(cols) + '</div>'; }
+var LOG_COLS = ['upload_id*', 'upload_type', 'file_name', 'file_path', 'result_file_path', 'uploaded_by', 'uploaded_at', 'status', 'total_rows', 'success_rows', 'error_rows', 'started_at', 'finished_at'];
+var ERR_COLS = ['upload_id*', 'row_no*', 'column_name*', 'message_id', 'message_text'];
+function ovCard(name, text, hot) { return '<div class="panel ov-card ov-table"' + (hot ? '' : ' style="border-width:1px"') + '><div class="eyebrow">' + (hot ? 'Tabel master' : 'Tabel master (detail)') + '</div><div class="tname">' + name + '</div><p>' + text + '</p></div>'; }
+var lastStatic = '';
+function renderStatic(m) {
+  var key = m.st + '|' + m.source + '|' + m.sc + '|' + m.mode;
+  if (key === lastStatic) return;
+  lastStatic = key;
+  if (m.st === 'two') {
+    $('ov-mid').innerHTML = ovCard(T_HEAD, 'Data Part List: 1 baris per part dan periode (pcs/case, max case/day, min MAD, effective date, status, Sync Status).', true) +
+      ovCard(T_DET, 'Data Mapping per Destination: 1 baris per destination dari sebuah part (case/day). Terhubung ke tabel di atas lewat part_no dan period.', false) +
+      '<p class="note">Setiap perubahan mengembalikan <b>Sync Status</b> ke No Sync (BR-09).</p>';
+    $('defs').innerHTML =
+      '<div class="panel def" style="grid-column:1/-1"><h3>Relasi antar tabel</h3><div class="er">' +
+      '<div class="er-box"><h4>' + T_HEAD + '</h4><div>PK: part_no, period</div><div>1 baris per part</div></div>' +
+      '<div class="er-link"><i>1 ─────&lt; N</i>FK<br>part_no + period</div>' +
+      '<div class="er-box"><h4>' + T_DET + '</h4><div>PK: part_no, period, dest_code</div><div>FK: part_no, period → ' + T_HEAD + '</div></div></div>' +
+      '<p>Baris detail tidak boleh ada tanpa baris header. Part tidak pernah dihapus (hanya status Inactive), jadi usulan perilaku hapus adalah RESTRICT. Detail tetap terhubung ke part yang sama saat Part List mengedit atributnya karena kuncinya tidak berubah.</p></div>' +
+      defCard(T_HEAD, '1 baris = Part No × Period. Atribut part disimpan sekali. Sync Status ada di sini. Part Name diambil dari TB_M_PART_MASTER lewat part_no saat proses, lalu disimpan di sini.', ['part_no*', 'period*', 'part_name', 'pcs_case', 'max_case_day', 'total_pcs_day', 'min_mad', 'effective_start_date', 'part_status', 'sync_status', 'last_source (CALC / SCREEN / UPLOAD)', 'last_upload_id', 'created_by / dt', 'updated_by / dt']) +
+      defCard(T_DET, '1 baris = 1 destination dari 1 part. Part yang belum punya destination tidak punya baris di sini. FK ke ' + T_HEAD + ' (part_no, period).', ['part_no* FK', 'period* FK', 'dest_code*', 'case_day', 'created_by / dt', 'updated_by / dt']) +
+      defCard('UPLOAD_LOG', '1 baris per file yang di-upload. Dipakai screen untuk polling status dan menampilkan ringkasan.', LOG_COLS) +
+      defCard('UPLOAD_ERROR', '1 baris per error. Sumber untuk daftar error di screen dan error file yang bisa di-download.', ERR_COLS);
+  } else {
+    $('ov-mid').innerHTML = ovCard(T_HEAD, 'Satu tabel untuk data Part List (pcs/case, max case/day, min MAD, effective date, status) dan data mapping (destination, case/day). Screen membaca dari sini.', true) +
+      '<p class="note">Setiap perubahan mengembalikan <b>Sync Status</b> ke No Sync (BR-09).</p>';
+    $('defs').innerHTML =
+      defCard(T_HEAD, '1 baris = Part No × Period × Destination. Part yang belum punya destination tetap punya 1 baris dengan dest_code kosong. Sama dengan bentuk Export Excel mapping yang sudah ada.', ['part_no*', 'period*', 'dest_code* (kosong = belum ada destination)', 'part_name', 'pcs_case', 'max_case_day', 'min_mad', 'effective_start_date', 'part_status', 'case_day', 'sync_status', 'last_upload_id', 'created_by / dt', 'updated_by / dt']) +
+      defCard('UPLOAD_LOG', '1 baris per file yang di-upload. Dipakai screen untuk polling status dan menampilkan ringkasan.', LOG_COLS) +
+      defCard('UPLOAD_ERROR', '1 baris per error. Sumber untuk daftar error di screen dan error file yang bisa di-download.', ERR_COLS);
+  }
+  renderCmp();
+}
+function writeOps(m) {
+  var a = tally(m.ops), h = tally(m.two.ops, T_HEAD), d = tally(m.two.ops, T_DET);
+  function f(c) { return c.INSERT + ' insert, ' + c.UPDATE + ' update, ' + c.DELETE + ' delete'; }
+  return { one: m.ops.length + ' operasi (' + f(a) + ')', two: m.two.ops.length + ' operasi · PART: ' + f(h) + ' · PART_DEST: ' + f(d) };
+}
+function renderCmp() {
+  var cs = S.src === 'calc', srcK = cs ? 'part' : S.src, scK = cs ? 'clean' : S.sc;
+  var m = simulate(srcK, scK, S.mode, 'one');
+  var w = m.committed ? writeOps(m) : { one: 'Tidak ada tulis ke master (file ditolak)', two: 'Tidak ada tulis ke master (file ditolak)' };
+  var rows = [
+    ['Bentuk data', '1 baris = part × period × destination. Atribut part diulang di tiap baris.', 'Header: 1 baris = part × period. Detail: 1 baris = destination.'],
+    ['Part tanpa destination', 'Baris placeholder dengan dest_code kosong. Saat mapping pertama masuk, baris ini dihapus dan diganti.', 'Hanya ada di header. Tidak ada baris di detail.'],
+    ['Edit part di Part List', 'Update semua baris destination part itu (PART-A = 3 baris).', 'Update 1 baris di header.'],
+    ['Atribut part (max_case_day dst.)', 'Diulang, harus selalu sama di semua baris part. Update yang gagal sebagian membuat data tidak konsisten.', 'Disimpan sekali.'],
+    ['Sync Status', 'Ada di tiap baris, harus diset serempak.', 'Satu tempat, di header.'],
+    ['Upload Mapping', 'Ganti baris di satu tabel.', 'Ganti baris di detail, lalu update header. Satu transaksi untuk dua tabel.'],
+    ['Screen Part List membaca', 'Satu baris per part harus diambil dari banyak baris (group / distinct).', 'Header saja.'],
+    ['Screen Mapping membaca', 'Satu tabel.', 'Join header dan detail. Filter Active ada di header.'],
+    ['Primary key', 'part_no + period + dest_code. Dest kosong berarti belum ada destination.', 'Header: part_no + period. Detail: part_no + period + dest_code, FK ke header.']
+  ];
+  var scLabel = { clean: 'file bersih', errors: 'ada baris error', template: 'template salah' }[scK];
+  $('cmp').innerHTML = '<thead><tr><th>Aspek</th><th>1 tabel</th><th>2 tabel</th></tr></thead><tbody>' + rows.map(function (r) { return '<tr><td>' + r[0] + '</td><td>' + r[1] + '</td><td>' + r[2] + '</td></tr>'; }).join('') +
+    '<tr class="dyn"><td>Operasi tulis pada skenario upload (' + (srcK === 'part' ? 'Part List' : 'Mapping') + ', ' + scLabel + (scK === 'errors' ? ', ' + (S.mode === 'all' ? 'tolak seluruh file' : 'simpan baris valid') : '') + ')</td><td>' + w.one + '</td><td>' + w.two + '</td></tr></tbody>';
+  $('rec').innerHTML = '<b>Kecenderungan saya: 2 tabel.</b> Atribut part dan Sync Status disimpan sekali, edit Part List cukup 1 baris, dan part tanpa destination tidak butuh baris placeholder. Harganya: Screen Mapping perlu join, dan upload Mapping menulis dua tabel dalam satu transaksi, dengan 1 update header tambahan per part (lihat baris biru: pada file Mapping bersih, 2 tabel justru 1 operasi lebih banyak). Kalau Anda tetap ingin satu tabel (misalnya karena Export Excel mapping sudah berbentuk begitu), simulasi 1 tabel tetap valid, hanya risiko konsistensinya perlu dicatat di dokumen batch.';
+}
+
+var DEC = [
+  ['D1', 'Bentuk tabel master', 'Pilih lewat toggle "Struktur tabel". 1 tabel: 1 baris = Part No × Period × Destination, atribut part diulang. 2 tabel: header Part List (1 baris per part) dan detail Mapping per Destination (1 baris per destination). Perbandingan lengkap ada di bagian "1 tabel dibanding 2 tabel".', 'Kecenderungan saya 2 tabel, alasannya di bagian perbandingan. Pilihan 1 tabel lebih sederhana dibaca screen, tetapi edit 1 part mengubah beberapa baris dan Sync Status harus diset serempak.', 'Langkah 5'],
+  ['D2', 'Kalau file punya error (sudah diputuskan)', 'Tolak seluruh file, tidak ada yang disimpan. User memperbaiki lalu upload ulang, dibantu sheet Re-upload di result report. Paling aman untuk data master.', 'Mode "Simpan baris yang valid" tetap ada di toggle hanya sebagai perbandingan dan tidak dipakai.', 'Langkah 4, 5, 6'],
+  ['D3', 'Cara batch dipicu', 'Pertanyaannya: setelah user menekan Validate file dan file tersimpan, siapa yang menjalankan batch? Usulan: aplikasi langsung memanggil batch (parameter upload_id) segera setelah file diterima, tanpa menunggu jadwal. Screen membaca status dari UPLOAD_LOG sampai selesai, jadi user melihat hasilnya dalam hitungan detik.', 'Alternatif: batch berjalan terjadwal (scheduler) tiap N menit, memeriksa file berstatus RECEIVED lalu memprosesnya. Lebih sederhana dan cocok kalau semua batch di sistem hanya boleh dijalankan oleh scheduler, tapi user menunggu sampai jadwal berikutnya. Di dokumen UISS-Batch ini menentukan isi bagian trigger: on-demand dengan parameter upload_id, atau terjadwal.', 'Langkah 2'],
+  ['D4', 'Arti upload Mapping', 'Ganti per part: destination part yang ada di file menggantikan seluruh mapping lama part itu. Destination yang tidak ada di file dihapus (lihat PART-C 456).', 'Alternatif: hanya tambah dan ubah, tidak pernah menghapus. Penghapusan tetap lewat screen.', 'Langkah 4, 5'],
+  ['D5', 'Edit max_case_day di bawah mapping yang sudah ada', 'Ditolak dengan pesan PL-08, karena membuat mapping melebihi kapasitas (BR-16 melarang itu di screen mapping).', 'Alternatif: boleh disimpan, mapping jadi over-allocated dan perlu dibetulkan D/S (terkait OP-14).', 'Langkah 4'],
+  ['D6', 'Sync Status setelah upload', 'Semua baris part yang disentuh kembali ke No Sync (BR-09). Sync tetap dijalankan D/S lewat tombol, tidak otomatis.', 'Alternatif: batch upload langsung memicu Sync. Perlu keputusan OP-06 (sistem tujuan) dulu.', 'Langkah 5'],
+  ['D7', 'Nama kolom file', 'Template Part List (sheet Upload) memakai 7 kolom snake_case: part_no, minimum_mad, pcs_case, max_case_day, status, flag_add_edit, effective_start_date. Template Mapping memakai part_no, dest_code, case_day, total_case_day. Di sheet Upload Mapping, part_no dan total_case_day read-only; hanya dest_code dan case_day yang editable. total_case_day adalah Total Case/Day part dari Part List (Max Case/Day).', 'Export Part List dan export Mapping memakai nama kolom yang sama dengan template.', 'Langkah 1'],
+  ['D8', 'History perubahan', 'Upload mencatat history per field yang berubah (nilai lama → baru, user, sumber Upload). Menjawab OP-03 untuk jalur upload.', 'Alternatif: tidak mencatat history dari upload. Tabel history belum ada di desain ini.', 'Langkah 5'],
+  ['D9', 'Bentuk FK (hanya untuk 2 tabel)', 'Kunci gabungan: detail menyimpan part_no dan period, FK ke PK header (part_no, period). Mudah dibaca dan sama dengan kunci di file upload.', 'Alternatif: header diberi ID sendiri (surrogate, mis. candidate_part_id) dan detail hanya menyimpan ID itu. FK lebih ringkas dan join lebih cepat, tapi file upload tetap memakai part_no + period sehingga batch harus mencari ID dulu. Perilaku hapus: RESTRICT (part tidak dihapus, hanya Inactive).', 'Langkah 4, 5'],
+  ['D10', 'Periode: baris baru atau update di tempat', 'Batch membuat baris periode baru (INSERT) di kedua tabel. Baris periode sebelumnya tidak diubah, jadi menjadi riwayat dan read-only. Cocok dengan kunci yang memuat period dan filter Calculation period di Mapping per Destination.', 'Alternatif: update baris yang sama setiap bulan. Lebih sederhana, tapi riwayat per periode hilang dan past period di FSD tidak punya isi. Jawaban ini sekaligus menjawab OP-13 (periode dibuat oleh batch).', 'Batch calc, langkah 4'],
+  ['D11', 'Part yang hasilnya tidak berubah', 'Tetap dibuat baris periode baru supaya part muncul di Mapping periode berjalan. Sync Status: berubah menjadi No Sync, tidak berubah menyalin status periode lalu.', 'Alternatif: semua baris baru No Sync, atau part tanpa perubahan tidak dibuatkan baris (part hilang dari periode baru). Perlu Anda pastikan sistem tujuan Sync menyimpan data per periode atau hanya yang terbaru.', 'Batch calc, langkah 3 dan 4'],
+  ['D12', 'Batch dijalankan ulang di periode yang sama', 'Hanya baris dengan last_source = CALC yang ditimpa. Baris yang sudah disesuaikan user (SCREEN atau UPLOAD) dipertahankan dan dicatat di BATCH_RUN_DETAIL.', 'Alternatif: timpa semua (adjustment user hilang), atau tolak run kedua untuk periode yang sama. Tanpa re-run, adjustment user aman karena batch periode berikutnya hanya membuat baris periode baru.', 'Batch calc, langkah 4'],
+  ['D13', 'Part Active yang tidak ada di result', 'Tidak diproses dan tidak mendapat baris periode baru. Dicatat sebagai INFO di BATCH_RUN_DETAIL (contoh PART-D).', 'Alternatif: salin dari periode lalu supaya tetap muncul. Ini sesuai aturan Anda (hanya part yang ada di result), tapi perlu dipastikan bahwa part itu memang boleh hilang dari periode berjalan.', 'Batch calc, langkah 2'],
+  ['D14', 'Isi result report dan cara upload ulang', 'File dibuat batch di akhir proses dan disimpan (path di UPLOAD_LOG). Empat sheet: Summary, Result (semua baris), Re-upload (hanya baris yang belum tersimpan, format template), Changes (perubahan di master). Kolom tambahan diabaikan saat upload.', 'Alternatif: satu sheet saja (file asli ditambah kolom hasil), dan user membuang sendiri baris yang sudah SAVED sebelum upload ulang, karena Add yang sudah tersimpan akan ditolak. Alternatif lain: file dibuat saat tombol ditekan, tidak disimpan. Masa simpan file hasil juga perlu ditentukan.', 'Upload, langkah 5 dan 6'],
+['D15', 'Template dan export Mapping (pola sama dengan Part List)', 'Export Mapping 2 sheet. Sheet Mapping per Destination mengikuti seluruh search criteria di screen (Calculation Period, Part Number, dan Sync Status), sehingga bisa menampilkan periode lampau. Sheet Upload kosong jika Calculation Period yang dipilih adalah periode lampau atau semua periode. Jika periode berjalan dipilih, Upload memuat mapping untuk part yang statusnya Active di Part List. Kolom part_no dan total_case_day read-only; hanya dest_code dan case_day yang dapat diubah, dan destination baru ditambahkan sebagai baris baru. total_case_day adalah Total Case/Day part yang diatur di Part List (Max Case/Day). Total hanya bisa ditambah lewat Part List, bukan lewat Mapping. Jumlah case_day seluruh destination setelah perubahan tidak boleh melebihi nilai terkunci ini. Part Active yang belum punya mapping selalu tampil sebagai satu baris kosong di sheet Upload untuk diisi. Hanya sheet Upload yang dibaca. Kolom period tidak ada karena upload hanya mengubah periode berjalan. Part yang tidak ada di Upload tidak berubah, part yang ada diganti seluruh mapping-nya (D4), dan part yang isinya sama dengan master dilewati (NO CHANGE) tanpa mengubah Sync Status. Tidak ada sel kosong, kecuali baris kosong part tanpa mapping yang boleh dibiarkan (part tidak berubah).', 'Alternatif: tetap menyertakan kolom period di sheet Upload sebagai penjaga bahwa file dibuat untuk periode yang benar (file periode lama ditolak). Tambahan satu kolom dan satu aturan validasi.', 'Hasil Export Excel'],
+  ['D16', 'Aturan baris Add dan Edit (Part List)', 'Flag A = Add, E = Edit. Part yang tidak ada di sheet Upload tidak berubah apa pun. Min MAD, Pcs/Case, Max Case/Day wajib terisi di setiap baris (A maupun E) dan boleh diubah pada status apa pun. Effective Date wajib terisi bila status Candidate (selalu untuk Add), dan hanya part Candidate yang boleh mengubahnya. Status tidak bisa diubah lewat upload (Add otomatis Candidate, kolom dikosongkan). Baris Edit yang nilainya sama dengan master dilewati (NO CHANGE) tanpa mengubah Sync Status.', 'Alternatif yang saya tinggalkan: sel kosong pada baris Edit berarti tidak diubah. Sesuai komentar Anda, sel kosong tidak diizinkan, jadi aturan ini tidak dipakai.', 'Langkah 4, 5'],
+  ['D17', 'Part Name dan Total Pcs/Day (sudah diputuskan)', 'Keduanya disimpan di MASTER_CANDIDATE_PART. Part Name diambil dari TB_M_PART_MASTER lewat part_no, Total Pcs/Day = Pcs/Case × Max Case/Day dihitung batch setelah tombol Validate file. Berlaku juga untuk penulis lain: Save di screen dan batch calculation juga mengisi kedua kolom.', 'Akibatnya Total Pcs/Day harus dihitung ulang setiap Pcs/Case atau Max Case/Day berubah, dan Part Name tidak ikut berubah otomatis kalau master part berubah. Perlu dicatat di dokumen batch.', 'Langkah 5, tabel'],
+  ['D18', 'Isi sheet Upload pada file export (sudah diputuskan: opsi A)', 'Sheet Upload sudah terisi semua part dengan nilai sekarang dan flag E. User mengubah sel yang perlu dan menambah baris flag A di bawahnya. Part yang tidak ingin diubah boleh dibiarkan (dilewati, NO CHANGE) atau barisnya dihapus.', 'Opsi B (sheet kosong, hanya header) tidak dipakai.', 'Hasil Export Excel']
+];
+$('dcards').innerHTML = DEC.map(function (d) {
+  return '<article class="panel dcard" id="' + d[0].toLowerCase() + '"><div class="dh"><span class="did">' + d[0] + '</span><h3>' + d[1] + '</h3></div><p><b>Usulan.</b> ' + d[2] + '</p><p class="alt">' + d[3] + '</p><p class="use">Muncul di: ' + d[4] + '</p></article>';
+}).join('');
+
+if (typeof document !== 'undefined' && document.getElementById) { render(); renderExport(); }
+
+/* Embedded in the Crossdock app: the iframe is as tall as the content, so in-page links scroll the host page. */
+document.addEventListener('click', function (e) {
+  var a = e.target.closest && e.target.closest('a[href^="#"]');
+  if (!a) return;
+  var t = document.getElementById(a.getAttribute('href').slice(1));
+  if (!t) return;
+  e.preventDefault();
+  location.hash = a.getAttribute('href');
+  t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+</script>
+
+</body>
+</html>
