@@ -248,6 +248,14 @@ tr.rowerr td:first-child { box-shadow: inset 3px 0 0 var(--bad-ink); }
 .cmp td { white-space: normal; min-width: 200px; }
 .cmp tr.dyn td { background: var(--accent-soft); }
 .rec { padding: 12px 14px; font-size: 14px; }
+.rs { padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.rs h3 { font-size: 15.5px; }
+.rs h4 { font-size: 11.5px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); font-weight: 700; margin-top: 4px; }
+.rs ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
+.rs li b { font-weight: 700; }
+.rs .tag { font-family: var(--mono); font-size: 12px; }
+.rs-foot { padding: 12px 14px; font-size: 14px; }
+
 .xl { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--panel); }
 .xl-bar { display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: #1d6f42; color: #fff; font-size: 12.5px; font-weight: 600; }
 .xl-bar span { overflow-wrap: anywhere; }
@@ -421,6 +429,75 @@ tr.rowerr td:first-child { box-shadow: inset 3px 0 0 var(--bad-ink); }
     <h2 id="exp-h">Hasil tombol Export Excel</h2>
     <p class="lead">Dua sub-menu Crossdock Master Setting masing-masing punya tombol Export Excel. Part List dan Mapping per Destination menghasilkan file dengan 2 sheet. Sheet hasil download mengikuti data dan kriteria pencarian di screen. Sheet Upload kosong untuk periode lampau atau semua periode. Untuk periode berjalan, sheet Upload berisi mapping part Active; part_no dan total_case_day terkunci, sedangkan dest_code dan case_day dapat diubah atau ditambah lewat baris baru.</p>
     <div class="panel" style="padding:14px 16px;display:flex;flex-direction:column;gap:12px" id="exp-box"></div>
+  </section>
+
+  <section class="sec" id="ringkasan" aria-labelledby="rs-h">
+    <h2 id="rs-h">Ringkasan aturan upload batch</h2>
+    <p class="lead">Rangkuman aturan yang sudah disepakati untuk Part List Upload dan Mapping per Destination Upload. Rincian per aturan ada di tabel di bawahnya.</p>
+    <div class="cards">
+      <div class="panel rs">
+        <h3>Aturan bersama kedua batch</h3>
+        <h4>Alur</h4>
+        <ul>
+          <li>User Export Excel, mengedit sheet <b>Upload</b>, lalu Upload Excel dan Validate file.</li>
+          <li>Screen menyimpan file dan membuat record upload (RECEIVED), lalu batch jalan dengan parameter <span class="tag">UPLOAD_ID</span>.</li>
+          <li>Batch: cek file, muat baris ke tabel temp, validasi semua baris, bandingkan dengan master, simpan, buat result report.</li>
+        </ul>
+        <h4>Aturan</h4>
+        <ul>
+          <li>Hanya sheet <b>Upload</b> yang dibaca. Sheet dan kolom lain diabaikan.</li>
+          <li>Part yang tidak ada di sheet <b>tidak berubah</b>.</li>
+          <li>Sel di kolom wajib <b>tidak boleh kosong</b>.</li>
+          <li>Cek file: .xlsx, maksimum 5 MB, maksimum 5.000 baris, sheet Upload ada, header lengkap.</li>
+          <li>Semua error dikumpulkan sekaligus, supaya user memperbaiki file sekali.</li>
+          <li><b>All-or-nothing</b>: ada satu error, seluruh file ditolak dan tidak ada yang tersimpan (D2, sudah diputuskan).</li>
+          <li>Nilai sama dengan master: <b>NO CHANGE</b>, dilewati tanpa mengubah Sync Status dan last update.</li>
+          <li>Record yang berubah kembali ke <b>No Sync</b>, <span class="tag">LAST_SOURCE = UPLOAD</span>, <span class="tag">LAST_UPLOAD_ID</span> terisi. Sync tetap manual oleh D/S.</li>
+          <li>Hasil: COMPLETED atau REJECTED, dengan result report 4 sheet (Summary, Result, Re-upload, Changes).</li>
+        </ul>
+      </div>
+      <div class="panel rs">
+        <h3>Upload Part List</h3>
+        <h4>Kolom sheet Upload</h4>
+        <ul><li><span class="tag">part_no, minimum_mad, pcs_case, max_case_day, status, flag_add_edit, effective_start_date</span></li></ul>
+        <h4>Aturan</h4>
+        <ul>
+          <li>Flag <b>A</b> = Add, <b>E</b> = Edit.</li>
+          <li>Part No harus ada di <span class="tag">TB_M_PART_MASTER</span>. Flag A: belum terdaftar. Flag E: sudah terdaftar. Tidak boleh dobel di file.</li>
+          <li>Min MAD (0 atau lebih), Pcs/Case dan Max Case/Day (lebih dari 0): bilangan bulat, wajib di setiap baris A maupun E.</li>
+          <li><b>Status tidak bisa diubah lewat upload.</b> Add: kosong, otomatis Candidate. Edit: kosong atau sama dengan status sekarang.</li>
+          <li>Edit boleh mengubah Min MAD, Pcs/Case, Max Case/Day pada status apa pun.</li>
+          <li><b>Effective Date</b> wajib bila status Candidate (selalu untuk Add), hari ini atau lebih. Hanya part Candidate yang boleh mengubahnya.</li>
+          <li>Edit tidak boleh menurunkan Max Case/Day di bawah mapping yang sudah ada (TBD, D5).</li>
+        </ul>
+        <h4>Yang disimpan</h4>
+        <ul>
+          <li>Add: record baru, status Candidate, Sync Status 0. <span class="tag">PART_NAME</span> dari <span class="tag">TB_M_PART_MASTER</span>, <span class="tag">TOTAL_PCS_DAY = PCS_CASE x MAX_CASE_DAY</span>. Keduanya disimpan.</li>
+          <li>Edit: hanya kolom yang berbeda di-update, Total Pcs/Day dihitung ulang.</li>
+        </ul>
+      </div>
+      <div class="panel rs">
+        <h3>Upload Mapping per Destination</h3>
+        <h4>Kolom sheet Upload</h4>
+        <ul><li><span class="tag">part_no</span> (terkunci), <span class="tag">dest_code</span> dan <span class="tag">case_day</span> (bisa diedit), <span class="tag">total_case_day</span> (terkunci). Tidak ada kolom period.</li></ul>
+        <h4>Aturan</h4>
+        <ul>
+          <li>Hanya <b>periode berjalan</b> yang bisa diubah (BR-13). Sheet Upload kosong untuk periode lampau dan semua periode.</li>
+          <li>Part harus terdaftar dan berstatus <b>Active</b>.</li>
+          <li>Kode destination harus ada di master destinasi (123, 456, 789), sekali per part. Destination baru: tambah baris.</li>
+          <li>Case/Day bilangan bulat lebih dari 0 bila destination terisi.</li>
+          <li><b>Batas total</b>: jumlah case_day semua destination per part tidak boleh melebihi Max Case/Day part itu di Part List. Total hanya bisa dinaikkan lewat Part List. Nilai total_case_day di file diabaikan.</li>
+          <li>Part Active tanpa mapping selalu muncul sebagai <b>satu baris kosong</b>. Kedua sel kosong: dilewati. Salah satu saja terisi: error.</li>
+        </ul>
+        <h4>Yang disimpan (D4, ganti per part)</h4>
+        <ul>
+          <li>Part di sheet: seluruh mapping lamanya diganti isi sheet. Destination yang tidak ada di file dihapus.</li>
+          <li>Part yang isinya sama persis: NO CHANGE.</li>
+          <li>Part yang berubah: Sync Status part itu menjadi 0.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="panel rs-foot"><b>Masih terbuka:</b> <a href="#d3" style="color:var(--warn-ink);font-weight:700">D3</a> cara batch dipicu, <a href="#d5" style="color:var(--warn-ink);font-weight:700">D5</a> Max Case/Day di bawah mapping, <a href="#d8" style="color:var(--warn-ink);font-weight:700">D8</a> history perubahan, serta upload bersamaan, retensi file, dan tombol Upload Excel di screen Mapping yang belum ada di prototype.</div>
   </section>
 
   <section class="sec" aria-labelledby="rules-h">

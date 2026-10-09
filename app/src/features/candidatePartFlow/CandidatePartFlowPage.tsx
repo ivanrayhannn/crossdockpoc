@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 /** Standalone simulation page, shipped as a static file so it is deployed with the app (public/simulations). */
-const SIMULATION_URL = `${import.meta.env.BASE_URL}simulations/candidate-part-flow.html?v=5`;
+const SIMULATION_URL = `${import.meta.env.BASE_URL}simulations/candidate-part-flow.html?v=6`;
 
 /**
  * Shows the Master Candidate Part batch-flow simulation (calculation batch, Part List upload, Mapping upload,
