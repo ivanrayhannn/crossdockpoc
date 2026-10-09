@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
-import { CUR_PER, DCODE, DOTS, MASTER_DESTS, PERIODS } from '../../../data/seed';
+import { CUR_PER, DOTS, MASTER_DESTS, PERIODS } from '../../../data/seed';
 import { fmt, num, syncBadge } from '../../../lib/format';
 import type { DestAllocation, Part } from '../../../types';
+import { exportMappingXlsx } from '../mappingExport';
 import type { CrossdockState } from '../useCrossdockState';
 
 const th: React.CSSProperties = {
@@ -24,27 +25,6 @@ const td: React.CSSProperties = {
   height: 40,
 };
 
-function exportMappingExcel(rows: Part[], per: string) {
-  let x = '<table border="1"><tr><th>Part No</th><th>Part Name</th><th>Period</th><th>Pcs/Case</th><th>Sync Status</th><th>Dest Code</th><th>Case/Day</th><th>Pcs/Day</th><th>Percentage</th></tr>';
-  rows.forEach((p) => {
-    const a = p.dests.reduce((s, d) => s + num(d.al), 0);
-    const sb = syncBadge(p.syncStatus).t;
-    const ds = p.dests.length ? p.dests : [{ d: '', cd: '', al: 0, st: 'Active' as const }];
-    ds.forEach((d) => {
-      const code = d.cd || DCODE[d.d] || '';
-      x += `<tr><td>${p.p}</td><td>${p.n}</td><td>${p.per}</td><td>${p.pc}</td><td>${sb}</td><td>${code}</td><td>${d.al}</td><td>${num(p.pc) * num(d.al)}</td><td>${a ? Math.round((num(d.al) / a) * 100) + '%' : ''}</td></tr>`;
-    });
-  });
-  x += '</table>';
-  const blob = new Blob(['﻿' + x], { type: 'application/vnd.ms-excel' });
-  const url = URL.createObjectURL(blob);
-  const el = document.createElement('a');
-  el.href = url;
-  el.download = `crossdock-mapping-${per.replace(' ', '-')}.xls`;
-  el.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
-
 export function DestMappingTab({ state }: { state: CrossdockState }) {
   const { parts, q, setQ, resetQ, ro, expand, editDest, draftDests, toggleExpand, startEditDest, cancelEditDest, patchDraft, saveDest, syncParts } = state;
 
@@ -52,8 +32,8 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
     () =>
       parts.filter(
         (p) =>
-          // Mapping per Destination only ever works with parts that are marked Active.
-          p.st === 'Active' &&
+          // The ongoing period only works with Active parts; past periods list every part.
+          (p.st === 'Active' || p.per !== CUR_PER) &&
           (q.per === 'all' || p.per === q.per) &&
           (!q.part || p.p.toLowerCase().includes(q.part.toLowerCase())) &&
           (q.sync === 'all' ||
@@ -64,8 +44,17 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
     [parts, q],
   );
 
-  // Sync only ever targets rows that aren't already a confirmed success.
-  const syncableCount = destRowsSrc.filter((p) => p.syncStatus === 0 || p.syncStatus === 2).length;
+  // Sync only ever targets rows that aren't already a confirmed success...
+  // ...and only in the ongoing period; past periods are read-only.
+  const syncable = destRowsSrc.filter((p) => p.per === CUR_PER && (p.syncStatus === 0 || p.syncStatus === 2));
+  const syncableCount = syncable.length;
+
+  const exportExcel = () => {
+    exportMappingXlsx(destRowsSrc, q.per).catch((err) => {
+      console.error('Export Excel failed', err);
+      window.alert('Export Excel failed. Please try again.');
+    });
+  };
 
   const numberOptions = useMemo(() => {
     const seen = new Set<string>();
@@ -154,7 +143,7 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
           <span style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
             <button
               className="btn btn-secondary"
-              onClick={() => syncParts(destRowsSrc.filter((p) => p.syncStatus === 0 || p.syncStatus === 2).map((p) => p.p))}
+              onClick={() => syncParts(syncable.map((p) => p.p))}
               disabled={!syncableCount}
               style={{ fontSize: 12, padding: '4px 12px' }}
             >
@@ -164,7 +153,7 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
               </svg>
               Sync{syncableCount ? ` (${syncableCount})` : ''}
             </button>
-            <button className="btn btn-primary" onClick={() => exportMappingExcel(destRowsSrc, q.per)} style={{ fontSize: 12, padding: '4px 12px' }}>
+            <button className="btn btn-primary" onClick={exportExcel} style={{ fontSize: 12, padding: '4px 12px' }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                 <path d="M12 3v12M7 10l5 5 5-5M5 21h14" />
               </svg>
@@ -178,13 +167,13 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
             <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: 12 }}>
               <thead>
                 <tr>
-                  <th style={{ ...th, padding: '0 16px', width: 150, height: 32 }}>Part Number</th>
+                  <th style={{ ...th, padding: '0 16px', width: 110, height: 32 }}>Period</th>
+                  <th style={{ ...th, width: 150 }}>Part Number</th>
                   <th style={th}>Part Name</th>
-                  <th style={{ ...th, width: 124 }}>Period</th>
                   <th style={{ ...th, textAlign: 'right', width: 86 }}>Pcs/Case</th>
                   <th style={{ ...th, textAlign: 'right', width: 128 }}>Total Case/Day</th>
                   <th style={{ ...th, textAlign: 'right', width: 110 }}>Pcs/Day</th>
-                  <th style={{ ...th, textAlign: 'right', width: 150 }}>Percentage</th>
+                  <th style={{ ...th, textAlign: 'right', width: 110 }}>Percentage</th>
                   <th style={{ ...th, width: 120 }}>Sync Status</th>
                 </tr>
               </thead>
@@ -243,7 +232,6 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
   const dOver = dAlloc > m;
   const dUnder = dAlloc < m;
   const share = m ? `${Math.round((a / m) * 100)}%` : '—';
-  const sharePct = m ? Math.min(100, Math.round((a / m) * 100)) : 0;
 
   const editViewDisp = ro || isEditing || !edok ? 'none' : 'inline-flex';
   const roPerDisp = !edok && !ro ? 'inline-flex' : 'none';
@@ -263,7 +251,8 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
   return (
     <>
       <tr className="row-hover">
-        <td style={{ ...td, padding: '0 16px' }}>
+        <td style={{ ...td, padding: '0 16px', whiteSpace: 'nowrap' }}>{p.per}</td>
+        <td style={td}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <button
               onClick={onToggleExpand}
@@ -278,36 +267,10 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
           </span>
         </td>
         <td style={td}>{p.n}</td>
-        <td style={td}>
-          <span
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              fontSize: 10.5,
-              fontWeight: 700,
-              padding: '2px 10px',
-              borderRadius: 999,
-              background: edok ? 'var(--color-accent-200)' : 'var(--color-neutral-200)',
-              color: edok ? 'var(--color-accent-800)' : 'var(--color-neutral-700)',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            <span style={{ width: 5, height: 5, borderRadius: 999, background: edok ? 'var(--color-accent-800)' : 'var(--color-neutral-700)' }} />
-            {p.per}
-          </span>
-        </td>
         <td style={{ ...td, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmt(p.pc)}</td>
         <td style={{ ...td, textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: 600 }}>{fmt(a)}</td>
         <td style={{ ...td, textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--color-neutral-700)' }}>{fmt(num(p.pc) * a)}</td>
-        <td style={{ ...td, textAlign: 'right' }}>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ width: 64, height: 5, borderRadius: 999, background: 'var(--color-neutral-300)', overflow: 'hidden' }}>
-              <span style={{ display: 'block', height: 5, borderRadius: 999, background: 'var(--color-accent)', width: `${sharePct}%` }} />
-            </span>
-            <span style={{ fontSize: 11, color: 'var(--color-neutral-800)', fontVariantNumeric: 'tabular-nums', width: 40, textAlign: 'right', fontWeight: 600 }}>{share}</span>
-          </span>
-        </td>
+        <td style={{ ...td, textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: 600, color: 'var(--color-neutral-800)' }}>{share}</td>
         <td style={td}>
           <span style={{ display: 'inline-flex', fontSize: 10, fontWeight: 700, padding: '2px 9px', borderRadius: 999, background: sb.bg, color: sb.fg, whiteSpace: 'nowrap' }}>{sb.t}</span>
         </td>
@@ -379,7 +342,6 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
                     const dot = DOTS[d.d] || 'var(--color-neutral-500)';
                     const pcsDay = fmt(num(p.pc) * num(d.al));
                     const rowShare = dAlloc ? `${Math.round((num(d.al) / dAlloc) * 100)}%` : '0%';
-                    const barPct = dAlloc ? Math.min(100, (num(d.al) / dAlloc) * 100) : 0;
                     const inputBg = isEditing ? 'var(--color-neutral-100)' : 'var(--color-surface)';
                     return (
                       <tr key={i}>
@@ -417,12 +379,7 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
                         </td>
                         <td style={{ padding: '0 14px', borderBottom: '1px solid var(--color-divider)', textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--color-neutral-800)' }}>{pcsDay}</td>
                         <td style={{ padding: '0 14px', borderBottom: '1px solid var(--color-divider)', textAlign: 'right' }}>
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                            <span style={{ width: 64, height: 5, borderRadius: 999, background: 'var(--color-neutral-300)', overflow: 'hidden' }}>
-                              <span style={{ display: 'block', height: 5, borderRadius: 999, background: dot, width: `${barPct}%` }} />
-                            </span>
-                            <span style={{ fontSize: 12, color: 'var(--color-neutral-700)', fontVariantNumeric: 'tabular-nums', width: 34, textAlign: 'right' }}>{rowShare}</span>
-                          </span>
+                          <span style={{ fontSize: 12, color: 'var(--color-neutral-700)', fontVariantNumeric: 'tabular-nums' }}>{rowShare}</span>
                         </td>
                         <td style={{ padding: '0 10px', borderBottom: '1px solid var(--color-divider)', textAlign: 'right' }}>
                           {isEditing && (
