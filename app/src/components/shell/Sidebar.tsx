@@ -8,12 +8,12 @@ const NAV_GROUPS: [string, string[]][] = [
   ['Timeline', ['Timeline']],
   ['Master', ['Sub Supplier Maintenance', 'Part Master Maintenance', 'Crossdock Master Setting']],
   ['Forecast', ['Forecast Inquiry']],
-  ['Common', ['Log Monitoring', 'System Master Maintenance', 'Candidate Part Batch Flow']],
+  ['Common', ['Log Monitoring', 'System Master Maintenance', 'Batch Process Simulation', 'Candidate Part Batch Flow']],
   ['Inventory Taking', ['Intak Period Maintenance', 'Yellow Line and CY Stock']],
 ];
 
 /** Nav items that are new in this build, flagged with a "New" badge until they're familiar. */
-const NEW_ITEMS = new Set(['Crossdock Master Setting', 'Case Consolidation Simulation', 'ASN Creation', 'Candidate Part Batch Flow']);
+const NEW_ITEMS = new Set(['Crossdock Master Setting', 'Case Consolidation Simulation', 'ASN Creation', 'Batch Process Simulation', 'Candidate Part Batch Flow']);
 
 export function Sidebar({ activeItem, onNavigate }: { activeItem: string; onNavigate: (route: RouteKey) => void }) {
   return (
