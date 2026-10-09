@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
-import { CUR_PER, DCODE, DOTS, MASTER_DESTS, PERIODS } from '../../../data/seed';
+import { CUR_PER, DOTS, MASTER_DESTS, PERIODS } from '../../../data/seed';
 import { fmt, num, syncBadge } from '../../../lib/format';
 import type { DestAllocation, Part } from '../../../types';
+import { exportMappingXlsx } from '../mappingExport';
 import type { CrossdockState } from '../useCrossdockState';
 
 const th: React.CSSProperties = {
@@ -23,27 +24,6 @@ const td: React.CSSProperties = {
   borderBottom: '1px solid var(--color-divider)',
   height: 40,
 };
-
-function exportMappingExcel(rows: Part[], per: string) {
-  let x = '<table border="1"><tr><th>Part No</th><th>Part Name</th><th>Period</th><th>Pcs/Case</th><th>Sync Status</th><th>Dest Code</th><th>Case/Day</th><th>Pcs/Day</th><th>Percentage</th></tr>';
-  rows.forEach((p) => {
-    const a = p.dests.reduce((s, d) => s + num(d.al), 0);
-    const sb = syncBadge(p.syncStatus).t;
-    const ds = p.dests.length ? p.dests : [{ d: '', cd: '', al: 0, st: 'Active' as const }];
-    ds.forEach((d) => {
-      const code = d.cd || DCODE[d.d] || '';
-      x += `<tr><td>${p.p}</td><td>${p.n}</td><td>${p.per}</td><td>${p.pc}</td><td>${sb}</td><td>${code}</td><td>${d.al}</td><td>${num(p.pc) * num(d.al)}</td><td>${a ? Math.round((num(d.al) / a) * 100) + '%' : ''}</td></tr>`;
-    });
-  });
-  x += '</table>';
-  const blob = new Blob(['﻿' + x], { type: 'application/vnd.ms-excel' });
-  const url = URL.createObjectURL(blob);
-  const el = document.createElement('a');
-  el.href = url;
-  el.download = `crossdock-mapping-${per.replace(' ', '-')}.xls`;
-  el.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
 
 export function DestMappingTab({ state }: { state: CrossdockState }) {
   const { parts, q, setQ, resetQ, ro, expand, editDest, draftDests, toggleExpand, startEditDest, cancelEditDest, patchDraft, saveDest, syncParts } = state;
@@ -68,6 +48,13 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
   // ...and only in the ongoing period; past periods are read-only.
   const syncable = destRowsSrc.filter((p) => p.per === CUR_PER && (p.syncStatus === 0 || p.syncStatus === 2));
   const syncableCount = syncable.length;
+
+  const exportExcel = () => {
+    exportMappingXlsx(destRowsSrc, q.per).catch((err) => {
+      console.error('Export Excel failed', err);
+      window.alert('Export Excel failed. Please try again.');
+    });
+  };
 
   const numberOptions = useMemo(() => {
     const seen = new Set<string>();
@@ -166,7 +153,7 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
               </svg>
               Sync{syncableCount ? ` (${syncableCount})` : ''}
             </button>
-            <button className="btn btn-primary" onClick={() => exportMappingExcel(destRowsSrc, q.per)} style={{ fontSize: 12, padding: '4px 12px' }}>
+            <button className="btn btn-primary" onClick={exportExcel} style={{ fontSize: 12, padding: '4px 12px' }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                 <path d="M12 3v12M7 10l5 5 5-5M5 21h14" />
               </svg>
