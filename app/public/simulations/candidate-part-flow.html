@@ -468,7 +468,7 @@ tr.rowerr td:first-child { box-shadow: inset 3px 0 0 var(--bad-ink); }
           <li><b>Status tidak bisa diubah lewat upload.</b> Add: kosong, otomatis Candidate. Edit: kosong atau sama dengan status sekarang.</li>
           <li>Edit boleh mengubah Min MAD, Pcs/Case, Max Case/Day pada status apa pun.</li>
           <li><b>Effective Date</b> wajib bila status Candidate (selalu untuk Add), hari ini atau lebih. Hanya part Candidate yang boleh mengubahnya.</li>
-          <li>Edit tidak boleh menurunkan Max Case/Day di bawah mapping yang sudah ada (TBD, D5).</li>
+          <li>Edit tidak boleh menurunkan Max Case/Day di bawah mapping yang sudah ada (D5, sudah diputuskan). Mapping harus dikurangi dulu di sub-menu Mapping per Destination, baru Max Case/Day di Part List bisa diturunkan.</li>
         </ul>
         <h4>Yang disimpan</h4>
         <ul>
@@ -497,7 +497,7 @@ tr.rowerr td:first-child { box-shadow: inset 3px 0 0 var(--bad-ink); }
         </ul>
       </div>
     </div>
-    <div class="panel rs-foot"><b>Masih terbuka:</b> <a href="#d3" style="color:var(--warn-ink);font-weight:700">D3</a> cara batch dipicu, <a href="#d5" style="color:var(--warn-ink);font-weight:700">D5</a> Max Case/Day di bawah mapping, <a href="#d8" style="color:var(--warn-ink);font-weight:700">D8</a> history perubahan, serta upload bersamaan, retensi file, dan tombol Upload Excel di screen Mapping yang belum ada di prototype.</div>
+    <div class="panel rs-foot"><b>Masih terbuka:</b> <a href="#d3" style="color:var(--warn-ink);font-weight:700">D3</a> cara batch dipicu, <a href="#d8" style="color:var(--warn-ink);font-weight:700">D8</a> history perubahan, serta upload bersamaan, retensi file, dan tombol Upload Excel di screen Mapping yang belum ada di prototype.</div>
   </section>
 
   <section class="sec" aria-labelledby="rules-h">
@@ -569,6 +569,7 @@ var FILES = {
       ['PART-M03', 300, 0, 15, '', 'A', '14-Sep-2026'],
       ['PART-M02', 500, 12, 40, '', 'A', ''],
       ['PART-C', 200, 10, 30, '', 'E', '20-Sep-2026'],
+      ['PART-A', 800, 60, 20, '', 'E', ''],
       ['PART-Z99', 100, 10, 10, '', 'E', ''],
       ['PART-G', 150, 50, 22, 'Inactive', 'E', '']
     ] },
@@ -1692,7 +1693,7 @@ var DEC = [
   ['D2', 'Kalau file punya error (sudah diputuskan)', 'Tolak seluruh file, tidak ada yang disimpan. User memperbaiki lalu upload ulang, dibantu sheet Re-upload di result report. Paling aman untuk data master.', 'Mode "Simpan baris yang valid" tetap ada di toggle hanya sebagai perbandingan dan tidak dipakai.', 'Langkah 4, 5, 6'],
   ['D3', 'Cara batch dipicu', 'Pertanyaannya: setelah user menekan Validate file dan file tersimpan, siapa yang menjalankan batch? Usulan: aplikasi langsung memanggil batch (parameter upload_id) segera setelah file diterima, tanpa menunggu jadwal. Screen membaca status dari UPLOAD_LOG sampai selesai, jadi user melihat hasilnya dalam hitungan detik.', 'Alternatif: batch berjalan terjadwal (scheduler) tiap N menit, memeriksa file berstatus RECEIVED lalu memprosesnya. Lebih sederhana dan cocok kalau semua batch di sistem hanya boleh dijalankan oleh scheduler, tapi user menunggu sampai jadwal berikutnya. Di dokumen UISS-Batch ini menentukan isi bagian trigger: on-demand dengan parameter upload_id, atau terjadwal.', 'Langkah 2'],
   ['D4', 'Arti upload Mapping', 'Ganti per part: destination part yang ada di file menggantikan seluruh mapping lama part itu. Destination yang tidak ada di file dihapus (lihat PART-C 456).', 'Alternatif: hanya tambah dan ubah, tidak pernah menghapus. Penghapusan tetap lewat screen.', 'Langkah 4, 5'],
-  ['D5', 'Edit max_case_day di bawah mapping yang sudah ada', 'Ditolak dengan pesan PL-08, karena membuat mapping melebihi kapasitas (BR-16 melarang itu di screen mapping).', 'Alternatif: boleh disimpan, mapping jadi over-allocated dan perlu dibetulkan D/S (terkait OP-14).', 'Langkah 4'],
+  ['D5', 'Edit max_case_day di bawah mapping yang sudah ada (sudah diputuskan)', 'Ditolak dengan pesan PL-08. Contoh: mapping part sudah total 100 case/day, Max Case/Day tidak bisa diturunkan ke 80 lewat Part List. D/S mengurangi mapping dulu di Mapping per Destination, baru Max Case/Day boleh diturunkan.', 'Tidak ada alternatif, aturan ini final.', 'Langkah 4'],
   ['D6', 'Sync Status setelah upload', 'Semua baris part yang disentuh kembali ke No Sync (BR-09). Sync tetap dijalankan D/S lewat tombol, tidak otomatis.', 'Alternatif: batch upload langsung memicu Sync. Perlu keputusan OP-06 (sistem tujuan) dulu.', 'Langkah 5'],
   ['D7', 'Nama kolom file', 'Template Part List (sheet Upload) memakai 7 kolom snake_case: part_no, minimum_mad, pcs_case, max_case_day, status, flag_add_edit, effective_start_date. Template Mapping memakai part_no, dest_code, case_day, total_case_day. Di sheet Upload Mapping, part_no dan total_case_day read-only; hanya dest_code dan case_day yang editable. total_case_day adalah Total Case/Day part dari Part List (Max Case/Day).', 'Export Part List dan export Mapping memakai nama kolom yang sama dengan template.', 'Langkah 1'],
   ['D8', 'History perubahan', 'Upload mencatat history per field yang berubah (nilai lama → baru, user, sumber Upload). Menjawab OP-03 untuk jalur upload.', 'Alternatif: tidak mencatat history dari upload. Tabel history belum ada di desain ini.', 'Langkah 5'],
