@@ -265,6 +265,8 @@ export const HIST_BY_PART: Record<string, HistoryEvent[]> = Object.fromEntries(A
 export function cloneSeedParts(): Part[] {
   return ALL_SEED.map((p) => ({
     ...p,
+    // Dummy Effective Start Date: a fixed day between 1 Jun and 27 Jun 2026, derived from the part number.
+    effDate: `2026-06-${String(1 + (hashStr(p.p) % 27)).padStart(2, '0')}`,
     dests: p.dests.map((d) => ({ ...d, cd: DCODE[d.d] || '' })),
   }));
 }
