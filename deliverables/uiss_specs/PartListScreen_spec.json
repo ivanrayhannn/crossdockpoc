@@ -14,7 +14,7 @@
    "author": "Ivan Rayhan",
    "date": "12-Oct-26",
    "reviewed_by": "",
-   "description": "Initial draft based on the business decisions for the Crossdock Master Setting Part List sub-menu and the crossdockpoc web prototype as of 12-Oct-26. Upload backend is documented in UISS-Batch \"Crossdock Master Setting - Part List Upload\". MASTER_CANDIDATE_PART holds one record per part (key PART_NO, no calculation period); the period belongs to the Mapping per Destination data only."
+   "description": "Initial draft based on the business decisions for the Crossdock Master Setting Part List sub-menu and the crossdockpoc web prototype as of 12-Oct-26. Upload backend is documented in UISS-Batch \"Crossdock Master Setting - Part List Upload\". Data level: TB_M_PART_CANDIDATE is at part number level (key PART_NO, no calculation period); TB_M_PART_CANDIDATE_DEST (Mapping per Destination) is at part number + calculation period + destination level."
   }
  ],
  "general": {
@@ -509,7 +509,7 @@
      },
      {
       "id": "db",
-      "label": "MASTER_CANDIDATE_PART",
+      "label": "TB_M_PART_CANDIDATE",
       "type": "db"
      },
      {
@@ -693,7 +693,7 @@
    "required": "N",
    "format": "X..TBD..X",
    "validation": "Contains, case-insensitive",
-   "description": "Suggestions = PART_NO of registered parts (MASTER_CANDIDATE_PART). Placeholder 'e.g. PART-B'. Combined with the other criteria by AND."
+   "description": "Suggestions = PART_NO of registered parts (TB_M_PART_CANDIDATE). Placeholder 'e.g. PART-B'. Combined with the other criteria by AND."
   },
   {
    "name": "Part Name",
@@ -790,7 +790,7 @@
   },
   {
    "name": "Incomplete mapping marker",
-   "source": "MASTER_CANDIDATE_PART_DEST",
+   "source": "TB_M_PART_CANDIDATE_DEST",
    "field": "CASE_DAY",
    "type": "",
    "len": "",
@@ -805,7 +805,7 @@
   },
   {
    "name": "Part Number",
-   "source": "MASTER_CANDIDATE_PART",
+   "source": "TB_M_PART_CANDIDATE",
    "field": "PART_NO",
    "type": "Varchar",
    "len": "TBD",
@@ -820,7 +820,7 @@
   },
   {
    "name": "Part Name",
-   "source": "MASTER_CANDIDATE_PART",
+   "source": "TB_M_PART_CANDIDATE",
    "field": "PART_NAME",
    "type": "Varchar",
    "len": "TBD",
@@ -835,7 +835,7 @@
   },
   {
    "name": "Min MAD",
-   "source": "MASTER_CANDIDATE_PART",
+   "source": "TB_M_PART_CANDIDATE",
    "field": "MIN_MAD",
    "type": "Number",
    "len": "TBD",
@@ -850,7 +850,7 @@
   },
   {
    "name": "Pcs/Case",
-   "source": "MASTER_CANDIDATE_PART",
+   "source": "TB_M_PART_CANDIDATE",
    "field": "PCS_CASE",
    "type": "Number",
    "len": "TBD",
@@ -865,7 +865,7 @@
   },
   {
    "name": "Max Case/Day",
-   "source": "MASTER_CANDIDATE_PART",
+   "source": "TB_M_PART_CANDIDATE",
    "field": "MAX_CASE_DAY",
    "type": "Number",
    "len": "TBD",
@@ -880,7 +880,7 @@
   },
   {
    "name": "Total Pcs/Day",
-   "source": "MASTER_CANDIDATE_PART",
+   "source": "TB_M_PART_CANDIDATE",
    "field": "TOTAL_PCS_DAY",
    "type": "Number",
    "len": "TBD",
@@ -895,7 +895,7 @@
   },
   {
    "name": "Status",
-   "source": "MASTER_CANDIDATE_PART",
+   "source": "TB_M_PART_CANDIDATE",
    "field": "PART_STATUS",
    "type": "Varchar",
    "len": "TBD",
@@ -910,7 +910,7 @@
   },
   {
    "name": "Last Update",
-   "source": "MASTER_CANDIDATE_PART",
+   "source": "TB_M_PART_CANDIDATE",
    "field": "CHANGED_DT, CHANGED_BY",
    "type": "Datetime",
    "len": "",
@@ -1084,7 +1084,7 @@
   },
   {
    "name": "Status",
-   "source": "MASTER_CANDIDATE_PART",
+   "source": "TB_M_PART_CANDIDATE",
    "field": "PART_STATUS",
    "type": "Varchar",
    "len": "TBD",
@@ -1099,7 +1099,7 @@
   },
   {
    "name": "Part No",
-   "source": "TB_M_PART_MASTER (Add) / MASTER_CANDIDATE_PART (Edit)",
+   "source": "TB_M_PART_MASTER (Add) / TB_M_PART_CANDIDATE (Edit)",
    "field": "PART_NO",
    "type": "Varchar",
    "len": "TBD",
@@ -1129,7 +1129,7 @@
   },
   {
    "name": "Effective Start Date",
-   "source": "MASTER_CANDIDATE_PART",
+   "source": "TB_M_PART_CANDIDATE",
    "field": "EFFECTIVE_START_DATE",
    "type": "Date",
    "len": "",
@@ -1144,7 +1144,7 @@
   },
   {
    "name": "Minimum MAD",
-   "source": "MASTER_CANDIDATE_PART",
+   "source": "TB_M_PART_CANDIDATE",
    "field": "MIN_MAD",
    "type": "Number",
    "len": "TBD",
@@ -1159,7 +1159,7 @@
   },
   {
    "name": "Pcs/Case",
-   "source": "MASTER_CANDIDATE_PART",
+   "source": "TB_M_PART_CANDIDATE",
    "field": "PCS_CASE",
    "type": "Number",
    "len": "TBD",
@@ -1174,7 +1174,7 @@
   },
   {
    "name": "Max Case/Day",
-   "source": "MASTER_CANDIDATE_PART",
+   "source": "TB_M_PART_CANDIDATE",
    "field": "MAX_CASE_DAY",
    "type": "Number",
    "len": "TBD",
@@ -1252,7 +1252,7 @@
   },
   {
    "name": "Part identity",
-   "source": "MASTER_CANDIDATE_PART",
+   "source": "TB_M_PART_CANDIDATE",
    "field": "PART_NO, PART_NAME",
    "type": "Varchar",
    "len": "",
@@ -1472,7 +1472,7 @@
    {
     "source": "Key-in from screen",
     "destination": {
-     "table": "MASTER_CANDIDATE_PART",
+     "table": "TB_M_PART_CANDIDATE",
      "operation": "Insert",
      "description": "Add Part modal - [Save]"
     },
@@ -1543,7 +1543,7 @@
    {
     "source": "Key-in from screen",
     "destination": {
-     "table": "MASTER_CANDIDATE_PART",
+     "table": "TB_M_PART_CANDIDATE",
      "operation": "Update",
      "description": "Edit part data - [Save]",
      "keys": [
@@ -1599,7 +1599,7 @@
    },
    {
     "source": {
-     "table": "MASTER_CANDIDATE_PART",
+     "table": "TB_M_PART_CANDIDATE",
      "keys": [
       {
        "field": "PART_NO",
@@ -1657,7 +1657,7 @@
    "items": [
     "The sub-menu is opened only for users logged in with a Procurement account.",
     "Search criteria: 'Part Number' and 'Part Name' blank, 'Status' = All, 'Sort by' = Newer to Older.",
-    "Retrieve all parts of MASTER_CANDIDATE_PART and display them sorted by CHANGED_DT descending, 25 rows per page, page 1.",
+    "Retrieve all parts of TB_M_PART_CANDIDATE and display them sorted by CHANGED_DT descending, 25 rows per page, page 1.",
     "If no part is registered at all, hide the table and display message no. 2 with [Upload Excel] and [Add one part]."
    ]
   },
@@ -1686,7 +1686,7 @@
    "level": 2,
    "items": [
     "Counter 'N parts \u00b7 M incomplete mappings' is counted over the whole filtered result, not only the current page.",
-    "Incomplete mapping: the part has no destination in MASTER_CANDIDATE_PART_DEST, or the sum of destination CASE_DAY differs from MAX_CASE_DAY. Mark the row with a blue bar and count it in 'M incomplete mappings'.",
+    "Incomplete mapping: the part has no destination in TB_M_PART_CANDIDATE_DEST, or the sum of destination CASE_DAY differs from MAX_CASE_DAY. Mark the row with a blue bar and count it in 'M incomplete mappings'.",
     "Min MAD flag: show 'Min MAD' bold in warning colour when the 6-month average MAD is below MIN_MAD, except for status Candidate (no MAD history yet). Source of the MAD history is TBD.",
     "Total Pcs/Day = Pcs/Case x Max Case/Day."
    ]
@@ -1707,7 +1707,7 @@
    "level": 3,
    "items": [
     "Open the 'Add Part Candidate Crossdock' modal. 'Status' = Candidate and locked (a new part is always Candidate); 'Effective Start Date' = system date + 1 day, minimum today.",
-    "'Part No' lists parts of TB_M_PART_MASTER that are not yet registered in MASTER_CANDIDATE_PART, so a Part No cannot be duplicated. No match shows message no. 8.",
+    "'Part No' lists parts of TB_M_PART_MASTER that are not yet registered in TB_M_PART_CANDIDATE, so a Part No cannot be duplicated. No match shows message no. 8.",
     "Selecting a Part No autofills 'Part Name'. 'Max Case/Day' is locked until 'Pcs/Case' is filled.",
     "[Save] is enabled only when Part No, Pcs/Case > 0 and Max Case/Day > 0 are filled; otherwise its tooltip shows message no. 5, 6 or 7 for the first missing item. Effective Start Date and Minimum MAD are not mandatory (TBD: confirm)."
    ]
@@ -1724,7 +1724,7 @@
    "level": 3,
    "items": [
     "If the Part No was registered by another user in the meantime, display message no. 3. Stop.",
-    "Insert the part into MASTER_CANDIDATE_PART with PART_STATUS = Candidate and SYNC_STATUS = 0 (No Sync) (refer Data Edit Mapping).",
+    "Insert the part into TB_M_PART_CANDIDATE with PART_STATUS = Candidate and SYNC_STATUS = 0 (No Sync) (refer Data Edit Mapping).",
     "Insert the change history (TBD: history table and logged events not defined yet).",
     "Close the modal, reset the Part Number / Part Name / Status filters, sort Newer to Older and display message no. 9. The new part is shown at the top."
    ]
@@ -1767,7 +1767,7 @@
    "level": 3,
    "items": [
     "If the record was changed by another user after it was opened, display message no. 4. Stop.",
-    "Update MASTER_CANDIDATE_PART and set SYNC_STATUS = 0 (No Sync), CHANGED_BY and CHANGED_DT. Every Save returns the part to No Sync so the D/S user synchronises it again.",
+    "Update TB_M_PART_CANDIDATE and set SYNC_STATUS = 0 (No Sync), CHANGED_BY and CHANGED_DT. Every Save returns the part to No Sync so the D/S user synchronises it again.",
     "Insert the change history (TBD: history table and logged events not defined yet).",
     "Close the modal, move the part to the top of the list and display message no. 9."
    ]
@@ -1998,7 +1998,7 @@
  "logging_messages": [
   {
    "event": "Click [Save] button",
-   "cause": "Database error on insert/update of MASTER_CANDIDATE_PART",
+   "cause": "Database error on insert/update of TB_M_PART_CANDIDATE",
    "type": "Error",
    "msg_id": "TBD",
    "message": "Failed to save part <PART_NO>: <DB error message>.",

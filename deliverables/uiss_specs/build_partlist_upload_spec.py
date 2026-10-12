@@ -1,6 +1,6 @@
 """Spec for UISS_Batch_PartListUpload_v2.xlsx (rebuilt from the v0.2 workbook, then updated to v0.3)."""
 import json, sys
-T, PM, LOG = 'MASTER_CANDIDATE_PART', 'TB_M_PART_MASTER', 'TB_R_CD_UPLOAD_LOG'
+T, PM, LOG = 'TB_M_PART_CANDIDATE', 'TB_M_PART_MASTER', 'TB_R_CD_UPLOAD_LOG'
 SHEET = 'Excel file - sheet Upload (valid rows)'
 STATUS_RULE = ('Status: flag A must be blank (a new part is always Candidate). Flag E: a Candidate part must stay '
                'Candidate (blank or Candidate); an Active part may be changed to Inactive and an Inactive part to '
@@ -16,10 +16,10 @@ spec = {
   {"revision": "0.2", "author": "Ivan", "date": "09-Oct-26", "reviewed_by": "",
    "description": "Max Case/Day vs existing mapping rule decided (4.2 no. 9); 4.3 simplified; sample upload scenarios added to Appendix"},
   {"revision": "0.3", "author": "Ivan Rayhan", "date": "12-Oct-26", "reviewed_by": "",
-   "description": "Status rule changed (4.2 no. 6): Candidate status cannot be changed by upload, Active <-> Inactive can, nothing can become Candidate; Edit maps status to PART_STATUS. Trigger renamed to [Validate file]. Operation and functional flow diagrams added. Scenarios N8, E7, E8 updated. PERIOD removed from MASTER_CANDIDATE_PART (one record per part, key PART_NO); the calculation period belongs to Mapping per Destination only."}],
+   "description": "Status rule changed (4.2 no. 6): Candidate status cannot be changed by upload, Active <-> Inactive can, nothing can become Candidate; Edit maps status to PART_STATUS. Trigger renamed to [Validate file]. Operation and functional flow diagrams added. Scenarios N8, E7, E8 updated. Tables renamed to TB_M_PART_CANDIDATE (part number level, key PART_NO, no period) and TB_M_PART_CANDIDATE_DEST (part number + period + destination level)."}],
  "general": {
   "objective": [
-   "To process the Part List file uploaded from the Crossdock Master Setting - Part List screen: from the [Validate file] button of the Upload Excel modal until the data is saved to MASTER_CANDIDATE_PART.",
+   "To process the Part List file uploaded from the Crossdock Master Setting - Part List screen: from the [Validate file] button of the Upload Excel modal until the data is saved to TB_M_PART_CANDIDATE.",
    "In case any error occurs, nothing is saved to the master. The error is recorded in the upload log and a result report is created."],
   "operation_flow": {"flow": {"direction": "TB", "nodes": [
      {"id": "a", "label": "Part List screen [Validate file]", "type": "screen"},
@@ -36,7 +36,7 @@ spec = {
    {"name": "Part List file (sheet Upload)", "type": "Excel", "description": "Uploaded by the user on the Part List screen ([Validate file]). Only sheet Upload is read. Max 5 MB, 5,000 rows."},
    {"name": PM, "type": "DB", "description": "Part existence check and Part Name"},
    {"name": T, "type": "DB", "description": "Current data for duplicate check, status rule and Edit comparison"},
-   {"name": "MASTER_CANDIDATE_PART_DEST", "type": "DB", "description": "Total Case/Day already mapped per part in the ongoing calculation period (check 9)"}],
+   {"name": "TB_M_PART_CANDIDATE_DEST", "type": "DB", "description": "Total Case/Day already mapped per part in the ongoing calculation period (check 9)"}],
   "outputs": [
    {"name": T, "type": "DB", "description": "if successful"},
    {"name": LOG, "type": "DB", "description": "Upload log: one record per upload with status (COMPLETED / REJECTED), counts and errors"},
@@ -47,9 +47,9 @@ spec = {
    {"title": "Execution Schedule", "columns": [{"title": "Item", "width": 12}, {"title": "Description", "width": 36}],
     "rows": [["Trigger", "Starts when the user clicks [Validate file] in the Upload Excel modal of the Part List screen (on demand, no schedule)."]]}],
   "constraints": [
-   "Names MASTER_CANDIDATE_PART and TB_M_PART_MASTER are as given; other table names are proposed and must follow the project naming convention.",
+   "Names TB_M_PART_CANDIDATE, TB_M_PART_CANDIDATE_DEST and TB_M_PART_MASTER are as given; other table names are proposed and must follow the project naming convention.",
    "Change history of the changed fields is not included yet. TBD: history table, logged events and retention are not decided.",
-   "Part List data has no calculation period: MASTER_CANDIDATE_PART holds one record per part (key PART_NO). The calculation period exists only in the Mapping per Destination data (MASTER_CANDIDATE_PART_DEST).",
+   "Data level: TB_M_PART_CANDIDATE (Part List) is at part number level, one record per part (key PART_NO), no calculation period. TB_M_PART_CANDIDATE_DEST (Mapping per Destination) is at part number + calculation period + destination level.",
    "Upload template: sheet Upload is prefilled by Export Excel of the Part List with all parts (flag E). Only changed rows are saved; unchanged rows are skipped."]
  },
  "func_flow": {
@@ -77,7 +77,7 @@ spec = {
     "children": ["Each row is Add (flag A) or Edit (flag E)."]},
    {"text": "If any row has an error, reject the whole file. Nothing is saved to the master and the errors are recorded in the upload log.",
     "children": ["Go to step 7."]},
-   {"text": "If all rows are valid, save to master table MASTER_CANDIDATE_PART (see 4.3).",
+   {"text": "If all rows are valid, save to master table TB_M_PART_CANDIDATE (see 4.3).",
     "children": ["Add: register the new part as Candidate.",
                  "Edit: update the changed values, including status Active <-> Inactive. A row with no change is skipped.",
                  "Every saved part gets Sync Status = No Sync."]},
@@ -134,7 +134,7 @@ spec = {
      {"dest_field": "END_DT", "description": "Server system date and time"}]}]},
  "func_desc_layout": "two",
  "func_desc": [
-  {"type": "text", "level": 0, "text": "This batch starts when the user clicks [Validate file] in the Upload Excel modal of the Part List screen. It checks the uploaded file and, if everything is valid, saves the data to MASTER_CANDIDATE_PART. If not, the upload is rejected and recorded in the upload log."},
+  {"type": "text", "level": 0, "text": "This batch starts when the user clicks [Validate file] in the Upload Excel modal of the Part List screen. It checks the uploaded file and, if everything is valid, saves the data to TB_M_PART_CANDIDATE. If not, the upload is rejected and recorded in the upload log."},
   {"type": "bullets", "marker": "-", "level": 0, "items": [
     "Only sheet \"Upload\" of the file is read. Parts that are not in the sheet are not changed.",
     "One run saves all rows or none (all-or-nothing).",
@@ -148,8 +148,8 @@ spec = {
   {"type": "text", "level": 0, "text": "Every row is checked and all errors are collected, so the user can correct the file once."},
   {"type": "heading", "text": "4.3 Saving"},
   {"type": "bullets", "marker": "-", "level": 0, "items": [
-    "If any row is rejected, nothing is saved to MASTER_CANDIDATE_PART. The upload status and the error of every row are recorded in the upload log (TB_R_CD_UPLOAD_LOG).",
-    "If all rows are valid, the data is saved to MASTER_CANDIDATE_PART: flag A inserts a new part (status Candidate), flag E updates the changed values, including status Active <-> Inactive. Rows with no change are skipped.",
+    "If any row is rejected, nothing is saved to TB_M_PART_CANDIDATE. The upload status and the error of every row are recorded in the upload log (TB_R_CD_UPLOAD_LOG).",
+    "If all rows are valid, the data is saved to TB_M_PART_CANDIDATE: flag A inserts a new part (status Candidate), flag E updates the changed values, including status Active <-> Inactive. Rows with no change are skipped.",
     "The status of a Candidate part is changed only in the Edit part data modal on the screen, not by upload.",
     "Every saved record gets Sync Status = No Sync. Sync to other systems is done manually by D/S.",
     "A result report (.xlsx) is created for both cases."]},
@@ -157,13 +157,13 @@ spec = {
   {"type": "table", "level": 0, "row_lines": "all", "columns": [{"title": "No", "width": 3, "align": "center"}, {"title": "Check", "width": 31}, {"title": "Column", "width": 12}], "rows": [
     ["1", "Flag is A (Add) or E (Edit).", "flag_add_edit"],
     ["2", "Part No exists in TB_M_PART_MASTER.", "part_no"],
-    ["3", "Flag A: Part No is not yet in MASTER_CANDIDATE_PART. Flag E: it already is.", "part_no"],
+    ["3", "Flag A: Part No is not yet in TB_M_PART_CANDIDATE. Flag E: it already is.", "part_no"],
     ["4", "Part No appears only once in the file.", "part_no"],
     ["5", "Min MAD (0 or more), Pcs/Case and Max Case/Day (more than 0) are whole numbers. Required on every row, no blank cell.", "minimum_mad, pcs_case, max_case_day"],
     ["6", STATUS_RULE, "status"],
     ["7", "Effective Start Date is required when the part status is Candidate (always for flag A) and must be today or later when new or changed.", "effective_start_date"],
     ["8", "Flag E: Effective Start Date can only change while the part status is Candidate.", "effective_start_date"],
-    ["9", "Flag E: Max Case/Day is not below the total Case/Day already mapped per destination in the ongoing calculation period of Mapping per Destination (MASTER_CANDIDATE_PART_DEST) (e.g. mapped 100, new Max Case/Day 80 is rejected). The user must first reduce the mapping in the Mapping per Destination sub-menu, then lower Max Case/Day in Part List.", "max_case_day"]]}],
+    ["9", "Flag E: Max Case/Day is not below the total Case/Day already mapped per destination in the ongoing calculation period of Mapping per Destination (TB_M_PART_CANDIDATE_DEST) (e.g. mapped 100, new Max Case/Day 80 is rejected). The user must first reduce the mapping in the Mapping per Destination sub-menu, then lower Max Case/Day in Part List.", "max_case_day"]]}],
  "logging_messages": [
   {"event": "Batch start", "cause": "Batch is called", "type": "Info", "msg_id": "TBD", "message": "Upload batch <UPLOAD_ID> started.", "action": {"system": "Write the log.", "user": "-"}},
   {"event": "Batch end", "cause": "Batch finishes", "type": "Info", "msg_id": "TBD", "message": "Upload batch <UPLOAD_ID> ended. Status <STATUS>, total <TOTAL_ROWS>, saved <SAVED_ROWS>, no change <NO_CHANGE_ROWS>, error <ERROR_ROWS>.", "action": {"system": "Write the log.", "user": "-"}},
@@ -172,7 +172,7 @@ spec = {
   {"event": "File check", "cause": "Extension, size, row count, sheet Upload or header is invalid", "type": "Error", "msg_id": "TBD", "message": "File check failed: <REASON>.", "action": {"system": "Set STATUS = REJECTED. Create the result report.", "user": "Download the file from the screen again and upload it."}},
   {"event": "Row validation", "cause": "A validation rule in 4.2 fails", "type": "Error", "msg_id": "TBD", "message": "Row <ROW_NO> <COLUMN> : <RULE_MESSAGE>.", "action": {"system": "Reject the whole file. Nothing is saved.", "user": "Correct the rows in sheet Re-upload of the result report, then upload again."}},
   {"event": "Row skipped", "cause": "Edit row has the same values as the master", "type": "Info", "msg_id": "TBD", "message": "Row <ROW_NO> Part No <PART_NO> has no change. Skipped.", "action": {"system": "Do not update the record.", "user": "-"}},
-  {"event": "Save to master", "cause": "Insert or update MASTER_CANDIDATE_PART fails", "type": "Error", "msg_id": "TBD", "message": "Cannot save Part No <PART_NO> to MASTER_CANDIDATE_PART.", "action": {"system": "Roll back. Set STATUS = REJECTED.", "user": "Contact system owner."}},
+  {"event": "Save to master", "cause": "Insert or update TB_M_PART_CANDIDATE fails", "type": "Error", "msg_id": "TBD", "message": "Cannot save Part No <PART_NO> to TB_M_PART_CANDIDATE.", "action": {"system": "Roll back. Set STATUS = REJECTED.", "user": "Contact system owner."}},
   {"event": "Result report", "cause": "Result report cannot be created", "type": "Warning", "msg_id": "TBD", "message": "Result report of <UPLOAD_ID> cannot be created.", "action": {"system": "Continue. RESULT_FILE_PATH stays blank.", "user": "Contact system owner."}},
   {"event": "Unexpected error", "cause": "Any other system error", "type": "Critical", "msg_id": "TBD", "message": "Unexpected error: <ERROR_DETAIL>.", "action": {"system": "Roll back. Set STATUS = REJECTED. Inform system owner by e-mail.", "user": "Contact system owner."}}],
  "appendix_layout": "full",
