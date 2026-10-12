@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&amp;family=Roboto+Mono:wght@400;500;600;700&amp;display=swap">
+<style>
+:root {
+  --color-bg: #eef1f5; --color-surface: #f6f8fb; --color-text: #1a1d21; --color-divider: #e3e6ea;
+  --color-neutral-100: #ffffff; --color-neutral-200: #f1f3f6; --color-neutral-300: #eef1f5; --color-neutral-400: #c5ccd6; --color-neutral-500: #6b7683;
+  --color-neutral-600: #5b6673; --color-neutral-700: #55606d; --color-neutral-800: #38414c; --color-neutral-900: #1f252c;
+  --color-accent: #4a90d9; --color-accent-100: #eaf2fb; --color-accent-200: #d3e3f6; --color-accent-300: #b1cdee;
+  --color-accent-700: #2f5f94; --color-accent-800: #25496f;
+  --color-accent-2: #7a8a5e; --color-accent-2-200: #dbe4c9; --color-accent-2-300: #c7d4ac; --color-accent-2-800: #414a30;
+  --shadow-md: 0 4px 14px rgba(20,40,70,.10);
+  --radius-sm: 4px; --radius-md: 6px;
+  --font-heading: "Source Sans 3", system-ui, sans-serif;
+  --font-body: "Source Sans 3", system-ui, sans-serif;
+}
+body { margin: 0; background: #eef1f5; -webkit-font-smoothing: antialiased; font-family: "Source Sans 3", system-ui, sans-serif; color: #1a1d21; }
+h1,h2,h3,h4 { font-family: "Source Sans 3", system-ui, sans-serif; font-weight: 700; letter-spacing: -.01em; margin: 0; }
+[style*="tabular-nums"] { font-family: "Roboto Mono", monospace; font-size: .95em; }
+a { color: var(--color-accent-700); } a:hover { color: var(--color-accent); }
+.field label { display:block; font-size:10px; letter-spacing:.05em; text-transform:uppercase; color:var(--color-neutral-700); margin-bottom:4px; font-weight:600; }
+.input { box-sizing:border-box; padding:6px 9px; font-family:var(--font-body); font-size:13px; color:var(--color-text); background:#fff; border:1px solid var(--color-neutral-400); border-radius:4px; outline:none; }
+.input:focus-visible { border-color:var(--color-accent); outline:2px solid var(--color-accent); outline-offset:1px; }
+.btn { display:inline-flex; align-items:center; gap:7px; cursor:pointer; font-family:var(--font-body); font-size:13px; font-weight:600; padding:7px 14px; border-radius:4px; border:1px solid transparent; white-space:nowrap; }
+.btn:disabled { opacity:.45; cursor:not-allowed; }
+.btn:focus-visible { outline:2px solid var(--color-accent); outline-offset:2px; }
+.btn-primary { background:var(--color-accent); border-color:var(--color-accent); color:#fff; }
+.btn-primary:hover:not(:disabled) { background:var(--color-accent-700); border-color:var(--color-accent-700); }
+.btn-secondary { background:#fff; border-color:var(--color-neutral-400); color:var(--color-neutral-800); }
+.btn-secondary:hover:not(:disabled) { background:var(--color-neutral-200); }
+</style>
+</helmet>
+
+<div style="min-width:1440px;display:flex;min-height:100vh;background:var(--color-bg)">
+
+  <aside style="width:250px;flex-shrink:0;background:#fff;border-right:1px solid var(--color-divider)">
+    <div style="height:52px;display:flex;align-items:center;gap:10px;padding:0 14px;background:#2b3c5b">
+      <span style="width:26px;height:26px;border-radius:var(--radius-md);background:#dc3545;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px">N</span>
+      <span style="color:#fff;font-weight:700;font-size:18px;letter-spacing:.02em">NSP</span>
+    </div>
+    <nav style="padding:8px 8px 20px">
+      <sc-for list="{{ navGroups }}" as="g" hint-placeholder-count="6">
+        <div style="display:flex;align-items:center;gap:10px;padding:9px 10px;color:#3a4757;font-size:13.5px;border-radius:var(--radius-md);margin-top:2px;background:{{ g.hdrBg }}">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--color-neutral-500)" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+          <span style="flex:1;font-weight:600">{{ g.label }}</span>
+          <span style="color:var(--color-neutral-500);font-size:12px;transform:rotate({{ g.rot }}deg)">›</span>
+        </div>
+        <div style="padding:2px 0 4px 4px;display:{{ g.childDisp }}">
+          <sc-for list="{{ g.items }}" as="c" hint-placeholder-count="3">
+            <div style="display:flex;align-items:center;gap:9px;padding:7px 10px 7px 28px;font-size:12.5px;border-radius:var(--radius-md);margin-top:1px;background:{{ c.bg }};color:{{ c.fg }};font-weight:{{ c.w }};line-height:1.3"><span style="width:5px;height:5px;border-radius:999px;background:{{ c.dot }};flex:none"></span><span style="flex:1;min-width:0">{{ c.t }}</span></div>
+          </sc-for>
+        </div>
+      </sc-for>
+    </nav>
+  </aside>
+
+  <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+    <header style="height:52px;flex-shrink:0;background:#2b3c5b;display:flex;align-items:center;gap:16px;padding:0 18px">
+      <span style="color:#fff;font-weight:700;font-size:16px">New Service Part System</span>
+      <span style="margin-left:auto;color:#cfd6e0;font-size:13px">Simulation · not connected to live data</span>
+    </header>
+    <div style="display:flex;align-items:center;gap:12px;padding:11px 24px;background:#fff;border-bottom:1px solid var(--color-divider);font-size:13px">
+      <a href="#">Home</a><span style="color:var(--color-neutral-500)">/</span><span style="color:var(--color-neutral-700)">ASN</span><span style="color:var(--color-neutral-500)">/</span><span style="color:#3a4757;font-weight:700">Case Consolidation Simulation</span>
+    </div>
+
+    <main style="flex:1;padding:18px 24px 28px;display:flex;flex-direction:column;gap:14px">
+      <div>
+        <h1 style="font-size:22px">Case consolidation simulation</h1>
+        <div style="font-size:12.5px;color:var(--color-neutral-700);margin-top:3px;max-width:820px;text-wrap:pretty">Customer orders released on an order date are always a multiple of pcs/case per destination, and a case never mixes destinations. Every day one supplier PO is released automatically with PO Date = Order Date + 1, holding all destinations. A PO can take at most Max Case/Day cases. Cases that do not fit wait in a FIFO backlog and go into the next PO first, so they use up the quota of later orders. Changing Max Case/Day does not add cases to a PO that is already released; it only applies to the next PO. Whatever is left at the end is shown as remaining and can be handled with a manual PO.</div>
+      </div>
+
+      <div style="background:var(--color-neutral-100);border:1px dashed var(--color-neutral-400);border-radius:var(--radius-md)">
+      <div style="display:flex;align-items:center;gap:10px;padding:9px 16px;border-bottom:1px dashed var(--color-neutral-400);background:var(--color-surface);border-radius:6px 6px 0 0">
+        <span style="display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 9px;border-radius:999px;background:oklch(0.95 0.05 80);color:oklch(0.42 0.1 65)">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.31L4.2 19.1A2 2 0 0 0 5.93 22h12.14a2 2 0 0 0 1.73-2.9L14 9.31V2"></path><path d="M8.5 2h7"></path></svg>
+          Simulation only
+        </span>
+        <span style="font-size:14px;font-weight:700">Simulation options</span>
+        <span style="font-size:12px;color:var(--color-neutral-600)">For testing scenarios only. Not part of the real screen.</span>
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:18px;padding:12px 16px;flex-wrap:wrap">
+        <div class="field">
+          <label>View as</label>
+          <span style="display:flex;padding:2px;border-radius:6px;background:var(--color-neutral-200)">
+            <sc-for list="{{ roleOpts }}" as="r" hint-placeholder-count="3">
+              <button onClick="{{ r.go }}" style="cursor:pointer;white-space:nowrap;font-family:var(--font-body);font-size:12px;font-weight:600;padding:6px 11px;border:0;border-radius:4px;background:{{ r.bg }};color:{{ r.fg }};box-shadow:{{ r.sh }}">{{ r.label }}</button>
+            </sc-for>
+          </span>
+        </div>
+        <div class="field">
+          <label>Part No</label>
+          <input class="input" value="{{ part }}" onChange="{{ setPart }}" style="width:130px;font-family:'Roboto Mono',monospace">
+        </div>
+        <div class="field">
+          <label>Pcs / Case (part master)</label>
+          <span style="display:inline-flex;align-items:center;border:1px solid var(--color-neutral-400);border-radius:var(--radius-sm);overflow:hidden;background:var(--color-neutral-100)">
+            <button onClick="{{ pcsDown }}" style="cursor:pointer;border:0;background:var(--color-neutral-200);width:30px;height:32px;font-size:16px;color:var(--color-neutral-800)">−</button>
+            <span style="width:44px;text-align:center;font-weight:700;font-variant-numeric:tabular-nums">{{ pcs }}</span>
+            <button onClick="{{ pcsUp }}" style="cursor:pointer;border:0;background:var(--color-neutral-200);width:30px;height:32px;font-size:16px;color:var(--color-neutral-800)">+</button>
+          </span>
+        </div>
+        <div class="field">
+          <label>Max Case/Day</label>
+          <span style="display:inline-flex;align-items:center;border:1px solid var(--color-neutral-400);border-radius:var(--radius-sm);overflow:hidden;background:var(--color-neutral-100)">
+            <button onClick="{{ maxDown }}" style="cursor:pointer;border:0;background:var(--color-neutral-200);width:30px;height:32px;font-size:16px;color:var(--color-neutral-800)">−</button>
+            <span style="width:44px;text-align:center;font-weight:700;font-variant-numeric:tabular-nums">{{ maxC }}</span>
+            <button onClick="{{ maxUp }}" style="cursor:pointer;border:0;background:var(--color-neutral-200);width:30px;height:32px;font-size:16px;color:var(--color-neutral-800)">+</button>
+          </span>
+        </div>
+        <span style="font-size:11.5px;color:var(--color-neutral-600);max-width:260px;line-height:1.35;padding-bottom:2px">Max Case/Day applies to every PO day. Extra cases wait for the next PO.</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-top:1px dashed var(--color-neutral-300);flex-wrap:wrap">
+        <span style="font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700)">Scenario</span>
+        <span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;flex:1">
+          <span style="display:inline-flex;border:1px solid var(--color-neutral-400);border-radius:var(--radius-sm);overflow:hidden">
+            <sc-for list="{{ presets }}" as="p" hint-placeholder-count="2">
+              <button onClick="{{ p.go }}" style="cursor:pointer;border:0;font-family:var(--font-body);font-size:12.5px;font-weight:600;padding:7px 12px;background:{{ p.bg }};color:{{ p.fg }}">{{ p.label }}</button>
+            </sc-for>
+          </span>
+          <button class="btn btn-secondary" onClick="{{ reset }}">Reset</button>
+          <span style="flex:1"></span>
+          <button class="btn btn-secondary" onClick="{{ stepOne }}" disabled="{{ doneFlag }}">Step +1 pc</button>
+          <button class="btn btn-secondary" onClick="{{ fillAll }}" disabled="{{ doneFlag }}">Fill instantly</button>
+          <button class="btn btn-primary" onClick="{{ togglePlay }}" disabled="{{ doneFlag }}">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style="display:{{ playIconDisp }}"><path d="M7 4.5v15l12-7.5z"></path></svg>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style="display:{{ pauseIconDisp }}"><rect x="6" y="5" width="4" height="14"></rect><rect x="14" y="5" width="4" height="14"></rect></svg>
+            {{ playLabel }}
+          </button>
+        </span>
+      </div>
+      </div>
+
+      <div style="display:flex;gap:4px;border-bottom:1px solid var(--color-divider)">
+        <sc-for list="{{ viewTabs }}" as="t" hint-placeholder-count="3">
+          <button onClick="{{ t.go }}" style="cursor:pointer;white-space:nowrap;flex:none;font-family:var(--font-body);font-size:13px;font-weight:600;padding:9px 14px;margin-bottom:-1px;background:transparent;border:0;border-bottom:2px solid {{ t.bd }};color:{{ t.fg }}">{{ t.label }}</button>
+        </sc-for>
+      </div>
+
+      <div style="display:{{ visDisp }};flex-direction:column;gap:14px">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 36px minmax(0,1.2fr);gap:0;align-items:start">
+
+        <div style="background:var(--color-neutral-100);border:1px solid var(--color-divider);border-radius:var(--radius-md);overflow:hidden">
+          <div style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--color-divider)">
+            <span style="font-size:14px;font-weight:700">Customer orders</span>
+            <span style="font-size:12px;color:var(--color-neutral-600)">1 order per date · oldest first · total {{ total }} pcs</span>
+            <button class="btn btn-secondary" onClick="{{ addOrder }}" style="margin-left:auto;font-size:12px;padding:4px 10px">+ Add order</button>
+          </div>
+          <sc-for list="{{ orderRows }}" as="o" hint-placeholder-count="5">
+            <div style="display:grid;grid-template-columns:14px 70px 120px 84px minmax(120px,1fr) 26px;align-items:center;gap:8px;padding:9px 14px;border-bottom:1px solid var(--color-neutral-300);background:{{ o.bg }};border-left:3px solid {{ o.bd }}">
+              <span style="width:12px;height:12px;border-radius:999px;background:{{ o.color }}"></span>
+              <span style="font-family:'Roboto Mono',monospace;font-weight:600;font-size:12.5px">{{ o.no }}</span>
+              <input class="input" type="date" value="{{ o.date }}" onChange="{{ o.setDate }}" style="width:120px;padding:4px 6px;font-size:12px">
+              <span style="display:inline-flex;align-items:center;border:1px solid var(--color-neutral-400);border-radius:var(--radius-sm);overflow:hidden;background:var(--color-neutral-100);width:fit-content">
+                <button onClick="{{ o.dec }}" style="cursor:pointer;border:0;background:var(--color-neutral-200);width:24px;height:26px;color:var(--color-neutral-800)">−</button>
+                <span style="width:30px;text-align:center;font-weight:700;font-variant-numeric:tabular-nums;font-size:12.5px">{{ o.qty }}</span>
+                <button onClick="{{ o.inc }}" style="cursor:pointer;border:0;background:var(--color-neutral-200);width:24px;height:26px;color:var(--color-neutral-800)">+</button>
+              </span>
+              <span style="display:flex;flex-wrap:wrap;gap:4px;align-items:center">
+                <sc-for list="{{ o.dots }}" as="d" hint-placeholder-count="3">
+                  <span style="width:13px;height:13px;border-radius:999px;box-sizing:border-box;background:{{ d.bg }};border:2px solid {{ d.bd }}"></span>
+                </sc-for>
+                <span style="font-size:11px;color:{{ o.noteFg }};margin-left:4px;white-space:nowrap">{{ o.note }}</span>
+              </span>
+              <button onClick="{{ o.remove }}" titlepushrder" style="cursor:pointer;border:0;background:transparent;width:26px;height:26px;border-radius:var(--radius-sm);display:grid;place-items:center;color:var(--color-neutral-600)" style-hover="background:var(--color-neutral-200)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg>
+              </button>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="display:flex;justify-content:center;padding-top:120px;color:var(--color-neutral-500)">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+        </div>
+
+        <div style="background:var(--color-neutral-100);border:1px solid var(--color-divider);border-radius:var(--radius-md);overflow:hidden">
+          <div style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--color-divider)">
+            <span style="font-size:14px;font-weight:700">Daily PO · D+1 · FIFO</span>
+            <span style="font-size:12px;color:var(--color-neutral-600)">{{ caseMeta }}</span>
+            <span style="margin-left:auto;font-size:12px;font-variant-numeric:tabular-nums;color:var(--color-neutral-700)">{{ progress }}</span>
+          </div>
+          <div style="display:flex;flex-direction:column;padding:4px 16px 12px">
+            <sc-for list="{{ releases }}" as="r" hint-placeholder-count="3">
+              <div style="padding:14px 0;border-bottom:1px dashed var(--color-divider)">
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                  <span style="font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--color-accent-2-200);color:var(--color-accent-2-800);white-space:nowrap">{{ r.no }}</span>
+                  <span style="font-size:13px;font-weight:700;font-variant-numeric:tabular-nums">{{ r.date }}</span>
+                  <span style="font-size:12px;color:var(--color-neutral-700)">{{ r.calc }}</span>
+                  <span style="margin-left:auto;font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:999px;background:{{ r.splitBg }};color:{{ r.splitFg }};white-space:nowrap">{{ r.splitText }}</span>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:12px;margin:11px 0 0 8px;padding-left:14px;border-left:2px solid var(--color-accent-200)">
+                  <sc-for list="{{ r.pos }}" as="p" hint-placeholder-count="1">
+                    <div>
+                      <div style="display:flex;align-items:stretch;border:1px solid var(--color-accent-300);border-radius:var(--radius-md);overflow:hidden;background:var(--color-neutral-100)">
+                        <div style="display:flex;align-items:center;justify-content:center;flex:none;width:76px;padding:0 12px;background:var(--color-accent);color:#fff;font-family:'Roboto Mono',monospace;font-weight:700;font-size:15px;white-space:nowrap">{{ p.no }}</div>
+                        <div style="padding:7px 14px;border-right:1px solid var(--color-divider);flex:none;width:128px;box-sizing:border-box">
+                          <div style="font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--color-neutral-600);font-weight:600">PO Date</div>
+                          <div style="font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap">{{ p.date }}</div>
+                        </div>
+                        <div style="padding:7px 14px;border-right:1px solid var(--color-divider);flex:none;width:180px;box-sizing:border-box">
+                          <div style="font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--color-neutral-600);font-weight:600">PO Qty</div>
+                          <div style="font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap">{{ p.qty }}</div>
+                        </div>
+                        <div style="padding:7px 14px;flex:1;min-width:0">
+                          <div style="font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--color-neutral-600);font-weight:600">Customer orders</div>
+                          <div style="font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.orders }}</div>
+                        </div>
+                      </div>
+                      <div style="display:flex;flex-direction:column;gap:9px;margin-top:9px">
+                        <sc-for list="{{ p.cases }}" as="c" hint-placeholder-count="1">
+                          <div style="display:flex;align-items:center;gap:14px">
+                            <div style="width:96px">
+                              <div style="font-family:'Roboto Mono',monospace;font-weight:700;font-size:12.5px">{{ c.caseNo }}</div>
+                              <div style="font-size:11px;color:{{ c.stFg }};font-weight:600">{{ c.status }}</div>
+                            </div>
+                            <div style="flex:1;display:flex;flex-wrap:wrap;gap:8px;padding:9px 14px;border-radius:999px;background:#e9e1d4;box-shadow:inset 0 2px 5px rgba(80,50,20,.22)">
+                              <sc-for list="{{ c.holes }}" as="x" hint-placeholder-count="6">
+                                <span style="width:28px;height:28px;border-radius:999px;display:grid;place-items:center;background:{{ x.bg }};box-shadow:{{ x.sh }};font-size:9px;font-weight:700;color:#fff;transform:scale({{ x.sc }});transition:transform .15s">{{ x.lbl }}</span>
+                              </sc-for>
+                            </div>
+                          </div>
+                        </sc-for>
+                      </div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:{{ waitDisp }};align-items:center;gap:12px;margin:0 16px 14px;padding:10px 14px;border-radius:999px;border:2px dashed oklch(0.8 0.1 75);background:oklch(0.97 0.03 80)">
+            <span style="font-size:12px;font-weight:700;color:oklch(0.42 0.1 65);white-space:nowrap">Remaining</span>
+            <span style="display:flex;flex-wrap:wrap;gap:6px">
+              <sc-for list="{{ waitDots }}" as="x" hint-placeholder-count="2">
+                <span style="width:22px;height:22px;border-radius:999px;display:grid;place-items:center;background:{{ x.bg }};font-size:8.5px;font-weight:700;color:#fff;opacity:.85">{{ x.lbl }}</span>
+              </sc-for>
+            </span>
+            <span style="margin-left:auto;font-size:12px;color:oklch(0.42 0.1 65);text-align:right">{{ waitText }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px">
+        <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="4">
+          <div style="padding:12px 16px;background:var(--color-neutral-100);border:1px solid var(--color-divider);border-radius:var(--radius-md);border-top:3px solid {{ k.c }}">
+            <div style="font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--color-neutral-600);font-weight:600">{{ k.k }}</div>
+            <div style="font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px">{{ k.v }}</div>
+            <div style="font-size:11.5px;color:var(--color-neutral-600)">{{ k.s }}</div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="background:var(--color-neutral-100);border:1px solid var(--color-divider);border-radius:var(--radius-md);overflow:hidden">
+        <div style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--color-divider)">
+          <span style="font-size:14px;font-weight:700">Allocation result</span>
+          <span style="font-size:12px;color:var(--color-neutral-600)">release batch → PO → case → customer order</span>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead>
+            <tr style="background:var(--color-surface)">
+              <th style="text-align:left;padding:8px 16px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid var(--color-divider);width:80px">PO Day</th>
+              <th style="text-align:left;padding:8px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid var(--color-divider);width:80px">PO No</th>
+              <th style="text-align:left;padding:8px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid var(--color-divider);width:130px">PO Date</th>
+              <th style="text-align:right;padding:8px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid var(--color-divider);width:90px">PO Qty</th>
+              <th style="text-align:left;padding:8px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid var(--color-divider);width:120px">Case No</th>
+              <th style="text-align:left;padding:8px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid var(--color-divider);width:120px">Part No</th>
+              <th style="text-align:left;padding:8px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid var(--color-divider);width:150px">Customer Order No</th>
+              <th style="text-align:left;padding:8px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid var(--color-divider);width:130px">Order Date</th>
+              <th style="text-align:right;padding:8px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid var(--color-divider);width:110px">Qty</th>
+              <th style="text-align:left;padding:8px 16px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid var(--color-divider)">Note</th>
+            </tr>
+          </thead>
+          <tbody>
+            <sc-for list="{{ allocRows }}" as="a" hint-placeholder-count="0">
+              <tr style="background:{{ a.bg }};border-top:{{ a.topBd }}">
+                <td style="padding:0 16px;height:38px;border-bottom:1px solid var(--color-neutral-300);font-weight:700;color:var(--color-accent-2-800)">{{ a.rel }}</td>
+                <td style="padding:0 12px;border-bottom:1px solid var(--color-neutral-300);font-family:'Roboto Mono',monospace;font-weight:700;color:{{ a.caseFg }}">{{ a.po }}</td>
+                <td style="padding:0 12px;border-bottom:1px solid var(--color-neutral-300);font-variant-numeric:tabular-nums;font-weight:600">{{ a.poDate }}</td>
+                <td style="padding:0 12px;border-bottom:1px solid var(--color-neutral-300);text-align:right;font-variant-numeric:tabular-nums;font-weight:700;color:var(--color-accent-800)">{{ a.poQty }}</td>
+                <td style="padding:0 12px;border-bottom:1px solid var(--color-neutral-300);font-family:'Roboto Mono',monospace;font-weight:600">{{ a.caseNo }}</td>
+                <td style="padding:0 12px;border-bottom:1px solid var(--color-neutral-300)">{{ a.part }}</td>
+                <td style="padding:0 12px;border-bottom:1px solid var(--color-neutral-300)"><span style="display:inline-flex;align-items:center;gap:7px"><span style="width:9px;height:9px;border-radius:999px;background:{{ a.color }}"></span><span style="font-family:'Roboto Mono',monospace">{{ a.no }}</span></span></td>
+                <td style="padding:0 12px;border-bottom:1px solid var(--color-neutral-300);font-variant-numeric:tabular-nums">{{ a.date }}</td>
+                <td style="padding:0 12px;border-bottom:1px solid var(--color-neutral-300);text-align:right;font-variant-numeric:tabular-nums;font-weight:600">{{ a.qty }}</td>
+                <td style="padding:0 16px;border-bottom:1px solid var(--color-neutral-300);font-size:12px;color:{{ a.noteFg }}">{{ a.note }}</td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+        <div style="display:{{ allocEmptyDisp }};padding:16px;font-size:12.5px;color:var(--color-neutral-600)">Press Play, Step or Fill instantly to start dropping pcs into cases.</div>
+      </div>
+      </div>
+
+      <div style="display:{{ asnDisp }};flex-direction:column;gap:14px">
+        <div style="display:{{ aP1Disp }};flex-direction:column;gap:14px">
+          <div style="display:{{ aListDisp }};background:#fff;border:1px solid #e3e6ea;border-radius:6px;overflow:hidden">
+            <div style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid #e3e6ea">
+              <span style="font-size:14px;font-weight:700">Select cases for ASN</span>
+              <span style="font-size:12px;color:var(--color-neutral-600)">{{ aListMeta }}</span>
+            </div>
+            <table style="width:100%;border-collapse:collapse;font-size:13px">
+              <thead><tr style="background:var(--color-surface)"><th style="width:46px;border-bottom:1px solid #e3e6ea"></th><th style="width:34px;border-bottom:1px solid #e3e6ea"></th><th style="text-align:left;padding:8px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid #e3e6ea;width:120px;white-space:nowrap">Case No</th><th style="text-align:left;padding:8px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid #e3e6ea;width:90px;white-space:nowrap">Part No</th><th style="text-align:left;padding:8px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid #e3e6ea;width:150px;white-space:nowrap">Destination</th><th style="text-align:right;padding:8px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid #e3e6ea;width:70px;white-space:nowrap">Qty</th><th style="text-align:left;padding:8px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid #e3e6ea;white-space:nowrap">Customer Orders</th><th style="text-align:left;padding:8px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid #e3e6ea;width:230px;white-space:nowrap">Status</th></tr></thead>
+              <tbody>
+                <sc-for list="{{ aGroups }}" as="g" hint-placeholder-count="3">
+                  <tr style="background:var(--color-surface)">
+                    <td onClick="{{ g.toggleAll }}" style="padding:0 0 0 16px;height:38px;border-bottom:1px solid #e3e6ea;cursor:{{ g.cur }}"><input type="checkbox" checked="{{ g.checked }}" disabled="{{ g.disabled }}" readOnly="{{ true }}" style="accent-color:var(--color-accent);width:16px;height:16px;margin:0;pointer-events:none"></td>
+                    <td colSpan="7" style="padding:0 16px 0 0;border-bottom:1px solid #e3e6ea">
+                      <span style="display:flex;align-items:center;gap:10px">
+                        <span style="font-family:'Roboto Mono',monospace;font-weight:700;color:var(--color-accent-800)">{{ g.po }}</span>
+                        <span style="font-size:12.5px;font-weight:600">PO Date {{ g.date }}</span>
+                        <span style="font-size:12px;color:var(--color-neutral-600)">{{ g.meta }}</span>
+                        <span style="margin-left:auto;font-size:12px;font-weight:600;color:var(--color-accent-700)">{{ g.selText }}</span>
+                      </span>
+                    </td>
+                  </tr>
+                  <sc-for list="{{ g.rows }}" as="r" hint-placeholder-count="3">
+                    <tr onClick="{{ r.toggle }}" style="cursor:{{ r.cur }};background:{{ r.bg }}" style-hover="background:{{ r.hov }}">
+                      <td style="padding:0 0 0 16px;height:42px;border-bottom:1px solid #eef1f5;border-left:3px solid {{ r.bd }}"><input type="checkbox" checked="{{ r.checked }}" disabled="{{ r.locked }}" readOnly="{{ true }}" style="accent-color:var(--color-accent);width:16px;height:16px;margin:0;pointer-events:none"></td>
+                      <td style="border-bottom:1px solid #eef1f5">
+                        <button onClick="{{ r.expand }}" title="Customer orders in this case" style="cursor:pointer;border:0;background:transparent;width:22px;height:22px;display:grid;place-items:center;border-radius:4px;color:var(--color-neutral-700)" style-hover="background:var(--color-accent-200)">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" style="transform:rotate({{ r.rot }}deg);transition:transform .12s"><polyline points="9 6 15 12 9 18"></polyline></svg>
+                        </button>
+                      </td>
+                      <td style="padding:0 12px;border-bottom:1px solid #eef1f5;font-family:'Roboto Mono',monospace;font-weight:600;color:{{ r.fg }}">{{ r.caseNo }}</td>
+                      <td style="padding:0 12px;border-bottom:1px solid #eef1f5;font-weight:600;color:{{ r.fg }}">{{ r.part }}</td>
+                      <td style="padding:0 12px;border-bottom:1px solid #eef1f5;color:{{ r.fg }}">{{ r.dest }}</td>
+                      <td style="padding:0 12px;border-bottom:1px solid #eef1f5;text-align:right;font-variant-numeric:tabular-nums;font-weight:700;color:{{ r.fg }}">{{ r.qty }}</td>
+                      <td style="padding:0 12px;border-bottom:1px solid #eef1f5;font-size:12.5px;color:var(--color-neutral-700)">{{ r.orderText }}</td>
+                      <td style="padding:0 12px;border-bottom:1px solid #eef1f5"><span style="display:inline-flex;font-size:11.5px;font-weight:700;padding:2px 10px;border-radius:999px;background:{{ r.stBg }};color:{{ r.stFg }};white-space:nowrap">{{ r.status }}</span></td>
+                    </tr>
+                    <tr style="display:{{ r.expDisp }}">
+                      <td colSpan="8" style="padding:4px 16px 12px 96px;border-bottom:1px solid #e3e6ea;background:var(--color-accent-100)">
+                        <table style="width:100%;max-width:560px;border-collapse:collapse;font-size:12.5px;background:#fff;border:1px solid var(--color-accent-300)">
+                          <thead><tr><th style="text-align:left;padding:8px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid #e3e6ea;white-space:nowrap">Customer Order No</th><th style="text-align:left;padding:8px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid #e3e6ea;width:140px;white-space:nowrap">Order Date</th><th style="text-align:right;padding:8px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid #e3e6ea;width:80px;white-space:nowrap">Qty</th></tr></thead>
+                          <tbody>
+                            <sc-for list="{{ r.orders }}" as="o" hint-placeholder-count="2">
+                              <tr><td style="padding:0 12px;border-bottom:1px solid #eef1f5;height:30px;font-family:'Roboto Mono',monospace">{{ o.no }}</td><td style="padding:0 12px;border-bottom:1px solid #eef1f5;font-variant-numeric:tabular-nums">{{ o.date }}</td><td style="padding:0 12px;border-bottom:1px solid #eef1f5;text-align:right;font-variant-numeric:tabular-nums;font-weight:600">{{ o.qty }}</td></tr>
+                            </sc-for>
+                          </tbody>
+                        </table>
+                      </td>
+                    </tr>
+                  </sc-for>
+                </sc-for>
+              </tbody>
+            </table>
+          </div>
+          <div style="display:{{ aEmptyDisp }};flex-direction:column;align-items:center;gap:6px;padding:44px 20px;background:#fff;border:1px solid #e3e6ea;border-radius:6px;text-align:center">
+            <h3 style="font-size:16px">No PO released in this simulation</h3>
+            <p style="font-size:13px;color:var(--color-neutral-700);margin:0">Add customer orders so at least one full case is released.</p>
+          </div>
+          <div style="position:sticky;bottom:0;z-index:20;display:flex;align-items:center;gap:16px;padding:12px 16px;background:#fff;border:1px solid #e3e6ea;border-radius:6px;box-shadow:0 -6px 18px rgba(20,40,70,.08)">
+            <span style="display:inline-grid;place-items:center;min-width:30px;height:30px;padding:0 8px;border-radius:999px;background:{{ aBadgeBg }};color:{{ aBadgeFg }};font-weight:700;font-variant-numeric:tabular-nums">{{ aSelCount }}</span>
+            <span style="display:flex;flex-direction:column;line-height:1.3">
+              <span style="font-size:13.5px;font-weight:700">{{ aBarTitle }}</span>
+              <span style="font-size:12px;color:var(--color-neutral-600)">{{ aBarMeta }}</span>
+            </span>
+            <span style="margin-left:auto;display:flex;gap:8px">
+              <button class="btn btn-secondary" onClick="{{ aClear }}" disabled="{{ aNoSel }}">Clear selection</button>
+              <button class="btn btn-primary" onClick="{{ aToDraft }}" disabled="{{ aNoSel }}">
+                Group into 1 ASN
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"></polyline></svg>
+              </button>
+            </span>
+          </div>
+        </div>
+
+        <div style="display:{{ aP2Disp }};flex-direction:column;gap:14px">
+          <div style="display:flex;align-items:center;gap:12px">
+            <button class="btn btn-secondary" onClick="{{ aBack }}" style="font-size:12.5px;padding:5px 12px">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 6 9 12 15 18"></polyline></svg>
+              {{ aBackLabel }}
+            </button>
+            <h2 style="font-size:20px">{{ aTitle }}</h2>
+            <span style="font-size:11.5px;font-weight:700;padding:2px 10px;border-radius:999px;background:{{ aStBg }};color:{{ aStFg }}">{{ aSt }}</span>
+          </div>
+          <div style="display:{{ aDoneDisp }};align-items:center;gap:12px;padding:11px 16px;border-radius:6px;background:var(--color-accent-2-200);border:1px solid var(--color-accent-2-300);color:var(--color-accent-2-800);font-size:13px">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><polyline points="8 12.5 11 15.5 16 9.5"></polyline></svg>
+            <span><strong>{{ aAsnNo }} submitted.</strong> {{ aDoneText }}</span>
+          </div>
+          <div style="background:#fff;border:1px solid #e3e6ea;border-radius:6px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))">
+            <div style="padding:12px 18px;border-right:1px solid #e3e6ea;display:flex;flex-direction:column;gap:3px">
+              <div style="font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);font-weight:600">ASN No</div>
+              <div style="font-family:'Roboto Mono',monospace;font-weight:700;font-size:14px">{{ aAsnNo }}</div>
+              <div style="font-size:11.5px;color:var(--color-neutral-600)">{{ aAsnNote }}</div>
+            </div>
+            <div style="padding:12px 18px;border-right:1px solid #e3e6ea;display:flex;flex-direction:column;gap:3px">
+              <div style="font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);font-weight:600">Supplier · Plant</div>
+              <div style="font-weight:700;font-size:14px"><span style="font-family:'Roboto Mono',monospace">50221</span> · <span style="font-family:'Roboto Mono',monospace">P01</span></div>
+              <div style="font-size:11.5px;color:var(--color-neutral-600)">PT Dummy Supplier Indonesia</div>
+            </div>
+            <div style="padding:12px 18px;display:flex;flex-direction:column;gap:3px">
+              <div style="font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);font-weight:600">Cases · Qty</div>
+              <div style="font-weight:700;font-size:14px;font-variant-numeric:tabular-nums">{{ aCases }} · {{ aPcs }}</div>
+            </div>
+          </div>
+          <div style="background:#fff;border:1px solid #e3e6ea;border-radius:6px;overflow:hidden">
+            <div style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid #e3e6ea">
+              <span style="font-size:14px;font-weight:700">Case list in this ASN</span>
+              <span style="font-size:12px;color:var(--color-neutral-600)">Grouped by Part No</span>
+              <span style="margin-left:auto;display:flex;align-items:center;gap:8px">
+                <label style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--color-neutral-700);white-space:nowrap">
+                  Delivery Date <span style="color:var(--color-accent-700);margin-left:-5px">*</span>
+                  <input class="input" type="date" value="{{ aDlv }}" min="2026-09-29" onChange="{{ aSetDlv }}" disabled="{{ aRo }}" style="width:150px;padding:5px 9px;border-color:{{ aDlvBd }}">
+                </label>
+                <span style="width:1px;height:22px;background:#e3e6ea"></span>
+                <button class="btn btn-secondary" onClick="{{ aBack }}" style="display:{{ aEditDisp }}">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                  Add cases
+                </button>
+                <button class="btn btn-secondary" disabled="{{ aNoDraft }}">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"></path></svg>
+                  Download All Case Labels
+                </button>
+              </span>
+            </div>
+            <table style="width:100%;border-collapse:collapse;font-size:13px">
+              <thead><tr style="background:var(--color-surface)"><th style="text-align:left;padding:8px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid #e3e6ea;width:56px;white-space:nowrap">Seq</th><th style="text-align:left;padding:8px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid #e3e6ea;width:120px;white-space:nowrap">Case No</th><th style="text-align:left;padding:8px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid #e3e6ea;width:80px;white-space:nowrap">PO No</th><th style="text-align:left;padding:8px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid #e3e6ea;width:90px;white-space:nowrap">Part No</th><th style="text-align:left;padding:8px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid #e3e6ea;white-space:nowrap">Destination</th><th style="text-align:right;padding:8px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid #e3e6ea;width:70px;white-space:nowrap">Qty</th><th style="text-align:right;padding:8px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid #e3e6ea;width:90px;white-space:nowrap">Action</th></tr></thead>
+              <tbody>
+                <sc-for list="{{ aDGroups }}" as="g" hint-placeholder-count="1">
+                  <tr style="background:var(--color-surface)"><td colSpan="7" style="padding:7px 16px;border-bottom:1px solid #e3e6ea"><span style="display:flex;gap:10px;align-items:center"><span style="font-size:13px;font-weight:700">{{ g.part }}</span><span style="font-size:12px;color:var(--color-neutral-600)">{{ g.meta }}</span></span></td></tr>
+                  <sc-for list="{{ g.rows }}" as="r" hint-placeholder-count="3">
+                    <tr>
+                      <td style="padding:0 12px;border-bottom:1px solid #eef1f5;height:40px;font-variant-numeric:tabular-nums;color:var(--color-neutral-600)">{{ r.seq }}</td>
+                      <td style="padding:0 12px;border-bottom:1px solid #eef1f5;font-family:'Roboto Mono',monospace;font-weight:600">{{ r.caseNo }}</td>
+                      <td style="padding:0 12px;border-bottom:1px solid #eef1f5;font-family:'Roboto Mono',monospace;color:var(--color-accent-800);font-weight:600">{{ r.po }}</td>
+                      <td style="padding:0 12px;border-bottom:1px solid #eef1f5;font-weight:600">{{ r.part }}</td>
+                      <td style="padding:0 12px;border-bottom:1px solid #eef1f5">{{ r.dest }}</td>
+                      <td style="padding:0 12px;border-bottom:1px solid #eef1f5;text-align:right;font-variant-numeric:tabular-nums;font-weight:700">{{ r.qty }}</td>
+                      <td style="padding:0 12px;border-bottom:1px solid #eef1f5;text-align:right">
+                        <button onClick="{{ r.remove }}" title="Remove from ASN" style="display:{{ r.rmDisp }};margin-left:auto;cursor:pointer;border:0;background:transparent;width:30px;height:30px;border-radius:4px;place-items:center;color:oklch(0.55 0.19 25)" style-hover="background:oklch(0.94 0.045 30)">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"></path></svg>
+                        </button>
+                      </td>
+                    </tr>
+                  </sc-for>
+                </sc-for>
+              </tbody>
+            </table>
+            <div style="display:{{ aDraftEmpty }};flex-direction:column;align-items:center;gap:6px;padding:32px 20px;text-align:center">
+              <div style="font-size:14px;font-weight:700">No cases in this ASN</div>
+              <div style="font-size:12.5px;color:var(--color-neutral-700)">Go back and select at least one case.</div>
+            </div>
+          </div>
+          <div style="display:{{ aEditDisp }};align-items:center;gap:10px;justify-content:flex-end">
+            <span style="font-size:12px;color:var(--color-neutral-600);margin-right:auto">{{ aHint }}</span>
+            <button class="btn btn-secondary" onClick="{{ aBack }}">Cancel</button>
+            <button class="btn btn-primary" onClick="{{ aOpen }}" disabled="{{ aSubmitDisabled }}">Submit ASN</button>
+          </div>
+        </div>
+
+        <sc-if value="{{ aConfirmOpen }}" hint-placeholder-val="{{ false }}">
+          <div style="position:fixed;inset:0;z-index:200;background:rgba(20,30,45,.45);display:grid;place-items:center">
+            <div style="width:480px;background:#fff;border-radius:8px;box-shadow:0 18px 48px rgba(20,40,70,.24);padding:18px 22px">
+              <h3 style="font-size:18px">Submit ASN?</h3>
+              <div style="font-size:13px;color:var(--color-neutral-700);margin-top:6px">{{ aCases }} · {{ aPcs }} · delivery {{ aDlvText }}. The cases are locked in this ASN after submit.</div>
+              <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:18px">
+                <button class="btn btn-secondary" onClick="{{ aCloseConfirm }}">Cancel</button>
+                <button class="btn btn-primary" onClick="{{ aSubmit }}">Submit ASN</button>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+
+      <div style="display:{{ dpDisp }};flex-direction:column;gap:14px">
+        <div style="display:{{ dpListDisp }};flex-direction:column;gap:14px">
+        <div style="background:#fff;border:1px solid #e3e6ea;border-radius:6px">
+          <div style="padding:10px 16px;border-bottom:1px solid #e3e6ea;font-size:14px;font-weight:700">Searching Criteria</div>
+          <div style="display:flex;align-items:flex-end;gap:14px;padding:12px 16px">
+            <div class="field">
+              <label>Delivery Plan · From</label>
+              <input class="input" type="date" value="{{ dpFFrom }}" onChange="{{ setDpFFrom }}" style="width:160px">
+            </div>
+            <div class="field">
+              <label>To</label>
+              <input class="input" type="date" value="{{ dpFTo }}" onChange="{{ setDpFTo }}" style="width:160px">
+            </div>
+            <div class="field">
+              <label>PO Number</label>
+              <input class="input" value="{{ dpFPo }}" onChange="{{ setDpFPo }}" placeholder="e.g. PO3" style="width:150px;font-family:'Roboto Mono',monospace">
+            </div>
+            <div class="field">
+              <label>Status</label>
+              <select class="input" value="{{ dpFSt }}" onChange="{{ setDpFSt }}" style="width:170px">
+                <option value="all">All</option>
+                <option value="po">PO released</option>
+                <option value="rem">Not released</option>
+              </select>
+            </div>
+            <span style="margin-left:auto;display:flex;gap:8px">
+              <button class="btn btn-secondary" onClick="{{ dpReset }}">Reset</button>
+              <button class="btn btn-primary" onClick="{{ dpSearch }}">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><line x1="16.5" y1="16.5" x2="21" y2="21"></line></svg>
+                Search
+              </button>
+            </span>
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid #e3e6ea;border-radius:6px;overflow:hidden">
+          <div style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid #e3e6ea">
+            <span style="font-size:14px;font-weight:700">Delivery Plan</span>
+            <span style="font-size:12px;color:var(--color-neutral-600)">Header · 1 row per PO</span><span style="margin-left:auto;font-size:12px;color:var(--color-neutral-600)">Click a PO to open its detail</span>
+          </div>
+          <table style="width:100%;border-collapse:collapse;font-size:13px">
+            <thead><tr style="background:var(--color-surface)"><th style="text-align:left;padding:8px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid #e3e6ea;width:200px;white-space:nowrap">Delivery Plan (PO)</th><th style="text-align:left;padding:8px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid #e3e6ea;width:180px;white-space:nowrap">PO Number</th><th style="text-align:left;padding:8px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid #e3e6ea;width:200px;white-space:nowrap">ASN Number</th><th style="text-align:left;padding:8px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid #e3e6ea;white-space:nowrap">Cases</th></tr></thead>
+            <tbody>
+              <sc-for list="{{ dpHdr }}" as="r" hint-placeholder-count="2">
+                <tr onClick="{{ r.select }}" style="cursor:pointer;background:{{ r.bg }}" style-hover="background:var(--color-accent-100)">
+                  <td style="padding:0 12px;height:38px;border-bottom:1px solid #eef1f5;border-left:3px solid {{ r.bd }};font-variant-numeric:tabular-nums;font-weight:600">{{ r.date }}</td>
+                  <td style="padding:0 12px;height:38px;border-bottom:1px solid #eef1f5;font-family:'Roboto Mono',monospace;font-weight:700;color:var(--color-accent-800)">{{ r.po }}</td>
+                  <td style="padding:0 12px;height:38px;border-bottom:1px solid #eef1f5;font-family:'Roboto Mono',monospace">{{ r.asn }}</td>
+                  <td style="padding:0 12px;height:38px;border-bottom:1px solid #eef1f5;color:var(--color-neutral-700)">{{ r.cases }}</td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </div>
+        </div>
+        <div style="display:{{ dpDetDisp }};flex-direction:column;gap:14px">
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 16px;background:#fff;border:1px solid #e3e6ea;border-radius:6px">
+          <button class="btn btn-secondary" onClick="{{ dpBack }}" style="font-size:12.5px;padding:5px 12px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 6 9 12 15 18"></polyline></svg>
+            Back to Delivery Plan
+          </button>
+          <span style="font-size:13px;color:var(--color-neutral-600)">Delivery Plan <span style="color:var(--color-neutral-400)">/</span> <span style="font-family:'Roboto Mono',monospace;font-weight:700;color:var(--color-accent-800)">{{ dpSel }}</span></span>
+          <span style="margin-left:auto;font-size:12.5px;color:var(--color-neutral-700)">{{ dpSelDate }} · {{ dpMeta }}</span>
+        </div>
+        <div style="background:#fff;border:1px solid #e3e6ea;border-radius:6px;overflow:hidden">
+          <div style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid #e3e6ea">
+            <span style="font-size:14px;font-weight:700">PO Released · Detail</span>
+            <span style="font-size:12px;color:var(--color-neutral-600)">Cases in this PO</span><span style="display:{{ didHintDisp }};margin-left:auto;font-size:12px;color:var(--color-neutral-600)">Click a case to filter Detail in Detail</span>
+          </div>
+          <table style="width:100%;border-collapse:collapse;font-size:13px">
+            <thead><tr style="background:var(--color-surface)"><th onClick="{{ dpToggleAll }}" style="width:40px;padding-left:16px;border-bottom:1px solid #e3e6ea;cursor:pointer"><input type="checkbox" checked="{{ dpAllChecked }}" disabled="{{ dpAllDisabled }}" readOnly="{{ true }}" style="accent-color:var(--color-accent);width:16px;height:16px;margin:0;pointer-events:none"></th><th style="width:44px;border-bottom:1px solid #e3e6ea"></th><th style="text-align:left;padding:8px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid #e3e6ea;width:150px;white-space:nowrap">Delivery Plan (PO)</th><th style="text-align:left;padding:8px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid #e3e6ea;width:100px;white-space:nowrap">Part No</th><th style="text-align:right;padding:8px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid #e3e6ea;width:80px;white-space:nowrap">Qty</th><th style="text-align:left;padding:8px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid #e3e6ea;width:90px;white-space:nowrap">PO No</th><th style="text-align:left;padding:8px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid #e3e6ea;white-space:nowrap">Case No</th><th style="text-align:right;padding:8px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid #e3e6ea;width:200px;white-space:nowrap">Action</th></tr></thead>
+            <tbody>
+              <sc-for list="{{ dpRows }}" as="r" hint-placeholder-count="6">
+                <tr onClick="{{ r.pick }}" style="cursor:pointer;background:{{ r.bg }}" style-hover="background:var(--color-accent-100)">
+                  <td onClick="{{ r.togSel }}" style="padding:0 0 0 16px;height:38px;border-bottom:1px solid #eef1f5;border-left:3px solid {{ r.selBd }};cursor:pointer"><input type="checkbox" checked="{{ r.chk }}" disabled="{{ r.locked }}" readOnly="{{ true }}" style="display:{{ r.chkDisp }};accent-color:var(--color-accent);width:16px;height:16px;margin:0;pointer-events:none"></td>
+                  <td style="padding:0 12px;height:38px;border-bottom:1px solid #eef1f5;padding-left:14px"><span style="display:inline-grid;place-items:center;width:22px;height:22px;border-radius:999px;background:var(--color-accent-200);color:var(--color-accent-800);font-size:11.5px;font-weight:700">{{ r.v }}</span></td>
+                  <td style="padding:0 12px;height:38px;border-bottom:1px solid #eef1f5;font-variant-numeric:tabular-nums">{{ r.date }}</td>
+                  <td style="padding:0 12px;height:38px;border-bottom:1px solid #eef1f5;font-weight:600">{{ r.part }}</td>
+                  <td style="padding:0 12px;height:38px;border-bottom:1px solid #eef1f5;text-align:right;font-variant-numeric:tabular-nums;font-weight:700">{{ r.qty }}</td>
+                  <td style="padding:0 12px;height:38px;border-bottom:1px solid #eef1f5;font-family:'Roboto Mono',monospace">{{ r.po }}</td>
+                  <td style="padding:0 12px;height:44px;border-bottom:1px solid #eef1f5">
+                    <span style="display:flex;align-items:center;gap:12px">
+                      <span style="font-family:'Roboto Mono',monospace;font-weight:600;width:74px">{{ r.caseNo }}</span>
+                      <span style="display:{{ r.asnTagDisp }};font-size:10.5px;font-weight:700;padding:1px 8px;border-radius:999px;background:var(--color-accent-2-200);color:var(--color-accent-2-800);white-space:nowrap">{{ r.asnTag }}</span>
+                      <span style="display:{{ holesDisp }};gap:4px;padding:4px 8px;border-radius:999px;background:#e9e1d4;box-shadow:inset 0 2px 4px rgba(80,50,20,.22)">
+                        <sc-for list="{{ r.holes }}" as="x" hint-placeholder-count="6">
+                          <span style="width:20px;height:20px;border-radius:999px;display:grid;place-items:center;background:{{ x.bg }};box-shadow:0 1px 2px rgba(0,0,0,.25);font-size:7.5px;font-weight:700;color:#fff">{{ x.lbl }}</span>
+                        </sc-for>
+                      </span>
+                    </span>
+                  </td>
+                  <td style="padding:0 12px;height:38px;border-bottom:1px solid #eef1f5;text-align:right">
+                    <button class="btn btn-secondary" onClick="{{ r.download }}" style="display:{{ r.dlDisp }};font-size:12px;padding:4px 11px">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"></path></svg>
+                      Download Case Label
+                    </button>
+                    <span style="display:{{ r.waitDisp }};font-size:12px;font-weight:600;color:oklch(0.45 0.11 65)">Waiting – case not full</span>
+                  </td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </div>
+        <div style="display:{{ dpBarDisp }};position:sticky;bottom:0;z-index:20;align-items:center;gap:16px;padding:12px 16px;background:#fff;border:1px solid #e3e6ea;border-radius:6px;box-shadow:0 -6px 18px rgba(20,40,70,.08)">
+          <span style="display:inline-grid;place-items:center;min-width:30px;height:30px;padding:0 8px;border-radius:999px;background:{{ aBadgeBg }};color:{{ aBadgeFg }};font-weight:700;font-variant-numeric:tabular-nums">{{ aSelCount }}</span>
+          <span style="display:flex;flex-direction:column;line-height:1.3">
+            <span style="font-size:13.5px;font-weight:700">{{ aBarTitle }}</span>
+            <span style="font-size:12px;color:var(--color-neutral-600)">{{ aBarMeta }}</span>
+          </span>
+          <span style="margin-left:auto;display:flex;gap:8px">
+            <button class="btn btn-secondary" onClick="{{ aClear }}" disabled="{{ aNoSel }}">Clear selection</button>
+            <button class="btn btn-primary" onClick="{{ aToDraft }}" disabled="{{ aNoSel }}">
+              Group into 1 ASN
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"></polyline></svg>
+            </button>
+          </span>
+        </div>
+        <div style="display:{{ didLockDisp }};align-items:center;gap:10px;padding:11px 16px;border-radius:6px;background:#fff;border:1px dashed var(--color-neutral-400);color:var(--color-neutral-700);font-size:12.5px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="flex:none"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg>
+          <span><strong>Detail in Detail</strong> (customer orders per case) is only visible to Demand Supply and Procurement.</span>
+        </div>
+        <div style="display:{{ didDisp }};background:#fff;border:1px solid #e3e6ea;border-radius:6px;overflow:hidden">
+          <div style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid #e3e6ea">
+            <span style="font-size:14px;font-weight:700">Detail in Detail</span>
+            <span style="font-size:12px;color:var(--color-neutral-600)">Customer orders per case · {{ dpOrdMeta }}</span><button class="btn btn-secondary" onClick="{{ dpClear }}" style="display:{{ dpClearDisp }};margin-left:auto;font-size:12px;padding:4px 11px">Show all cases</button>
+          </div>
+          <table style="width:100%;border-collapse:collapse;font-size:13px">
+            <thead><tr style="background:var(--color-surface)"><th style="text-align:left;padding:8px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid #e3e6ea;width:150px;white-space:nowrap">Delivery Plan (PO)</th><th style="text-align:left;padding:8px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid #e3e6ea;width:130px;white-space:nowrap">Case No</th><th style="text-align:left;padding:8px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid #e3e6ea;width:100px;white-space:nowrap">Part No</th><th style="text-align:right;padding:8px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid #e3e6ea;width:80px;white-space:nowrap">Qty</th><th style="text-align:right;padding:8px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid #e3e6ea;width:100px;white-space:nowrap">Customer Qty</th><th style="text-align:left;padding:8px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid #e3e6ea;width:150px;white-space:nowrap">CUSTOMER ORDER</th><th style="text-align:left;padding:8px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid #e3e6ea;width:120px;white-space:nowrap">CUSTOMER DATE<br></th><th style="text-align:left;padding:8px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid #e3e6ea;white-space:nowrap">Variable</th></tr></thead>
+            <tbody>
+              <sc-for list="{{ dpOrd }}" as="o" hint-placeholder-count="8">
+                <tr>
+                  <td style="padding:0 12px;height:38px;border-bottom:1px solid #eef1f5;font-variant-numeric:tabular-nums">{{ o.date }}</td>
+                  <td style="padding:0 12px;height:38px;border-bottom:1px solid #eef1f5;font-family:'Roboto Mono',monospace;color:var(--color-neutral-700)">{{ o.caseNo }}</td>
+                  <td style="padding:0 12px;height:38px;border-bottom:1px solid #eef1f5;font-weight:600">{{ o.part }}</td>
+                  <td style="padding:0 12px;height:38px;border-bottom:1px solid #eef1f5;text-align:right;font-variant-numeric:tabular-nums;font-weight:700">{{ o.qty }}</td>
+                  <td style="padding:0 12px;height:38px;border-bottom:1px solid #eef1f5;text-align:right;font-variant-numeric:tabular-nums;color:var(--color-neutral-700)">{{ o.total }}</td>
+                  <td style="padding:0 12px;height:38px;border-bottom:1px solid #eef1f5;"><span style="display:inline-flex;align-items:center;gap:7px"><span style="width:10px;height:10px;border-radius:999px;background:{{ o.color }}"></span><span style="font-family:'Roboto Mono',monospace">{{ o.no }}</span></span></td>
+                  <td style="padding:0 12px;height:38px;border-bottom:1px solid #eef1f5;font-variant-numeric:tabular-nums">{{ o.od }}</td>
+                  <td style="padding:0 12px;height:38px;border-bottom:1px solid #eef1f5"><span style="display:inline-grid;place-items:center;width:22px;height:22px;border-radius:999px;background:var(--color-accent-200);color:var(--color-accent-800);font-size:11.5px;font-weight:700">{{ o.v }}</span></td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const HUES = [250, 145, 70, 305, 190, 20, 110, 340, 45];
+const colorOf = i => 'oklch(0.6 0.13 ' + HUES[i % HUES.length] + ')';
+const DEST = { VN: { name: 'Vietnam', code: '789', c: 'var(--color-accent)' }, JP: { name: 'Japan', code: '456', c: 'oklch(0.6 0.1 135)' }, TH: { name: 'Thailand', code: '123', c: 'oklch(0.7 0.12 70)' } };
+const DORD = ['VN', 'JP', 'TH'];
+const SEED = [
+  { id: 1, no: 'Order 1', date: '2026-09-15', dest: 'VN', qty: 2 },
+  { id: 2, no: 'Order 2', date: '2026-09-15', dest: 'VN', qty: 4 },
+  { id: 3, no: 'Order 3', date: '2026-09-15', dest: 'JP', qty: 6 },
+  { id: 4, no: 'Order 4', date: '2026-09-16', dest: 'VN', qty: 1 },
+  { id: 5, no: 'Order 5', date: '2026-09-16', dest: 'VN', qty: 5 },
+  { id: 6, no: 'Order 6', date: '2026-09-16', dest: 'JP', qty: 2 },
+  { id: 7, no: 'Order 7', date: '2026-09-16', dest: 'JP', qty: 4 },
+  { id: 8, no: 'Order 8', date: '2026-09-16', dest: 'TH', qty: 3 },
+  { id: 9, no: 'Order 9', date: '2026-09-16', dest: 'TH', qty: 3 },
+  { id: 10, no: 'Order 10', date: '2026-09-17', dest: 'VN', qty: 12 },
+  { id: 11, no: 'Order 11', date: '2026-09-17', dest: 'TH', qty: 2 },
+  { id: 12, no: 'Order 12', date: '2026-09-17', dest: 'TH', qty: 1 },
+  { id: 13, no: 'Order 13', date: '2026-09-17', dest: 'TH', qty: 3 }
+];
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const niceD = iso => { const [y, m, d] = iso.split('-'); return d + '-' + MON[+m - 1] + '-' + y; };
+const addDay = iso => { const t = new Date(iso + 'T00:00:00Z'); t.setUTCDate(t.getUTCDate() + 1); return t.toISOString().slice(0, 10); };
+const caseNo = n => '50221X' + String(n).padStart(2, '0');
+const plural = (n, w) => n + ' ' + w + (n > 1 ? 's' : '');
+
+const isoD = n => '2026-09-' + String(n).padStart(2, '0');
+const PRESETS = {
+  a: { label: '1 destination · 10 days', maxC: 2, capOv: { [isoD(17)]: 1, [isoD(18)]: 1, [isoD(19)]: 1 },
+    orders: Array.from({ length: 10 }, (_, i) => ({ id: i + 1, no: 'Order ' + (i + 1), date: isoD(15 + i), dest: 'VN', qty: 12 })) },
+  b: { label: '3 destinations', maxC: 2, capOv: {}, orders: SEED }
+};
+
+const DP_HDR = [{ date: '18-Sep-2026', po: 'PO1', asn: 'xxxxx' }, { date: '19-Sep-2026', po: 'PO2', asn: 'xxxxx' }];
+const DP_CASES = [
+  { v: 'a', date: '18-Sep-2026', part: '1', qty: 6, po: 'PO1', caseNo: '50221X01' },
+  { v: 'b', date: '18-Sep-2026', part: '2', qty: 6, po: 'PO1', caseNo: '50221X02' },
+  { v: 'c', date: '18-Sep-2026', part: '2', qty: 6, po: 'PO1', caseNo: '50221X03' },
+  { v: 'd', date: '18-Sep-2026', part: '3', qty: 12, po: 'PO1', caseNo: '50221X04' },
+  { v: 'e', date: '18-Sep-2026', part: '3', qty: 6, po: 'PO1', caseNo: '50221X05' },
+  { v: 'f', date: '18-Sep-2026', part: '4', qty: 6, po: 'PO1', caseNo: '50221X07' },
+  { v: 'g', date: '19-Sep-2026', part: '3', qty: 6, po: 'PO2', caseNo: '50221X08' }
+];
+const DP_ORD = [
+  { v: 'a', no: 'Order 0', qty: 6, od: '' }, { v: 'b', no: 'Order 1', qty: 3, od: '15-Sep' }, { v: 'b', no: 'Order 2', qty: 3, od: '16-Sep' },
+  { v: 'c', no: 'Order 3', qty: 6, od: '17-Sep' }, { v: 'd', no: 'Order 4', qty: 1, od: '15-Sep' }, { v: 'd', no: 'Order 5', qty: 2, od: '16-Sep' },
+  { v: 'd', no: 'Order 6', qty: 3, od: '17-Sep' }, { v: 'e', no: 'Order 7', qty: 3, od: '17-Sep' }, { v: 'e', no: 'Order 7', qty: 3, od: '17-Sep' },
+  { v: 'e', no: 'Order 8', qty: 6, od: '17-Sep' }, { v: 'f', no: 'Order 9', qty: 6, od: '17-Sep' }, { v: 'g', no: 'Order 10', qty: 6, od: '18-Sep' }
+];
+
+class Component extends DCLogic {
+  presetState(k) { const p = PRESETS[k]; return { preset: k, orders: p.orders.map(o => ({ ...o })), capOv: { ...p.capOv }, maxC: p.maxC, pcs: 6, nextId: 100, coExp: {}, poExp: {} }; }
+
+  state = { preset: 'a', capOv: { ...PRESETS.a.capOv }, orders: PRESETS.a.orders.map(o => ({ ...o })), pcs: 6, maxC: 2, step: 0, playing: false, part: 'Part 2', nextId: 14, view: 'dp', coFilter: 'all', coExp: {}, poExp: {} };
+
+  componentWillUnmount() { clearInterval(this._iv); }
+  stop() { clearInterval(this._iv); this._iv = null; }
+  edit(fn) { this.stop(); this.setState(s => ({ ...fn(s), step: 0, playing: false })); }
+  model(s) {
+    const sorted = s.orders.map((o, i) => ({ ...o, ci: i })).sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : (DORD.indexOf(a.dest) - DORD.indexOf(b.dest)) || a.id - b.id);
+    const dates = [...new Set(sorted.map(o => o.date))];
+    const queue = [], carry = {};
+    dates.forEach(d => DORD.forEach(dc => {
+      const fresh = []; sorted.filter(o => o.date === d && o.dest === dc).forEach(o => { for (let i = 0; i < o.qty; i++) fresh.push(o); });
+      const pool = (carry[dc] || []).concat(fresh); if (!pool.length) return;
+      const nC = Math.floor(pool.length / s.pcs);
+      for (let c = 0; c < nC; c++) queue.push({ od: d, dest: dc, pieces: pool.slice(c * s.pcs, (c + 1) * s.pcs) });
+      carry[dc] = pool.slice(nC * s.pcs);
+    }));
+    const releases = [], seq = []; let qi = 0, poN = 0, cN = 0;
+    if (dates.length) {
+      let t = addDay(dates[0]), n = 0; const end = addDay(dates[dates.length - 1]);
+      while (t <= end) {
+        const cap = s.capOv[t] ?? s.maxC, open = queue.slice(qi);
+        const avail = open.filter(c => addDay(c.od) <= t).length, backlogIn = open.filter(c => addDay(c.od) < t).length;
+        const take = Math.min(cap, avail), r = { no: 'PO day ' + (++n), t, cap, avail, backlogIn, freshC: avail - backlogIn, take, over: t in s.capOv, pos: [] };
+        if (take) {
+          const po = { no: 'PO' + (++poN), date: t, cases: [], rel: r.no };
+          for (let j = 0; j < take; j++) {
+            const cs = queue[qi++], cn = ++cN; po.cases.push({ n: cn, start: seq.length, dest: cs.dest, od: cs.od });
+            cs.pieces.forEach(x => seq.push({ o: x, po: po.no, poDate: t, cn, rel: r.no, relDate: cs.od, dest: cs.dest }));
+          }
+          r.pos.push(po);
+        }
+        r.left = avail - take;
+        releases.push(r); t = addDay(t);
+      }
+    }
+    const pending = queue.slice(qi).flatMap(c => c.pieces).concat(DORD.flatMap(dc => carry[dc] || []));
+    return { sorted, releases, seq, rel: seq.length, pending, pendingQty: pending.length, poCount: poN, caseCount: cN };
+  }
+
+  asnVals(s, releases, seq) {
+    const pos = releases.filter(r => r.pos.length).map(r => r.pos[0]);
+    const all = [];
+    pos.forEach(p => p.cases.forEach(c => {
+      const runs = []; seq.slice(c.start, c.start + s.pcs).forEach(x => { const l = runs[runs.length - 1]; if (l && l.o.id === x.o.id) l.n++; else runs.push({ o: x.o, n: 1 }); });
+      all.push({ id: caseNo(c.n), po: p.no, date: p.date, dest: DEST[c.dest].name + ' · ' + DEST[c.dest].code, part: s.part, qty: s.pcs,
+        orders: runs.map(r => ({ no: r.o.no, qty: r.n, date: niceD(r.o.date) })) });
+    }));
+    const asn = s.aAsn || {}, sel = s.aSel || {}, exp = s.aExp || {}, done = s.aDone || null, ro = !!done;
+    const page = s.aPage || 'select';
+    const oText = c => c.orders.map(o => o.no + ' (' + o.qty + ')').join(', ');
+    const sum = l => l.reduce((a, c) => a + c.qty, 0);
+    const uniq = (l, k) => [...new Set(l.map(c => c[k]))];
+    const toggle = id => this.setState(st => { const m = { ...(st.aSel || {}) }; if (m[id]) delete m[id]; else m[id] = true; return { aSel: m }; });
+    const aGroups = pos.map(p => {
+      const cs = all.filter(c => c.po === p.no), avail = cs.filter(c => !asn[c.id]);
+      const nSel = avail.filter(c => sel[c.id]).length, full = avail.length > 0 && nSel === avail.length;
+      return {
+        po: p.no, date: niceD(p.date), meta: plural(cs.length, 'case') + ' · ' + sum(cs) + ' pcs' + (avail.length < cs.length ? ' · ' + (cs.length - avail.length) + ' in ASN' : ''),
+        selText: nSel ? nSel + ' of ' + avail.length + ' selected' : '', checked: full, disabled: !avail.length, cur: avail.length ? 'pointer' : 'default',
+        toggleAll: () => { if (!avail.length) return; this.setState(st => { const m = { ...(st.aSel || {}) }; avail.forEach(c => { if (full) delete m[c.id]; else m[c.id] = true; }); return { aSel: m }; }); },
+        rows: cs.map(c => {
+          const locked = !!asn[c.id], on = !!sel[c.id], open = !!exp[c.id];
+          return { caseNo: c.id, part: c.part, dest: c.dest, qty: c.qty, orderText: oText(c), orders: c.orders, checked: on || locked, locked,
+            status: locked ? 'In ' + asn[c.id] : on ? 'Selected' : 'Not in ASN',
+            stBg: locked ? 'var(--color-accent-2-200)' : on ? 'var(--color-accent-200)' : 'var(--color-neutral-200)',
+            stFg: locked ? 'var(--color-accent-2-800)' : on ? 'var(--color-accent-800)' : 'var(--color-neutral-700)',
+            bg: on ? 'var(--color-accent-100)' : '#fff', hov: locked ? '#fff' : 'var(--color-accent-100)', bd: on ? 'var(--color-accent)' : 'transparent',
+            fg: locked ? 'var(--color-neutral-600)' : 'var(--color-text)', cur: locked ? 'default' : 'pointer', rot: open ? 90 : 0, expDisp: open ? 'table-row' : 'none',
+            toggle: () => { if (!locked) toggle(c.id); },
+            expand: e => { e.stopPropagation(); this.setState(st => ({ aExp: { ...(st.aExp || {}), [c.id]: !(st.aExp || {})[c.id] } })); } };
+        })
+      };
+    });
+    const selC = all.filter(c => sel[c.id]);
+    const draft = done ? all.filter(c => done.ids.includes(c.id)) : selC;
+    let n = 0;
+    const aDGroups = uniq(draft, 'part').map(pt => { const cs = draft.filter(c => c.part === pt); return { part: pt, meta: plural(cs.length, 'case') + ' · ' + sum(cs) + ' pcs',
+      rows: cs.map(c => ({ seq: String(++n).padStart(2, '0'), caseNo: c.id, po: c.po, part: c.part, dest: c.dest, qty: c.qty, rmDisp: ro ? 'none' : 'grid', remove: () => toggle(c.id) })) }; });
+    const asnNo = done ? done.no : 'ASN-50221-260929-00' + (Object.values(asn).length ? new Set(Object.values(asn)).size + 1 : 1);
+    const dlv = done ? done.dlv : (s.aDlv ?? '2026-09-30');
+    const p2 = page === 'draft';
+    return {
+      aP1Disp: 'none', aP2Disp: 'flex',
+      aGroups, aListDisp: all.length ? 'block' : 'none', aEmptyDisp: all.length ? 'none' : 'flex',
+      aListMeta: plural(pos.length, 'PO') + ' · ' + plural(all.length, 'case') + ' · from the simulation above',
+      aSelCount: selC.length, aNoSel: !selC.length,
+      aBadgeBg: selC.length ? 'var(--color-accent)' : 'var(--color-neutral-200)', aBadgeFg: selC.length ? '#fff' : 'var(--color-neutral-600)',
+      aBarTitle: selC.length ? plural(selC.length, 'case') + ' selected · ' + sum(selC) + ' pcs' : 'No case selected',
+      aBarMeta: selC.length ? uniq(selC, 'po').join(', ') : 'Tick cases or a whole PO. Cases already in an ASN are locked.',
+      aClear: () => this.setState({ aSel: {} }),
+      aToDraft: () => { window.scrollTo(0, 0); this.setState({ view: 'asn', aPage: 'draft' }); },
+      aBack: () => { window.scrollTo(0, 0); this.setState(st => ({ view: 'dp', aPage: 'select', aDone: null, dpPage: 'detail' })); },
+      aBackLabel: 'Back to PO Released · Detail',
+      aTitle: ro ? asnNo : 'ASN Draft', aSt: ro ? 'Submitted' : 'Draft',
+      aStBg: ro ? 'var(--color-accent-2-200)' : 'var(--color-neutral-200)', aStFg: ro ? 'var(--color-accent-2-800)' : 'var(--color-neutral-700)',
+      aDoneDisp: ro ? 'flex' : 'none', aDoneText: ro ? plural(draft.length, 'case') + ' are locked. Delivery ' + niceD(dlv) + '.' : '',
+      aAsnNo: asnNo, aAsnNote: ro ? 'submitted' : 'auto · assigned on submit',
+      aDlv: dlv, aSetDlv: e => this.setState({ aDlv: e.target.value }), aRo: ro, aDlvBd: !ro && !dlv ? 'oklch(0.6 0.17 28)' : 'var(--color-neutral-400)',
+      aCases: plural(draft.length, 'case'), aPcs: sum(draft) + ' pcs', aDlvText: dlv ? niceD(dlv) : '—',
+      aDGroups, aDraftEmpty: draft.length ? 'none' : 'flex', aEditDisp: ro ? 'none' : 'flex', aNoDraft: !draft.length,
+      aSubmitDisabled: !draft.length || !dlv,
+      aHint: !dlv ? 'Fill in the delivery date to submit.' : '1 ASN can contain several POs; each case holds one part.',
+      aOpen: () => this.setState({ aConfirm: true }), aCloseConfirm: () => this.setState({ aConfirm: false }),
+      aConfirmOpen: !!s.aConfirm && !ro && s.view === 'asn',
+      aSubmit: () => this.setState(st => { const ids = Object.keys(st.aSel || {}), m = { ...(st.aAsn || {}) }; ids.forEach(id => { m[id] = asnNo; });
+        return { aConfirm: false, aAsn: m, aSel: {}, aDone: { no: asnNo, ids, dlv } }; })
+    };
+  }
+
+  dpVals(s, releases, seq) {
+    const q = s.dpQ || { from: '', to: '', po: '', st: 'all' }, f = s.dpF || q;
+    const det = s.dpPage === 'detail';
+    const crit = {
+      dpAllChecked: false, dpAllDisabled: true, dpBarDisp: 'none', dpToggleAll: () => {},
+      dpListDisp: det ? 'none' : 'flex', dpDetDisp: det ? 'flex' : 'none',
+      dpBack: () => this.setState({ dpPage: 'list', dpVar: null }),
+      dpFFrom: f.from, dpFTo: f.to, dpFPo: f.po, dpFSt: f.st,
+      setDpFFrom: e => { const v = e.target.value; this.setState(st => ({ dpF: { ...(st.dpF || q), from: v } })); },
+      setDpFTo: e => { const v = e.target.value; this.setState(st => ({ dpF: { ...(st.dpF || q), to: v } })); },
+      setDpFPo: e => { const v = e.target.value; this.setState(st => ({ dpF: { ...(st.dpF || q), po: v } })); },
+      setDpFSt: e => { const v = e.target.value; this.setState(st => ({ dpF: { ...(st.dpF || q), st: v } })); },
+      dpSearch: () => this.setState(st => ({ dpQ: { ...(st.dpF || q) }, dpSel: null, dpVar: null, dpPage: 'list' })),
+      dpReset: () => this.setState({ dpQ: null, dpF: null, dpSel: null, dpVar: null, dpPage: 'list' })
+    };
+    const pos = q.st === 'rem' ? [] : releases.filter(r => r.pos.length).map(r => r.pos[0])
+      .filter(p => (!q.from || p.date >= q.from) && (!q.to || p.date <= q.to) && (!q.po || p.no.toLowerCase().includes(q.po.trim().toLowerCase())));
+    const LET = 'abcdefghijklmnopqrstuvwxyz';
+    const selPo = pos.find(p => p.no === s.dpSel) || pos[0];
+    const vf = s.dpVar || null;
+    const inPo = id => seq.filter(x => x.o.id === id).length;
+    const remOrders = s.orders.map((o, ci) => ({ ...o, ci, rem: o.qty - inPo(o.id) })).filter(o => o.rem > 0).sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : a.id - b.id);
+    const remQty = remOrders.reduce((a, o) => a + o.rem, 0) * ((q.st === 'po' || q.po) ? 0 : 1);
+    const isRem = s.dpSel === 'REM' || (!pos.length && remQty > 0);
+    const selNo = isRem ? 'REM' : ((pos.find(p => p.no === s.dpSel) || pos[0] || {}).no);
+    const capOf = t => s.capOv[t] ?? s.maxC;
+    const capSet = (t, v) => this.edit(st => ({ capOv: { ...st.capOv, [t]: Math.max(0, Math.min(9, v)) } }));
+    const hdr = pos.map(p => ({ date: niceD(p.date), po: p.no, asn: '-', cases: p.cases.length + ' case · ' + p.cases.length * s.pcs + ' pcs',
+      cap: capOf(p.date), capDisp: 'inline-flex', capBg: p.date in s.capOv ? 'oklch(0.95 0.05 80)' : '#fff',
+      capDown: e => { e.stopPropagation(); capSet(p.date, capOf(p.date) - 1); }, capUp: e => { e.stopPropagation(); capSet(p.date, capOf(p.date) + 1); },
+      bg: '#fff', bd: 'transparent',
+      select: () => this.setState({ dpSel: p.no, dpVar: null, dpPage: 'detail' }) }));
+    if (remQty) hdr.push({ date: 'Not released', po: '-', asn: '-', cases: plural(remOrders.length, 'order') + ' · ' + remQty + ' pcs remaining',
+      bg: 'oklch(0.985 0.015 80)', bd: 'oklch(0.72 0.12 70)', cap: '', capDisp: 'none', capBg: '#fff', capDown: () => {}, capUp: () => {}, select: () => this.setState({ dpSel: 'REM', dpVar: null, dpPage: 'detail' }) });
+    if (isRem && remQty) {
+      const byD = {}; remOrders.forEach(o => { const k = o.date + o.dest; (byD[k] = byD[k] || { od: o.date, dest: o.dest, list: [] }).list.push(o); });
+      const dRows = Object.values(byD).map((g, i) => ({ v: '–', date: '-', part: s.part, qty: g.list.reduce((a, o) => a + o.rem, 0), total: remQty, po: '-', caseNo: 'Waiting',
+        dest: DEST[g.dest].name + ' · ' + DEST[g.dest].code, od: niceD(g.od), late: 'remaining', bg: '#fff',
+        holes: g.list.flatMap(o => Array.from({ length: o.rem }, () => ({ bg: colorOf(o.ci), lbl: 'O' + o.no.replace(/\D/g, '') }))),
+        dlDisp: 'none', waitDisp: 'inline', chk: false, locked: true, chkDisp: 'none', asnTag: '', asnTagDisp: 'none', selBd: 'transparent', togSel: e => { e.stopPropagation(); }, pick: () => {}, download: e => { e.stopPropagation(); } }));
+      return { ...crit, dpHdr: hdr, dpRows: dRows, dpSel: 'Not released', dpSelDate: 'waiting for next PO or manual PO', dpMeta: remQty + ' pcs remaining',
+        dpOrd: remOrders.map(o => ({ v: '–', color: colorOf(o.ci), date: '-', part: s.part, qty: o.rem, total: o.qty, no: o.no + ' · ' + DEST[o.dest].name, od: niceD(o.date).slice(0, 6), caseNo: o.rem < o.qty ? 'rest in PO' : '-' })),
+        dpOrdMeta: 'Remaining customer orders', dpClearDisp: 'none', dpClear: () => {} };
+    }
+    if (!selPo) return { ...crit, dpHdr: hdr, dpRows: [], dpOrd: [], dpSel: '-', dpSelDate: '-', dpMeta: 'no PO', dpOrdMeta: '-', dpClearDisp: 'none', dpClear: () => {} };
+    const total = s.pcs * selPo.cases.length;
+    const cs = selPo.cases.map((c, i) => ({ ...c, v: LET[i % 26], pieces: seq.slice(c.start, c.start + s.pcs) }));
+    const aAsn = s.aAsn || {}, aSel = s.aSel || {};
+    const availIds = cs.map(c => caseNo(c.n)).filter(id => !aAsn[id]);
+    const allOn = availIds.length > 0 && availIds.every(id => aSel[id]);
+    const togSel = id => this.setState(st => { const m = { ...(st.aSel || {}) }; if (m[id]) delete m[id]; else m[id] = true; return { aSel: m }; });
+    const dRows = cs.map(c => ({ v: c.v,
+      chk: !!aSel[caseNo(c.n)] || !!aAsn[caseNo(c.n)], locked: !!aAsn[caseNo(c.n)], chkDisp: 'inline-block',
+      asnTag: aAsn[caseNo(c.n)] ? 'In ' + aAsn[caseNo(c.n)] : '', asnTagDisp: aAsn[caseNo(c.n)] ? 'inline-flex' : 'none',
+      selBd: aSel[caseNo(c.n)] ? 'var(--color-accent)' : 'transparent',
+      togSel: e => { e.stopPropagation(); if (!aAsn[caseNo(c.n)]) togSel(caseNo(c.n)); }, date: niceD(selPo.date), part: s.part, qty: s.pcs, total, po: selPo.no, caseNo: caseNo(c.n),
+      dest: DEST[c.dest].name + ' · ' + DEST[c.dest].code, od: niceD(c.od),
+      late: addDay(c.od) < selPo.date ? 'backlog' : '',
+      bg: vf === c.v ? 'var(--color-accent-100)' : '#fff',
+      holes: c.pieces.map(x => ({ bg: colorOf(x.o.ci), lbl: 'O' + x.o.no.replace(/\D/g, '') })), dlDisp: 'inline-flex', waitDisp: 'none',
+      pick: () => { if ((this.state.role || 'sup') !== 'sup') this.setState(st => ({ dpVar: st.dpVar === c.v ? null : c.v })); },
+      download: e => { e.stopPropagation(); } }));
+    const oRows = [];
+    cs.filter(c => !vf || c.v === vf).forEach(c => {
+      const runs = []; c.pieces.forEach(x => { const l = runs[runs.length - 1]; if (l && l.o.id === x.o.id) l.n++; else runs.push({ o: x.o, n: 1 }); });
+      runs.forEach(r => oRows.push({ v: c.v, color: colorOf(r.o.ci), date: niceD(selPo.date), part: s.part, qty: r.n, total: r.o.qty, no: r.o.no + ' · ' + DEST[r.o.dest].name, od: niceD(r.o.date).slice(0, 6), caseNo: caseNo(c.n) }));
+    });
+    const cur = cs.find(c => c.v === vf);
+    return {
+      ...crit, dpHdr: hdr, dpRows: dRows, dpOrd: oRows, dpAllChecked: allOn, dpAllDisabled: !availIds.length, dpBarDisp: 'flex',
+      dpToggleAll: () => { if (!availIds.length) return; this.setState(st => { const m = { ...(st.aSel || {}) }; availIds.forEach(id => { if (allOn) delete m[id]; else m[id] = true; }); return { aSel: m }; }); },
+      dpSel: selPo.no, dpSelDate: niceD(selPo.date),
+      dpMeta: cs.length + ' case · ' + total + ' pcs',
+      dpOrdMeta: cur ? 'Case ' + caseNo(cur.n) + ' (variable ' + cur.v + ')' : 'All cases in ' + selPo.no,
+      dpClearDisp: vf ? 'inline-flex' : 'none', dpClear: () => this.setState({ dpVar: null })
+    };
+  }
+
+  tableVals(s, sorted, releases, seq) {
+    const V = [['dp', 'Delivery Plan'], ['sim', 'Visual simulation']];
+    const dl = dc => DEST[dc].name + ' · ' + DEST[dc].code;
+    const WARN = 'oklch(0.45 0.11 65)', poDateOf = po => niceD(seq.find(x => x.po === po).poDate).slice(0, 6);
+    const rowsAll = [];
+    [...new Set(sorted.map(o => o.date))].forEach(d => DORD.forEach(dc => {
+      const ords = sorted.filter(o => o.date === d && o.dest === dc); if (!ords.length) return;
+      const qty = ords.reduce((a, o) => a + o.qty, 0), mine = seq.filter(x => x.relDate === d && x.dest === dc);
+      const inPo = mine.length, rem = qty - inPo, key = d + dc, open = !!s.coExp[key];
+      const st = !rem ? ['In PO', 'var(--color-accent-2-200)', 'var(--color-accent-2-800)'] : inPo ? ['Partly in PO', 'var(--color-accent-200)', 'var(--color-accent-800)'] : ['Remaining', 'oklch(0.95 0.05 80)', 'oklch(0.42 0.1 65)'];
+      const pos = [...new Set(mine.map(x => x.po))];
+      rowsAll.push({ dest: dc, date: niceD(d), destName: DEST[dc].name, destCode: DEST[dc].code, dot: DEST[dc].c,
+        qty: qty + ' pcs', inPo: inPo + ' pcs', rem: rem ? rem + ' pcs' : '—', remFg: rem ? WARN : 'var(--color-neutral-500)',
+        pos: pos.map(p => p + ' (' + poDateOf(p) + ')').join(', ') || '—', orderCount: plural(ords.length, 'order'),
+        status: st[0], stBg: st[1], stFg: st[2],
+        bg: open ? 'var(--color-accent-100)' : 'var(--color-neutral-100)', rot: open ? 90 : 0, expDisp: open ? 'table-row' : 'none',
+        toggle: () => this.setState(x => ({ coExp: { ...x.coExp, [key]: !x.coExp[key] } })),
+        lines: ords.map(o => { const m = seq.filter(x => x.o.id === o.id), r2 = o.qty - m.length;
+          return { no: o.no, qty: o.qty, inPo: m.length, rem: r2 || '—', remFg: r2 ? WARN : 'var(--color-neutral-500)', color: colorOf(o.ci),
+            cases: [...new Set(m.map(x => x.cn))].map(caseNo).join(', ') || '—',
+            po: [...new Set(m.map(x => x.po))].map(p => p + ' (' + poDateOf(p) + ')').join(', ') || 'next PO / manual PO' }; }) });
+    }));
+    const rows = rowsAll.filter(r => s.coFilter === 'all' || r.dest === s.coFilter);
+    const K = [['all', 'All destinations', 'var(--color-neutral-400)']].concat(DORD.filter(dc => sorted.some(o => o.dest === dc)).map(dc => [dc, dl(dc), DEST[dc].c]));
+    const poTable = releases.map(r => {
+      const p = r.pos[0], open = !!s.poExp[r.t], lines = [], from = {};
+      (p ? p.cases : []).forEach(c => {
+        from[c.od] = (from[c.od] || 0) + 1;
+        const runs = []; seq.slice(c.start, c.start + s.pcs).forEach(x => { const l = runs[runs.length - 1]; if (l && l.o.id === x.o.id) l.n++; else runs.push({ o: x.o, n: 1 }); });
+        const late = addDay(c.od) < r.t;
+        runs.forEach((x, i) => lines.push({ topBd: i === 0 ? '1px solid var(--color-divider)' : '0', caseNo: i === 0 ? caseNo(c.n) : '', dest: i === 0 ? dl(c.dest) : '', dot: i === 0 ? DEST[c.dest].c : 'transparent',
+          od: i === 0 ? niceD(c.od) : '', no: x.o.no, qty: x.n, color: colorOf(x.o.ci), note: i === 0 && late ? 'backlog · due ' + niceD(addDay(c.od)).slice(0, 6) : '', noteFg: WARN }));
+      });
+      const capSet = v => this.edit(st => ({ capOv: { ...st.capOv, [r.t]: Math.max(0, Math.min(9, v)) } }));
+      return { no: p ? p.no : '—', noFg: p ? 'var(--color-accent-800)' : 'var(--color-neutral-500)', date: niceD(r.t), cap: r.cap,
+        capBg: r.over ? 'oklch(0.95 0.05 80)' : 'var(--color-neutral-100)', capDown: () => capSet(r.cap - 1), capUp: () => capSet(r.cap + 1),
+        qty: r.take ? r.take * s.pcs + ' pcs' : 'No PO', cases: r.take + ' / ' + r.avail,
+        from: Object.keys(from).map(d => niceD(d).slice(0, 6) + ' × ' + from[d]).join(' · ') || '—',
+        left: r.left ? plural(r.left, 'case') + ' · ' + r.left * s.pcs + ' pcs' : '—', leftFg: r.left ? WARN : 'var(--color-neutral-500)',
+        bg: open ? 'var(--color-accent-100)' : 'var(--color-neutral-100)', rot: open ? 90 : 0, expDisp: open && lines.length ? 'table-row' : 'none', lines,
+        toggle: () => this.setState(x => ({ poExp: { ...x.poExp, [r.t]: !x.poExp[r.t] } })) };
+    });
+    return {
+      presets: Object.keys(PRESETS).map(k => ({ label: PRESETS[k].label, go: () => this.edit(() => this.presetState(k)),
+        bg: s.preset === k ? 'var(--color-accent)' : 'var(--color-neutral-100)', fg: s.preset === k ? '#fff' : 'var(--color-neutral-800)' })),
+      roleOpts: [['sup', 'Supplier'], ['ds', 'Demand Supply'], ['proc', 'Procurement']].map(([k, label]) => { const on = (s.role || 'sup') === k;
+        return { label, go: () => this.setState({ role: k, dpVar: null }), bg: on ? '#fff' : 'transparent', fg: on ? 'var(--color-accent-800)' : 'var(--color-neutral-700)', sh: on ? '0 1px 3px rgba(20,40,70,.15)' : 'none' }; }),
+      didDisp: (s.role || 'sup') === 'sup' ? 'none' : 'block',
+      didLockDisp: 'none',
+      holesDisp: (s.role || 'sup') === 'sup' ? 'none' : 'flex',
+      didHintDisp: (s.role || 'sup') === 'sup' ? 'none' : 'inline',
+      viewTabs: V.map(([k, label]) => ({ label, go: () => this.setState({ view: k }), bd: s.view === k ? 'var(--color-accent)' : 'transparent', fg: s.view === k ? 'var(--color-accent-800)' : 'var(--color-neutral-700)' })),
+      visDisp: s.view === 'sim' ? 'flex' : 'none', coDisp: s.view === 'co' ? 'flex' : 'none', poDisp: s.view === 'po' ? 'flex' : 'none', dpDisp: s.view === 'dp' ? 'flex' : 'none', ...this.dpVals(s, releases, seq), asnDisp: s.view === 'asn' ? 'flex' : 'none', ...this.asnVals(s, releases, seq),
+      coKpis: K.map(([k, label, c]) => { const os = sorted.filter(o => k === 'all' || o.dest === k), tot = os.reduce((a, o) => a + o.qty, 0), inp = seq.filter(x => k === 'all' || x.dest === k).length;
+        return { k: label, v: tot + ' pcs', s: inp + ' in PO · ' + (tot - inp) + ' remaining', c, go: () => this.setState({ coFilter: k }),
+          bg: s.coFilter === k ? 'var(--color-accent-100)' : 'var(--color-neutral-100)', bd: s.coFilter === k ? 'var(--color-accent)' : 'var(--color-divider)' }; }),
+      coRows: rows, coEmptyDisp: rows.length ? 'none' : 'block',
+      coMeta: rows.length + ' order date × destination · qty always a multiple of ' + s.pcs,
+      poTable
+    };
+  }
+
+  play() {
+    if (this.state.playing) { this.stop(); this.setState({ playing: false }); return; }
+    this.setState({ playing: true });
+    this._iv = setInterval(() => {
+      const { rel } = this.model(this.state);
+      if (this.state.step >= rel) { this.stop(); this.setState({ playing: false }); return; }
+      this.setState(s => ({ step: s.step + 1 }));
+    }, 240);
+  }
+
+  renderVals() {
+    const s = this.state;
+    const { sorted, releases, seq, rel, pending, pendingQty, poCount, caseCount } = this.model(s);
+    const placed = Math.min(s.step, rel), done = placed >= rel;
+    const next = seq[placed];
+    const total = sorted.reduce((a, o) => a + o.qty, 0);
+    const short = o => 'O' + o.no.replace(/\D/g, '');
+    const needMore = pendingQty ? s.pcs - (pendingQty % s.pcs) : 0;
+    const pendOf = id => pending.filter(x => x.id === id).length;
+    const pendOrders = [...new Map(pending.map(o => [o.id, o])).values()];
+    const orderRows = sorted.map(o => {
+      const idx = []; seq.forEach((x, g) => { if (x.o.id === o.id) idx.push(g); });
+      const moved = idx.filter(g => g < placed).length;
+      const pos = [...new Set(seq.filter(x => x.o.id === o.id).map(x => x.po))];
+      const rels = [...new Set(seq.filter(x => x.o.id === o.id).map(x => x.rel))];
+      const pn = pendOf(o.id), isPend = pn > 0;
+      const active = !done && next && next.o.id === o.id, color = colorOf(o.ci);
+      const dots = idx.map(g => g < placed ? { bg: 'transparent', bd: 'var(--color-neutral-300)' } : { bg: color, bd: color })
+        .concat(Array.from({ length: pn }, () => ({ bg: 'oklch(0.97 0.03 80)', bd: 'oklch(0.72 0.12 70)' })));
+      let note = idx.length ? rels.join('+') + ' → ' + pos.join(' + ') : '';
+      if (!done && moved && moved < idx.length) note = moved + '/' + idx.length + ' packed';
+      if (pn) note = (note ? note + ' · ' : '') + pn + ' remaining';
+      return {
+        no: o.no + ' · ' + o.dest, date: o.date, qty: o.qty, color, dots, note,
+        bg: active ? 'var(--color-accent-100)' : 'var(--color-neutral-100)', bd: active ? 'var(--color-accent)' : 'transparent',
+        noteFg: isPend ? 'oklch(0.45 0.11 65)' : pos.length > 1 ? 'var(--color-accent-700)' : 'var(--color-neutral-600)',
+        setDate: e => { const v = e.target.value; if (v) this.edit(st => ({ orders: st.orders.map(x => x.id === o.id ? { ...x, date: v } : x) })); },
+        inc: () => this.edit(st => ({ orders: st.orders.map(x => x.id === o.id ? { ...x, qty: Math.min(24, x.qty + 1) } : x) })),
+        dec: () => this.edit(st => ({ orders: st.orders.map(x => x.id === o.id ? { ...x, qty: Math.max(1, x.qty - 1) } : x) })),
+        remove: () => this.edit(st => ({ orders: st.orders.filter(x => x.id !== o.id) }))
+      };
+    });
+
+    const releaseVals = releases.map(r => ({
+      no: r.no, date: niceD(r.t),
+      calc: 'available ' + plural(r.avail, 'case') + (r.backlogIn ? ' (backlog ' + r.backlogIn + ' + new ' + r.freshC + ')' : '') + ' · Max Case/Day ' + r.cap + (r.take ? '' : ' · no PO'),
+      splitText: r.left ? 'Backlog ' + plural(r.left, 'case') : 'No backlog',
+      splitBg: r.left ? 'oklch(0.95 0.05 80)' : 'var(--color-accent-2-200)', splitFg: r.left ? 'oklch(0.42 0.1 65)' : 'var(--color-accent-2-800)',
+      pos: r.pos.map(p => {
+        const ords = [...new Set(p.cases.flatMap(c => seq.slice(c.start, c.start + s.pcs).map(x => x.o.no)))];
+        return {
+          no: p.no, date: niceD(p.date), qty: p.cases.length * s.pcs + ' pcs · ' + plural(p.cases.length, 'case'), orders: ords.join(', '),
+          cases: p.cases.map(c => {
+            const filled = Math.max(0, Math.min(s.pcs, placed - c.start));
+            return {
+              caseNo: caseNo(c.n),
+              status: DEST[c.dest].name + ' · ' + niceD(c.od).slice(0, 6),
+              stFg: addDay(c.od) < p.date ? 'oklch(0.45 0.11 65)' : filled === s.pcs ? 'var(--color-accent-2-800)' : 'var(--color-neutral-600)',
+              holes: Array.from({ length: s.pcs }, (_, j) => {
+                const g = c.start + j, on = g < placed, o = seq[g].o;
+                return { bg: on ? colorOf(o.ci) : '#d6ccbd', sh: on ? '0 2px 3px rgba(0,0,0,.25)' : 'inset 0 2px 4px rgba(80,50,20,.35)', lbl: on ? short(o) : '', sc: on && g === placed - 1 && !done ? 1.12 : 1 };
+              })
+            };
+          })
+        };
+      })
+    }));
+
+    const allocRows = [];
+    releases.forEach(r => r.pos.forEach((p, pi) => p.cases.forEach((c, ci) => {
+      const to = Math.min(placed, c.start + s.pcs), runs = [];
+      for (let g = c.start; g < to; g++) { const o = seq[g].o, l = runs[runs.length - 1]; if (l && l.o.id === o.id) l.n++; else runs.push({ o, n: 1 }); }
+      runs.forEach((x, i) => {
+        const pos = [...new Set(seq.filter(q => q.o.id === x.o.id).map(q => q.po))];
+        const poFirst = i === 0 && ci === 0, relFirst = poFirst && pi === 0;
+        allocRows.push({ topBd: poFirst ? '2px solid var(--color-neutral-400)' : '0', rel: relFirst ? r.no : '', po: poFirst ? p.no : '', poDate: poFirst ? niceD(p.date) : '', poQty: poFirst ? p.cases.length * s.pcs + ' pcs' : '',
+          caseNo: i === 0 ? caseNo(c.n) : '', caseFg: 'var(--color-accent-800)', part: s.part, no: x.o.no, date: niceD(x.o.date), qty: x.n, color: colorOf(x.o.ci), bg: 'var(--color-neutral-100)',
+          note: x.n !== x.o.qty ? x.n + ' of ' + x.o.qty + ' pcs' + (pos.length > 1 ? ' · order spans ' + pos.join(' + ') : '') : '', noteFg: pos.length > 1 ? 'var(--color-accent-700)' : 'var(--color-neutral-600)' });
+      });
+    })));
+    if (done) pendOrders.forEach((o, i) => allocRows.push({ topBd: i === 0 ? '2px solid var(--color-neutral-400)' : '0', rel: i === 0 ? '—' : '', po: i === 0 ? 'Not released' : '', poDate: '', poQty: '', caseNo: '', caseFg: 'oklch(0.45 0.11 65)', part: s.part,
+      no: o.no, date: niceD(o.date), qty: pendOf(o.id), color: colorOf(o.ci), bg: 'oklch(0.985 0.015 80)', note: 'Remaining ' + pendOf(o.id) + ' of ' + o.qty + ' pcs · waits for the next PO or a manual PO', noteFg: 'oklch(0.45 0.11 65)' }));
+
+    return {
+      navGroups: [['Ordering', []], ['ASN', ['Case Label Printing', 'ASN Creation', 'Delivery Note Creation', 'Case Consolidation Simulation', 'ASN Inquiry']], ['Master', []], ['Common', []]].map(([label, items]) => {
+        const open = label === 'ASN';
+        return { label, rot: open ? -90 : 0, hdrBg: open ? '#f1f5f9' : 'transparent', childDisp: open ? 'block' : 'none',
+          items: items.map(t => { const a = t === 'Case Consolidation Simulation'; return { t, bg: a ? '#dc3545' : 'transparent', fg: a ? '#fff' : 'var(--color-neutral-700)', w: a ? 600 : 400, dot: a ? '#fff' : 'var(--color-neutral-500)' }; }) };
+      }),
+      part: s.part, setPart: e => this.setState({ part: e.target.value }),
+      pcs: s.pcs, maxC: s.maxC,
+      pcsUp: () => this.edit(st => ({ pcs: Math.min(12, st.pcs + 1) })),
+      pcsDown: () => this.edit(st => ({ pcs: Math.max(2, st.pcs - 1) })),
+      maxUp: () => this.edit(st => ({ maxC: Math.min(6, st.maxC + 1) })),
+      maxDown: () => this.edit(st => ({ maxC: Math.max(1, st.maxC - 1) })),
+      reset: () => this.edit(st => this.presetState(st.preset)),
+      stepOne: () => this.setState(st => ({ step: Math.min(rel, st.step + 1) })),
+      fillAll: () => { this.stop(); this.setState({ step: rel, playing: false }); },
+      togglePlay: () => this.play(),
+      doneFlag: done || !rel,
+      playLabel: s.playing ? 'Pause' : placed ? 'Resume' : 'Play',
+      playIconDisp: s.playing ? 'none' : 'inline', pauseIconDisp: s.playing ? 'inline' : 'none',
+      addOrder: () => this.edit(st => { const last = [...st.orders].sort((a, b) => a.date < b.date ? -1 : 1).pop(); return { orders: [...st.orders, { id: st.nextId, no: 'Order ' + st.nextId, date: last ? addDay(last.date) : '2026-09-15', dest: 'VN', qty: st.pcs }], nextId: st.nextId + 1 }; }),
+      total, orderRows,
+      releases: releaseVals,
+      caseMeta: plural(releases.length, 'release') + ' · ' + poCount + ' PO · ' + plural(caseCount, 'case'),
+      progress: placed + ' / ' + rel + ' pcs packed',
+      waitDisp: pending.length ? 'flex' : 'none',
+      waitDots: pending.map(o => ({ bg: colorOf(o.ci), lbl: short(o) })),
+      waitText: pendOrders.map(o => o.no + ' ' + pendOf(o.id) + ' pcs').join(', ') + ' remaining · waits for the next PO or a manual PO',
+      kpis: [
+        { k: 'Customer order qty', v: total + ' pcs', s: plural(sorted.length, 'order') + ' · multiple of ' + s.pcs + ' per destination', c: 'var(--color-neutral-400)' },
+        { k: 'In supplier PO', v: rel + ' pcs', s: plural(caseCount, 'case') + ' · FIFO', c: 'var(--color-accent-2-300)' },
+        { k: 'Supplier PO', v: poCount + ' PO', s: '1 PO per day · D+1', c: 'var(--color-accent)' },
+        { k: 'Remaining', v: pendingQty + ' pcs', s: pendingQty ? plural(pendingQty / s.pcs, 'case') + ' · next PO or manual PO' : 'all orders in a PO', c: 'oklch(0.8 0.1 75)' }
+      ],
+      allocRows, allocEmptyDisp: allocRows.length ? 'none' : 'block',
+      stopProp: e => e.stopPropagation(),
+      ...this.tableVals(s, sorted, releases, seq)
+    };
+  }
+}
+</script>
+</body>
+</html>

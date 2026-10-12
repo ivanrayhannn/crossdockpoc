@@ -1,0 +1,327 @@
+{
+  "doc_type": "batch",
+  "header": {
+    "phase": "DR",
+    "project_name": "NSP - New Service Part System",
+    "block_name": "Batch",
+    "function_name": "TBD Crossdock Master Setting - Part List Upload",
+    "created_date": "08-Oct-26",
+    "created_by": "Ivan",
+    "updated_date": "08-Oct-26",
+    "updated_by": "Ivan"
+  },
+  "revisions": [
+    {
+      "revision": "0.1",
+      "author": "Ivan",
+      "date": "08-Oct-26",
+      "reviewed_by": "",
+      "description": "Initial draft based on the existing Crossdock batch upload draft."
+    },
+    {
+      "revision": "0.2",
+      "author": "Ivan",
+      "date": "08-Oct-26",
+      "reviewed_by": "",
+      "description": "Corrected the upload template to the six FSD columns; completed flow diagrams and table mappings; marked proposed backend rules and open points."
+    }
+  ],
+  "general": {
+    "objective": [
+      "To upload Part List data from the Crossdock Master Setting - Part List screen into MASTER_CANDIDATE_PART.",
+      "To validate the complete workbook and save all valid changes as one transaction (Proposed); when a file or row error occurs, no master data is saved."
+    ],
+    "operation_flow": {
+      "image": "C:/Users/fid.rayhan/Downloads/crossdock-master-setting-app/deliverables/uiss_diagrams/part_list_upload_overview.png",
+      "caption": "Part List Upload - operation overview",
+      "note": "Upload validation and transaction behavior are proposed because FSD OP-02 leaves them open."
+    },
+    "inputs": [
+      {
+        "name": "Part List upload workbook (.xlsx)",
+        "type": "Excel",
+        "description": "FSD limit: 5 MB and 5,000 rows. The Upload sheet name and header-order check are proposed."
+      },
+      {
+        "name": "TB_R_CD_UPLOAD_LOG",
+        "type": "DB",
+        "description": "Upload ID, file name and stored file path; one RECEIVED record is created by the screen (table proposed)."
+      },
+      {
+        "name": "TB_M_PART_MASTER",
+        "type": "DB",
+        "description": "Part existence check and Part Name lookup; physical schema TBD."
+      },
+      {
+        "name": "MASTER_CANDIDATE_PART",
+        "type": "DB",
+        "description": "Current row for Add/Edit existence checks and comparison."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "MASTER_CANDIDATE_PART",
+        "type": "DB",
+        "description": "Candidate part rows inserted or updated if all rows pass validation."
+      },
+      {
+        "name": "TB_T_CD_UPLOAD_PART",
+        "type": "DB",
+        "description": "Staging rows as text with validation status and errors (table proposed)."
+      },
+      {
+        "name": "TB_R_CD_UPLOAD_LOG",
+        "type": "DB",
+        "description": "Batch status, row counts, result path and start/end time (table proposed)."
+      },
+      {
+        "name": "Result report (.xlsx)",
+        "type": "Excel",
+        "description": "Proposed Summary, Result, Re-upload and Changes sheets; exact design TBD."
+      }
+    ],
+    "extra_tables": [
+      {
+        "title": "Parameters",
+        "columns": [
+          {"title": "Name", "width": 18},
+          {"title": "Description", "width": 30}
+        ],
+        "rows": [["UPLOAD_ID", "ID of the upload record created by the screen"]]
+      },
+      {
+        "title": "Execution Schedule",
+        "columns": [
+          {"title": "Item", "width": 15},
+          {"title": "Description", "width": 34}
+        ],
+        "rows": [["Trigger", "Screen call after file receipt is proposed; confirm synchronous call versus queued job."]]
+      }
+    ],
+    "constraints": [
+      "The ongoing calculation period is used for Part List records.",
+      "MASTER_CANDIDATE_PART and TB_M_PART_MASTER are named in the existing draft; upload log and temp table names are proposed.",
+      "All-or-nothing saving, report sheet names, concurrent-run behavior and temp-row retention are proposed or TBD.",
+      "Changed-field history is outside this batch draft; confirm event coverage and retention with FSD OP-03."
+    ]
+  },
+  "func_flow": {
+    "image": "C:/Users/fid.rayhan/Downloads/crossdock-master-setting-app/deliverables/uiss_diagrams/part_list_upload_flow.png",
+    "steps": [
+      {"text": "Retrieve UPLOAD_ID and the upload record from TB_R_CD_UPLOAD_LOG.", "children": ["If the record or stored file is missing, log message no. 4 and stop."]},
+      {"text": "Set STATUS = 'PROCESSING' and START_DT, then check the workbook extension, size, row count, Upload sheet and headers (see 4.1).", "children": ["If invalid, log message no. 5, set STATUS = REJECTED and proceed to step 6."]},
+      {"text": "Load every data row into TB_T_CD_UPLOAD_PART as text with UPLOAD_ID and Excel row number."},
+      {"text": "Validate all rows and store every validation error in the temp table (see 4.2). If any row fails, log message no. 6, set STATUS = REJECTED and do not write master data."},
+      {"text": "If all rows are valid, insert Add rows and update Edit rows in one transaction. Skip unchanged Edit rows. If a database error occurs, roll back, log message no. 8 and set STATUS = REJECTED."},
+      {"text": "Create the proposed result workbook; update status, counts, result path and END_DT in TB_R_CD_UPLOAD_LOG. Log message no. 9 if report creation fails; write batch end message no. 2 and return status."}
+    ]
+  },
+  "data_map": {
+    "blocks": [
+      {
+        "source": {"table": "Excel file - sheet Upload"},
+        "destination": {"table": "TB_T_CD_UPLOAD_PART", "operation": "Insert", "description": "Load raw rows as text"},
+        "mappings": [
+          {"dest_field": "UPLOAD_ID", "description": "Batch parameter UPLOAD_ID"},
+          {"dest_field": "ROW_NO", "description": "Excel row number"},
+          {"source_field": "flag_add_edit", "dest_field": "FLAG_ADD_EDIT"},
+          {"source_field": "part_no", "dest_field": "PART_NO"},
+          {"source_field": "pcs_case", "dest_field": "PCS_CASE"},
+          {"source_field": "max_case_day", "dest_field": "MAX_CASE_DAY"},
+          {"source_field": "minimum_mad", "dest_field": "MINIMUM_MAD"},
+          {"source_field": "effective_start_date", "dest_field": "EFFECTIVE_START_DATE"},
+          {"dest_field": "VALIDATION_STATUS", "description": "Default: 'N'"},
+          {"dest_field": "ERROR_MSG", "description": "Default: blank"},
+          {"dest_field": "CREATED_BY", "description": "Login user who uploaded the file"},
+          {"dest_field": "CREATED_DT", "description": "Server system date and time"}
+        ]
+      },
+      {
+        "source": {"table": "TB_T_CD_UPLOAD_PART", "keys": [{"field": "UPLOAD_ID", "value": "Parameter UPLOAD_ID"}, {"field": "ROW_NO", "value": "Excel row number"}]},
+        "destination": {"table": "TB_T_CD_UPLOAD_PART", "operation": "Update", "description": "Store row validation result", "keys": [{"field": "UPLOAD_ID", "value": "Parameter UPLOAD_ID"}, {"field": "ROW_NO", "value": "Validated row number"}]},
+        "mappings": [
+          {"dest_field": "VALIDATION_STATUS", "description": "'V' if valid; 'E' if any rule fails"},
+          {"dest_field": "ERROR_MSG", "description": "All validation errors for the row; blank when valid"}
+        ]
+      },
+      {
+        "source": {"table": "TB_T_CD_UPLOAD_PART", "keys": [{"field": "UPLOAD_ID", "value": "Parameter UPLOAD_ID"}, {"field": "FLAG_ADD_EDIT", "value": "'A'"}, {"field": "VALIDATION_STATUS", "value": "'V'"}]},
+        "destination": {"table": "MASTER_CANDIDATE_PART", "operation": "Insert", "description": "Validated Add row"},
+        "mappings": [
+          {"source_field": "PART_NO", "dest_field": "PART_NO"},
+          {"dest_field": "PERIOD", "description": "Ongoing calculation period"},
+          {"dest_field": "PART_NAME", "description": "TB_M_PART_MASTER.PART_NAME by PART_NO"},
+          {"source_field": "MINIMUM_MAD", "dest_field": "MIN_MAD", "description": "Convert to integer; non-negative rule proposed"},
+          {"source_field": "PCS_CASE", "dest_field": "PCS_CASE", "description": "Convert to positive integer"},
+          {"source_field": "MAX_CASE_DAY", "dest_field": "MAX_CASE_DAY", "description": "Convert to positive integer"},
+          {"dest_field": "TOTAL_PCS_DAY", "description": "PCS_CASE multiplied by MAX_CASE_DAY"},
+          {"source_field": "EFFECTIVE_START_DATE", "dest_field": "EFFECTIVE_START_DATE", "description": "Convert to date; Add requires a date per the upload modal (exact rule TBD)"},
+          {"dest_field": "PART_STATUS", "description": "Default: 'Candidate' (BR-02)"},
+          {"dest_field": "SYNC_STATUS", "description": "Default: '0' (No Sync)"},
+          {"dest_field": "LAST_SOURCE", "description": "Default: 'UPLOAD'"},
+          {"dest_field": "LAST_UPLOAD_ID", "description": "Batch parameter UPLOAD_ID"},
+          {"dest_field": "CREATED_BY", "description": "Login user who uploaded the file"},
+          {"dest_field": "CREATED_DT", "description": "Server system date and time"},
+          {"dest_field": "CHANGED_BY", "description": "Same as CREATED_BY"},
+          {"dest_field": "CHANGED_DT", "description": "Server system date and time"}
+        ]
+      },
+      {
+        "source": {"table": "TB_T_CD_UPLOAD_PART", "keys": [{"field": "UPLOAD_ID", "value": "Parameter UPLOAD_ID"}, {"field": "FLAG_ADD_EDIT", "value": "'E'"}, {"field": "VALIDATION_STATUS", "value": "'V'"}]},
+        "destination": {"table": "MASTER_CANDIDATE_PART", "operation": "Update", "description": "Validated Edit row", "keys": [{"field": "PART_NO", "value": "PART_NO of row"}, {"field": "PERIOD", "value": "Ongoing calculation period"}]},
+        "mappings": [
+          {"dest_field": "PART_NO", "description": "Key, not changed"},
+          {"dest_field": "PERIOD", "description": "Key, not changed"},
+          {"dest_field": "PART_NAME", "description": "Not changed; sourced from TB_M_PART_MASTER"},
+          {"source_field": "MINIMUM_MAD", "dest_field": "MIN_MAD", "description": "Convert to integer"},
+          {"source_field": "PCS_CASE", "dest_field": "PCS_CASE", "description": "Convert to integer"},
+          {"source_field": "MAX_CASE_DAY", "dest_field": "MAX_CASE_DAY", "description": "Convert to integer"},
+          {"dest_field": "TOTAL_PCS_DAY", "description": "Recalculate: PCS_CASE multiplied by MAX_CASE_DAY"},
+          {"source_field": "EFFECTIVE_START_DATE", "dest_field": "EFFECTIVE_START_DATE", "description": "Blank means keep current; change only while status is Candidate"},
+          {"dest_field": "PART_STATUS", "description": "Not changed; status is not an upload column"},
+          {"dest_field": "SYNC_STATUS", "description": "Set to '0' when any value changes"},
+          {"dest_field": "LAST_SOURCE", "description": "Set to 'UPLOAD'"},
+          {"dest_field": "LAST_UPLOAD_ID", "description": "Batch parameter UPLOAD_ID"},
+          {"dest_field": "CREATED_BY", "description": "Not changed"},
+          {"dest_field": "CREATED_DT", "description": "Not changed"},
+          {"dest_field": "CHANGED_BY", "description": "Login user who uploaded the file"},
+          {"dest_field": "CHANGED_DT", "description": "Server system date and time"}
+        ]
+      },
+      {
+        "source": "Batch counters and result report",
+        "destination": {"table": "TB_R_CD_UPLOAD_LOG", "operation": "Update", "description": "Batch completion status and counts", "keys": [{"field": "UPLOAD_ID", "value": "Parameter UPLOAD_ID"}]},
+        "mappings": [
+          {"dest_field": "STATUS", "description": "'COMPLETED' when saved/skipped; 'REJECTED' on file, validation or database error"},
+          {"dest_field": "TOTAL_ROWS", "description": "Number of data rows in sheet Upload"},
+          {"dest_field": "SAVED_ROWS", "description": "Rows inserted or updated"},
+          {"dest_field": "NO_CHANGE_ROWS", "description": "Rows skipped because values are unchanged"},
+          {"dest_field": "ERROR_ROWS", "description": "Rows with validation errors"},
+          {"dest_field": "RESULT_FILE_PATH", "description": "Path of result report; blank if report creation fails"},
+          {"dest_field": "END_DT", "description": "Server system date and time"}
+        ]
+      }
+    ]
+  },
+  "func_desc_layout": "two",
+  "func_desc": [
+    {"type": "heading", "text": "4. DESCRIPTION", "level": 0},
+    {"type": "text", "text": "This batch processes one Part List workbook. The screen stores the file and creates an upload record with STATUS = RECEIVED before invoking the batch with UPLOAD_ID.", "level": 1},
+    {"type": "bullets", "items": [
+      "FSD section 9 defines the six template columns, .xlsx format, maximum 5 MB and maximum 5,000 rows.",
+      "The Upload sheet name, strict header-order check, all-or-nothing saving and result report are proposed because FSD OP-02 leaves upload processing open.",
+      "Only the ongoing calculation period is written. Parts not present in the workbook are unchanged."
+    ], "level": 1},
+    {"type": "heading", "text": "4.1 File Check (log message no. 5)", "level": 0},
+    {"type": "bullets", "items": [
+      "Extension is .xlsx and file size is 5 MB or less (FSD).",
+      "Workbook contains 1 to 5,000 data rows (FSD); empty-file behavior is TBD.",
+      "The Upload sheet exists (Proposed); other sheets are ignored.",
+      "The six FSD headers exist in the order shown in Appendix. Strict order and extra-column handling are proposed."
+    ], "level": 1},
+    {"type": "heading", "text": "4.2 Row Validation (log message no. 6)", "level": 0},
+    {"type": "text", "text": "Validate every row and collect all errors so the user can correct the file once. Upload-specific checks not defined by the FSD are proposed.", "level": 1},
+    {"type": "table", "level": 1, "row_lines": "all", "columns": [
+      {"title": "No", "width": 4}, {"title": "Column", "width": 23}, {"title": "Validation"}, {"title": "Basis", "width": 17}
+    ], "rows": [
+      [1, "flag_add_edit", "Value must be A or E.", "Upload template"],
+      [2, "part_no", "Part No exists in TB_M_PART_MASTER. Add must not exist in MASTER_CANDIDATE_PART for the ongoing period; Edit must exist.", "BR-02 / BR-03"],
+      [3, "part_no", "A Part No may appear only once in the workbook.", "Proposed"],
+      [4, "pcs_case, max_case_day", "Required whole numbers greater than zero.", "BR-04; limits TBD (OP-07)"],
+      [5, "minimum_mad", "Required by the upload modal; numeric range and upper bound are TBD.", "FSD section 9; OP-07"],
+      [6, "effective_start_date", "Required for Add per the upload modal. Edit can change it only while Candidate; a new date must be today or later (proposed); blank means keep current.", "BR-06"],
+      [7, "max_case_day", "Whether a new value may be below the sum of existing destination mappings is TBD.", "Existing draft open point"]
+    ]},
+    {"type": "heading", "text": "4.3 Saving", "level": 0},
+    {"type": "bullets", "items": [
+      "Flag A inserts a row with PART_STATUS = Candidate and SYNC_STATUS = 0 (BR-02); PART_NAME is looked up in TB_M_PART_MASTER.",
+      "Flag E updates the existing row. PART_NO, PERIOD, PART_NAME, PART_STATUS and created audit fields are not changed. TOTAL_PCS_DAY is recalculated.",
+      "If an Edit row has no changed business value, skip it and leave sync and audit fields unchanged.",
+      "For changed rows, set SYNC_STATUS = 0, LAST_SOURCE = UPLOAD, LAST_UPLOAD_ID = UPLOAD_ID, CHANGED_BY to the login user and CHANGED_DT to server time.",
+      "Commit all changed rows together (Proposed). On database error, roll back the complete upload and reject the run."
+    ], "level": 1},
+    {"type": "heading", "text": "4.4 Result and Open Points", "level": 0},
+    {"type": "bullets", "items": [
+      "The existing draft proposes Summary, Result, Re-upload and Changes report sheets; confirm their exact columns, file path and retention.",
+      "Confirm temp-row cleanup, concurrent-upload handling, numeric limits, effective-date rules and the Max Case/Day versus existing mapping rule.",
+      "Per-field history is not included; confirm event coverage and retention under FSD OP-03."
+    ], "level": 1}
+  ],
+  "logging_messages": [
+    {"event": "Batch start", "cause": "Batch is called with UPLOAD_ID", "type": "Info", "msg_id": "TBD", "message": "Part List upload batch <UPLOAD_ID> started.", "action": {"system": "Write the batch log.", "user": "-"}},
+    {"event": "Batch end", "cause": "Batch completes or rejects the upload", "type": "Info", "msg_id": "TBD", "message": "Upload <UPLOAD_ID> ended. Status <STATUS>; total <TOTAL_ROWS>, saved <SAVED_ROWS>, unchanged <NO_CHANGE_ROWS>, errors <ERROR_ROWS>.", "action": {"system": "Write the batch log.", "user": "-"}},
+    {"event": "Database access", "cause": "Database connection cannot be established", "type": "Critical", "msg_id": "TBD", "message": "Database cannot be connected.", "action": {"system": "Stop the batch and inform the system owner.", "user": "Contact the system owner."}},
+    {"event": "Get upload record", "cause": "Upload record or stored file is not found", "type": "Error", "msg_id": "TBD", "message": "Upload record or file for <UPLOAD_ID> was not found.", "action": {"system": "Stop the batch.", "user": "Upload the file again."}},
+    {"event": "File check", "cause": "Extension, size, row count, sheet or header is invalid", "type": "Error", "msg_id": "TBD", "message": "File check failed: <REASON>.", "action": {"system": "Set status to REJECTED and create the proposed result report.", "user": "Download the template again, correct the file and upload it."}},
+    {"event": "Row validation", "cause": "A validation rule in 4.2 fails", "type": "Error", "msg_id": "TBD", "message": "Row <ROW_NO>, column <COLUMN>: <RULE_MESSAGE>.", "action": {"system": "Reject the whole file; do not write master data.", "user": "Correct the Re-upload sheet in the result report and upload again."}},
+    {"event": "Row skipped", "cause": "An Edit row has no changed value", "type": "Info", "msg_id": "TBD", "message": "Row <ROW_NO>, Part No <PART_NO> has no change and was skipped.", "action": {"system": "Do not update the master row.", "user": "-"}},
+    {"event": "Save to master", "cause": "Insert or update of MASTER_CANDIDATE_PART fails", "type": "Error", "msg_id": "TBD", "message": "Cannot save Part No <PART_NO> to MASTER_CANDIDATE_PART.", "action": {"system": "Roll back and set status to REJECTED.", "user": "Contact the system owner."}},
+    {"event": "Result report", "cause": "Result workbook cannot be created", "type": "Warning", "msg_id": "TBD", "message": "Result report for <UPLOAD_ID> could not be created.", "action": {"system": "Leave RESULT_FILE_PATH blank and finalize the upload log.", "user": "Contact the system owner."}},
+    {"event": "Unexpected error", "cause": "Any other system error", "type": "Critical", "msg_id": "TBD", "message": "Unexpected error in Part List upload: <ERROR_DETAIL>.", "action": {"system": "Roll back, set status to REJECTED and inform the system owner.", "user": "Contact the system owner."}}
+  ],
+  "appendix_layout": "full",
+  "appendix": [
+    {"type": "heading", "text": "Upload template (sheet name proposed as Upload)", "level": 0},
+    {"type": "text", "text": "FSD section 9 defines the six columns and file limits. The sheet name and strict header-order check are proposed.", "level": 1},
+    {"type": "table", "level": 1, "row_lines": "all", "columns": [{"title": "Column", "width": 27}, {"title": "Content / Rule", "width": 69}], "rows": [
+      ["flag_add_edit", "Required. A = Add a new part; E = Edit an existing part."],
+      ["part_no", "Required. Part Number; must exist in TB_M_PART_MASTER."],
+      ["pcs_case", "Required. Pieces per case; proposed positive integer."],
+      ["max_case_day", "Required. Max Case/Day; proposed positive integer."],
+      ["minimum_mad", "Required by upload modal; numeric range and upper bound TBD (FSD OP-07)."],
+      ["effective_start_date", "Required for Add per modal; Edit can change only while status is Candidate. Format TBD."]
+    ]},
+    {"type": "heading", "text": "Proposed result workbook", "level": 0},
+    {"type": "bullets", "items": ["The existing draft proposes Summary, Result, Re-upload and Changes sheets; exact columns require confirmation.", "Errors should include Excel row number, column name and message."], "level": 1}
+  ],
+  "tables": [
+    {"name": "MASTER_CANDIDATE_PART", "kind": "transaction", "description": "Candidate part setting by Part No and calculation period; successful upload target.", "columns": [
+      ["PART_NO", "VARCHAR(TBD)", "Y", "N", "Part number; length follows TB_M_PART_MASTER"],
+      ["PERIOD", "VARCHAR(TBD)", "Y", "N", "Ongoing calculation period; period format TBD"],
+      ["PART_NAME", "VARCHAR(TBD)", "", "N", "Retrieved from TB_M_PART_MASTER by PART_NO"],
+      ["MIN_MAD", "INT", "", "N", "Minimum MAD; numeric range to be confirmed"],
+      ["PCS_CASE", "INT", "", "N", "Pieces per case; positive integer"],
+      ["MAX_CASE_DAY", "INT", "", "N", "Maximum cases per day; positive integer"],
+      ["TOTAL_PCS_DAY", "INT", "", "N", "PCS_CASE multiplied by MAX_CASE_DAY"],
+      ["EFFECTIVE_START_DATE", "DATE", "", "Y", "Required for Add; Edit changes only while Candidate"],
+      ["PART_STATUS", "VARCHAR(TBD)", "", "N", "Candidate / Active / Inactive"],
+      ["SYNC_STATUS", "CHAR(1)", "", "N", "0 = No Sync, 1 = Success, 2 = Failed"],
+      ["LAST_SOURCE", "VARCHAR(TBD)", "", "N", "CALC / SCREEN / UPLOAD"],
+      ["LAST_UPLOAD_ID", "VARCHAR(TBD)", "", "Y", "Upload that last changed the record"],
+      ["CREATED_BY", "VARCHAR(TBD)", "", "N", "User who created the record"],
+      ["CREATED_DT", "DATETIME", "", "N", "Created date and time"],
+      ["CHANGED_BY", "VARCHAR(TBD)", "", "N", "User who last changed the record"],
+      ["CHANGED_DT", "DATETIME", "", "N", "Last changed date and time"]
+    ]},
+    {"name": "TB_R_CD_UPLOAD_LOG", "kind": "log", "proposed": true, "description": "One upload record per workbook; created by screen and updated by batch.", "columns": [
+      ["UPLOAD_ID", "VARCHAR(TBD)", "Y", "N", "Upload ID generated by screen"],
+      ["FUNCTION_ID", "VARCHAR(TBD)", "", "N", "PART_LIST or MAPPING"],
+      ["FILE_NAME", "VARCHAR(TBD)", "", "N", "Uploaded file name"],
+      ["UPLOAD_FILE_PATH", "VARCHAR(TBD)", "", "N", "Stored input path used by batch"],
+      ["STATUS", "VARCHAR(TBD)", "", "N", "RECEIVED / PROCESSING / COMPLETED / REJECTED"],
+      ["TOTAL_ROWS", "INT", "", "Y", "Rows in Upload sheet"],
+      ["SAVED_ROWS", "INT", "", "Y", "Rows inserted or updated"],
+      ["NO_CHANGE_ROWS", "INT", "", "Y", "Rows skipped because unchanged"],
+      ["ERROR_ROWS", "INT", "", "Y", "Rows with validation errors"],
+      ["RESULT_FILE_PATH", "VARCHAR(TBD)", "", "Y", "Result workbook path"],
+      ["START_DT", "DATETIME", "", "Y", "Batch start"],
+      ["END_DT", "DATETIME", "", "Y", "Batch end"],
+      ["CREATED_BY", "VARCHAR(TBD)", "", "N", "User who created upload record"],
+      ["CREATED_DT", "DATETIME", "", "N", "Upload record creation time"]
+    ]},
+    {"name": "TB_T_CD_UPLOAD_PART", "kind": "temp", "proposed": true, "description": "Raw Part List rows as text with validation result.", "columns": [
+      ["UPLOAD_ID", "VARCHAR(TBD)", "Y", "N", "FK to TB_R_CD_UPLOAD_LOG"],
+      ["ROW_NO", "INT", "Y", "N", "Excel row number"],
+      ["FLAG_ADD_EDIT", "VARCHAR(TBD)", "", "Y", "Raw value; A = Add, E = Edit"],
+      ["PART_NO", "VARCHAR(TBD)", "", "Y", "Raw text from part_no"],
+      ["PCS_CASE", "VARCHAR(TBD)", "", "Y", "Raw text from pcs_case"],
+      ["MAX_CASE_DAY", "VARCHAR(TBD)", "", "Y", "Raw text from max_case_day"],
+      ["MINIMUM_MAD", "VARCHAR(TBD)", "", "Y", "Raw text from minimum_mad"],
+      ["EFFECTIVE_START_DATE", "VARCHAR(TBD)", "", "Y", "Raw text from effective_start_date"],
+      ["VALIDATION_STATUS", "CHAR(1)", "", "N", "N = not validated, V = valid, E = error"],
+      ["ERROR_MSG", "VARCHAR(TBD)", "", "Y", "All validation messages for row"],
+      ["CREATED_BY", "VARCHAR(TBD)", "", "N", "User who created staging row"],
+      ["CREATED_DT", "DATETIME", "", "N", "Staging row creation date and time"]
+    ]}
+  ]
+}
