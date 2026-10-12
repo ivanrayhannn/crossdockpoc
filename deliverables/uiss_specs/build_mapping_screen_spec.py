@@ -1,0 +1,328 @@
+"""Spec for UISS_Screen_MappingPerDestination.xlsx (UISS-Screen, Crossdock Master Setting - Mapping per Destination)."""
+import json, sys
+
+T, D, DM = 'TB_M_PART_CANDIDATE', 'TB_M_PART_CANDIDATE_DEST', 'Destination master (TBD)'
+IMG = 'deliverables/uiss_screens/mapping'
+NAME, PROJ = 'FID Rayhan', 'Crossdock Optimization'
+
+
+def it(name, source='', field='', type_='', len_='', io='', control='', just='', init='', req='', fmt='', val='', desc=''):
+    return {"name": name, "source": source, "field": field, "type": type_, "len": len_, "io": io, "control": control,
+            "justified": just, "initial": init, "required": req, "format": fmt, "validation": val, "description": desc}
+
+
+def btn(name, desc):
+    return it(name, '', '', '', '', 'I', 'Button', 'Center', '', '', '', '', desc)
+
+
+B = ["Reset", "Search", "Sync", "Upload Excel", "Export Excel", "Expand (arrow)", "Edit mapping", "Split evenly",
+     "Add destination", "Remove destination", "Cancel", "Save", "Close", "Validate file", "OK"]
+LIST = ["Reset", "Search", "Sync", "Upload Excel", "Export Excel", "Expand (arrow)"]
+EDIT = ["Split evenly", "Add destination", "Remove destination", "Cancel", "Save"]
+
+
+def modes(on):
+    return {b: ("E" if b in on else "D") for b in B}
+
+
+spec = {
+ "doc_type": "screen",
+ "header": {"phase": "DR", "project_name": PROJ, "block_name": "Screen",
+            "function_name": "TBD Crossdock Master Setting - Mapping per Destination", "created_date": "12-Oct-26", "created_by": NAME},
+ "revisions": [{"revision": "0.1", "author": NAME, "date": "12-Oct-26", "reviewed_by": "",
+                "description": "Initial draft based on the business decisions for the Crossdock Master Setting Mapping per Destination sub-menu and the crossdockpoc web prototype as of 12-Oct-26 (including Upload Excel). Upload backend is documented in UISS-Batch \"Crossdock Master Setting - Mapping per Destination Upload\"."}],
+ "general": {
+  "objective": [
+   "To split the Max Case/Day of each Active part over destinations (Thailand, Japan, Vietnam) for the ongoing calculation period.",
+   "To display the destination mapping per part and calculation period, including past periods (read only).",
+   "To synchronise changed mappings to the target system and show the Sync Status of each part.",
+   "To export the mapping to Excel and upload the mapping of the ongoing period from Excel.",
+   "This sub-menu is opened only for users logged in with a D/S account; users with a Procurement account open the Part List sub-menu instead."],
+  "display_order": [
+   {"section": "Result List", "fields": [{"field": "Part Number", "order": "Ascending (TBD)"}]},
+   {"section": "Destination Mapping panel", "fields": [{"field": "Order in which destinations were added", "order": "-"}]}],
+  "buttons": [
+   {"name": "Reset", "function": "Clear criteria and reset the screen to its initial value."},
+   {"name": "Search", "function": "To retrieve records according to the specified criteria. TBD: the prototype filters while typing, so whether filtering waits for [Search] (or the button is removed) is still to be decided."},
+   {"name": "Sync", "function": "Send the mapping of the listed parts that are No Sync or Failed (ongoing period) to the target system. The label shows the number of parts, e.g. Sync (4)."},
+   {"name": "Upload Excel", "function": "Open the \"Upload Excel - destination mapping\" modal. Enabled only when the ongoing calculation period is selected."},
+   {"name": "Export Excel", "function": "Download the mapping as .xlsx: sheet \"Mapping per Destination\" (active filter) and sheet \"Upload\" (base file for the upload)."},
+   {"name": "Expand (arrow)", "function": "Open / close the Destination Mapping panel of the part row."},
+   {"name": "Edit mapping", "function": "Change the Destination Mapping panel into edit mode (ongoing period only)."},
+   {"name": "Split evenly", "function": "Divide Max Case/Day evenly over all destinations of the part."},
+   {"name": "Add destination", "function": "Add a new destination row (destination not selected, Case/Day 0)."},
+   {"name": "Remove destination", "function": "Remove the destination row (trash icon)."},
+   {"name": "Cancel", "function": "Leave edit mode and discard all changes of the panel."},
+   {"name": "Save", "function": "Save the destination mapping of the part."},
+   {"name": "Close", "function": "Close the Upload Excel modal without uploading."},
+   {"name": "Validate file", "function": "Save button of the upload: validate the uploaded file and save it (all-or-nothing), then show the success popup."},
+   {"name": "OK", "function": "Close the success popup."}],
+  "screen_modes": [
+   {"mode": "Initial Mode", "sections": [
+     {"section": "Search Criteria", "description": "Calculation period = ongoing period, Part Number blank, Sync Status = No Sync", "buttons": modes(LIST)},
+     {"section": "Result List", "description": "Parts of the ongoing period with Sync Status No Sync. Refer below 1)", "buttons": modes(LIST)}]},
+   {"mode": "Search Result Mode", "sections": [
+     {"section": "Result List - ongoing period", "description": "Active parts matching all criteria", "buttons": modes(LIST)},
+     {"section": "Result List - past period / All periods", "description": "All parts of the period; Upload Excel disabled", "buttons": modes(["Reset", "Search", "Sync", "Export Excel", "Expand (arrow)"])},
+     {"section": "Empty State", "description": "No parts match the filters; table hidden", "buttons": modes(["Reset", "Search", "Upload Excel", "Export Excel"])}]},
+   {"mode": "Detail View Mode", "sections": [
+     {"section": "Ongoing period", "description": "Panel read only; [Edit mapping] shown", "buttons": modes(LIST + ["Edit mapping"])},
+     {"section": "Past period", "description": "Panel read only; badge 'Past period - read only' instead of [Edit mapping]", "buttons": modes(["Reset", "Search", "Sync", "Export Excel", "Expand (arrow)"])}]},
+   {"mode": "Edit Mapping Mode", "sections": [
+     {"section": "Valid mapping", "description": "Destination and Case/Day editable; total <= Max Case/Day", "buttons": modes(LIST + EDIT)},
+     {"section": "Mapping cannot be saved", "description": "Total > Max Case/Day, no destination, or a row without destination; Save disabled", "buttons": modes(LIST + ["Split evenly", "Add destination", "Remove destination", "Cancel"])}]},
+   {"mode": "Upload Mode (modal)", "sections": [
+     {"section": "Upload Excel", "description": "Template columns, rules, file area", "buttons": modes(["Close", "Validate file"])},
+     {"section": "Success popup", "description": "'Saved successfully' after Validate file", "buttons": modes(["OK"])}]}],
+  "screen_mode_remarks": [
+   "1) Sync is enabled only when at least one listed part of the ongoing period is No Sync or Failed.",
+   "2) Split evenly is shown only in edit mode when the part has more than one destination row.",
+   "3) A user logged in with a read-only account cannot use Edit mapping, Sync or Upload Excel. TBD: which accounts are read-only is not defined yet."]
+ },
+ "screen_flow": [
+  {"title": "Screen Flow for Mapping per Destination", "flow": {"direction": "LR", "nodes": [
+     {"id": "list", "label": "Mapping per Destination list", "type": "screen"},
+     {"id": "view", "label": "Destination Mapping panel (view)", "type": "screen"},
+     {"id": "edit", "label": "Edit mapping mode", "type": "screen"},
+     {"id": "up", "label": "Upload Excel modal", "type": "screen"},
+     {"id": "ok", "label": "Saved successfully popup", "type": "message"},
+     {"id": "xls", "label": "Excel file (.xlsx)", "type": "file"},
+     {"id": "tgt", "label": "Target system (TBD)", "type": "db"}],
+   "edges": [
+     {"from": "list", "to": "view", "label": "Expand"},
+     {"from": "view", "to": "edit", "label": "Edit mapping"},
+     {"from": "edit", "to": "view", "label": "Save / Cancel"},
+     {"from": "list", "to": "up", "label": "Upload Excel"},
+     {"from": "up", "to": "ok", "label": "Validate file"},
+     {"from": "ok", "to": "list", "label": "OK"},
+     {"from": "list", "to": "xls", "label": "Export Excel"},
+     {"from": "list", "to": "tgt", "label": "Sync"}]},
+   "notes": ["Close on the Upload Excel modal returns to the list without uploading. Closing the panel while editing discards the changes."]},
+  {"title": "Screen Flow for Save (Edit mapping)", "flow": {"direction": "TB", "nodes": [
+     {"id": "s", "label": "START", "type": "start"},
+     {"id": "e", "label": "On Click of Save button", "type": "event"},
+     {"id": "d1", "label": "Total <= Max Case/Day and every row has a destination?", "type": "decision"},
+     {"id": "m1", "label": "Save stays disabled, show banner", "type": "message"},
+     {"id": "p1", "label": "Replace mapping of part and ongoing period", "type": "process"},
+     {"id": "db", "label": D, "type": "db"},
+     {"id": "p2", "label": "Sync Status = No Sync", "type": "process"},
+     {"id": "db2", "label": T, "type": "db"},
+     {"id": "x", "label": "Back to view mode", "type": "end"}],
+   "edges": [{"from": "s", "to": "e"}, {"from": "e", "to": "d1"}, {"from": "d1", "to": "m1", "label": "No"},
+             {"from": "d1", "to": "p1", "label": "Yes"}, {"from": "p1", "to": "db", "style": "dashed"},
+             {"from": "p1", "to": "p2"}, {"from": "p2", "to": "db2", "style": "dashed"}, {"from": "p2", "to": "x"}],
+   "same_rank": [["p1", "db"], ["p2", "db2"]]}}],
+ "screen_layout": [
+  {"caption": "1. Initial Mode - ongoing period, Sync Status = No Sync", "image": f"{IMG}/c_01_default.png"},
+  {"caption": "2. Search Result Mode - Sync Status = All", "image": f"{IMG}/c_02_sync_all.png"},
+  {"caption": "3. Search Result Mode - past period (Upload Excel disabled)", "image": f"{IMG}/c_03_past_period.png"},
+  {"caption": "4. Search Result Mode - no parts match the filters", "image": f"{IMG}/c_04_no_result.png"},
+  {"caption": "5. Detail View Mode - ongoing period", "image": f"{IMG}/c_05_details_view.png"},
+  {"caption": "6. Detail View Mode - past period (read only)", "image": f"{IMG}/c_06_details_past.png"},
+  {"caption": "7. Edit Mapping Mode", "image": f"{IMG}/c_07_edit_mode.png"},
+  {"caption": "8. Edit Mapping Mode - allocation above Max Case/Day (Save disabled)", "image": f"{IMG}/c_08_over_allocation.png"},
+  {"caption": "9. Edit Mapping Mode - row without destination (Save disabled)", "image": f"{IMG}/c_09_missing_destination.png"},
+  {"caption": "10. Detail View Mode - part without destination", "image": f"{IMG}/c_10_no_destination.png"},
+  {"caption": "11. Edit Mapping Mode - after Split evenly", "image": f"{IMG}/c_11_split_evenly.png"},
+  {"caption": "12. Before Sync - Sync (4) with Sync Status = No Sync", "image": f"{IMG}/c_12_before_sync.png"},
+  {"caption": "13. After Sync - viewed with Sync Status = All (Failed parts were not in the filter)", "image": f"{IMG}/c_13_after_sync.png"},
+  {"caption": "14. Upload Mode - Upload Excel modal", "image": f"{IMG}/c_14_upload.png"},
+  {"caption": "15. Upload Mode - Saved successfully popup after Validate file", "image": f"{IMG}/c_15_upload_success.png"}],
+ "items": [
+  {"group": "<Search Criteria Section>"},
+  it("Calculation period", "Key-in", "", "Varchar", "", "I", "Combo Box", "Left", "Ongoing period, e.g. 'Sep 2026 (ongoing)'", "N", "Mon YYYY", "",
+     "Options: All periods / every calculation period; the ongoing one is marked '(ongoing)'. The label shows (ongoing) / (past) / (all). TBD: how periods are created and when a period becomes past."),
+  it("Part Number", "Key-in", "", "Varchar", "TBD", "I", "Text box with suggestion list", "Left", "Blank", "N", "X..TBD..X", "Contains, case-insensitive",
+     "Suggestions = registered Part Numbers. Placeholder 'e.g. PART-B'. Combined with the other criteria by AND."),
+  it("Sync Status", "Key-in", "", "Varchar", "", "I", "Combo Box", "Left", "No Sync", "N", "", "", "Options: All / No Sync / Success / Failed."),
+  btn("Reset", "Returns every criterion to its initial value (Calculation period = ongoing, Sync Status = No Sync)."),
+  btn("Search", "TBD: the prototype filters immediately while typing/selecting; decide whether filtering waits for [Search] or the button is removed."),
+  {"group": "<Result List Section>"},
+  it("Section title", "", "", "Varchar", "", "O", "Label", "Left", "'Destination mapping per part'", "", "", "", ""),
+  btn("Sync (n)", "n = listed parts of the ongoing period with Sync Status No Sync or Failed. Disabled when n = 0. Refer Operation Description 5.6."),
+  btn("Upload Excel", "Disabled for a past period or All periods (tooltip message no. 6). Refer Operation Description 5.7."),
+  btn("Export Excel", "Refer Operation Description 5.8."),
+  it("Period", D, "PERIOD", "Varchar", "TBD", "O", "Label", "Left", "", "", "Mon YYYY", "", "Calculation period of the row."),
+  btn("Expand (arrow)", "Opens / closes the Destination Mapping panel of the row."),
+  it("Part Number", T, "PART_NO", "Varchar", "TBD", "O", "Label", "Left", "", "", "X..TBD..X", "", ""),
+  it("Part Name", T, "PART_NAME", "Varchar", "TBD", "O", "Label", "Left", "", "", "X..TBD..X", "", ""),
+  it("Pcs/Case", T, "PCS_CASE", "Number", "TBD", "O", "Label", "Right", "", "", "ZZ,ZZ9", "", ""),
+  it("Total Case/Day", D, "SUM(CASE_DAY)", "Number", "", "O", "Label", "Right", "", "", "ZZ,ZZ9", "", "Sum of Case/Day of all destinations of the part and period."),
+  it("Pcs/Day", "", "", "Number", "", "O", "Label", "Right", "", "", "ZZ,ZZ9", "", "= Pcs/Case x Total Case/Day."),
+  it("Percentage", "", "", "Number", "", "O", "Label", "Right", "", "", "ZZ9%", "", "= Total Case/Day / Max Case/Day (MAX_CASE_DAY). TBD: existing data above 100%."),
+  it("Sync Status", T, "SYNC_STATUS", "Char", "1", "O", "Chip", "Left", "", "", "", "", "0 = No Sync (grey), 1 = Success (green), 2 = Failed (red)."),
+  {"group": "<Empty State Section>"},
+  it("Empty state message", "", "", "Varchar", "", "O", "Label", "Center", "", "", "", "", "Display message no. 1."),
+  {"group": "<Destination Mapping Panel>"},
+  it("Allocation chip", "", "", "Varchar", "", "O", "Chip", "Left", "", "", "{total} / {Max Case/Day} case/day used", "",
+     "Red when the total is above Max Case/Day, grey when below, green when equal."),
+  it("Allocation note", "", "", "Varchar", "", "O", "Label", "Left", "", "", "", "",
+     "'no destination yet' / '{n} case/day over' / '{n} case/day left' / 'capacity fully allocated'."),
+  it("Past period badge", "", "", "Varchar", "", "O", "Badge", "Left", "", "", "", "", "Display message no. 5; shown instead of [Edit mapping] for a period that is not ongoing."),
+  btn("Split evenly", "Refer Operation Description 5.5."),
+  btn("Edit mapping", "Shown only for the ongoing period."),
+  btn("Cancel", "Shown in edit mode; discards the changes."),
+  btn("Save", "Shown in edit mode. Disabled while the mapping cannot be saved (Operation Description 5.5)."),
+  it("Destination (CD)", D, "DEST_CODE", "Varchar", "TBD", "I/O", "Combo Box", "Left", "New row: 'Select destination'", "Y", "999 - X..X", "Once per part",
+     f"List = {DM} (123 Thailand, 456 Japan, 789 Vietnam). Destinations already used by another row of the same part are hidden."),
+  it("Case/Day", D, "CASE_DAY", "Number", "TBD", "I/O", "Text box", "Right", "New row: 0", "Y", "ZZ,ZZ9", "Whole number (TBD: upper limit)", "Editable in edit mode only."),
+  it("Pcs/Day", "", "", "Number", "", "O", "Label", "Right", "", "", "ZZ,ZZ9", "", "= Pcs/Case x Case/Day of the destination."),
+  it("Percentage", "", "", "Number", "", "O", "Label", "Right", "", "", "ZZ9%", "", "= Case/Day of the destination / total Case/Day of the part."),
+  btn("Remove destination (trash icon)", "Shown in edit mode on every row."),
+  btn("Add destination", "Shown in edit mode, with the hint 'New row - pick a destination from the destination master in the Destination (CD) column.'"),
+  it("No destination message", "", "", "Varchar", "", "O", "Label", "Center", "", "", "", "", "Display message no. 2; shown when the part has no destination."),
+  it("Validation banner", "", "", "Varchar", "", "O", "Banner", "Left", "", "", "", "", "Display message no. 3 (over allocation) or no. 4 (row without destination)."),
+  {"group": "<Upload Excel Modal>"},
+  it("Template columns", "", "", "Varchar", "", "O", "Label (chips)", "Left", "", "", "", "", "part_no, dest_code, case_day, total_case_day (same order as sheet 'Upload' of Export Excel)."),
+  it("Upload rules", "", "", "Varchar", "", "O", "Label", "Left", "", "", "", "", "Rows / Replace / Limits / Base rules. Refer Operation Description 5.7."),
+  it("Upload file", "Key-in", "", "File", "", "I", "Drag-and-drop area + [Choose file]", "Center", "Blank", "Y", ".xlsx", "Max 5 MB, max 5,000 rows",
+     "File checks and row validation are done by the batch (UISS-Batch Mapping per Destination Upload)."),
+  btn("Download template .xlsx", "Downloads the empty upload template. TBD: template file location."),
+  btn("Close", "Closes the modal without uploading."),
+  btn("Validate file", "Save button of the upload. Refer Operation Description 5.7."),
+  {"group": "<Saved Successfully Popup>"},
+  it("Success message", "", "", "Varchar", "", "O", "Label", "Center", "", "", "", "", "Display message no. 7."),
+  btn("OK", "Closes the popup.")],
+ "data_map": {"blocks": [
+  {"source": {"table": D, "keys": [{"field": "PART_NO", "value": "Edited part"}, {"field": "PERIOD", "value": "Ongoing period"}]},
+   "destination": {"table": D, "operation": "Delete", "description": "Edit mapping - [Save]",
+                   "keys": [{"field": "PART_NO", "value": "Edited part"}, {"field": "PERIOD", "value": "Ongoing period"}]},
+   "mappings": [{"dest_field": "PART_NO", "description": "Current rows of the part are removed"}, {"dest_field": "PERIOD", "description": "Ongoing period only"},
+                {"dest_field": "DEST_CODE", "description": "Row is deleted"}, {"dest_field": "CASE_DAY", "description": "Row is deleted"}]},
+  {"source": "Key-in from screen",
+   "destination": {"table": D, "operation": "Insert", "description": "Edit mapping - [Save]"},
+   "mappings": [
+     {"source_field": "Part Number", "dest_field": "PART_NO"},
+     {"source_field": "Calculation period", "dest_field": "PERIOD", "description": "Ongoing calculation period"},
+     {"source_field": "Destination (CD)", "dest_field": "DEST_CODE", "description": "One row per destination in the panel"},
+     {"source_field": "Case/Day", "dest_field": "CASE_DAY"},
+     {"dest_field": "CREATED_BY", "description": "Login user ID"},
+     {"dest_field": "CREATED_DT", "description": "Server system date-time"},
+     {"dest_field": "CHANGED_BY", "description": "Login user ID"},
+     {"dest_field": "CHANGED_DT", "description": "Server system date-time"}]},
+  {"source": "Key-in from screen",
+   "destination": {"table": T, "operation": "Update", "description": "Edit mapping - [Save]",
+                   "keys": [{"field": "PART_NO", "value": "Edited part"}]},
+   "mappings": [
+     {"dest_field": "SYNC_STATUS", "description": "'0' (No Sync)"},
+     {"dest_field": "LAST_SOURCE", "description": "'SCREEN'"},
+     {"dest_field": "CHANGED_BY", "description": "Login user ID"},
+     {"dest_field": "CHANGED_DT", "description": "Server system date-time"}]},
+  {"source": {"table": T, "keys": [{"field": "SYNC_STATUS", "value": "'0' or '2', listed parts"}]},
+   "destination": {"table": T, "operation": "Update", "description": "[Sync]",
+                   "keys": [{"field": "PART_NO", "value": "Each synchronised part"}]},
+   "mappings": [
+     {"dest_field": "SYNC_STATUS", "description": "'1' (Success) or '2' (Failed) per result of the target system"},
+     {"dest_field": "SYNC_DT", "description": "Server system date-time (TBD: column)"}]}]},
+ "operation": [
+  {"type": "heading", "text": "5.1 Initial Display"},
+  {"type": "bullets", "marker": "a.", "level": 2, "items": [
+    "The sub-menu is opened only for users logged in with a D/S account.",
+    "Search criteria: 'Calculation period' = ongoing period, 'Part Number' blank, 'Sync Status' = No Sync.",
+    f"Ongoing period: list every Active part of {T}, with its destinations of {D} for that period (a part without destinations is listed with Total Case/Day 0).",
+    f"Past period: list every part that has rows in {D} for that period, whatever its current status. 'All periods' lists both."]},
+  {"type": "heading", "text": "5.2 Specifying Criteria"},
+  {"type": "bullets", "marker": "a.", "level": 2, "items": [
+    "'Part Number' matches by 'contains', case-insensitive; 'Calculation period' and 'Sync Status' match exactly. All criteria are combined with AND.",
+    "The prototype applies the filter while typing. TBD: whether filtering waits for [Search] or the [Search] button is removed.",
+    "If no row matches, hide the table and display message no. 1.",
+    "With the default Sync Status = No Sync, parts that are Success or Failed are hidden until the filter is changed."]},
+  {"type": "heading", "text": "5.3 Result List"},
+  {"type": "bullets", "marker": "a.", "level": 2, "items": [
+    "Total Case/Day = sum of CASE_DAY of the part and period; Pcs/Day = Pcs/Case x Total Case/Day.",
+    "Percentage = Total Case/Day / Max Case/Day. TBD: how to show existing data above 100%.",
+    "The table scrolls inside the section (no paging). TBD: whether paging is needed for large data."]},
+  {"type": "heading", "text": "5.4 Destination Mapping Panel"},
+  {"type": "bullets", "marker": "a.", "level": 2, "items": [
+    "User clicks the arrow on a row: open the panel with the allocation chip, the note and the destination table (Destination, Case/Day, Pcs/Day, Percentage). All items are read only.",
+    "Ongoing period: show [Edit mapping]. Past period: show message no. 5 instead; the mapping cannot be changed.",
+    "A part without destination shows message no. 2."]},
+  {"type": "heading", "text": "5.5 Edit Mapping"},
+  {"type": "item", "marker": "a.", "level": 2, "text": "User clicks [Edit mapping]."},
+  {"type": "bullets", "marker": "1.", "level": 3, "items": [
+    "Copy the mapping into a draft; Destination and Case/Day become editable, a trash icon appears per row and [Add destination] is shown.",
+    "The Destination list hides destinations already used by another row of the same part (one destination per part).",
+    "[Add destination] adds a row with 'Select destination' and Case/Day 0.",
+    "[Split evenly] (more than one row): Case/Day of each row = floor(Max Case/Day / number of rows); the remainder is added +1 per row from the first row. Example 24 / 3 = 8 / 8 / 8; 25 / 3 = 9 / 8 / 8.",
+    "The allocation chip and note are recalculated on every change."]},
+  {"type": "item", "marker": "b.", "level": 2, "text": "Save rules - [Save] is disabled while:"},
+  {"type": "bullets", "marker": "-", "level": 3, "items": [
+    "the total Case/Day is above Max Case/Day (show message no. 3);",
+    "the part has no destination row; or",
+    "a row has no destination selected (show message no. 4).",
+    "A total below or equal to Max Case/Day is allowed; below is shown as '{n} case/day left'."]},
+  {"type": "item", "marker": "c.", "level": 2, "text": "User clicks [Save]."},
+  {"type": "bullets", "marker": "1.", "level": 3, "items": [
+    "If the mapping was changed by another user after edit mode started, display message no. 8. Stop.",
+    f"Replace the rows of the part and the ongoing period in {D} by the rows of the draft (refer Data Edit Mapping).",
+    f"Set SYNC_STATUS = 0 (No Sync) in {T}, so the D/S user synchronises the part again.",
+    "Leave edit mode and show the saved mapping."]},
+  {"type": "item", "marker": "d.", "level": 2, "text": "User clicks [Cancel] or closes the panel: discard the draft."},
+  {"type": "heading", "text": "5.6 Sync"},
+  {"type": "bullets", "marker": "a.", "level": 2, "items": [
+    "[Sync (n)] sends only the listed rows (active filter) of the ongoing period whose Sync Status is No Sync or Failed.",
+    "Each part gets Sync Status Success, or Failed when the target system rejects it (message no. 10). Failed parts can be sent again.",
+    "With the default filter No Sync, synchronised parts leave the list; change Sync Status to All to see them.",
+    "TBD: target system, payload, error handling and notification."]},
+  {"type": "heading", "text": "5.7 Upload Excel"},
+  {"type": "bullets", "marker": "a.", "level": 2, "items": [
+    "[Upload Excel] is enabled only when the ongoing calculation period is selected; otherwise it is disabled with message no. 6 as tooltip.",
+    "The modal shows the template columns (part_no, dest_code, case_day, total_case_day), the upload rules and the file area (.xlsx, max 5 MB, max 5,000 rows).",
+    "Base file: sheet 'Upload' of Export Excel with the ongoing period selected. A part in the file gets its whole mapping replaced; parts not in the file are not changed.",
+    "User clicks [Validate file] (save button of the upload): the file is passed to the upload batch; validation, saving (all-or-nothing) and logging follow UISS-Batch \"Crossdock Master Setting - Mapping per Destination Upload\".",
+    "When the upload is completed, close the modal and display message no. 7. When it is rejected, show the batch result (error list) - refer UISS-Batch.",
+    "Changed parts show Sync Status No Sync."]},
+  {"type": "heading", "text": "5.8 Export Excel"},
+  {"type": "bullets", "marker": "a.", "level": 2, "items": [
+    "User clicks [Export Excel]: download Crossdock_Mapping_per_Destination_<period>_YYYYMMDD.xlsx (<period> e.g. Sep_2026 or All_periods).",
+    "Sheet 'Mapping per Destination': rows of the active filter, one row per destination (a part without destination gives one row with blank destination columns). Columns: Period, Part Number, Part Name, Pcs/Case, Total Case/Day, Pcs/Day, Percentage, Sync Status, Destination Code, Destination, Dest Case/Day, Dest Pcs/Day, Dest Percentage. Information only.",
+    "Sheet 'Upload': every Active part of the ongoing period with part_no, dest_code, case_day, total_case_day (= Max Case/Day); one row per destination, and one row with dest_code and case_day blank for a part without mapping. Empty when a past period or All periods is selected.",
+    "If the file cannot be created, display message no. 9."]},
+  {"type": "heading", "text": "5.9 Data Level and Status Definitions"},
+  {"type": "table", "level": 2, "row_lines": "all", "columns": [{"title": "Item", "width": 12}, {"title": "Value", "width": 9}, {"title": "Definition", "width": 25}], "rows": [
+    ["Table", T, "Part List data, part number level (key PART_NO). Holds Max Case/Day, status and Sync Status."],
+    ["Table", D, "Mapping data, part number + calculation period + destination level (key PART_NO, PERIOD, DEST_CODE)."],
+    ["Part Status", "Active", "Only Active parts are mapped in the ongoing period."],
+    ["Sync Status", "No Sync (0)", "Not sent yet, or changed since the last synchronisation."],
+    ["Sync Status", "Success (1)", "Last synchronisation succeeded."],
+    ["Sync Status", "Failed (2)", "Last synchronisation failed; may be retried."],
+    ["Period", "Ongoing / past", "Ongoing: mapping can be edited and uploaded. Past: read only."]]},
+  {"type": "text", "level": 2, "text": "TBD: Sync Status is kept per part (TB_M_PART_CANDIDATE), so a past period row shows the current status of the part; confirm whether a status per period is needed."}],
+ "display_messages": [
+  {"group": "Search Operation"},
+  {"event": "Change search criteria", "cause": "No part matches the criteria", "type": "Info", "msg_id": "TBD",
+   "message": "No parts match these filters - Change the period or sync status, or press Reset to show all parts.", "action": "Change the criteria or click [Reset]"},
+  {"group": "Edit Mapping Operation"},
+  {"event": "Open Destination Mapping panel", "cause": "Part has no destination", "type": "Info", "msg_id": "TBD",
+   "message": "No destination yet - Click Edit mapping and add at least one destination so the part is included in the volume calculation.", "action": "Click [Edit mapping] and add a destination"},
+  {"event": "Change Case/Day in edit mode", "cause": "Total Case/Day above Max Case/Day", "type": "Error", "msg_id": "TBD",
+   "message": "Allocation of {n} case/day exceeds Max Case/Day ({m}). Reduce one of the destinations.", "action": "Reduce Case/Day of a destination"},
+  {"event": "Edit mode", "cause": "A row has no destination selected", "type": "Error", "msg_id": "TBD",
+   "message": "Select a destination for every row, or remove the empty row, before saving.", "action": "Select a destination or remove the row"},
+  {"event": "Open panel of a past period", "cause": "Period is not ongoing", "type": "Info", "msg_id": "TBD",
+   "message": "Past period - read only", "action": "-"},
+  {"group": "Upload Operation"},
+  {"event": "Hover disabled [Upload Excel]", "cause": "Past period or All periods selected", "type": "Info", "msg_id": "TBD",
+   "message": "Past period - read only. Select the ongoing period to upload.", "action": "Select the ongoing period"},
+  {"event": "Click [Validate file] button", "cause": "Upload validated and saved", "type": "Info", "msg_id": "TBD",
+   "message": "Saved successfully - Upload completed. The file has been validated and the destination mapping has been saved to Mapping per Destination.", "action": "Click [OK]"},
+  {"group": "Save Operation"},
+  {"event": "Click [Save] button", "cause": "Mapping changed by another user", "type": "Error", "msg_id": "MSTD0114AERR",
+   "message": "Error in Update because of concurrency check.", "action": "Cancel, refresh and edit again"},
+  {"group": "Export Operation"},
+  {"event": "Click [Export Excel] button", "cause": "Excel file cannot be created", "type": "Error", "msg_id": "TBD",
+   "message": "Export Excel failed. Please try again.", "action": "Click [Export Excel] again; contact administrator if it persists"},
+  {"group": "Sync Operation"},
+  {"event": "Click [Sync] button", "cause": "Target system rejected one or more parts", "type": "Error", "msg_id": "TBD",
+   "message": "Sync failed for {n} part(s). Their Sync Status is Failed; click Sync to retry. (TBD: final text)", "action": "Click [Sync] again; contact administrator if it persists"}],
+ "logging_messages": [
+  {"event": "Click [Save] button", "cause": f"Database error on replace of {D}", "type": "Error", "msg_id": "TBD",
+   "message": "Failed to save mapping of part <PART_NO>, period <PERIOD>: <DB error message>.", "exception": "Y", "action": "Show [Corresponding Screen Message] on screen (TBD)"},
+  {"event": "Click [Sync] button", "cause": "Target system returns an error", "type": "Error", "msg_id": "TBD",
+   "message": "Sync of part <PART_NO> failed: <error message>.", "exception": "Y", "action": "Display Message no. 10"},
+  {"event": "Click [Export Excel] button", "cause": "Excel file generation error", "type": "Error", "msg_id": "TBD",
+   "message": "Export Excel of Mapping per Destination failed: <error message>.", "exception": "Y", "action": "Display Message no. 9"},
+  {"event": "Click [Validate file] button", "cause": "Upload processing", "type": "Info", "msg_id": "-",
+   "message": "Logging is handled by the Mapping per Destination Upload batch (refer UISS-Batch \"Crossdock Master Setting - Mapping per Destination Upload\").", "exception": "N", "action": "-"}]
+}
+json.dump(spec, open(sys.argv[1], 'w'), indent=1)

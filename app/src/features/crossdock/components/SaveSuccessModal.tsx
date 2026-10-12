@@ -27,7 +27,9 @@ export function SaveSuccessModal({ notice, onClose }: { notice: SaveNotice; onCl
         </h3>
         <p style={{ fontSize: 13, color: 'var(--color-neutral-700)', margin: '0 0 18px' }}>
           {notice.mode === 'upload' ? (
-            'Upload completed. The file has been validated and the part settings have been saved to the Part List.'
+            notice.target === 'mapping'
+              ? 'Upload completed. The file has been validated and the destination mapping has been saved to Mapping per Destination.'
+              : 'Upload completed. The file has been validated and the part settings have been saved to the Part List.'
           ) : (
             <>
               <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{notice.part}</span>

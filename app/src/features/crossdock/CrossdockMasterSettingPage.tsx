@@ -9,6 +9,7 @@ import { PartListTab } from './components/PartListTab';
 import { PartModal } from './components/PartModal';
 import { RoleGate } from './components/RoleGate';
 import { SaveSuccessModal } from './components/SaveSuccessModal';
+import { MappingUploadModal } from './components/MappingUploadModal';
 import { UploadModal } from './components/UploadModal';
 import { ViewTabs } from './components/ViewTabs';
 import { exportPartsXlsx, selectParts } from './partList';
@@ -61,6 +62,7 @@ export function CrossdockMasterSettingPage({ onNavigate }: { onNavigate: (route:
 
       {modal === 'part' && <PartModal state={state} />}
       {modal === 'upload' && <UploadModal state={state} />}
+      {modal === 'upload-mapping' && <MappingUploadModal state={state} />}
       {modal === 'history' && <HistoryModal state={state} />}
       {notice && <SaveSuccessModal notice={notice} onClose={dismissNotice} />}
     </AppShell>

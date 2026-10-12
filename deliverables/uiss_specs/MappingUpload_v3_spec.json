@@ -1,0 +1,1442 @@
+{
+ "doc_type": "batch",
+ "header": {
+  "phase": "DR",
+  "project_name": "Crossdock Optimization",
+  "block_name": "Batch",
+  "function_name": "TBD Crossdock Master Setting - Mapping per Destination Upload",
+  "created_date": "08-Oct-26",
+  "created_by": "FID Rayhan",
+  "updated_date": "12-Oct-26",
+  "updated_by": "FID Rayhan"
+ },
+ "revisions": [
+  {
+   "revision": "0.1",
+   "author": "FID Rayhan",
+   "date": "08-Oct-26",
+   "reviewed_by": "",
+   "description": "Initial draft based on the existing Crossdock batch upload draft."
+  },
+  {
+   "revision": "0.2",
+   "author": "FID Rayhan",
+   "date": "08-Oct-26",
+   "reviewed_by": "",
+   "description": "Completed flow diagrams and table mappings; marked the upload template and backend behaviour as proposed."
+  },
+  {
+   "revision": "0.3",
+   "author": "FID Rayhan",
+   "date": "12-Oct-26",
+   "reviewed_by": "",
+   "description": "Rewritten at business level like the Part List Upload: trigger [Validate file] of the Mapping per Destination screen, no temp table, tables TB_M_PART_CANDIDATE (part number level) and TB_M_PART_CANDIDATE_DEST (part number + period + destination level), row rules 1-7, placeholder rows, sample scenarios. No external document references."
+  }
+ ],
+ "general": {
+  "objective": [
+   "To process the destination mapping file uploaded from the Crossdock Master Setting - Mapping per Destination screen: from the [Validate file] button of the Upload Excel modal until the mapping of the ongoing calculation period is saved to TB_M_PART_CANDIDATE_DEST.",
+   "In case any error occurs, nothing is saved. The error is recorded in the upload log and a result report is created."
+  ],
+  "operation_flow": {
+   "flow": {
+    "direction": "TB",
+    "nodes": [
+     {
+      "id": "a",
+      "label": "Mapping per Destination [Validate file]",
+      "type": "screen"
+     },
+     {
+      "id": "b",
+      "label": "Check file",
+      "type": "process"
+     },
+     {
+      "id": "c",
+      "label": "Check rows per part",
+      "type": "process"
+     },
+     {
+      "id": "d",
+      "label": "All valid?",
+      "type": "decision"
+     },
+     {
+      "id": "e",
+      "label": "Replace mapping of changed parts",
+      "type": "process"
+     },
+     {
+      "id": "f",
+      "label": "Reject, record in upload log",
+      "type": "process"
+     },
+     {
+      "id": "g",
+      "label": "Result report + upload log",
+      "type": "document"
+     }
+    ],
+    "edges": [
+     {
+      "from": "a",
+      "to": "b"
+     },
+     {
+      "from": "b",
+      "to": "c"
+     },
+     {
+      "from": "c",
+      "to": "d"
+     },
+     {
+      "from": "d",
+      "to": "e",
+      "label": "Yes"
+     },
+     {
+      "from": "d",
+      "to": "f",
+      "label": "No"
+     },
+     {
+      "from": "e",
+      "to": "g"
+     },
+     {
+      "from": "f",
+      "to": "g"
+     }
+    ]
+   }
+  },
+  "inputs": [
+   {
+    "name": "Mapping file (sheet Upload)",
+    "type": "Excel",
+    "description": "Uploaded by the D/S user on the Mapping per Destination screen ([Validate file]). Only sheet Upload is read. Max 5 MB, 5,000 rows."
+   },
+   {
+    "name": "TB_M_PART_CANDIDATE",
+    "type": "DB",
+    "description": "Part status (must be Active) and Max Case/Day of each part"
+   },
+   {
+    "name": "TB_M_PART_CANDIDATE_DEST",
+    "type": "DB",
+    "description": "Current mapping of the ongoing period, to detect parts with no change"
+   },
+   {
+    "name": "Destination master (TBD)",
+    "type": "DB",
+    "description": "Valid destination codes (123 Thailand, 456 Japan, 789 Vietnam)"
+   }
+  ],
+  "outputs": [
+   {
+    "name": "TB_M_PART_CANDIDATE_DEST",
+    "type": "DB",
+    "description": "if successful: mapping of each changed part replaced (ongoing period)"
+   },
+   {
+    "name": "TB_M_PART_CANDIDATE",
+    "type": "DB",
+    "description": "if successful: Sync Status = No Sync for each changed part"
+   },
+   {
+    "name": "TB_R_CD_UPLOAD_LOG",
+    "type": "DB",
+    "description": "Upload log: one record per upload with status (COMPLETED / REJECTED), counts and errors"
+   },
+   {
+    "name": "Result report",
+    "type": "Excel",
+    "description": "Also if error occurs. Sheets: Summary, Result, Re-upload, Changes"
+   }
+  ],
+  "extra_tables": [
+   {
+    "title": "Parameters",
+    "columns": [
+     {
+      "title": "Name",
+      "width": 14
+     },
+     {
+      "title": "Description",
+      "width": 34
+     }
+    ],
+    "rows": [
+     [
+      "Uploaded file",
+      "File selected by the user on the Mapping per Destination screen"
+     ],
+     [
+      "User",
+      "Login name of the user who clicks [Validate file]"
+     ]
+    ]
+   },
+   {
+    "title": "Grouping Keys",
+    "columns": [
+     {
+      "title": "Field Name",
+      "width": 20
+     }
+    ],
+    "rows": [
+     "part_no"
+    ]
+   },
+   {
+    "title": "Execution Schedule",
+    "columns": [
+     {
+      "title": "Item",
+      "width": 12
+     },
+     {
+      "title": "Description",
+      "width": 36
+     }
+    ],
+    "rows": [
+     [
+      "Trigger",
+      "Starts when the user clicks [Validate file] in the Upload Excel modal of the Mapping per Destination screen (on demand, no schedule). The button is enabled only for the ongoing period."
+     ]
+    ]
+   }
+  ],
+  "constraints": [
+   "Data level: TB_M_PART_CANDIDATE (Part List) is at part number level (key PART_NO). TB_M_PART_CANDIDATE_DEST (Mapping per Destination) is at part number + calculation period + destination level (key PART_NO, PERIOD, DEST_CODE).",
+   "Only the ongoing calculation period is changed. Past periods are read only.",
+   "Names TB_M_PART_CANDIDATE and TB_M_PART_CANDIDATE_DEST are as given; the upload log name is proposed and the destination master table is TBD.",
+   "Upload template: sheet Upload is prefilled by Export Excel (ongoing period selected) with every Active part. Parts not in the file are not changed.",
+   "Change history of the mapping is not included yet. TBD: history table, logged events and retention are not decided."
+  ]
+ },
+ "func_flow": {
+  "flow": {
+   "direction": "TB",
+   "nodes": [
+    {
+     "id": "p1",
+     "label": "Receive uploaded file",
+     "type": "process",
+     "step": 1
+    },
+    {
+     "id": "xls",
+     "label": "Excel file (sheet Upload)",
+     "type": "document",
+     "lane": "input"
+    },
+    {
+     "id": "p2",
+     "label": "Check file (4.1)",
+     "type": "process",
+     "step": 2
+    },
+    {
+     "id": "p4",
+     "label": "Check rows, group by part (4.2)",
+     "type": "process",
+     "step": 4
+    },
+    {
+     "id": "m",
+     "label": "TB_M_PART_CANDIDATE / TB_M_PART_CANDIDATE_DEST",
+     "type": "db",
+     "lane": "input"
+    },
+    {
+     "id": "d",
+     "label": "Any error?",
+     "type": "decision",
+     "step": 5
+    },
+    {
+     "id": "p6",
+     "label": "Replace mapping of changed parts (4.3)",
+     "type": "process",
+     "step": 6
+    },
+    {
+     "id": "t",
+     "label": "TB_M_PART_CANDIDATE_DEST / TB_M_PART_CANDIDATE",
+     "type": "db",
+     "lane": "output"
+    },
+    {
+     "id": "p7",
+     "label": "Result report + upload log",
+     "type": "process",
+     "step": 7
+    },
+    {
+     "id": "log",
+     "label": "TB_R_CD_UPLOAD_LOG",
+     "type": "db",
+     "lane": "output"
+    }
+   ],
+   "edges": [
+    {
+     "from": "xls",
+     "to": "p1"
+    },
+    {
+     "from": "p1",
+     "to": "p2"
+    },
+    {
+     "from": "p2",
+     "to": "p4",
+     "label": "valid"
+    },
+    {
+     "from": "p2",
+     "to": "p7",
+     "label": "invalid"
+    },
+    {
+     "from": "m",
+     "to": "p4"
+    },
+    {
+     "from": "p4",
+     "to": "d"
+    },
+    {
+     "from": "d",
+     "to": "p6",
+     "label": "No"
+    },
+    {
+     "from": "d",
+     "to": "p7",
+     "label": "Yes"
+    },
+    {
+     "from": "p6",
+     "to": "t"
+    },
+    {
+     "from": "p6",
+     "to": "p7"
+    },
+    {
+     "from": "p7",
+     "to": "log"
+    }
+   ]
+  },
+  "steps": [
+   "User clicks [Validate file] in the Upload Excel modal of the Mapping per Destination screen (ongoing period). The batch starts and receives the uploaded file.",
+   {
+    "text": "Check the file: format .xlsx, size, number of rows, sheet \"Upload\" and template columns (see 4.1).",
+    "children": [
+     "If the file is not valid, reject the upload and go to step 7."
+    ]
+   },
+   "Read all rows of sheet \"Upload\" and group them by part_no.",
+   {
+    "text": "Check every row and every part against the business rules (see 4.2) and collect all errors.",
+    "children": [
+     "A placeholder row (dest_code and case_day both blank) is skipped."
+    ]
+   },
+   {
+    "text": "If any row has an error, reject the whole file. Nothing is saved and the errors are recorded in the upload log.",
+    "children": [
+     "Go to step 7."
+    ]
+   },
+   {
+    "text": "If all rows are valid, compare each part with its current mapping of the ongoing period (see 4.3).",
+    "children": [
+     "Same destinations and Case/Day: skip the part (no change).",
+     "Otherwise: replace the mapping of the part by the rows of the file and set Sync Status = No Sync.",
+     "A part whose rows are all blank is not changed."
+    ]
+   },
+   "Create the result report and record the result (completed or rejected) in the upload log. The Mapping per Destination screen shows the result to the user. Exit."
+  ]
+ },
+ "data_map": {
+  "blocks": [
+   {
+    "source": {
+     "table": "TB_M_PART_CANDIDATE_DEST",
+     "keys": [
+      {
+       "field": "PART_NO",
+       "value": "Changed part"
+      },
+      {
+       "field": "PERIOD",
+       "value": "Ongoing period"
+      }
+     ]
+    },
+    "destination": {
+     "table": "TB_M_PART_CANDIDATE_DEST",
+     "operation": "Delete",
+     "description": "Changed part - old rows",
+     "keys": [
+      {
+       "field": "PART_NO",
+       "value": "Changed part"
+      },
+      {
+       "field": "PERIOD",
+       "value": "Ongoing period"
+      }
+     ]
+    },
+    "mappings": [
+     {
+      "dest_field": "PART_NO",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "PERIOD",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "DEST_CODE",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "CASE_DAY",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "CREATED_BY",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "CREATED_DT",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "CHANGED_BY",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "CHANGED_DT",
+      "description": "Row is deleted"
+     }
+    ]
+   },
+   {
+    "source": {
+     "table": "Excel file - sheet Upload (valid rows)",
+     "keys": [
+      {
+       "field": "part_no",
+       "value": "Changed part"
+      },
+      {
+       "field": "dest_code",
+       "value": "Not blank"
+      }
+     ]
+    },
+    "destination": {
+     "table": "TB_M_PART_CANDIDATE_DEST",
+     "operation": "Insert",
+     "description": "Changed part - new rows"
+    },
+    "mappings": [
+     {
+      "source_field": "part_no",
+      "dest_field": "PART_NO"
+     },
+     {
+      "dest_field": "PERIOD",
+      "description": "Ongoing calculation period"
+     },
+     {
+      "source_field": "dest_code",
+      "dest_field": "DEST_CODE"
+     },
+     {
+      "source_field": "case_day",
+      "dest_field": "CASE_DAY"
+     },
+     {
+      "dest_field": "CREATED_BY",
+      "description": "Login name of the user who uploaded"
+     },
+     {
+      "dest_field": "CREATED_DT",
+      "description": "Server system date and time"
+     },
+     {
+      "dest_field": "CHANGED_BY",
+      "description": "Same as CREATED_BY"
+     },
+     {
+      "dest_field": "CHANGED_DT",
+      "description": "Server system date and time"
+     }
+    ]
+   },
+   {
+    "source": "Changed part of this upload",
+    "destination": {
+     "table": "TB_M_PART_CANDIDATE",
+     "operation": "Update",
+     "description": "Changed part - Sync Status",
+     "keys": [
+      {
+       "field": "PART_NO",
+       "value": "Changed part"
+      }
+     ]
+    },
+    "mappings": [
+     {
+      "dest_field": "PART_NO",
+      "description": "Key, not changed"
+     },
+     {
+      "dest_field": "PART_NAME",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "MIN_MAD",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "PCS_CASE",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "MAX_CASE_DAY",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "TOTAL_PCS_DAY",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "EFFECTIVE_START_DATE",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "PART_STATUS",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "SYNC_STATUS",
+      "description": "Set '0' (No Sync)"
+     },
+     {
+      "dest_field": "LAST_SOURCE",
+      "description": "Set 'UPLOAD'"
+     },
+     {
+      "dest_field": "LAST_UPLOAD_ID",
+      "description": "UPLOAD_ID of this run"
+     },
+     {
+      "dest_field": "CREATED_BY",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "CREATED_DT",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "CHANGED_BY",
+      "description": "Login name of the user who uploaded"
+     },
+     {
+      "dest_field": "CHANGED_DT",
+      "description": "Server system date and time"
+     }
+    ]
+   },
+   {
+    "source": "Result of this upload",
+    "destination": {
+     "table": "TB_R_CD_UPLOAD_LOG",
+     "operation": "Update",
+     "description": "Result of the run",
+     "keys": [
+      {
+       "field": "UPLOAD_ID",
+       "value": "UPLOAD_ID of this run"
+      }
+     ]
+    },
+    "mappings": [
+     {
+      "dest_field": "STATUS",
+      "description": "COMPLETED if all parts saved or skipped, REJECTED if file check or any row failed"
+     },
+     {
+      "dest_field": "TOTAL_ROWS",
+      "description": "Number of rows in sheet Upload"
+     },
+     {
+      "dest_field": "SAVED_ROWS",
+      "description": "Parts whose mapping was replaced"
+     },
+     {
+      "dest_field": "NO_CHANGE_ROWS",
+      "description": "Parts skipped because nothing changed"
+     },
+     {
+      "dest_field": "ERROR_ROWS",
+      "description": "Rows with error"
+     },
+     {
+      "dest_field": "RESULT_FILE_PATH",
+      "description": "Path of the result report .xlsx"
+     },
+     {
+      "dest_field": "END_DT",
+      "description": "Server system date and time"
+     }
+    ]
+   }
+  ]
+ },
+ "func_desc_layout": "two",
+ "func_desc": [
+  {
+   "type": "text",
+   "level": 0,
+   "text": "This batch starts when the user clicks [Validate file] in the Upload Excel modal of the Mapping per Destination screen. It checks the uploaded file and, if everything is valid, replaces the mapping of the changed parts for the ongoing calculation period. If not, the upload is rejected and recorded in the upload log."
+  },
+  {
+   "type": "bullets",
+   "marker": "-",
+   "level": 0,
+   "items": [
+    "Only sheet \"Upload\" of the file is read. Parts that are not in the sheet are not changed.",
+    "Only the ongoing calculation period is changed; past periods are read only.",
+    "One run saves all parts or none (all-or-nothing).",
+    "The column total_case_day is for reference only and is not read; the limit is Max Case/Day of the part in TB_M_PART_CANDIDATE."
+   ]
+  },
+  {
+   "type": "heading",
+   "text": "4.1 File Check (log message no. 5)"
+  },
+  {
+   "type": "bullets",
+   "marker": "1.",
+   "level": 0,
+   "items": [
+    "File extension is .xlsx.",
+    "File size is 5 MB or less.",
+    "Sheet Upload has 1 to 5,000 data rows.",
+    "Sheet \"Upload\" exists. Other sheets are ignored.",
+    "Header has the 4 template columns (see Appendix). Extra columns are ignored."
+   ]
+  },
+  {
+   "type": "heading",
+   "text": "4.2 Row Validation (log message no. 6)"
+  },
+  {
+   "type": "text",
+   "level": 0,
+   "text": "Every row is checked and all errors are collected, so the user can correct the file once. Checks 4 and 6 are done per part (all rows with the same part_no)."
+  },
+  {
+   "type": "heading",
+   "text": "4.3 Saving"
+  },
+  {
+   "type": "bullets",
+   "marker": "-",
+   "level": 0,
+   "items": [
+    "If any row is rejected, nothing is saved. The upload status and the error of every row are recorded in the upload log (TB_R_CD_UPLOAD_LOG).",
+    "If all rows are valid, each part in the file is compared with its current mapping of the ongoing period. A part with the same destinations and Case/Day is skipped (no change); its Sync Status and last update stay.",
+    "For a changed part, all its rows of the ongoing period in TB_M_PART_CANDIDATE_DEST are replaced by the rows of the file: destinations in the file are inserted or updated, destinations not in the file are removed.",
+    "A part whose rows are all blank (placeholder) is not changed, so a mapping cannot be removed completely by upload (same as the screen: at least one destination).",
+    "Every changed part gets Sync Status = No Sync in TB_M_PART_CANDIDATE. Sync is done manually by D/S on the screen.",
+    "A result report (.xlsx) is created for both cases."
+   ]
+  },
+  {
+   "type": "column_break"
+  },
+  {
+   "type": "table",
+   "level": 0,
+   "row_lines": "all",
+   "columns": [
+    {
+     "title": "No",
+     "width": 3,
+     "align": "center"
+    },
+    {
+     "title": "Check",
+     "width": 31
+    },
+    {
+     "title": "Column",
+     "width": 12
+    }
+   ],
+   "rows": [
+    [
+     "1",
+     "Part No exists in TB_M_PART_CANDIDATE and its status is Active.",
+     "part_no"
+    ],
+    [
+     "2",
+     "Destination code exists in the destination master.",
+     "dest_code"
+    ],
+    [
+     "3",
+     "case_day is a whole number greater than 0 when dest_code is filled.",
+     "case_day"
+    ],
+    [
+     "4",
+     "A destination code appears only once per part in the file.",
+     "dest_code"
+    ],
+    [
+     "5",
+     "dest_code and case_day are both filled, or both blank (placeholder row). Only one of the two filled is an error.",
+     "dest_code, case_day"
+    ],
+    [
+     "6",
+     "The total case_day of all rows of a part does not exceed the Max Case/Day of the part in TB_M_PART_CANDIDATE (total_case_day of the file is ignored). Below or equal is allowed.",
+     "case_day"
+    ],
+    [
+     "7",
+     "The upload is for the ongoing calculation period only (the screen enables [Validate file] only for that period).",
+     "-"
+    ]
+   ]
+  }
+ ],
+ "logging_messages": [
+  {
+   "event": "Batch start",
+   "cause": "Batch is called",
+   "type": "Info",
+   "msg_id": "TBD",
+   "message": "Mapping upload batch <UPLOAD_ID> started.",
+   "action": {
+    "system": "Write the log.",
+    "user": "-"
+   }
+  },
+  {
+   "event": "Batch end",
+   "cause": "Batch finishes",
+   "type": "Info",
+   "msg_id": "TBD",
+   "message": "Mapping upload batch <UPLOAD_ID> ended. Status <STATUS>, total <TOTAL_ROWS>, saved parts <SAVED_ROWS>, no change <NO_CHANGE_ROWS>, error <ERROR_ROWS>.",
+   "action": {
+    "system": "Write the log.",
+    "user": "-"
+   }
+  },
+  {
+   "event": "Database access",
+   "cause": "Cannot connect to the database",
+   "type": "Critical",
+   "msg_id": "TBD",
+   "message": "Cannot connect to the database.",
+   "action": {
+    "system": "Stop the batch. Inform system owner by e-mail.",
+    "user": "Contact system owner."
+   }
+  },
+  {
+   "event": "Receive file",
+   "cause": "Uploaded file of <UPLOAD_ID> not found",
+   "type": "Error",
+   "msg_id": "TBD",
+   "message": "Uploaded file of <UPLOAD_ID> not found.",
+   "action": {
+    "system": "Stop the batch.",
+    "user": "Upload the file again."
+   }
+  },
+  {
+   "event": "File check",
+   "cause": "Extension, size, row count, sheet Upload or header is invalid",
+   "type": "Error",
+   "msg_id": "TBD",
+   "message": "File check failed: <REASON>.",
+   "action": {
+    "system": "Set STATUS = REJECTED. Create the result report.",
+    "user": "Download the file from the screen again and upload it."
+   }
+  },
+  {
+   "event": "Row validation",
+   "cause": "A validation rule in 4.2 fails",
+   "type": "Error",
+   "msg_id": "TBD",
+   "message": "Row <ROW_NO> <COLUMN> : <RULE_MESSAGE>.",
+   "action": {
+    "system": "Reject the whole file. Nothing is saved.",
+    "user": "Correct the rows in sheet Re-upload of the result report, then upload again."
+   }
+  },
+  {
+   "event": "Part skipped",
+   "cause": "Rows of the part equal the current mapping, or all rows are blank",
+   "type": "Info",
+   "msg_id": "TBD",
+   "message": "Part No <PART_NO> has no mapping change. Skipped.",
+   "action": {
+    "system": "Do not change the mapping or the part.",
+    "user": "-"
+   }
+  },
+  {
+   "event": "Save mapping",
+   "cause": "Replace of TB_M_PART_CANDIDATE_DEST or update of TB_M_PART_CANDIDATE fails",
+   "type": "Error",
+   "msg_id": "TBD",
+   "message": "Cannot save the mapping of Part No <PART_NO>.",
+   "action": {
+    "system": "Roll back. Set STATUS = REJECTED.",
+    "user": "Contact system owner."
+   }
+  },
+  {
+   "event": "Result report",
+   "cause": "Result report cannot be created",
+   "type": "Warning",
+   "msg_id": "TBD",
+   "message": "Result report of <UPLOAD_ID> cannot be created.",
+   "action": {
+    "system": "Continue. RESULT_FILE_PATH stays blank.",
+    "user": "Contact system owner."
+   }
+  },
+  {
+   "event": "Unexpected error",
+   "cause": "Any other system error",
+   "type": "Critical",
+   "msg_id": "TBD",
+   "message": "Unexpected error: <ERROR_DETAIL>.",
+   "action": {
+    "system": "Roll back. Set STATUS = REJECTED. Inform system owner by e-mail.",
+    "user": "Contact system owner."
+   }
+  }
+ ],
+ "appendix_layout": "full",
+ "appendix": [
+  {
+   "type": "heading",
+   "text": "Upload template (sheet \"Upload\")"
+  },
+  {
+   "type": "table",
+   "level": 0,
+   "row_lines": "all",
+   "columns": [
+    {
+     "title": "Column",
+     "width": 16
+    },
+    {
+     "title": "Content",
+     "width": 60
+    }
+   ],
+   "rows": [
+    [
+     "part_no",
+     "Part Number of an Active part. One row per destination; all rows of a part together form its new mapping."
+    ],
+    [
+     "dest_code",
+     "Destination code (123 / 456 / 789). Once per part. Blank together with case_day = placeholder row."
+    ],
+    [
+     "case_day",
+     "Case/Day of the destination, whole number greater than 0."
+    ],
+    [
+     "total_case_day",
+     "Max Case/Day of the part, for reference only (not read by the batch)."
+    ]
+   ]
+  },
+  {
+   "type": "heading",
+   "text": "Sample upload scenarios"
+  },
+  {
+   "type": "text",
+   "level": 0,
+   "text": "Each scenario is a separate upload file. Ongoing period = Sep 2026. Input rows follow sheet Upload: part_no | dest_code | case_day | total_case_day."
+  },
+  {
+   "type": "text",
+   "level": 0,
+   "bold": true,
+   "text": "A. Master data before upload (ongoing period)"
+  },
+  {
+   "type": "table",
+   "level": 0,
+   "row_lines": "all",
+   "columns": [
+    {
+     "title": "Part No",
+     "width": 12
+    },
+    {
+     "title": "Status",
+     "width": 10
+    },
+    {
+     "title": "Max Case/Day",
+     "width": 11,
+     "align": "right"
+    },
+    {
+     "title": "Current mapping (dest_code:case_day)",
+     "width": 30
+    },
+    {
+     "title": "Total",
+     "width": 8,
+     "align": "right"
+    }
+   ],
+   "rows": [
+    [
+     "PART-A",
+     "Active",
+     "24",
+     "123:12, 456:8, 789:4",
+     "24"
+    ],
+    [
+     "PART-C",
+     "Active",
+     "30",
+     "789:18",
+     "18"
+    ],
+    [
+     "PART-G",
+     "Active",
+     "22",
+     "(no mapping - placeholder row in the export)",
+     "0"
+    ],
+    [
+     "PART-I",
+     "Candidate",
+     "20",
+     "(not in Mapping per Destination)",
+     "-"
+    ]
+   ]
+  },
+  {
+   "type": "text",
+   "level": 0,
+   "bold": true,
+   "text": "B. Normal scenarios (file accepted)"
+  },
+  {
+   "type": "table",
+   "level": 0,
+   "row_lines": "all",
+   "columns": [
+    {
+     "title": "No",
+     "width": 4
+    },
+    {
+     "title": "Scenario",
+     "width": 17
+    },
+    {
+     "title": "Input rows",
+     "width": 27
+    },
+    {
+     "title": "Expected result",
+     "width": 30
+    }
+   ],
+   "rows": [
+    [
+     "N1",
+     "Change Case/Day",
+     "PART-A | 123 | 10, PART-A | 456 | 8, PART-A | 789 | 6",
+     "Replaced. Total 24 (equal to Max). Sync Status No Sync."
+    ],
+    [
+     "N2",
+     "Remove a destination",
+     "PART-A | 123 | 12, PART-A | 456 | 8",
+     "Replaced. 789 removed. Total 20, 4 case/day left (below Max is allowed)."
+    ],
+    [
+     "N3",
+     "Add a destination",
+     "PART-C | 789 | 18, PART-C | 456 | 12",
+     "Replaced. 456 added. Total 30 (equal to Max)."
+    ],
+    [
+     "N4",
+     "First mapping from the placeholder row",
+     "PART-G | 123 | 22",
+     "Inserted. Total 22. Sync Status No Sync."
+    ],
+    [
+     "N5",
+     "Placeholder row left blank",
+     "PART-G | (blank) | (blank)",
+     "NO CHANGE. PART-G stays without mapping."
+    ],
+    [
+     "N6",
+     "Same values as the master",
+     "PART-A | 123 | 12, PART-A | 456 | 8, PART-A | 789 | 4",
+     "NO CHANGE. Sync Status and last update stay."
+    ],
+    [
+     "N7",
+     "File with only some parts",
+     "PART-C rows only",
+     "Only PART-C is processed. PART-A and PART-G are not changed."
+    ]
+   ]
+  },
+  {
+   "type": "text",
+   "level": 0,
+   "bold": true,
+   "text": "C. Error scenarios (whole file rejected, nothing saved)"
+  },
+  {
+   "type": "table",
+   "level": 0,
+   "row_lines": "all",
+   "columns": [
+    {
+     "title": "No",
+     "width": 4
+    },
+    {
+     "title": "Scenario",
+     "width": 17
+    },
+    {
+     "title": "Input rows",
+     "width": 27
+    },
+    {
+     "title": "Error (4.2 check no.)",
+     "width": 30
+    }
+   ],
+   "rows": [
+    [
+     "E1",
+     "Part not registered",
+     "PART-Z99 | 123 | 10",
+     "Check 1: Part No is not registered or its status is not Active."
+    ],
+    [
+     "E2",
+     "Part is not Active",
+     "PART-I | 123 | 10",
+     "Check 1: Part No is not registered or its status is not Active."
+    ],
+    [
+     "E3",
+     "Unknown destination",
+     "PART-A | 999 | 10",
+     "Check 2: Destination code 999 not found in the destination master."
+    ],
+    [
+     "E4",
+     "Invalid Case/Day",
+     "PART-A | 123 | 0",
+     "Check 3: case_day must be a whole number greater than 0."
+    ],
+    [
+     "E5",
+     "Same destination twice",
+     "PART-A | 123 | 10, PART-A | 123 | 4",
+     "Check 4: Destination 123 appears more than once for this part."
+    ],
+    [
+     "E6",
+     "Only one of dest_code / case_day",
+     "PART-G | 123 | (blank)",
+     "Check 5: dest_code and case_day must both be filled or both blank."
+    ],
+    [
+     "E7",
+     "Total above Max Case/Day",
+     "PART-A | 123 | 12, PART-A | 456 | 8, PART-A | 789 | 10",
+     "Check 6: Total allocation of 30 case/day exceeds Max Case/Day (24). Reduce one of the destinations."
+    ],
+    [
+     "E8",
+     "Valid rows mixed with an error row",
+     "N4 rows (valid) + E3 row (error) in one file",
+     "Whole file rejected. N4 is NOT saved. Result report sheet Re-upload lists the rows to correct."
+    ]
+   ]
+  },
+  {
+   "type": "text",
+   "level": 0,
+   "bold": true,
+   "text": "D. File-level errors (file check 4.1)"
+  },
+  {
+   "type": "table",
+   "level": 0,
+   "row_lines": "all",
+   "columns": [
+    {
+     "title": "No",
+     "width": 4
+    },
+    {
+     "title": "Scenario",
+     "width": 40
+    },
+    {
+     "title": "Expected result",
+     "width": 34
+    }
+   ],
+   "rows": [
+    [
+     "F1",
+     "File is .xls or .csv",
+     "Rejected: file must be .xlsx."
+    ],
+    [
+     "F2",
+     "File larger than 5 MB",
+     "Rejected: file size exceeds 5 MB."
+    ],
+    [
+     "F3",
+     "More than 5,000 data rows, or no data row",
+     "Rejected: row count out of range."
+    ],
+    [
+     "F4",
+     "No sheet named Upload (e.g. only sheet Mapping per Destination)",
+     "Rejected: sheet Upload not found."
+    ],
+    [
+     "F5",
+     "A template column is missing (e.g. case_day deleted)",
+     "Rejected: required column not found."
+    ]
+   ]
+  }
+ ],
+ "tables": [
+  {
+   "name": "TB_M_PART_CANDIDATE",
+   "kind": "transaction",
+   "proposed": false,
+   "description": "Candidate part setting, one record per part (Part List data, no calculation period). Read for status and Max Case/Day; Sync Status updated.",
+   "columns": [
+    [
+     "PART_NO",
+     "VARCHAR(TBD)",
+     "Y",
+     "N",
+     "Part number; length follows TB_M_PART_MASTER"
+    ],
+    [
+     "PART_NAME",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "Retrieved from TB_M_PART_MASTER by PART_NO"
+    ],
+    [
+     "MIN_MAD",
+     "INT",
+     "",
+     "N",
+     "Minimum MAD"
+    ],
+    [
+     "PCS_CASE",
+     "INT",
+     "",
+     "N",
+     "Pieces per case (> 0)"
+    ],
+    [
+     "MAX_CASE_DAY",
+     "INT",
+     "",
+     "N",
+     "Total Case/Day of the part (> 0); limit of the mapping"
+    ],
+    [
+     "TOTAL_PCS_DAY",
+     "INT",
+     "",
+     "N",
+     "PCS_CASE x MAX_CASE_DAY"
+    ],
+    [
+     "EFFECTIVE_START_DATE",
+     "DATE",
+     "",
+     "Y",
+     "Effective start date"
+    ],
+    [
+     "PART_STATUS",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "Candidate / Active / Inactive"
+    ],
+    [
+     "SYNC_STATUS",
+     "CHAR(1)",
+     "",
+     "N",
+     "0 = No Sync, 1 = Success, 2 = Failed"
+    ],
+    [
+     "LAST_SOURCE",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "CALC / SCREEN / UPLOAD"
+    ],
+    [
+     "LAST_UPLOAD_ID",
+     "VARCHAR(TBD)",
+     "",
+     "Y",
+     "Upload that last changed the record"
+    ],
+    [
+     "CREATED_BY",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "User who created the record"
+    ],
+    [
+     "CREATED_DT",
+     "DATETIME",
+     "",
+     "N",
+     "Created date and time"
+    ],
+    [
+     "CHANGED_BY",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "User who last changed the record"
+    ],
+    [
+     "CHANGED_DT",
+     "DATETIME",
+     "",
+     "N",
+     "Last changed date and time"
+    ]
+   ]
+  },
+  {
+   "name": "TB_M_PART_CANDIDATE_DEST",
+   "kind": "transaction",
+   "proposed": false,
+   "description": "Destination mapping, one record per part, calculation period and destination (Mapping per Destination data). Target of a successful upload.",
+   "columns": [
+    [
+     "PART_NO",
+     "VARCHAR(TBD)",
+     "Y",
+     "N",
+     "Part number; FK to TB_M_PART_CANDIDATE"
+    ],
+    [
+     "PERIOD",
+     "VARCHAR(TBD)",
+     "Y",
+     "N",
+     "Calculation period, e.g. Sep 2026 (format TBD)"
+    ],
+    [
+     "DEST_CODE",
+     "VARCHAR(TBD)",
+     "Y",
+     "N",
+     "Destination code; destination master table TBD"
+    ],
+    [
+     "CASE_DAY",
+     "INT",
+     "",
+     "N",
+     "Allocated Case/Day of the destination (> 0)"
+    ],
+    [
+     "CREATED_BY",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "User who created the record"
+    ],
+    [
+     "CREATED_DT",
+     "DATETIME",
+     "",
+     "N",
+     "Created date and time"
+    ],
+    [
+     "CHANGED_BY",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "User who last changed the record"
+    ],
+    [
+     "CHANGED_DT",
+     "DATETIME",
+     "",
+     "N",
+     "Last changed date and time"
+    ]
+   ]
+  },
+  {
+   "name": "TB_R_CD_UPLOAD_LOG",
+   "kind": "log",
+   "proposed": true,
+   "description": "One record per uploaded file (Part List and Mapping uploads). Created by the batch when it starts, updated with the result.",
+   "columns": [
+    [
+     "UPLOAD_ID",
+     "VARCHAR(TBD)",
+     "Y",
+     "N",
+     "Upload ID, generated by the screen"
+    ],
+    [
+     "FUNCTION_ID",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "PART_LIST or MAPPING"
+    ],
+    [
+     "FILE_NAME",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "Uploaded file name"
+    ],
+    [
+     "STATUS",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "PROCESSING / COMPLETED / REJECTED"
+    ],
+    [
+     "TOTAL_ROWS",
+     "INT",
+     "",
+     "Y",
+     "Rows in sheet Upload"
+    ],
+    [
+     "SAVED_ROWS",
+     "INT",
+     "",
+     "Y",
+     "Parts saved (Mapping) / rows saved (Part List)"
+    ],
+    [
+     "NO_CHANGE_ROWS",
+     "INT",
+     "",
+     "Y",
+     "Parts or rows skipped because nothing changed"
+    ],
+    [
+     "ERROR_ROWS",
+     "INT",
+     "",
+     "Y",
+     "Rows with error"
+    ],
+    [
+     "RESULT_FILE_PATH",
+     "VARCHAR(TBD)",
+     "",
+     "Y",
+     "Path of the result report .xlsx"
+    ],
+    [
+     "START_DT",
+     "DATETIME",
+     "",
+     "Y",
+     "Batch start"
+    ],
+    [
+     "END_DT",
+     "DATETIME",
+     "",
+     "Y",
+     "Batch end"
+    ],
+    [
+     "CREATED_BY",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "User who created the record"
+    ],
+    [
+     "CREATED_DT",
+     "DATETIME",
+     "",
+     "N",
+     "Created date and time"
+    ]
+   ]
+  }
+ ]
+}

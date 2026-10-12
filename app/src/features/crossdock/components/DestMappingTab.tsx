@@ -26,7 +26,9 @@ const td: React.CSSProperties = {
 };
 
 export function DestMappingTab({ state }: { state: CrossdockState }) {
-  const { parts, q, setQ, resetQ, ro, expand, editDest, draftDests, toggleExpand, startEditDest, cancelEditDest, patchDraft, saveDest, syncParts } = state;
+  const { parts, q, setQ, resetQ, ro, expand, editDest, draftDests, toggleExpand, startEditDest, cancelEditDest, patchDraft, saveDest, syncParts, openMappingUpload } = state;
+  // Only the ongoing period can be changed, so the upload is disabled for past periods and "All periods".
+  const uploadLocked = ro || q.per !== CUR_PER;
 
   const destRowsSrc = useMemo(
     () =>
@@ -50,7 +52,7 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
   const syncableCount = syncable.length;
 
   const exportExcel = () => {
-    exportMappingXlsx(destRowsSrc, q.per).catch((err) => {
+    exportMappingXlsx(destRowsSrc, q.per, parts).catch((err) => {
       console.error('Export Excel failed', err);
       window.alert('Export Excel failed. Please try again.');
     });
@@ -152,6 +154,18 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
                 <path d="M21 4v5h-5" />
               </svg>
               Sync{syncableCount ? ` (${syncableCount})` : ''}
+            </button>
+            <button
+              className="btn btn-secondary"
+              onClick={openMappingUpload}
+              disabled={uploadLocked}
+              title={uploadLocked ? 'Past period — read only. Select the ongoing period to upload.' : 'Upload the destination mapping from Excel'}
+              style={{ fontSize: 12, padding: '4px 12px' }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <path d="M12 21V9M7 14l5-5 5 5M5 3h14" />
+              </svg>
+              Upload Excel
             </button>
             <button className="btn btn-primary" onClick={exportExcel} style={{ fontSize: 12, padding: '4px 12px' }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">

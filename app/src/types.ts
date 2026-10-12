@@ -57,7 +57,7 @@ export interface PartQuery {
   sort: 'default' | 'pn_asc' | 'dt_desc' | 'dt_asc';
 }
 
-export type ModalKind = 'part' | 'upload' | 'history' | null;
+export type ModalKind = 'part' | 'upload' | 'upload-mapping' | 'history' | null;
 export type TabView = 'part' | 'dest';
 export type UserRole = 'procurement' | 'ds';
 
