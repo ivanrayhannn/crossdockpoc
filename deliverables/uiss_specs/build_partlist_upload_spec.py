@@ -7,15 +7,15 @@ STATUS_RULE = ('Status: flag A must be blank (a new part is always Candidate). F
                'Active; no part can be changed to Candidate.')
 spec = {
  "doc_type": "batch",
- "header": {"phase": "DR", "project_name": "NSP - New Service Part System", "block_name": "Batch",
+ "header": {"phase": "DR", "project_name": "Crossdock Optimization", "block_name": "Batch",
             "function_name": "TBD Crossdock Master Setting - Part List Upload",
-            "created_date": "08-Oct-26", "created_by": "Ivan", "updated_date": "12-Oct-26", "updated_by": "Ivan Rayhan"},
+            "created_date": "08-Oct-26", "created_by": "FID Rayhan", "updated_date": "12-Oct-26", "updated_by": "FID Rayhan"},
  "revisions": [
-  {"revision": "0.1", "author": "Ivan", "date": "08-Oct-26", "reviewed_by": "",
+  {"revision": "0.1", "author": "FID Rayhan", "date": "08-Oct-26", "reviewed_by": "",
    "description": "Initial draft based on the validated Candidate Part Batch Flow simulation (rules as of 09-Oct-26, build v2)"},
-  {"revision": "0.2", "author": "Ivan", "date": "09-Oct-26", "reviewed_by": "",
+  {"revision": "0.2", "author": "FID Rayhan", "date": "09-Oct-26", "reviewed_by": "",
    "description": "Max Case/Day vs existing mapping rule decided (4.2 no. 9); 4.3 simplified; sample upload scenarios added to Appendix"},
-  {"revision": "0.3", "author": "Ivan Rayhan", "date": "12-Oct-26", "reviewed_by": "",
+  {"revision": "0.3", "author": "FID Rayhan", "date": "12-Oct-26", "reviewed_by": "",
    "description": "Status rule changed (4.2 no. 6): Candidate status cannot be changed by upload, Active <-> Inactive can, nothing can become Candidate; Edit maps status to PART_STATUS. Trigger renamed to [Validate file]. Operation and functional flow diagrams added. Scenarios N8, E7, E8 updated. Tables renamed to TB_M_PART_CANDIDATE (part number level, key PART_NO, no period) and TB_M_PART_CANDIDATE_DEST (part number + period + destination level)."}],
  "general": {
   "objective": [

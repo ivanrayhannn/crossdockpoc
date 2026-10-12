@@ -2,16 +2,16 @@
  "doc_type": "screen",
  "header": {
   "phase": "DR",
-  "project_name": "NSP - New Service Part System",
+  "project_name": "Crossdock Optimization",
   "block_name": "Screen",
   "function_name": "TBD Crossdock Master Setting - Part List",
   "created_date": "12-Oct-26",
-  "created_by": "Ivan Rayhan"
+  "created_by": "FID Rayhan"
  },
  "revisions": [
   {
    "revision": "0.1",
-   "author": "Ivan Rayhan",
+   "author": "FID Rayhan",
    "date": "12-Oct-26",
    "reviewed_by": "",
    "description": "Initial draft based on the business decisions for the Crossdock Master Setting Part List sub-menu and the crossdockpoc web prototype as of 12-Oct-26. Upload backend is documented in UISS-Batch \"Crossdock Master Setting - Part List Upload\". Data level: TB_M_PART_CANDIDATE is at part number level (key PART_NO, no calculation period); TB_M_PART_CANDIDATE_DEST (Mapping per Destination) is at part number + calculation period + destination level."
