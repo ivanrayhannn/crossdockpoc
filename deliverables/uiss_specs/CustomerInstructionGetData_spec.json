@@ -1,0 +1,1665 @@
+{
+  "doc_type": "batch",
+  "header": {
+    "phase": "DR",
+    "project_name": "NSP - New Service Part System",
+    "block_name": "Batch",
+    "function_name": "TBD Case Consolidation - Customer Instruction Get Data (F1)",
+    "created_date": "12-Oct-26",
+    "created_by": "Ivan",
+    "updated_date": "12-Oct-26",
+    "updated_by": "Ivan"
+  },
+  "revisions": [
+    {
+      "revision": "0.1",
+      "author": "Ivan",
+      "date": "12-Oct-26",
+      "reviewed_by": "",
+      "description": "Initial draft of F1 Get Data based on discussion rules GD-01 to GD-11. F2 Cancel Sync, F3 PO Mapping and F4 Case Assignment are documented separately."
+    }
+  ],
+  "general": {
+    "objective": [
+      "To get new crossdock customer orders (DEMAND_HISTORY_UPDATE_CD = '06') from TB_R_H0202_DEMAND_HISTORY_SUM and insert them into TB_R_CUSTOMER_INSTRUCTION as the base data for Case Consolidation (F2 Cancel Sync, F3 PO Mapping, F4 Case Assignment).",
+      "To accept a Customer Order Date only when every part on that date is Active in the Crossdock Part List master. When any part is not Active, the whole Customer Order Date is held in a pending table and checked again in the next runs (GD-04, GD-05).",
+      "In case any technical error occurs, all inserted data is rolled back, the watermark is not moved and F2 to F4 are not executed (GD-10)."
+    ],
+    "operation_flow": {
+      "flow": {
+        "direction": "TB",
+        "nodes": [
+          {
+            "id": "sch",
+            "label": "Job scheduler daily 05:00",
+            "type": "event"
+          },
+          {
+            "id": "h",
+            "label": "TB_R_H0202_DEMAND_HISTORY_SUM",
+            "type": "db"
+          },
+          {
+            "id": "m",
+            "label": "MASTER_CANDIDATE_PART",
+            "type": "db"
+          },
+          {
+            "id": "f1",
+            "label": "F1 Get Data",
+            "type": "process"
+          },
+          {
+            "id": "ci",
+            "label": "TB_R_CUSTOMER_INSTRUCTION",
+            "type": "db"
+          },
+          {
+            "id": "pd",
+            "label": "TB_R_CI_PENDING_ORDER_DT",
+            "type": "db"
+          },
+          {
+            "id": "nx",
+            "label": "F2 Cancel Sync, F3, F4",
+            "type": "subprocess"
+          }
+        ],
+        "edges": [
+          {
+            "from": "sch",
+            "to": "f1"
+          },
+          {
+            "from": "h",
+            "to": "f1"
+          },
+          {
+            "from": "m",
+            "to": "f1"
+          },
+          {
+            "from": "f1",
+            "to": "ci",
+            "label": "accepted dates"
+          },
+          {
+            "from": "f1",
+            "to": "pd",
+            "label": "rejected dates"
+          },
+          {
+            "from": "ci",
+            "to": "nx",
+            "style": "dashed"
+          }
+        ],
+        "same_rank": [
+          [
+            "h",
+            "m"
+          ],
+          [
+            "ci",
+            "pd"
+          ]
+        ]
+      },
+      "note": "F2 to F4 are outside this document; they run after F1 succeeds in the same 05:00 job."
+    },
+    "inputs": [
+      {
+        "name": "TB_R_H0202_DEMAND_HISTORY_SUM",
+        "type": "DB",
+        "description": "Only DEMAND_HISTORY_UPDATE_CD = '06'. Delta: CREATE_DT later than the watermark (GD-03). Rows of pending Customer Order Dates are read again regardless of the watermark (GD-05)."
+      },
+      {
+        "name": "MASTER_CANDIDATE_PART",
+        "type": "DB",
+        "description": "Crossdock Part List master. Part must have PART_STATUS = 'Active' (GD-04). Period to read is TBD."
+      },
+      {
+        "name": "TB_R_CUSTOMER_INSTRUCTION",
+        "type": "DB",
+        "description": "Existing keys; a key that already exists is skipped (insert only, GD-07)."
+      },
+      {
+        "name": "TB_R_CI_PENDING_ORDER_DT",
+        "type": "DB",
+        "description": "Customer Order Dates held by earlier runs with status P (Pending); processed first, oldest date first (table proposed)."
+      },
+      {
+        "name": "TB_R_CI_BATCH_LOG",
+        "type": "DB",
+        "description": "WATERMARK_TO of the last successful F1 run (table proposed)."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "TB_R_CUSTOMER_INSTRUCTION",
+        "type": "DB",
+        "description": "New order lines of accepted Customer Order Dates, if successful."
+      },
+      {
+        "name": "TB_R_CI_PENDING_ORDER_DT",
+        "type": "DB",
+        "description": "Rejected Customer Order Dates (insert or re-open) and released dates (status update) (table proposed)."
+      },
+      {
+        "name": "TB_R_CI_BATCH_LOG",
+        "type": "DB",
+        "description": "One record per run: status, counts, watermark, start/end. Also logs necessary information (table proposed)."
+      }
+    ],
+    "extra_tables": [
+      {
+        "title": "Execution Schedule",
+        "columns": [
+          {
+            "title": "Item",
+            "width": 14
+          },
+          {
+            "title": "Description",
+            "width": 35
+          }
+        ],
+        "rows": [
+          [
+            "Trigger",
+            "Job scheduler, once a day at 05:00 (GD-01)."
+          ],
+          [
+            "Sequence",
+            "F1 -> F2 -> F3 -> F4 in the same job. F2 to F4 run only if F1 ends successfully."
+          ],
+          [
+            "Re-run",
+            "Safe to re-run: existing keys are skipped and the watermark only moves on success."
+          ],
+          [
+            "Dependency",
+            "TBD: confirm that the TOPAS load of H0202 always finishes before 05:00."
+          ]
+        ]
+      },
+      {
+        "title": "Unique Key of TB_R_CUSTOMER_INSTRUCTION (GD-06)",
+        "columns": [
+          {
+            "title": "Field Name",
+            "width": 22
+          }
+        ],
+        "rows": [
+          "CUSTOMER_CD",
+          "CUSTOMER_ORDER_NO",
+          "ORDER_DT",
+          "DESTINATION_CD",
+          "ORDER_PART_NO",
+          "DETAILED_ITEM_NO"
+        ]
+      },
+      {
+        "title": "Grouping Keys (acceptance unit)",
+        "columns": [
+          {
+            "title": "Field Name",
+            "width": 22
+          }
+        ],
+        "rows": [
+          "ORDER_DT"
+        ]
+      }
+    ],
+    "constraints": [
+      "Insert only: quantity changes in H0202 for a key that already exists are ignored; corrections are injected manually outside this batch (GD-07, GD-11).",
+      "F1 does not check pcs/case multiples. The hold for non-multiple quantities is done in F3 per ORDER_DT + DESTINATION_CD + PART (GD-09).",
+      "SERIAL_NO is not used (GD-06).",
+      "Table names TB_R_CI_PENDING_ORDER_DT and TB_R_CI_BATCH_LOG and the column SPLIT_SEQ are proposed; align them with the project naming convention."
+    ]
+  },
+  "func_flow": {
+    "flow": {
+      "direction": "TB",
+      "nodes": [
+        {
+          "id": "s",
+          "label": "START",
+          "type": "start"
+        },
+        {
+          "id": "p1",
+          "label": "Create batch log, get watermark",
+          "type": "process",
+          "step": 1
+        },
+        {
+          "id": "lg1",
+          "label": "TB_R_CI_BATCH_LOG",
+          "type": "db",
+          "lane": "output"
+        },
+        {
+          "id": "p2",
+          "label": "Get pending order dates",
+          "type": "process",
+          "step": 2
+        },
+        {
+          "id": "pd1",
+          "label": "TB_R_CI_PENDING_ORDER_DT",
+          "type": "db",
+          "lane": "input"
+        },
+        {
+          "id": "p3",
+          "label": "Get H0202 rows (pending + delta)",
+          "type": "process",
+          "step": 3
+        },
+        {
+          "id": "h",
+          "label": "TB_R_H0202_DEMAND_HISTORY_SUM",
+          "type": "db",
+          "lane": "input"
+        },
+        {
+          "id": "p4",
+          "label": "Check part status per ORDER_DT",
+          "type": "process",
+          "step": 4
+        },
+        {
+          "id": "m",
+          "label": "MASTER_CANDIDATE_PART",
+          "type": "db",
+          "lane": "input"
+        },
+        {
+          "id": "d1",
+          "label": "All parts Active?",
+          "type": "decision"
+        },
+        {
+          "id": "p5",
+          "label": "Hold ORDER_DT in pending table",
+          "type": "process",
+          "step": 5
+        },
+        {
+          "id": "p6",
+          "label": "Insert new keys",
+          "type": "process",
+          "step": 6
+        },
+        {
+          "id": "ci",
+          "label": "TB_R_CUSTOMER_INSTRUCTION",
+          "type": "db",
+          "lane": "output"
+        },
+        {
+          "id": "d2",
+          "label": "All ORDER_DT processed?",
+          "type": "decision"
+        },
+        {
+          "id": "p7",
+          "label": "Commit, close batch log",
+          "type": "process",
+          "step": 7
+        },
+        {
+          "id": "lg2",
+          "label": "TB_R_CI_BATCH_LOG",
+          "type": "db",
+          "lane": "output"
+        },
+        {
+          "id": "e",
+          "label": "END",
+          "type": "end"
+        }
+      ],
+      "edges": [
+        {
+          "from": "s",
+          "to": "p1"
+        },
+        {
+          "from": "p1",
+          "to": "lg1"
+        },
+        {
+          "from": "p1",
+          "to": "p2"
+        },
+        {
+          "from": "pd1",
+          "to": "p2"
+        },
+        {
+          "from": "p2",
+          "to": "p3"
+        },
+        {
+          "from": "h",
+          "to": "p3"
+        },
+        {
+          "from": "p3",
+          "to": "p4"
+        },
+        {
+          "from": "m",
+          "to": "p4"
+        },
+        {
+          "from": "p4",
+          "to": "d1"
+        },
+        {
+          "from": "d1",
+          "to": "p5",
+          "label": "No"
+        },
+        {
+          "from": "d1",
+          "to": "p6",
+          "label": "Yes"
+        },
+        {
+          "from": "p6",
+          "to": "ci"
+        },
+        {
+          "from": "p5",
+          "to": "d2"
+        },
+        {
+          "from": "p6",
+          "to": "d2"
+        },
+        {
+          "from": "d2",
+          "to": "p4",
+          "label": "No"
+        },
+        {
+          "from": "d2",
+          "to": "p7",
+          "label": "Yes"
+        },
+        {
+          "from": "p7",
+          "to": "lg2"
+        },
+        {
+          "from": "p7",
+          "to": "e"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "text": "Insert a batch log record with STATUS = 'PROCESSING' and START_DT (log message no. 1). Get the watermark = WATERMARK_TO of the last F1 run with STATUS = 'SUCCESS'.",
+        "children": [
+          "If no successful run exists, use the initial cut-off parameter (value TBD at go-live).",
+          "If the parameter is not set, log message no. 4. Stop."
+        ]
+      },
+      {
+        "text": "Retrieve the Customer Order Dates in TB_R_CI_PENDING_ORDER_DT with STATUS = 'P', ordered by ORDER_DT ascending (GD-05)."
+      },
+      {
+        "text": "Retrieve H0202 rows with DEMAND_HISTORY_UPDATE_CD = '06' (see 4.1):",
+        "children": [
+          "Group A: all rows of the pending ORDER_DT from step 2, regardless of the watermark.",
+          "Group B: rows with CREATE_DT > watermark whose ORDER_DT is not pending (delta).",
+          "New watermark = MAX(CREATE_DT) of the rows read; unchanged if nothing was read.",
+          "If no row is found, log message no. 5 and go to step 7."
+        ]
+      },
+      {
+        "text": "Process ORDER_DT one by one: Group A first, then Group B, oldest ORDER_DT first. Check every ORDER_PART_NO of the ORDER_DT against MASTER_CANDIDATE_PART (see 4.2)."
+      },
+      {
+        "text": "If any part is not Active: do not insert any row of this ORDER_DT. Insert the date into TB_R_CI_PENDING_ORDER_DT with STATUS = 'P', or update the existing record (log message no. 6). Proceed to the next ORDER_DT.",
+        "children": [
+          "Other ORDER_DT that pass the check are still processed (business rejection, not a batch failure)."
+        ]
+      },
+      {
+        "text": "If all parts are Active: insert every row whose unique key does not exist in TB_R_CUSTOMER_INSTRUCTION (see 4.3). Skip existing keys (log message no. 8).",
+        "children": [
+          "If the ORDER_DT was pending, set its STATUS = 'R' (Released) (log message no. 7).",
+          "If an insert fails, log message no. 10, roll back all changes of this run and go to the error end."
+        ]
+      },
+      {
+        "text": "When all ORDER_DT are processed, commit. Update the batch log: STATUS = 'SUCCESS', counts, WATERMARK_TO = new watermark, END_DT (log message no. 2). Return success so that F2 starts.",
+        "children": [
+          "Error end: STATUS = 'ERROR', WATERMARK_TO = watermark from step 1 (not moved), END_DT. Return error; F2 to F4 are not executed (GD-10)."
+        ]
+      }
+    ]
+  },
+  "data_map": {
+    "blocks": [
+      {
+        "source": "Batch start",
+        "destination": {
+          "table": "TB_R_CI_BATCH_LOG",
+          "operation": "Insert",
+          "description": "Step 1 - batch start"
+        },
+        "mappings": [
+          {
+            "dest_field": "BATCH_RUN_ID",
+            "description": "Generated sequence; format TBD"
+          },
+          {
+            "dest_field": "FUNCTION_ID",
+            "description": "Default: 'F1' (batch ID TBD)"
+          },
+          {
+            "dest_field": "STATUS",
+            "description": "Default: 'PROCESSING'"
+          },
+          {
+            "dest_field": "WATERMARK_FROM",
+            "description": "WATERMARK_TO of the last SUCCESS F1 run, or the initial cut-off parameter"
+          },
+          {
+            "dest_field": "WATERMARK_TO",
+            "description": "Default: same as WATERMARK_FROM"
+          },
+          {
+            "dest_field": "READ_ROWS",
+            "description": "Default: 0"
+          },
+          {
+            "dest_field": "INSERTED_ROWS",
+            "description": "Default: 0"
+          },
+          {
+            "dest_field": "SKIPPED_ROWS",
+            "description": "Default: 0"
+          },
+          {
+            "dest_field": "REJECTED_ROWS",
+            "description": "Default: 0"
+          },
+          {
+            "dest_field": "REJECTED_ORDER_DT",
+            "description": "Default: 0"
+          },
+          {
+            "dest_field": "RELEASED_ORDER_DT",
+            "description": "Default: 0"
+          },
+          {
+            "dest_field": "MESSAGE",
+            "description": "Default: blank"
+          },
+          {
+            "dest_field": "START_DT",
+            "description": "Server system date and time"
+          },
+          {
+            "dest_field": "END_DT",
+            "description": "Default: NULL"
+          },
+          {
+            "dest_field": "CREATED_BY",
+            "description": "Batch ID (TBD)"
+          },
+          {
+            "dest_field": "CREATED_DT",
+            "description": "Server system date and time"
+          }
+        ]
+      },
+      {
+        "source": {
+          "table": "TB_R_H0202_DEMAND_HISTORY_SUM",
+          "keys": [
+            {
+              "field": "DEMAND_HISTORY_UPDATE_CD",
+              "value": "'06'"
+            },
+            {
+              "field": "CREATE_DT",
+              "value": "> watermark (Group B) or ORDER_DT is pending (Group A)"
+            },
+            {
+              "field": "ORDER_DT",
+              "value": "All parts of the ORDER_DT are Active"
+            }
+          ]
+        },
+        "destination": {
+          "table": "TB_R_CUSTOMER_INSTRUCTION",
+          "operation": "Insert",
+          "description": "Step 6 - accepted ORDER_DT, key not yet in table"
+        },
+        "mappings": [
+          {
+            "source_field": "CUSTOMER_CD",
+            "dest_field": "CUSTOMER_CD"
+          },
+          {
+            "source_field": "CUSTOMER_ORDER_NO",
+            "dest_field": "CUSTOMER_ORDER_NO"
+          },
+          {
+            "source_field": "ORDER_DT",
+            "dest_field": "ORDER_DT"
+          },
+          {
+            "source_field": "DESTINATION_CD",
+            "dest_field": "DESTINATION_CD"
+          },
+          {
+            "source_field": "ORDER_PART_NO",
+            "dest_field": "ORDER_PART_NO"
+          },
+          {
+            "source_field": "DETAILED_ITEM_NO",
+            "dest_field": "DETAILED_ITEM_NO"
+          },
+          {
+            "dest_field": "SPLIT_SEQ",
+            "description": "Default: 1. Higher numbers are created by F3 when one order line is split over several POs (Proposed)"
+          },
+          {
+            "source_field": "DEMAND_HISTORY_UPDATE_CD",
+            "dest_field": "DEMAND_HISTORY_UPDATE_CD",
+            "description": "Always '06'"
+          },
+          {
+            "source_field": "ORDER_QTY_DEMAND_QTY",
+            "dest_field": "ORDER_QTY_DEMAND_QTY",
+            "description": "Reference only"
+          },
+          {
+            "source_field": "SHIPPING_QTY",
+            "dest_field": "SHIPPING_QTY",
+            "description": "Reference only"
+          },
+          {
+            "source_field": "CROSS_DOCK_QTY",
+            "dest_field": "CROSS_DOCK_QTY",
+            "description": "Customer quantity; never changed after insert"
+          },
+          {
+            "source_field": "PROCESS_QTY",
+            "dest_field": "PROCESS_QTY",
+            "description": "Reference only"
+          },
+          {
+            "source_field": "BO_CANCEL_QTY",
+            "dest_field": "BO_CANCEL_QTY",
+            "description": "Reference only"
+          },
+          {
+            "source_field": "FIRM_ORDER_QTY",
+            "dest_field": "FIRM_ORDER_QTY",
+            "description": "Reference only"
+          },
+          {
+            "source_field": "REJECT_QTY",
+            "dest_field": "REJECT_QTY",
+            "description": "Reference only"
+          },
+          {
+            "source_field": "CROSS_DOCK_QTY",
+            "dest_field": "ORDER_QTY",
+            "description": "Active quantity. Initial value = CROSS_DOCK_QTY; F2 sets CROSS_DOCK_QTY - CANCEL_H0253_QTY"
+          },
+          {
+            "dest_field": "CANCEL_H0253_QTY",
+            "description": "Default: NULL (filled by F2)"
+          },
+          {
+            "dest_field": "ORDER_STATUS",
+            "description": "Default: NULL (F2 sets '2' = Cancel)"
+          },
+          {
+            "dest_field": "PO_NUMBER",
+            "description": "Default: NULL (filled by F3)"
+          },
+          {
+            "dest_field": "PO_QTY",
+            "description": "Default: NULL (filled by F3)"
+          },
+          {
+            "dest_field": "REMAINING_ORDER_QTY",
+            "description": "Default: NULL (filled by F3)"
+          },
+          {
+            "dest_field": "CASE_NUMBER",
+            "description": "Default: NULL (filled by F4)"
+          },
+          {
+            "dest_field": "ASN_NUMBER",
+            "description": "Default: NULL (filled at ASN creation)"
+          },
+          {
+            "dest_field": "DELETED_FLAG",
+            "description": "Default: 'N'"
+          },
+          {
+            "dest_field": "H0202_CREATE_DT",
+            "description": "H0202.CREATE_DT of the source row, for traceability"
+          },
+          {
+            "dest_field": "LAST_BATCH_RUN_ID",
+            "description": "BATCH_RUN_ID of this run"
+          },
+          {
+            "dest_field": "CREATED_BY",
+            "description": "Batch ID (TBD)"
+          },
+          {
+            "dest_field": "CREATED_DT",
+            "description": "Server system date and time"
+          },
+          {
+            "dest_field": "CHANGED_BY",
+            "description": "Same as CREATED_BY"
+          },
+          {
+            "dest_field": "CHANGED_DT",
+            "description": "Server system date and time"
+          }
+        ]
+      },
+      {
+        "source": {
+          "table": "TB_R_H0202_DEMAND_HISTORY_SUM",
+          "keys": [
+            {
+              "field": "ORDER_DT",
+              "value": "At least one ORDER_PART_NO is not Active"
+            }
+          ]
+        },
+        "destination": {
+          "table": "TB_R_CI_PENDING_ORDER_DT",
+          "operation": "Insert",
+          "description": "Step 5 - ORDER_DT rejected for the first time"
+        },
+        "mappings": [
+          {
+            "source_field": "ORDER_DT",
+            "dest_field": "ORDER_DT"
+          },
+          {
+            "dest_field": "STATUS",
+            "description": "Default: 'P' (Pending)"
+          },
+          {
+            "dest_field": "REJECT_REASON",
+            "description": "Default: 'PART_NOT_ACTIVE'"
+          },
+          {
+            "dest_field": "NOT_ACTIVE_PART_NO",
+            "description": "Comma-separated list of ORDER_PART_NO not Active in MASTER_CANDIDATE_PART"
+          },
+          {
+            "dest_field": "REJECTED_ROWS",
+            "description": "Number of H0202 rows of the ORDER_DT that were not inserted"
+          },
+          {
+            "dest_field": "RETRY_COUNT",
+            "description": "Default: 0"
+          },
+          {
+            "dest_field": "FIRST_BATCH_RUN_ID",
+            "description": "BATCH_RUN_ID of this run"
+          },
+          {
+            "dest_field": "LAST_BATCH_RUN_ID",
+            "description": "BATCH_RUN_ID of this run"
+          },
+          {
+            "dest_field": "RELEASED_DT",
+            "description": "Default: NULL"
+          },
+          {
+            "dest_field": "CREATED_BY",
+            "description": "Batch ID (TBD)"
+          },
+          {
+            "dest_field": "CREATED_DT",
+            "description": "Server system date and time"
+          },
+          {
+            "dest_field": "CHANGED_BY",
+            "description": "Same as CREATED_BY"
+          },
+          {
+            "dest_field": "CHANGED_DT",
+            "description": "Server system date and time"
+          }
+        ]
+      },
+      {
+        "source": "Result of the part status check (step 5 / step 6)",
+        "destination": {
+          "table": "TB_R_CI_PENDING_ORDER_DT",
+          "operation": "Update",
+          "description": "Step 5 - still not Active or re-opened; step 6 - released",
+          "keys": [
+            {
+              "field": "ORDER_DT",
+              "value": "ORDER_DT being processed"
+            }
+          ]
+        },
+        "mappings": [
+          {
+            "dest_field": "STATUS",
+            "description": "'P' if still or again rejected; 'R' (Released) when all parts are Active and rows are inserted"
+          },
+          {
+            "dest_field": "NOT_ACTIVE_PART_NO",
+            "description": "Current list of parts not Active; blank when released"
+          },
+          {
+            "dest_field": "REJECTED_ROWS",
+            "description": "Current number of rows not inserted; 0 when released"
+          },
+          {
+            "dest_field": "RETRY_COUNT",
+            "description": "RETRY_COUNT + 1"
+          },
+          {
+            "dest_field": "LAST_BATCH_RUN_ID",
+            "description": "BATCH_RUN_ID of this run"
+          },
+          {
+            "dest_field": "RELEASED_DT",
+            "description": "Server system date and time when STATUS = 'R'; NULL when re-opened"
+          },
+          {
+            "dest_field": "CHANGED_BY",
+            "description": "Batch ID (TBD)"
+          },
+          {
+            "dest_field": "CHANGED_DT",
+            "description": "Server system date and time"
+          }
+        ]
+      },
+      {
+        "source": "Batch counters",
+        "destination": {
+          "table": "TB_R_CI_BATCH_LOG",
+          "operation": "Update",
+          "description": "Step 7 - batch end (success or error)",
+          "keys": [
+            {
+              "field": "BATCH_RUN_ID",
+              "value": "BATCH_RUN_ID of this run"
+            }
+          ]
+        },
+        "mappings": [
+          {
+            "dest_field": "STATUS",
+            "description": "'SUCCESS' after commit; 'ERROR' after rollback"
+          },
+          {
+            "dest_field": "WATERMARK_TO",
+            "description": "SUCCESS: MAX(CREATE_DT) of rows read (unchanged if none). ERROR: same as WATERMARK_FROM"
+          },
+          {
+            "dest_field": "READ_ROWS",
+            "description": "H0202 rows read (Group A + Group B)"
+          },
+          {
+            "dest_field": "INSERTED_ROWS",
+            "description": "Rows inserted into TB_R_CUSTOMER_INSTRUCTION"
+          },
+          {
+            "dest_field": "SKIPPED_ROWS",
+            "description": "Rows skipped because the key already exists"
+          },
+          {
+            "dest_field": "REJECTED_ROWS",
+            "description": "Rows not inserted because their ORDER_DT is pending"
+          },
+          {
+            "dest_field": "REJECTED_ORDER_DT",
+            "description": "Number of ORDER_DT held as pending in this run"
+          },
+          {
+            "dest_field": "RELEASED_ORDER_DT",
+            "description": "Number of pending ORDER_DT released in this run"
+          },
+          {
+            "dest_field": "MESSAGE",
+            "description": "Error detail when STATUS = 'ERROR'"
+          },
+          {
+            "dest_field": "END_DT",
+            "description": "Server system date and time"
+          }
+        ]
+      }
+    ]
+  },
+  "func_desc_layout": "two",
+  "func_desc": [
+    {
+      "type": "heading",
+      "text": "4. DESCRIPTION",
+      "level": 0
+    },
+    {
+      "type": "text",
+      "text": "F1 is the first function of the daily Case Consolidation job. It copies new crossdock customer order lines from H0202 into TB_R_CUSTOMER_INSTRUCTION. It only inserts; cancel (F2), PO mapping (F3) and case assignment (F4) update the rows later.",
+      "level": 1
+    },
+    {
+      "type": "bullets",
+      "items": [
+        "Prerequisite: the H0202 load from TOPAS is finished before 05:00 (TBD).",
+        "Prerequisite: Crossdock Part List master (MASTER_CANDIDATE_PART) is maintained in Crossdock Master Setting."
+      ],
+      "level": 1
+    },
+    {
+      "type": "heading",
+      "text": "4.1 Data Selection (GD-02, GD-03, GD-05)",
+      "level": 0
+    },
+    {
+      "type": "bullets",
+      "items": [
+        "Source condition: DEMAND_HISTORY_UPDATE_CD = '06'. Other codes (for example '07') are not read.",
+        "Group A - pending dates: all '06' rows whose ORDER_DT has STATUS = 'P' in TB_R_CI_PENDING_ORDER_DT, regardless of CREATE_DT. Processed first, oldest ORDER_DT first.",
+        "Group B - delta: '06' rows with CREATE_DT > watermark and ORDER_DT not pending.",
+        "Watermark = WATERMARK_TO of the last SUCCESS F1 run. The new watermark is MAX(CREATE_DT) of the rows read and is saved only when the run succeeds.",
+        "Rejected rows do not block the watermark, because their ORDER_DT is kept in the pending table and read again as Group A.",
+        "CREATE_DT data type in H0202 is TBD (the extract shows text in Oracle format); compare as timestamp."
+      ],
+      "level": 1
+    },
+    {
+      "type": "heading",
+      "text": "4.2 Part Status Validation (GD-04) - log message no. 6",
+      "level": 0
+    },
+    {
+      "type": "bullets",
+      "items": [
+        "Every ORDER_PART_NO of the ORDER_DT must exist in MASTER_CANDIDATE_PART with PART_STATUS = 'Active' at the batch run date. A part that is not registered is treated as not Active (Proposed).",
+        "Which MASTER_CANDIDATE_PART period is read is TBD.",
+        "Rejection unit is the whole ORDER_DT: all customers, all destinations and all parts of that date. No row of the date is inserted.",
+        "This is a business rejection: the batch continues with the other ORDER_DT and ends with SUCCESS."
+      ],
+      "level": 1
+    },
+    {
+      "type": "text",
+      "text": "Example (dummy data):",
+      "level": 1,
+      "bold": true
+    },
+    {
+      "type": "table",
+      "level": 1,
+      "row_lines": "all",
+      "columns": [
+        {
+          "title": "ORDER_DT",
+          "width": 8
+        },
+        {
+          "title": "Dest",
+          "width": 4
+        },
+        {
+          "title": "Part",
+          "width": 6
+        },
+        {
+          "title": "Part status",
+          "width": 7
+        },
+        {
+          "title": "Result",
+          "width": 20
+        }
+      ],
+      "rows": [
+        [
+          "09-Oct-26",
+          "TH",
+          "Part A",
+          "Active",
+          "Held (date pending)"
+        ],
+        [
+          "09-Oct-26",
+          "JP",
+          "Part B",
+          "Inactive",
+          "Held (date pending)"
+        ],
+        [
+          "09-Oct-26",
+          "PH",
+          "Part A",
+          "Active",
+          "Held (date pending)"
+        ],
+        [
+          "10-Oct-26",
+          "TH",
+          "Part A",
+          "Active",
+          "Inserted"
+        ],
+        [
+          "10-Oct-26",
+          "PH",
+          "Part C",
+          "Active",
+          "Inserted"
+        ]
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "4.3 Duplicate Prevention (GD-06, GD-07)",
+      "level": 0
+    },
+    {
+      "type": "bullets",
+      "items": [
+        "Unique key: CUSTOMER_CD + CUSTOMER_ORDER_NO + ORDER_DT + DESTINATION_CD + ORDER_PART_NO + DETAILED_ITEM_NO. SERIAL_NO is not used.",
+        "A key that already exists in TB_R_CUSTOMER_INSTRUCTION is skipped; its quantities are not updated (log message no. 8, counted in SKIPPED_ROWS).",
+        "If the same key appears more than once in the rows read, insert the row with the latest CREATE_DT and log message no. 9 (Proposed).",
+        "Quantity corrections made in H0202 for an existing key are handled by manual injection (GD-11)."
+      ],
+      "level": 1
+    },
+    {
+      "type": "heading",
+      "text": "4.4 Initial Values (GD-08)",
+      "level": 0
+    },
+    {
+      "type": "table",
+      "level": 1,
+      "row_lines": "all",
+      "columns": [
+        {
+          "title": "Column",
+          "width": 20
+        },
+        {
+          "title": "Value at F1",
+          "width": 16
+        },
+        {
+          "title": "Changed by",
+          "width": 10
+        }
+      ],
+      "rows": [
+        [
+          "CROSS_DOCK_QTY",
+          "From H0202",
+          "Never"
+        ],
+        [
+          "ORDER_QTY",
+          "Same as CROSS_DOCK_QTY",
+          "F2"
+        ],
+        [
+          "CANCEL_H0253_QTY",
+          "NULL",
+          "F2"
+        ],
+        [
+          "ORDER_STATUS",
+          "NULL",
+          "F2"
+        ],
+        [
+          "DELETED_FLAG",
+          "'N'",
+          "F2"
+        ],
+        [
+          "PO_NUMBER, PO_QTY, REMAINING_ORDER_QTY",
+          "NULL",
+          "F3"
+        ],
+        [
+          "CASE_NUMBER",
+          "NULL",
+          "F4"
+        ],
+        [
+          "ASN_NUMBER",
+          "NULL",
+          "ASN creation"
+        ]
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "4.5 Transaction and Error Handling (GD-10)",
+      "level": 0
+    },
+    {
+      "type": "bullets",
+      "items": [
+        "All inserts and pending-table changes of one run are committed together at step 7.",
+        "Any technical error (database connection, insert failure, unexpected error) rolls back everything; WATERMARK_TO is not moved; the job does not start F2 to F4.",
+        "The batch log record is written in its own transaction so that the ERROR status remains after the rollback."
+      ],
+      "level": 1
+    },
+    {
+      "type": "heading",
+      "text": "4.6 Out of Scope of F1",
+      "level": 0
+    },
+    {
+      "type": "bullets",
+      "items": [
+        "Pcs/case multiple check and hold of non-multiple dates: F3, per ORDER_DT + DESTINATION_CD + PART, pcs/case from Crossdock Master Setting (GD-09).",
+        "Cancel from H0253: F2.",
+        "Manual injection of corrected quantities and of dates held for a long time (GD-11)."
+      ],
+      "level": 1
+    },
+    {
+      "type": "heading",
+      "text": "4.7 Open Points",
+      "level": 0
+    },
+    {
+      "type": "bullets",
+      "items": [
+        "Batch ID, MSG IDs and the initial cut-off watermark at go-live.",
+        "MASTER_CANDIDATE_PART period to read, and whether an unregistered part is treated as not Active.",
+        "Late rows: when rows of an ORDER_DT are already inserted and a later row of the same date has a part that is not Active, the earlier rows stay in TB_R_CUSTOMER_INSTRUCTION; only the new rows are held. Confirm.",
+        "Physical data types of TB_R_CUSTOMER_INSTRUCTION follow H0202; confirm lengths.",
+        "SPLIT_SEQ column and key extension depend on the F3 design."
+      ],
+      "level": 1
+    }
+  ],
+  "logging_messages": [
+    {
+      "event": "Batch start",
+      "cause": "Job scheduler starts F1",
+      "type": "Info",
+      "msg_id": "TBD",
+      "message": "Customer Instruction Get Data <BATCH_RUN_ID> started. Watermark <WATERMARK_FROM>.",
+      "action": {
+        "system": "Write the batch log.",
+        "user": "-"
+      }
+    },
+    {
+      "event": "Batch end",
+      "cause": "F1 completes successfully",
+      "type": "Info",
+      "msg_id": "TBD",
+      "message": "Customer Instruction Get Data <BATCH_RUN_ID> ended. Read <READ_ROWS>, inserted <INSERTED_ROWS>, skipped <SKIPPED_ROWS>, rejected <REJECTED_ROWS> (<REJECTED_ORDER_DT> order dates), released <RELEASED_ORDER_DT> order dates.",
+      "action": {
+        "system": "Write the batch log and start F2.",
+        "user": "-"
+      }
+    },
+    {
+      "event": "Database access",
+      "cause": "Database connection cannot be established",
+      "type": "Critical",
+      "msg_id": "TBD",
+      "message": "Database cannot be connected.",
+      "action": {
+        "system": "Stop the batch; F2 to F4 are not executed. Inform the system owner by e-mail.",
+        "user": "Contact the system owner, then re-run the job."
+      }
+    },
+    {
+      "event": "Get watermark",
+      "cause": "No successful run and the initial cut-off parameter is not set",
+      "type": "Error",
+      "msg_id": "TBD",
+      "message": "Watermark for Customer Instruction Get Data is not available.",
+      "action": {
+        "system": "Stop the batch; F2 to F4 are not executed.",
+        "user": "Set the initial cut-off parameter, then re-run the job."
+      }
+    },
+    {
+      "event": "Get H0202 data",
+      "cause": "No pending order date and no new H0202 row",
+      "type": "Info",
+      "msg_id": "TBD",
+      "message": "No new crossdock order data since <WATERMARK_FROM>.",
+      "action": {
+        "system": "End F1 successfully and start F2.",
+        "user": "-"
+      }
+    },
+    {
+      "event": "Part status check",
+      "cause": "A part of the order date is not Active in the Crossdock Part List",
+      "type": "Warning",
+      "msg_id": "TBD",
+      "message": "Order date <ORDER_DT> is held: part <ORDER_PART_NO> is not Active in Crossdock Part List. <REJECTED_ROWS> rows not inserted.",
+      "action": {
+        "system": "Keep the order date as pending and check it again in the next run.",
+        "user": "Activate the part in Crossdock Master Setting, or inject the data manually."
+      }
+    },
+    {
+      "event": "Pending release",
+      "cause": "All parts of a pending order date are now Active",
+      "type": "Info",
+      "msg_id": "TBD",
+      "message": "Pending order date <ORDER_DT> released; <INSERTED_ROWS> rows inserted.",
+      "action": {
+        "system": "Set pending STATUS = 'R'.",
+        "user": "-"
+      }
+    },
+    {
+      "event": "Duplicate check",
+      "cause": "Key already exists in TB_R_CUSTOMER_INSTRUCTION",
+      "type": "Info",
+      "msg_id": "TBD",
+      "message": "Order line <CUSTOMER_CD>/<CUSTOMER_ORDER_NO>/<ORDER_DT>/<DESTINATION_CD>/<ORDER_PART_NO>/<DETAILED_ITEM_NO> already exists and was skipped.",
+      "action": {
+        "system": "Skip the row; do not update quantities.",
+        "user": "If the quantity changed in TOPAS, inject the correction manually."
+      }
+    },
+    {
+      "event": "Duplicate check",
+      "cause": "Same key appears more than once in the rows read",
+      "type": "Warning",
+      "msg_id": "TBD",
+      "message": "Duplicate H0202 rows for <Record data PK>; row with latest CREATE_DT used.",
+      "action": {
+        "system": "Insert the latest row only.",
+        "user": "Check the H0202 data with the TOPAS team."
+      }
+    },
+    {
+      "event": "Insert customer instruction",
+      "cause": "Insert into TB_R_CUSTOMER_INSTRUCTION or the pending table fails",
+      "type": "Error",
+      "msg_id": "TBD",
+      "message": "Cannot insert <Record data PK> into <TABLE_NAME>: <ERROR_DETAIL>.",
+      "action": {
+        "system": "Roll back the whole run, keep the watermark, set status ERROR; F2 to F4 are not executed. Inform the system owner by e-mail.",
+        "user": "Contact the system owner, then re-run the job."
+      }
+    },
+    {
+      "event": "Unexpected error",
+      "cause": "Any other system error",
+      "type": "Critical",
+      "msg_id": "TBD",
+      "message": "Unexpected error in Customer Instruction Get Data: <ERROR_DETAIL>.",
+      "action": {
+        "system": "Roll back the whole run, keep the watermark, set status ERROR; F2 to F4 are not executed. Inform the system owner by e-mail.",
+        "user": "Contact the system owner, then re-run the job."
+      }
+    }
+  ],
+  "tables": [
+    {
+      "name": "TB_R_CUSTOMER_INSTRUCTION",
+      "kind": "transaction",
+      "description": "Crossdock customer order lines for Case Consolidation; inserted by F1, updated by F2, F3, F4 and ASN creation.",
+      "columns": [
+        [
+          "CUSTOMER_CD",
+          "VARCHAR(TBD)",
+          "Y",
+          "N",
+          "Customer code; follows H0202"
+        ],
+        [
+          "CUSTOMER_ORDER_NO",
+          "VARCHAR(TBD)",
+          "Y",
+          "N",
+          "Customer order number; follows H0202"
+        ],
+        [
+          "ORDER_DT",
+          "DATE",
+          "Y",
+          "N",
+          "Customer Order Date"
+        ],
+        [
+          "DESTINATION_CD",
+          "VARCHAR(TBD)",
+          "Y",
+          "N",
+          "Destination code; follows H0202"
+        ],
+        [
+          "ORDER_PART_NO",
+          "VARCHAR(TBD)",
+          "Y",
+          "N",
+          "Order part number; joins to H0253.SHIPPING_PART_NO"
+        ],
+        [
+          "DETAILED_ITEM_NO",
+          "VARCHAR(TBD)",
+          "Y",
+          "N",
+          "Detailed item number; follows H0202"
+        ],
+        [
+          "SPLIT_SEQ",
+          "INT",
+          "Y",
+          "N",
+          "Split sequence when one order line is mapped to several POs (Proposed; F1 = 1)"
+        ],
+        [
+          "DEMAND_HISTORY_UPDATE_CD",
+          "VARCHAR(TBD)",
+          "",
+          "N",
+          "Always '06'"
+        ],
+        [
+          "ORDER_QTY_DEMAND_QTY",
+          "NUMBER",
+          "",
+          "Y",
+          "Reference from H0202"
+        ],
+        [
+          "SHIPPING_QTY",
+          "NUMBER",
+          "",
+          "Y",
+          "Reference from H0202"
+        ],
+        [
+          "CROSS_DOCK_QTY",
+          "NUMBER",
+          "",
+          "N",
+          "Customer quantity; never changed"
+        ],
+        [
+          "PROCESS_QTY",
+          "NUMBER",
+          "",
+          "Y",
+          "Reference from H0202"
+        ],
+        [
+          "BO_CANCEL_QTY",
+          "NUMBER",
+          "",
+          "Y",
+          "Reference from H0202"
+        ],
+        [
+          "FIRM_ORDER_QTY",
+          "NUMBER",
+          "",
+          "Y",
+          "Reference from H0202"
+        ],
+        [
+          "REJECT_QTY",
+          "NUMBER",
+          "",
+          "Y",
+          "Reference from H0202"
+        ],
+        [
+          "ORDER_QTY",
+          "NUMBER",
+          "",
+          "N",
+          "Active quantity = CROSS_DOCK_QTY - CANCEL_H0253_QTY"
+        ],
+        [
+          "CANCEL_H0253_QTY",
+          "NUMBER",
+          "",
+          "Y",
+          "Cancel quantity from H0253 (F2)"
+        ],
+        [
+          "ORDER_STATUS",
+          "VARCHAR(TBD)",
+          "",
+          "Y",
+          "NULL = active; '2' = Cancel (F2)"
+        ],
+        [
+          "PO_NUMBER",
+          "VARCHAR(TBD)",
+          "",
+          "Y",
+          "Paired supplier PO (F3)"
+        ],
+        [
+          "PO_QTY",
+          "NUMBER",
+          "",
+          "Y",
+          "Quantity paired with the PO (F3)"
+        ],
+        [
+          "REMAINING_ORDER_QTY",
+          "NUMBER",
+          "",
+          "Y",
+          "Quantity not yet paired with a PO (F3)"
+        ],
+        [
+          "CASE_NUMBER",
+          "VARCHAR(TBD)",
+          "",
+          "Y",
+          "Assigned case (F4)"
+        ],
+        [
+          "ASN_NUMBER",
+          "VARCHAR(TBD)",
+          "",
+          "Y",
+          "ASN number; row is locked once filled"
+        ],
+        [
+          "DELETED_FLAG",
+          "CHAR(1)",
+          "",
+          "N",
+          "'N' = active, 'Y' = soft deleted (F2)"
+        ],
+        [
+          "H0202_CREATE_DT",
+          "TIMESTAMP",
+          "",
+          "N",
+          "CREATE_DT of the H0202 source row"
+        ],
+        [
+          "LAST_BATCH_RUN_ID",
+          "VARCHAR(TBD)",
+          "",
+          "N",
+          "Batch run that last changed the row"
+        ],
+        [
+          "CREATED_BY",
+          "VARCHAR(TBD)",
+          "",
+          "N",
+          "Batch ID"
+        ],
+        [
+          "CREATED_DT",
+          "DATETIME",
+          "",
+          "N",
+          "Created date and time"
+        ],
+        [
+          "CHANGED_BY",
+          "VARCHAR(TBD)",
+          "",
+          "N",
+          "Batch ID or user who last changed the row"
+        ],
+        [
+          "CHANGED_DT",
+          "DATETIME",
+          "",
+          "N",
+          "Last changed date and time"
+        ]
+      ]
+    },
+    {
+      "name": "TB_R_CI_PENDING_ORDER_DT",
+      "kind": "parking",
+      "proposed": true,
+      "description": "Customer Order Dates held because a part is not Active; checked again every run.",
+      "columns": [
+        [
+          "ORDER_DT",
+          "DATE",
+          "Y",
+          "N",
+          "Customer Order Date held"
+        ],
+        [
+          "STATUS",
+          "CHAR(1)",
+          "",
+          "N",
+          "P = Pending, R = Released"
+        ],
+        [
+          "REJECT_REASON",
+          "VARCHAR(TBD)",
+          "",
+          "N",
+          "PART_NOT_ACTIVE"
+        ],
+        [
+          "NOT_ACTIVE_PART_NO",
+          "VARCHAR(TBD)",
+          "",
+          "Y",
+          "Parts not Active at the last check"
+        ],
+        [
+          "REJECTED_ROWS",
+          "INT",
+          "",
+          "N",
+          "H0202 rows of the date not inserted at the last check"
+        ],
+        [
+          "RETRY_COUNT",
+          "INT",
+          "",
+          "N",
+          "Number of re-checks"
+        ],
+        [
+          "FIRST_BATCH_RUN_ID",
+          "VARCHAR(TBD)",
+          "",
+          "N",
+          "Run that first held the date"
+        ],
+        [
+          "LAST_BATCH_RUN_ID",
+          "VARCHAR(TBD)",
+          "",
+          "N",
+          "Run that last checked the date"
+        ],
+        [
+          "RELEASED_DT",
+          "DATETIME",
+          "",
+          "Y",
+          "Date and time the date was released"
+        ],
+        [
+          "CREATED_BY",
+          "VARCHAR(TBD)",
+          "",
+          "N",
+          "Batch ID"
+        ],
+        [
+          "CREATED_DT",
+          "DATETIME",
+          "",
+          "N",
+          "Created date and time"
+        ],
+        [
+          "CHANGED_BY",
+          "VARCHAR(TBD)",
+          "",
+          "N",
+          "Batch ID"
+        ],
+        [
+          "CHANGED_DT",
+          "DATETIME",
+          "",
+          "N",
+          "Last changed date and time"
+        ]
+      ]
+    },
+    {
+      "name": "TB_R_CI_BATCH_LOG",
+      "kind": "log",
+      "proposed": true,
+      "description": "One record per run of the Case Consolidation job function; holds the F1 watermark.",
+      "columns": [
+        [
+          "BATCH_RUN_ID",
+          "VARCHAR(TBD)",
+          "Y",
+          "N",
+          "Run ID"
+        ],
+        [
+          "FUNCTION_ID",
+          "VARCHAR(TBD)",
+          "",
+          "N",
+          "F1 / F2 / F3 / F4"
+        ],
+        [
+          "STATUS",
+          "VARCHAR(TBD)",
+          "",
+          "N",
+          "PROCESSING / SUCCESS / ERROR"
+        ],
+        [
+          "WATERMARK_FROM",
+          "TIMESTAMP",
+          "",
+          "Y",
+          "H0202 CREATE_DT watermark at start"
+        ],
+        [
+          "WATERMARK_TO",
+          "TIMESTAMP",
+          "",
+          "Y",
+          "H0202 CREATE_DT watermark at end"
+        ],
+        [
+          "READ_ROWS",
+          "INT",
+          "",
+          "N",
+          "H0202 rows read"
+        ],
+        [
+          "INSERTED_ROWS",
+          "INT",
+          "",
+          "N",
+          "Rows inserted"
+        ],
+        [
+          "SKIPPED_ROWS",
+          "INT",
+          "",
+          "N",
+          "Rows skipped (key exists)"
+        ],
+        [
+          "REJECTED_ROWS",
+          "INT",
+          "",
+          "N",
+          "Rows held (date pending)"
+        ],
+        [
+          "REJECTED_ORDER_DT",
+          "INT",
+          "",
+          "N",
+          "Order dates held in this run"
+        ],
+        [
+          "RELEASED_ORDER_DT",
+          "INT",
+          "",
+          "N",
+          "Order dates released in this run"
+        ],
+        [
+          "MESSAGE",
+          "VARCHAR(TBD)",
+          "",
+          "Y",
+          "Error detail"
+        ],
+        [
+          "START_DT",
+          "DATETIME",
+          "",
+          "N",
+          "Run start"
+        ],
+        [
+          "END_DT",
+          "DATETIME",
+          "",
+          "Y",
+          "Run end"
+        ],
+        [
+          "CREATED_BY",
+          "VARCHAR(TBD)",
+          "",
+          "N",
+          "Batch ID"
+        ],
+        [
+          "CREATED_DT",
+          "DATETIME",
+          "",
+          "N",
+          "Created date and time"
+        ]
+      ]
+    }
+  ]
+}
