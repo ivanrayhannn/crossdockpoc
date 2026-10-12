@@ -14,7 +14,7 @@
    "author": "Ivan Rayhan",
    "date": "12-Oct-26",
    "reviewed_by": "",
-   "description": "Initial draft based on FSD Crossdock Master Setting v0.3 (Part List sub-menu) and the crossdockpoc web prototype as of 12-Oct-26. Upload backend is documented in UISS-Batch \"Crossdock Master Setting - Part List Upload\"."
+   "description": "Initial draft based on FSD Crossdock Master Setting v0.3 (Part List sub-menu) and the crossdockpoc web prototype as of 12-Oct-26. Upload backend is documented in UISS-Batch \"Crossdock Master Setting - Part List Upload\". Reference codes (BR / OP / FSD MSG) explained in Operation Description 5.0."
   }
  ],
  "general": {
@@ -380,7 +380,8 @@
   ],
   "screen_mode_remarks": [
    "1) Prev is disabled on the first page and Next on the last page.",
-   "2) A user logged in with a read-only account sees [View] instead of [Edit] and cannot use Add Part / Upload Excel / Save. TBD (OP-11): read-only accounts are not defined yet."
+   "2) A user logged in with a read-only account sees [View] instead of [Edit] and cannot use Add Part / Upload Excel / Save. TBD (OP-11): read-only accounts are not defined yet.",
+   "3) BR-xx / OP-xx refer to FSD Crossdock Master Setting v0.3 (sheets \"7 Business Rules\" / \"10 Open Points\"). Refer Operation Description 5.0."
   ]
  },
  "screen_flow": [
@@ -1654,6 +1655,56 @@
   ]
  },
  "operation": [
+  {
+   "type": "heading",
+   "text": "5.0 Reference Documents and Abbreviations"
+  },
+  {
+   "type": "text",
+   "level": 2,
+   "text": "Codes in this document trace each rule back to its source document:"
+  },
+  {
+   "type": "table",
+   "level": 2,
+   "columns": [
+    {
+     "title": "Code",
+     "width": 9
+    },
+    {
+     "title": "Refers to",
+     "width": 37
+    }
+   ],
+   "rows": [
+    [
+     "BR-xx",
+     "Business Rule - FSD Crossdock Master Setting v0.3, sheet \"7 Business Rules\" (BR-01 to BR-18)"
+    ],
+    [
+     "OP-xx",
+     "Open Point - FSD Crossdock Master Setting v0.3, sheet \"10 Open Points\" (OP-01 to OP-14)"
+    ],
+    [
+     "FSD MSG-xx",
+     "Message - FSD Crossdock Master Setting v0.3, sheet \"8 Messages\" (MSG-01 to MSG-17)"
+    ],
+    [
+     "message no. N",
+     "Row N of sheet \"6. Display Message (Screen)\" of this UISS"
+    ],
+    [
+     "UISS-Batch",
+     "UISS-Batch \"Crossdock Master Setting - Part List Upload\" (upload backend)"
+    ]
+   ]
+  },
+  {
+   "type": "text",
+   "level": 2,
+   "text": "File: FSD_Crossdock_Master_Setting.xlsx (crossdockpoc repository). Upload rules: FSD_Crossdock_Upload_Batch.xlsx v0.2."
+  },
   {
    "type": "heading",
    "text": "5.1 Initial Display"
