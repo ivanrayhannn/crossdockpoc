@@ -58,8 +58,9 @@ export function PartModal({ state }: { state: CrossdockState }) {
   const saveDisabled = !f.p || !pc || !mc;
   const saveTitle = !f.p ? 'Part No is required' : !pc ? 'Enter Pcs/Case first (step 2)' : !mc ? 'Enter Max Case/Day (step 2)' : 'Save part data';
 
-  // Effective Start Date is set once when the part is added; editing keeps the original value.
-  const effDateLocked = inputRO || !!editId;
+  // Effective Start Date can only change while the saved part is still Candidate (BR-06).
+  const savedStatus = editId ? parts.find((p) => p.p === editId)?.st : undefined;
+  const effDateLocked = inputRO || (!!editId && savedStatus !== 'Candidate');
 
   // A newly added part always starts as Candidate; the status only becomes
   // editable once the part exists.
@@ -147,7 +148,7 @@ export function PartModal({ state }: { state: CrossdockState }) {
                     min={todayStr()}
                     onChange={(e) => patch((x) => { x.effDate = e.target.value; })}
                     disabled={effDateLocked}
-                    title={effDateLocked && !inputRO ? 'Effective Start Date cannot be changed after the part is added' : undefined}
+                    title={effDateLocked && !inputRO ? 'Can only be changed while the status is still Candidate' : undefined}
                     style={{ background: effDateLocked ? 'var(--color-neutral-200)' : inputBg }}
                   />
                 </div>

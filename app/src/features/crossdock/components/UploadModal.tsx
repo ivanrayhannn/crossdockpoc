@@ -46,7 +46,7 @@ export function UploadModal({ state }: { state: CrossdockState }) {
             <button className="btn btn-secondary" onClick={closeModal}>
               Close
             </button>
-            <button className="btn btn-primary" onClick={closeModal}>
+            <button className="btn btn-primary" onClick={closeModal} title="Validate the uploaded file and save it">
               Validate file
             </button>
           </span>

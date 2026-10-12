@@ -239,6 +239,9 @@ export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHist
                       </td>
                       <td style={{ ...td, padding: '0 10px' }}>
                         <span style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
+                          <button className="btn btn-secondary" onClick={() => onOpenPart(p.p)} style={{ fontSize: 12, padding: '4px 12px', whiteSpace: 'nowrap' }}>
+                            {ro ? 'View' : 'Edit'}
+                          </button>
                           <button
                             onClick={() => onOpenHistory(p.p)}
                             title="History"
