@@ -15,12 +15,8 @@ const DEFAULT_Q: PartQuery = {
 
 const EDITOR = 'D. Anggraini';
 
-/** Shown in the success popup after a part is saved from the Add/Edit form. */
-export interface SaveNotice {
-  mode: 'add' | 'edit';
-  part: string;
-  name: string;
-}
+/** Shown in the success popup after a part is saved from the Add/Edit form, or after an upload is saved. */
+export type SaveNotice = { mode: 'add' | 'edit'; part: string; name: string } | { mode: 'upload' };
 
 /** Deep-ish clone of a part's destination list, so edits inside a modal/draft
  * never mutate the committed `parts` array until explicitly saved. */
@@ -153,6 +149,13 @@ export function useCrossdockState() {
   const addPart = useCallback(() => openFor(null, 'part'), [openFor]);
   const openUpload = useCallback(() => setModal('upload'), []);
 
+  /** "Validate file" is the save button of the upload: it closes the modal and confirms the save (OP-02).
+   * The prototype does not read the file, so the Part List itself stays unchanged. */
+  const submitUpload = useCallback(() => {
+    setModal(null);
+    setNotice({ mode: 'upload' });
+  }, []);
+
   const resetQ = useCallback(() => {
     setQ((prev) => ({ ...DEFAULT_Q, dest: prev.dest || 'Thailand' }));
   }, []);
@@ -186,6 +189,7 @@ export function useCrossdockState() {
     commit,
     addPart,
     openUpload,
+    submitUpload,
     resetQ,
   };
 }

@@ -4,11 +4,11 @@ const UP_COLS = ['flag_add_edit', 'part_no', 'pcs_case', 'max_case_day', 'minimu
 
 const UP_RULES: { label: string; cols: string }[] = [
   { label: 'Add', cols: 'flag_add_edit, part_no, pcs_case, max_case_day, minimum_mad, effective_start_date — all required.' },
-  { label: 'Edit', cols: 'flag_add_edit, part_no, pcs_case, max_case_day, minimum_mad can be changed; effective_start_date can only be changed while the part status is still Candidate. You must download Export Excel first as the base file before editing and re-uploading.' },
+  { label: 'Edit', cols: 'flag_add_edit, part_no, pcs_case, max_case_day, minimum_mad can be changed; effective_start_date can only be changed while the part status is still Candidate. Download Export Excel first: its sheet "Upload" is the base file (pre-filled with flag E) to edit and upload again.' },
 ];
 
 export function UploadModal({ state }: { state: CrossdockState }) {
-  const { closeModal } = state;
+  const { closeModal, submitUpload } = state;
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(33,33,33,.55)', display: 'grid', placeItems: 'center', padding: 36 }}>
       <div style={{ width: 720, background: 'var(--color-neutral-100)', borderRadius: 10, boxShadow: 'var(--shadow-lg)', padding: '24px 28px 22px' }}>
@@ -46,7 +46,7 @@ export function UploadModal({ state }: { state: CrossdockState }) {
             <button className="btn btn-secondary" onClick={closeModal}>
               Close
             </button>
-            <button className="btn btn-primary" onClick={closeModal} title="Validate the uploaded file and save it">
+            <button className="btn btn-primary" onClick={submitUpload} title="Validate the uploaded file and save it">
               Validate file
             </button>
           </span>

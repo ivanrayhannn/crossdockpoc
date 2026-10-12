@@ -21,9 +21,9 @@ export function CrossdockMasterSettingPage({ onNavigate }: { onNavigate: (route:
   const state = useCrossdockState();
   const { parts, q, setQ, resetQ, ro, role, setRole, switchRole, view, modal, addPart, openUpload, openFor, notice, dismissNotice } = state;
 
-  // Export what the Part List table shows: same filter and sort, all pages.
+  // Sheet 1 follows the Part List table (same filter and sort, all pages); sheet "Upload" holds every part.
   const exportExcel = useCallback(() => {
-    exportPartsXlsx(selectParts(parts, q)).catch((err) => {
+    exportPartsXlsx(selectParts(parts, q), parts).catch((err) => {
       console.error('Export Excel failed', err);
       window.alert('Export Excel failed. Please try again.');
     });

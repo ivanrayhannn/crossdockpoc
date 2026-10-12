@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { CUR_PER, DOTS, MASTER_DESTS, PERIODS } from '../../../data/seed';
 import { fmt, num, syncBadge } from '../../../lib/format';
 import type { DestAllocation, Part } from '../../../types';
@@ -231,6 +231,9 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
   const dAlloc = dList.reduce((x, d) => x + num(d.al), 0);
   const dOver = dAlloc > m;
   const dUnder = dAlloc < m;
+  // Every row needs a destination before the mapping can be saved (OP-04).
+  const dMissing = dList.some((d) => !d.d);
+  const saveBlockedTitle = !dList.length ? 'Add at least one destination' : dOver ? 'Allocation exceeds Max Case/Day' : dMissing ? 'Select a destination for every row' : 'Save mapping';
   const share = m ? `${Math.round((a / m) * 100)}%` : '—';
 
   const editViewDisp = ro || isEditing || !edok ? 'none' : 'inline-flex';
@@ -311,7 +314,7 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
               <button className="btn btn-ghost" onClick={onCancelEdit} style={{ display: editingDisp, fontSize: 12, padding: '4px 12px' }}>
                 Cancel
               </button>
-              <button className="btn btn-primary" onClick={onSave} disabled={dOver || !dList.length} style={{ display: editingDisp, fontSize: 12, padding: '4px 16px' }}>
+              <button className="btn btn-primary" onClick={onSave} disabled={dOver || dMissing || !dList.length} title={saveBlockedTitle} style={{ display: editingDisp, fontSize: 12, padding: '4px 16px' }}>
                 Save
               </button>
             </span>
@@ -427,20 +430,24 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
             )}
           </div>
 
-          {dOver && (
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 11, padding: '11px 14px', borderRadius: 13, background: 'var(--color-accent-100)', border: '1px solid var(--color-accent-300)', marginTop: 11, fontSize: 12.5, color: 'var(--color-accent-800)' }}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" style={{ flex: 'none', marginTop: 1 }}>
-                <line x1="12" y1="8" x2="12" y2="13" />
-                <line x1="12" y1="17" x2="12" y2="17" />
-                <circle cx="12" cy="12" r="9" />
-              </svg>
-              <span>
-                Allocation of {fmt(dAlloc)} case/day exceeds Max Case/Day ({fmt(m)}). Reduce one of the destinations.
-              </span>
-            </div>
-          )}
+          {dOver && <MappingAlert>Allocation of {fmt(dAlloc)} case/day exceeds Max Case/Day ({fmt(m)}). Reduce one of the destinations.</MappingAlert>}
+          {isEditing && dMissing && <MappingAlert>Select a destination for every row, or remove the empty row, before saving.</MappingAlert>}
         </td>
       </tr>
     </>
+  );
+}
+
+/** Banner under the destination table explaining why the mapping cannot be saved. */
+function MappingAlert({ children }: { children: ReactNode }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 11, padding: '11px 14px', borderRadius: 13, background: 'var(--color-accent-100)', border: '1px solid var(--color-accent-300)', marginTop: 11, fontSize: 12.5, color: 'var(--color-accent-800)' }}>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" style={{ flex: 'none', marginTop: 1 }}>
+        <line x1="12" y1="8" x2="12" y2="13" />
+        <line x1="12" y1="17" x2="12" y2="17" />
+        <circle cx="12" cy="12" r="9" />
+      </svg>
+      <span>{children}</span>
+    </div>
   );
 }
