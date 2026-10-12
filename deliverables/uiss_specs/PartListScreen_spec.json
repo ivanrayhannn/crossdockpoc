@@ -1,0 +1,1980 @@
+{
+ "doc_type": "screen",
+ "header": {
+  "phase": "DR",
+  "project_name": "NSP - New Service Part System",
+  "block_name": "Screen",
+  "function_name": "TBD Crossdock Master Setting - Part List",
+  "created_date": "12-Oct-26",
+  "created_by": "Ivan Rayhan"
+ },
+ "revisions": [
+  {
+   "revision": "0.1",
+   "author": "Ivan Rayhan",
+   "date": "12-Oct-26",
+   "reviewed_by": "",
+   "description": "Initial draft based on FSD Crossdock Master Setting v0.3 (Part List sub-menu) and the crossdockpoc web prototype as of 12-Oct-26. Upload backend is documented in UISS-Batch \"Crossdock Master Setting - Part List Upload\"."
+  }
+ ],
+ "general": {
+  "objective": [
+   "To register crossdock candidate parts for the ongoing calculation period (Part No, Minimum MAD, Pcs/Case, Max Case/Day, Effective Start Date).",
+   "To search and display registered crossdock parts with their status, capacity and mapping completeness.",
+   "To change part data and part status (Candidate / Active / Inactive) of a registered part.",
+   "To display the change history of a part.",
+   "To export the Part List to Excel and upload part settings from Excel (Add and Edit).",
+   "This sub-menu is opened for users logged in with a Procurement account (BR-01)."
+  ],
+  "display_order": [
+   {
+    "section": "Result List (Sort by = Newer to Older, default)",
+    "fields": [
+     {
+      "field": "Last Update (CHANGED_DT)",
+      "order": "Descending"
+     }
+    ]
+   },
+   {
+    "section": "Result List (Sort by = Older to Newer)",
+    "fields": [
+     {
+      "field": "Last Update (CHANGED_DT)",
+      "order": "Ascending"
+     }
+    ]
+   },
+   {
+    "section": "Result List (Sort by = Default)",
+    "fields": [
+     {
+      "field": "Part Number",
+      "order": "Ascending"
+     }
+    ]
+   },
+   {
+    "section": "History Setting modal",
+    "fields": [
+     {
+      "field": "Event date and time",
+      "order": "Descending"
+     }
+    ]
+   }
+  ],
+  "buttons": [
+   {
+    "name": "Add Part",
+    "function": "Open the \"Add Part Candidate Crossdock\" modal (Add Mode), ready to register a new part."
+   },
+   {
+    "name": "Upload Excel",
+    "function": "Open the \"Upload Excel - part settings\" modal (Upload Mode)."
+   },
+   {
+    "name": "Export Excel",
+    "function": "Download the Part List as .xlsx: sheet \"Part List\" (active filter) and sheet \"Upload\" (base file for Edit uploads)."
+   },
+   {
+    "name": "Reset",
+    "function": "Clear criteria and reset the screen to its initial value."
+   },
+   {
+    "name": "Search",
+    "function": "To retrieve records according to the specified criteria. TBD (OP-01): the prototype filters while typing."
+   },
+   {
+    "name": "Part Number link / Edit",
+    "function": "Change the screen into edit mode to modify the selected row (\"Edit part data\" modal)."
+   },
+   {
+    "name": "History",
+    "function": "Open the \"History setting\" modal of the selected part."
+   },
+   {
+    "name": "Prev / Next",
+    "function": "Move to the previous / next page of the result list."
+   },
+   {
+    "name": "Save",
+    "function": "Save the part data entered in the Add / Edit modal."
+   },
+   {
+    "name": "Cancel",
+    "function": "Close the Add / Edit modal without saving."
+   },
+   {
+    "name": "Close",
+    "function": "Close the History setting / Upload Excel modal (also the X icon of every modal)."
+   },
+   {
+    "name": "Validate file",
+    "function": "Save button of the upload: validate the uploaded file and save it (all-or-nothing), then show the success popup (OP-02)."
+   },
+   {
+    "name": "OK",
+    "function": "Close the success popup."
+   }
+  ],
+  "screen_modes": [
+   {
+    "mode": "Initial Mode",
+    "sections": [
+     {
+      "section": "Search Criteria",
+      "description": "Part Number and Part Name blank, Status = All, Sort by = Newer to Older",
+      "buttons": {
+       "Add Part": "E",
+       "Upload Excel": "E",
+       "Export Excel": "E",
+       "Reset": "E",
+       "Search": "E",
+       "Part Number link / Edit": "E",
+       "History": "E",
+       "Prev / Next": "E",
+       "Save": "D",
+       "Cancel": "D",
+       "Close": "D",
+       "Validate file": "D",
+       "OK": "D"
+      }
+     },
+     {
+      "section": "Result List",
+      "description": "All registered parts, 25 rows per page, page 1. Refer below 1)",
+      "buttons": {
+       "Add Part": "E",
+       "Upload Excel": "E",
+       "Export Excel": "E",
+       "Reset": "E",
+       "Search": "E",
+       "Part Number link / Edit": "E",
+       "History": "E",
+       "Prev / Next": "E",
+       "Save": "D",
+       "Cancel": "D",
+       "Close": "D",
+       "Validate file": "D",
+       "OK": "D"
+      }
+     }
+    ]
+   },
+   {
+    "mode": "Search Result Mode",
+    "sections": [
+     {
+      "section": "Result List",
+      "description": "Parts matching all criteria (AND); page returns to 1",
+      "buttons": {
+       "Add Part": "E",
+       "Upload Excel": "E",
+       "Export Excel": "E",
+       "Reset": "E",
+       "Search": "E",
+       "Part Number link / Edit": "E",
+       "History": "E",
+       "Prev / Next": "E",
+       "Save": "D",
+       "Cancel": "D",
+       "Close": "D",
+       "Validate file": "D",
+       "OK": "D"
+      }
+     },
+     {
+      "section": "Empty State",
+      "description": "No matching parts; table and paging hidden; [Reset filter] shown",
+      "buttons": {
+       "Add Part": "E",
+       "Upload Excel": "E",
+       "Export Excel": "E",
+       "Reset": "E",
+       "Search": "E",
+       "Part Number link / Edit": "D",
+       "History": "D",
+       "Prev / Next": "D",
+       "Save": "D",
+       "Cancel": "D",
+       "Close": "D",
+       "Validate file": "D",
+       "OK": "D"
+      }
+     }
+    ]
+   },
+   {
+    "mode": "Add Mode (modal)",
+    "sections": [
+     {
+      "section": "Part No not selected",
+      "description": "Status locked to Candidate; Max Case/Day locked; Save disabled",
+      "buttons": {
+       "Add Part": "D",
+       "Upload Excel": "D",
+       "Export Excel": "D",
+       "Reset": "D",
+       "Search": "D",
+       "Part Number link / Edit": "D",
+       "History": "D",
+       "Prev / Next": "D",
+       "Save": "D",
+       "Cancel": "E",
+       "Close": "E",
+       "Validate file": "D",
+       "OK": "D"
+      }
+     },
+     {
+      "section": "Part No selected, Pcs/Case blank",
+      "description": "Part Name autofilled; Max Case/Day still locked; Save disabled",
+      "buttons": {
+       "Add Part": "D",
+       "Upload Excel": "D",
+       "Export Excel": "D",
+       "Reset": "D",
+       "Search": "D",
+       "Part Number link / Edit": "D",
+       "History": "D",
+       "Prev / Next": "D",
+       "Save": "D",
+       "Cancel": "E",
+       "Close": "E",
+       "Validate file": "D",
+       "OK": "D"
+      }
+     },
+     {
+      "section": "All required items filled",
+      "description": "Total Pcs/Day calculated; Save enabled",
+      "buttons": {
+       "Add Part": "D",
+       "Upload Excel": "D",
+       "Export Excel": "D",
+       "Reset": "D",
+       "Search": "D",
+       "Part Number link / Edit": "D",
+       "History": "D",
+       "Prev / Next": "D",
+       "Save": "E",
+       "Cancel": "E",
+       "Close": "E",
+       "Validate file": "D",
+       "OK": "D"
+      }
+     }
+    ]
+   },
+   {
+    "mode": "Edit Mode (modal)",
+    "sections": [
+     {
+      "section": "Saved status Candidate",
+      "description": "Part No locked; Status, Effective Start Date, Min MAD, Pcs/Case, Max Case/Day editable",
+      "buttons": {
+       "Add Part": "D",
+       "Upload Excel": "D",
+       "Export Excel": "D",
+       "Reset": "D",
+       "Search": "D",
+       "Part Number link / Edit": "D",
+       "History": "D",
+       "Prev / Next": "D",
+       "Save": "E",
+       "Cancel": "E",
+       "Close": "E",
+       "Validate file": "D",
+       "OK": "D"
+      }
+     },
+     {
+      "section": "Saved status Active / Inactive",
+      "description": "Same as 4.a but Effective Start Date locked (BR-06)",
+      "buttons": {
+       "Add Part": "D",
+       "Upload Excel": "D",
+       "Export Excel": "D",
+       "Reset": "D",
+       "Search": "D",
+       "Part Number link / Edit": "D",
+       "History": "D",
+       "Prev / Next": "D",
+       "Save": "E",
+       "Cancel": "E",
+       "Close": "E",
+       "Validate file": "D",
+       "OK": "D"
+      }
+     }
+    ]
+   },
+   {
+    "mode": "History Mode (modal)",
+    "sections": [
+     {
+      "section": "History setting",
+      "description": "Change timeline of the selected part, read only",
+      "buttons": {
+       "Add Part": "D",
+       "Upload Excel": "D",
+       "Export Excel": "D",
+       "Reset": "D",
+       "Search": "D",
+       "Part Number link / Edit": "D",
+       "History": "D",
+       "Prev / Next": "D",
+       "Save": "D",
+       "Cancel": "D",
+       "Close": "E",
+       "Validate file": "D",
+       "OK": "D"
+      }
+     }
+    ]
+   },
+   {
+    "mode": "Upload Mode (modal)",
+    "sections": [
+     {
+      "section": "Upload Excel",
+      "description": "Template columns, rules, file area",
+      "buttons": {
+       "Add Part": "D",
+       "Upload Excel": "D",
+       "Export Excel": "D",
+       "Reset": "D",
+       "Search": "D",
+       "Part Number link / Edit": "D",
+       "History": "D",
+       "Prev / Next": "D",
+       "Save": "D",
+       "Cancel": "D",
+       "Close": "E",
+       "Validate file": "E",
+       "OK": "D"
+      }
+     },
+     {
+      "section": "Success popup",
+      "description": "\"Saved successfully\" after Save or Validate file",
+      "buttons": {
+       "Add Part": "D",
+       "Upload Excel": "D",
+       "Export Excel": "D",
+       "Reset": "D",
+       "Search": "D",
+       "Part Number link / Edit": "D",
+       "History": "D",
+       "Prev / Next": "D",
+       "Save": "D",
+       "Cancel": "D",
+       "Close": "D",
+       "Validate file": "D",
+       "OK": "E"
+      }
+     }
+    ]
+   }
+  ],
+  "screen_mode_remarks": [
+   "1) Prev is disabled on the first page and Next on the last page.",
+   "2) A user logged in with a read-only account sees [View] instead of [Edit] and cannot use Add Part / Upload Excel / Save. TBD (OP-11): read-only accounts are not defined yet."
+  ]
+ },
+ "screen_flow": [
+  {
+   "title": "Screen Flow for Part List",
+   "flow": {
+    "direction": "LR",
+    "nodes": [
+     {
+      "id": "list",
+      "label": "Part List",
+      "type": "screen"
+     },
+     {
+      "id": "add",
+      "label": "Add Part modal",
+      "type": "screen"
+     },
+     {
+      "id": "edit",
+      "label": "Edit part data modal",
+      "type": "screen"
+     },
+     {
+      "id": "hist",
+      "label": "History setting modal",
+      "type": "screen"
+     },
+     {
+      "id": "up",
+      "label": "Upload Excel modal",
+      "type": "screen"
+     },
+     {
+      "id": "ok",
+      "label": "Saved successfully popup",
+      "type": "message"
+     },
+     {
+      "id": "xls",
+      "label": "Excel file (.xlsx)",
+      "type": "file"
+     }
+    ],
+    "edges": [
+     {
+      "from": "list",
+      "to": "add",
+      "label": "Add Part"
+     },
+     {
+      "from": "list",
+      "to": "edit",
+      "label": "Part Number / Edit"
+     },
+     {
+      "from": "list",
+      "to": "hist",
+      "label": "History icon"
+     },
+     {
+      "from": "list",
+      "to": "up",
+      "label": "Upload Excel"
+     },
+     {
+      "from": "list",
+      "to": "xls",
+      "label": "Export Excel"
+     },
+     {
+      "from": "add",
+      "to": "ok",
+      "label": "Save"
+     },
+     {
+      "from": "edit",
+      "to": "ok",
+      "label": "Save"
+     },
+     {
+      "from": "up",
+      "to": "ok",
+      "label": "Validate file"
+     },
+     {
+      "from": "ok",
+      "to": "list",
+      "label": "OK"
+     }
+    ]
+   },
+   "notes": [
+    "Cancel / Close / X on any modal returns to the Part List without saving."
+   ]
+  },
+  {
+   "title": "Screen Flow for Save (Add / Edit part data)",
+   "flow": {
+    "direction": "TB",
+    "nodes": [
+     {
+      "id": "s",
+      "label": "START",
+      "type": "start"
+     },
+     {
+      "id": "e",
+      "label": "On Click of Save button",
+      "type": "event"
+     },
+     {
+      "id": "d1",
+      "label": "Mandatory items valid?",
+      "type": "decision"
+     },
+     {
+      "id": "m1",
+      "label": "Save stays disabled (tooltip)",
+      "type": "message"
+     },
+     {
+      "id": "p1",
+      "label": "Insert / update part record",
+      "type": "process"
+     },
+     {
+      "id": "db",
+      "label": "MASTER_CANDIDATE_PART",
+      "type": "db"
+     },
+     {
+      "id": "p2",
+      "label": "Sync Status = No Sync, move part to top",
+      "type": "process"
+     },
+     {
+      "id": "m2",
+      "label": "Show Saved successfully",
+      "type": "message"
+     },
+     {
+      "id": "x",
+      "label": "END",
+      "type": "end"
+     }
+    ],
+    "edges": [
+     {
+      "from": "s",
+      "to": "e"
+     },
+     {
+      "from": "e",
+      "to": "d1"
+     },
+     {
+      "from": "d1",
+      "to": "m1",
+      "label": "No"
+     },
+     {
+      "from": "d1",
+      "to": "p1",
+      "label": "Yes"
+     },
+     {
+      "from": "p1",
+      "to": "db",
+      "style": "dashed"
+     },
+     {
+      "from": "p1",
+      "to": "p2"
+     },
+     {
+      "from": "p2",
+      "to": "m2"
+     },
+     {
+      "from": "m2",
+      "to": "x"
+     }
+    ],
+    "same_rank": [
+     [
+      "p1",
+      "db"
+     ]
+    ]
+   }
+  }
+ ],
+ "screen_layout": [
+  {
+   "caption": "1. Initial Mode - Part List (Status = All, Sort by = Newer to Older)",
+   "image": "deliverables/uiss_screens/part_list/c_01_initial.png"
+  },
+  {
+   "caption": "2. Search Result Mode - Status = Candidate",
+   "image": "deliverables/uiss_screens/part_list/c_02_filter_candidate.png"
+  },
+  {
+   "caption": "3. Search Result Mode - no matching parts (empty state)",
+   "image": "deliverables/uiss_screens/part_list/c_03_no_result.png"
+  },
+  {
+   "caption": "4. Add Mode - empty form (Save disabled)",
+   "image": "deliverables/uiss_screens/part_list/c_04_add_empty.png"
+  },
+  {
+   "caption": "5. Add Mode - Part No list (only parts not yet registered)",
+   "image": "deliverables/uiss_screens/part_list/c_05_add_partno_list.png"
+  },
+  {
+   "caption": "6. Add Mode - Part No not found",
+   "image": "deliverables/uiss_screens/part_list/c_06_add_partno_notfound.png"
+  },
+  {
+   "caption": "7. Add Mode - all required items filled (Save enabled)",
+   "image": "deliverables/uiss_screens/part_list/c_07_add_filled.png"
+  },
+  {
+   "caption": "8. Saved successfully popup after Save",
+   "image": "deliverables/uiss_screens/part_list/c_08_save_success.png"
+  },
+  {
+   "caption": "9. Edit Mode - Candidate part (Effective Start Date editable)",
+   "image": "deliverables/uiss_screens/part_list/c_09_edit_candidate.png"
+  },
+  {
+   "caption": "10. Edit Mode - Active part (Effective Start Date locked)",
+   "image": "deliverables/uiss_screens/part_list/c_10_edit_active.png"
+  },
+  {
+   "caption": "11. History Mode - History setting",
+   "image": "deliverables/uiss_screens/part_list/c_11_history.png"
+  },
+  {
+   "caption": "12. Upload Mode - Upload Excel modal",
+   "image": "deliverables/uiss_screens/part_list/c_12_upload.png"
+  },
+  {
+   "caption": "13. Upload Mode - Saved successfully popup after Validate file",
+   "image": "deliverables/uiss_screens/part_list/c_13_upload_success.png"
+  }
+ ],
+ "items": [
+  {
+   "group": "<Header Section>"
+  },
+  {
+   "name": "Add Part",
+   "source": "",
+   "field": "",
+   "type": "",
+   "len": "",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "",
+   "validation": "",
+   "description": "Opens the Add Part modal. Refer Operation Description 5.4."
+  },
+  {
+   "name": "Upload Excel",
+   "source": "",
+   "field": "",
+   "type": "",
+   "len": "",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "",
+   "validation": "",
+   "description": "Opens the Upload Excel modal. Refer Operation Description 5.7."
+  },
+  {
+   "name": "Export Excel",
+   "source": "",
+   "field": "",
+   "type": "",
+   "len": "",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "",
+   "validation": "",
+   "description": "Downloads Crossdock_Part_List_YYYYMMDD.xlsx. Refer Operation Description 5.8."
+  },
+  {
+   "group": "<Search Criteria Section>"
+  },
+  {
+   "name": "Part Number",
+   "source": "Key-in",
+   "field": "",
+   "type": "Varchar",
+   "len": "TBD",
+   "io": "I",
+   "control": "Text box with suggestion list",
+   "justified": "Left",
+   "initial": "Blank",
+   "required": "N",
+   "format": "X..TBD..X",
+   "validation": "Contains, case-insensitive",
+   "description": "Suggestions = PART_NO of registered parts (MASTER_CANDIDATE_PART). Placeholder 'e.g. PART-B'. Combined with other criteria by AND (BR-08)."
+  },
+  {
+   "name": "Part Name",
+   "source": "Key-in",
+   "field": "",
+   "type": "Varchar",
+   "len": "TBD",
+   "io": "I",
+   "control": "Text box",
+   "justified": "Left",
+   "initial": "Blank",
+   "required": "N",
+   "format": "X..TBD..X",
+   "validation": "Contains, case-insensitive",
+   "description": "Placeholder 'Part name'. AND with other criteria (BR-08)."
+  },
+  {
+   "name": "Status",
+   "source": "Key-in",
+   "field": "",
+   "type": "Varchar",
+   "len": "",
+   "io": "I",
+   "control": "Combo Box",
+   "justified": "Left",
+   "initial": "All",
+   "required": "N",
+   "format": "",
+   "validation": "",
+   "description": "Options: All / Candidate / Active / Inactive. Filters PART_STATUS."
+  },
+  {
+   "name": "Sort by",
+   "source": "Key-in",
+   "field": "",
+   "type": "Varchar",
+   "len": "",
+   "io": "I",
+   "control": "Combo Box",
+   "justified": "Left",
+   "initial": "Newer to Older",
+   "required": "N",
+   "format": "",
+   "validation": "",
+   "description": "Options: Default (Part Number A-Z) / Newer to Older / Older to Newer (by Last Update)."
+  },
+  {
+   "name": "Reset",
+   "source": "",
+   "field": "",
+   "type": "",
+   "len": "",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "",
+   "validation": "",
+   "description": "Returns every criterion to its initial value."
+  },
+  {
+   "name": "Search",
+   "source": "",
+   "field": "",
+   "type": "",
+   "len": "",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "",
+   "validation": "",
+   "description": "TBD (OP-01): the prototype filters immediately while typing/selecting; decide whether filtering waits for [Search]."
+  },
+  {
+   "group": "<Result List Section>"
+  },
+  {
+   "name": "Registered parts counter",
+   "source": "",
+   "field": "",
+   "type": "Varchar",
+   "len": "",
+   "io": "O",
+   "control": "Label",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "N parts \u00b7 M incomplete mappings",
+   "validation": "",
+   "description": "N = number of filtered rows (all pages). M = filtered rows whose mapping is incomplete (BR-10)."
+  },
+  {
+   "name": "Incomplete mapping marker",
+   "source": "MASTER_CANDIDATE_PART_DEST",
+   "field": "CASE_DAY",
+   "type": "",
+   "len": "",
+   "io": "O",
+   "control": "Row marker (blue bar)",
+   "justified": "",
+   "initial": "",
+   "required": "",
+   "format": "",
+   "validation": "",
+   "description": "Shown when the part has no destination or the sum of destination Case/Day differs from MAX_CASE_DAY (BR-10)."
+  },
+  {
+   "name": "Part Number",
+   "source": "MASTER_CANDIDATE_PART",
+   "field": "PART_NO",
+   "type": "Varchar",
+   "len": "TBD",
+   "io": "O",
+   "control": "Hyperlink",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "X..TBD..X",
+   "validation": "",
+   "description": "Click opens the Edit part data modal (same as [Edit])."
+  },
+  {
+   "name": "Part Name",
+   "source": "MASTER_CANDIDATE_PART",
+   "field": "PART_NAME",
+   "type": "Varchar",
+   "len": "TBD",
+   "io": "O",
+   "control": "Label",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "X..TBD..X",
+   "validation": "",
+   "description": "Truncated with '...' when long; full name in tooltip."
+  },
+  {
+   "name": "Min MAD",
+   "source": "MASTER_CANDIDATE_PART",
+   "field": "MIN_MAD",
+   "type": "Number",
+   "len": "TBD",
+   "io": "O",
+   "control": "Label",
+   "justified": "Right",
+   "initial": "",
+   "required": "",
+   "format": "ZZ,ZZ9",
+   "validation": "",
+   "description": "Bold warning colour when the 6-month average MAD is below MIN_MAD and status is not Candidate (BR-11). Source of MAD history TBD."
+  },
+  {
+   "name": "Pcs/Case",
+   "source": "MASTER_CANDIDATE_PART",
+   "field": "PCS_CASE",
+   "type": "Number",
+   "len": "TBD",
+   "io": "O",
+   "control": "Label",
+   "justified": "Right",
+   "initial": "",
+   "required": "",
+   "format": "ZZ,ZZ9",
+   "validation": "",
+   "description": ""
+  },
+  {
+   "name": "Max Case/Day",
+   "source": "MASTER_CANDIDATE_PART",
+   "field": "MAX_CASE_DAY",
+   "type": "Number",
+   "len": "TBD",
+   "io": "O",
+   "control": "Label",
+   "justified": "Right",
+   "initial": "",
+   "required": "",
+   "format": "ZZ,ZZ9",
+   "validation": "",
+   "description": ""
+  },
+  {
+   "name": "Total Pcs/Day",
+   "source": "MASTER_CANDIDATE_PART",
+   "field": "TOTAL_PCS_DAY",
+   "type": "Number",
+   "len": "TBD",
+   "io": "O",
+   "control": "Label",
+   "justified": "Right",
+   "initial": "",
+   "required": "",
+   "format": "ZZ,ZZ9",
+   "validation": "",
+   "description": "= Pcs/Case x Max Case/Day (BR-05)."
+  },
+  {
+   "name": "Status",
+   "source": "MASTER_CANDIDATE_PART",
+   "field": "PART_STATUS",
+   "type": "Varchar",
+   "len": "TBD",
+   "io": "O",
+   "control": "Chip",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "",
+   "validation": "",
+   "description": "Candidate (blue) / Active (green) / Inactive (grey)."
+  },
+  {
+   "name": "Last Update",
+   "source": "MASTER_CANDIDATE_PART",
+   "field": "CHANGED_DT, CHANGED_BY",
+   "type": "Datetime",
+   "len": "",
+   "io": "O",
+   "control": "Label (2 lines)",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "DD-Mon-YYYY HH:MI",
+   "validation": "",
+   "description": "Line 1 date-time, line 2 user name of the last change."
+  },
+  {
+   "name": "Edit",
+   "source": "",
+   "field": "",
+   "type": "",
+   "len": "",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "",
+   "validation": "",
+   "description": "Opens the Edit part data modal of the row. Shown as [View] for a read-only account (OP-11)."
+  },
+  {
+   "name": "History (clock icon)",
+   "source": "",
+   "field": "",
+   "type": "",
+   "len": "",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "",
+   "validation": "",
+   "description": "Opens the History setting modal of the row."
+  },
+  {
+   "group": "<Footer Section>"
+  },
+  {
+   "name": "Rows per page",
+   "source": "Key-in",
+   "field": "",
+   "type": "Number",
+   "len": "",
+   "io": "I",
+   "control": "Combo Box",
+   "justified": "Left",
+   "initial": "25",
+   "required": "N",
+   "format": "",
+   "validation": "",
+   "description": "Options 25 / 50 / 100. Change returns to page 1."
+  },
+  {
+   "name": "Paging information",
+   "source": "",
+   "field": "",
+   "type": "Varchar",
+   "len": "",
+   "io": "O",
+   "control": "Label",
+   "justified": "Right",
+   "initial": "",
+   "required": "",
+   "format": "a-b of N parts \u00b7 page x/y",
+   "validation": "",
+   "description": ""
+  },
+  {
+   "name": "Prev / Next",
+   "source": "",
+   "field": "",
+   "type": "",
+   "len": "",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "",
+   "validation": "",
+   "description": "Previous / next page. Refer Screen Mode remark 1)."
+  },
+  {
+   "group": "<Empty State Section>"
+  },
+  {
+   "name": "Empty state message",
+   "source": "",
+   "field": "",
+   "type": "Varchar",
+   "len": "",
+   "io": "O",
+   "control": "Label",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "",
+   "validation": "",
+   "description": "Display message no. 1 (filter result empty) or no. 2 (no part registered)."
+  },
+  {
+   "name": "Reset filter",
+   "source": "",
+   "field": "",
+   "type": "",
+   "len": "",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "",
+   "validation": "",
+   "description": "Same as [Reset]. Shown with message no. 1."
+  },
+  {
+   "name": "Upload Excel / Add one part",
+   "source": "",
+   "field": "",
+   "type": "",
+   "len": "",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "",
+   "validation": "",
+   "description": "Shown with message no. 2; same as header [Upload Excel] / [Add Part]."
+  },
+  {
+   "group": "<Add Part / Edit Part Data Modal>"
+  },
+  {
+   "name": "Modal title",
+   "source": "",
+   "field": "",
+   "type": "Varchar",
+   "len": "",
+   "io": "O",
+   "control": "Label",
+   "justified": "Left",
+   "initial": "Add: 'Add Part Candidate Crossdock'; Edit: 'Edit part data'",
+   "required": "",
+   "format": "",
+   "validation": "",
+   "description": ""
+  },
+  {
+   "name": "Step indicator",
+   "source": "",
+   "field": "",
+   "type": "",
+   "len": "",
+   "io": "O",
+   "control": "Stepper",
+   "justified": "Left",
+   "initial": "Step 1 active",
+   "required": "",
+   "format": "",
+   "validation": "",
+   "description": "Step 1 Part Candidate (Part No), step 2 Pcs/Case & Max Case/Day, step 3 Total Pcs/Day; a step gets a check when its items are filled."
+  },
+  {
+   "name": "Status",
+   "source": "MASTER_CANDIDATE_PART",
+   "field": "PART_STATUS",
+   "type": "Varchar",
+   "len": "TBD",
+   "io": "I/O",
+   "control": "Combo Box",
+   "justified": "Left",
+   "initial": "Candidate",
+   "required": "Y",
+   "format": "",
+   "validation": "BR-02, BR-07",
+   "description": "Add: locked to Candidate (tooltip 'New parts are automatically Candidate'). Edit: Candidate / Active / Inactive."
+  },
+  {
+   "name": "Part No",
+   "source": "TB_M_PART_MASTER (Add) / MASTER_CANDIDATE_PART (Edit)",
+   "field": "PART_NO",
+   "type": "Varchar",
+   "len": "TBD",
+   "io": "I/O",
+   "control": "Combo Box with search",
+   "justified": "Left",
+   "initial": "Blank",
+   "required": "Y",
+   "format": "X..TBD..X",
+   "validation": "BR-03",
+   "description": "Add: lists parts of TB_M_PART_MASTER not yet registered (Part No + name, contains search, arrow keys / Enter / Esc). Edit: locked."
+  },
+  {
+   "name": "Part Name",
+   "source": "TB_M_PART_MASTER",
+   "field": "PART_NAME (TBD)",
+   "type": "Varchar",
+   "len": "TBD",
+   "io": "O",
+   "control": "Text box (disabled)",
+   "justified": "Left",
+   "initial": "Blank",
+   "required": "",
+   "format": "X..TBD..X",
+   "validation": "",
+   "description": "Autofilled from the selected Part No."
+  },
+  {
+   "name": "Effective Start Date",
+   "source": "MASTER_CANDIDATE_PART",
+   "field": "EFFECTIVE_START_DATE",
+   "type": "Date",
+   "len": "",
+   "io": "I",
+   "control": "Date picker",
+   "justified": "Left",
+   "initial": "Add: System date + 1 day",
+   "required": "N (TBD OP-09)",
+   "format": "DD-Mon-YYYY",
+   "validation": "Today or later; BR-06",
+   "description": "Editable in Add, and in Edit only while the saved status is Candidate; otherwise locked with tooltip 'Can only be changed while the status is still Candidate'."
+  },
+  {
+   "name": "Minimum MAD",
+   "source": "MASTER_CANDIDATE_PART",
+   "field": "MIN_MAD",
+   "type": "Number",
+   "len": "TBD",
+   "io": "I",
+   "control": "Text box",
+   "justified": "Right",
+   "initial": "Blank",
+   "required": "N (TBD OP-09)",
+   "format": "ZZ,ZZ9",
+   "validation": "Whole number (TBD OP-07)",
+   "description": ""
+  },
+  {
+   "name": "Pcs/Case",
+   "source": "MASTER_CANDIDATE_PART",
+   "field": "PCS_CASE",
+   "type": "Number",
+   "len": "TBD",
+   "io": "I",
+   "control": "Text box",
+   "justified": "Right",
+   "initial": "Blank",
+   "required": "Y",
+   "format": "ZZ,ZZ9",
+   "validation": "Whole number > 0 (BR-04)",
+   "description": ""
+  },
+  {
+   "name": "Max Case/Day",
+   "source": "MASTER_CANDIDATE_PART",
+   "field": "MAX_CASE_DAY",
+   "type": "Number",
+   "len": "TBD",
+   "io": "I",
+   "control": "Text box",
+   "justified": "Right",
+   "initial": "Blank",
+   "required": "Y",
+   "format": "ZZ,ZZ9",
+   "validation": "Whole number > 0 (BR-04)",
+   "description": "Locked until Pcs/Case is filled (tooltip 'Enter Pcs/Case first')."
+  },
+  {
+   "name": "Total Pcs/Day",
+   "source": "",
+   "field": "",
+   "type": "Number",
+   "len": "",
+   "io": "O",
+   "control": "Label",
+   "justified": "Right",
+   "initial": "'-'",
+   "required": "",
+   "format": "ZZ,ZZ9",
+   "validation": "",
+   "description": "= Pcs/Case x Max Case/Day, recalculated on every change (BR-05)."
+  },
+  {
+   "name": "Cancel",
+   "source": "",
+   "field": "",
+   "type": "",
+   "len": "",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "",
+   "validation": "",
+   "description": "Closes the modal without saving."
+  },
+  {
+   "name": "Save",
+   "source": "",
+   "field": "",
+   "type": "",
+   "len": "",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "",
+   "validation": "",
+   "description": "Enabled only when Part No, Pcs/Case > 0 and Max Case/Day > 0 are filled. Refer Operation Description 5.4 / 5.5."
+  },
+  {
+   "name": "Close (X)",
+   "source": "",
+   "field": "",
+   "type": "",
+   "len": "",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "",
+   "validation": "",
+   "description": "Same as [Cancel]."
+  },
+  {
+   "group": "<History Setting Modal>"
+  },
+  {
+   "name": "Part identity",
+   "source": "MASTER_CANDIDATE_PART",
+   "field": "PART_NO, PART_NAME",
+   "type": "Varchar",
+   "len": "",
+   "io": "O",
+   "control": "Label",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "",
+   "validation": "",
+   "description": "Part No \u00b7 Part Name of the selected row."
+  },
+  {
+   "name": "Event title",
+   "source": "TBD (history table, OP-03)",
+   "field": "TBD",
+   "type": "Varchar",
+   "len": "",
+   "io": "O",
+   "control": "Timeline",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "",
+   "validation": "",
+   "description": "e.g. 'Part registered', 'Status changed'. Latest event marked with a blue dot."
+  },
+  {
+   "name": "Event date-time",
+   "source": "TBD (history table, OP-03)",
+   "field": "TBD",
+   "type": "Datetime",
+   "len": "",
+   "io": "O",
+   "control": "Label",
+   "justified": "Right",
+   "initial": "",
+   "required": "",
+   "format": "DD-Mon-YYYY HH:MI",
+   "validation": "",
+   "description": ""
+  },
+  {
+   "name": "Changed field (old \u2192 new)",
+   "source": "TBD (history table, OP-03)",
+   "field": "TBD",
+   "type": "Varchar",
+   "len": "",
+   "io": "O",
+   "control": "Label",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "",
+   "validation": "",
+   "description": "Field name, old value struck through, new value."
+  },
+  {
+   "name": "User",
+   "source": "TBD (history table, OP-03)",
+   "field": "TBD",
+   "type": "Varchar",
+   "len": "",
+   "io": "O",
+   "control": "Label",
+   "justified": "Right",
+   "initial": "",
+   "required": "",
+   "format": "",
+   "validation": "",
+   "description": "User who made the change."
+  },
+  {
+   "name": "Close",
+   "source": "",
+   "field": "",
+   "type": "",
+   "len": "",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "",
+   "validation": "",
+   "description": "Closes the modal."
+  },
+  {
+   "group": "<Upload Excel Modal>"
+  },
+  {
+   "name": "Template columns",
+   "source": "",
+   "field": "",
+   "type": "Varchar",
+   "len": "",
+   "io": "O",
+   "control": "Label (chips)",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "",
+   "validation": "",
+   "description": "part_no, minimum_mad, pcs_case, max_case_day, status, flag_add_edit, effective_start_date (same order as sheet 'Upload' of Export Excel)."
+  },
+  {
+   "name": "Rules per flag_add_edit and status",
+   "source": "",
+   "field": "",
+   "type": "Varchar",
+   "len": "",
+   "io": "O",
+   "control": "Label",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "",
+   "validation": "",
+   "description": "Add / Edit / Status rules; Candidate status cannot be changed by upload, Active <-> Inactive allowed, nothing can become Candidate."
+  },
+  {
+   "name": "Upload file",
+   "source": "Key-in",
+   "field": "",
+   "type": "File",
+   "len": "",
+   "io": "I",
+   "control": "Drag-and-drop area + [Choose file]",
+   "justified": "Center",
+   "initial": "Blank",
+   "required": "Y",
+   "format": ".xlsx",
+   "validation": "Max 5 MB, max 5,000 rows",
+   "description": "File checks and row validation are done by the batch (UISS-Batch Part List Upload)."
+  },
+  {
+   "name": "Download template .xlsx",
+   "source": "",
+   "field": "",
+   "type": "",
+   "len": "",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "",
+   "validation": "",
+   "description": "Downloads the empty upload template. TBD: template file location."
+  },
+  {
+   "name": "Close",
+   "source": "",
+   "field": "",
+   "type": "",
+   "len": "",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "",
+   "validation": "",
+   "description": "Closes the modal without uploading."
+  },
+  {
+   "name": "Validate file",
+   "source": "",
+   "field": "",
+   "type": "",
+   "len": "",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "",
+   "validation": "",
+   "description": "Save button of the upload (OP-02). Refer Operation Description 5.7."
+  },
+  {
+   "group": "<Saved Successfully Popup>"
+  },
+  {
+   "name": "Success message",
+   "source": "",
+   "field": "",
+   "type": "Varchar",
+   "len": "",
+   "io": "O",
+   "control": "Label",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "",
+   "validation": "",
+   "description": "Display message no. 9 (Add / Edit) or no. 11 (upload)."
+  },
+  {
+   "name": "OK",
+   "source": "",
+   "field": "",
+   "type": "",
+   "len": "",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "",
+   "validation": "",
+   "description": "Closes the popup."
+  }
+ ],
+ "data_map": {
+  "blocks": [
+   {
+    "source": "Key-in from screen",
+    "destination": {
+     "table": "MASTER_CANDIDATE_PART",
+     "operation": "Insert",
+     "description": "Add Part modal - [Save]"
+    },
+    "mappings": [
+     {
+      "source_field": "Part No",
+      "dest_field": "PART_NO"
+     },
+     {
+      "dest_field": "PERIOD",
+      "description": "Ongoing calculation period (TBD OP-13)"
+     },
+     {
+      "source_field": "Part Name",
+      "dest_field": "PART_NAME",
+      "description": "From TB_M_PART_MASTER by PART_NO"
+     },
+     {
+      "source_field": "Minimum MAD",
+      "dest_field": "MIN_MAD"
+     },
+     {
+      "source_field": "Pcs/Case",
+      "dest_field": "PCS_CASE"
+     },
+     {
+      "source_field": "Max Case/Day",
+      "dest_field": "MAX_CASE_DAY"
+     },
+     {
+      "dest_field": "TOTAL_PCS_DAY",
+      "description": "PCS_CASE x MAX_CASE_DAY"
+     },
+     {
+      "source_field": "Effective Start Date",
+      "dest_field": "EFFECTIVE_START_DATE"
+     },
+     {
+      "dest_field": "PART_STATUS",
+      "description": "'Candidate' (BR-02)"
+     },
+     {
+      "dest_field": "SYNC_STATUS",
+      "description": "'0' (No Sync)"
+     },
+     {
+      "dest_field": "LAST_SOURCE",
+      "description": "'SCREEN'"
+     },
+     {
+      "dest_field": "LAST_UPLOAD_ID",
+      "description": "NULL"
+     },
+     {
+      "dest_field": "CREATED_BY",
+      "description": "Login user ID"
+     },
+     {
+      "dest_field": "CREATED_DT",
+      "description": "Server system date-time"
+     },
+     {
+      "dest_field": "CHANGED_BY",
+      "description": "Login user ID"
+     },
+     {
+      "dest_field": "CHANGED_DT",
+      "description": "Server system date-time"
+     }
+    ]
+   },
+   {
+    "source": "Key-in from screen",
+    "destination": {
+     "table": "MASTER_CANDIDATE_PART",
+     "operation": "Update",
+     "description": "Edit part data - [Save]",
+     "keys": [
+      {
+       "field": "PART_NO",
+       "value": "Part No of the edited row"
+      },
+      {
+       "field": "PERIOD",
+       "value": "Ongoing calculation period"
+      }
+     ]
+    },
+    "mappings": [
+     {
+      "source_field": "Status",
+      "dest_field": "PART_STATUS"
+     },
+     {
+      "source_field": "Minimum MAD",
+      "dest_field": "MIN_MAD"
+     },
+     {
+      "source_field": "Pcs/Case",
+      "dest_field": "PCS_CASE"
+     },
+     {
+      "source_field": "Max Case/Day",
+      "dest_field": "MAX_CASE_DAY"
+     },
+     {
+      "dest_field": "TOTAL_PCS_DAY",
+      "description": "PCS_CASE x MAX_CASE_DAY"
+     },
+     {
+      "source_field": "Effective Start Date",
+      "dest_field": "EFFECTIVE_START_DATE",
+      "description": "Only while saved status is Candidate (BR-06)"
+     },
+     {
+      "dest_field": "SYNC_STATUS",
+      "description": "'0' (No Sync) (BR-09)"
+     },
+     {
+      "dest_field": "LAST_SOURCE",
+      "description": "'SCREEN'"
+     },
+     {
+      "dest_field": "CHANGED_BY",
+      "description": "Login user ID"
+     },
+     {
+      "dest_field": "CHANGED_DT",
+      "description": "Server system date-time"
+     }
+    ]
+   },
+   {
+    "source": {
+     "table": "MASTER_CANDIDATE_PART",
+     "keys": [
+      {
+       "field": "PART_NO",
+       "value": "Saved part"
+      }
+     ]
+    },
+    "destination": {
+     "table": "TBD (part history)",
+     "operation": "Insert",
+     "description": "Add / Edit - [Save]"
+    },
+    "mappings": [
+     {
+      "source_field": "PART_NO",
+      "dest_field": "PART_NO"
+     },
+     {
+      "dest_field": "EVENT",
+      "description": "TBD (OP-03)"
+     },
+     {
+      "dest_field": "FIELD_NAME",
+      "description": "Changed field (TBD)"
+     },
+     {
+      "dest_field": "OLD_VALUE",
+      "description": "Value before Save (TBD)"
+     },
+     {
+      "dest_field": "NEW_VALUE",
+      "description": "Value after Save (TBD)"
+     },
+     {
+      "dest_field": "CHANGED_BY",
+      "description": "Login user ID"
+     },
+     {
+      "dest_field": "CHANGED_DT",
+      "description": "Server system date-time"
+     }
+    ]
+   }
+  ]
+ },
+ "operation": [
+  {
+   "type": "heading",
+   "text": "5.1 Initial Display"
+  },
+  {
+   "type": "bullets",
+   "marker": "a.",
+   "level": 2,
+   "items": [
+    "The sub-menu is opened for users logged in with a Procurement account (BR-01).",
+    "Search criteria: 'Part Number' and 'Part Name' blank, 'Status' = All, 'Sort by' = Newer to Older.",
+    "Retrieve all parts of MASTER_CANDIDATE_PART and display them sorted by CHANGED_DT descending, 25 rows per page, page 1.",
+    "If no part is registered at all, hide the table and display message no. 2 with [Upload Excel] and [Add one part]."
+   ]
+  },
+  {
+   "type": "heading",
+   "text": "5.2 Specifying Criteria"
+  },
+  {
+   "type": "bullets",
+   "marker": "a.",
+   "level": 2,
+   "items": [
+    "'Part Number' and 'Part Name' match by 'contains', case-insensitive; 'Status' matches exactly. All criteria are combined with AND (BR-08).",
+    "Changing any criterion, 'Sort by' or 'Rows per page' returns the list to page 1.",
+    "The prototype applies the filter while typing; whether filtering waits for [Search] is TBD (OP-01).",
+    "If no row matches, hide the table and paging and display message no. 1 with [Reset filter]."
+   ]
+  },
+  {
+   "type": "heading",
+   "text": "5.3 Result List"
+  },
+  {
+   "type": "bullets",
+   "marker": "a.",
+   "level": 2,
+   "items": [
+    "Counter 'N parts \u00b7 M incomplete mappings' is counted over the whole filtered result, not only the current page.",
+    "Incomplete mapping (BR-10): the part has no destination in MASTER_CANDIDATE_PART_DEST, or the sum of destination CASE_DAY differs from MAX_CASE_DAY. Mark the row with a blue bar.",
+    "Min MAD flag (BR-11): show 'Min MAD' bold in warning colour when the 6-month average MAD is below MIN_MAD, except for status Candidate. Source of the MAD history is TBD.",
+    "Total Pcs/Day = Pcs/Case x Max Case/Day (BR-05)."
+   ]
+  },
+  {
+   "type": "heading",
+   "text": "5.4 Add Part"
+  },
+  {
+   "type": "item",
+   "marker": "a.",
+   "level": 2,
+   "text": "User clicks [Add Part]."
+  },
+  {
+   "type": "bullets",
+   "marker": "1.",
+   "level": 3,
+   "items": [
+    "Open the 'Add Part Candidate Crossdock' modal. 'Status' = Candidate (locked, BR-02); 'Effective Start Date' = system date + 1 day, minimum today (BR-06).",
+    "'Part No' lists parts of TB_M_PART_MASTER that are not yet registered in MASTER_CANDIDATE_PART, so a Part No cannot be duplicated (BR-03). No match shows message no. 8.",
+    "Selecting a Part No autofills 'Part Name'. 'Max Case/Day' is locked until 'Pcs/Case' is filled.",
+    "[Save] is enabled only when Part No, Pcs/Case > 0 and Max Case/Day > 0 are filled (BR-04); otherwise its tooltip shows message no. 5, 6 or 7 for the first missing item."
+   ]
+  },
+  {
+   "type": "item",
+   "marker": "b.",
+   "level": 2,
+   "text": "User clicks [Save]."
+  },
+  {
+   "type": "bullets",
+   "marker": "1.",
+   "level": 3,
+   "items": [
+    "If the Part No was registered by another user in the meantime, display message no. 3. Stop.",
+    "Insert the part into MASTER_CANDIDATE_PART with PART_STATUS = Candidate and SYNC_STATUS = 0 (No Sync) (refer Data Edit Mapping).",
+    "Insert the change history (TBD OP-03).",
+    "Close the modal, reset the Part Number / Part Name / Status filters, sort Newer to Older and display message no. 9. The new part is shown at the top."
+   ]
+  },
+  {
+   "type": "item",
+   "marker": "c.",
+   "level": 2,
+   "text": "User clicks [Cancel] or the X icon: close the modal without saving."
+  },
+  {
+   "type": "heading",
+   "text": "5.5 Edit Part Data"
+  },
+  {
+   "type": "item",
+   "marker": "a.",
+   "level": 2,
+   "text": "User clicks the 'Part Number' link or [Edit] on a row."
+  },
+  {
+   "type": "bullets",
+   "marker": "1.",
+   "level": 3,
+   "items": [
+    "Open the 'Edit part data' modal with the saved values. 'Part No' is locked; 'Status' can be Candidate / Active / Inactive (BR-07).",
+    "'Effective Start Date' is editable only while the saved status is Candidate; otherwise locked with message no. 10 as tooltip (BR-06).",
+    "'Minimum MAD', 'Pcs/Case' and 'Max Case/Day' can be changed; 'Total Pcs/Day' is recalculated."
+   ]
+  },
+  {
+   "type": "item",
+   "marker": "b.",
+   "level": 2,
+   "text": "User clicks [Save]."
+  },
+  {
+   "type": "bullets",
+   "marker": "1.",
+   "level": 3,
+   "items": [
+    "If the record was changed by another user after it was opened, display message no. 4. Stop.",
+    "Update MASTER_CANDIDATE_PART and set SYNC_STATUS = 0 (No Sync), CHANGED_BY and CHANGED_DT (BR-09).",
+    "Insert the change history (TBD OP-03).",
+    "Close the modal, move the part to the top of the list and display message no. 9."
+   ]
+  },
+  {
+   "type": "heading",
+   "text": "5.6 History Setting"
+  },
+  {
+   "type": "bullets",
+   "marker": "a.",
+   "level": 2,
+   "items": [
+    "User clicks the clock icon on a row: open 'History setting' with the change timeline of the part, newest first.",
+    "Each event shows the title, date-time, field name, old value (struck through) \u2192 new value and user.",
+    "A part without history shows message no. 12. History source and logged events are TBD (OP-03)."
+   ]
+  },
+  {
+   "type": "heading",
+   "text": "5.7 Upload Excel"
+  },
+  {
+   "type": "bullets",
+   "marker": "a.",
+   "level": 2,
+   "items": [
+    "User clicks [Upload Excel]: open the modal with the template columns, the rules and the file area (.xlsx, max 5 MB, max 5,000 rows).",
+    "Edit rows use sheet 'Upload' of the Part List Export Excel as base file (pre-filled with flag E).",
+    "Status rule: a Candidate part's status cannot be changed by upload; Active <-> Inactive can be changed; no part can be changed to Candidate.",
+    "User clicks [Validate file] (save button of the upload, OP-02): the file is passed to the upload batch; validation, saving (all-or-nothing) and logging follow UISS-Batch \"Crossdock Master Setting - Part List Upload\".",
+    "When the upload is completed, close the modal and display message no. 11. When it is rejected, show the batch result (error list) - refer UISS-Batch.",
+    "Changed parts show Sync Status No Sync (BR-09)."
+   ]
+  },
+  {
+   "type": "heading",
+   "text": "5.8 Export Excel"
+  },
+  {
+   "type": "bullets",
+   "marker": "a.",
+   "level": 2,
+   "items": [
+    "User clicks [Export Excel]: download Crossdock_Part_List_YYYYMMDD.xlsx.",
+    "Sheet 'Part List': rows of the active filter and sort (all pages) with Part Number, Part Name, Min MAD, Pcs/Case, Max Case/Day, Total Pcs/Day, Status, Effective Start Date, Last Update. Information only.",
+    "Sheet 'Upload': every registered part with part_no, minimum_mad, pcs_case, max_case_day, status, flag_add_edit = E, effective_start_date (DD-Mon-YYYY). Base file for Edit uploads.",
+    "If the file cannot be created, display message no. 13."
+   ]
+  }
+ ],
+ "display_messages": [
+  {
+   "group": "Search Operation"
+  },
+  {
+   "event": "Change search criteria",
+   "cause": "No part matches the criteria (FSD MSG-01)",
+   "type": "Info",
+   "msg_id": "TBD",
+   "message": "No matching parts - Loosen the search criteria or reset all filters.",
+   "action": "Change the criteria or click [Reset filter]"
+  },
+  {
+   "event": "Open Part List",
+   "cause": "No part registered yet (FSD MSG-02)",
+   "type": "Info",
+   "msg_id": "TBD",
+   "message": "No crossdock parts registered yet - Start from the Excel template, or register a single part and map its Max Case/Day to Thailand, Japan and Vietnam.",
+   "action": "Click [Upload Excel] or [Add one part]"
+  },
+  {
+   "group": "Add / Edit Operation"
+  },
+  {
+   "event": "Click [Save] button",
+   "cause": "Part No already registered (concurrent add)",
+   "type": "Error",
+   "msg_id": "MSTD0039AERR",
+   "message": "Duplication found for {Part No}",
+   "action": "Close the modal and search the part"
+  },
+  {
+   "event": "Click [Save] button",
+   "cause": "Record changed by another user",
+   "type": "Error",
+   "msg_id": "MSTD0114AERR",
+   "message": "Error in Update because of concurrency check.",
+   "action": "Close the modal, refresh and edit again"
+  },
+  {
+   "event": "Hover disabled [Save]",
+   "cause": "Part No not selected (FSD MSG-03)",
+   "type": "Info",
+   "msg_id": "TBD",
+   "message": "Part No is required",
+   "action": "Select a Part No"
+  },
+  {
+   "event": "Hover disabled [Save]",
+   "cause": "Pcs/Case not filled (FSD MSG-03, MSG-04)",
+   "type": "Info",
+   "msg_id": "TBD",
+   "message": "Enter Pcs/Case first (step 2)",
+   "action": "Fill Pcs/Case"
+  },
+  {
+   "event": "Hover disabled [Save]",
+   "cause": "Max Case/Day not filled (FSD MSG-03)",
+   "type": "Info",
+   "msg_id": "TBD",
+   "message": "Enter Max Case/Day (step 2)",
+   "action": "Fill Max Case/Day"
+  },
+  {
+   "event": "Type in 'Part No'",
+   "cause": "No unregistered part matches the text (FSD MSG-07)",
+   "type": "Info",
+   "msg_id": "TBD",
+   "message": "Part not found",
+   "action": "Check the Part No"
+  },
+  {
+   "event": "Click [Save] button",
+   "cause": "Part saved successfully",
+   "type": "Info",
+   "msg_id": "TBD",
+   "message": "Saved successfully - {Part No} \u00b7 {Part Name} has been added/updated. It is now at the top of the Part List.",
+   "action": "Click [OK]"
+  },
+  {
+   "event": "Hover 'Effective Start Date'",
+   "cause": "Saved status is Active / Inactive (FSD MSG-06)",
+   "type": "Info",
+   "msg_id": "TBD",
+   "message": "Can only be changed while the status is still Candidate",
+   "action": "-"
+  },
+  {
+   "group": "Upload Operation"
+  },
+  {
+   "event": "Click [Validate file] button",
+   "cause": "Upload validated and saved (FSD MSG-17)",
+   "type": "Info",
+   "msg_id": "TBD",
+   "message": "Saved successfully - Upload completed. The file has been validated and the part settings have been saved to the Part List.",
+   "action": "Click [OK]"
+  },
+  {
+   "group": "History Operation"
+  },
+  {
+   "event": "Click History icon",
+   "cause": "Part has no history (FSD MSG-08)",
+   "type": "Info",
+   "msg_id": "TBD",
+   "message": "No change history for this part yet.",
+   "action": "Click [Close]"
+  },
+  {
+   "group": "Export Operation"
+  },
+  {
+   "event": "Click [Export Excel] button",
+   "cause": "Excel file cannot be created",
+   "type": "Error",
+   "msg_id": "TBD",
+   "message": "Export Excel failed. Please try again.",
+   "action": "Click [Export Excel] again; contact administrator if it persists"
+  }
+ ],
+ "logging_messages": [
+  {
+   "event": "Click [Save] button",
+   "cause": "Database error on insert/update of MASTER_CANDIDATE_PART",
+   "type": "Error",
+   "msg_id": "TBD",
+   "message": "Failed to save part <PART_NO>: <DB error message>.",
+   "exception": "Y",
+   "action": "Show [Corresponding Screen Message] on screen (TBD)"
+  },
+  {
+   "event": "Click [Export Excel] button",
+   "cause": "Excel file generation error",
+   "type": "Error",
+   "msg_id": "TBD",
+   "message": "Export Excel of Part List failed: <error message>.",
+   "exception": "Y",
+   "action": "Display Message no. 13"
+  },
+  {
+   "event": "Click [Validate file] button",
+   "cause": "Upload processing",
+   "type": "Info",
+   "msg_id": "-",
+   "message": "Logging is handled by the Part List Upload batch (refer UISS-Batch \"Crossdock Master Setting - Part List Upload\").",
+   "exception": "N",
+   "action": "-"
+  }
+ ]
+}
