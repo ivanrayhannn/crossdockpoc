@@ -14,12 +14,12 @@
    "author": "Ivan Rayhan",
    "date": "12-Oct-26",
    "reviewed_by": "",
-   "description": "Initial draft based on the business decisions for the Crossdock Master Setting Part List sub-menu and the crossdockpoc web prototype as of 12-Oct-26. Upload backend is documented in UISS-Batch \"Crossdock Master Setting - Part List Upload\"."
+   "description": "Initial draft based on the business decisions for the Crossdock Master Setting Part List sub-menu and the crossdockpoc web prototype as of 12-Oct-26. Upload backend is documented in UISS-Batch \"Crossdock Master Setting - Part List Upload\". MASTER_CANDIDATE_PART holds one record per part (key PART_NO, no calculation period); the period belongs to the Mapping per Destination data only."
   }
  ],
  "general": {
   "objective": [
-   "To register crossdock candidate parts for the ongoing calculation period (Part No, Minimum MAD, Pcs/Case, Max Case/Day, Effective Start Date).",
+   "To register crossdock candidate parts (Part No, Minimum MAD, Pcs/Case, Max Case/Day, Effective Start Date).",
    "To search and display registered crossdock parts with their status, capacity and mapping completeness.",
    "To change part data and part status (Candidate / Active / Inactive) of a registered part.",
    "To display the change history of a part.",
@@ -1482,10 +1482,6 @@
       "dest_field": "PART_NO"
      },
      {
-      "dest_field": "PERIOD",
-      "description": "Ongoing calculation period (TBD: period format and creation)"
-     },
-     {
       "source_field": "Part Name",
       "dest_field": "PART_NAME",
       "description": "From TB_M_PART_MASTER by PART_NO"
@@ -1554,10 +1550,6 @@
       {
        "field": "PART_NO",
        "value": "Part No of the edited row"
-      },
-      {
-       "field": "PERIOD",
-       "value": "Ongoing calculation period"
       }
      ]
     },
@@ -1856,12 +1848,12 @@
     [
      "Part Status",
      "Active",
-     "Active part. Only Active parts are mapped in Mapping per Destination (ongoing period)."
+     "Active part. Only Active parts can be mapped in the Mapping per Destination sub-menu."
     ],
     [
      "Part Status",
      "Inactive",
-     "Inactive part. Not mapped in the ongoing period."
+     "Inactive part. Not mapped in the Mapping per Destination sub-menu."
     ],
     [
      "Sync Status",

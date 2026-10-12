@@ -16,7 +16,7 @@ spec = {
   {"revision": "0.2", "author": "Ivan", "date": "09-Oct-26", "reviewed_by": "",
    "description": "Max Case/Day vs existing mapping rule decided (4.2 no. 9); 4.3 simplified; sample upload scenarios added to Appendix"},
   {"revision": "0.3", "author": "Ivan Rayhan", "date": "12-Oct-26", "reviewed_by": "",
-   "description": "Status rule changed (4.2 no. 6): Candidate status cannot be changed by upload, Active <-> Inactive can, nothing can become Candidate; Edit maps status to PART_STATUS. Trigger renamed to [Validate file]. Operation and functional flow diagrams added. Scenarios N8, E7, E8 updated."}],
+   "description": "Status rule changed (4.2 no. 6): Candidate status cannot be changed by upload, Active <-> Inactive can, nothing can become Candidate; Edit maps status to PART_STATUS. Trigger renamed to [Validate file]. Operation and functional flow diagrams added. Scenarios N8, E7, E8 updated. PERIOD removed from MASTER_CANDIDATE_PART (one record per part, key PART_NO); the calculation period belongs to Mapping per Destination only."}],
  "general": {
   "objective": [
    "To process the Part List file uploaded from the Crossdock Master Setting - Part List screen: from the [Validate file] button of the Upload Excel modal until the data is saved to MASTER_CANDIDATE_PART.",
@@ -36,7 +36,7 @@ spec = {
    {"name": "Part List file (sheet Upload)", "type": "Excel", "description": "Uploaded by the user on the Part List screen ([Validate file]). Only sheet Upload is read. Max 5 MB, 5,000 rows."},
    {"name": PM, "type": "DB", "description": "Part existence check and Part Name"},
    {"name": T, "type": "DB", "description": "Current data for duplicate check, status rule and Edit comparison"},
-   {"name": "MASTER_CANDIDATE_PART_DEST", "type": "DB", "description": "Total Case/Day already mapped per part (check 9)"}],
+   {"name": "MASTER_CANDIDATE_PART_DEST", "type": "DB", "description": "Total Case/Day already mapped per part in the ongoing calculation period (check 9)"}],
   "outputs": [
    {"name": T, "type": "DB", "description": "if successful"},
    {"name": LOG, "type": "DB", "description": "Upload log: one record per upload with status (COMPLETED / REJECTED), counts and errors"},
@@ -49,7 +49,7 @@ spec = {
   "constraints": [
    "Names MASTER_CANDIDATE_PART and TB_M_PART_MASTER are as given; other table names are proposed and must follow the project naming convention.",
    "Change history of the changed fields is not included yet. TBD: history table, logged events and retention are not decided.",
-   "Period of the records is the ongoing calculation period.",
+   "Part List data has no calculation period: MASTER_CANDIDATE_PART holds one record per part (key PART_NO). The calculation period exists only in the Mapping per Destination data (MASTER_CANDIDATE_PART_DEST).",
    "Upload template: sheet Upload is prefilled by Export Excel of the Part List with all parts (flag E). Only changed rows are saved; unchanged rows are skipped."]
  },
  "func_flow": {
@@ -88,7 +88,6 @@ spec = {
    "destination": {"table": T, "operation": "Insert", "description": "Flag A - new part"},
    "mappings": [
      {"source_field": "part_no", "dest_field": "PART_NO"},
-     {"dest_field": "PERIOD", "description": "Ongoing calculation period"},
      {"dest_field": "PART_NAME", "description": PM + ".PART_NAME by PART_NO"},
      {"source_field": "minimum_mad", "dest_field": "MIN_MAD"},
      {"source_field": "pcs_case", "dest_field": "PCS_CASE"},
@@ -105,10 +104,9 @@ spec = {
      {"dest_field": "CHANGED_DT", "description": "Server system date and time"}]},
   {"source": {"table": SHEET, "keys": [{"field": "flag_add_edit", "value": "'E'"}]},
    "destination": {"table": T, "operation": "Update", "description": "Flag E - only if changed",
-                   "keys": [{"field": "PART_NO", "value": "PART_NO of the row"}, {"field": "PERIOD", "value": "Ongoing calculation period"}]},
+                   "keys": [{"field": "PART_NO", "value": "PART_NO of the row"}]},
    "mappings": [
      {"source_field": "part_no", "dest_field": "PART_NO", "description": "Key, not changed"},
-     {"dest_field": "PERIOD", "description": "Key, not changed"},
      {"dest_field": "PART_NAME", "description": "Not changed"},
      {"source_field": "minimum_mad", "dest_field": "MIN_MAD"},
      {"source_field": "pcs_case", "dest_field": "PCS_CASE"},
@@ -159,13 +157,13 @@ spec = {
   {"type": "table", "level": 0, "row_lines": "all", "columns": [{"title": "No", "width": 3, "align": "center"}, {"title": "Check", "width": 31}, {"title": "Column", "width": 12}], "rows": [
     ["1", "Flag is A (Add) or E (Edit).", "flag_add_edit"],
     ["2", "Part No exists in TB_M_PART_MASTER.", "part_no"],
-    ["3", "Flag A: Part No is not yet in MASTER_CANDIDATE_PART (ongoing period). Flag E: it already is.", "part_no"],
+    ["3", "Flag A: Part No is not yet in MASTER_CANDIDATE_PART. Flag E: it already is.", "part_no"],
     ["4", "Part No appears only once in the file.", "part_no"],
     ["5", "Min MAD (0 or more), Pcs/Case and Max Case/Day (more than 0) are whole numbers. Required on every row, no blank cell.", "minimum_mad, pcs_case, max_case_day"],
     ["6", STATUS_RULE, "status"],
     ["7", "Effective Start Date is required when the part status is Candidate (always for flag A) and must be today or later when new or changed.", "effective_start_date"],
     ["8", "Flag E: Effective Start Date can only change while the part status is Candidate.", "effective_start_date"],
-    ["9", "Flag E: Max Case/Day is not below the total Case/Day already mapped per destination in Mapping per Destination (e.g. mapped 100, new Max Case/Day 80 is rejected). The user must first reduce the mapping in the Mapping per Destination sub-menu, then lower Max Case/Day in Part List.", "max_case_day"]]}],
+    ["9", "Flag E: Max Case/Day is not below the total Case/Day already mapped per destination in the ongoing calculation period of Mapping per Destination (MASTER_CANDIDATE_PART_DEST) (e.g. mapped 100, new Max Case/Day 80 is rejected). The user must first reduce the mapping in the Mapping per Destination sub-menu, then lower Max Case/Day in Part List.", "max_case_day"]]}],
  "logging_messages": [
   {"event": "Batch start", "cause": "Batch is called", "type": "Info", "msg_id": "TBD", "message": "Upload batch <UPLOAD_ID> started.", "action": {"system": "Write the log.", "user": "-"}},
   {"event": "Batch end", "cause": "Batch finishes", "type": "Info", "msg_id": "TBD", "message": "Upload batch <UPLOAD_ID> ended. Status <STATUS>, total <TOTAL_ROWS>, saved <SAVED_ROWS>, no change <NO_CHANGE_ROWS>, error <ERROR_ROWS>.", "action": {"system": "Write the log.", "user": "-"}},
@@ -185,7 +183,7 @@ spec = {
     ["status", "Candidate / Active / Inactive. Flag A: blank. Flag E: a Candidate part stays Candidate (blank or Candidate); Active <-> Inactive allowed; never Candidate for an Active or Inactive part."],
     ["flag_add_edit", "A = Add, E = Edit"], ["effective_start_date", "DD-Mon-YYYY"]]},
   {"type": "heading", "text": "Sample upload scenarios (from the Candidate Part Batch Flow simulation)"},
-  {"type": "text", "level": 0, "text": "Each scenario is a separate upload file. Today = 13-Sep-2026, ongoing period = Sep 2026. Input columns follow sheet Upload: part_no | minimum_mad | pcs_case | max_case_day | status | flag_add_edit | effective_start_date."},
+  {"type": "text", "level": 0, "text": "Each scenario is a separate upload file. Today = 13-Sep-2026. Mapped Case/Day = mapping of the ongoing calculation period (Sep 2026) in Mapping per Destination. Input columns follow sheet Upload: part_no | minimum_mad | pcs_case | max_case_day | status | flag_add_edit | effective_start_date."},
   {"type": "text", "level": 0, "bold": True, "text": "A. Master data before upload"},
   {"type": "table", "level": 0, "row_lines": "all", "columns": [{"title": "Part No", "width": 12}, {"title": "Status", "width": 10}, {"title": "Min MAD", "width": 8, "align": "right"}, {"title": "Pcs/Case", "width": 8, "align": "right"}, {"title": "Max Case/Day", "width": 10, "align": "right"}, {"title": "Mapped Case/Day", "width": 18}, {"title": "Effective Date", "width": 12}], "rows": [
     ["PART-A", "Active", "800", "60", "24", "24 (123:12, 456:8, 789:4)", "01-Aug-2026"],
@@ -227,9 +225,8 @@ spec = {
     ["F4", "No sheet named Upload (e.g. only sheet Part List)", "Rejected: sheet Upload not found."],
     ["F5", "A template column is missing (e.g. flag_add_edit deleted)", "Rejected: required column not found."]]}],
  "tables": [
-  {"name": T, "kind": "transaction", "proposed": False, "description": "Candidate part setting per part and period (Part List data). Target of a successful upload.",
+  {"name": T, "kind": "transaction", "proposed": False, "description": "Candidate part setting, one record per part (Part List data, no calculation period). Target of a successful upload.",
    "columns": [["PART_NO", "VARCHAR(TBD)", "Y", "N", "Part number; length follows TB_M_PART_MASTER"],
-               ["PERIOD", "VARCHAR(TBD)", "Y", "N", "Calculation period, e.g. Sep 2026 (format TBD)"],
                ["PART_NAME", "VARCHAR(TBD)", "", "N", "Retrieved from TB_M_PART_MASTER by PART_NO"],
                ["MIN_MAD", "INT", "", "N", "Minimum MAD"], ["PCS_CASE", "INT", "", "N", "Pieces per case (> 0)"],
                ["MAX_CASE_DAY", "INT", "", "N", "Total Case/Day of the part (> 0)"], ["TOTAL_PCS_DAY", "INT", "", "N", "PCS_CASE x MAX_CASE_DAY"],

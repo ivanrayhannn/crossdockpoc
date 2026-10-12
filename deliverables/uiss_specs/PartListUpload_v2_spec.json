@@ -30,7 +30,7 @@
    "author": "Ivan Rayhan",
    "date": "12-Oct-26",
    "reviewed_by": "",
-   "description": "Status rule changed (4.2 no. 6): Candidate status cannot be changed by upload, Active <-> Inactive can, nothing can become Candidate; Edit maps status to PART_STATUS. Trigger renamed to [Validate file]. Operation and functional flow diagrams added. Scenarios N8, E7, E8 updated."
+   "description": "Status rule changed (4.2 no. 6): Candidate status cannot be changed by upload, Active <-> Inactive can, nothing can become Candidate; Edit maps status to PART_STATUS. Trigger renamed to [Validate file]. Operation and functional flow diagrams added. Scenarios N8, E7, E8 updated. PERIOD removed from MASTER_CANDIDATE_PART (one record per part, key PART_NO); the calculation period belongs to Mapping per Destination only."
   }
  ],
  "general": {
@@ -131,7 +131,7 @@
    {
     "name": "MASTER_CANDIDATE_PART_DEST",
     "type": "DB",
-    "description": "Total Case/Day already mapped per part (check 9)"
+    "description": "Total Case/Day already mapped per part in the ongoing calculation period (check 9)"
    }
   ],
   "outputs": [
@@ -198,7 +198,7 @@
   "constraints": [
    "Names MASTER_CANDIDATE_PART and TB_M_PART_MASTER are as given; other table names are proposed and must follow the project naming convention.",
    "Change history of the changed fields is not included yet. TBD: history table, logged events and retention are not decided.",
-   "Period of the records is the ongoing calculation period.",
+   "Part List data has no calculation period: MASTER_CANDIDATE_PART holds one record per part (key PART_NO). The calculation period exists only in the Mapping per Destination data (MASTER_CANDIDATE_PART_DEST).",
    "Upload template: sheet Upload is prefilled by Export Excel of the Part List with all parts (flag E). Only changed rows are saved; unchanged rows are skipped."
   ]
  },
@@ -373,10 +373,6 @@
       "dest_field": "PART_NO"
      },
      {
-      "dest_field": "PERIOD",
-      "description": "Ongoing calculation period"
-     },
-     {
       "dest_field": "PART_NAME",
       "description": "TB_M_PART_MASTER.PART_NAME by PART_NO"
      },
@@ -452,10 +448,6 @@
       {
        "field": "PART_NO",
        "value": "PART_NO of the row"
-      },
-      {
-       "field": "PERIOD",
-       "value": "Ongoing calculation period"
       }
      ]
     },
@@ -463,10 +455,6 @@
      {
       "source_field": "part_no",
       "dest_field": "PART_NO",
-      "description": "Key, not changed"
-     },
-     {
-      "dest_field": "PERIOD",
       "description": "Key, not changed"
      },
      {
@@ -668,7 +656,7 @@
     ],
     [
      "3",
-     "Flag A: Part No is not yet in MASTER_CANDIDATE_PART (ongoing period). Flag E: it already is.",
+     "Flag A: Part No is not yet in MASTER_CANDIDATE_PART. Flag E: it already is.",
      "part_no"
     ],
     [
@@ -698,7 +686,7 @@
     ],
     [
      "9",
-     "Flag E: Max Case/Day is not below the total Case/Day already mapped per destination in Mapping per Destination (e.g. mapped 100, new Max Case/Day 80 is rejected). The user must first reduce the mapping in the Mapping per Destination sub-menu, then lower Max Case/Day in Part List.",
+     "Flag E: Max Case/Day is not below the total Case/Day already mapped per destination in the ongoing calculation period of Mapping per Destination (MASTER_CANDIDATE_PART_DEST) (e.g. mapped 100, new Max Case/Day 80 is rejected). The user must first reduce the mapping in the Mapping per Destination sub-menu, then lower Max Case/Day in Part List.",
      "max_case_day"
     ]
    ]
@@ -874,7 +862,7 @@
   {
    "type": "text",
    "level": 0,
-   "text": "Each scenario is a separate upload file. Today = 13-Sep-2026, ongoing period = Sep 2026. Input columns follow sheet Upload: part_no | minimum_mad | pcs_case | max_case_day | status | flag_add_edit | effective_start_date."
+   "text": "Each scenario is a separate upload file. Today = 13-Sep-2026. Mapped Case/Day = mapping of the ongoing calculation period (Sep 2026) in Mapping per Destination. Input columns follow sheet Upload: part_no | minimum_mad | pcs_case | max_case_day | status | flag_add_edit | effective_start_date."
   },
   {
    "type": "text",
@@ -1219,7 +1207,7 @@
    "name": "MASTER_CANDIDATE_PART",
    "kind": "transaction",
    "proposed": false,
-   "description": "Candidate part setting per part and period (Part List data). Target of a successful upload.",
+   "description": "Candidate part setting, one record per part (Part List data, no calculation period). Target of a successful upload.",
    "columns": [
     [
      "PART_NO",
@@ -1227,13 +1215,6 @@
      "Y",
      "N",
      "Part number; length follows TB_M_PART_MASTER"
-    ],
-    [
-     "PERIOD",
-     "VARCHAR(TBD)",
-     "Y",
-     "N",
-     "Calculation period, e.g. Sep 2026 (format TBD)"
     ],
     [
      "PART_NAME",
