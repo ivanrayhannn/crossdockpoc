@@ -1,5 +1,6 @@
 """Spec for UISS_Batch_PartListUpload_v2.xlsx (rebuilt from the v0.2 workbook, then updated to v0.3)."""
 import json, sys
+import hist_table
 T, PM, LOG = 'TB_M_PART_CANDIDATE', 'TB_M_PART_MASTER', 'Log'
 SHEET = 'Excel file - sheet Upload (valid rows)'
 STATUS_RULE = ('Status: flag A must be blank (a new part is always Candidate). Flag E: a Candidate part must stay '
@@ -168,15 +169,7 @@ spec = {
      {"dest_field": "CHANGED_DT", "description": "Server system date and time"}]},
   {"source": "Saved rows of this upload",
    "destination": {"table": "TB_H_PART_CANDIDATE", "operation": "Insert", "description": "Saved row - history"},
-   "mappings": [{"dest_field": "PART_NO", "description": "Part of the event"},
-                {"dest_field": "PERIOD", "description": "Blank (Part List has no period)"},
-                {"dest_field": "EVENT", "description": "'ADD' (flag A) / 'EDIT' (flag E)"},
-                {"dest_field": "SOURCE", "description": "'UPLOAD'"},
-                {"dest_field": "FIELD_NAME", "description": "Changed field, e.g. PCS_CASE, MAX_CASE_DAY, PART_STATUS"},
-                {"dest_field": "OLD_VALUE", "description": "Value before upload (blank for ADD)"},
-                {"dest_field": "NEW_VALUE", "description": "Value from the file"},
-                {"dest_field": "CHANGED_BY", "description": "Login name of the user who uploaded"},
-                {"dest_field": "CHANGED_DT", "description": "Server system date and time"}]},
+   "mappings": hist_table.mappings("NULL (Part List has no period)", "'ADD' (flag A) / 'EDIT' (flag E)", "'UPLOAD'", "Changed field, e.g. PCS_CASE, MAX_CASE_DAY, PART_STATUS", "Value before upload (NULL for ADD)", "Value from the file", "Login name of the user who uploaded", "Server system date and time", upload_id="UPLOAD_ID of this run")},
   {"source": "Result of this upload",
    "destination": {"table": LOG, "operation": "Update", "description": "Result of the run",
                    "keys": [{"field": "UPLOAD_ID", "value": "UPLOAD_ID of this run"}]},
@@ -207,7 +200,7 @@ spec = {
     "If any row is rejected, nothing is saved to TB_M_PART_CANDIDATE. The upload status and the error of every row are recorded in the upload log (Log).",
     "If all rows are valid, the data is saved to TB_M_PART_CANDIDATE: flag A inserts a new part (status Candidate), flag E updates the changed values, including status Active <-> Inactive. Rows with no change are skipped.",
     "The status of a Candidate part is changed only in the Edit part data modal on the screen, not by upload.",
-    "Every inserted or changed part gets a history record per changed field in TB_H_PART_CANDIDATE (event ADD / EDIT, source UPLOAD). Column names TBD.",
+    "Every inserted or changed part gets a history record per changed field in TB_H_PART_CANDIDATE (event ADD / EDIT, source UPLOAD, UPLOAD_ID of this run; refer Appendix).",
     "Every saved record gets Sync Status = No Sync. It is sent to the global system by the RPA when D/S clicks [Sync] in Mapping per Destination.",
     "A result report (.xlsx) is created for both cases."]},
   {"type": "column_break"},
@@ -222,15 +215,15 @@ spec = {
     ["8", "Flag E: Effective Start Date can only change while the part status is Candidate.", "effective_start_date"],
     ["9", "Flag E: Max Case/Day is not below the total Case/Day already mapped per destination in the ongoing calculation period of Mapping per Destination (TB_M_PART_CANDIDATE_DEST) (e.g. mapped 100, new Max Case/Day 80 is rejected). The user must first reduce the mapping in the Mapping per Destination sub-menu, then lower Max Case/Day in Part List.", "max_case_day"]]}],
  "logging_messages": [
-  {"event": "Batch start", "cause": "Batch is called", "type": "Info", "msg_id": "TBD", "message": "Upload batch <UPLOAD_ID> started.", "action": {"system": "Write the log.", "user": "-"}},
-  {"event": "Batch end", "cause": "Batch finishes", "type": "Info", "msg_id": "TBD", "message": "Upload batch <UPLOAD_ID> ended. Status <STATUS>, total <TOTAL_ROWS>, saved <SAVED_ROWS>, no change <NO_CHANGE_ROWS>, error <ERROR_ROWS>.", "action": {"system": "Write the log.", "user": "-"}},
-  {"event": "Receive file", "cause": "Uploaded file of <UPLOAD_ID> not found", "type": "Error", "msg_id": "TBD", "message": "Uploaded file of <UPLOAD_ID> not found.", "action": {"system": "Stop the batch.", "user": "Upload the file again."}},
-  {"event": "File check", "cause": "Extension, size, row count, sheet Upload or header is invalid", "type": "Error", "msg_id": "TBD", "message": "File check failed: <REASON>.", "action": {"system": "Set STATUS = REJECTED. Create the result report.", "user": "Download the file from the screen again and upload it."}},
-  {"event": "Row validation", "cause": "A validation rule in 4.2 fails", "type": "Error", "msg_id": "TBD", "message": "Row <ROW_NO> <COLUMN> : <RULE_MESSAGE>.", "action": {"system": "Reject the whole file. Nothing is saved.", "user": "Correct the rows in sheet Re-upload of the result report, then upload again."}},
-  {"event": "Row skipped", "cause": "Edit row has the same values as the master", "type": "Info", "msg_id": "TBD", "message": "Row <ROW_NO> Part No <PART_NO> has no change. Skipped.", "action": {"system": "Do not update the record.", "user": "-"}},
-  {"event": "Save to master", "cause": "Insert or update TB_M_PART_CANDIDATE fails", "type": "Error", "msg_id": "TBD", "message": "Cannot save Part No <PART_NO> to TB_M_PART_CANDIDATE.", "action": {"system": "Roll back. Set STATUS = REJECTED.", "user": "User contact PIC"}},
-  {"event": "Result report", "cause": "Result report cannot be created", "type": "Warning", "msg_id": "TBD", "message": "Result report of <UPLOAD_ID> cannot be created.", "action": {"system": "Continue. RESULT_FILE_PATH stays blank.", "user": "Contact system owner."}},
-  {"event": "Unexpected error", "cause": "Any other system error", "type": "Critical", "msg_id": "TBD", "message": "Unexpected error: <ERROR_DETAIL>.", "action": {"system": "Roll back. Set STATUS = REJECTED.", "user": "User contact PIC"}}],
+  {"event": "Batch start", "cause": "Batch is called", "type": "Info", "msg_id": "LOG1", "message": "Upload batch <UPLOAD_ID> started.", "action": {"system": "Write the log.", "user": "-"}},
+  {"event": "Batch end", "cause": "Batch finishes", "type": "Info", "msg_id": "LOG2", "message": "Upload batch <UPLOAD_ID> ended. Status <STATUS>, total <TOTAL_ROWS>, saved <SAVED_ROWS>, no change <NO_CHANGE_ROWS>, error <ERROR_ROWS>.", "action": {"system": "Write the log.", "user": "-"}},
+  {"event": "Receive file", "cause": "Uploaded file of <UPLOAD_ID> not found", "type": "Error", "msg_id": "LOG3", "message": "Uploaded file of <UPLOAD_ID> not found.", "action": {"system": "Stop the batch.", "user": "Upload the file again."}},
+  {"event": "File check", "cause": "Extension, size, row count, sheet Upload or header is invalid", "type": "Error", "msg_id": "LOG4", "message": "File check failed: <REASON>.", "action": {"system": "Set STATUS = REJECTED. Create the result report.", "user": "Download the file from the screen again and upload it."}},
+  {"event": "Row validation", "cause": "A validation rule in 4.2 fails", "type": "Error", "msg_id": "LOG5", "message": "Row <ROW_NO> <COLUMN> : <RULE_MESSAGE>.", "action": {"system": "Reject the whole file. Nothing is saved.", "user": "Correct the rows in sheet Re-upload of the result report, then upload again."}},
+  {"event": "Row skipped", "cause": "Edit row has the same values as the master", "type": "Info", "msg_id": "LOG6", "message": "Row <ROW_NO> Part No <PART_NO> has no change. Skipped.", "action": {"system": "Do not update the record.", "user": "-"}},
+  {"event": "Save to master", "cause": "Insert or update TB_M_PART_CANDIDATE fails", "type": "Error", "msg_id": "LOG7", "message": "Cannot save Part No <PART_NO> to TB_M_PART_CANDIDATE.", "action": {"system": "Roll back. Set STATUS = REJECTED.", "user": "User contact PIC"}},
+  {"event": "Result report", "cause": "Result report cannot be created", "type": "Warning", "msg_id": "LOG8", "message": "Result report of <UPLOAD_ID> cannot be created.", "action": {"system": "Continue. RESULT_FILE_PATH stays blank.", "user": "Contact system owner."}},
+  {"event": "Unexpected error", "cause": "Any other system error", "type": "Critical", "msg_id": "LOG9", "message": "Unexpected error: <ERROR_DETAIL>.", "action": {"system": "Roll back. Set STATUS = REJECTED.", "user": "User contact PIC"}}],
  "appendix_layout": "full",
  "appendix": [
   {"type": "heading", "text": "Upload template (sheet \"Upload\")"},
@@ -254,6 +247,6 @@ spec = {
                ["LAST_SOURCE", "VARCHAR(TBD)", "", "N", "CALC / SCREEN / UPLOAD"],
                ["LAST_UPLOAD_ID", "VARCHAR(TBD)", "", "Y", "Upload that last changed the record"],
                ["CREATED_BY", "VARCHAR(TBD)", "", "N", "User who created the record"], ["CREATED_DT", "DATETIME", "", "N", "Created date and time"],
-               ["CHANGED_BY", "VARCHAR(TBD)", "", "N", "User who last changed the record"], ["CHANGED_DT", "DATETIME", "", "N", "Last changed date and time"]]}]
+               ["CHANGED_BY", "VARCHAR(TBD)", "", "N", "User who last changed the record"], ["CHANGED_DT", "DATETIME", "", "N", "Last changed date and time"]]}, hist_table.TABLE]
 }
 json.dump(spec, open(sys.argv[1], 'w'), indent=1)

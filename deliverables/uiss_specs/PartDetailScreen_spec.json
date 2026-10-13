@@ -4,7 +4,7 @@
   "phase": "DR",
   "project_name": "Crossdock Optimization",
   "block_name": "Screen",
-  "function_name": "TBD Crossdock Master Setting - Part Detail",
+  "function_name": "X5 Crossdock Master Setting - Part Detail",
   "created_date": "13-Oct-26",
   "created_by": "FID Rayhan"
  },
@@ -41,7 +41,7 @@
    },
    {
     "name": "Search",
-    "function": "To retrieve records according to the specified criteria."
+    "function": "To retrieve records according to the specified criteria. The criteria are applied only when [Search] is clicked (or Enter is pressed in a text box)."
    },
    {
     "name": "Add Detail",
@@ -437,7 +437,7 @@
    "required": "",
    "format": "",
    "validation": "",
-   "description": "Retrieves the records by the criteria."
+   "description": "Applies the criteria to the result list. Typing or selecting a criterion alone does not change the list; Enter in a text box = [Search]."
   },
   {
    "group": "<Result List Section>"
@@ -1075,7 +1075,7 @@
    "event": "Change search criteria",
    "cause": "No record matches the criteria",
    "type": "Info",
-   "msg_id": "TBD",
+   "msg_id": "MSG1",
    "message": "No matching parts - Change the Part Number or press Reset.",
    "action": "Change the criteria or click [Reset]"
   },
@@ -1083,7 +1083,7 @@
    "event": "Open Part Detail",
    "cause": "No record registered yet",
    "type": "Info",
-   "msg_id": "TBD",
+   "msg_id": "MSG2",
    "message": "No part detail registered yet - Click Add Detail to register Minimum MAD and Case/Day of a part.",
    "action": "Click [Add Detail]"
   },
@@ -1094,7 +1094,7 @@
    "event": "Hover disabled [Save]",
    "cause": "Part No not selected",
    "type": "Info",
-   "msg_id": "TBD",
+   "msg_id": "MSG3",
    "message": "Part No is required",
    "action": "Select a Part No"
   },
@@ -1102,7 +1102,7 @@
    "event": "Hover disabled [Save]",
    "cause": "Minimum MAD blank or not a whole number",
    "type": "Info",
-   "msg_id": "TBD",
+   "msg_id": "MSG4",
    "message": "Enter Minimum MAD (whole number, 0 or more)",
    "action": "Fill Minimum MAD"
   },
@@ -1110,7 +1110,7 @@
    "event": "Hover disabled [Save]",
    "cause": "Case/Day blank or not greater than 0",
    "type": "Info",
-   "msg_id": "TBD",
+   "msg_id": "MSG5",
    "message": "Enter Case/Day (whole number, more than 0)",
    "action": "Fill Case/Day"
   },
@@ -1118,7 +1118,7 @@
    "event": "Click [Save] button",
    "cause": "Record saved",
    "type": "Info",
-   "msg_id": "TBD",
+   "msg_id": "MSG6",
    "message": "Saved successfully - {Part No} has been added/updated.",
    "action": "Click [OK]"
   },
@@ -1137,7 +1137,7 @@
    "event": "Click [Yes, delete] button",
    "cause": "Record deleted",
    "type": "Info",
-   "msg_id": "TBD",
+   "msg_id": "MSG7",
    "message": "Saved successfully - {Part No} has been deleted.",
    "action": "Click [OK]"
   },
@@ -1156,7 +1156,7 @@
    "event": "Click [Save] button (Edit)",
    "cause": "Record changed by another user",
    "type": "Error",
-   "msg_id": "MSTD0114AERR",
+   "msg_id": "MSG8",
    "message": "Error in Update because of concurrency check.",
    "action": "Close the modal, refresh and edit again"
   },
@@ -1174,7 +1174,7 @@
    "event": "Click [Save] button",
    "cause": "Database error on insert/update of TB_M_PART_CROSSDOCK_DTL",
    "type": "Error",
-   "msg_id": "TBD",
+   "msg_id": "LOG1",
    "message": "Failed to save part detail <PART_NO>: <DB error message>.",
    "exception": "Y",
    "action": "Show [Corresponding Screen Message] on screen (TBD)"
@@ -1183,7 +1183,7 @@
    "event": "Click [Yes, delete] button",
    "cause": "Database error on delete of TB_M_PART_CROSSDOCK_DTL",
    "type": "Error",
-   "msg_id": "TBD",
+   "msg_id": "LOG2",
    "message": "Failed to delete part detail <PART_NO>: <DB error message>.",
    "exception": "Y",
    "action": "Show [Corresponding Screen Message] on screen (TBD)"

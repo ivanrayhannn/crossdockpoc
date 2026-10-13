@@ -12,6 +12,9 @@ const STATUS_STYLE: Record<PartStatus, { bg: string; fg: string }> = {
 interface PartListTabProps {
   parts: Part[];
   q: PartQuery;
+  /** Criteria applied by [Search] (with the current sort). */
+  aq: PartQuery;
+  onSearch: () => void;
   setQ: (updater: (prev: PartQuery) => PartQuery) => void;
   resetQ: () => void;
   ro: boolean;
@@ -48,15 +51,15 @@ const td: React.CSSProperties = {
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100];
 
-export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHistory, onAddPart, onOpenUpload }: PartListTabProps) {
+export function PartListTab({ parts, q, aq, onSearch, setQ, resetQ, ro, onOpenPart, onOpenHistory, onAddPart, onOpenUpload }: PartListTabProps) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
 
-  const rowsSrc = useMemo(() => selectParts(parts, q), [parts, q]);
+  const rowsSrc = useMemo(() => selectParts(parts, aq), [parts, aq]);
 
   useEffect(() => {
     setPage(1);
-  }, [q, pageSize]);
+  }, [aq, pageSize]);
 
   const empty = parts.length === 0;
   const noResult = !empty && rowsSrc.length === 0;
@@ -102,6 +105,7 @@ export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHist
                   className="input"
                   value={q.part}
                   onChange={(e) => setQ((prev) => ({ ...prev, part: e.target.value }))}
+                  onKeyDown={(e) => e.key === 'Enter' && onSearch()}
                   placeholder="e.g. PART-B"
                   list="part-number-options"
                   role="combobox"
@@ -127,7 +131,7 @@ export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHist
             </div>
             <div className="field" style={{ width: 260 }}>
               <label>Part Name</label>
-              <input className="input" value={q.name} onChange={(e) => setQ((prev) => ({ ...prev, name: e.target.value }))} placeholder="Part name" />
+              <input className="input" value={q.name} onChange={(e) => setQ((prev) => ({ ...prev, name: e.target.value }))} onKeyDown={(e) => e.key === 'Enter' && onSearch()} placeholder="Part name" />
             </div>
             <div className="field" style={{ width: 200 }}>
               <label>Status</label>
@@ -150,7 +154,7 @@ export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHist
               <button className="btn btn-secondary" onClick={resetQ}>
                 Reset
               </button>
-              <button className="btn btn-primary">
+              <button className="btn btn-primary" onClick={onSearch}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round">
                   <circle cx="11" cy="11" r="7" />
                   <line x1="16.5" y1="16.5" x2="21" y2="21" />

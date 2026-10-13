@@ -1,7 +1,8 @@
 """Spec for UISS_Batch_MappingUpload.xlsx (UISS-Batch, Crossdock Master Setting - Mapping per Destination Upload), v0.3."""
 import json, sys
+import hist_table
 
-T, D, LOG, DM = 'TB_M_PART_CANDIDATE', 'TB_M_PART_CANDIDATE_DEST', 'Log', 'Destination master (TBD)'
+T, D, LOG, DM = 'TB_M_PART_CANDIDATE', 'TB_M_PART_CANDIDATE_DEST', 'Log', 'TB_M_H0125 (Destination Master)'
 SHEET = 'Excel file - sheet Upload (valid rows)'
 NAME, PROJ = 'FID Rayhan', 'Crossdock Optimization'
 NC = 'Not changed'
@@ -39,7 +40,7 @@ SAMPLE = {
    "rows": [
     ["E1", "Part not registered", "PART-Z99", "123", 10, B, "Check 1: Part No is not registered or its status is not Active."],
     ["E2", "Part is not Active", "PART-I", "123", 10, 20, "Check 1: Part No is not registered or its status is not Active."],
-    ["E3", "Unknown destination", "PART-A", "999", 10, 24, "Check 2: Destination code 999 not found in the destination master."],
+    ["E3", "Unknown destination", "PART-A", "999", 10, 24, "Check 2: Destination code 999 not found in the destination master (TB_M_H0125)."],
     ["E4", "Invalid Case/Day", "PART-A", "123", 0, 24, "Check 3: case_day must be a whole number greater than 0."],
     ["E5", "Same destination twice", "PART-A", "123", 10, 24, "Check 4: Destination 123 appears more than once for this part."],
     ["E5", "Same destination twice", "PART-A", "123", 4, 24, B],
@@ -59,7 +60,7 @@ SAMPLE = {
 spec = {
  "doc_type": "batch",
  "header": {"phase": "DR", "project_name": PROJ, "block_name": "Batch",
-            "function_name": "TBD Crossdock Master Setting - Mapping per Destination Upload",
+            "function_name": "X4 Crossdock Master Setting - Mapping per Destination Upload",
             "created_date": "08-Oct-26", "created_by": NAME},
  "revisions": [{"revision": "0.1", "author": "FID Rayhan", "date": "08-Oct-26", "reviewed_by": "", "description": "Initial Draft"}],
  "general": {
@@ -163,15 +164,7 @@ spec = {
      {"dest_field": "CHANGED_DT", "description": "Server system date and time"}]},
   {"source": "Changed parts of this upload",
    "destination": {"table": "TB_H_PART_CANDIDATE", "operation": "Insert", "description": "Changed part - history"},
-   "mappings": [{"dest_field": "PART_NO", "description": "Part of the event"},
-                {"dest_field": "PERIOD", "description": "Ongoing calculation period"},
-                {"dest_field": "EVENT", "description": "'MAPPING'"},
-                {"dest_field": "SOURCE", "description": "'UPLOAD'"},
-                {"dest_field": "FIELD_NAME", "description": "Destination code (added, changed or removed)"},
-                {"dest_field": "OLD_VALUE", "description": "Case/Day before (blank when added)"},
-                {"dest_field": "NEW_VALUE", "description": "Case/Day after (blank when removed)"},
-                {"dest_field": "CHANGED_BY", "description": "Login name of the user who uploaded"},
-                {"dest_field": "CHANGED_DT", "description": "Server system date and time"}]},
+   "mappings": hist_table.mappings("Ongoing calculation period", "'MAPPING'", "'UPLOAD'", "'CASE_DAY'", "Case/Day before (NULL when added)", "Case/Day after (NULL when removed)", "Login name of the user who uploaded", "Server system date and time", upload_id="UPLOAD_ID of this run", dest_code="Destination added, changed or removed")},
   {"source": "Result of this upload",
    "destination": {"table": LOG, "operation": "Update", "description": "Result of the run",
                    "keys": [{"field": "UPLOAD_ID", "value": "UPLOAD_ID of this run"}]},
@@ -204,28 +197,28 @@ spec = {
     "If all rows are valid, each part in the file is compared with its current mapping of the ongoing period. A part with the same destinations and Case/Day is skipped (no change); its Sync Status and last update stay.",
     "For a changed part, all its rows of the ongoing period in TB_M_PART_CANDIDATE_DEST are replaced by the rows of the file: destinations in the file are inserted or updated, destinations not in the file are removed.",
     "A part whose rows are all blank (placeholder) is not changed, so a mapping cannot be removed completely by upload (same as the screen: at least one destination).",
-    "Every changed part gets a history record per added, changed or removed destination in TB_H_PART_CANDIDATE (event MAPPING, source UPLOAD). Column names TBD.",
+    "Every changed part gets a history record per added, changed or removed destination in TB_H_PART_CANDIDATE (event MAPPING, source UPLOAD, DEST_CODE and FIELD_NAME CASE_DAY; refer Appendix).",
     "Every changed part gets Sync Status = No Sync in TB_M_PART_CANDIDATE. It is sent to the global system by the RPA when D/S clicks [Sync] on the screen.",
     "A result report (.xlsx) is created for both cases."]},
   {"type": "column_break"},
   {"type": "table", "level": 0, "row_lines": "all", "columns": [{"title": "No", "width": 3, "align": "center"}, {"title": "Check", "width": 31}, {"title": "Column", "width": 12}], "rows": [
     ["1", "Part No exists in TB_M_PART_CANDIDATE and its status is Active.", "part_no"],
-    ["2", "Destination code exists in the destination master.", "dest_code"],
+    ["2", "Destination code exists in the destination master (TB_M_H0125).", "dest_code"],
     ["3", "case_day is a whole number greater than 0 when dest_code is filled.", "case_day"],
     ["4", "A destination code appears only once per part in the file.", "dest_code"],
     ["5", "dest_code and case_day are both filled, or both blank (placeholder row). Only one of the two filled is an error.", "dest_code, case_day"],
     ["6", "The total case_day of all rows of a part does not exceed the Max Case/Day of the part in TB_M_PART_CANDIDATE (total_case_day of the file is ignored). Below or equal is allowed.", "case_day"],
     ["7", "The upload is for the ongoing calculation period only (the screen enables [Validate file] only for that period).", "-"]]}],
  "logging_messages": [
-  {"event": "Batch start", "cause": "Batch is called", "type": "Info", "msg_id": "TBD", "message": "Mapping upload batch <UPLOAD_ID> started.", "action": {"system": "Write the log.", "user": "-"}},
-  {"event": "Batch end", "cause": "Batch finishes", "type": "Info", "msg_id": "TBD", "message": "Mapping upload batch <UPLOAD_ID> ended. Status <STATUS>, total <TOTAL_ROWS>, saved parts <SAVED_ROWS>, no change <NO_CHANGE_ROWS>, error <ERROR_ROWS>.", "action": {"system": "Write the log.", "user": "-"}},
-  {"event": "Receive file", "cause": "Uploaded file of <UPLOAD_ID> not found", "type": "Error", "msg_id": "TBD", "message": "Uploaded file of <UPLOAD_ID> not found.", "action": {"system": "Stop the batch.", "user": "Upload the file again."}},
-  {"event": "File check", "cause": "Extension, size, row count, sheet Upload or header is invalid", "type": "Error", "msg_id": "TBD", "message": "File check failed: <REASON>.", "action": {"system": "Set STATUS = REJECTED. Create the result report.", "user": "Download the file from the screen again and upload it."}},
-  {"event": "Row validation", "cause": "A validation rule in 4.2 fails", "type": "Error", "msg_id": "TBD", "message": "Row <ROW_NO> <COLUMN> : <RULE_MESSAGE>.", "action": {"system": "Reject the whole file. Nothing is saved.", "user": "Correct the rows in sheet Re-upload of the result report, then upload again."}},
-  {"event": "Part skipped", "cause": "Rows of the part equal the current mapping, or all rows are blank", "type": "Info", "msg_id": "TBD", "message": "Part No <PART_NO> has no mapping change. Skipped.", "action": {"system": "Do not change the mapping or the part.", "user": "-"}},
-  {"event": "Save mapping", "cause": "Replace of TB_M_PART_CANDIDATE_DEST or update of TB_M_PART_CANDIDATE fails", "type": "Error", "msg_id": "TBD", "message": "Cannot save the mapping of Part No <PART_NO>.", "action": {"system": "Roll back. Set STATUS = REJECTED.", "user": "User contact PIC"}},
-  {"event": "Result report", "cause": "Result report cannot be created", "type": "Warning", "msg_id": "TBD", "message": "Result report of <UPLOAD_ID> cannot be created.", "action": {"system": "Continue. RESULT_FILE_PATH stays blank.", "user": "Contact system owner."}},
-  {"event": "Unexpected error", "cause": "Any other system error", "type": "Critical", "msg_id": "TBD", "message": "Unexpected error: <ERROR_DETAIL>.", "action": {"system": "Roll back. Set STATUS = REJECTED.", "user": "User contact PIC"}}],
+  {"event": "Batch start", "cause": "Batch is called", "type": "Info", "msg_id": "LOG1", "message": "Mapping upload batch <UPLOAD_ID> started.", "action": {"system": "Write the log.", "user": "-"}},
+  {"event": "Batch end", "cause": "Batch finishes", "type": "Info", "msg_id": "LOG2", "message": "Mapping upload batch <UPLOAD_ID> ended. Status <STATUS>, total <TOTAL_ROWS>, saved parts <SAVED_ROWS>, no change <NO_CHANGE_ROWS>, error <ERROR_ROWS>.", "action": {"system": "Write the log.", "user": "-"}},
+  {"event": "Receive file", "cause": "Uploaded file of <UPLOAD_ID> not found", "type": "Error", "msg_id": "LOG3", "message": "Uploaded file of <UPLOAD_ID> not found.", "action": {"system": "Stop the batch.", "user": "Upload the file again."}},
+  {"event": "File check", "cause": "Extension, size, row count, sheet Upload or header is invalid", "type": "Error", "msg_id": "LOG4", "message": "File check failed: <REASON>.", "action": {"system": "Set STATUS = REJECTED. Create the result report.", "user": "Download the file from the screen again and upload it."}},
+  {"event": "Row validation", "cause": "A validation rule in 4.2 fails", "type": "Error", "msg_id": "LOG5", "message": "Row <ROW_NO> <COLUMN> : <RULE_MESSAGE>.", "action": {"system": "Reject the whole file. Nothing is saved.", "user": "Correct the rows in sheet Re-upload of the result report, then upload again."}},
+  {"event": "Part skipped", "cause": "Rows of the part equal the current mapping, or all rows are blank", "type": "Info", "msg_id": "LOG6", "message": "Part No <PART_NO> has no mapping change. Skipped.", "action": {"system": "Do not change the mapping or the part.", "user": "-"}},
+  {"event": "Save mapping", "cause": "Replace of TB_M_PART_CANDIDATE_DEST or update of TB_M_PART_CANDIDATE fails", "type": "Error", "msg_id": "LOG7", "message": "Cannot save the mapping of Part No <PART_NO>.", "action": {"system": "Roll back. Set STATUS = REJECTED.", "user": "User contact PIC"}},
+  {"event": "Result report", "cause": "Result report cannot be created", "type": "Warning", "msg_id": "LOG8", "message": "Result report of <UPLOAD_ID> cannot be created.", "action": {"system": "Continue. RESULT_FILE_PATH stays blank.", "user": "Contact system owner."}},
+  {"event": "Unexpected error", "cause": "Any other system error", "type": "Critical", "msg_id": "LOG9", "message": "Unexpected error: <ERROR_DETAIL>.", "action": {"system": "Roll back. Set STATUS = REJECTED.", "user": "User contact PIC"}}],
  "appendix_layout": "full",
  "appendix": [
   {"type": "heading", "text": "Upload template (sheet \"Upload\")"},
@@ -254,9 +247,9 @@ spec = {
   {"name": D, "kind": "transaction", "proposed": False, "description": "Destination mapping, one record per part, calculation period and destination (Mapping per Destination data). Target of a successful upload.",
    "columns": [["PART_NO", "VARCHAR(TBD)", "Y", "N", "Part number; FK to TB_M_PART_CANDIDATE"],
                ["PERIOD", "VARCHAR(TBD)", "Y", "N", "Calculation period, e.g. Sep 2026 (format TBD)"],
-               ["DEST_CODE", "VARCHAR(TBD)", "Y", "N", "Destination code; destination master table TBD"],
+               ["DEST_CODE", "VARCHAR(TBD)", "Y", "N", "Destination code; exists in TB_M_H0125 (Destination Master)"],
                ["CASE_DAY", "INT", "", "N", "Allocated Case/Day of the destination (> 0)"],
                ["CREATED_BY", "VARCHAR(TBD)", "", "N", "User who created the record"], ["CREATED_DT", "DATETIME", "", "N", "Created date and time"],
-               ["CHANGED_BY", "VARCHAR(TBD)", "", "N", "User who last changed the record"], ["CHANGED_DT", "DATETIME", "", "N", "Last changed date and time"]]}]
+               ["CHANGED_BY", "VARCHAR(TBD)", "", "N", "User who last changed the record"], ["CHANGED_DT", "DATETIME", "", "N", "Last changed date and time"]]}, hist_table.TABLE]
 }
 json.dump(spec, open(sys.argv[1], 'w'), indent=1)

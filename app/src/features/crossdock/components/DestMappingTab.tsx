@@ -26,9 +26,9 @@ const td: React.CSSProperties = {
 };
 
 export function DestMappingTab({ state }: { state: CrossdockState }) {
-  const { parts, q, setQ, resetQ, ro, expand, editDest, draftDests, toggleExpand, startEditDest, cancelEditDest, patchDraft, saveDest, syncParts, openMappingUpload } = state;
+  const { parts, q, aq, setQ, runSearch, resetQ, ro, expand, editDest, draftDests, toggleExpand, startEditDest, cancelEditDest, patchDraft, saveDest, syncParts, openMappingUpload } = state;
   // Only the ongoing period can be changed, so the upload is disabled for past periods and "All periods".
-  const uploadLocked = ro || q.per !== CUR_PER;
+  const uploadLocked = ro || aq.per !== CUR_PER;
 
   const destRowsSrc = useMemo(
     () =>
@@ -36,15 +36,15 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
         (p) =>
           // The ongoing period only works with Active parts; past periods list every part.
           (p.st === 'Active' || p.per !== CUR_PER) &&
-          (q.per === 'all' || p.per === q.per) &&
-          (!q.part || p.p.toLowerCase().includes(q.part.toLowerCase())) &&
-          (q.sync === 'all' ||
-            (q.sync === 'notsync' && p.syncStatus === 0) ||
-            (q.sync === 'success' && p.syncStatus === 1) ||
-            (q.sync === 'failed' && p.syncStatus === 2) ||
-            (q.sync === 'waiting' && p.syncStatus === 3)),
+          (aq.per === 'all' || p.per === aq.per) &&
+          (!aq.part || p.p.toLowerCase().includes(aq.part.toLowerCase())) &&
+          (aq.sync === 'all' ||
+            (aq.sync === 'notsync' && p.syncStatus === 0) ||
+            (aq.sync === 'success' && p.syncStatus === 1) ||
+            (aq.sync === 'failed' && p.syncStatus === 2) ||
+            (aq.sync === 'waiting' && p.syncStatus === 3)),
       ),
-    [parts, q],
+    [parts, aq],
   );
 
   // Sync only ever targets rows that aren't already a confirmed success...
@@ -55,7 +55,7 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
   const syncableCount = syncable.length;
 
   const exportExcel = () => {
-    exportMappingXlsx(destRowsSrc, q.per, parts).catch((err) => {
+    exportMappingXlsx(destRowsSrc, aq.per, parts).catch((err) => {
       console.error('Export Excel failed', err);
       window.alert('Export Excel failed. Please try again.');
     });
@@ -95,6 +95,7 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
                 className="input"
                 value={q.part}
                 onChange={(e) => setQ((prev) => ({ ...prev, part: e.target.value }))}
+                onKeyDown={(e) => e.key === 'Enter' && runSearch()}
                 placeholder="e.g. PART-B"
                 list="dest-part-number-options"
                 role="combobox"
@@ -132,7 +133,7 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
             <button className="btn btn-secondary" onClick={resetQ}>
               Reset
             </button>
-            <button className="btn btn-primary">
+            <button className="btn btn-primary" onClick={runSearch}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round">
                 <circle cx="11" cy="11" r="7" />
                 <line x1="16.5" y1="16.5" x2="21" y2="21" />

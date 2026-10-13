@@ -1,4 +1,4 @@
-# Screen – Crossdock Master Setting – Part List
+# Screen – Crossdock Master Setting – Part List (X1)
 
 Ringkasan poin-poin layar Part List: akses, item, aturan Add / Edit, History, Upload / Export, pesan, dan **semua tabel yang terlibat**.
 Sumber: UISS-Screen `UISS_Screen_PartList.xlsx` (X1, 0.1 Initial Draft) dan keputusan bisnis sampai 13-Oct-26.
@@ -24,10 +24,10 @@ Sumber: UISS-Screen `UISS_Screen_PartList.xlsx` (X1, 0.1 Initial Draft) dan kepu
 | Status | All | All / Candidate / Active / Inactive |
 | Sort by | Newer to Older | Default (Part Number A-Z) / Newer to Older / Older to Newer (Last Update) |
 
-- Semua kriteria digabung **AND**; ubah kriteria / sort / rows per page → kembali ke halaman 1.
+- Kriteria baru diterapkan saat klik **[Search]** (atau Enter di text box). Mengetik / memilih kriteria saja **tidak** mengubah list. **Sort by** langsung diterapkan.
+- Semua kriteria digabung **AND**; klik Search / ubah sort / rows per page → kembali ke halaman 1.
 - 25 baris per halaman (25 / 50 / 100), Prev / Next.
 - Tidak ada hasil → MSG1 + [Reset filter]. Belum ada part sama sekali → MSG2 + [Upload Excel] / [Add one part].
-- **TBD**: prototype memfilter saat mengetik; apakah menunggu [Search] atau tombol dihapus.
 
 ## 4. Result list
 | Kolom | Keterangan |
@@ -62,12 +62,13 @@ Sumber: UISS-Screen `UISS_Screen_PartList.xlsx` (X1, 0.1 Initial Draft) dan kepu
 2. Part No terkunci; Status bisa Candidate / Active / Inactive.
 3. **Effective Start Date hanya bisa diubah selama status tersimpan Candidate** (minimum hari ini); selain itu terkunci dengan tooltip MSG10.
 4. MAD (opsional), Pcs/Case, Max Case/Day bisa diubah.
-5. Save:
+5. **Max Case/Day tidak boleh lebih kecil dari total Case/Day yang sudah di-mapping** di periode berjalan (TB_M_PART_CANDIDATE_DEST). Kalau lebih kecil: field merah, MSG14 tampil, [Save] disabled. User harus kurangi mapping dulu di Mapping per Destination (aturan sama dengan upload check 9). Dicek lagi di server saat Save.
+6. Save:
    - Data diubah user lain setelah dibuka → MSG4, stop.
+   - Max Case/Day < total mapping → MSG14, stop.
    - Update TB_M_PART_CANDIDATE, **SYNC_STATUS = 0 (No Sync)** setiap Save, CHANGED_BY/DT.
    - Insert history TB_H_PART_CANDIDATE (event **EDIT**, source **SCREEN**), satu record per field yang berubah.
    - Tutup modal, part pindah ke atas, MSG9.
-- Open point: apakah Max Case/Day di modal Edit perlu dicek tidak lebih kecil dari total mapping (seperti upload check 9).
 
 ## 7. History setting
 - Klik ikon jam → timeline perubahan part, terbaru di atas.
@@ -132,19 +133,39 @@ Save saat part masih Waiting → kembali No Sync.
 Sumber daftar Part No (yang belum terdaftar) dan Part Name.
 
 ### 11.3 TB_M_PART_CANDIDATE_DEST — *dibaca*
-Untuk menghitung **incomplete mapping** (tanpa destinasi atau total CASE_DAY ≠ MAX_CASE_DAY). Tidak diubah dari layar ini.
+Untuk menghitung **incomplete mapping** (tanpa destinasi atau total CASE_DAY ≠ MAX_CASE_DAY) dan cek Max Case/Day ≥ total mapping periode berjalan di Edit. Tidak diubah dari layar ini.
 
 ### 11.4 TB_H_PART_CANDIDATE — *ditulis & dibaca* (history)
-Tabel history semua perubahan part. Kolom fisik **belum ditentukan (TBD)**; field logis: PART_NO, PERIOD, EVENT, SOURCE, FIELD_NAME, OLD_VALUE, NEW_VALUE, CHANGED_BY, CHANGED_DT (satu record per field yang berubah).
+Tabel history semua perubahan part. **Usulan** definisi fisik (insert only, satu record per field yang berubah; index PART_NO + CREATED_DT):
 
-| Event | Source | Kapan | Contoh FIELD_NAME / nilai |
+| Kolom | Tipe | PK | Null | Keterangan |
+|---|---|---|---|---|
+| HIST_ID | BIGINT | Y | N | Running number (identity) |
+| PART_NO | VARCHAR(TBD) |  | N | Part number; length follows TB_M_PART_MASTER |
+| PERIOD | VARCHAR(TBD) |  | Y | Calculation period for MAPPING / SYNC; NULL for ADD / EDIT (Part List has no period) |
+| EVENT_TYPE | VARCHAR(10) |  | N | ADD / EDIT / MAPPING / SYNC |
+| SOURCE | VARCHAR(10) |  | N | SCREEN / UPLOAD / RPA |
+| UPLOAD_ID | VARCHAR(TBD) |  | Y | Upload of the change (Log); NULL when not from an upload |
+| DEST_CODE | VARCHAR(TBD) |  | Y | Destination code for MAPPING; NULL for other events |
+| FIELD_NAME | VARCHAR(30) |  | N | Changed field: PCS_CASE, MAX_CASE_DAY, MAD, PART_STATUS, EFFECTIVE_START_DATE, CASE_DAY, SYNC_STATUS |
+| OLD_VALUE | VARCHAR(255) |  | Y | Value before the change; NULL for ADD or an added destination |
+| NEW_VALUE | VARCHAR(255) |  | Y | Value after the change; NULL for a removed destination |
+| REMARK | VARCHAR(500) |  | Y | Free text, e.g. SYNC_MESSAGE of a Failed sync |
+| CREATED_BY | VARCHAR(20) |  | N | User who made the change (RPA user ID for SYNC) |
+| CREATED_DT | DATETIME |  | N | Date and time of the change |
+
+**Usulan retensi**: simpan 24 bulan online (berdasarkan CREATED_DT); housekeeping job bulanan menghapus record yang lebih lama. Periode bisa diatur di system master. Perlu konfirmasi.
+
+| Event (EVENT_TYPE) | Source | Kapan | FIELD_NAME / nilai |
 |---|---|---|---|
-| ADD | SCREEN / UPLOAD | Part baru (Add Part di layar / flag A) | PCS_CASE, MAX_CASE_DAY, … (OLD kosong) |
-| EDIT | SCREEN / UPLOAD | Ubah data part (Edit di layar / flag E) | PCS_CASE, MAX_CASE_DAY, PART_STATUS, MAD, EFFECTIVE_START_DATE |
-| MAPPING | SCREEN / UPLOAD | Tambah / ubah / hapus destinasi (periode berjalan) | Kode destinasi; OLD/NEW = Case/Day |
-| SYNC | RPA | Hasil Sync | SYNC_STATUS: Waiting → Success / Failed + pesan |
+| ADD | SCREEN / UPLOAD | Part baru (Add Part di layar / flag A) | PCS_CASE, MAX_CASE_DAY, MAD, EFFECTIVE_START_DATE, PART_STATUS; OLD = NULL; PERIOD = NULL |
+| EDIT | SCREEN / UPLOAD | Ubah data part (Edit di layar / flag E) | Field yang berubah; OLD → NEW; PERIOD = NULL |
+| MAPPING | SCREEN / UPLOAD | Tambah / ubah / hapus destinasi (periode berjalan) | DEST_CODE terisi, FIELD_NAME = CASE_DAY; OLD NULL = ditambah, NEW NULL = dihapus |
+| SYNC | RPA | Hasil Sync | FIELD_NAME = SYNC_STATUS; Waiting → Success / Failed (atau No Sync kalau berubah saat RPA jalan); REMARK = SYNC_MESSAGE |
 
-Di layar ini: **ditulis** event ADD / EDIT dengan source SCREEN (PERIOD kosong, Part List tidak punya periode); **dibaca** semua event untuk modal History setting.
+UPLOAD_ID diisi untuk source UPLOAD (link ke Log).
+
+Di layar ini: **ditulis** event ADD / EDIT dengan source SCREEN (PERIOD NULL, Part List tidak punya periode); **dibaca** semua event untuk modal History setting (urut CREATED_DT terbaru).
 
 ### 11.5 Tabel terkait (tidak diubah layar ini)
 - **TB_M_PART_CROSSDOCK_DTL** – Minimum MAD dan Case/Day per part, dikelola di tab Part Detail.
@@ -168,10 +189,12 @@ Di layar ini: **ditulis** event ADD / EDIT dengan source SCREEN (PERIOD kosong, 
 | MSG11 | Upload sukses | Info | Saved successfully - Upload completed. … |
 | MSG12 | History kosong | Info | No change history for this part yet. |
 | MSG13 | Export gagal | Error | Export Excel failed. Please try again. |
+| MSG14 | Edit, Max Case/Day < total mapping | Error | Max Case/Day can not be less than the mapped total ({n} case/day) of the ongoing period. Reduce the mapping in Mapping per Destination first. |
+
+Logging message: LOG1 (gagal simpan), LOG2 (gagal export).
 
 ## 13. Open points
-- Filter saat mengetik vs tombol [Search].
-- Cek Max Case/Day ≥ total mapping di modal Edit.
 - Kalimat Effective Start Date yang menggantung di Op Desc 5.4 a.4.
 - Akun read-only ([View]) belum didefinisikan.
-- Kolom fisik dan retensi TB_H_PART_CANDIDATE; lokasi template upload; panjang VARCHAR.
+- Konfirmasi usulan kolom dan retensi TB_H_PART_CANDIDATE (11.4).
+- Lokasi template upload; panjang VARCHAR.

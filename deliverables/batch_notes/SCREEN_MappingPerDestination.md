@@ -2,7 +2,7 @@
 
 Ringkasan poin-poin layar Mapping per Destination: akses, kriteria, panel mapping, aturan Save, Sync via RPA, Upload / Export, pesan, dan **semua tabel yang terlibat**.
 Sumber: UISS-Screen `UISS_Screen_MappingPerDestination.xlsx` (0.1 Initial Draft) dan keputusan bisnis sampai 13-Oct-26.
-Screen ID: **TBD** (usulan X3).
+Screen ID: **X3**.
 
 ---
 
@@ -22,11 +22,12 @@ Screen ID: **TBD** (usulan X3).
 | Part Number | Kosong | Contains, case-insensitive |
 | Sync Status | **No Sync** | All / No Sync / Waiting / Success / Failed |
 
-- Semua kriteria digabung **AND**. Tidak ada hasil → pesan no. 1.
+- Kriteria diterapkan saat klik **[Search]** (atau Enter di Part Number); memilih kriteria saja tidak mengubah list. Upload Excel dan Export mengikuti periode yang sudah di-Search.
+- Semua kriteria digabung **AND**. Tidak ada hasil → MSG1.
 - **Periode berjalan**: semua part **Active** dari TB_M_PART_CANDIDATE + destinasinya (part tanpa destinasi tampil dengan Total Case/Day 0).
 - **Periode lalu**: semua part yang punya baris di TB_M_PART_CANDIDATE_DEST untuk periode itu, apa pun statusnya sekarang. All periods = keduanya.
 - Default No Sync → part Success / Failed tersembunyi sampai filter diubah.
-- Tabel scroll di dalam section (tanpa paging). **TBD**: perlu paging?; filter saat mengetik vs [Search]; cara periode dibuat.
+- Tabel scroll di dalam section (tanpa paging). **TBD**: perlu paging?; cara periode dibuat.
 
 ## 4. Result list
 | Kolom | Keterangan |
@@ -36,7 +37,7 @@ Screen ID: **TBD** (usulan X3).
 | Part Number, Part Name, Pcs/Case | Dari TB_M_PART_CANDIDATE |
 | Total Case/Day | Jumlah CASE_DAY semua destinasi part + periode |
 | Pcs/Day | Pcs/Case × Total Case/Day |
-| Percentage | Total Case/Day / Max Case/Day (**TBD**: data lama > 100%) |
+| Percentage | Total Case/Day / Max Case/Day; tidak pernah > 100% (Save, upload, dan edit Max Case/Day di Part List diblok) |
 | Sync Status | 0 No Sync (abu), 3 Waiting (kuning), 1 Success (hijau), 2 Failed (merah, tooltip SYNC_MESSAGE) |
 
 Tombol di atas tabel: **[Sync (n)]**, **[Upload Excel]**, **[Export Excel]**.
@@ -45,8 +46,8 @@ Tombol di atas tabel: **[Sync (n)]**, **[Upload Excel]**, **[Export Excel]**.
 - Chip alokasi: merah (total > Max), abu (total < Max), hijau (sama).
 - Catatan: "no destination yet" / "{n} case/day over" / "{n} case/day left" / "capacity fully allocated".
 - Kolom: Destination (CD), Case/Day, Pcs/Day (= Pcs/Case × Case/Day), Percentage (= Case/Day / total Case/Day part).
-- Periode berjalan → [Edit mapping]. Periode lalu → badge "Past period - read only" (pesan no. 5).
-- Part tanpa destinasi → pesan no. 2.
+- Periode berjalan → [Edit mapping]. Periode lalu → badge "Past period - read only" (MSG5).
+- Part tanpa destinasi → MSG2.
 
 ## 6. Edit mapping & aturan Save
 1. Klik [Edit mapping] → draft; Destination & Case/Day bisa diubah, ikon trash per baris, [Add destination].
@@ -54,12 +55,12 @@ Tombol di atas tabel: **[Sync (n)]**, **[Upload Excel]**, **[Export Excel]**.
 3. [Add destination] → baris baru "Select destination", Case/Day 0.
 4. [Split evenly] (> 1 baris): floor(Max Case/Day / jumlah baris), sisa +1 per baris dari baris pertama. Contoh 24/3 = 8/8/8; 25/3 = 9/8/8.
 5. **[Save] disabled** kalau:
-   - total Case/Day **>** Max Case/Day (pesan no. 3);
+   - total Case/Day **>** Max Case/Day (MSG3);
    - part tidak punya baris destinasi; atau
-   - ada baris tanpa destinasi (pesan no. 4) — **ditolak, tidak bisa disimpan**.
+   - ada baris tanpa destinasi (MSG4) — **ditolak, tidak bisa disimpan**.
    - Total **≤** Max Case/Day **boleh** (kurang ditampilkan "{n} case/day left").
 6. Klik [Save]:
-   - Mapping diubah user lain sejak edit dimulai → pesan no. 8, stop.
+   - Mapping diubah user lain sejak edit dimulai → MSG8, stop.
    - **Replace** baris part + periode berjalan di TB_M_PART_CANDIDATE_DEST dengan isi draft.
    - TB_M_PART_CANDIDATE: **SYNC_STATUS = 0 (No Sync)**.
    - TB_H_PART_CANDIDATE: satu record per destinasi yang ditambah / diubah / dihapus (event **MAPPING**, source **SCREEN**).
@@ -68,19 +69,19 @@ Tombol di atas tabel: **[Sync (n)]**, **[Upload Excel]**, **[Export Excel]**.
 
 ## 7. Sync (via RPA)
 1. Klik **[Sync (n)]** (on demand). n = semua part **Active** periode berjalan dengan Sync Status **No Sync atau Failed**, **tidak tergantung filter**. Disabled kalau n = 0.
-2. Part tersebut → **SYNC_STATUS = 3 (Waiting)**, fungsi RPA dijalankan, pesan no. 10.
+2. Part tersebut → **SYNC_STATUS = 3 (Waiting)**, fungsi RPA dijalankan, MSG10.
 3. RPA per part Waiting: baca PCS_CASE, MAX_CASE_DAY + semua destinasi & CASE_DAY periode berjalan → **replace** di global system sebagai satu paket → tulis balik SYNC_STATUS 1 / 2, SYNC_DT, SYNC_MESSAGE.
 4. Part diubah setelah dibaca RPA (CHANGED_DT beda) → SYNC_STATUS = 0, bukan Success.
 5. Setiap hasil dicatat di **TB_H_PART_CANDIDATE** (event **SYNC**, source **RPA**).
-6. Part Failed: tooltip pesan no. 11, ikut lagi di Sync berikutnya. Candidate / Inactive tidak pernah di-sync.
+6. Part Failed: tooltip MSG11, ikut lagi di Sync berikutnya. Candidate / Inactive tidak pernah di-sync.
 Detail: `BATCH_RPA_Sync.md`.
 
 ## 8. Upload Excel
-- Aktif **hanya** kalau periode berjalan dipilih; periode lalu / All periods → disabled, tooltip pesan no. 6.
+- Aktif **hanya** kalau periode berjalan dipilih; periode lalu / All periods → disabled, tooltip MSG6.
 - Kolom template: part_no, dest_code, case_day, total_case_day (referensi). File .xlsx, max 5 MB, max 5.000 baris.
 - Base file: sheet **Upload** dari Export Excel (periode berjalan). Part di file → seluruh mapping di-replace; part yang tidak ada di file tidak berubah.
 - [Validate file] = tombol simpan upload → batch Mapping per Destination Upload (all-or-nothing, Log). Detail: `BATCH_Mapping_Upload.md`.
-- Sukses → tutup modal, pesan no. 7. Ditolak → hasil batch (daftar error). Part yang berubah → No Sync.
+- Sukses → tutup modal, MSG7. Ditolak → hasil batch (daftar error). Part yang berubah → No Sync.
 
 ## 9. Export Excel
 File `Crossdock_Mapping_per_Destination_<period>_YYYYMMDD.xlsx` (<period> mis. Sep_2026 / All_periods):
@@ -89,7 +90,7 @@ File `Crossdock_Mapping_per_Destination_<period>_YYYYMMDD.xlsx` (<period> mis. S
 | Mapping per Destination | Baris filter aktif, 1 baris per destinasi (part tanpa destinasi = 1 baris kosong): Period, Part Number, Part Name, Pcs/Case, Total Case/Day, Pcs/Day, Percentage, Sync Status, Destination Code, Destination, Dest Case/Day, Dest Pcs/Day, Dest Percentage. Informasi saja |
 | Upload | Semua part Active periode berjalan: part_no, dest_code, case_day, total_case_day (= Max Case/Day); 1 baris per destinasi, part tanpa mapping = 1 baris placeholder. Kosong untuk periode lalu / All periods |
 
-Gagal dibuat → pesan no. 9.
+Gagal dibuat → MSG9.
 
 ---
 
@@ -100,7 +101,7 @@ Gagal dibuat → pesan no. 9.
 |---|---|---|---|
 | PART_NO | Y | FK ke TB_M_PART_CANDIDATE | Part yang diedit |
 | PERIOD | Y | Periode kalkulasi (format TBD) | Periode berjalan |
-| DEST_CODE | Y | Kode destinasi (master TBD) | Dari draft |
+| DEST_CODE | Y | Kode destinasi (ada di TB_M_H0125) | Dari draft |
 | CASE_DAY | | Case/Day destinasi (> 0) | Dari draft |
 | CREATED_BY / CREATED_DT | | Audit | Login user / system date |
 | CHANGED_BY / CHANGED_DT | | Audit, juga concurrency check | Login user / system date |
@@ -117,20 +118,40 @@ Cara simpan: hapus semua baris part + periode berjalan, lalu insert baris draft 
 | SYNC_DT, SYNC_MESSAGE | Diisi RPA; SYNC_MESSAGE jadi tooltip Failed |
 | CHANGED_BY / CHANGED_DT | Diupdate saat Save; dibandingkan RPA |
 
-### 10.3 Destination master — *dibaca*
-Nama tabel **TBD**. Isi diketahui: 123 Thailand, 456 Japan, 789 Vietnam.
+### 10.3 TB_M_H0125 (Destination Master) — *dibaca*
+Isi diketahui: 123 Thailand, 456 Japan, 789 Vietnam.
 
 ### 10.4 TB_H_PART_CANDIDATE — *ditulis* (history)
-Tabel history semua perubahan part. Kolom fisik **belum ditentukan (TBD)**; field logis: PART_NO, PERIOD, EVENT, SOURCE, FIELD_NAME, OLD_VALUE, NEW_VALUE, CHANGED_BY, CHANGED_DT (satu record per field yang berubah).
+Tabel history semua perubahan part. **Usulan** definisi fisik (insert only, satu record per field yang berubah; index PART_NO + CREATED_DT):
 
-| Event | Source | Kapan | Contoh FIELD_NAME / nilai |
+| Kolom | Tipe | PK | Null | Keterangan |
+|---|---|---|---|---|
+| HIST_ID | BIGINT | Y | N | Running number (identity) |
+| PART_NO | VARCHAR(TBD) |  | N | Part number; length follows TB_M_PART_MASTER |
+| PERIOD | VARCHAR(TBD) |  | Y | Calculation period for MAPPING / SYNC; NULL for ADD / EDIT (Part List has no period) |
+| EVENT_TYPE | VARCHAR(10) |  | N | ADD / EDIT / MAPPING / SYNC |
+| SOURCE | VARCHAR(10) |  | N | SCREEN / UPLOAD / RPA |
+| UPLOAD_ID | VARCHAR(TBD) |  | Y | Upload of the change (Log); NULL when not from an upload |
+| DEST_CODE | VARCHAR(TBD) |  | Y | Destination code for MAPPING; NULL for other events |
+| FIELD_NAME | VARCHAR(30) |  | N | Changed field: PCS_CASE, MAX_CASE_DAY, MAD, PART_STATUS, EFFECTIVE_START_DATE, CASE_DAY, SYNC_STATUS |
+| OLD_VALUE | VARCHAR(255) |  | Y | Value before the change; NULL for ADD or an added destination |
+| NEW_VALUE | VARCHAR(255) |  | Y | Value after the change; NULL for a removed destination |
+| REMARK | VARCHAR(500) |  | Y | Free text, e.g. SYNC_MESSAGE of a Failed sync |
+| CREATED_BY | VARCHAR(20) |  | N | User who made the change (RPA user ID for SYNC) |
+| CREATED_DT | DATETIME |  | N | Date and time of the change |
+
+**Usulan retensi**: simpan 24 bulan online (berdasarkan CREATED_DT); housekeeping job bulanan menghapus record yang lebih lama. Periode bisa diatur di system master. Perlu konfirmasi.
+
+| Event (EVENT_TYPE) | Source | Kapan | FIELD_NAME / nilai |
 |---|---|---|---|
-| ADD | SCREEN / UPLOAD | Part baru (Add Part di layar / flag A) | PCS_CASE, MAX_CASE_DAY, … (OLD kosong) |
-| EDIT | SCREEN / UPLOAD | Ubah data part (Edit di layar / flag E) | PCS_CASE, MAX_CASE_DAY, PART_STATUS, MAD, EFFECTIVE_START_DATE |
-| MAPPING | SCREEN / UPLOAD | Tambah / ubah / hapus destinasi (periode berjalan) | Kode destinasi; OLD/NEW = Case/Day |
-| SYNC | RPA | Hasil Sync | SYNC_STATUS: Waiting → Success / Failed + pesan |
+| ADD | SCREEN / UPLOAD | Part baru (Add Part di layar / flag A) | PCS_CASE, MAX_CASE_DAY, MAD, EFFECTIVE_START_DATE, PART_STATUS; OLD = NULL; PERIOD = NULL |
+| EDIT | SCREEN / UPLOAD | Ubah data part (Edit di layar / flag E) | Field yang berubah; OLD → NEW; PERIOD = NULL |
+| MAPPING | SCREEN / UPLOAD | Tambah / ubah / hapus destinasi (periode berjalan) | DEST_CODE terisi, FIELD_NAME = CASE_DAY; OLD NULL = ditambah, NEW NULL = dihapus |
+| SYNC | RPA | Hasil Sync | FIELD_NAME = SYNC_STATUS; Waiting → Success / Failed (atau No Sync kalau berubah saat RPA jalan); REMARK = SYNC_MESSAGE |
 
-Di layar ini: event **MAPPING** source **SCREEN** saat Save (PERIOD = periode berjalan, FIELD_NAME = kode destinasi, OLD/NEW = Case/Day; hapus destinasi = NEW kosong), dan event **SYNC** source **RPA** dari hasil Sync. Dibaca di modal History setting Part List.
+UPLOAD_ID diisi untuk source UPLOAD (link ke Log).
+
+Di layar ini: event **MAPPING** source **SCREEN** saat Save (PERIOD = periode berjalan, DEST_CODE = destinasi, FIELD_NAME = CASE_DAY, OLD/NEW = Case/Day; hapus destinasi = NEW NULL), dan event **SYNC** source **RPA** dari hasil Sync. Dibaca di modal History setting Part List.
 
 ### 10.5 Tabel terkait
 - **Log** – upload log, ditulis batch Mapping per Destination Upload.
@@ -138,25 +159,23 @@ Di layar ini: event **MAPPING** source **SCREEN** saat Save (PERIOD = periode be
 
 ---
 
-## 11. Pesan layar (MSG ID TBD)
-| No | Kapan | Tipe | Pesan |
+## 11. Pesan layar (MSG1–MSG11; logging LOG1–LOG3)
+| ID | Kapan | Tipe | Pesan |
 |---|---|---|---|
-| 1 | Filter tanpa hasil | Info | No parts match these filters - Change the period or sync status, or press Reset to show all parts. |
-| 2 | Part tanpa destinasi | Info | No destination yet - Click Edit mapping and add at least one destination … |
-| 3 | Total > Max Case/Day | Error | Allocation of {n} case/day exceeds Max Case/Day ({m}). Reduce one of the destinations. |
-| 4 | Baris tanpa destinasi | Error | Select a destination for every row, or remove the empty row, before saving. |
-| 5 | Panel periode lalu | Info | Past period - read only |
-| 6 | Hover Upload disabled | Info | Past period - read only. Select the ongoing period to upload. |
-| 7 | Upload sukses | Info | Saved successfully - Upload completed. … |
-| 8 | Save, diubah user lain | Error | Error in Update because of concurrency check. |
-| 9 | Export gagal | Error | Export Excel failed. Please try again. |
-| 10 | Klik Sync | Info | Sync requested for {n} part(s). They stay Waiting until the RPA has sent them to the global system. |
-| 11 | Hover chip Failed | Info | Sync failed: {SYNC_MESSAGE}. The part is sent again with the next Sync. |
+| MSG1 | Filter tanpa hasil | Info | No parts match these filters - Change the period or sync status, or press Reset to show all parts. |
+| MSG2 | Part tanpa destinasi | Info | No destination yet - Click Edit mapping and add at least one destination … |
+| MSG3 | Total > Max Case/Day | Error | Allocation of {n} case/day exceeds Max Case/Day ({m}). Reduce one of the destinations. |
+| MSG4 | Baris tanpa destinasi | Error | Select a destination for every row, or remove the empty row, before saving. |
+| MSG5 | Panel periode lalu | Info | Past period - read only |
+| MSG6 | Hover Upload disabled | Info | Past period - read only. Select the ongoing period to upload. |
+| MSG7 | Upload sukses | Info | Saved successfully - Upload completed. … |
+| MSG8 | Save, diubah user lain | Error | Error in Update because of concurrency check. |
+| MSG9 | Export gagal | Error | Export Excel failed. Please try again. |
+| MSG10 | Klik Sync | Info | Sync requested for {n} part(s). They stay Waiting until the RPA has sent them to the global system. |
+| MSG11 | Hover chip Failed | Info | Sync failed: {SYNC_MESSAGE}. The part is sent again with the next Sync. |
 
 ## 12. Open points
-- Screen ID final dan penomoran MSG ID.
-- Nama tabel destination master; format PERIOD dan cara periode dibuat.
-- Tampilan Percentage untuk data lama > 100%.
-- Paging untuk data besar; filter saat mengetik vs [Search].
+- Format PERIOD dan cara periode dibuat; nama kolom di TB_M_H0125.
+- Paging untuk data besar.
 - Detail fungsi RPA; batas waktu status Waiting.
-- Kolom fisik dan retensi TB_H_PART_CANDIDATE.
+- Konfirmasi usulan kolom dan retensi TB_H_PART_CANDIDATE (10.4).

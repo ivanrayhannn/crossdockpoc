@@ -22,16 +22,16 @@ const ACTIVE_ITEM = 'Crossdock Master Setting';
 
 export function CrossdockMasterSettingPage({ onNavigate }: { onNavigate: (route: RouteKey) => void }) {
   const state = useCrossdockState();
-  const { parts, q, setQ, resetQ, ro, role, setRole, switchRole, view, setProcView, modal, addPart, openUpload, openFor, notice, dismissNotice } = state;
+  const { parts, q, aq, setQ, runSearch, resetQ, ro, role, setRole, switchRole, view, setProcView, modal, addPart, openUpload, openFor, notice, dismissNotice } = state;
   const detail = usePartDetail(parts);
 
   // Sheet 1 follows the Part List table (same filter and sort, all pages); sheet "Upload" holds every part.
   const exportExcel = useCallback(() => {
-    exportPartsXlsx(selectParts(parts, q), parts).catch((err) => {
+    exportPartsXlsx(selectParts(parts, aq), parts).catch((err) => {
       console.error('Export Excel failed', err);
       window.alert('Export Excel failed. Please try again.');
     });
-  }, [parts, q]);
+  }, [parts, aq]);
 
   if (!role) {
     return (
@@ -52,7 +52,9 @@ export function CrossdockMasterSettingPage({ onNavigate }: { onNavigate: (route:
         <PartListTab
           parts={parts}
           q={q}
+          aq={aq}
           setQ={setQ}
+          onSearch={runSearch}
           resetQ={resetQ}
           ro={ro}
           onOpenPart={(id) => openFor(id, 'part')}

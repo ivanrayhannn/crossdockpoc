@@ -4,7 +4,7 @@
   "phase": "DR",
   "project_name": "Crossdock Optimization",
   "block_name": "Screen",
-  "function_name": "TBD Crossdock Master Setting - Mapping per Destination",
+  "function_name": "X3 Crossdock Master Setting - Mapping per Destination",
   "created_date": "12-Oct-26",
   "created_by": "FID Rayhan"
  },
@@ -52,7 +52,7 @@
    },
    {
     "name": "Search",
-    "function": "To retrieve records according to the specified criteria. TBD: the prototype filters while typing, so whether filtering waits for [Search] (or the button is removed) is still to be decided."
+    "function": "To retrieve records according to the specified criteria. The criteria are applied only when [Search] is clicked (or Enter is pressed in a text box); Sort by is applied at once."
    },
    {
     "name": "Sync",
@@ -701,7 +701,7 @@
    "required": "",
    "format": "",
    "validation": "",
-   "description": "TBD: the prototype filters immediately while typing/selecting; decide whether filtering waits for [Search] or the button is removed."
+   "description": "Applies the criteria to the result list. Typing or selecting a criterion alone does not change the list; Enter in a text box = [Search]."
   },
   {
    "group": "<Result List Section>"
@@ -884,7 +884,7 @@
    "required": "",
    "format": "ZZ9%",
    "validation": "",
-   "description": "= Total Case/Day / Max Case/Day (MAX_CASE_DAY). TBD: existing data above 100%."
+   "description": "= Total Case/Day / Max Case/Day (MAX_CASE_DAY). Never above 100%: Save, upload and the Max Case/Day edit in Part List are blocked above the limit."
   },
   {
    "name": "Sync Status",
@@ -1040,7 +1040,7 @@
    "required": "Y",
    "format": "999 - X..X",
    "validation": "Once per part",
-   "description": "List = Destination master (TBD) (123 Thailand, 456 Japan, 789 Vietnam). Destinations already used by another row of the same part are hidden."
+   "description": "List = TB_M_H0125 (Destination Master) (123 Thailand, 456 Japan, 789 Vietnam). Destinations already used by another row of the same part are hidden."
   },
   {
    "name": "Case/Day",
@@ -1409,6 +1409,10 @@
     },
     "mappings": [
      {
+      "dest_field": "HIST_ID",
+      "description": "Auto (identity)"
+     },
+     {
       "dest_field": "PART_NO",
       "description": "Part of the event"
      },
@@ -1417,7 +1421,7 @@
       "description": "Ongoing calculation period"
      },
      {
-      "dest_field": "EVENT",
+      "dest_field": "EVENT_TYPE",
       "description": "'MAPPING'"
      },
      {
@@ -1425,23 +1429,35 @@
       "description": "'SCREEN'"
      },
      {
+      "dest_field": "UPLOAD_ID",
+      "description": "NULL"
+     },
+     {
+      "dest_field": "DEST_CODE",
+      "description": "Destination added, changed or removed"
+     },
+     {
       "dest_field": "FIELD_NAME",
-      "description": "Destination code (added, changed or removed)"
+      "description": "'CASE_DAY'"
      },
      {
       "dest_field": "OLD_VALUE",
-      "description": "Case/Day before (blank when added)"
+      "description": "Case/Day before (NULL when added)"
      },
      {
       "dest_field": "NEW_VALUE",
-      "description": "Case/Day after (blank when removed)"
+      "description": "Case/Day after (NULL when removed)"
      },
      {
-      "dest_field": "CHANGED_BY",
+      "dest_field": "REMARK",
+      "description": "NULL"
+     },
+     {
+      "dest_field": "CREATED_BY",
       "description": "Login user ID"
      },
      {
-      "dest_field": "CHANGED_DT",
+      "dest_field": "CREATED_DT",
       "description": "Server system date and time"
      }
     ]
@@ -1515,6 +1531,10 @@
     },
     "mappings": [
      {
+      "dest_field": "HIST_ID",
+      "description": "Auto (identity)"
+     },
+     {
       "dest_field": "PART_NO",
       "description": "Synchronised part"
      },
@@ -1523,12 +1543,20 @@
       "description": "Ongoing calculation period"
      },
      {
-      "dest_field": "EVENT",
+      "dest_field": "EVENT_TYPE",
       "description": "'SYNC'"
      },
      {
       "dest_field": "SOURCE",
       "description": "'RPA'"
+     },
+     {
+      "dest_field": "UPLOAD_ID",
+      "description": "NULL"
+     },
+     {
+      "dest_field": "DEST_CODE",
+      "description": "NULL"
      },
      {
       "dest_field": "FIELD_NAME",
@@ -1540,14 +1568,18 @@
      },
      {
       "dest_field": "NEW_VALUE",
-      "description": "'Success' / 'Failed: <SYNC_MESSAGE>'"
+      "description": "'Success' / 'Failed' ('No Sync' when changed during the RPA run)"
      },
      {
-      "dest_field": "CHANGED_BY",
+      "dest_field": "REMARK",
+      "description": "SYNC_MESSAGE when Failed"
+     },
+     {
+      "dest_field": "CREATED_BY",
       "description": "RPA user ID (TBD)"
      },
      {
-      "dest_field": "CHANGED_DT",
+      "dest_field": "CREATED_DT",
       "description": "Date-time of the RPA result"
      }
     ]
@@ -1579,7 +1611,9 @@
    "marker": "a.",
    "level": 2,
    "items": [
+    "The criteria are applied when the user clicks [Search] (or presses Enter in 'Part Number'); changing a criterion alone does not change the list.",
     "'Part Number' matches by 'contains', case-insensitive; 'Calculation period' and 'Sync Status' match exactly. All criteria are combined with AND.",
+    "[Upload Excel] and Export Excel follow the period of the applied criteria.",
     "If no row matches, hide the table and display message no. 1.",
     "With the default Sync Status = No Sync, parts that are Success or Failed are hidden until the filter is changed."
    ]
@@ -1594,7 +1628,7 @@
    "level": 2,
    "items": [
     "Total Case/Day = sum of CASE_DAY of the part and period; Pcs/Day = Pcs/Case x Total Case/Day.",
-    "Percentage = Total Case/Day / Max Case/Day. TBD: how to show existing data above 100%.",
+    "Percentage = Total Case/Day / Max Case/Day; it never exceeds 100% because the total can not go above Max Case/Day (Save, upload and the Max Case/Day edit in Part List are blocked).",
     "The table scrolls inside the section (no paging). TBD: whether paging is needed for large data."
    ]
   },
@@ -1665,7 +1699,7 @@
     "If the mapping was changed by another user after edit mode started, display message no. 8. Stop.",
     "Replace the rows of the part and the ongoing period in TB_M_PART_CANDIDATE_DEST by the rows of the draft (refer Data Edit Mapping).",
     "Set SYNC_STATUS = 0 (No Sync) in TB_M_PART_CANDIDATE, so the D/S user synchronises the part again.",
-    "Insert a history record per added, changed or removed destination in TB_H_PART_CANDIDATE (event MAPPING, source SCREEN).",
+    "Insert a history record per added, changed or removed destination in TB_H_PART_CANDIDATE (event MAPPING, source SCREEN, DEST_CODE, FIELD_NAME CASE_DAY, old / new Case/Day).",
     "Leave edit mode and show the saved mapping."
    ]
   },
@@ -1710,7 +1744,7 @@
     "Replace the data of the part in the global system with this complete set, so a change such as Japan up and Thailand down, or a removed destination, arrives as one consistent update.",
     "Write the result back to TB_M_PART_CANDIDATE: SYNC_STATUS = 1 (Success) or 2 (Failed), SYNC_DT and SYNC_MESSAGE (reason when Failed).",
     "If the part was changed after the RPA read it (CHANGED_DT differs), set SYNC_STATUS = 0 (No Sync) instead of Success, so the newer data is sent by the next Sync.",
-    "Record every part in TB_H_PART_CANDIDATE (event SYNC, source RPA, result and message)."
+    "Record every part in TB_H_PART_CANDIDATE (event SYNC, source RPA, FIELD_NAME SYNC_STATUS, new status, REMARK = SYNC_MESSAGE)."
    ]
   },
   {
@@ -1836,7 +1870,7 @@
    "event": "Change search criteria",
    "cause": "No part matches the criteria",
    "type": "Info",
-   "msg_id": "TBD",
+   "msg_id": "MSG1",
    "message": "No parts match these filters - Change the period or sync status, or press Reset to show all parts.",
    "action": "Change the criteria or click [Reset]"
   },
@@ -1847,7 +1881,7 @@
    "event": "Open Destination Mapping panel",
    "cause": "Part has no destination",
    "type": "Info",
-   "msg_id": "TBD",
+   "msg_id": "MSG2",
    "message": "No destination yet - Click Edit mapping and add at least one destination so the part is included in the volume calculation.",
    "action": "Click [Edit mapping] and add a destination"
   },
@@ -1855,7 +1889,7 @@
    "event": "Change Case/Day in edit mode",
    "cause": "Total Case/Day above Max Case/Day",
    "type": "Error",
-   "msg_id": "TBD",
+   "msg_id": "MSG3",
    "message": "Allocation of {n} case/day exceeds Max Case/Day ({m}). Reduce one of the destinations.",
    "action": "Reduce Case/Day of a destination"
   },
@@ -1863,7 +1897,7 @@
    "event": "Edit mode",
    "cause": "A row has no destination selected",
    "type": "Error",
-   "msg_id": "TBD",
+   "msg_id": "MSG4",
    "message": "Select a destination for every row, or remove the empty row, before saving.",
    "action": "Select a destination or remove the row"
   },
@@ -1871,7 +1905,7 @@
    "event": "Open panel of a past period",
    "cause": "Period is not ongoing",
    "type": "Info",
-   "msg_id": "TBD",
+   "msg_id": "MSG5",
    "message": "Past period - read only",
    "action": "-"
   },
@@ -1882,7 +1916,7 @@
    "event": "Hover disabled [Upload Excel]",
    "cause": "Past period or All periods selected",
    "type": "Info",
-   "msg_id": "TBD",
+   "msg_id": "MSG6",
    "message": "Past period - read only. Select the ongoing period to upload.",
    "action": "Select the ongoing period"
   },
@@ -1890,7 +1924,7 @@
    "event": "Click [Validate file] button",
    "cause": "Upload validated and saved",
    "type": "Info",
-   "msg_id": "TBD",
+   "msg_id": "MSG7",
    "message": "Saved successfully - Upload completed. The file has been validated and the destination mapping has been saved to Mapping per Destination.",
    "action": "Click [OK]"
   },
@@ -1901,7 +1935,7 @@
    "event": "Click [Save] button",
    "cause": "Mapping changed by another user",
    "type": "Error",
-   "msg_id": "MSTD0114AERR",
+   "msg_id": "MSG8",
    "message": "Error in Update because of concurrency check.",
    "action": "Cancel, refresh and edit again"
   },
@@ -1912,7 +1946,7 @@
    "event": "Click [Export Excel] button",
    "cause": "Excel file cannot be created",
    "type": "Error",
-   "msg_id": "TBD",
+   "msg_id": "MSG9",
    "message": "Export Excel failed. Please try again.",
    "action": "Click [Export Excel] again; contact administrator if it persists"
   },
@@ -1923,7 +1957,7 @@
    "event": "Click [Sync] button",
    "cause": "Parts handed to the RPA",
    "type": "Info",
-   "msg_id": "TBD",
+   "msg_id": "MSG10",
    "message": "Sync requested for {n} part(s). They stay Waiting until the RPA has sent them to the global system.",
    "action": "-"
   },
@@ -1931,7 +1965,7 @@
    "event": "Hover a Failed Sync Status chip",
    "cause": "The RPA could not send the part",
    "type": "Info",
-   "msg_id": "TBD",
+   "msg_id": "MSG11",
    "message": "Sync failed: {SYNC_MESSAGE}. The part is sent again with the next Sync.",
    "action": "Correct the cause if needed and click [Sync]"
   }
@@ -1941,7 +1975,7 @@
    "event": "Click [Save] button",
    "cause": "Database error on replace of TB_M_PART_CANDIDATE_DEST",
    "type": "Error",
-   "msg_id": "TBD",
+   "msg_id": "LOG1",
    "message": "Failed to save mapping of part <PART_NO>, period <PERIOD>: <DB error message>.",
    "exception": "Y",
    "action": "Show [Corresponding Screen Message] on screen (TBD)"
@@ -1950,7 +1984,7 @@
    "event": "RPA function",
    "cause": "The global system rejects a part",
    "type": "Error",
-   "msg_id": "TBD",
+   "msg_id": "LOG2",
    "message": "Sync of part <PART_NO> failed: <SYNC_MESSAGE>.",
    "exception": "Y",
    "action": "Status Failed; Display Message no. 11 on the chip"
@@ -1959,7 +1993,7 @@
    "event": "Click [Export Excel] button",
    "cause": "Excel file generation error",
    "type": "Error",
-   "msg_id": "TBD",
+   "msg_id": "LOG3",
    "message": "Export Excel of Mapping per Destination failed: <error message>.",
    "exception": "Y",
    "action": "Display Message no. 9"
@@ -1972,6 +2006,107 @@
    "message": "Logging is handled by the Mapping per Destination Upload batch (refer UISS-Batch \"Crossdock Master Setting - Mapping per Destination Upload\").",
    "exception": "N",
    "action": "-"
+  }
+ ],
+ "tables": [
+  {
+   "name": "TB_H_PART_CANDIDATE",
+   "kind": "history",
+   "proposed": true,
+   "description": "History of every change of a crossdock part (Add / Edit by screen or upload, mapping changes, Sync results). Read by the History setting modal of Part List (index PART_NO, CREATED_DT). Proposed retention: 24 months online by CREATED_DT; a monthly housekeeping job deletes older records (period configurable in system master). To be confirmed.",
+   "columns": [
+    [
+     "HIST_ID",
+     "BIGINT",
+     "Y",
+     "N",
+     "Running number (identity)"
+    ],
+    [
+     "PART_NO",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "Part number; length follows TB_M_PART_MASTER"
+    ],
+    [
+     "PERIOD",
+     "VARCHAR(TBD)",
+     "",
+     "Y",
+     "Calculation period for MAPPING / SYNC; NULL for ADD / EDIT (Part List has no period)"
+    ],
+    [
+     "EVENT_TYPE",
+     "VARCHAR(10)",
+     "",
+     "N",
+     "ADD / EDIT / MAPPING / SYNC"
+    ],
+    [
+     "SOURCE",
+     "VARCHAR(10)",
+     "",
+     "N",
+     "SCREEN / UPLOAD / RPA"
+    ],
+    [
+     "UPLOAD_ID",
+     "VARCHAR(TBD)",
+     "",
+     "Y",
+     "Upload of the change (Log); NULL when not from an upload"
+    ],
+    [
+     "DEST_CODE",
+     "VARCHAR(TBD)",
+     "",
+     "Y",
+     "Destination code for MAPPING; NULL for other events"
+    ],
+    [
+     "FIELD_NAME",
+     "VARCHAR(30)",
+     "",
+     "N",
+     "Changed field: PCS_CASE, MAX_CASE_DAY, MAD, PART_STATUS, EFFECTIVE_START_DATE, CASE_DAY, SYNC_STATUS"
+    ],
+    [
+     "OLD_VALUE",
+     "VARCHAR(255)",
+     "",
+     "Y",
+     "Value before the change; NULL for ADD or an added destination"
+    ],
+    [
+     "NEW_VALUE",
+     "VARCHAR(255)",
+     "",
+     "Y",
+     "Value after the change; NULL for a removed destination"
+    ],
+    [
+     "REMARK",
+     "VARCHAR(500)",
+     "",
+     "Y",
+     "Free text, e.g. SYNC_MESSAGE of a Failed sync"
+    ],
+    [
+     "CREATED_BY",
+     "VARCHAR(20)",
+     "",
+     "N",
+     "User who made the change (RPA user ID for SYNC)"
+    ],
+    [
+     "CREATED_DT",
+     "DATETIME",
+     "",
+     "N",
+     "Date and time of the change"
+    ]
+   ]
   }
  ]
 }

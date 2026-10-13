@@ -128,18 +128,38 @@ Di UISS cukup ditulis **"Log"** tanpa definisi tabel (sesuai arahan). Yang saya 
 | CREATED_BY / CREATED_DT | | Audit |
 
 ### 8.5 TB_H_PART_CANDIDATE — *ditulis* (history)
-Tabel history semua perubahan part. Kolom fisik **belum ditentukan (TBD)**; field logis yang dipakai di UISS: PART_NO, PERIOD, EVENT, SOURCE, FIELD_NAME, OLD_VALUE, NEW_VALUE, CHANGED_BY, CHANGED_DT (satu record per field yang berubah).
+Tabel history semua perubahan part. **Usulan** definisi fisik (insert only, satu record per field yang berubah; index PART_NO + CREATED_DT):
 
-| Event | Source | Kapan | Contoh FIELD_NAME / nilai |
+| Kolom | Tipe | PK | Null | Keterangan |
+|---|---|---|---|---|
+| HIST_ID | BIGINT | Y | N | Running number (identity) |
+| PART_NO | VARCHAR(TBD) |  | N | Part number; length follows TB_M_PART_MASTER |
+| PERIOD | VARCHAR(TBD) |  | Y | Calculation period for MAPPING / SYNC; NULL for ADD / EDIT (Part List has no period) |
+| EVENT_TYPE | VARCHAR(10) |  | N | ADD / EDIT / MAPPING / SYNC |
+| SOURCE | VARCHAR(10) |  | N | SCREEN / UPLOAD / RPA |
+| UPLOAD_ID | VARCHAR(TBD) |  | Y | Upload of the change (Log); NULL when not from an upload |
+| DEST_CODE | VARCHAR(TBD) |  | Y | Destination code for MAPPING; NULL for other events |
+| FIELD_NAME | VARCHAR(30) |  | N | Changed field: PCS_CASE, MAX_CASE_DAY, MAD, PART_STATUS, EFFECTIVE_START_DATE, CASE_DAY, SYNC_STATUS |
+| OLD_VALUE | VARCHAR(255) |  | Y | Value before the change; NULL for ADD or an added destination |
+| NEW_VALUE | VARCHAR(255) |  | Y | Value after the change; NULL for a removed destination |
+| REMARK | VARCHAR(500) |  | Y | Free text, e.g. SYNC_MESSAGE of a Failed sync |
+| CREATED_BY | VARCHAR(20) |  | N | User who made the change (RPA user ID for SYNC) |
+| CREATED_DT | DATETIME |  | N | Date and time of the change |
+
+**Usulan retensi**: simpan 24 bulan online (berdasarkan CREATED_DT); housekeeping job bulanan menghapus record yang lebih lama. Periode bisa diatur di system master. Perlu konfirmasi.
+
+| Event (EVENT_TYPE) | Source | Kapan | FIELD_NAME / nilai |
 |---|---|---|---|
-| ADD | SCREEN / UPLOAD | Part baru (Add Part di layar / flag A) | PCS_CASE, MAX_CASE_DAY, … (OLD kosong) |
-| EDIT | SCREEN / UPLOAD | Ubah data part (Edit di layar / flag E) | PCS_CASE, MAX_CASE_DAY, PART_STATUS, MAD, EFFECTIVE_START_DATE |
-| MAPPING | SCREEN / UPLOAD | Tambah / ubah / hapus destinasi (periode berjalan) | Kode destinasi; OLD/NEW = Case/Day |
-| SYNC | RPA | Hasil Sync | SYNC_STATUS: Waiting → Success / Failed + pesan |
+| ADD | SCREEN / UPLOAD | Part baru (Add Part di layar / flag A) | PCS_CASE, MAX_CASE_DAY, MAD, EFFECTIVE_START_DATE, PART_STATUS; OLD = NULL; PERIOD = NULL |
+| EDIT | SCREEN / UPLOAD | Ubah data part (Edit di layar / flag E) | Field yang berubah; OLD → NEW; PERIOD = NULL |
+| MAPPING | SCREEN / UPLOAD | Tambah / ubah / hapus destinasi (periode berjalan) | DEST_CODE terisi, FIELD_NAME = CASE_DAY; OLD NULL = ditambah, NEW NULL = dihapus |
+| SYNC | RPA | Hasil Sync | FIELD_NAME = SYNC_STATUS; Waiting → Success / Failed (atau No Sync kalau berubah saat RPA jalan); REMARK = SYNC_MESSAGE |
+
+UPLOAD_ID diisi untuk source UPLOAD (link ke Log).
 
 Dibaca oleh modal *History setting* di Part List.
 
-Di batch ini: event **ADD** (flag A) / **EDIT** (flag E), source **UPLOAD**, satu record per field yang berubah.
+Di batch ini: event **ADD** (flag A) / **EDIT** (flag E), source **UPLOAD**, UPLOAD_ID run ini, satu record per field yang berubah.
 
 ### 8.6 TB_M_PART_CROSSDOCK_DTL — *terkait, tidak disentuh batch ini*
 Detail part (Minimum MAD, Case/Day) dari sub-menu Part Detail. Tidak dibaca/ditulis oleh upload Part List.
@@ -159,7 +179,7 @@ Detail part (Minimum MAD, Case/Day) dari sub-menu Part Detail. Tidak dibaca/ditu
 | 8 | Result report | Warning | Result report of <UPLOAD_ID> cannot be created. |
 | 9 | Unexpected error | Critical | Unexpected error: <ERROR_DETAIL>. → User contact PIC |
 
-MSG ID semua masih **TBD**.
+MSG ID: LOG1–LOG9 (sesuai nomor).
 
 ## 10. Contoh skenario (sheet *Sample Input* di UISS)
 - Diterima: N1–N9 (Add, Edit Candidate, naik Max Case/Day, tanpa perubahan, sebagian part, turunkan Max setelah mapping dikurangi, Active→Inactive, Add tanpa MAD).
@@ -169,5 +189,5 @@ MSG ID semua masih **TBD**.
 ## 11. Open points
 - Panjang VARCHAR semua kolom dan nama field Part Name di TB_M_PART_MASTER.
 - Lokasi file template & result report; retensi Log.
-- Kolom fisik TB_H_PART_CANDIDATE dan retensinya.
-- Screen/Batch ID final (sekarang X2) dan MSG ID.
+- Konfirmasi usulan kolom dan retensi TB_H_PART_CANDIDATE.
+- ~~Batch ID dan MSG ID~~ → X2, LOG1–LOG9.

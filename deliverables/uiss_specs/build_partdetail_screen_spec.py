@@ -26,7 +26,7 @@ def modes(on):
 spec = {
  "doc_type": "screen",
  "header": {"phase": "DR", "project_name": PROJ, "block_name": "Screen",
-            "function_name": "TBD Crossdock Master Setting - Part Detail", "created_date": "13-Oct-26", "created_by": NAME},
+            "function_name": "X5 Crossdock Master Setting - Part Detail", "created_date": "13-Oct-26", "created_by": NAME},
  "revisions": [{"revision": "0.1", "author": NAME, "date": "13-Oct-26", "reviewed_by": "", "description": "Initial Draft"}],
  "general": {
   "objective": [
@@ -36,7 +36,7 @@ spec = {
   "display_order": [{"section": "Result List", "fields": [{"field": "Last Update (CHANGED_DT)", "order": "Descending"}]}],
   "buttons": [
    {"name": "Reset", "function": "Clear criteria and reset the screen to its initial value."},
-   {"name": "Search", "function": "To retrieve records according to the specified criteria."},
+   {"name": "Search", "function": "To retrieve records according to the specified criteria. The criteria are applied only when [Search] is clicked (or Enter is pressed in a text box)."},
    {"name": "Add Detail", "function": "Open the 'Add Part Detail' modal (Add Mode), ready to add a new record."},
    {"name": "Edit", "function": "Change the screen into edit mode to modify the selected row ('Edit part detail' modal)."},
    {"name": "Delete", "function": "Delete the selected row after confirmation."},
@@ -97,7 +97,7 @@ spec = {
   {"group": "<Search Criteria Section>"},
   it("Part Number", "Key-in", "", "Varchar", "TBD", "I", "Text box", "Left", "Blank", "N", "X..TBD..X", "Contains, case-insensitive", "Placeholder 'e.g. PART-B'."),
   btn("Reset", "Clears Part Number."),
-  btn("Search", "Retrieves the records by the criteria."),
+  btn("Search", "Applies the criteria to the result list. Typing or selecting a criterion alone does not change the list; Enter in a text box = [Search]."),
   {"group": "<Result List Section>"},
   it("Section title / counter", "", "", "Varchar", "", "O", "Label", "Left", "", "", "Part detail · N parts", "", "N = number of listed records."),
   btn("Add Detail", "Opens the Add Part Detail modal. Refer screen mode remark 1)."),
@@ -194,26 +194,26 @@ spec = {
   {"type": "text", "level": 2, "text": "TBD: which functions read MIN_MAD and CASE_DAY (e.g. the MAD calculation function) and whether a change must be logged in a history table."}],
  "display_messages": [
   {"group": "Search Operation"},
-  {"event": "Change search criteria", "cause": "No record matches the criteria", "type": "Info", "msg_id": "TBD",
+  {"event": "Change search criteria", "cause": "No record matches the criteria", "type": "Info", "msg_id": "MSG1",
    "message": "No matching parts - Change the Part Number or press Reset.", "action": "Change the criteria or click [Reset]"},
-  {"event": "Open Part Detail", "cause": "No record registered yet", "type": "Info", "msg_id": "TBD",
+  {"event": "Open Part Detail", "cause": "No record registered yet", "type": "Info", "msg_id": "MSG2",
    "message": "No part detail registered yet - Click Add Detail to register Minimum MAD and Case/Day of a part.", "action": "Click [Add Detail]"},
   {"group": "Add / Edit Operation"},
-  {"event": "Hover disabled [Save]", "cause": "Part No not selected", "type": "Info", "msg_id": "TBD", "message": "Part No is required", "action": "Select a Part No"},
-  {"event": "Hover disabled [Save]", "cause": "Minimum MAD blank or not a whole number", "type": "Info", "msg_id": "TBD", "message": "Enter Minimum MAD (whole number, 0 or more)", "action": "Fill Minimum MAD"},
-  {"event": "Hover disabled [Save]", "cause": "Case/Day blank or not greater than 0", "type": "Info", "msg_id": "TBD", "message": "Enter Case/Day (whole number, more than 0)", "action": "Fill Case/Day"},
-  {"event": "Click [Save] button", "cause": "Record saved", "type": "Info", "msg_id": "TBD", "message": "Saved successfully - {Part No} has been added/updated.", "action": "Click [OK]"},
+  {"event": "Hover disabled [Save]", "cause": "Part No not selected", "type": "Info", "msg_id": "MSG3", "message": "Part No is required", "action": "Select a Part No"},
+  {"event": "Hover disabled [Save]", "cause": "Minimum MAD blank or not a whole number", "type": "Info", "msg_id": "MSG4", "message": "Enter Minimum MAD (whole number, 0 or more)", "action": "Fill Minimum MAD"},
+  {"event": "Hover disabled [Save]", "cause": "Case/Day blank or not greater than 0", "type": "Info", "msg_id": "MSG5", "message": "Enter Case/Day (whole number, more than 0)", "action": "Fill Case/Day"},
+  {"event": "Click [Save] button", "cause": "Record saved", "type": "Info", "msg_id": "MSG6", "message": "Saved successfully - {Part No} has been added/updated.", "action": "Click [OK]"},
   {"group": "Delete Operation"},
   {"event": "Click [Delete] button", "cause": "Confirmation", "type": "Confirm", "msg_id": "MSTD0001ACFM", "message": "Are you sure you want to delete the record ? {Part No}", "action": "Click [Yes, delete] or [No]"},
-  {"event": "Click [Yes, delete] button", "cause": "Record deleted", "type": "Info", "msg_id": "TBD", "message": "Saved successfully - {Part No} has been deleted.", "action": "Click [OK]"},
+  {"event": "Click [Yes, delete] button", "cause": "Record deleted", "type": "Info", "msg_id": "MSG7", "message": "Saved successfully - {Part No} has been deleted.", "action": "Click [OK]"},
   {"group": "Concurrency"},
   {"event": "Click [Save] button (Add)", "cause": "Part No added by another user", "type": "Error", "msg_id": "MSTD0039AERR", "message": "Duplication found for {Part No}", "action": "Close the modal and search the part"},
-  {"event": "Click [Save] button (Edit)", "cause": "Record changed by another user", "type": "Error", "msg_id": "MSTD0114AERR", "message": "Error in Update because of concurrency check.", "action": "Close the modal, refresh and edit again"},
+  {"event": "Click [Save] button (Edit)", "cause": "Record changed by another user", "type": "Error", "msg_id": "MSG8", "message": "Error in Update because of concurrency check.", "action": "Close the modal, refresh and edit again"},
   {"event": "Click [Yes, delete] button", "cause": "Record changed or deleted by another user", "type": "Error", "msg_id": "MSTD0115AERR", "message": "Error in Delete because of concurrency check.", "action": "Refresh the list and try again"}],
  "logging_messages": [
-  {"event": "Click [Save] button", "cause": f"Database error on insert/update of {DTL}", "type": "Error", "msg_id": "TBD",
+  {"event": "Click [Save] button", "cause": f"Database error on insert/update of {DTL}", "type": "Error", "msg_id": "LOG1",
    "message": "Failed to save part detail <PART_NO>: <DB error message>.", "exception": "Y", "action": "Show [Corresponding Screen Message] on screen (TBD)"},
-  {"event": "Click [Yes, delete] button", "cause": f"Database error on delete of {DTL}", "type": "Error", "msg_id": "TBD",
+  {"event": "Click [Yes, delete] button", "cause": f"Database error on delete of {DTL}", "type": "Error", "msg_id": "LOG2",
    "message": "Failed to delete part detail <PART_NO>: <DB error message>.", "exception": "Y", "action": "Show [Corresponding Screen Message] on screen (TBD)"}]
 }
 json.dump(spec, open(sys.argv[1], 'w'), indent=1)

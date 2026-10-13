@@ -34,12 +34,14 @@ interface FormState {
 export function PartDetailTab({ parts, ro, detail }: { parts: Part[]; ro: boolean; detail: PartDetailState }) {
   const { details, saveDetail, deleteDetail } = detail;
   const [query, setQuery] = useState('');
+  // The list filters on the Part Number applied by [Search].
+  const [applied, setApplied] = useState('');
   const [form, setForm] = useState<FormState | null>(null);
   const [toDelete, setToDelete] = useState<PartDetail | null>(null);
   const [done, setDone] = useState<string | null>(null);
 
   const nameOf = useMemo(() => new Map(parts.map((p) => [p.p, p.n])), [parts]);
-  const rows = details.filter((d) => !query || d.p.toLowerCase().includes(query.toLowerCase()));
+  const rows = details.filter((d) => !applied || d.p.toLowerCase().includes(applied.toLowerCase()));
   // Only parts registered in Part List (TB_M_PART_CANDIDATE) that have no detail record yet can be added.
   const usedIds = new Set(details.map((d) => d.p));
   const options = parts.filter((p) => !usedIds.has(p.p)).map((p) => ({ no: p.p, name: p.n }));
@@ -67,13 +69,13 @@ export function PartDetailTab({ parts, ro, detail }: { parts: Part[]; ro: boolea
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 13 }}>
           <div className="field" style={{ width: 260 }}>
             <label>Part Number</label>
-            <input className="input" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="e.g. PART-B" style={{ fontFamily: 'var(--font-mono)', fontSize: 13 }} />
+            <input className="input" value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && setApplied(query)} placeholder="e.g. PART-B" style={{ fontFamily: 'var(--font-mono)', fontSize: 13 }} />
           </div>
           <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-            <button className="btn btn-secondary" onClick={() => setQuery('')}>
+            <button className="btn btn-secondary" onClick={() => { setQuery(''); setApplied(''); }}>
               Reset
             </button>
-            <button className="btn btn-primary">Search</button>
+            <button className="btn btn-primary" onClick={() => setApplied(query)}>Search</button>
           </div>
         </div>
       </div>

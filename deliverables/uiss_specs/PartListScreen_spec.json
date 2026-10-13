@@ -84,7 +84,7 @@
    },
    {
     "name": "Search",
-    "function": "To retrieve records according to the specified criteria. TBD: the prototype filters while typing, so whether filtering waits for [Search] (or the button is removed) is still to be decided."
+    "function": "To retrieve records according to the specified criteria. The criteria are applied only when [Search] is clicked (or Enter is pressed in a text box); Sort by is applied at once."
    },
    {
     "name": "Part Number link / Edit",
@@ -495,12 +495,12 @@
      },
      {
       "id": "d1",
-      "label": "Mandatory items valid?",
+      "label": "Mandatory items valid and Max Case/Day >= mapped total?",
       "type": "decision"
      },
      {
       "id": "m1",
-      "label": "Save stays disabled (tooltip)",
+      "label": "Save stays disabled (tooltip / message no. 14)",
       "type": "message"
      },
      {
@@ -617,15 +617,19 @@
    "image": "deliverables/uiss_screens/part_list/c_10_edit_active.png"
   },
   {
-   "caption": "11. History Mode - History setting",
+   "caption": "11. Edit Mode - Max Case/Day below the mapped total (message no. 14, Save disabled)",
+   "image": "deliverables/uiss_screens/part_list/c_14_edit_below_mapped.png"
+  },
+  {
+   "caption": "12. History Mode - History setting",
    "image": "deliverables/uiss_screens/part_list/c_11_history.png"
   },
   {
-   "caption": "12. Upload Mode - Upload Excel modal",
+   "caption": "13. Upload Mode - Upload Excel modal",
    "image": "deliverables/uiss_screens/part_list/c_12_upload.png"
   },
   {
-   "caption": "13. Upload Mode - Saved successfully popup after Validate file",
+   "caption": "14. Upload Mode - Saved successfully popup after Validate file",
    "image": "deliverables/uiss_screens/part_list/c_13_upload_success.png"
   }
  ],
@@ -784,7 +788,7 @@
    "required": "",
    "format": "",
    "validation": "",
-   "description": "TBD: the prototype filters immediately while typing/selecting; decide whether filtering waits for [Search] or the button is removed."
+   "description": "Applies the criteria to the result list. Typing or selecting a criterion alone does not change the list; Enter in a text box = [Search]."
   },
   {
    "group": "<Result List Section>"
@@ -800,7 +804,7 @@
    "justified": "Left",
    "initial": "",
    "required": "",
-   "format": "N parts \u00b7 M incomplete mappings",
+   "format": "N parts · M incomplete mappings",
    "validation": "",
    "description": "N = number of filtered rows (all pages). M = filtered rows whose mapping is incomplete (no destination, or total destination Case/Day differs from Max Case/Day)."
   },
@@ -998,7 +1002,7 @@
    "justified": "Right",
    "initial": "",
    "required": "",
-   "format": "a-b of N parts \u00b7 page x/y",
+   "format": "a-b of N parts · page x/y",
    "validation": "",
    "description": ""
   },
@@ -1201,7 +1205,7 @@
    "required": "Y",
    "format": "ZZ,ZZ9",
    "validation": "Whole number > 0",
-   "description": "Locked until Pcs/Case is filled (tooltip 'Enter Pcs/Case first')."
+   "description": "Locked until Pcs/Case is filled (tooltip 'Enter Pcs/Case first'). Edit: can not be less than the total Case/Day already mapped in the ongoing period (TB_M_PART_CANDIDATE_DEST); otherwise the field is marked red, message no. 14 is shown and [Save] is disabled."
   },
   {
    "name": "Total Pcs/Day",
@@ -1246,7 +1250,7 @@
    "required": "",
    "format": "",
    "validation": "",
-   "description": "Enabled only when Part No, Pcs/Case > 0 and Max Case/Day > 0 are filled. Refer Operation Description 5.4 / 5.5."
+   "description": "Enabled only when Part No, Pcs/Case > 0 and Max Case/Day > 0 are filled and, in Edit, Max Case/Day is not below the mapped total. Refer Operation Description 5.4 / 5.5."
   },
   {
    "name": "Close (X)",
@@ -1279,7 +1283,7 @@
    "required": "",
    "format": "",
    "validation": "",
-   "description": "Part No \u00b7 Part Name of the selected row."
+   "description": "Part No · Part Name of the selected row."
   },
   {
    "name": "Event title",
@@ -1312,7 +1316,7 @@
    "description": ""
   },
   {
-   "name": "Changed field (old \u2192 new)",
+   "name": "Changed field (old → new)",
    "source": "TB_H_PART_CANDIDATE",
    "field": "TBD",
    "type": "Varchar",
@@ -1640,15 +1644,19 @@
     },
     "mappings": [
      {
+      "dest_field": "HIST_ID",
+      "description": "Auto (identity)"
+     },
+     {
       "dest_field": "PART_NO",
       "description": "Part of the event"
      },
      {
       "dest_field": "PERIOD",
-      "description": "Blank (Part List has no period)"
+      "description": "NULL (Part List has no period)"
      },
      {
-      "dest_field": "EVENT",
+      "dest_field": "EVENT_TYPE",
       "description": "'ADD' (Add Part) / 'EDIT' (Edit part data)"
      },
      {
@@ -1656,23 +1664,35 @@
       "description": "'SCREEN'"
      },
      {
+      "dest_field": "UPLOAD_ID",
+      "description": "NULL"
+     },
+     {
+      "dest_field": "DEST_CODE",
+      "description": "NULL"
+     },
+     {
       "dest_field": "FIELD_NAME",
       "description": "Changed field, e.g. PCS_CASE, MAX_CASE_DAY, PART_STATUS"
      },
      {
       "dest_field": "OLD_VALUE",
-      "description": "Value before Save (blank for ADD)"
+      "description": "Value before Save (NULL for ADD)"
      },
      {
       "dest_field": "NEW_VALUE",
       "description": "Value after Save"
      },
      {
-      "dest_field": "CHANGED_BY",
+      "dest_field": "REMARK",
+      "description": "NULL"
+     },
+     {
+      "dest_field": "CREATED_BY",
       "description": "Login user ID"
      },
      {
-      "dest_field": "CHANGED_DT",
+      "dest_field": "CREATED_DT",
       "description": "Server system date-time"
      }
     ]
@@ -1704,8 +1724,9 @@
    "marker": "a.",
    "level": 2,
    "items": [
+    "The criteria are applied when the user clicks [Search] (or presses Enter in 'Part Number' / 'Part Name'); changing a criterion alone does not change the list. 'Sort by' is applied at once.",
     "'Part Number' and 'Part Name' match by 'contains', case-insensitive; 'Status' matches exactly. All criteria are combined with AND.",
-    "Changing any criterion, 'Sort by' or 'Rows per page' returns the list to page 1.",
+    "Clicking [Search] or changing 'Sort by' or 'Rows per page' returns the list to page 1.",
     "If no row matches, hide the table and paging and display message no. 1 with [Reset filter]."
    ]
   },
@@ -1718,7 +1739,7 @@
    "marker": "a.",
    "level": 2,
    "items": [
-    "Counter 'N parts \u00b7 M incomplete mappings' is counted over the whole filtered result, not only the current page.",
+    "Counter 'N parts · M incomplete mappings' is counted over the whole filtered result, not only the current page.",
     "Incomplete mapping: the part has no destination in TB_M_PART_CANDIDATE_DEST, or the sum of destination CASE_DAY differs from MAX_CASE_DAY. Mark the row with a blue bar and count it in 'M incomplete mappings'.",
     "Total Pcs/Day = Pcs/Case x Max Case/Day."
    ]
@@ -1784,7 +1805,8 @@
    "items": [
     "Open the 'Edit part data' modal with the saved values. 'Part No' is locked; 'Status' can be Candidate / Active / Inactive.",
     "'Effective Start Date' is editable only while the saved status is Candidate (minimum today); otherwise locked with message no. 10 as tooltip.",
-    "'MAD' (optional), 'Pcs/Case' and 'Max Case/Day' can be changed; 'Total Pcs/Day' is recalculated."
+    "'MAD' (optional), 'Pcs/Case' and 'Max Case/Day' can be changed; 'Total Pcs/Day' is recalculated.",
+    "Max Case/Day can not be less than the total Case/Day already mapped to destinations in the ongoing period (TB_M_PART_CANDIDATE_DEST); otherwise the field is marked red, message no. 14 is shown below Pcs/Case & Max Case/Day and [Save] is disabled. The user must first reduce the mapping in Mapping per Destination (same rule as upload check 9)."
    ]
   },
   {
@@ -1799,6 +1821,7 @@
    "level": 3,
    "items": [
     "If the record was changed by another user after it was opened, display message no. 4. Stop.",
+    "Check Max Case/Day against the mapped total of the ongoing period again on the server; if it is below, display message no. 14. Stop.",
     "Update TB_M_PART_CANDIDATE and set SYNC_STATUS = 0 (No Sync), CHANGED_BY and CHANGED_DT. Every Save returns the part to No Sync so the D/S user synchronises it again.",
     "Insert the change history when any register or update in Part List",
     "Close the modal, move the part to the top of the list and display message no. 9."
@@ -1815,9 +1838,146 @@
    "items": [
     "History retrieved from inserted data when user add/modify part list data",
     "User clicks the clock icon on a row: open 'History setting' with the change timeline of the part, newest first.",
-    "Each event shows the title, date-time, field name, old value (struck through) \u2192 new value and user.",
-    "History is read from TB_H_PART_CANDIDATE, which records every change of the part: Add / Edit by screen, Upload, mapping changes (add, change or remove a destination) and Sync results. A part without history shows message no. 12. TBD: column names and retention."
+    "Each event shows the title, date-time, field name, old value (struck through) → new value and user.",
+    "History is read from TB_H_PART_CANDIDATE, which records every change of the part: Add / Edit by screen, Upload, mapping changes (add, change or remove a destination) and Sync results. A part without history shows message no. 12."
    ]
+  },
+  {
+   "type": "text",
+   "level": 2,
+   "text": "TB_H_PART_CANDIDATE (proposed) - one record per changed field, insert only:"
+  },
+  {
+   "type": "table",
+   "level": 2,
+   "row_lines": "all",
+   "columns": [
+    {
+     "title": "Column",
+     "width": 13
+    },
+    {
+     "title": "Type",
+     "width": 10
+    },
+    {
+     "title": "PK",
+     "width": 3,
+     "align": "center"
+    },
+    {
+     "title": "Null",
+     "width": 3,
+     "align": "center"
+    },
+    {
+     "title": "Description",
+     "width": 30
+    }
+   ],
+   "rows": [
+    [
+     "HIST_ID",
+     "BIGINT",
+     "Y",
+     "N",
+     "Running number (identity)"
+    ],
+    [
+     "PART_NO",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "Part number; length follows TB_M_PART_MASTER"
+    ],
+    [
+     "PERIOD",
+     "VARCHAR(TBD)",
+     "",
+     "Y",
+     "Calculation period for MAPPING / SYNC; NULL for ADD / EDIT (Part List has no period)"
+    ],
+    [
+     "EVENT_TYPE",
+     "VARCHAR(10)",
+     "",
+     "N",
+     "ADD / EDIT / MAPPING / SYNC"
+    ],
+    [
+     "SOURCE",
+     "VARCHAR(10)",
+     "",
+     "N",
+     "SCREEN / UPLOAD / RPA"
+    ],
+    [
+     "UPLOAD_ID",
+     "VARCHAR(TBD)",
+     "",
+     "Y",
+     "Upload of the change (Log); NULL when not from an upload"
+    ],
+    [
+     "DEST_CODE",
+     "VARCHAR(TBD)",
+     "",
+     "Y",
+     "Destination code for MAPPING; NULL for other events"
+    ],
+    [
+     "FIELD_NAME",
+     "VARCHAR(30)",
+     "",
+     "N",
+     "Changed field: PCS_CASE, MAX_CASE_DAY, MAD, PART_STATUS, EFFECTIVE_START_DATE, CASE_DAY, SYNC_STATUS"
+    ],
+    [
+     "OLD_VALUE",
+     "VARCHAR(255)",
+     "",
+     "Y",
+     "Value before the change; NULL for ADD or an added destination"
+    ],
+    [
+     "NEW_VALUE",
+     "VARCHAR(255)",
+     "",
+     "Y",
+     "Value after the change; NULL for a removed destination"
+    ],
+    [
+     "REMARK",
+     "VARCHAR(500)",
+     "",
+     "Y",
+     "Free text, e.g. SYNC_MESSAGE of a Failed sync"
+    ],
+    [
+     "CREATED_BY",
+     "VARCHAR(20)",
+     "",
+     "N",
+     "User who made the change (RPA user ID for SYNC)"
+    ],
+    [
+     "CREATED_DT",
+     "DATETIME",
+     "",
+     "N",
+     "Date and time of the change"
+    ]
+   ]
+  },
+  {
+   "type": "text",
+   "level": 2,
+   "text": "Events: ADD / EDIT (source SCREEN or UPLOAD, PERIOD NULL), MAPPING (source SCREEN or UPLOAD, PERIOD and DEST_CODE filled, FIELD_NAME CASE_DAY), SYNC (source RPA, FIELD_NAME SYNC_STATUS, REMARK = SYNC_MESSAGE)."
+  },
+  {
+   "type": "text",
+   "level": 2,
+   "text": "Proposed retention: 24 months online by CREATED_DT; a monthly housekeeping job deletes older records (period configurable in system master). To be confirmed."
   },
   {
    "type": "heading",
@@ -1993,7 +2153,7 @@
    "cause": "Part saved successfully",
    "type": "Info",
    "msg_id": "MSG9",
-   "message": "Saved successfully - {Part No} \u00b7 {Part Name} has been added/updated. It is now at the top of the Part List.",
+   "message": "Saved successfully - {Part No} · {Part Name} has been added/updated. It is now at the top of the Part List.",
    "action": "Click [OK]"
   },
   {
@@ -2036,6 +2196,14 @@
    "msg_id": "MSG13",
    "message": "Export Excel failed. Please try again.",
    "action": "Click [Export Excel] again; contact administrator if it persists"
+  },
+  {
+   "event": "Change 'Max Case/Day' in Edit / click [Save]",
+   "cause": "Max Case/Day below the total Case/Day mapped in the ongoing period",
+   "type": "Error",
+   "msg_id": "MSG14",
+   "message": "Max Case/Day can not be less than the mapped total ({n} case/day) of the ongoing period. Reduce the mapping in Mapping per Destination first.",
+   "action": "Reduce the mapping in Mapping per Destination first, or enter a higher Max Case/Day"
   }
  ],
  "logging_messages": [
@@ -2043,7 +2211,7 @@
    "event": "Click [Save] button",
    "cause": "Database error on insert/update of TB_M_PART_CANDIDATE",
    "type": "Error",
-   "msg_id": "TBD",
+   "msg_id": "LOG1",
    "message": "Failed to save part <PART_NO>: <DB error message>.",
    "exception": "Y",
    "action": "Show [Corresponding Screen Message] on screen (TBD)"
@@ -2052,7 +2220,7 @@
    "event": "Click [Export Excel] button",
    "cause": "Excel file generation error",
    "type": "Error",
-   "msg_id": "TBD",
+   "msg_id": "LOG2",
    "message": "Export Excel of Part List failed: <error message>.",
    "exception": "Y",
    "action": "Display Message no. 13"
@@ -2065,6 +2233,107 @@
    "message": "Logging is handled by the Part List Upload batch (refer UISS-Batch \"Crossdock Master Setting - Part List Upload\").",
    "exception": "N",
    "action": "-"
+  }
+ ],
+ "tables": [
+  {
+   "name": "TB_H_PART_CANDIDATE",
+   "kind": "history",
+   "proposed": true,
+   "description": "History of every change of a crossdock part (Add / Edit by screen or upload, mapping changes, Sync results). Read by the History setting modal of Part List (index PART_NO, CREATED_DT). Proposed retention: 24 months online by CREATED_DT; a monthly housekeeping job deletes older records (period configurable in system master). To be confirmed.",
+   "columns": [
+    [
+     "HIST_ID",
+     "BIGINT",
+     "Y",
+     "N",
+     "Running number (identity)"
+    ],
+    [
+     "PART_NO",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "Part number; length follows TB_M_PART_MASTER"
+    ],
+    [
+     "PERIOD",
+     "VARCHAR(TBD)",
+     "",
+     "Y",
+     "Calculation period for MAPPING / SYNC; NULL for ADD / EDIT (Part List has no period)"
+    ],
+    [
+     "EVENT_TYPE",
+     "VARCHAR(10)",
+     "",
+     "N",
+     "ADD / EDIT / MAPPING / SYNC"
+    ],
+    [
+     "SOURCE",
+     "VARCHAR(10)",
+     "",
+     "N",
+     "SCREEN / UPLOAD / RPA"
+    ],
+    [
+     "UPLOAD_ID",
+     "VARCHAR(TBD)",
+     "",
+     "Y",
+     "Upload of the change (Log); NULL when not from an upload"
+    ],
+    [
+     "DEST_CODE",
+     "VARCHAR(TBD)",
+     "",
+     "Y",
+     "Destination code for MAPPING; NULL for other events"
+    ],
+    [
+     "FIELD_NAME",
+     "VARCHAR(30)",
+     "",
+     "N",
+     "Changed field: PCS_CASE, MAX_CASE_DAY, MAD, PART_STATUS, EFFECTIVE_START_DATE, CASE_DAY, SYNC_STATUS"
+    ],
+    [
+     "OLD_VALUE",
+     "VARCHAR(255)",
+     "",
+     "Y",
+     "Value before the change; NULL for ADD or an added destination"
+    ],
+    [
+     "NEW_VALUE",
+     "VARCHAR(255)",
+     "",
+     "Y",
+     "Value after the change; NULL for a removed destination"
+    ],
+    [
+     "REMARK",
+     "VARCHAR(500)",
+     "",
+     "Y",
+     "Free text, e.g. SYNC_MESSAGE of a Failed sync"
+    ],
+    [
+     "CREATED_BY",
+     "VARCHAR(20)",
+     "",
+     "N",
+     "User who made the change (RPA user ID for SYNC)"
+    ],
+    [
+     "CREATED_DT",
+     "DATETIME",
+     "",
+     "N",
+     "Date and time of the change"
+    ]
+   ]
   }
  ]
 }

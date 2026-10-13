@@ -1,7 +1,8 @@
 """Spec for UISS_Screen_MappingPerDestination.xlsx (UISS-Screen, Crossdock Master Setting - Mapping per Destination)."""
 import json, sys
+import hist_table
 
-T, D, DM = 'TB_M_PART_CANDIDATE', 'TB_M_PART_CANDIDATE_DEST', 'Destination master (TBD)'
+T, D, DM = 'TB_M_PART_CANDIDATE', 'TB_M_PART_CANDIDATE_DEST', 'TB_M_H0125 (Destination Master)'
 IMG = 'deliverables/uiss_screens/mapping'
 NAME, PROJ = 'FID Rayhan', 'Crossdock Optimization'
 
@@ -28,7 +29,7 @@ def modes(on):
 spec = {
  "doc_type": "screen",
  "header": {"phase": "DR", "project_name": PROJ, "block_name": "Screen",
-            "function_name": "TBD Crossdock Master Setting - Mapping per Destination", "created_date": "12-Oct-26", "created_by": NAME},
+            "function_name": "X3 Crossdock Master Setting - Mapping per Destination", "created_date": "12-Oct-26", "created_by": NAME},
  "revisions": [{"revision": "0.1", "author": "FID Rayhan", "date": "12-Oct-26", "reviewed_by": "", "description": "Initial Draft"}],
  "general": {
   "objective": [
@@ -42,7 +43,7 @@ spec = {
    {"section": "Destination Mapping panel", "fields": [{"field": "Order in which destinations were added", "order": "-"}]}],
   "buttons": [
    {"name": "Reset", "function": "Clear criteria and reset the screen to its initial value."},
-   {"name": "Search", "function": "To retrieve records according to the specified criteria. TBD: the prototype filters while typing, so whether filtering waits for [Search] (or the button is removed) is still to be decided."},
+   {"name": "Search", "function": "To retrieve records according to the specified criteria. The criteria are applied only when [Search] is clicked (or Enter is pressed in a text box); Sort by is applied at once."},
    {"name": "Sync", "function": "Hand every Active part of the ongoing period with Sync Status No Sync or Failed to the RPA, whatever the filter shows; the parts become Waiting. The label shows the number of parts, e.g. Sync (9)."},
    {"name": "Upload Excel", "function": "Open the \"Upload Excel - destination mapping\" modal. Enabled only when the ongoing calculation period is selected."},
    {"name": "Export Excel", "function": "Download the mapping as .xlsx: sheet \"Mapping per Destination\" (active filter) and sheet \"Upload\" (base file for the upload)."},
@@ -135,7 +136,7 @@ spec = {
      "Suggestions = registered Part Numbers. Placeholder 'e.g. PART-B'. Combined with the other criteria by AND."),
   it("Sync Status", "Key-in", "", "Varchar", "", "I", "Combo Box", "Left", "No Sync", "N", "", "", "Options: All / No Sync / Waiting / Success / Failed."),
   btn("Reset", "Returns every criterion to its initial value (Calculation period = ongoing, Sync Status = No Sync)."),
-  btn("Search", "TBD: the prototype filters immediately while typing/selecting; decide whether filtering waits for [Search] or the button is removed."),
+  btn("Search", "Applies the criteria to the result list. Typing or selecting a criterion alone does not change the list; Enter in a text box = [Search]."),
   {"group": "<Result List Section>"},
   it("Section title", "", "", "Varchar", "", "O", "Label", "Left", "'Destination mapping per part'", "", "", "", ""),
   btn("Sync (n)", "n = Active parts of the ongoing period with Sync Status No Sync or Failed, whatever the filter. Disabled when n = 0. Refer Operation Description 5.6."),
@@ -148,7 +149,7 @@ spec = {
   it("Pcs/Case", T, "PCS_CASE", "Number", "TBD", "O", "Label", "Right", "", "", "ZZ,ZZ9", "", ""),
   it("Total Case/Day", D, "SUM(CASE_DAY)", "Number", "", "O", "Label", "Right", "", "", "ZZ,ZZ9", "", "Sum of Case/Day of all destinations of the part and period."),
   it("Pcs/Day", "", "", "Number", "", "O", "Label", "Right", "", "", "ZZ,ZZ9", "", "= Pcs/Case x Total Case/Day."),
-  it("Percentage", "", "", "Number", "", "O", "Label", "Right", "", "", "ZZ9%", "", "= Total Case/Day / Max Case/Day (MAX_CASE_DAY). TBD: existing data above 100%."),
+  it("Percentage", "", "", "Number", "", "O", "Label", "Right", "", "", "ZZ9%", "", "= Total Case/Day / Max Case/Day (MAX_CASE_DAY). Never above 100%: Save, upload and the Max Case/Day edit in Part List are blocked above the limit."),
   it("Sync Status", T, "SYNC_STATUS", "Char", "1", "O", "Chip", "Left", "", "", "", "", "0 = No Sync (grey), 3 = Waiting (amber), 1 = Success (green), 2 = Failed (red). The Failed chip shows SYNC_MESSAGE as tooltip (message no. 11)."),
   {"group": "<Empty State Section>"},
   it("Empty state message", "", "", "Varchar", "", "O", "Label", "Center", "", "", "", "", "Display message no. 1."),
@@ -209,15 +210,7 @@ spec = {
      {"dest_field": "CHANGED_DT", "description": "Server system date-time"}]},
   {"source": "Key-in from screen",
    "destination": {"table": "TB_H_PART_CANDIDATE", "operation": "Insert", "description": "Edit mapping - [Save]"},
-   "mappings": [{"dest_field": "PART_NO", "description": "Part of the event"},
-                {"dest_field": "PERIOD", "description": "Ongoing calculation period"},
-                {"dest_field": "EVENT", "description": "'MAPPING'"},
-                {"dest_field": "SOURCE", "description": "'SCREEN'"},
-                {"dest_field": "FIELD_NAME", "description": "Destination code (added, changed or removed)"},
-                {"dest_field": "OLD_VALUE", "description": "Case/Day before (blank when added)"},
-                {"dest_field": "NEW_VALUE", "description": "Case/Day after (blank when removed)"},
-                {"dest_field": "CHANGED_BY", "description": "Login user ID"},
-                {"dest_field": "CHANGED_DT", "description": "Server system date and time"}]},
+   "mappings": hist_table.mappings("Ongoing calculation period", "'MAPPING'", "'SCREEN'", "'CASE_DAY'", "Case/Day before (NULL when added)", "Case/Day after (NULL when removed)", "Login user ID", "Server system date and time", dest_code="Destination added, changed or removed")},
   {"source": {"table": T, "keys": [{"field": "PART_STATUS", "value": "'Active'"}, {"field": "SYNC_STATUS", "value": "'0' or '2'"}]},
    "destination": {"table": T, "operation": "Update", "description": "[Sync]",
                    "keys": [{"field": "PART_NO", "value": "Each part to synchronise"}]},
@@ -232,16 +225,7 @@ spec = {
      {"dest_field": "SYNC_MESSAGE", "description": "Reason when Failed, blank when Success"}]},
   {"source": "RPA result (global system)",
    "destination": {"table": "TB_H_PART_CANDIDATE", "operation": "Insert", "description": "Sync result - by the RPA"},
-   "mappings": [
-     {"dest_field": "PART_NO", "description": "Synchronised part"},
-     {"dest_field": "PERIOD", "description": "Ongoing calculation period"},
-     {"dest_field": "EVENT", "description": "'SYNC'"},
-     {"dest_field": "SOURCE", "description": "'RPA'"},
-     {"dest_field": "FIELD_NAME", "description": "'SYNC_STATUS'"},
-     {"dest_field": "OLD_VALUE", "description": "'Waiting'"},
-     {"dest_field": "NEW_VALUE", "description": "'Success' / 'Failed: <SYNC_MESSAGE>'"},
-     {"dest_field": "CHANGED_BY", "description": "RPA user ID (TBD)"},
-     {"dest_field": "CHANGED_DT", "description": "Date-time of the RPA result"}]}]},
+   "mappings": hist_table.mappings("Ongoing calculation period", "'SYNC'", "'RPA'", "'SYNC_STATUS'", "'Waiting'", "'Success' / 'Failed' ('No Sync' when changed during the RPA run)", "RPA user ID (TBD)", "Date-time of the RPA result", remark="SYNC_MESSAGE when Failed", part="Synchronised part")}]},
  "operation": [
   {"type": "heading", "text": "5.1 Initial Display"},
   {"type": "bullets", "marker": "a.", "level": 2, "items": [
@@ -251,13 +235,15 @@ spec = {
     f"Past period: list every part that has rows in {D} for that period, whatever its current status. 'All periods' lists both."]},
   {"type": "heading", "text": "5.2 Specifying Criteria"},
   {"type": "bullets", "marker": "a.", "level": 2, "items": [
+    "The criteria are applied when the user clicks [Search] (or presses Enter in 'Part Number'); changing a criterion alone does not change the list.",
     "'Part Number' matches by 'contains', case-insensitive; 'Calculation period' and 'Sync Status' match exactly. All criteria are combined with AND.",
+    "[Upload Excel] and Export Excel follow the period of the applied criteria.",
     "If no row matches, hide the table and display message no. 1.",
     "With the default Sync Status = No Sync, parts that are Success or Failed are hidden until the filter is changed."]},
   {"type": "heading", "text": "5.3 Result List"},
   {"type": "bullets", "marker": "a.", "level": 2, "items": [
     "Total Case/Day = sum of CASE_DAY of the part and period; Pcs/Day = Pcs/Case x Total Case/Day.",
-    "Percentage = Total Case/Day / Max Case/Day. TBD: how to show existing data above 100%.",
+    "Percentage = Total Case/Day / Max Case/Day; it never exceeds 100% because the total can not go above Max Case/Day (Save, upload and the Max Case/Day edit in Part List are blocked).",
     "The table scrolls inside the section (no paging). TBD: whether paging is needed for large data."]},
   {"type": "heading", "text": "5.4 Destination Mapping Panel"},
   {"type": "bullets", "marker": "a.", "level": 2, "items": [
@@ -283,7 +269,7 @@ spec = {
     "If the mapping was changed by another user after edit mode started, display message no. 8. Stop.",
     f"Replace the rows of the part and the ongoing period in {D} by the rows of the draft (refer Data Edit Mapping).",
     f"Set SYNC_STATUS = 0 (No Sync) in {T}, so the D/S user synchronises the part again.",
-    "Insert a history record per added, changed or removed destination in TB_H_PART_CANDIDATE (event MAPPING, source SCREEN).",
+    "Insert a history record per added, changed or removed destination in TB_H_PART_CANDIDATE (event MAPPING, source SCREEN, DEST_CODE, FIELD_NAME CASE_DAY, old / new Case/Day).",
     "Leave edit mode and show the saved mapping."]},
   {"type": "item", "marker": "d.", "level": 2, "text": "User clicks [Cancel] or closes the panel: discard the draft."},
   {"type": "heading", "text": "5.6 Sync"},
@@ -298,7 +284,7 @@ spec = {
     "Replace the data of the part in the global system with this complete set, so a change such as Japan up and Thailand down, or a removed destination, arrives as one consistent update.",
     f"Write the result back to {T}: SYNC_STATUS = 1 (Success) or 2 (Failed), SYNC_DT and SYNC_MESSAGE (reason when Failed).",
     "If the part was changed after the RPA read it (CHANGED_DT differs), set SYNC_STATUS = 0 (No Sync) instead of Success, so the newer data is sent by the next Sync.",
-    "Record every part in TB_H_PART_CANDIDATE (event SYNC, source RPA, result and message)."]},
+    "Record every part in TB_H_PART_CANDIDATE (event SYNC, source RPA, FIELD_NAME SYNC_STATUS, new status, REMARK = SYNC_MESSAGE)."]},
   {"type": "item", "marker": "c.", "level": 2, "text": "A Failed part shows SYNC_MESSAGE as tooltip on its chip (message no. 11) and is included again in the next [Sync]."},
   {"type": "item", "marker": "d.", "level": 2, "text": "TBD: RPA function details (global system screens, run time, behaviour when the RPA is not available)."},
   {"type": "heading", "text": "5.7 Upload Excel"},
@@ -328,41 +314,42 @@ spec = {
   {"type": "text", "level": 2, "text": "Sync Status is kept per part in TB_M_PART_CANDIDATE because the RPA sends a part as one set (Pcs/Case, Max Case/Day and all destinations). Every mapping change and every Sync result is recorded in the history table TB_H_PART_CANDIDATE (with the period)."}],
  "display_messages": [
   {"group": "Search Operation"},
-  {"event": "Change search criteria", "cause": "No part matches the criteria", "type": "Info", "msg_id": "TBD",
+  {"event": "Change search criteria", "cause": "No part matches the criteria", "type": "Info", "msg_id": "MSG1",
    "message": "No parts match these filters - Change the period or sync status, or press Reset to show all parts.", "action": "Change the criteria or click [Reset]"},
   {"group": "Edit Mapping Operation"},
-  {"event": "Open Destination Mapping panel", "cause": "Part has no destination", "type": "Info", "msg_id": "TBD",
+  {"event": "Open Destination Mapping panel", "cause": "Part has no destination", "type": "Info", "msg_id": "MSG2",
    "message": "No destination yet - Click Edit mapping and add at least one destination so the part is included in the volume calculation.", "action": "Click [Edit mapping] and add a destination"},
-  {"event": "Change Case/Day in edit mode", "cause": "Total Case/Day above Max Case/Day", "type": "Error", "msg_id": "TBD",
+  {"event": "Change Case/Day in edit mode", "cause": "Total Case/Day above Max Case/Day", "type": "Error", "msg_id": "MSG3",
    "message": "Allocation of {n} case/day exceeds Max Case/Day ({m}). Reduce one of the destinations.", "action": "Reduce Case/Day of a destination"},
-  {"event": "Edit mode", "cause": "A row has no destination selected", "type": "Error", "msg_id": "TBD",
+  {"event": "Edit mode", "cause": "A row has no destination selected", "type": "Error", "msg_id": "MSG4",
    "message": "Select a destination for every row, or remove the empty row, before saving.", "action": "Select a destination or remove the row"},
-  {"event": "Open panel of a past period", "cause": "Period is not ongoing", "type": "Info", "msg_id": "TBD",
+  {"event": "Open panel of a past period", "cause": "Period is not ongoing", "type": "Info", "msg_id": "MSG5",
    "message": "Past period - read only", "action": "-"},
   {"group": "Upload Operation"},
-  {"event": "Hover disabled [Upload Excel]", "cause": "Past period or All periods selected", "type": "Info", "msg_id": "TBD",
+  {"event": "Hover disabled [Upload Excel]", "cause": "Past period or All periods selected", "type": "Info", "msg_id": "MSG6",
    "message": "Past period - read only. Select the ongoing period to upload.", "action": "Select the ongoing period"},
-  {"event": "Click [Validate file] button", "cause": "Upload validated and saved", "type": "Info", "msg_id": "TBD",
+  {"event": "Click [Validate file] button", "cause": "Upload validated and saved", "type": "Info", "msg_id": "MSG7",
    "message": "Saved successfully - Upload completed. The file has been validated and the destination mapping has been saved to Mapping per Destination.", "action": "Click [OK]"},
   {"group": "Save Operation"},
-  {"event": "Click [Save] button", "cause": "Mapping changed by another user", "type": "Error", "msg_id": "MSTD0114AERR",
+  {"event": "Click [Save] button", "cause": "Mapping changed by another user", "type": "Error", "msg_id": "MSG8",
    "message": "Error in Update because of concurrency check.", "action": "Cancel, refresh and edit again"},
   {"group": "Export Operation"},
-  {"event": "Click [Export Excel] button", "cause": "Excel file cannot be created", "type": "Error", "msg_id": "TBD",
+  {"event": "Click [Export Excel] button", "cause": "Excel file cannot be created", "type": "Error", "msg_id": "MSG9",
    "message": "Export Excel failed. Please try again.", "action": "Click [Export Excel] again; contact administrator if it persists"},
   {"group": "Sync Operation"},
-  {"event": "Click [Sync] button", "cause": "Parts handed to the RPA", "type": "Info", "msg_id": "TBD",
+  {"event": "Click [Sync] button", "cause": "Parts handed to the RPA", "type": "Info", "msg_id": "MSG10",
    "message": "Sync requested for {n} part(s). They stay Waiting until the RPA has sent them to the global system.", "action": "-"},
-  {"event": "Hover a Failed Sync Status chip", "cause": "The RPA could not send the part", "type": "Info", "msg_id": "TBD",
+  {"event": "Hover a Failed Sync Status chip", "cause": "The RPA could not send the part", "type": "Info", "msg_id": "MSG11",
    "message": "Sync failed: {SYNC_MESSAGE}. The part is sent again with the next Sync.", "action": "Correct the cause if needed and click [Sync]"}],
  "logging_messages": [
-  {"event": "Click [Save] button", "cause": f"Database error on replace of {D}", "type": "Error", "msg_id": "TBD",
+  {"event": "Click [Save] button", "cause": f"Database error on replace of {D}", "type": "Error", "msg_id": "LOG1",
    "message": "Failed to save mapping of part <PART_NO>, period <PERIOD>: <DB error message>.", "exception": "Y", "action": "Show [Corresponding Screen Message] on screen (TBD)"},
-  {"event": "RPA function", "cause": "The global system rejects a part", "type": "Error", "msg_id": "TBD",
+  {"event": "RPA function", "cause": "The global system rejects a part", "type": "Error", "msg_id": "LOG2",
    "message": "Sync of part <PART_NO> failed: <SYNC_MESSAGE>.", "exception": "Y", "action": "Status Failed; Display Message no. 11 on the chip"},
-  {"event": "Click [Export Excel] button", "cause": "Excel file generation error", "type": "Error", "msg_id": "TBD",
+  {"event": "Click [Export Excel] button", "cause": "Excel file generation error", "type": "Error", "msg_id": "LOG3",
    "message": "Export Excel of Mapping per Destination failed: <error message>.", "exception": "Y", "action": "Display Message no. 9"},
   {"event": "Click [Validate file] button", "cause": "Upload processing", "type": "Info", "msg_id": "-",
-   "message": "Logging is handled by the Mapping per Destination Upload batch (refer UISS-Batch \"Crossdock Master Setting - Mapping per Destination Upload\").", "exception": "N", "action": "-"}]
+   "message": "Logging is handled by the Mapping per Destination Upload batch (refer UISS-Batch \"Crossdock Master Setting - Mapping per Destination Upload\").", "exception": "N", "action": "-"}],
+ "tables": [hist_table.TABLE]
 }
 json.dump(spec, open(sys.argv[1], 'w'), indent=1)

@@ -33,7 +33,9 @@ export function useCrossdockState() {
   const [expand, setExpand] = useState<Record<string, boolean>>({});
   const [editDest, setEditDest] = useState<string | null>(null);
   const [draftDests, setDraftDests] = useState<DestAllocation[] | null>(null);
+  // q = criteria being typed; aq = criteria applied by [Search]. Lists filter on aq only.
   const [q, setQ] = useState<PartQuery>(DEFAULT_Q);
+  const [aq, setAq] = useState<PartQuery>(DEFAULT_Q);
   const [notice, setNotice] = useState<SaveNotice | null>(null);
   // Procurement opens two sub-menus (Part List, Part Detail); D/S opens Mapping per Destination.
   const [procView, setProcView] = useState<'part' | 'detail'>('part');
@@ -143,7 +145,9 @@ export function useCrossdockState() {
     // The saved part goes to the top of the list, whether it was added or edited.
     setParts((prevParts) => [f, ...prevParts.filter((p) => p.p !== f.p)]);
     // Show it right away: drop filters that could hide it and sort newest first.
-    setQ((prev) => ({ ...prev, part: '', name: '', st: 'all', sort: 'dt_desc' }));
+    const showSaved = (prev: PartQuery): PartQuery => ({ ...prev, part: '', name: '', st: 'all', sort: 'dt_desc' });
+    setQ(showSaved);
+    setAq(showSaved);
     setNotice({ mode: editId ? 'edit' : 'add', part: f.p, name: f.n });
     setModal(null);
     setForm(null);
@@ -163,9 +167,17 @@ export function useCrossdockState() {
     setNotice({ mode: 'upload', target });
   }, []);
 
+  /** [Search] applies the criteria; Sort by is not a filter and applies at once (see sortedQ). */
+  const runSearch = useCallback(() => setAq(q), [q]);
+
   const resetQ = useCallback(() => {
-    setQ((prev) => ({ ...DEFAULT_Q, dest: prev.dest || 'Thailand' }));
+    const reset = (prev: PartQuery): PartQuery => ({ ...DEFAULT_Q, dest: prev.dest || 'Thailand' });
+    setQ(reset);
+    setAq(reset);
   }, []);
+
+  // Applied filters with the current sort order.
+  const sortedQ: PartQuery = { ...aq, sort: q.sort };
 
   return {
     parts,
@@ -182,6 +194,8 @@ export function useCrossdockState() {
     draftDests,
     q,
     setQ,
+    aq: sortedQ,
+    runSearch,
     notice,
     dismissNotice,
     ro,
