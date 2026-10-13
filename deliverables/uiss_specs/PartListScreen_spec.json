@@ -6,9 +6,7 @@
   "block_name": "Screen",
   "function_name": "X1 Crossdock Master Setting - Part List",
   "created_date": "12-Oct-26",
-  "created_by": "FID Rayhan",
-  "updated_date": "13-Oct-26",
-  "updated_by": "FID Rayhan"
+  "created_by": "FID Rayhan"
  },
  "revisions": [
   {
@@ -16,14 +14,7 @@
    "author": "FID Rayhan",
    "date": "12-Oct-26",
    "reviewed_by": "",
-   "description": "FID Rayhan"
-  },
-  {
-   "revision": "0.2",
-   "author": "FID Rayhan",
-   "date": "13-Oct-26",
-   "reviewed_by": "",
-   "description": "Sync Status Waiting (3) added: Sync of Mapping per Destination hands all Active No Sync parts to the RPA, which writes back Success / Failed. History table TB_R_PARTX_LOG. Message IDs MSG1-MSG13."
+   "description": "Initial Draft"
   }
  ],
  "general": {

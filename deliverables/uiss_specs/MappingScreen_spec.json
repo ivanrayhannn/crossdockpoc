@@ -6,9 +6,7 @@
   "block_name": "Screen",
   "function_name": "TBD Crossdock Master Setting - Mapping per Destination",
   "created_date": "12-Oct-26",
-  "created_by": "FID Rayhan",
-  "updated_date": "13-Oct-26",
-  "updated_by": "FID Rayhan"
+  "created_by": "FID Rayhan"
  },
  "revisions": [
   {
@@ -16,14 +14,7 @@
    "author": "FID Rayhan",
    "date": "12-Oct-26",
    "reviewed_by": "",
-   "description": "Initial draft based on the business decisions for the Crossdock Master Setting Mapping per Destination sub-menu and the crossdockpoc web prototype as of 12-Oct-26 (including Upload Excel). Upload backend is documented in UISS-Batch \"Crossdock Master Setting - Mapping per Destination Upload\"."
-  },
-  {
-   "revision": "0.2",
-   "author": "FID Rayhan",
-   "date": "13-Oct-26",
-   "reviewed_by": "",
-   "description": "Sync through the RPA: [Sync] sets every Active No Sync / Failed part of the ongoing period to Waiting (3), whatever the filter; the RPA sends Pcs/Case, Max Case/Day and the whole mapping of the part to the global system and writes back Success / Failed, SYNC_DT, SYNC_MESSAGE and the Sync log. Sync Status filter gets Waiting."
+   "description": "Initial Draft"
   }
  ],
  "general": {

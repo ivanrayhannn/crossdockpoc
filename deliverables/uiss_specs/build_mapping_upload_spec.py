@@ -60,14 +60,8 @@ spec = {
  "doc_type": "batch",
  "header": {"phase": "DR", "project_name": PROJ, "block_name": "Batch",
             "function_name": "TBD Crossdock Master Setting - Mapping per Destination Upload",
-            "created_date": "08-Oct-26", "created_by": NAME, "updated_date": "13-Oct-26", "updated_by": NAME},
- "revisions": [
-  {"revision": "0.1", "author": NAME, "date": "08-Oct-26", "reviewed_by": "", "description": "Initial draft based on the existing Crossdock batch upload draft."},
-  {"revision": "0.2", "author": NAME, "date": "08-Oct-26", "reviewed_by": "", "description": "Completed flow diagrams and table mappings; marked the upload template and backend behaviour as proposed."},
-  {"revision": "0.3", "author": NAME, "date": "12-Oct-26", "reviewed_by": "",
-   "description": "Rewritten at business level like the Part List Upload: trigger [Validate file] of the Mapping per Destination screen, no temp table, tables TB_M_PART_CANDIDATE (part number level) and TB_M_PART_CANDIDATE_DEST (part number + period + destination level), row rules 1-7, placeholder rows, sample scenarios. No external document references."},
-  {"revision": "0.4", "author": NAME, "date": "13-Oct-26", "reviewed_by": "",
-   "description": "Upload log written as Log (no table definition). Sample upload scenarios moved to sheet Sample Input, one value per column. Changed parts are sent to the global system by the RPA when D/S clicks [Sync]. SYNC_DT / SYNC_MESSAGE added to TB_M_PART_CANDIDATE."}],
+            "created_date": "08-Oct-26", "created_by": NAME},
+ "revisions": [{"revision": "0.1", "author": "FID Rayhan", "date": "08-Oct-26", "reviewed_by": "", "description": "Initial Draft"}],
  "general": {
   "objective": [
    "To process the destination mapping file uploaded from the Crossdock Master Setting - Mapping per Destination screen: from the [Validate file] button of the Upload Excel modal until the mapping of the ongoing calculation period is saved to TB_M_PART_CANDIDATE_DEST.",

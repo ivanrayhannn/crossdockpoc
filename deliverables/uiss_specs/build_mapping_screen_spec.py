@@ -28,11 +28,8 @@ def modes(on):
 spec = {
  "doc_type": "screen",
  "header": {"phase": "DR", "project_name": PROJ, "block_name": "Screen",
-            "function_name": "TBD Crossdock Master Setting - Mapping per Destination", "created_date": "12-Oct-26", "created_by": NAME, "updated_date": "13-Oct-26", "updated_by": NAME},
- "revisions": [{"revision": "0.1", "author": NAME, "date": "12-Oct-26", "reviewed_by": "",
-                "description": "Initial draft based on the business decisions for the Crossdock Master Setting Mapping per Destination sub-menu and the crossdockpoc web prototype as of 12-Oct-26 (including Upload Excel). Upload backend is documented in UISS-Batch \"Crossdock Master Setting - Mapping per Destination Upload\"."},
-               {"revision": "0.2", "author": NAME, "date": "13-Oct-26", "reviewed_by": "",
-                "description": "Sync through the RPA: [Sync] sets every Active No Sync / Failed part of the ongoing period to Waiting (3), whatever the filter; the RPA sends Pcs/Case, Max Case/Day and the whole mapping of the part to the global system and writes back Success / Failed, SYNC_DT, SYNC_MESSAGE and the Sync log. Sync Status filter gets Waiting."}],
+            "function_name": "TBD Crossdock Master Setting - Mapping per Destination", "created_date": "12-Oct-26", "created_by": NAME},
+ "revisions": [{"revision": "0.1", "author": "FID Rayhan", "date": "12-Oct-26", "reviewed_by": "", "description": "Initial Draft"}],
  "general": {
   "objective": [
    "To split the Max Case/Day of each Active part over destinations (Thailand, Japan, Vietnam) for the ongoing calculation period.",

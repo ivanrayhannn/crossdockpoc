@@ -61,11 +61,8 @@ spec = {
  "doc_type": "batch",
  "header": {"phase": "DR", "project_name": "Crossdock Optimization", "block_name": "Batch",
             "function_name": "X2 Crossdock Master Setting - Part List Upload",
-            "created_date": "08-Oct-26", "created_by": "FID Rayhan", "updated_date": "13-Oct-26", "updated_by": "FID Rayhan"},
- "revisions": [
-  {"revision": "0.1", "author": "FID Rayhan", "date": "08-Oct-26", "reviewed_by": "", "description": "Initial draft"},
-  {"revision": "0.2", "author": "FID Rayhan", "date": "13-Oct-26", "reviewed_by": "",
-   "description": "Upload log written as Log (no table definition). Sample upload scenarios moved to sheet Sample Input, one value per column. Saved parts are synchronised by the RPA when D/S clicks [Sync] in Mapping per Destination."}],
+            "created_date": "08-Oct-26", "created_by": "FID Rayhan"},
+ "revisions": [{"revision": "0.1", "author": "FID Rayhan", "date": "08-Oct-26", "reviewed_by": "", "description": "Initial Draft"}],
  "general": {
   "objective": [
    "To process the Part List file uploaded from the Crossdock Master Setting - Part List screen: from the [Validate file] button of the Upload Excel modal until the data is saved to TB_M_PART_CANDIDATE.",
