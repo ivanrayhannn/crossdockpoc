@@ -14,14 +14,14 @@ DM_COLS = [
     ["STATE_CODE", "TBD", "", "", "State code (reference only)"],
     ["DESTINATION_ADDRESS1", "TBD", "", "", "Destination address 1 (reference only)"],
     ["DESTINATION_ADDRESS2", "TBD", "", "", "Destination address 2 (reference only)"],
-    ["CREATED_BY", "TBD", "", "", "Registrant ID"],
-    ["CREATED_DT", "TBD", "", "", "Created date (TBD: not in the column list received)"],
-    ["CHANGED_BY", "TBD", "", "", "Update Operator ID"],
-    ["CHANGED_DT", "TBD", "", "", "Update Date & Time"]]
+    ["CREATED_BY", "TBD", "", "", "User who created the record"],
+    ["CREATED_DT", "TBD", "", "", "Created date and time"],
+    ["UPDATED_BY", "TBD", "", "", "User who last updated the record"],
+    ["UPDATED_DT", "TBD", "", "", "Last updated date and time"]]
 DM_TABLE = {"name": "TB_M_H0125", "kind": "master", "proposed": False,
             "description": "Destination Master (existing NSP table, read only). Only the listed columns are relevant; physical column names follow the existing table (names here are logical).",
             "columns": DM_COLS}
-PERIOD_FMT = "CHAR(6) YYYYMM, e.g. 202609 (proposed); displayed as 'Sep 2026'"
+PERIOD_FMT = "CHAR(6) YYYYMM, e.g. 202609; displayed as 'Sep 2026'"
 T, D, LOG, DM = 'TB_M_PART_CANDIDATE', 'TB_M_PART_CANDIDATE_DEST', 'Log', 'TB_M_H0125 (Destination Master)'
 SHEET = 'Excel file - sheet Upload (valid rows)'
 NAME, PROJ = 'FID Rayhan', 'Crossdock Optimization'
@@ -266,7 +266,7 @@ spec = {
                ["CHANGED_BY", "VARCHAR(TBD)", "", "N", "User who last changed the record"], ["CHANGED_DT", "DATETIME", "", "N", "Last changed date and time"]]},
   {"name": D, "kind": "transaction", "proposed": False, "description": "Destination mapping, one record per part, calculation period and destination (Mapping per Destination data). Target of a successful upload.",
    "columns": [["PART_NO", "VARCHAR(TBD)", "Y", "N", "Part number; FK to TB_M_PART_CANDIDATE"],
-               ["PERIOD", "CHAR(6)", "Y", "N", "Calculation period, YYYYMM e.g. 202609 (proposed); displayed as Sep 2026"],
+               ["PERIOD", "CHAR(6)", "Y", "N", "Calculation period, YYYYMM e.g. 202609; displayed as Sep 2026"],
                ["DEST_CODE", "VARCHAR(TBD)", "Y", "N", "Destination code; exists in TB_M_H0125 (Destination Master)"],
                ["CASE_DAY", "INT", "", "N", "Allocated Case/Day of the destination (> 0)"],
                ["CREATED_BY", "VARCHAR(TBD)", "", "N", "User who created the record"], ["CREATED_DT", "DATETIME", "", "N", "Created date and time"],

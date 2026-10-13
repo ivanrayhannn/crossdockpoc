@@ -101,7 +101,7 @@ Gagal dibuat → MSG9.
 | Kolom | PK | Keterangan | Saat Save mapping |
 |---|---|---|---|
 | PART_NO | Y | FK ke TB_M_PART_CANDIDATE | Part yang diedit |
-| PERIOD | Y | Periode kalkulasi, CHAR(6) YYYYMM mis. 202609 (**usulan**), tampil "Sep 2026" | Periode berjalan |
+| PERIOD | Y | Periode kalkulasi, CHAR(6) YYYYMM mis. 202609, tampil "Sep 2026" | Periode berjalan |
 | DEST_CODE | Y | Kode destinasi (ada di TB_M_H0125) | Dari draft |
 | CASE_DAY | | Case/Day destinasi (> 0) | Dari draft |
 | CREATED_BY / CREATED_DT | | Audit | Login user / system date |
@@ -134,10 +134,10 @@ Tabel master existing NSP, **hanya dibaca**. Kolom yang relevan (kolom lain diab
 | Postal Code | Referensi |
 | State Code | Referensi |
 | Destination Address 1 / 2 | Referensi |
-| Created By (Registrant ID) | Audit |
-| Created Date | Audit – **belum ada di daftar kolom yang diterima** |
-| Update By (Update Operator ID) | Audit |
-| Update DT (Update Date & Time) | Audit |
+| CREATED_BY | Audit – user pembuat |
+| CREATED_DT | Audit – waktu dibuat |
+| UPDATED_BY | Audit – user terakhir |
+| UPDATED_DT | Audit – waktu terakhir diubah |
 
 Contoh data: 123 Thailand, 456 Japan, 789 Vietnam.
 
@@ -195,7 +195,6 @@ Di layar ini: event **MAPPING** source **SCREEN** saat Save (PERIOD = periode be
 | MSG11 | Hover chip Failed | Info | Sync failed: {SYNC_MESSAGE}. The part is sent again with the next Sync. |
 
 ## 12. Open points
-- Konfirmasi format PERIOD (usulan YYYYMM) dan cara periode baru dibuat.
-- Kolom Created Date di TB_M_H0125.
+- Cara periode baru dibuat.
 - Detail fungsi RPA; batas waktu status Waiting.
 - Konfirmasi usulan kolom dan retensi TB_H_PART_CANDIDATE (10.4).

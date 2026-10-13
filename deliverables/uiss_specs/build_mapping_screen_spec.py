@@ -15,14 +15,14 @@ DM_COLS = [
     ["STATE_CODE", "TBD", "", "", "State code (reference only)"],
     ["DESTINATION_ADDRESS1", "TBD", "", "", "Destination address 1 (reference only)"],
     ["DESTINATION_ADDRESS2", "TBD", "", "", "Destination address 2 (reference only)"],
-    ["CREATED_BY", "TBD", "", "", "Registrant ID"],
-    ["CREATED_DT", "TBD", "", "", "Created date (TBD: not in the column list received)"],
-    ["CHANGED_BY", "TBD", "", "", "Update Operator ID"],
-    ["CHANGED_DT", "TBD", "", "", "Update Date & Time"]]
+    ["CREATED_BY", "TBD", "", "", "User who created the record"],
+    ["CREATED_DT", "TBD", "", "", "Created date and time"],
+    ["UPDATED_BY", "TBD", "", "", "User who last updated the record"],
+    ["UPDATED_DT", "TBD", "", "", "Last updated date and time"]]
 DM_TABLE = {"name": "TB_M_H0125", "kind": "master", "proposed": False,
             "description": "Destination Master (existing NSP table, read only). Only the listed columns are relevant; physical column names follow the existing table (names here are logical).",
             "columns": DM_COLS}
-PERIOD_FMT = "CHAR(6) YYYYMM, e.g. 202609 (proposed); displayed as 'Sep 2026'"
+PERIOD_FMT = "CHAR(6) YYYYMM, e.g. 202609; displayed as 'Sep 2026'"
 IMG = 'deliverables/uiss_screens/mapping'
 NAME, PROJ = 'FID Rayhan', 'Crossdock Optimization'
 
@@ -164,7 +164,7 @@ spec = {
   btn("Sync (n)", "n = Active parts of the ongoing period with Sync Status No Sync or Failed, whatever the filter. Disabled when n = 0. Refer Operation Description 5.6."),
   btn("Upload Excel", "Disabled for a past period or All periods (tooltip message no. 6). Refer Operation Description 5.7."),
   btn("Export Excel", "Refer Operation Description 5.8."),
-  it("Period", D, "PERIOD", "Char", "6", "O", "Label", "Left", "", "", "Mon YYYY", "", "Calculation period of the row. Stored as YYYYMM (proposed), displayed as Mon YYYY."),
+  it("Period", D, "PERIOD", "Char", "6", "O", "Label", "Left", "", "", "Mon YYYY", "", "Calculation period of the row. Stored as YYYYMM (e.g. 202609), displayed as Mon YYYY."),
   btn("Expand (arrow)", "Opens / closes the Destination Mapping panel of the row."),
   it("Part Number", T, "PART_NO", "Varchar", "TBD", "O", "Label", "Left", "", "", "X..TBD..X", "", ""),
   it("Part Name", T, "PART_NAME", "Varchar", "TBD", "O", "Label", "Left", "", "", "X..TBD..X", "", ""),

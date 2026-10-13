@@ -1457,7 +1457,7 @@
      "CHAR(6)",
      "Y",
      "N",
-     "Calculation period, YYYYMM e.g. 202609 (proposed); displayed as Sep 2026"
+     "Calculation period, YYYYMM e.g. 202609; displayed as Sep 2026"
     ],
     [
      "DEST_CODE",
@@ -1690,28 +1690,28 @@
      "TBD",
      "",
      "",
-     "Registrant ID"
+     "User who created the record"
     ],
     [
      "CREATED_DT",
      "TBD",
      "",
      "",
-     "Created date (TBD: not in the column list received)"
+     "Created date and time"
     ],
     [
-     "CHANGED_BY",
+     "UPDATED_BY",
      "TBD",
      "",
      "",
-     "Update Operator ID"
+     "User who last updated the record"
     ],
     [
-     "CHANGED_DT",
+     "UPDATED_DT",
      "TBD",
      "",
      "",
-     "Update Date & Time"
+     "Last updated date and time"
     ]
    ]
   }

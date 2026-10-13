@@ -795,7 +795,7 @@
    "required": "",
    "format": "Mon YYYY",
    "validation": "",
-   "description": "Calculation period of the row. Stored as YYYYMM (proposed), displayed as Mon YYYY."
+   "description": "Calculation period of the row. Stored as YYYYMM (e.g. 202609), displayed as Mon YYYY."
   },
   {
    "name": "Expand (arrow)",
@@ -1886,7 +1886,7 @@
     [
      "Table",
      "TB_M_PART_CANDIDATE_DEST",
-     "Mapping data, part number + calculation period + destination level (key PART_NO, PERIOD, DEST_CODE). PERIOD = CHAR(6) YYYYMM, e.g. 202609 (proposed); displayed as 'Sep 2026'."
+     "Mapping data, part number + calculation period + destination level (key PART_NO, PERIOD, DEST_CODE). PERIOD = CHAR(6) YYYYMM, e.g. 202609; displayed as 'Sep 2026'."
     ],
     [
      "Table",

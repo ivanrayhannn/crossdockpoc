@@ -80,7 +80,7 @@ Diisi otomatis oleh **Export Excel** (periode berjalan dipilih): semua part **Ac
 | Kolom | Tipe | PK | Null | Keterangan | Diisi saat upload |
 |---|---|---|---|---|---|
 | PART_NO | VARCHAR(TBD) | Y | N | FK ke TB_M_PART_CANDIDATE | dari file |
-| PERIOD | CHAR(6) | Y | N | Periode kalkulasi YYYYMM, mis. 202609 (**usulan**; tampil Sep 2026) | periode berjalan |
+| PERIOD | CHAR(6) | Y | N | Periode kalkulasi YYYYMM, mis. 202609 (tampil Sep 2026) | periode berjalan |
 | DEST_CODE | VARCHAR(TBD) | Y | N | Kode destinasi; ada di TB_M_H0125 | dari file |
 | CASE_DAY | INT | | N | Case/Day destinasi (> 0) | dari file |
 | CREATED_BY | VARCHAR(TBD) | | N | User pembuat | login user |
@@ -122,10 +122,10 @@ Tabel master existing NSP, **hanya dibaca**. Kolom yang relevan (kolom lain diab
 | Postal Code | Referensi |
 | State Code | Referensi |
 | Destination Address 1 / 2 | Referensi |
-| Created By (Registrant ID) | Audit |
-| Created Date | Audit – **belum ada di daftar kolom yang diterima** |
-| Update By (Update Operator ID) | Audit |
-| Update DT (Update Date & Time) | Audit |
+| CREATED_BY | Audit – user pembuat |
+| CREATED_DT | Audit – waktu dibuat |
+| UPDATED_BY | Audit – user terakhir |
+| UPDATED_DT | Audit – waktu terakhir diubah |
 
 Contoh data: 123 Thailand, 456 Japan, 789 Vietnam.
 
@@ -187,7 +187,7 @@ Di batch ini: event **MAPPING**, source **UPLOAD**, PERIOD = periode berjalan, U
 - Error file: F1–F5.
 
 ## 11. Open points
-- Konfirmasi format PERIOD (usulan YYYYMM) dan cara periode baru dibuat; kolom Created Date di TB_M_H0125.
+- Cara periode baru dibuat.
 - Panjang VARCHAR; lokasi template & result report; retensi Log.
 - Konfirmasi usulan kolom dan retensi TB_H_PART_CANDIDATE.
 - ~~Batch ID dan MSG ID~~ → X4, LOG1–LOG9. ~~Persentase > 100%~~ → tidak perlu.
