@@ -2,7 +2,7 @@ import type { UserRole } from '../../../types';
 
 // Prototype-only entry screen: in the real system the sub-menu opens according to the logged-in account.
 const SUB_MENUS: { key: UserRole; title: string; desc: string }[] = [
-  { key: 'procurement', title: 'Part List', desc: 'Manage part identity: Part No, Pcs/Case, Max Case/Day, MAD. Part Detail: Minimum MAD and Case/Day per part.' },
+  { key: 'procurement', title: 'Part List', desc: 'Manage part identity: Part No, Min MAD, Pcs/Case, Max Case/Day.' },
   { key: 'ds', title: 'Mapping per Destination', desc: "Split each part's Max Case/Day across destinations (Thailand, Japan, Vietnam)." },
 ];
 

@@ -32,7 +32,7 @@ Urutan kolom = sheet "Upload" hasil **Export Excel** Part List (prefill semua pa
 | Kolom | Isi | Wajib |
 |---|---|---|
 | part_no | Part Number | Ya |
-| mad | MAD (hasil fungsi kalkulasi MAD) | **Tidak** (opsional) |
+| min_mad | Minimum MAD (wajib, bilangan bulat ≥ 0); acuan pembanding hasil MAD dari calculation | Ya (≥ 0) |
 | pcs_case | Pieces per case | Ya (> 0) |
 | max_case_day | Max Case/Day | Ya (> 0) |
 | status | Candidate / Active / Inactive | Lihat check 6 |
@@ -66,7 +66,7 @@ Urutan kolom = sheet "Upload" hasil **Export Excel** Part List (prefill semua pa
 | 2 | Part No ada di TB_M_PART_MASTER | part_no |
 | 3 | Flag A: Part No **belum** ada di TB_M_PART_CANDIDATE. Flag E: **sudah** ada | part_no |
 | 4 | Part No hanya muncul sekali dalam file | part_no |
-| 5 | pcs_case dan max_case_day bilangan bulat > 0 (wajib). **mad opsional**; kalau diisi bilangan bulat ≥ 0 | pcs_case, max_case_day, mad |
+| 5 | min_mad bilangan bulat ≥ 0, pcs_case dan max_case_day bilangan bulat > 0; ketiganya wajib | min_mad, pcs_case, max_case_day |
 | 6 | Status: flag A harus kosong (part baru selalu Candidate). Flag E: part **Candidate tetap Candidate** (kosong/Candidate); Active ↔ Inactive **boleh**; tidak boleh diubah **menjadi Candidate** | status |
 | 7 | Effective Start Date wajib selama status Candidate (selalu untuk flag A) dan ≥ hari ini kalau baru/berubah | effective_start_date |
 | 8 | Flag E: Effective Start Date hanya bisa berubah selama status Candidate | effective_start_date |
@@ -74,8 +74,8 @@ Urutan kolom = sheet "Upload" hasil **Export Excel** Part List (prefill semua pa
 
 ## 7. Aturan simpan
 - Ada error → **tidak ada** yang tersimpan; status upload & error per baris dicatat di Log.
-- Flag A → insert: PART_STATUS = Candidate, SYNC_STATUS = 0, LAST_SOURCE = UPLOAD, PART_NAME dari part master, TOTAL_PCS_DAY = PCS_CASE × MAX_CASE_DAY, MAD kosong = NULL.
-- Flag E → update hanya kalau ada perubahan; MAD kosong = tidak diubah; status hanya Active ↔ Inactive.
+- Flag A → insert: PART_STATUS = Candidate, SYNC_STATUS = 0, LAST_SOURCE = UPLOAD, PART_NAME dari part master, TOTAL_PCS_DAY = PCS_CASE × MAX_CASE_DAY, MIN_MAD dari file.
+- Flag E → update hanya kalau ada perubahan; status hanya Active ↔ Inactive.
 - Status part **Candidate** hanya bisa diubah lewat modal *Edit part data* di layar, bukan upload.
 - Part yang tersimpan dikirim ke global system oleh **RPA** saat D/S klik [Sync] di Mapping per Destination (lihat `BATCH_RPA_Sync.md`).
 
@@ -90,7 +90,7 @@ Satu record per part, **tanpa periode**.
 |---|---|---|---|---|---|
 | PART_NO | VARCHAR(TBD) | Y | N | Part number; panjang mengikuti TB_M_PART_MASTER | A: dari file; E: key |
 | PART_NAME | VARCHAR(TBD) | | N | Dari TB_M_PART_MASTER | A: lookup; E: tidak berubah |
-| MAD | INT | | Y | Hasil fungsi kalkulasi MAD; opsional saat Add/Upload | dari `mad` (kosong = NULL / tidak berubah) |
+| MIN_MAD | INT | | N | Minimum MAD (wajib, bilangan bulat ≥ 0); acuan pembanding hasil MAD dari calculation | dari `min_mad` |
 | PCS_CASE | INT | | N | Pieces per case (> 0) | dari file |
 | MAX_CASE_DAY | INT | | N | Total Case/Day part (> 0) | dari file |
 | TOTAL_PCS_DAY | INT | | N | PCS_CASE × MAX_CASE_DAY | dihitung |
@@ -139,7 +139,7 @@ Tabel history semua perubahan part. **Usulan** definisi fisik (insert only, satu
 | SOURCE | VARCHAR(10) |  | N | SCREEN / UPLOAD / RPA |
 | UPLOAD_ID | VARCHAR(TBD) |  | Y | Upload of the change (Log); NULL when not from an upload |
 | DEST_CODE | VARCHAR(TBD) |  | Y | Destination code for MAPPING; NULL for other events |
-| FIELD_NAME | VARCHAR(30) |  | N | Changed field: PCS_CASE, MAX_CASE_DAY, MAD, PART_STATUS, EFFECTIVE_START_DATE, CASE_DAY, SYNC_STATUS |
+| FIELD_NAME | VARCHAR(30) |  | N | Changed field: PCS_CASE, MAX_CASE_DAY, MIN_MAD, PART_STATUS, EFFECTIVE_START_DATE, CASE_DAY, SYNC_STATUS |
 | OLD_VALUE | VARCHAR(255) |  | Y | Value before the change; NULL for ADD or an added destination |
 | NEW_VALUE | VARCHAR(255) |  | Y | Value after the change; NULL for a removed destination |
 | REMARK | VARCHAR(500) |  | Y | Free text, e.g. SYNC_MESSAGE of a Failed sync |
@@ -150,7 +150,7 @@ Tabel history semua perubahan part. **Usulan** definisi fisik (insert only, satu
 
 | Event (EVENT_TYPE) | Source | Kapan | FIELD_NAME / nilai |
 |---|---|---|---|
-| ADD | SCREEN / UPLOAD | Part baru (Add Part di layar / flag A) | PCS_CASE, MAX_CASE_DAY, MAD, EFFECTIVE_START_DATE, PART_STATUS; OLD = NULL; PERIOD = NULL |
+| ADD | SCREEN / UPLOAD | Part baru (Add Part di layar / flag A) | PCS_CASE, MAX_CASE_DAY, MIN_MAD, EFFECTIVE_START_DATE, PART_STATUS; OLD = NULL; PERIOD = NULL |
 | EDIT | SCREEN / UPLOAD | Ubah data part (Edit di layar / flag E) | Field yang berubah; OLD → NEW; PERIOD = NULL |
 | MAPPING | SCREEN / UPLOAD | Tambah / ubah / hapus destinasi (periode berjalan) | DEST_CODE terisi, FIELD_NAME = CASE_DAY; OLD NULL = ditambah, NEW NULL = dihapus |
 | SYNC | RPA | Hasil Sync | FIELD_NAME = SYNC_STATUS; Waiting → Success / Failed (atau No Sync kalau berubah saat RPA jalan); REMARK = SYNC_MESSAGE |
@@ -160,9 +160,6 @@ UPLOAD_ID diisi untuk source UPLOAD (link ke Log).
 Dibaca oleh modal *History setting* di Part List.
 
 Di batch ini: event **ADD** (flag A) / **EDIT** (flag E), source **UPLOAD**, UPLOAD_ID run ini, satu record per field yang berubah.
-
-### 8.6 TB_M_PART_CROSSDOCK_DTL — *terkait, tidak disentuh batch ini*
-Detail part (Minimum MAD, Case/Day) dari sub-menu Part Detail. Tidak dibaca/ditulis oleh upload Part List.
 
 ---
 
@@ -182,8 +179,8 @@ Detail part (Minimum MAD, Case/Day) dari sub-menu Part Detail. Tidak dibaca/ditu
 MSG ID: LOG1–LOG9 (sesuai nomor).
 
 ## 10. Contoh skenario (sheet *Sample Input* di UISS)
-- Diterima: N1–N9 (Add, Edit Candidate, naik Max Case/Day, tanpa perubahan, sebagian part, turunkan Max setelah mapping dikurangi, Active→Inactive, Add tanpa MAD).
-- Ditolak: E1–E14 (flag salah, part tidak ada, duplikat, angka salah, ubah status Candidate, ubah ke Candidate, tanggal lampau, Max di bawah mapping, campuran valid+error).
+- Diterima: N1–N8 (Add, Edit Candidate, naik Max Case/Day, tanpa perubahan, sebagian part, turunkan Max setelah mapping dikurangi, Active→Inactive).
+- Ditolak: E1–E15 (flag salah, part tidak ada, duplikat, angka salah, ubah status Candidate, ubah ke Candidate, tanggal lampau, Max di bawah mapping, campuran valid+error, Add tanpa Min MAD).
 - Error file: F1–F5.
 
 ## 11. Open points

@@ -247,7 +247,7 @@ function genHistoryFor(part: SeedPart): HistoryEvent[] {
 
     if (minMadChanged) {
       const oldMinMad = Math.max(50, part.minMad + (rng.chance(0.5) ? 1 : -1) * rng.int(50, 200));
-      events.push({ date: dayBetween(), t: 'MAD changed', f: 'MAD', o: String(oldMinMad), n: String(part.minMad), by: rng.pick(EDITORS) });
+      events.push({ date: dayBetween(), t: 'Min MAD changed', f: 'Min MAD', o: String(oldMinMad), n: String(part.minMad), by: rng.pick(EDITORS) });
     }
 
     // The move out of Candidate, driven by average MAD vs Min MAD.

@@ -2,14 +2,13 @@ import type { TabView } from '../../../types';
 
 const LABEL: Record<TabView, string> = {
   part: 'Part List',
-  detail: 'Part Detail',
   dest: 'Mapping per Destination',
 };
 
-/** Procurement opens two sub-menus (Part List, Part Detail) and can switch between them;
- * D/S only opens Mapping per Destination, so its tab is a wayfinding label. */
-export function ViewTabs({ view, onChange }: { view: TabView; onChange?: (v: 'part' | 'detail') => void }) {
-  const tabs: TabView[] = view === 'dest' ? ['dest'] : ['part', 'detail'];
+/** Each account opens exactly one sub-menu (Procurement: Part List, D/S: Mapping per Destination),
+ * so the tab is a wayfinding label only. */
+export function ViewTabs({ view }: { view: TabView }) {
+  const tabs: TabView[] = [view];
   return (
     <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2, padding: '18px 0 0', borderBottom: '1px solid var(--color-divider)', margin: '0 28px' }}>
       {tabs.map((t) => {
@@ -17,9 +16,8 @@ export function ViewTabs({ view, onChange }: { view: TabView; onChange?: (v: 'pa
         return (
           <button
             key={t}
-            onClick={() => t !== 'dest' && onChange?.(t)}
-            style={{
-              cursor: t === 'dest' ? 'default' : 'pointer',
+                        style={{
+              cursor: 'default',
               border: 0,
               background: 'transparent',
               fontFamily: 'var(--font-body)',

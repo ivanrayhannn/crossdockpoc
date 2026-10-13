@@ -171,7 +171,7 @@ spec = {
                    "keys": [{"field": "PART_NO", "value": "Changed part"}]},
    "mappings": [
      {"dest_field": "PART_NO", "description": "Key, not changed"},
-     {"dest_field": "PART_NAME", "description": NC}, {"dest_field": "MAD", "description": NC},
+     {"dest_field": "PART_NAME", "description": NC}, {"dest_field": "MIN_MAD", "description": NC},
      {"dest_field": "PCS_CASE", "description": NC}, {"dest_field": "MAX_CASE_DAY", "description": NC},
      {"dest_field": "TOTAL_PCS_DAY", "description": NC}, {"dest_field": "EFFECTIVE_START_DATE", "description": NC},
      {"dest_field": "PART_STATUS", "description": NC},
@@ -253,7 +253,7 @@ spec = {
   {"name": T, "kind": "transaction", "proposed": False, "description": "Candidate part setting, one record per part (Part List data, no calculation period). Read for status and Max Case/Day; Sync Status updated.",
    "columns": [["PART_NO", "VARCHAR(TBD)", "Y", "N", "Part number; length follows TB_M_PART_MASTER"],
                ["PART_NAME", "VARCHAR(TBD)", "", "N", "Retrieved from TB_M_PART_MASTER by PART_NO"],
-               ["MAD", "INT", "", "Y", "MAD; result of the MAD calculation function"], ["PCS_CASE", "INT", "", "N", "Pieces per case (> 0)"],
+               ["MIN_MAD", "INT", "", "N", "Minimum MAD (mandatory); reference compared with the MAD result of the calculation"], ["PCS_CASE", "INT", "", "N", "Pieces per case (> 0)"],
                ["MAX_CASE_DAY", "INT", "", "N", "Total Case/Day of the part (> 0); limit of the mapping"], ["TOTAL_PCS_DAY", "INT", "", "N", "PCS_CASE x MAX_CASE_DAY"],
                ["EFFECTIVE_START_DATE", "DATE", "", "Y", "Effective start date"],
                ["PART_STATUS", "VARCHAR(TBD)", "", "N", "Candidate / Active / Inactive"],

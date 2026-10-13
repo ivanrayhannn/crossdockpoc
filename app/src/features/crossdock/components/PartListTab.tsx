@@ -78,7 +78,6 @@ export function PartListTab({ parts, q, aq, onSearch, setQ, resetQ, ro, onOpenPa
   const pageSrc = rowsSrc.slice(pageStart, pageStart + pageSize);
 
   const rows = pageSrc.map((p) => {
-    // MAD is filled by the calculation function; it stays blank until a value exists.
     const hasMad = p.minMad !== '' && p.minMad != null;
     return {
       p,
@@ -203,7 +202,7 @@ export function PartListTab({ parts, q, aq, onSearch, setQ, resetQ, ro, onOpenPa
                 <tr>
                   <th style={{ ...th, padding: '0 10px 0 16px', width: 130 }}>Part Number</th>
                   <th style={{ ...th, width: 220 }}>Part Name</th>
-                  <th style={{ ...th, textAlign: 'right', width: 90 }}>MAD</th>
+                  <th style={{ ...th, textAlign: 'right', width: 90 }}>Min MAD</th>
                   <th style={{ ...th, textAlign: 'right', width: 86 }}>Pcs/Case</th>
                   <th style={{ ...th, textAlign: 'right', width: 104 }}>Max Case/Day</th>
                   <th style={{ ...th, textAlign: 'right', width: 104 }}>Total Pcs/Day</th>

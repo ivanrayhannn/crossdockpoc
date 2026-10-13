@@ -16,7 +16,7 @@ COLUMNS = [
     ["SOURCE", "VARCHAR(10)", "", "N", "SCREEN / UPLOAD / RPA"],
     ["UPLOAD_ID", "VARCHAR(TBD)", "", "Y", "Upload of the change (Log); NULL when not from an upload"],
     ["DEST_CODE", "VARCHAR(TBD)", "", "Y", "Destination code for MAPPING; NULL for other events"],
-    ["FIELD_NAME", "VARCHAR(30)", "", "N", "Changed field: PCS_CASE, MAX_CASE_DAY, MAD, PART_STATUS, EFFECTIVE_START_DATE, CASE_DAY, SYNC_STATUS"],
+    ["FIELD_NAME", "VARCHAR(30)", "", "N", "Changed field: PCS_CASE, MAX_CASE_DAY, MIN_MAD, PART_STATUS, EFFECTIVE_START_DATE, CASE_DAY, SYNC_STATUS"],
     ["OLD_VALUE", "VARCHAR(255)", "", "Y", "Value before the change; NULL for ADD or an added destination"],
     ["NEW_VALUE", "VARCHAR(255)", "", "Y", "Value after the change; NULL for a removed destination"],
     ["REMARK", "VARCHAR(500)", "", "Y", "Free text, e.g. SYNC_MESSAGE of a Failed sync"],

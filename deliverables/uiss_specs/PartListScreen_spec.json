@@ -19,12 +19,11 @@
  ],
  "general": {
   "objective": [
-   "To register crossdock candidate parts (Part No, Pcs/Case, Max Case/Day, Effective Start Date; MAD optional).",
+   "To register crossdock candidate parts (Part No, Min MAD, Pcs/Case, Max Case/Day, Effective Start Date).",
    "To search and display registered crossdock parts with their status, capacity and mapping completeness.",
    "To change part data and part status (Candidate / Active / Inactive) of a registered part.",
    "To display the change history of a part.",
    "To export the Part List to Excel and upload part settings from Excel (Add and Edit).",
-   "Minimum MAD and Case/Day per part are maintained in the Part Detail sub-menu (TB_M_PART_CROSSDOCK_DTL), opened by the same Procurement account.",
    "This sub-menu is opened only for users logged in with a Procurement account; users with a D/S account open the Mapping per Destination sub-menu instead."
   ],
   "display_order": [
@@ -273,7 +272,7 @@
     "sections": [
      {
       "section": "Saved status Candidate",
-      "description": "Part No locked; Status, Effective Start Date, MAD, Pcs/Case, Max Case/Day editable",
+      "description": "Part No locked; Status, Effective Start Date, Min MAD, Pcs/Case, Max Case/Day editable",
       "buttons": {
        "Add Part": "D",
        "Upload Excel": "D",
@@ -638,21 +637,6 @@
    "group": "<Header Section>"
   },
   {
-   "name": "Sub-menu tabs",
-   "source": "",
-   "field": "",
-   "type": "",
-   "len": "",
-   "io": "I",
-   "control": "Tab",
-   "justified": "Left",
-   "initial": "Part List",
-   "required": "",
-   "format": "",
-   "validation": "",
-   "description": "'Part List' / 'Part Detail'. Part Detail opens the sub-menu for Minimum MAD and Case/Day per part (separate UISS-Screen)."
-  },
-  {
    "name": "Add Part",
    "source": "",
    "field": "",
@@ -854,9 +838,9 @@
    "description": "Truncated with '...' when long; full name in tooltip."
   },
   {
-   "name": "MAD",
+   "name": "Min MAD",
    "source": "TB_M_PART_CANDIDATE",
-   "field": "MAD",
+   "field": "MIN_MAD",
    "type": "Number",
    "len": "TBD",
    "io": "O",
@@ -866,7 +850,7 @@
    "required": "",
    "format": "ZZ,ZZ9",
    "validation": "",
-   "description": "Result of the MAD calculation function; blank until calculated."
+   "description": "Minimum MAD of the part, entered by the user. Reference value compared with the MAD result of the calculation."
   },
   {
    "name": "Pcs/Case",
@@ -1163,19 +1147,19 @@
    "description": "Editable in Add, and in Edit only while the saved status is Candidate; otherwise locked with tooltip 'Can only be changed while the status is still Candidate'."
   },
   {
-   "name": "MAD",
+   "name": "Min MAD",
    "source": "TB_M_PART_CANDIDATE",
-   "field": "MAD",
+   "field": "MIN_MAD",
    "type": "Number",
    "len": "TBD",
    "io": "I",
    "control": "Text box",
    "justified": "Right",
    "initial": "Blank",
-   "required": "N",
+   "required": "Y",
    "format": "ZZ,ZZ9",
-   "validation": "Whole number, 0 or more (when filled)",
-   "description": "Optional on Add / Edit; filled or overwritten by the MAD calculation function."
+   "validation": "Mandatory; whole number, 0 or more",
+   "description": "Minimum MAD of the part, entered by the user. Reference value compared with the MAD result of the calculation. Mandatory on Add and Edit; tooltip of disabled [Save] = message no. 15."
   },
   {
    "name": "Pcs/Case",
@@ -1250,7 +1234,7 @@
    "required": "",
    "format": "",
    "validation": "",
-   "description": "Enabled only when Part No, Pcs/Case > 0 and Max Case/Day > 0 are filled and, in Edit, Max Case/Day is not below the mapped total. Refer Operation Description 5.4 / 5.5."
+   "description": "Enabled only when Part No, Min MAD, Pcs/Case > 0 and Max Case/Day > 0 are filled and, in Edit, Max Case/Day is not below the mapped total. Refer Operation Description 5.4 / 5.5."
   },
   {
    "name": "Close (X)",
@@ -1376,7 +1360,7 @@
    "required": "",
    "format": "",
    "validation": "",
-   "description": "part_no, mad, pcs_case, max_case_day, status, flag_add_edit, effective_start_date (same order as sheet 'Upload' of Export Excel)."
+   "description": "part_no, min_mad, pcs_case, max_case_day, status, flag_add_edit, effective_start_date (same order as sheet 'Upload' of Export Excel)."
   },
   {
    "name": "Rules per flag_add_edit and status",
@@ -1507,9 +1491,9 @@
       "description": "From TB_M_PART_MASTER by PART_NO"
      },
      {
-      "source_field": "MAD",
-      "dest_field": "MAD",
-      "description": "Optional; blank = NULL until the MAD calculation function fills it"
+      "source_field": "Min MAD",
+      "dest_field": "MIN_MAD",
+      "description": "Mandatory; entered by the user"
      },
      {
       "source_field": "Pcs/Case",
@@ -1588,9 +1572,9 @@
       "dest_field": "PART_STATUS"
      },
      {
-      "source_field": "MAD",
-      "dest_field": "MAD",
-      "description": "Optional; blank = not changed"
+      "source_field": "Min MAD",
+      "dest_field": "MIN_MAD",
+      "description": "Mandatory; entered by the user"
      },
      {
       "source_field": "Pcs/Case",
@@ -1762,7 +1746,7 @@
     "Open the 'Add Part Candidate Crossdock' modal. 'Status' = Candidate and locked (a new part is always Candidate); 'Effective Start Date' = system date + 1 day, minimum today.",
     "'Part No' lists parts of TB_M_PART_MASTER that are not yet registered in TB_M_PART_CANDIDATE, so can not register part into Crossdock master",
     "Selecting a Part No autofills 'Part Name'. 'Max Case/Day' is locked until 'Pcs/Case' is filled.",
-    "[Save] is enabled only when Part No, Pcs/Case > 0 and Max Case/Day > 0 are filled; otherwise its tooltip shows message no. 5, 6 or 7 for the first missing item. Effective Start Date"
+    "[Save] is enabled only when Part No, Min MAD (whole number, 0 or more), Pcs/Case > 0 and Max Case/Day > 0 are filled; otherwise its tooltip shows message no. 5, 15, 6 or 7 for the first missing item. Effective Start Date"
    ]
   },
   {
@@ -1805,7 +1789,7 @@
    "items": [
     "Open the 'Edit part data' modal with the saved values. 'Part No' is locked; 'Status' can be Candidate / Active / Inactive.",
     "'Effective Start Date' is editable only while the saved status is Candidate (minimum today); otherwise locked with message no. 10 as tooltip.",
-    "'MAD' (optional), 'Pcs/Case' and 'Max Case/Day' can be changed; 'Total Pcs/Day' is recalculated.",
+    "'Min MAD' (mandatory, whole number 0 or more), 'Pcs/Case' and 'Max Case/Day' can be changed; 'Total Pcs/Day' is recalculated.",
     "Max Case/Day can not be less than the total Case/Day already mapped to destinations in the ongoing period (TB_M_PART_CANDIDATE_DEST); otherwise the field is marked red, message no. 14 is shown below Pcs/Case & Max Case/Day and [Save] is disabled. The user must first reduce the mapping in Mapping per Destination (same rule as upload check 9)."
    ]
   },
@@ -1930,7 +1914,7 @@
      "VARCHAR(30)",
      "",
      "N",
-     "Changed field: PCS_CASE, MAX_CASE_DAY, MAD, PART_STATUS, EFFECTIVE_START_DATE, CASE_DAY, SYNC_STATUS"
+     "Changed field: PCS_CASE, MAX_CASE_DAY, MIN_MAD, PART_STATUS, EFFECTIVE_START_DATE, CASE_DAY, SYNC_STATUS"
     ],
     [
      "OLD_VALUE",
@@ -2006,8 +1990,8 @@
    "level": 2,
    "items": [
     "User clicks [Export Excel]: download Crossdock_Part_List_YYYYMMDD.xlsx.",
-    "Sheet 'Part List': rows of the active filter and sort (all pages) with Part Number, Part Name, MAD, Pcs/Case, Max Case/Day, Total Pcs/Day, Status, Effective Start Date, Last Update. Information only.",
-    "Sheet 'Upload': every registered part with part_no, mad, pcs_case, max_case_day, status, flag_add_edit = E, effective_start_date (DD-Mon-YYYY). Base file for Edit uploads.",
+    "Sheet 'Part List': rows of the active filter and sort (all pages) with Part Number, Part Name, Min MAD, Pcs/Case, Max Case/Day, Total Pcs/Day, Status, Effective Start Date, Last Update. Information only.",
+    "Sheet 'Upload': every registered part with part_no, min_mad, pcs_case, max_case_day, status, flag_add_edit = E, effective_start_date (DD-Mon-YYYY). Base file for Edit uploads.",
     "If the file cannot be created, display message no. 13."
    ]
   },
@@ -2204,6 +2188,14 @@
    "msg_id": "MSG14",
    "message": "Max Case/Day can not be less than the mapped total ({n} case/day) of the ongoing period. Reduce the mapping in Mapping per Destination first.",
    "action": "Reduce the mapping in Mapping per Destination first, or enter a higher Max Case/Day"
+  },
+  {
+   "event": "Hover disabled [Save]",
+   "cause": "Min MAD blank or not a whole number",
+   "type": "Info",
+   "msg_id": "MSG15",
+   "message": "Enter Min MAD (whole number, 0 or more)",
+   "action": "Fill Min MAD"
   }
  ],
  "logging_messages": [
@@ -2296,7 +2288,7 @@
      "VARCHAR(30)",
      "",
      "N",
-     "Changed field: PCS_CASE, MAX_CASE_DAY, MAD, PART_STATUS, EFFECTIVE_START_DATE, CASE_DAY, SYNC_STATUS"
+     "Changed field: PCS_CASE, MAX_CASE_DAY, MIN_MAD, PART_STATUS, EFFECTIVE_START_DATE, CASE_DAY, SYNC_STATUS"
     ],
     [
      "OLD_VALUE",

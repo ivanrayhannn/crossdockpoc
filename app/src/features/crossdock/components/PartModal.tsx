@@ -61,8 +61,12 @@ export function PartModal({ state }: { state: CrossdockState }) {
   const belowMapped = !!editId && !!mc && mc < mapped;
   const belowMsg = `Max Case/Day can not be less than the mapped total (${fmt(mapped)} case/day) of the ongoing period. Reduce the mapping in Mapping per Destination first.`;
 
-  const saveDisabled = !f.p || !pc || !mc || belowMapped;
-  const saveTitle = !f.p ? 'Part No is required' : !pc ? 'Enter Pcs/Case first (step 2)' : !mc ? 'Enter Max Case/Day (step 2)' : belowMapped ? belowMsg : 'Save part data';
+  // Min MAD is mandatory: whole number, 0 or more (reference for the MAD result of the calculation).
+  const minMadStr = String(f.minMad == null ? '' : f.minMad).trim();
+  const minMadOk = /^\d+$/.test(minMadStr);
+
+  const saveDisabled = !f.p || !minMadOk || !pc || !mc || belowMapped;
+  const saveTitle = !f.p ? 'Part No is required' : !minMadOk ? 'Enter Min MAD (whole number, 0 or more)' : !pc ? 'Enter Pcs/Case first (step 2)' : !mc ? 'Enter Max Case/Day (step 2)' : belowMapped ? belowMsg : 'Save part data';
 
   // Effective Start Date can only change while the saved part is still Candidate (BR-06).
   const savedStatus = editId ? parts.find((p) => p.p === editId)?.st : undefined;
@@ -159,7 +163,7 @@ export function PartModal({ state }: { state: CrossdockState }) {
                   />
                 </div>
                 <div className="field">
-                  <label>MAD <span style={{ color: 'var(--color-neutral-500)', textTransform: 'none', letterSpacing: 0 }}>(optional)</span></label>
+                  <label>Min MAD *</label>
                   <input
                     className="input"
                     value={String(f.minMad == null ? '' : f.minMad)}

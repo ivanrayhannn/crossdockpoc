@@ -493,7 +493,7 @@
       "description": "Not changed"
      },
      {
-      "dest_field": "MAD",
+      "dest_field": "MIN_MAD",
       "description": "Not changed"
      },
      {
@@ -1333,11 +1333,11 @@
      "Retrieved from TB_M_PART_MASTER by PART_NO"
     ],
     [
-     "MAD",
+     "MIN_MAD",
      "INT",
      "",
-     "Y",
-     "MAD; result of the MAD calculation function"
+     "N",
+     "Minimum MAD (mandatory); reference compared with the MAD result of the calculation"
     ],
     [
      "PCS_CASE",
@@ -1563,7 +1563,7 @@
      "VARCHAR(30)",
      "",
      "N",
-     "Changed field: PCS_CASE, MAX_CASE_DAY, MAD, PART_STATUS, EFFECTIVE_START_DATE, CASE_DAY, SYNC_STATUS"
+     "Changed field: PCS_CASE, MAX_CASE_DAY, MIN_MAD, PART_STATUS, EFFECTIVE_START_DATE, CASE_DAY, SYNC_STATUS"
     ],
     [
      "OLD_VALUE",

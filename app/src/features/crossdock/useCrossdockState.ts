@@ -37,17 +37,14 @@ export function useCrossdockState() {
   const [q, setQ] = useState<PartQuery>(DEFAULT_Q);
   const [aq, setAq] = useState<PartQuery>(DEFAULT_Q);
   const [notice, setNotice] = useState<SaveNotice | null>(null);
-  // Procurement opens two sub-menus (Part List, Part Detail); D/S opens Mapping per Destination.
-  const [procView, setProcView] = useState<'part' | 'detail'>('part');
 
   // No auth backend in this build — always full read/write access.
   const ro = false;
   // Prototype-only preview switch: the real system opens exactly one sub-menu
   // (Part List or Mapping per Destination) according to the logged-in account.
-  const view: TabView = role === 'ds' ? 'dest' : procView;
+  const view: TabView = role === 'ds' ? 'dest' : 'part';
   const switchRole = useCallback(() => {
     setRole(null);
-    setProcView('part');
   }, []);
 
   const openFor = useCallback(
@@ -141,7 +138,7 @@ export function useCrossdockState() {
   const commit = useCallback(() => {
     if (!form) return;
     // Any change at the part-number level invalidates the current mapping sync.
-    const f: Part = { ...form, pc: num(form.pc), mc: num(form.mc), minMad: form.minMad === '' || form.minMad == null ? '' : num(form.minMad), by: EDITOR, dt: nowStamp(), syncStatus: 0 };
+    const f: Part = { ...form, pc: num(form.pc), mc: num(form.mc), minMad: num(form.minMad), by: EDITOR, dt: nowStamp(), syncStatus: 0 };
     // The saved part goes to the top of the list, whether it was added or edited.
     setParts((prevParts) => [f, ...prevParts.filter((p) => p.p !== f.p)]);
     // Show it right away: drop filters that could hide it and sort newest first.
@@ -188,7 +185,6 @@ export function useCrossdockState() {
     setRole,
     switchRole,
     view,
-    setProcView,
     expand,
     editDest,
     draftDests,

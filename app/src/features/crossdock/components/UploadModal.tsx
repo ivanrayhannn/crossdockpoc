@@ -1,11 +1,11 @@
 import type { CrossdockState } from '../useCrossdockState';
 
 // Same columns and order as sheet "Upload" of the Part List Export Excel.
-const UP_COLS = ['part_no', 'mad', 'pcs_case', 'max_case_day', 'status', 'flag_add_edit', 'effective_start_date'];
+const UP_COLS = ['part_no', 'min_mad', 'pcs_case', 'max_case_day', 'status', 'flag_add_edit', 'effective_start_date'];
 
 const UP_RULES: { label: string; cols: string }[] = [
-  { label: 'Add', cols: 'part_no, pcs_case, max_case_day, flag_add_edit = A and effective_start_date are required; mad is optional (filled later by the calculation function). Leave status blank — a new part is always Candidate.' },
-  { label: 'Edit', cols: 'flag_add_edit = E. mad (optional), pcs_case and max_case_day can be changed; effective_start_date only while the part status is still Candidate. Download Export Excel first: its sheet "Upload" is the base file (pre-filled with flag E) to edit and upload again.' },
+  { label: 'Add', cols: 'part_no, min_mad, pcs_case, max_case_day, flag_add_edit = A and effective_start_date are required. Leave status blank — a new part is always Candidate.' },
+  { label: 'Edit', cols: 'flag_add_edit = E. min_mad (required), pcs_case and max_case_day can be changed; effective_start_date only while the part status is still Candidate. Download Export Excel first: its sheet "Upload" is the base file (pre-filled with flag E) to edit and upload again.' },
   { label: 'Status', cols: 'The status of a Candidate part cannot be changed by upload (the row is rejected). An Active part can be changed to Inactive and an Inactive part to Active. No part can be changed to Candidate.' },
 ];
 

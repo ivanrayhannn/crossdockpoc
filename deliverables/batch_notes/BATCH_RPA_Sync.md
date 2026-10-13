@@ -54,7 +54,7 @@ Disimpan **per part** di TB_M_PART_CANDIDATE karena RPA mengirim part sebagai sa
 | SYNC_MESSAGE | Diisi RPA: alasan Failed (kosong kalau Success) |
 | CHANGED_DT | Dibandingkan RPA untuk deteksi perubahan selama proses |
 
-Kolom lain (lihat `BATCH_PartList_Upload.md` 8.1): PART_NAME, MAD, TOTAL_PCS_DAY, EFFECTIVE_START_DATE, LAST_SOURCE, LAST_UPLOAD_ID, audit — tidak disentuh Sync.
+Kolom lain (lihat `BATCH_PartList_Upload.md` 8.1): PART_NAME, MIN_MAD, TOTAL_PCS_DAY, EFFECTIVE_START_DATE, LAST_SOURCE, LAST_UPLOAD_ID, audit — tidak disentuh Sync.
 
 ### 5.2 TB_M_PART_CANDIDATE_DEST — *dibaca*
 | Kolom | Peran di Sync |
@@ -76,7 +76,7 @@ Tabel history semua perubahan part. **Usulan** definisi fisik (insert only, satu
 | SOURCE | VARCHAR(10) |  | N | SCREEN / UPLOAD / RPA |
 | UPLOAD_ID | VARCHAR(TBD) |  | Y | Upload of the change (Log); NULL when not from an upload |
 | DEST_CODE | VARCHAR(TBD) |  | Y | Destination code for MAPPING; NULL for other events |
-| FIELD_NAME | VARCHAR(30) |  | N | Changed field: PCS_CASE, MAX_CASE_DAY, MAD, PART_STATUS, EFFECTIVE_START_DATE, CASE_DAY, SYNC_STATUS |
+| FIELD_NAME | VARCHAR(30) |  | N | Changed field: PCS_CASE, MAX_CASE_DAY, MIN_MAD, PART_STATUS, EFFECTIVE_START_DATE, CASE_DAY, SYNC_STATUS |
 | OLD_VALUE | VARCHAR(255) |  | Y | Value before the change; NULL for ADD or an added destination |
 | NEW_VALUE | VARCHAR(255) |  | Y | Value after the change; NULL for a removed destination |
 | REMARK | VARCHAR(500) |  | Y | Free text, e.g. SYNC_MESSAGE of a Failed sync |
@@ -87,7 +87,7 @@ Tabel history semua perubahan part. **Usulan** definisi fisik (insert only, satu
 
 | Event (EVENT_TYPE) | Source | Kapan | FIELD_NAME / nilai |
 |---|---|---|---|
-| ADD | SCREEN / UPLOAD | Part baru (Add Part di layar / flag A) | PCS_CASE, MAX_CASE_DAY, MAD, EFFECTIVE_START_DATE, PART_STATUS; OLD = NULL; PERIOD = NULL |
+| ADD | SCREEN / UPLOAD | Part baru (Add Part di layar / flag A) | PCS_CASE, MAX_CASE_DAY, MIN_MAD, EFFECTIVE_START_DATE, PART_STATUS; OLD = NULL; PERIOD = NULL |
 | EDIT | SCREEN / UPLOAD | Ubah data part (Edit di layar / flag E) | Field yang berubah; OLD → NEW; PERIOD = NULL |
 | MAPPING | SCREEN / UPLOAD | Tambah / ubah / hapus destinasi (periode berjalan) | DEST_CODE terisi, FIELD_NAME = CASE_DAY; OLD NULL = ditambah, NEW NULL = dihapus |
 | SYNC | RPA | Hasil Sync | FIELD_NAME = SYNC_STATUS; Waiting → Success / Failed (atau No Sync kalau berubah saat RPA jalan); REMARK = SYNC_MESSAGE |
@@ -102,7 +102,6 @@ Di Sync: event **SYNC**, source **RPA**, PERIOD = periode berjalan, FIELD_NAME =
 Diakses lewat RPA (tanpa interface). Layar/field yang diisi RPA: **TBD**.
 
 ### 5.5 Tabel lain yang **tidak** dipakai Sync
-- TB_M_PART_CROSSDOCK_DTL (Minimum MAD, Case/Day per part, sub-menu Part Detail) — fungsi pemakainya TBD.
 - Log upload (hanya untuk proses upload).
 
 ---

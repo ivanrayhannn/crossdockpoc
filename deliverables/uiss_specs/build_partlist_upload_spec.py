@@ -7,14 +7,14 @@ STATUS_RULE = ('Status: flag A must be blank (a new part is always Candidate). F
                'Candidate (blank or Candidate); an Active part may be changed to Inactive and an Inactive part to '
                'Active; no part can be changed to Candidate.')
 B = ''
-INPUT = ['part_no', 'mad', 'pcs_case', 'max_case_day', 'status', 'flag_add_edit', 'effective_start_date']
+INPUT = ['part_no', 'min_mad', 'pcs_case', 'max_case_day', 'status', 'flag_add_edit', 'effective_start_date']
 W_IN = [6, 30, 12, 12, 10, 13, 11, 13, 19]
 SAMPLE = {
  "title": "Sample Input", "heading": "Sample upload scenarios - Part List Upload",
  "intro": ["Each scenario is a separate upload file. Today = 13-Sep-2026, mapping of the ongoing calculation period = Sep 2026.",
            "Input columns follow sheet Upload of the Export Excel; a blank cell is a blank value in the file."],
  "sections": [
-  {"title": "A. Master data before upload", "columns": ["Part No", "Status", "MAD", "Pcs/Case", "Max Case/Day", "Effective Date", "Mapped 123", "Mapped 456", "Mapped 789", "Mapped total"],
+  {"title": "A. Master data before upload", "columns": ["Part No", "Status", "Min MAD", "Pcs/Case", "Max Case/Day", "Effective Date", "Mapped 123", "Mapped 456", "Mapped 789", "Mapped total"],
    "widths": [12, 16, 10, 10, 13, 15, 11, 11, 11, 13],
    "rows": [["PART-A", "Active", 800, 60, 24, "01-Aug-2026", 12, 8, 4, 24],
             ["PART-C", "Active", 200, 10, 30, "01-Aug-2026", B, 12, 18, 30],
@@ -32,8 +32,7 @@ SAMPLE = {
     ["N5", "Edit with the same values as the master", "PART-A", 800, 60, 24, "Active", "E", B, "NO CHANGE. Row skipped, Sync Status and last update stay."],
     ["N6", "File with only some parts (one row)", "PART-I", 300, 15, 18, "Candidate", "E", "20-Sep-2026", "Only PART-I is processed. PART-A, C, G are not in the sheet and are not changed."],
     ["N7", "Lower Max Case/Day after the mapping was reduced to 20 in Mapping per Destination", "PART-A", 800, 60, 20, B, "E", B, "Updated. Max Case/Day 24 -> 20 (not below mapped 20)."],
-    ["N8", "Change an Active part to Inactive", "PART-G", 150, 50, 22, "Inactive", "E", B, "Updated. Status Active -> Inactive, Sync Status No Sync. Inactive -> Active works the same way."],
-    ["N9", "Add a new part without MAD", "PART-M03", B, 25, 10, B, "A", "15-Sep-2026", "Inserted. MAD stays blank until the MAD calculation function fills it."]]},
+    ["N8", "Change an Active part to Inactive", "PART-G", 150, 50, 22, "Inactive", "E", B, "Updated. Status Active -> Inactive, Sync Status No Sync. Inactive -> Active works the same way."]]},
   {"title": "C. Error scenarios (whole file rejected, nothing saved)", "columns": ["No", "Scenario"] + INPUT + ["Error (4.2 check no.)"], "widths": W_IN + [55],
    "rows": [
     ["E1", "Flag is not A or E", "PART-I", 300, 15, 18, B, "X", "20-Sep-2026", "Check 1: flag_add_edit must be A or E."],
@@ -42,7 +41,7 @@ SAMPLE = {
     ["E4", "Edit a part that is not registered", "PART-M03", 300, 20, 15, B, "E", B, "Check 3: Part No not registered, use flag A."],
     ["E5", "Same part twice in the file (row 1)", "PART-I", 300, 15, 18, "Candidate", "E", "20-Sep-2026", "Check 4: Part No appears more than once."],
     ["E5", "Same part twice in the file (row 2)", "PART-I", 300, 15, 19, "Candidate", "E", "20-Sep-2026", "Check 4: Part No appears more than once."],
-    ["E6", "Invalid number", "PART-M03", 300, 0, 15, B, "A", "14-Sep-2026", "Check 5: pcs_case must be greater than 0. A blank pcs_case or max_case_day is also an error (a blank mad is allowed)."],
+    ["E6", "Invalid number", "PART-M03", 300, 0, 15, B, "A", "14-Sep-2026", "Check 5: pcs_case must be greater than 0. A blank min_mad, pcs_case or max_case_day is also an error."],
     ["E7", "Change the status of a Candidate part", "PART-I", 300, 15, 20, "Active", "E", "15-Sep-2026", "Check 6: the status of a Candidate part cannot be changed by upload. Change it in the Edit part data modal."],
     ["E8", "Change an Active part to Candidate", "PART-C", 200, 10, 30, "Candidate", "E", B, "Check 6: no part can be changed to Candidate."],
     ["E9", "Add with a status", "PART-M03", 300, 20, 15, "Active", "A", "14-Sep-2026", "Check 6: status of a new part is always Candidate, leave it blank."],
@@ -51,7 +50,8 @@ SAMPLE = {
     ["E12", "Change effective date of an Active part", "PART-C", 200, 10, 30, B, "E", "20-Sep-2026", "Check 8: effective date can only change while the part is Candidate."],
     ["E13", "Max Case/Day below existing mapping", "PART-A", 800, 60, 20, B, "E", B, "Check 9: Max Case/Day 20 is below mapped 24. Reduce the mapping first in Mapping per Destination."],
     ["E14", "Valid row (= N1) mixed with an error row (= E2), row 1", "PART-M01", 300, 20, 15, B, "A", "14-Sep-2026", "Whole file rejected. The valid row is NOT saved."],
-    ["E14", "Valid row mixed with an error row, row 2", "PART-Z99", 100, 10, 10, B, "E", B, "Check 2 on this row. Result report sheet Re-upload lists the rows to correct."]]},
+    ["E14", "Valid row mixed with an error row, row 2", "PART-Z99", 100, 10, 10, B, "E", B, "Check 2 on this row. Result report sheet Re-upload lists the rows to correct."],
+    ["E15", "Add a new part without Min MAD", "PART-M03", B, 25, 10, B, "A", "15-Sep-2026", "Check 5: min_mad is required (whole number, 0 or more)."]]},
   {"title": "D. File-level errors (file check 4.1)", "columns": ["No", "Scenario", "Expected result"],
    "rows": [["F1", "File is .xls or .csv", "Rejected: file must be .xlsx."],
             ["F2", "File larger than 5 MB", "Rejected: file size exceeds 5 MB."],
@@ -133,7 +133,7 @@ spec = {
    "mappings": [
      {"source_field": "part_no", "dest_field": "PART_NO"},
      {"dest_field": "PART_NAME", "description": PM + ".PART_NAME by PART_NO"},
-     {"source_field": "mad", "dest_field": "MAD", "description": "Optional; blank = NULL until the MAD calculation function fills it"},
+     {"source_field": "min_mad", "dest_field": "MIN_MAD", "description": "From the file (mandatory)"},
      {"source_field": "pcs_case", "dest_field": "PCS_CASE"},
      {"source_field": "max_case_day", "dest_field": "MAX_CASE_DAY"},
      {"dest_field": "TOTAL_PCS_DAY", "description": "PCS_CASE x MAX_CASE_DAY"},
@@ -153,7 +153,7 @@ spec = {
    "mappings": [
      {"source_field": "part_no", "dest_field": "PART_NO", "description": "Key, not changed"},
      {"dest_field": "PART_NAME", "description": "Not changed"},
-     {"source_field": "mad", "dest_field": "MAD", "description": "Optional; blank = not changed"},
+     {"source_field": "min_mad", "dest_field": "MIN_MAD", "description": "From the file (mandatory)"},
      {"source_field": "pcs_case", "dest_field": "PCS_CASE"},
      {"source_field": "max_case_day", "dest_field": "MAX_CASE_DAY"},
      {"dest_field": "TOTAL_PCS_DAY", "description": "Recalculate : PCS_CASE x MAX_CASE_DAY"},
@@ -209,7 +209,7 @@ spec = {
     ["2", "Part No exists in TB_M_PART_MASTER.", "part_no"],
     ["3", "Flag A: Part No is not yet in TB_M_PART_CANDIDATE. Flag E: it already is.", "part_no"],
     ["4", "Part No appears only once in the file.", "part_no"],
-    ["5", "Pcs/Case and Max Case/Day are whole numbers greater than 0, required on every row. MAD is optional (filled later by the MAD calculation function); when filled it is a whole number, 0 or more.", "pcs_case, max_case_day, mad"],
+    ["5", "Min MAD is a whole number, 0 or more, and Pcs/Case and Max Case/Day are whole numbers greater than 0; all three are required on every row.", "min_mad, pcs_case, max_case_day"],
     ["6", STATUS_RULE, "status"],
     ["7", "Effective Start Date is required when the part status is Candidate (always for flag A) and must be today or later when new or changed.", "effective_start_date"],
     ["8", "Flag E: Effective Start Date can only change while the part status is Candidate.", "effective_start_date"],
@@ -228,7 +228,7 @@ spec = {
  "appendix": [
   {"type": "heading", "text": "Upload template (sheet \"Upload\")"},
   {"type": "table", "level": 0, "row_lines": "all", "columns": [{"title": "Column", "width": 16}, {"title": "Content", "width": 60}], "rows": [
-    ["part_no", "Part Number"], ["mad", "MAD (optional; filled later by the MAD calculation function)"], ["pcs_case", "Pieces per case"], ["max_case_day", "Max Case/Day"],
+    ["part_no", "Part Number"], ["min_mad", "Min MAD (mandatory; whole number, 0 or more): reference compared with the MAD result of the calculation"], ["pcs_case", "Pieces per case"], ["max_case_day", "Max Case/Day"],
     ["status", "Candidate / Active / Inactive. Flag A: blank. Flag E: a Candidate part stays Candidate (blank or Candidate); Active <-> Inactive allowed; never Candidate for an Active or Inactive part."],
     ["flag_add_edit", "A = Add, E = Edit"], ["effective_start_date", "DD-Mon-YYYY"]]},
   {"type": "text", "level": 0, "text": "Sample upload scenarios (master data, accepted files, rejected files): see sheet Sample Input."}],
@@ -237,7 +237,7 @@ spec = {
   {"name": T, "kind": "transaction", "proposed": False, "description": "Candidate part setting, one record per part (Part List data, no calculation period). Target of a successful upload.",
    "columns": [["PART_NO", "VARCHAR(TBD)", "Y", "N", "Part number; length follows TB_M_PART_MASTER"],
                ["PART_NAME", "VARCHAR(TBD)", "", "N", "Retrieved from TB_M_PART_MASTER by PART_NO"],
-               ["MAD", "INT", "", "Y", "MAD; result of the MAD calculation function, optional on Add / Upload"], ["PCS_CASE", "INT", "", "N", "Pieces per case (> 0)"],
+               ["MIN_MAD", "INT", "", "N", "Minimum MAD (mandatory); reference compared with the MAD result of the calculation"], ["PCS_CASE", "INT", "", "N", "Pieces per case (> 0)"],
                ["MAX_CASE_DAY", "INT", "", "N", "Total Case/Day of the part (> 0)"], ["TOTAL_PCS_DAY", "INT", "", "N", "PCS_CASE x MAX_CASE_DAY"],
                ["EFFECTIVE_START_DATE", "DATE", "", "Y", "Effective start date; required while the part is Candidate"],
                ["PART_STATUS", "VARCHAR(TBD)", "", "N", "Candidate / Active / Inactive"],

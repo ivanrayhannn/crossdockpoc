@@ -33,7 +33,7 @@ export interface Part {
   cat: PartCategory;
   /** MAD (Moving Average Demand) for the last 6 months. */
   mad: number[];
-  /** MAD shown in Part List: filled by the calculation function, optional on Add / Upload ('' = not calculated yet). */
+  /** Min MAD (mandatory): reference compared with the MAD result of the calculation ('' only while the form is being filled). */
   minMad: number | string;
   by: string;
   dt: string;
@@ -59,18 +59,8 @@ export interface PartQuery {
 }
 
 export type ModalKind = 'part' | 'upload' | 'upload-mapping' | 'history' | null;
-export type TabView = 'part' | 'detail' | 'dest';
+export type TabView = 'part' | 'dest';
 
-/** One record of TB_M_PART_CROSSDOCK_DTL (Part Detail sub-menu). */
-export interface PartDetail {
-  p: string;
-  /** Minimum MAD of the part. */
-  minMad: number;
-  /** Case/Day of the part (independent of Max Case/Day in Part List). */
-  cd: number;
-  by: string;
-  dt: string;
-}
 export type UserRole = 'procurement' | 'ds';
 
 export interface HistoryEvent {
