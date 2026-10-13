@@ -125,6 +125,11 @@
     "description": "if successful"
    },
    {
+    "name": "TB_H_PART_CANDIDATE",
+    "type": "DB",
+    "description": "if successful: history record per changed field of each saved part"
+   },
+   {
     "name": "Log",
     "type": "DB",
     "description": "Upload log: one record per upload with status (COMPLETED / REJECTED), counts and errors"
@@ -514,6 +519,52 @@
     ]
    },
    {
+    "source": "Saved rows of this upload",
+    "destination": {
+     "table": "TB_H_PART_CANDIDATE",
+     "operation": "Insert",
+     "description": "Saved row - history"
+    },
+    "mappings": [
+     {
+      "dest_field": "PART_NO",
+      "description": "Part of the event"
+     },
+     {
+      "dest_field": "PERIOD",
+      "description": "Blank (Part List has no period)"
+     },
+     {
+      "dest_field": "EVENT",
+      "description": "'ADD' (flag A) / 'EDIT' (flag E)"
+     },
+     {
+      "dest_field": "SOURCE",
+      "description": "'UPLOAD'"
+     },
+     {
+      "dest_field": "FIELD_NAME",
+      "description": "Changed field, e.g. PCS_CASE, MAX_CASE_DAY, PART_STATUS"
+     },
+     {
+      "dest_field": "OLD_VALUE",
+      "description": "Value before upload (blank for ADD)"
+     },
+     {
+      "dest_field": "NEW_VALUE",
+      "description": "Value from the file"
+     },
+     {
+      "dest_field": "CHANGED_BY",
+      "description": "Login name of the user who uploaded"
+     },
+     {
+      "dest_field": "CHANGED_DT",
+      "description": "Server system date and time"
+     }
+    ]
+   },
+   {
     "source": "Result of this upload",
     "destination": {
      "table": "Log",
@@ -613,6 +664,7 @@
     "If any row is rejected, nothing is saved to TB_M_PART_CANDIDATE. The upload status and the error of every row are recorded in the upload log (Log).",
     "If all rows are valid, the data is saved to TB_M_PART_CANDIDATE: flag A inserts a new part (status Candidate), flag E updates the changed values, including status Active <-> Inactive. Rows with no change are skipped.",
     "The status of a Candidate part is changed only in the Edit part data modal on the screen, not by upload.",
+    "Every inserted or changed part gets a history record per changed field in TB_H_PART_CANDIDATE (event ADD / EDIT, source UPLOAD). Column names TBD.",
     "Every saved record gets Sync Status = No Sync. It is sent to the global system by the RPA when D/S clicks [Sync] in Mapping per Destination.",
     "A result report (.xlsx) is created for both cases."
    ]

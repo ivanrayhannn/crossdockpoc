@@ -22,6 +22,7 @@ Sumber: UISS-Batch `UISS_Batch_PartListUpload_v2.xlsx` (0.1 Initial Draft) dan k
 | Input | TB_M_PART_CANDIDATE | DB | Data sekarang: cek duplikat, aturan status, pembanding Edit |
 | Input | TB_M_PART_CANDIDATE_DEST | DB | Total Case/Day yang sudah di-mapping (check 9) |
 | Output | TB_M_PART_CANDIDATE | DB | Insert (flag A) / Update (flag E) kalau semua valid |
+| Output | TB_H_PART_CANDIDATE | DB | History per field yang berubah (event ADD / EDIT, source UPLOAD) |
 | Output | Log (upload log) | DB | 1 record per upload: status, jumlah baris, error |
 | Output | Result report | Excel | Selalu dibuat. Sheet: Summary, Result, Re-upload, Changes |
 
@@ -47,7 +48,7 @@ Urutan kolom = sheet "Upload" hasil **Export Excel** Part List (prefill semua pa
 6. Semua valid → simpan ke TB_M_PART_CANDIDATE:
    - Flag A: insert part baru dengan status **Candidate**.
    - Flag E: update nilai yang berubah (termasuk status Active ↔ Inactive). Baris tanpa perubahan **di-skip**.
-   - Setiap part yang tersimpan → **Sync Status = No Sync (0)**.
+   - Setiap part yang tersimpan → **Sync Status = No Sync (0)** dan history ke **TB_H_PART_CANDIDATE**.
 7. Buat result report, catat hasil (COMPLETED / REJECTED) di Log, layar Part List menampilkan hasil.
 
 ## 6. Validasi
@@ -126,10 +127,19 @@ Di UISS cukup ditulis **"Log"** tanpa definisi tabel (sesuai arahan). Yang saya 
 | START_DT / END_DT | DATETIME | Mulai / selesai batch |
 | CREATED_BY / CREATED_DT | | Audit |
 
-### 8.5 TB_H_PART_CANDIDATE — *terkait (history Part List)*
-Tabel history perubahan Part List, dibaca oleh modal *History setting* dan diisi setiap register / update part di layar Part List.
-Field yang dipetakan di UISS-Screen Part List: PART_NO, EVENT, FIELD_NAME, OLD_VALUE, NEW_VALUE, CHANGED_BY, CHANGED_DT (tipe & panjang TBD).
-**TBD**: apakah upload juga menulis history ke tabel ini.
+### 8.5 TB_H_PART_CANDIDATE — *ditulis* (history)
+Tabel history semua perubahan part. Kolom fisik **belum ditentukan (TBD)**; field logis yang dipakai di UISS: PART_NO, PERIOD, EVENT, SOURCE, FIELD_NAME, OLD_VALUE, NEW_VALUE, CHANGED_BY, CHANGED_DT (satu record per field yang berubah).
+
+| Event | Source | Kapan | Contoh FIELD_NAME / nilai |
+|---|---|---|---|
+| ADD | SCREEN / UPLOAD | Part baru (Add Part di layar / flag A) | PCS_CASE, MAX_CASE_DAY, … (OLD kosong) |
+| EDIT | SCREEN / UPLOAD | Ubah data part (Edit di layar / flag E) | PCS_CASE, MAX_CASE_DAY, PART_STATUS, MAD, EFFECTIVE_START_DATE |
+| MAPPING | SCREEN / UPLOAD | Tambah / ubah / hapus destinasi (periode berjalan) | Kode destinasi; OLD/NEW = Case/Day |
+| SYNC | RPA | Hasil Sync | SYNC_STATUS: Waiting → Success / Failed + pesan |
+
+Dibaca oleh modal *History setting* di Part List.
+
+Di batch ini: event **ADD** (flag A) / **EDIT** (flag E), source **UPLOAD**, satu record per field yang berubah.
 
 ### 8.6 TB_M_PART_CROSSDOCK_DTL — *terkait, tidak disentuh batch ini*
 Detail part (Minimum MAD, Case/Day) dari sub-menu Part Detail. Tidak dibaca/ditulis oleh upload Part List.
@@ -159,5 +169,5 @@ MSG ID semua masih **TBD**.
 ## 11. Open points
 - Panjang VARCHAR semua kolom dan nama field Part Name di TB_M_PART_MASTER.
 - Lokasi file template & result report; retensi Log.
-- Apakah upload ikut menulis history ke TB_H_PART_CANDIDATE; event yang dicatat dan retensinya.
+- Kolom fisik TB_H_PART_CANDIDATE dan retensinya.
 - Screen/Batch ID final (sekarang X2) dan MSG ID.

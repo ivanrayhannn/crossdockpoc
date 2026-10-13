@@ -1401,6 +1401,52 @@
     ]
    },
    {
+    "source": "Key-in from screen",
+    "destination": {
+     "table": "TB_H_PART_CANDIDATE",
+     "operation": "Insert",
+     "description": "Edit mapping - [Save]"
+    },
+    "mappings": [
+     {
+      "dest_field": "PART_NO",
+      "description": "Part of the event"
+     },
+     {
+      "dest_field": "PERIOD",
+      "description": "Ongoing calculation period"
+     },
+     {
+      "dest_field": "EVENT",
+      "description": "'MAPPING'"
+     },
+     {
+      "dest_field": "SOURCE",
+      "description": "'SCREEN'"
+     },
+     {
+      "dest_field": "FIELD_NAME",
+      "description": "Destination code (added, changed or removed)"
+     },
+     {
+      "dest_field": "OLD_VALUE",
+      "description": "Case/Day before (blank when added)"
+     },
+     {
+      "dest_field": "NEW_VALUE",
+      "description": "Case/Day after (blank when removed)"
+     },
+     {
+      "dest_field": "CHANGED_BY",
+      "description": "Login user ID"
+     },
+     {
+      "dest_field": "CHANGED_DT",
+      "description": "Server system date and time"
+     }
+    ]
+   },
+   {
     "source": {
      "table": "TB_M_PART_CANDIDATE",
      "keys": [
@@ -1463,9 +1509,9 @@
    {
     "source": "RPA result (global system)",
     "destination": {
-     "table": "Sync log",
+     "table": "TB_H_PART_CANDIDATE",
      "operation": "Insert",
-     "description": "Written by the RPA"
+     "description": "Sync result - by the RPA"
     },
     "mappings": [
      {
@@ -1477,16 +1523,32 @@
       "description": "Ongoing calculation period"
      },
      {
-      "dest_field": "SYNC_DT",
+      "dest_field": "EVENT",
+      "description": "'SYNC'"
+     },
+     {
+      "dest_field": "SOURCE",
+      "description": "'RPA'"
+     },
+     {
+      "dest_field": "FIELD_NAME",
+      "description": "'SYNC_STATUS'"
+     },
+     {
+      "dest_field": "OLD_VALUE",
+      "description": "'Waiting'"
+     },
+     {
+      "dest_field": "NEW_VALUE",
+      "description": "'Success' / 'Failed: <SYNC_MESSAGE>'"
+     },
+     {
+      "dest_field": "CHANGED_BY",
+      "description": "RPA user ID (TBD)"
+     },
+     {
+      "dest_field": "CHANGED_DT",
       "description": "Date-time of the RPA result"
-     },
-     {
-      "dest_field": "SYNC_STATUS",
-      "description": "'1' Success / '2' Failed"
-     },
-     {
-      "dest_field": "SYNC_MESSAGE",
-      "description": "Reason when Failed"
      }
     ]
    }
@@ -1603,6 +1665,7 @@
     "If the mapping was changed by another user after edit mode started, display message no. 8. Stop.",
     "Replace the rows of the part and the ongoing period in TB_M_PART_CANDIDATE_DEST by the rows of the draft (refer Data Edit Mapping).",
     "Set SYNC_STATUS = 0 (No Sync) in TB_M_PART_CANDIDATE, so the D/S user synchronises the part again.",
+    "Insert a history record per added, changed or removed destination in TB_H_PART_CANDIDATE (event MAPPING, source SCREEN).",
     "Leave edit mode and show the saved mapping."
    ]
   },
@@ -1647,7 +1710,7 @@
     "Replace the data of the part in the global system with this complete set, so a change such as Japan up and Thailand down, or a removed destination, arrives as one consistent update.",
     "Write the result back to TB_M_PART_CANDIDATE: SYNC_STATUS = 1 (Success) or 2 (Failed), SYNC_DT and SYNC_MESSAGE (reason when Failed).",
     "If the part was changed after the RPA read it (CHANGED_DT differs), set SYNC_STATUS = 0 (No Sync) instead of Success, so the newer data is sent by the next Sync.",
-    "Record every part in the Sync log (part, period, date-time, result, message)."
+    "Record every part in TB_H_PART_CANDIDATE (event SYNC, source RPA, result and message)."
    ]
   },
   {
@@ -1762,7 +1825,7 @@
   {
    "type": "text",
    "level": 2,
-   "text": "Sync Status is kept per part in TB_M_PART_CANDIDATE because the RPA sends a part as one set (Pcs/Case, Max Case/Day and all destinations). The history per period is kept in the Sync log."
+   "text": "Sync Status is kept per part in TB_M_PART_CANDIDATE because the RPA sends a part as one set (Pcs/Case, Max Case/Day and all destinations). Every mapping change and every Sync result is recorded in the history table TB_H_PART_CANDIDATE (with the period)."
   }
  ],
  "display_messages": [

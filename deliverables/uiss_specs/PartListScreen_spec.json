@@ -1640,24 +1640,32 @@
     },
     "mappings": [
      {
-      "source_field": "PART_NO",
-      "dest_field": "PART_NO"
+      "dest_field": "PART_NO",
+      "description": "Part of the event"
+     },
+     {
+      "dest_field": "PERIOD",
+      "description": "Blank (Part List has no period)"
      },
      {
       "dest_field": "EVENT",
-      "description": "TBD (events to log not decided)"
+      "description": "'ADD' (Add Part) / 'EDIT' (Edit part data)"
+     },
+     {
+      "dest_field": "SOURCE",
+      "description": "'SCREEN'"
      },
      {
       "dest_field": "FIELD_NAME",
-      "description": "Changed field (TBD)"
+      "description": "Changed field, e.g. PCS_CASE, MAX_CASE_DAY, PART_STATUS"
      },
      {
       "dest_field": "OLD_VALUE",
-      "description": "Value before Save (TBD)"
+      "description": "Value before Save (blank for ADD)"
      },
      {
       "dest_field": "NEW_VALUE",
-      "description": "Value after Save (TBD)"
+      "description": "Value after Save"
      },
      {
       "dest_field": "CHANGED_BY",
@@ -1808,7 +1816,7 @@
     "History retrieved from inserted data when user add/modify part list data",
     "User clicks the clock icon on a row: open 'History setting' with the change timeline of the part, newest first.",
     "Each event shows the title, date-time, field name, old value (struck through) \u2192 new value and user.",
-    "A part without history shows message no. 12. History is read from TB_H_PART_CANDIDATE. TBD: logged events and retention."
+    "History is read from TB_H_PART_CANDIDATE, which records every change of the part: Add / Edit by screen, Upload, mapping changes (add, change or remove a destination) and Sync results. A part without history shows message no. 12. TBD: column names and retention."
    ]
   },
   {

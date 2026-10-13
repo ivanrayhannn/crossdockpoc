@@ -24,6 +24,7 @@ Batch ID: **TBD** (usulan X4).
 | Input | Destination master (TBD) | DB | Kode destinasi valid: 123 Thailand, 456 Japan, 789 Vietnam |
 | Output | TB_M_PART_CANDIDATE_DEST | DB | Mapping part yang berubah di-**replace** (periode berjalan) |
 | Output | TB_M_PART_CANDIDATE | DB | Sync Status = No Sync untuk part yang berubah |
+| Output | TB_H_PART_CANDIDATE | DB | History per destinasi yang ditambah / diubah / dihapus (event MAPPING, source UPLOAD) |
 | Output | Log (upload log) | DB | 1 record per upload |
 | Output | Result report | Excel | Summary, Result, Re-upload, Changes |
 
@@ -67,6 +68,7 @@ Diisi otomatis oleh **Export Excel** (periode berjalan dipilih): semua part **Ac
 ## 7. Aturan simpan
 - Part di file yang berubah: **hapus** semua baris part + periode berjalan di TB_M_PART_CANDIDATE_DEST, lalu **insert** baris dari file (destinasi baru ditambah, yang tidak ada di file terhapus).
 - Part yang tidak ada di file: tidak diubah.
+- TB_H_PART_CANDIDATE: satu record per destinasi yang ditambah / diubah / dihapus.
 - TB_M_PART_CANDIDATE part yang berubah: SYNC_STATUS = 0, LAST_SOURCE = UPLOAD, LAST_UPLOAD_ID, CHANGED_BY/DT. Kolom lain tidak berubah.
 - Pengiriman ke global system dilakukan **RPA** saat D/S klik [Sync] (lihat `BATCH_RPA_Sync.md`).
 
@@ -111,8 +113,19 @@ Nama tabel fisik **TBD**. Isi yang diketahui: 123 Thailand, 456 Japan, 789 Vietn
 ### 8.4 Log (upload log) — *ditulis*
 Di UISS ditulis **"Log"** saja. Struktur yang diketahui sama dengan Part List Upload (UPLOAD_ID, FUNCTION_ID = MAPPING, FILE_NAME, STATUS, jumlah baris, RESULT_FILE_PATH, START_DT/END_DT, audit). Untuk mapping: SAVED_ROWS = jumlah part yang di-replace, NO_CHANGE_ROWS = jumlah part yang di-skip.
 
-### 8.5 Sync log — *terkait*
-Diisi oleh RPA (bukan batch ini). Lihat `BATCH_RPA_Sync.md`.
+### 8.5 TB_H_PART_CANDIDATE — *ditulis* (history)
+Tabel history semua perubahan part. Kolom fisik **belum ditentukan (TBD)**; field logis yang dipakai di UISS: PART_NO, PERIOD, EVENT, SOURCE, FIELD_NAME, OLD_VALUE, NEW_VALUE, CHANGED_BY, CHANGED_DT (satu record per field yang berubah).
+
+| Event | Source | Kapan | Contoh FIELD_NAME / nilai |
+|---|---|---|---|
+| ADD | SCREEN / UPLOAD | Part baru (Add Part di layar / flag A) | PCS_CASE, MAX_CASE_DAY, … (OLD kosong) |
+| EDIT | SCREEN / UPLOAD | Ubah data part (Edit di layar / flag E) | PCS_CASE, MAX_CASE_DAY, PART_STATUS, MAD, EFFECTIVE_START_DATE |
+| MAPPING | SCREEN / UPLOAD | Tambah / ubah / hapus destinasi (periode berjalan) | Kode destinasi; OLD/NEW = Case/Day |
+| SYNC | RPA | Hasil Sync | SYNC_STATUS: Waiting → Success / Failed + pesan |
+
+Dibaca oleh modal *History setting* di Part List.
+
+Di batch ini: event **MAPPING**, source **UPLOAD**, PERIOD = periode berjalan, satu record per destinasi yang ditambah / diubah / dihapus.
 
 ---
 

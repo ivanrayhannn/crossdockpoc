@@ -24,7 +24,7 @@ Belum ada UISS-Batch tersendiri untuk RPA ini (**TBD**).
 | 1 | Success | RPA berhasil mengirim | RPA |
 | 2 | Failed | RPA gagal; alasan di SYNC_MESSAGE; ikut lagi di [Sync] berikutnya | RPA |
 
-Disimpan **per part** di TB_M_PART_CANDIDATE karena RPA mengirim part sebagai satu set. Riwayat per periode ada di **Sync log**.
+Disimpan **per part** di TB_M_PART_CANDIDATE karena RPA mengirim part sebagai satu set. Riwayat (termasuk periode) dicatat di tabel history **TB_H_PART_CANDIDATE** (event SYNC).
 
 ## 4. Alur
 1. User klik [Sync (n)] → semua part target diset **SYNC_STATUS = 3 (Waiting)**, fungsi RPA dijalankan. Pesan: "Sync requested for {n} part(s)…".
@@ -34,7 +34,7 @@ Disimpan **per part** di TB_M_PART_CANDIDATE karena RPA mengirim part sebagai sa
    3. **Replace** data part di global system dengan set lengkap ini (destinasi yang dihapus ikut terhapus).
    4. Tulis balik ke TB_M_PART_CANDIDATE: SYNC_STATUS = 1 / 2, SYNC_DT, SYNC_MESSAGE.
    5. Kalau part **diubah setelah dibaca RPA** (CHANGED_DT berbeda) → SYNC_STATUS = **0** (bukan Success), supaya data terbaru terkirim di Sync berikutnya.
-   6. Catat ke **Sync log** (part, periode, waktu, hasil, pesan).
+   6. Catat ke **TB_H_PART_CANDIDATE**: event SYNC, source RPA, periode, waktu, hasil dan pesan.
 3. Part Failed menampilkan SYNC_MESSAGE sebagai tooltip di chip status, dan ikut lagi di [Sync] berikutnya.
 4. Save di Part List / Mapping saat part masih Waiting → kembali No Sync (hasil RPA untuk data lama tidak dianggap Success).
 
@@ -64,23 +64,25 @@ Kolom lain (lihat `BATCH_PartList_Upload.md` 8.1): PART_NAME, MAD, TOTAL_PCS_DAY
 | DEST_CODE | **Dikirim** (destinasi) |
 | CASE_DAY | **Dikirim** (Case/Day destinasi) |
 
-### 5.3 Sync log — *ditulis oleh RPA*
-Nama tabel fisik **TBD** (di UISS ditulis "Sync log").
+### 5.3 TB_H_PART_CANDIDATE — *ditulis oleh RPA* (history)
+Tabel history semua perubahan part. Kolom fisik **belum ditentukan (TBD)**; field logis yang dipakai di UISS: PART_NO, PERIOD, EVENT, SOURCE, FIELD_NAME, OLD_VALUE, NEW_VALUE, CHANGED_BY, CHANGED_DT (satu record per field yang berubah).
 
-| Field | Isi |
-|---|---|
-| PART_NO | Part yang di-sync |
-| PERIOD | Periode berjalan |
-| SYNC_DT | Waktu hasil RPA |
-| SYNC_STATUS | 1 Success / 2 Failed |
-| SYNC_MESSAGE | Alasan kalau Failed |
+| Event | Source | Kapan | Contoh FIELD_NAME / nilai |
+|---|---|---|---|
+| ADD | SCREEN / UPLOAD | Part baru (Add Part di layar / flag A) | PCS_CASE, MAX_CASE_DAY, … (OLD kosong) |
+| EDIT | SCREEN / UPLOAD | Ubah data part (Edit di layar / flag E) | PCS_CASE, MAX_CASE_DAY, PART_STATUS, MAD, EFFECTIVE_START_DATE |
+| MAPPING | SCREEN / UPLOAD | Tambah / ubah / hapus destinasi (periode berjalan) | Kode destinasi; OLD/NEW = Case/Day |
+| SYNC | RPA | Hasil Sync | SYNC_STATUS: Waiting → Success / Failed + pesan |
+
+Dibaca oleh modal *History setting* di Part List.
+
+Di Sync: event **SYNC**, source **RPA**, FIELD_NAME = SYNC_STATUS, OLD = Waiting, NEW = Success / Failed: <SYNC_MESSAGE>. (Menggantikan "Sync log" yang terpisah.)
 
 ### 5.4 Global system TMMIN — *tujuan*
 Diakses lewat RPA (tanpa interface). Layar/field yang diisi RPA: **TBD**.
 
 ### 5.5 Tabel lain yang **tidak** dipakai Sync
 - TB_M_PART_CROSSDOCK_DTL (Minimum MAD, Case/Day per part, sub-menu Part Detail) — fungsi pemakainya TBD.
-- TB_H_PART_CANDIDATE (history Part List).
 - Log upload (hanya untuk proses upload).
 
 ---
@@ -94,6 +96,6 @@ Diakses lewat RPA (tanpa interface). Layar/field yang diisi RPA: **TBD**.
 
 ## 7. Open points
 - Detail fungsi RPA: layar global system, urutan input, waktu proses, perilaku kalau RPA tidak tersedia / timeout.
-- Nama tabel fisik Sync log dan retensinya.
+- Kolom fisik TB_H_PART_CANDIDATE dan retensinya; user ID yang dipakai RPA (CHANGED_BY).
 - Perlu UISS-Batch tersendiri untuk RPA function?
 - Apakah status Waiting perlu batas waktu (mis. kembali ke Failed kalau RPA tidak merespons).
