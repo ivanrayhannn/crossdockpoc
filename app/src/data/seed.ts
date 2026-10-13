@@ -191,12 +191,13 @@ function generateBulkParts(): SeedPart[] {
     const destCount = st === 'Candidate' ? 0 : rng.pick([0, 1, 1, 2, 2, 2, 3]);
     const chosen = [...DESTS].sort(() => rng.int(0, 1) - 0.5).slice(0, destCount);
     const mode = rng.pick(['match', 'under', 'over']);
-    const target = mode === 'match' ? mc : mode === 'under' ? Math.max(0, mc - rng.int(2, 10)) : mc + rng.int(2, 10);
+    // The mapped total never exceeds Max Case/Day ('over' kept only so the random sequence stays the same).
+    const target = Math.min(mc, mode === 'match' ? mc : mode === 'under' ? Math.max(0, mc - rng.int(2, 10)) : mc + rng.int(2, 10));
     const dests: SeedPart['dests'] = [];
     let remaining = target;
     chosen.forEach((d, idx) => {
       const isLast = idx === chosen.length - 1;
-      const al = isLast ? Math.max(0, remaining) : Math.max(0, Math.round(remaining / (chosen.length - idx) + rng.int(-3, 3)));
+      const al = isLast ? Math.max(0, remaining) : Math.min(remaining, Math.max(0, Math.round(remaining / (chosen.length - idx) + rng.int(-3, 3))));
       remaining -= al;
       dests.push({ d, al, st: rng.chance(0.9) ? 'Active' : 'Inactive' });
     });

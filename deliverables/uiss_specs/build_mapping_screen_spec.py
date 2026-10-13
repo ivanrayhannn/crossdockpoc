@@ -3,6 +3,26 @@ import json, sys
 import hist_table
 
 T, D, DM = 'TB_M_PART_CANDIDATE', 'TB_M_PART_CANDIDATE_DEST', 'TB_M_H0125 (Destination Master)'
+DM_COLS = [
+    ["DESTINATION_CODE", "TBD", "Y", "N", "Destination code, e.g. 123. Used by Crossdock: destination list, upload check 2, DEST_CODE"],
+    ["CUSTOMER_CODE", "TBD", "", "", "Customer code (reference only)"],
+    ["ORDER_TRANSPORTATION_CODE", "TBD", "", "", "Order transportation code (reference only)"],
+    ["BO_INSTRUCTION_CODE", "TBD", "", "", "B/O instruction code (reference only)"],
+    ["DESTINATION_NAME", "TBD", "", "", "Destination name, e.g. Thailand. Used by Crossdock: shown with the code ('123 - Thailand') and in Export Excel"],
+    ["REGION_CODE", "TBD", "", "", "Region code (reference only)"],
+    ["COUNTRY_NAME", "TBD", "", "", "Country name (reference only)"],
+    ["POSTAL_CODE", "TBD", "", "", "Postal code (reference only)"],
+    ["STATE_CODE", "TBD", "", "", "State code (reference only)"],
+    ["DESTINATION_ADDRESS1", "TBD", "", "", "Destination address 1 (reference only)"],
+    ["DESTINATION_ADDRESS2", "TBD", "", "", "Destination address 2 (reference only)"],
+    ["CREATED_BY", "TBD", "", "", "Registrant ID"],
+    ["CREATED_DT", "TBD", "", "", "Created date (TBD: not in the column list received)"],
+    ["CHANGED_BY", "TBD", "", "", "Update Operator ID"],
+    ["CHANGED_DT", "TBD", "", "", "Update Date & Time"]]
+DM_TABLE = {"name": "TB_M_H0125", "kind": "master", "proposed": False,
+            "description": "Destination Master (existing NSP table, read only). Only the listed columns are relevant; physical column names follow the existing table (names here are logical).",
+            "columns": DM_COLS}
+PERIOD_FMT = "CHAR(6) YYYYMM, e.g. 202609 (proposed); displayed as 'Sep 2026'"
 IMG = 'deliverables/uiss_screens/mapping'
 NAME, PROJ = 'FID Rayhan', 'Crossdock Optimization'
 
@@ -17,8 +37,8 @@ def btn(name, desc):
 
 
 B = ["Reset", "Search", "Sync", "Upload Excel", "Export Excel", "Expand (arrow)", "Edit mapping", "Split evenly",
-     "Add destination", "Remove destination", "Cancel", "Save", "Close", "Validate file", "OK"]
-LIST = ["Reset", "Search", "Sync", "Upload Excel", "Export Excel", "Expand (arrow)"]
+     "Add destination", "Remove destination", "Cancel", "Save", "Close", "Validate file", "OK", "Prev / Next"]
+LIST = ["Reset", "Search", "Sync", "Upload Excel", "Export Excel", "Expand (arrow)", "Prev / Next"]
 EDIT = ["Split evenly", "Add destination", "Remove destination", "Cancel", "Save"]
 
 
@@ -48,6 +68,7 @@ spec = {
    {"name": "Upload Excel", "function": "Open the \"Upload Excel - destination mapping\" modal. Enabled only when the ongoing calculation period is selected."},
    {"name": "Export Excel", "function": "Download the mapping as .xlsx: sheet \"Mapping per Destination\" (active filter) and sheet \"Upload\" (base file for the upload)."},
    {"name": "Expand (arrow)", "function": "Open / close the Destination Mapping panel of the part row."},
+   {"name": "Prev / Next", "function": "Move to the previous / next page of the result list."},
    {"name": "Edit mapping", "function": "Change the Destination Mapping panel into edit mode (ongoing period only)."},
    {"name": "Split evenly", "function": "Divide Max Case/Day evenly over all destinations of the part."},
    {"name": "Add destination", "function": "Add a new destination row (destination not selected, Case/Day 0)."},
@@ -77,6 +98,7 @@ spec = {
   "screen_mode_remarks": [
    "1) Sync is enabled only when at least one Active part of the ongoing period is No Sync or Failed (not limited to the listed rows).",
    "2) Split evenly is shown only in edit mode when the part has more than one destination row.",
+   "4) Prev is disabled on the first page and Next on the last page.",
    "3) A user logged in with a read-only account cannot use Edit mapping, Sync or Upload Excel. TBD: which accounts are read-only is not defined yet."]
  },
  "screen_flow": [
@@ -142,7 +164,7 @@ spec = {
   btn("Sync (n)", "n = Active parts of the ongoing period with Sync Status No Sync or Failed, whatever the filter. Disabled when n = 0. Refer Operation Description 5.6."),
   btn("Upload Excel", "Disabled for a past period or All periods (tooltip message no. 6). Refer Operation Description 5.7."),
   btn("Export Excel", "Refer Operation Description 5.8."),
-  it("Period", D, "PERIOD", "Varchar", "TBD", "O", "Label", "Left", "", "", "Mon YYYY", "", "Calculation period of the row."),
+  it("Period", D, "PERIOD", "Char", "6", "O", "Label", "Left", "", "", "Mon YYYY", "", "Calculation period of the row. Stored as YYYYMM (proposed), displayed as Mon YYYY."),
   btn("Expand (arrow)", "Opens / closes the Destination Mapping panel of the row."),
   it("Part Number", T, "PART_NO", "Varchar", "TBD", "O", "Label", "Left", "", "", "X..TBD..X", "", ""),
   it("Part Name", T, "PART_NAME", "Varchar", "TBD", "O", "Label", "Left", "", "", "X..TBD..X", "", ""),
@@ -151,6 +173,10 @@ spec = {
   it("Pcs/Day", "", "", "Number", "", "O", "Label", "Right", "", "", "ZZ,ZZ9", "", "= Pcs/Case x Total Case/Day."),
   it("Percentage", "", "", "Number", "", "O", "Label", "Right", "", "", "ZZ9%", "", "= Total Case/Day / Max Case/Day (MAX_CASE_DAY). Never above 100%: Save, upload and the Max Case/Day edit in Part List are blocked above the limit."),
   it("Sync Status", T, "SYNC_STATUS", "Char", "1", "O", "Chip", "Left", "", "", "", "", "0 = No Sync (grey), 3 = Waiting (amber), 1 = Success (green), 2 = Failed (red). The Failed chip shows SYNC_MESSAGE as tooltip (message no. 11)."),
+  {"group": "<Footer Section>"},
+  it("Rows per page", "Key-in", "", "Number", "", "I", "Combo Box", "Left", "25", "N", "", "", "Options 25 / 50 / 100. Change returns to page 1."),
+  it("Paging information", "", "", "Varchar", "", "O", "Label", "Right", "", "", "", "", "'{from}-{to} of {n} parts · page {p}/{total}'."),
+  btn("Prev / Next", "Previous / next page. Refer Screen Mode remark 4)."),
   {"group": "<Empty State Section>"},
   it("Empty state message", "", "", "Varchar", "", "O", "Label", "Center", "", "", "", "", "Display message no. 1."),
   {"group": "<Destination Mapping Panel>"},
@@ -164,7 +190,7 @@ spec = {
   btn("Cancel", "Shown in edit mode; discards the changes."),
   btn("Save", "Shown in edit mode. Disabled while the mapping cannot be saved (Operation Description 5.5)."),
   it("Destination (CD)", D, "DEST_CODE", "Varchar", "TBD", "I/O", "Combo Box", "Left", "New row: 'Select destination'", "Y", "999 - X..X", "Once per part",
-     f"List = {DM} (123 Thailand, 456 Japan, 789 Vietnam). Destinations already used by another row of the same part are hidden."),
+     f"List = DESTINATION_CODE - DESTINATION_NAME of {DM} (e.g. 123 - Thailand, 456 - Japan, 789 - Vietnam). Destinations already used by another row of the same part are hidden."),
   it("Case/Day", D, "CASE_DAY", "Number", "TBD", "I/O", "Text box", "Right", "New row: 0", "Y", "ZZ,ZZ9", "Whole number (TBD: upper limit)", "Editable in edit mode only."),
   it("Pcs/Day", "", "", "Number", "", "O", "Label", "Right", "", "", "ZZ,ZZ9", "", "= Pcs/Case x Case/Day of the destination."),
   it("Percentage", "", "", "Number", "", "O", "Label", "Right", "", "", "ZZ9%", "", "= Case/Day of the destination / total Case/Day of the part."),
@@ -244,7 +270,7 @@ spec = {
   {"type": "bullets", "marker": "a.", "level": 2, "items": [
     "Total Case/Day = sum of CASE_DAY of the part and period; Pcs/Day = Pcs/Case x Total Case/Day.",
     "Percentage = Total Case/Day / Max Case/Day; it never exceeds 100% because the total can not go above Max Case/Day (Save, upload and the Max Case/Day edit in Part List are blocked).",
-    "The table scrolls inside the section (no paging). TBD: whether paging is needed for large data."]},
+    "The list is paged: 25 rows per page by default (25 / 50 / 100), with paging information and [Prev] / [Next]. A part with its Destination Mapping panel counts as one row. [Search], Reset and a change of Rows per page return to page 1."]},
   {"type": "heading", "text": "5.4 Destination Mapping Panel"},
   {"type": "bullets", "marker": "a.", "level": 2, "items": [
     "User clicks the arrow on a row: open the panel with the allocation chip, the note and the destination table (Destination, Case/Day, Pcs/Day, Percentage). All items are read only.",
@@ -304,7 +330,8 @@ spec = {
   {"type": "heading", "text": "5.9 Data Level and Status Definitions"},
   {"type": "table", "level": 2, "row_lines": "all", "columns": [{"title": "Item", "width": 12}, {"title": "Value", "width": 9}, {"title": "Definition", "width": 25}], "rows": [
     ["Table", T, "Part List data, part number level (key PART_NO). Holds Max Case/Day, status and Sync Status."],
-    ["Table", D, "Mapping data, part number + calculation period + destination level (key PART_NO, PERIOD, DEST_CODE)."],
+    ["Table", D, "Mapping data, part number + calculation period + destination level (key PART_NO, PERIOD, DEST_CODE). PERIOD = " + PERIOD_FMT + "."],
+    ["Table", "TB_M_H0125", "Destination Master (existing, read only). Crossdock uses DESTINATION_CODE and DESTINATION_NAME only."],
     ["Part Status", "Active", "Only Active parts are mapped in the ongoing period."],
     ["Sync Status", "No Sync (0)", "Not sent yet, or changed since the last synchronisation."],
     ["Sync Status", "Waiting (3)", "[Sync] clicked; waiting for the RPA."],

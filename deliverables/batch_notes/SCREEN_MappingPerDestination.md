@@ -27,7 +27,8 @@ Screen ID: **X3**.
 - **Periode berjalan**: semua part **Active** dari TB_M_PART_CANDIDATE + destinasinya (part tanpa destinasi tampil dengan Total Case/Day 0).
 - **Periode lalu**: semua part yang punya baris di TB_M_PART_CANDIDATE_DEST untuk periode itu, apa pun statusnya sekarang. All periods = keduanya.
 - Default No Sync → part Success / Failed tersembunyi sampai filter diubah.
-- Tabel scroll di dalam section (tanpa paging). **TBD**: perlu paging?; cara periode dibuat.
+- **Paging**: 25 baris per halaman (25 / 50 / 100), info "1–25 of N parts · page 1/n", tombol Prev / Next. Satu part (termasuk panel mapping-nya) = 1 baris. Search, Reset, dan ganti Rows per page → kembali ke halaman 1.
+- **TBD**: cara periode baru dibuat.
 
 ## 4. Result list
 | Kolom | Keterangan |
@@ -100,7 +101,7 @@ Gagal dibuat → MSG9.
 | Kolom | PK | Keterangan | Saat Save mapping |
 |---|---|---|---|
 | PART_NO | Y | FK ke TB_M_PART_CANDIDATE | Part yang diedit |
-| PERIOD | Y | Periode kalkulasi (format TBD) | Periode berjalan |
+| PERIOD | Y | Periode kalkulasi, CHAR(6) YYYYMM mis. 202609 (**usulan**), tampil "Sep 2026" | Periode berjalan |
 | DEST_CODE | Y | Kode destinasi (ada di TB_M_H0125) | Dari draft |
 | CASE_DAY | | Case/Day destinasi (> 0) | Dari draft |
 | CREATED_BY / CREATED_DT | | Audit | Login user / system date |
@@ -119,7 +120,26 @@ Cara simpan: hapus semua baris part + periode berjalan, lalu insert baris draft 
 | CHANGED_BY / CHANGED_DT | Diupdate saat Save; dibandingkan RPA |
 
 ### 10.3 TB_M_H0125 (Destination Master) — *dibaca*
-Isi diketahui: 123 Thailand, 456 Japan, 789 Vietnam.
+Tabel master existing NSP, **hanya dibaca**. Kolom yang relevan (kolom lain diabaikan; nama fisik mengikuti tabel existing):
+
+| Kolom | Dipakai Crossdock |
+|---|---|
+| Destination Code (PK) | **Ya** – list Destination (CD), cek upload no. 2, disimpan sebagai DEST_CODE |
+| Customer Code | Referensi |
+| Order Transportation Code | Referensi |
+| B/O Instruction Code | Referensi |
+| Destination Name | **Ya** – tampil bersama kode ("123 - Thailand") dan di Export Excel |
+| Region Code | Referensi |
+| Country Name | Referensi |
+| Postal Code | Referensi |
+| State Code | Referensi |
+| Destination Address 1 / 2 | Referensi |
+| Created By (Registrant ID) | Audit |
+| Created Date | Audit – **belum ada di daftar kolom yang diterima** |
+| Update By (Update Operator ID) | Audit |
+| Update DT (Update Date & Time) | Audit |
+
+Contoh data: 123 Thailand, 456 Japan, 789 Vietnam.
 
 ### 10.4 TB_H_PART_CANDIDATE — *ditulis* (history)
 Tabel history semua perubahan part. **Usulan** definisi fisik (insert only, satu record per field yang berubah; index PART_NO + CREATED_DT):
@@ -128,7 +148,7 @@ Tabel history semua perubahan part. **Usulan** definisi fisik (insert only, satu
 |---|---|---|---|---|
 | HIST_ID | BIGINT | Y | N | Running number (identity) |
 | PART_NO | VARCHAR(TBD) |  | N | Part number; length follows TB_M_PART_MASTER |
-| PERIOD | VARCHAR(TBD) |  | Y | Calculation period for MAPPING / SYNC; NULL for ADD / EDIT (Part List has no period) |
+| PERIOD | CHAR(6) |  | Y | Calculation period YYYYMM for MAPPING / SYNC; NULL for ADD / EDIT (Part List has no period) |
 | EVENT_TYPE | VARCHAR(10) |  | N | ADD / EDIT / MAPPING / SYNC |
 | SOURCE | VARCHAR(10) |  | N | SCREEN / UPLOAD / RPA |
 | UPLOAD_ID | VARCHAR(TBD) |  | Y | Upload of the change (Log); NULL when not from an upload |
@@ -175,7 +195,7 @@ Di layar ini: event **MAPPING** source **SCREEN** saat Save (PERIOD = periode be
 | MSG11 | Hover chip Failed | Info | Sync failed: {SYNC_MESSAGE}. The part is sent again with the next Sync. |
 
 ## 12. Open points
-- Format PERIOD dan cara periode dibuat; nama kolom di TB_M_H0125.
-- Paging untuk data besar.
+- Konfirmasi format PERIOD (usulan YYYYMM) dan cara periode baru dibuat.
+- Kolom Created Date di TB_M_H0125.
 - Detail fungsi RPA; batas waktu status Waiting.
 - Konfirmasi usulan kolom dan retensi TB_H_PART_CANDIDATE (10.4).

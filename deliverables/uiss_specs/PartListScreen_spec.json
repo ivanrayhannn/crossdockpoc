@@ -1892,10 +1892,10 @@
     ],
     [
      "PERIOD",
-     "VARCHAR(TBD)",
+     "CHAR(6)",
      "",
      "Y",
-     "Calculation period for MAPPING / SYNC; NULL for ADD / EDIT (Part List has no period)"
+     "Calculation period YYYYMM for MAPPING / SYNC; NULL for ADD / EDIT (Part List has no period)"
     ],
     [
      "EVENT_TYPE",
@@ -2258,10 +2258,10 @@
     ],
     [
      "PERIOD",
-     "VARCHAR(TBD)",
+     "CHAR(6)",
      "",
      "Y",
-     "Calculation period for MAPPING / SYNC; NULL for ADD / EDIT (Part List has no period)"
+     "Calculation period YYYYMM for MAPPING / SYNC; NULL for ADD / EDIT (Part List has no period)"
     ],
     [
      "EVENT_TYPE",

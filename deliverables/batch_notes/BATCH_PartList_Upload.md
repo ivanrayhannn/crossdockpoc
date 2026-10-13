@@ -134,7 +134,7 @@ Tabel history semua perubahan part. **Usulan** definisi fisik (insert only, satu
 |---|---|---|---|---|
 | HIST_ID | BIGINT | Y | N | Running number (identity) |
 | PART_NO | VARCHAR(TBD) |  | N | Part number; length follows TB_M_PART_MASTER |
-| PERIOD | VARCHAR(TBD) |  | Y | Calculation period for MAPPING / SYNC; NULL for ADD / EDIT (Part List has no period) |
+| PERIOD | CHAR(6) |  | Y | Calculation period YYYYMM for MAPPING / SYNC; NULL for ADD / EDIT (Part List has no period) |
 | EVENT_TYPE | VARCHAR(10) |  | N | ADD / EDIT / MAPPING / SYNC |
 | SOURCE | VARCHAR(10) |  | N | SCREEN / UPLOAD / RPA |
 | UPLOAD_ID | VARCHAR(TBD) |  | Y | Upload of the change (Log); NULL when not from an upload |

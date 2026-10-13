@@ -2,6 +2,26 @@
 import json, sys
 import hist_table
 
+DM_COLS = [
+    ["DESTINATION_CODE", "TBD", "Y", "N", "Destination code, e.g. 123. Used by Crossdock: destination list, upload check 2, DEST_CODE"],
+    ["CUSTOMER_CODE", "TBD", "", "", "Customer code (reference only)"],
+    ["ORDER_TRANSPORTATION_CODE", "TBD", "", "", "Order transportation code (reference only)"],
+    ["BO_INSTRUCTION_CODE", "TBD", "", "", "B/O instruction code (reference only)"],
+    ["DESTINATION_NAME", "TBD", "", "", "Destination name, e.g. Thailand. Used by Crossdock: shown with the code ('123 - Thailand') and in Export Excel"],
+    ["REGION_CODE", "TBD", "", "", "Region code (reference only)"],
+    ["COUNTRY_NAME", "TBD", "", "", "Country name (reference only)"],
+    ["POSTAL_CODE", "TBD", "", "", "Postal code (reference only)"],
+    ["STATE_CODE", "TBD", "", "", "State code (reference only)"],
+    ["DESTINATION_ADDRESS1", "TBD", "", "", "Destination address 1 (reference only)"],
+    ["DESTINATION_ADDRESS2", "TBD", "", "", "Destination address 2 (reference only)"],
+    ["CREATED_BY", "TBD", "", "", "Registrant ID"],
+    ["CREATED_DT", "TBD", "", "", "Created date (TBD: not in the column list received)"],
+    ["CHANGED_BY", "TBD", "", "", "Update Operator ID"],
+    ["CHANGED_DT", "TBD", "", "", "Update Date & Time"]]
+DM_TABLE = {"name": "TB_M_H0125", "kind": "master", "proposed": False,
+            "description": "Destination Master (existing NSP table, read only). Only the listed columns are relevant; physical column names follow the existing table (names here are logical).",
+            "columns": DM_COLS}
+PERIOD_FMT = "CHAR(6) YYYYMM, e.g. 202609 (proposed); displayed as 'Sep 2026'"
 T, D, LOG, DM = 'TB_M_PART_CANDIDATE', 'TB_M_PART_CANDIDATE_DEST', 'Log', 'TB_M_H0125 (Destination Master)'
 SHEET = 'Excel file - sheet Upload (valid rows)'
 NAME, PROJ = 'FID Rayhan', 'Crossdock Optimization'
@@ -203,7 +223,7 @@ spec = {
   {"type": "column_break"},
   {"type": "table", "level": 0, "row_lines": "all", "columns": [{"title": "No", "width": 3, "align": "center"}, {"title": "Check", "width": 31}, {"title": "Column", "width": 12}], "rows": [
     ["1", "Part No exists in TB_M_PART_CANDIDATE and its status is Active.", "part_no"],
-    ["2", "Destination code exists in the destination master (TB_M_H0125).", "dest_code"],
+    ["2", "Destination code exists in TB_M_H0125 (Destination Master, DESTINATION_CODE).", "dest_code"],
     ["3", "case_day is a whole number greater than 0 when dest_code is filled.", "case_day"],
     ["4", "A destination code appears only once per part in the file.", "dest_code"],
     ["5", "dest_code and case_day are both filled, or both blank (placeholder row). Only one of the two filled is an error.", "dest_code, case_day"],
@@ -246,10 +266,10 @@ spec = {
                ["CHANGED_BY", "VARCHAR(TBD)", "", "N", "User who last changed the record"], ["CHANGED_DT", "DATETIME", "", "N", "Last changed date and time"]]},
   {"name": D, "kind": "transaction", "proposed": False, "description": "Destination mapping, one record per part, calculation period and destination (Mapping per Destination data). Target of a successful upload.",
    "columns": [["PART_NO", "VARCHAR(TBD)", "Y", "N", "Part number; FK to TB_M_PART_CANDIDATE"],
-               ["PERIOD", "VARCHAR(TBD)", "Y", "N", "Calculation period, e.g. Sep 2026 (format TBD)"],
+               ["PERIOD", "CHAR(6)", "Y", "N", "Calculation period, YYYYMM e.g. 202609 (proposed); displayed as Sep 2026"],
                ["DEST_CODE", "VARCHAR(TBD)", "Y", "N", "Destination code; exists in TB_M_H0125 (Destination Master)"],
                ["CASE_DAY", "INT", "", "N", "Allocated Case/Day of the destination (> 0)"],
                ["CREATED_BY", "VARCHAR(TBD)", "", "N", "User who created the record"], ["CREATED_DT", "DATETIME", "", "N", "Created date and time"],
-               ["CHANGED_BY", "VARCHAR(TBD)", "", "N", "User who last changed the record"], ["CHANGED_DT", "DATETIME", "", "N", "Last changed date and time"]]}, hist_table.TABLE]
+               ["CHANGED_BY", "VARCHAR(TBD)", "", "N", "User who last changed the record"], ["CHANGED_DT", "DATETIME", "", "N", "Last changed date and time"]]}, hist_table.TABLE, DM_TABLE]
 }
 json.dump(spec, open(sys.argv[1], 'w'), indent=1)

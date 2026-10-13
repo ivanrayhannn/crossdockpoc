@@ -58,7 +58,7 @@ Diisi otomatis oleh **Export Excel** (periode berjalan dipilih): semua part **Ac
 | No | Aturan | Kolom |
 |---|---|---|
 | 1 | Part No ada di TB_M_PART_CANDIDATE dan status **Active** | part_no |
-| 2 | Kode destinasi ada di TB_M_H0125 (Destination Master) | dest_code |
+| 2 | Kode destinasi ada di TB_M_H0125 (Destination Code) | dest_code |
 | 3 | case_day bilangan bulat > 0 kalau dest_code diisi | case_day |
 | 4 | Satu kode destinasi hanya sekali per part | dest_code |
 | 5 | dest_code dan case_day **keduanya diisi atau keduanya kosong** (placeholder) | dest_code, case_day |
@@ -80,7 +80,7 @@ Diisi otomatis oleh **Export Excel** (periode berjalan dipilih): semua part **Ac
 | Kolom | Tipe | PK | Null | Keterangan | Diisi saat upload |
 |---|---|---|---|---|---|
 | PART_NO | VARCHAR(TBD) | Y | N | FK ke TB_M_PART_CANDIDATE | dari file |
-| PERIOD | VARCHAR(TBD) | Y | N | Periode kalkulasi, mis. Sep 2026 (format TBD) | periode berjalan |
+| PERIOD | CHAR(6) | Y | N | Periode kalkulasi YYYYMM, mis. 202609 (**usulan**; tampil Sep 2026) | periode berjalan |
 | DEST_CODE | VARCHAR(TBD) | Y | N | Kode destinasi; ada di TB_M_H0125 | dari file |
 | CASE_DAY | INT | | N | Case/Day destinasi (> 0) | dari file |
 | CREATED_BY | VARCHAR(TBD) | | N | User pembuat | login user |
@@ -108,7 +108,26 @@ Diisi otomatis oleh **Export Excel** (periode berjalan dipilih): semua part **Ac
 | CHANGED_BY / CHANGED_DT | | | N | Audit | login user / system date |
 
 ### 8.3 TB_M_H0125 (Destination Master) — *dibaca*
-Isi yang diketahui: 123 Thailand, 456 Japan, 789 Vietnam (kode + nama).
+Tabel master existing NSP, **hanya dibaca**. Kolom yang relevan (kolom lain diabaikan; nama fisik mengikuti tabel existing):
+
+| Kolom | Dipakai Crossdock |
+|---|---|
+| Destination Code (PK) | **Ya** – list Destination (CD), cek upload no. 2, disimpan sebagai DEST_CODE |
+| Customer Code | Referensi |
+| Order Transportation Code | Referensi |
+| B/O Instruction Code | Referensi |
+| Destination Name | **Ya** – tampil bersama kode ("123 - Thailand") dan di Export Excel |
+| Region Code | Referensi |
+| Country Name | Referensi |
+| Postal Code | Referensi |
+| State Code | Referensi |
+| Destination Address 1 / 2 | Referensi |
+| Created By (Registrant ID) | Audit |
+| Created Date | Audit – **belum ada di daftar kolom yang diterima** |
+| Update By (Update Operator ID) | Audit |
+| Update DT (Update Date & Time) | Audit |
+
+Contoh data: 123 Thailand, 456 Japan, 789 Vietnam.
 
 ### 8.4 Log (upload log) — *ditulis*
 Di UISS ditulis **"Log"** saja. Struktur yang diketahui sama dengan Part List Upload (UPLOAD_ID, FUNCTION_ID = MAPPING, FILE_NAME, STATUS, jumlah baris, RESULT_FILE_PATH, START_DT/END_DT, audit). Untuk mapping: SAVED_ROWS = jumlah part yang di-replace, NO_CHANGE_ROWS = jumlah part yang di-skip.
@@ -120,7 +139,7 @@ Tabel history semua perubahan part. **Usulan** definisi fisik (insert only, satu
 |---|---|---|---|---|
 | HIST_ID | BIGINT | Y | N | Running number (identity) |
 | PART_NO | VARCHAR(TBD) |  | N | Part number; length follows TB_M_PART_MASTER |
-| PERIOD | VARCHAR(TBD) |  | Y | Calculation period for MAPPING / SYNC; NULL for ADD / EDIT (Part List has no period) |
+| PERIOD | CHAR(6) |  | Y | Calculation period YYYYMM for MAPPING / SYNC; NULL for ADD / EDIT (Part List has no period) |
 | EVENT_TYPE | VARCHAR(10) |  | N | ADD / EDIT / MAPPING / SYNC |
 | SOURCE | VARCHAR(10) |  | N | SCREEN / UPLOAD / RPA |
 | UPLOAD_ID | VARCHAR(TBD) |  | Y | Upload of the change (Log); NULL when not from an upload |
@@ -168,7 +187,7 @@ Di batch ini: event **MAPPING**, source **UPLOAD**, PERIOD = periode berjalan, U
 - Error file: F1–F5.
 
 ## 11. Open points
-- Format PERIOD dan cara periode dibuat; nama kolom di TB_M_H0125.
+- Konfirmasi format PERIOD (usulan YYYYMM) dan cara periode baru dibuat; kolom Created Date di TB_M_H0125.
 - Panjang VARCHAR; lokasi template & result report; retensi Log.
 - Konfirmasi usulan kolom dan retensi TB_H_PART_CANDIDATE.
 - ~~Batch ID dan MSG ID~~ → X4, LOG1–LOG9. ~~Persentase > 100%~~ → tidak perlu.

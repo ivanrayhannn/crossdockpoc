@@ -1,9 +1,11 @@
-import { useMemo, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { CUR_PER, DOTS, MASTER_DESTS, PERIODS } from '../../../data/seed';
 import { fmt, num, syncBadge } from '../../../lib/format';
 import type { DestAllocation, Part } from '../../../types';
 import { exportMappingXlsx } from '../mappingExport';
 import type { CrossdockState } from '../useCrossdockState';
+
+const PAGE_SIZE_OPTIONS = [25, 50, 100];
 
 const th: React.CSSProperties = {
   textAlign: 'left',
@@ -60,6 +62,17 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
       window.alert('Export Excel failed. Please try again.');
     });
   };
+
+  // Paging: back to page 1 whenever the applied criteria or the page size change.
+  const [pageSize, setPageSize] = useState(25);
+  const pageKey = `${JSON.stringify(aq)}|${pageSize}`;
+  const [pageState, setPageState] = useState({ key: pageKey, page: 1 });
+  const page = pageState.key === pageKey ? pageState.page : 1;
+  const setPage = (n: number) => setPageState({ key: pageKey, page: n });
+  const totalPages = Math.max(1, Math.ceil(destRowsSrc.length / pageSize));
+  const pageClamped = Math.min(page, totalPages);
+  const pageStart = (pageClamped - 1) * pageSize;
+  const pageRows = destRowsSrc.slice(pageStart, pageStart + pageSize);
 
   const numberOptions = useMemo(() => {
     const seen = new Set<string>();
@@ -197,7 +210,7 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
                 </tr>
               </thead>
               <tbody>
-                {destRowsSrc.map((p) => (
+                {pageRows.map((p) => (
                   <DestRow
                     key={p.p}
                     p={p}
@@ -214,6 +227,30 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {destRowsSrc.length > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 13, padding: '9px 16px', borderTop: '1px solid var(--color-divider)', fontSize: 12 }}>
+            <span style={{ color: 'var(--color-neutral-700)' }}>Rows per page</span>
+            <select className="input" value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} style={{ width: 72, minHeight: 28, fontSize: 12, padding: '2px 10px' }}>
+              {PAGE_SIZE_OPTIONS.map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
+            </select>
+            <span style={{ marginLeft: 'auto', color: 'var(--color-neutral-700)', fontVariantNumeric: 'tabular-nums' }}>
+              {pageStart + 1}–{Math.min(pageStart + pageSize, destRowsSrc.length)} of {destRowsSrc.length} {destRowsSrc.length === 1 ? 'part' : 'parts'} · page {pageClamped}/{totalPages}
+            </span>
+            <span style={{ display: 'flex', gap: 3 }}>
+              <button className="btn btn-secondary" onClick={() => setPage(Math.max(1, pageClamped - 1))} disabled={pageClamped <= 1} style={{ fontSize: 12, padding: '3px 11px' }}>
+                Prev
+              </button>
+              <button className="btn btn-secondary" onClick={() => setPage(Math.min(totalPages, pageClamped + 1))} disabled={pageClamped >= totalPages} style={{ fontSize: 12, padding: '3px 11px' }}>
+                Next
+              </button>
+            </span>
           </div>
         )}
 
