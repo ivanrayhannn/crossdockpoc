@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { fmt, madAvg, num, parseDt } from '../../../lib/format';
+import { fmt, num, parseDt } from '../../../lib/format';
 import type { Part, PartQuery, PartStatus } from '../../../types';
 import { selectParts } from '../partList';
 
@@ -75,14 +75,13 @@ export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHist
   const pageSrc = rowsSrc.slice(pageStart, pageStart + pageSize);
 
   const rows = pageSrc.map((p) => {
-    const avg = madAvg(p.mad);
-    // Candidate parts have no MAD history yet, so the Min MAD warning doesn't apply.
-    const below = p.st !== 'Candidate' && avg < num(p.minMad);
+    // MAD is filled by the calculation function; it stays blank until a value exists.
+    const hasMad = p.minMad !== '' && p.minMad != null;
     return {
       p,
-      minMad: fmt(num(p.minMad)),
-      minMadFg: below ? 'var(--color-warn-fg)' : 'var(--color-neutral-800)',
-      minMadW: below ? 700 : 400,
+      minMad: hasMad ? fmt(num(p.minMad)) : '—',
+      minMadFg: 'var(--color-neutral-800)',
+      minMadW: 400,
       stBg: STATUS_STYLE[p.st].bg,
       stFg: STATUS_STYLE[p.st].fg,
     };
@@ -200,7 +199,7 @@ export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHist
                 <tr>
                   <th style={{ ...th, padding: '0 10px 0 16px', width: 130 }}>Part Number</th>
                   <th style={{ ...th, width: 220 }}>Part Name</th>
-                  <th style={{ ...th, textAlign: 'right', width: 90 }}>Min MAD</th>
+                  <th style={{ ...th, textAlign: 'right', width: 90 }}>MAD</th>
                   <th style={{ ...th, textAlign: 'right', width: 86 }}>Pcs/Case</th>
                   <th style={{ ...th, textAlign: 'right', width: 104 }}>Max Case/Day</th>
                   <th style={{ ...th, textAlign: 'right', width: 104 }}>Total Pcs/Day</th>

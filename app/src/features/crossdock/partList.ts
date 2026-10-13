@@ -30,7 +30,7 @@ function uploadDate(iso: string | undefined): string {
 const LIST_COLUMNS: (Column<Part> & { width: number })[] = [
   { header: { value: 'Part Number', ...HEADER }, cell: (p) => ({ value: p.p }), width: 18 },
   { header: { value: 'Part Name', ...HEADER }, cell: (p) => ({ value: p.n }), width: 32 },
-  { header: { value: 'Min MAD', ...HEADER, align: 'right' }, cell: (p) => ({ value: num(p.minMad), format: NUMBER_FORMAT }), width: 12 },
+  { header: { value: 'MAD', ...HEADER, align: 'right' }, cell: (p) => (p.minMad === '' ? null : { value: num(p.minMad), format: NUMBER_FORMAT }), width: 12 },
   { header: { value: 'Pcs/Case', ...HEADER, align: 'right' }, cell: (p) => ({ value: num(p.pc), format: NUMBER_FORMAT }), width: 12 },
   { header: { value: 'Max Case/Day', ...HEADER, align: 'right' }, cell: (p) => ({ value: num(p.mc), format: NUMBER_FORMAT }), width: 14 },
   { header: { value: 'Total Pcs/Day', ...HEADER, align: 'right' }, cell: (p) => ({ value: num(p.pc) * num(p.mc), format: NUMBER_FORMAT }), width: 15 },
@@ -42,7 +42,7 @@ const LIST_COLUMNS: (Column<Part> & { width: number })[] = [
 /** Sheet 2 "Upload": the upload template (column order of FSD Crossdock Upload Batch) pre-filled with current values (flag E), the base file for Edit uploads. */
 const UPLOAD_COLUMNS: (Column<Part> & { width: number })[] = [
   { header: { value: 'part_no', ...HEADER }, cell: (p) => ({ value: p.p }), width: 18 },
-  { header: { value: 'minimum_mad', ...HEADER }, cell: (p) => ({ value: num(p.minMad) }), width: 14 },
+  { header: { value: 'mad', ...HEADER }, cell: (p) => (p.minMad === '' ? null : { value: num(p.minMad) }), width: 10 },
   { header: { value: 'pcs_case', ...HEADER }, cell: (p) => ({ value: num(p.pc) }), width: 11 },
   { header: { value: 'max_case_day', ...HEADER }, cell: (p) => ({ value: num(p.mc) }), width: 14 },
   { header: { value: 'status', ...HEADER }, cell: (p) => ({ value: p.st }), width: 12 },

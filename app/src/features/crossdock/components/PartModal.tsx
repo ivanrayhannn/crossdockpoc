@@ -153,7 +153,7 @@ export function PartModal({ state }: { state: CrossdockState }) {
                   />
                 </div>
                 <div className="field">
-                  <label>Minimum MAD</label>
+                  <label>MAD <span style={{ color: 'var(--color-neutral-500)', textTransform: 'none', letterSpacing: 0 }}>(optional)</span></label>
                   <input
                     className="input"
                     value={String(f.minMad == null ? '' : f.minMad)}

@@ -488,7 +488,7 @@
       "description": "Not changed"
      },
      {
-      "dest_field": "MIN_MAD",
+      "dest_field": "MAD",
       "description": "Not changed"
      },
      {
@@ -1265,11 +1265,11 @@
      "Retrieved from TB_M_PART_MASTER by PART_NO"
     ],
     [
-     "MIN_MAD",
+     "MAD",
      "INT",
      "",
-     "N",
-     "Minimum MAD"
+     "Y",
+     "MAD; result of the MAD calculation function"
     ],
     [
      "PCS_CASE",

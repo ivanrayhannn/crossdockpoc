@@ -355,8 +355,9 @@
       "description": "TB_M_PART_MASTER.PART_NAME by PART_NO"
      },
      {
-      "source_field": "minimum_mad",
-      "dest_field": "MIN_MAD"
+      "source_field": "mad",
+      "dest_field": "MAD",
+      "description": "Optional; blank = NULL until the MAD calculation function fills it"
      },
      {
       "source_field": "pcs_case",
@@ -448,8 +449,9 @@
       "description": "Not changed"
      },
      {
-      "source_field": "minimum_mad",
-      "dest_field": "MIN_MAD"
+      "source_field": "mad",
+      "dest_field": "MAD",
+      "description": "Optional; blank = not changed"
      },
      {
       "source_field": "pcs_case",
@@ -660,8 +662,8 @@
     ],
     [
      "5",
-     "Min MAD (0 or more), Pcs/Case and Max Case/Day (more than 0) are whole numbers. Required on every row, no blank cell.",
-     "minimum_mad, pcs_case, max_case_day"
+     "Pcs/Case and Max Case/Day are whole numbers greater than 0, required on every row. MAD is optional (filled later by the MAD calculation function); when filled it is a whole number, 0 or more.",
+     "pcs_case, max_case_day, mad"
     ],
     [
      "6",
@@ -813,8 +815,8 @@
      "Part Number"
     ],
     [
-     "minimum_mad",
-     "Minimum MAD"
+     "mad",
+     "MAD (optional; filled later by the MAD calculation function)"
     ],
     [
      "pcs_case",
@@ -857,7 +859,7 @@
     "columns": [
      "Part No",
      "Status",
-     "Min MAD",
+     "MAD",
      "Pcs/Case",
      "Max Case/Day",
      "Effective Date",
@@ -971,7 +973,7 @@
      "No",
      "Scenario",
      "part_no",
-     "minimum_mad",
+     "mad",
      "pcs_case",
      "max_case_day",
      "status",
@@ -1087,6 +1089,18 @@
       "E",
       "",
       "Updated. Status Active -> Inactive, Sync Status No Sync. Inactive -> Active works the same way."
+     ],
+     [
+      "N9",
+      "Add a new part without MAD",
+      "PART-M03",
+      "",
+      25,
+      10,
+      "",
+      "A",
+      "15-Sep-2026",
+      "Inserted. MAD stays blank until the MAD calculation function fills it."
      ]
     ]
    },
@@ -1096,7 +1110,7 @@
      "No",
      "Scenario",
      "part_no",
-     "minimum_mad",
+     "mad",
      "pcs_case",
      "max_case_day",
      "status",
@@ -1199,7 +1213,7 @@
       "",
       "A",
       "14-Sep-2026",
-      "Check 5: pcs_case must be greater than 0. A blank cell in a required column is also an error."
+      "Check 5: pcs_case must be greater than 0. A blank pcs_case or max_case_day is also an error (a blank mad is allowed)."
      ],
      [
       "E7",
@@ -1370,11 +1384,11 @@
      "Retrieved from TB_M_PART_MASTER by PART_NO"
     ],
     [
-     "MIN_MAD",
+     "MAD",
      "INT",
      "",
-     "N",
-     "Minimum MAD"
+     "Y",
+     "MAD; result of the MAD calculation function, optional on Add / Upload"
     ],
     [
      "PCS_CASE",
