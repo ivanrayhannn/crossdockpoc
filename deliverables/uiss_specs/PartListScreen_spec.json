@@ -1283,7 +1283,7 @@
   },
   {
    "name": "Event title",
-   "source": "TBD (history table)",
+   "source": "TB_H_PART_CANDIDATE",
    "field": "TBD",
    "type": "Varchar",
    "len": "",
@@ -1298,7 +1298,7 @@
   },
   {
    "name": "Event date-time",
-   "source": "TBD (history table)",
+   "source": "TB_H_PART_CANDIDATE",
    "field": "TBD",
    "type": "Datetime",
    "len": "",
@@ -1313,7 +1313,7 @@
   },
   {
    "name": "Changed field (old \u2192 new)",
-   "source": "TBD (history table)",
+   "source": "TB_H_PART_CANDIDATE",
    "field": "TBD",
    "type": "Varchar",
    "len": "",
@@ -1328,7 +1328,7 @@
   },
   {
    "name": "User",
-   "source": "TBD (history table)",
+   "source": "TB_H_PART_CANDIDATE",
    "field": "TBD",
    "type": "Varchar",
    "len": "",
@@ -1634,7 +1634,7 @@
      ]
     },
     "destination": {
-     "table": "TBD (history table)",
+     "table": "TB_H_PART_CANDIDATE",
      "operation": "Insert",
      "description": "Add / Edit - [Save]"
     },
@@ -1808,7 +1808,7 @@
     "History retrieved from inserted data when user add/modify part list data",
     "User clicks the clock icon on a row: open 'History setting' with the change timeline of the part, newest first.",
     "Each event shows the title, date-time, field name, old value (struck through) \u2192 new value and user.",
-    "A part without history shows message no. 12. TBD: history source, logged events and retention."
+    "A part without history shows message no. 12. History is read from TB_H_PART_CANDIDATE. TBD: logged events and retention."
    ]
   },
   {

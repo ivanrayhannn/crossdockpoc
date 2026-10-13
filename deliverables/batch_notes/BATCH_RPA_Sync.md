@@ -80,6 +80,7 @@ Diakses lewat RPA (tanpa interface). Layar/field yang diisi RPA: **TBD**.
 
 ### 5.5 Tabel lain yang **tidak** dipakai Sync
 - TB_M_PART_CROSSDOCK_DTL (Minimum MAD, Case/Day per part, sub-menu Part Detail) — fungsi pemakainya TBD.
+- TB_H_PART_CANDIDATE (history Part List).
 - Log upload (hanya untuk proses upload).
 
 ---
