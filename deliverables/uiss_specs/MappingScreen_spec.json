@@ -6,7 +6,9 @@
   "block_name": "Screen",
   "function_name": "TBD Crossdock Master Setting - Mapping per Destination",
   "created_date": "12-Oct-26",
-  "created_by": "FID Rayhan"
+  "created_by": "FID Rayhan",
+  "updated_date": "13-Oct-26",
+  "updated_by": "FID Rayhan"
  },
  "revisions": [
   {
@@ -15,13 +17,20 @@
    "date": "12-Oct-26",
    "reviewed_by": "",
    "description": "Initial draft based on the business decisions for the Crossdock Master Setting Mapping per Destination sub-menu and the crossdockpoc web prototype as of 12-Oct-26 (including Upload Excel). Upload backend is documented in UISS-Batch \"Crossdock Master Setting - Mapping per Destination Upload\"."
+  },
+  {
+   "revision": "0.2",
+   "author": "FID Rayhan",
+   "date": "13-Oct-26",
+   "reviewed_by": "",
+   "description": "Sync through the RPA: [Sync] sets every Active No Sync / Failed part of the ongoing period to Waiting (3), whatever the filter; the RPA sends Pcs/Case, Max Case/Day and the whole mapping of the part to the global system and writes back Success / Failed, SYNC_DT, SYNC_MESSAGE and the Sync log. Sync Status filter gets Waiting."
   }
  ],
  "general": {
   "objective": [
    "To split the Max Case/Day of each Active part over destinations (Thailand, Japan, Vietnam) for the ongoing calculation period.",
    "To display the destination mapping per part and calculation period, including past periods (read only).",
-   "To synchronise changed mappings to the target system and show the Sync Status of each part.",
+   "To hand changed parts to the RPA, which sends them to the global system, and show the Sync Status of each part.",
    "To export the mapping to Excel and upload the mapping of the ongoing period from Excel.",
    "This sub-menu is opened only for users logged in with a D/S account; users with a Procurement account open the Part List sub-menu instead."
   ],
@@ -56,7 +65,7 @@
    },
    {
     "name": "Sync",
-    "function": "Send the mapping of the listed parts that are No Sync or Failed (ongoing period) to the target system. The label shows the number of parts, e.g. Sync (4)."
+    "function": "Hand every Active part of the ongoing period with Sync Status No Sync or Failed to the RPA, whatever the filter shows; the parts become Waiting. The label shows the number of parts, e.g. Sync (9)."
    },
    {
     "name": "Upload Excel",
@@ -366,7 +375,7 @@
    }
   ],
   "screen_mode_remarks": [
-   "1) Sync is enabled only when at least one listed part of the ongoing period is No Sync or Failed.",
+   "1) Sync is enabled only when at least one Active part of the ongoing period is No Sync or Failed (not limited to the listed rows).",
    "2) Split evenly is shown only in edit mode when the part has more than one destination row.",
    "3) A user logged in with a read-only account cannot use Edit mapping, Sync or Upload Excel. TBD: which accounts are read-only is not defined yet."
   ]
@@ -409,7 +418,7 @@
      },
      {
       "id": "tgt",
-      "label": "Target system (TBD)",
+      "label": "RPA -> global system",
       "type": "db"
      }
     ],
@@ -608,11 +617,11 @@
    "image": "deliverables/uiss_screens/mapping/c_11_split_evenly.png"
   },
   {
-   "caption": "12. Before Sync - Sync (4) with Sync Status = No Sync",
+   "caption": "12. Before Sync - Sync (9): 4 No Sync + 5 Failed Active parts of the ongoing period",
    "image": "deliverables/uiss_screens/mapping/c_12_before_sync.png"
   },
   {
-   "caption": "13. After Sync - viewed with Sync Status = All (Failed parts were not in the filter)",
+   "caption": "13. After Sync - the 9 parts are Waiting for the RPA (viewed with Sync Status = All)",
    "image": "deliverables/uiss_screens/mapping/c_13_after_sync.png"
   },
   {
@@ -671,7 +680,7 @@
    "required": "N",
    "format": "",
    "validation": "",
-   "description": "Options: All / No Sync / Success / Failed."
+   "description": "Options: All / No Sync / Waiting / Success / Failed."
   },
   {
    "name": "Reset",
@@ -734,7 +743,7 @@
    "required": "",
    "format": "",
    "validation": "",
-   "description": "n = listed parts of the ongoing period with Sync Status No Sync or Failed. Disabled when n = 0. Refer Operation Description 5.6."
+   "description": "n = Active parts of the ongoing period with Sync Status No Sync or Failed, whatever the filter. Disabled when n = 0. Refer Operation Description 5.6."
   },
   {
    "name": "Upload Excel",
@@ -899,7 +908,7 @@
    "required": "",
    "format": "",
    "validation": "",
-   "description": "0 = No Sync (grey), 1 = Success (green), 2 = Failed (red)."
+   "description": "0 = No Sync (grey), 3 = Waiting (amber), 1 = Success (green), 2 = Failed (red). The Failed chip shows SYNC_MESSAGE as tooltip (message no. 11)."
   },
   {
    "group": "<Empty State Section>"
@@ -1405,8 +1414,12 @@
      "table": "TB_M_PART_CANDIDATE",
      "keys": [
       {
+       "field": "PART_STATUS",
+       "value": "'Active'"
+      },
+      {
        "field": "SYNC_STATUS",
-       "value": "'0' or '2', listed parts"
+       "value": "'0' or '2'"
       }
      ]
     },
@@ -1417,18 +1430,72 @@
      "keys": [
       {
        "field": "PART_NO",
-       "value": "Each synchronised part"
+       "value": "Each part to synchronise"
       }
      ]
     },
     "mappings": [
      {
       "dest_field": "SYNC_STATUS",
-      "description": "'1' (Success) or '2' (Failed) per result of the target system"
+      "description": "'3' (Waiting); the RPA function is started"
+     }
+    ]
+   },
+   {
+    "source": "RPA result (global system)",
+    "destination": {
+     "table": "TB_M_PART_CANDIDATE",
+     "operation": "Update",
+     "description": "Written by the RPA",
+     "keys": [
+      {
+       "field": "PART_NO",
+       "value": "Each Waiting part"
+      }
+     ]
+    },
+    "mappings": [
+     {
+      "dest_field": "SYNC_STATUS",
+      "description": "'1' (Success) / '2' (Failed); '0' if CHANGED_DT changed after the RPA read the part"
      },
      {
       "dest_field": "SYNC_DT",
-      "description": "Server system date-time (TBD: column)"
+      "description": "Date-time of the RPA result"
+     },
+     {
+      "dest_field": "SYNC_MESSAGE",
+      "description": "Reason when Failed, blank when Success"
+     }
+    ]
+   },
+   {
+    "source": "RPA result (global system)",
+    "destination": {
+     "table": "Sync log",
+     "operation": "Insert",
+     "description": "Written by the RPA"
+    },
+    "mappings": [
+     {
+      "dest_field": "PART_NO",
+      "description": "Synchronised part"
+     },
+     {
+      "dest_field": "PERIOD",
+      "description": "Ongoing calculation period"
+     },
+     {
+      "dest_field": "SYNC_DT",
+      "description": "Date-time of the RPA result"
+     },
+     {
+      "dest_field": "SYNC_STATUS",
+      "description": "'1' Success / '2' Failed"
+     },
+     {
+      "dest_field": "SYNC_MESSAGE",
+      "description": "Reason when Failed"
      }
     ]
    }
@@ -1460,7 +1527,6 @@
    "level": 2,
    "items": [
     "'Part Number' matches by 'contains', case-insensitive; 'Calculation period' and 'Sync Status' match exactly. All criteria are combined with AND.",
-    "The prototype applies the filter while typing. TBD: whether filtering waits for [Search] or the [Search] button is removed.",
     "If no row matches, hide the table and display message no. 1.",
     "With the default Sync Status = No Sync, parts that are Success or Failed are hidden until the filter is changed."
    ]
@@ -1560,15 +1626,50 @@
    "text": "5.6 Sync"
   },
   {
-   "type": "bullets",
+   "type": "item",
    "marker": "a.",
    "level": 2,
+   "text": "User clicks [Sync (n)] (on demand)."
+  },
+  {
+   "type": "bullets",
+   "marker": "1.",
+   "level": 3,
    "items": [
-    "[Sync (n)] sends only the listed rows (active filter) of the ongoing period whose Sync Status is No Sync or Failed.",
-    "Each part gets Sync Status Success, or Failed when the target system rejects it (message no. 10). Failed parts can be sent again.",
-    "With the default filter No Sync, synchronised parts leave the list; change Sync Status to All to see them.",
-    "TBD: target system, payload, error handling and notification."
+    "Select every Active part of the ongoing period with Sync Status No Sync or Failed, whatever the search criteria show (n of the button). Candidate and Inactive parts are never synchronised.",
+    "Set SYNC_STATUS = 3 (Waiting) for these parts in TB_M_PART_CANDIDATE and start the RPA function. Display message no. 10.",
+    "With the default filter No Sync the parts leave the list; select Sync Status = Waiting or All to follow them."
    ]
+  },
+  {
+   "type": "item",
+   "marker": "b.",
+   "level": 2,
+   "text": "RPA function (the global system has no interface, so an RPA enters the data)."
+  },
+  {
+   "type": "bullets",
+   "marker": "1.",
+   "level": 3,
+   "items": [
+    "For each Waiting part, read Pcs/Case and Max Case/Day from TB_M_PART_CANDIDATE and all destinations with Case/Day of the ongoing period from TB_M_PART_CANDIDATE_DEST.",
+    "Replace the data of the part in the global system with this complete set, so a change such as Japan up and Thailand down, or a removed destination, arrives as one consistent update.",
+    "Write the result back to TB_M_PART_CANDIDATE: SYNC_STATUS = 1 (Success) or 2 (Failed), SYNC_DT and SYNC_MESSAGE (reason when Failed).",
+    "If the part was changed after the RPA read it (CHANGED_DT differs), set SYNC_STATUS = 0 (No Sync) instead of Success, so the newer data is sent by the next Sync.",
+    "Record every part in the Sync log (part, period, date-time, result, message)."
+   ]
+  },
+  {
+   "type": "item",
+   "marker": "c.",
+   "level": 2,
+   "text": "A Failed part shows SYNC_MESSAGE as tooltip on its chip (message no. 11) and is included again in the next [Sync]."
+  },
+  {
+   "type": "item",
+   "marker": "d.",
+   "level": 2,
+   "text": "TBD: RPA function details (global system screens, run time, behaviour when the RPA is not available)."
   },
   {
    "type": "heading",
@@ -1647,13 +1748,18 @@
     ],
     [
      "Sync Status",
+     "Waiting (3)",
+     "[Sync] clicked; waiting for the RPA."
+    ],
+    [
+     "Sync Status",
      "Success (1)",
-     "Last synchronisation succeeded."
+     "The RPA sent the part to the global system."
     ],
     [
      "Sync Status",
      "Failed (2)",
-     "Last synchronisation failed; may be retried."
+     "The RPA could not send the part; reason in SYNC_MESSAGE; retried by the next [Sync]."
     ],
     [
      "Period",
@@ -1665,7 +1771,7 @@
   {
    "type": "text",
    "level": 2,
-   "text": "TBD: Sync Status is kept per part (TB_M_PART_CANDIDATE), so a past period row shows the current status of the part; confirm whether a status per period is needed."
+   "text": "Sync Status is kept per part in TB_M_PART_CANDIDATE because the RPA sends a part as one set (Pcs/Case, Max Case/Day and all destinations). The history per period is kept in the Sync log."
   }
  ],
  "display_messages": [
@@ -1761,11 +1867,19 @@
   },
   {
    "event": "Click [Sync] button",
-   "cause": "Target system rejected one or more parts",
-   "type": "Error",
+   "cause": "Parts handed to the RPA",
+   "type": "Info",
    "msg_id": "TBD",
-   "message": "Sync failed for {n} part(s). Their Sync Status is Failed; click Sync to retry. (TBD: final text)",
-   "action": "Click [Sync] again; contact administrator if it persists"
+   "message": "Sync requested for {n} part(s). They stay Waiting until the RPA has sent them to the global system.",
+   "action": "-"
+  },
+  {
+   "event": "Hover a Failed Sync Status chip",
+   "cause": "The RPA could not send the part",
+   "type": "Info",
+   "msg_id": "TBD",
+   "message": "Sync failed: {SYNC_MESSAGE}. The part is sent again with the next Sync.",
+   "action": "Correct the cause if needed and click [Sync]"
   }
  ],
  "logging_messages": [
@@ -1779,13 +1893,13 @@
    "action": "Show [Corresponding Screen Message] on screen (TBD)"
   },
   {
-   "event": "Click [Sync] button",
-   "cause": "Target system returns an error",
+   "event": "RPA function",
+   "cause": "The global system rejects a part",
    "type": "Error",
    "msg_id": "TBD",
-   "message": "Sync of part <PART_NO> failed: <error message>.",
+   "message": "Sync of part <PART_NO> failed: <SYNC_MESSAGE>.",
    "exception": "Y",
-   "action": "Display Message no. 10"
+   "action": "Status Failed; Display Message no. 11 on the chip"
   },
   {
    "event": "Click [Export Excel] button",

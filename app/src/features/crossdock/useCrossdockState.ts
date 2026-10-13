@@ -118,9 +118,10 @@ export function useCrossdockState() {
     setDraftDests(null);
   }, [editDest, draftDests]);
 
+  // The RPA writes Success / Failed back later; the prototype stops at Waiting.
   const syncParts = useCallback((ids: string[]) => {
     const idSet = new Set(ids);
-    setParts((prevParts) => prevParts.map((p) => (idSet.has(p.p) ? { ...p, syncStatus: 1, dt: nowStamp() } : p)));
+    setParts((prevParts) => prevParts.map((p) => (idSet.has(p.p) ? { ...p, syncStatus: 3 } : p)));
   }, []);
 
   const closeModal = useCallback(() => {

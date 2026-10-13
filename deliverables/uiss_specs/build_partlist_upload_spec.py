@@ -1,22 +1,71 @@
 """Spec for UISS_Batch_PartListUpload_v2.xlsx (rebuilt from the v0.2 workbook, then updated to v0.3)."""
 import json, sys
-T, PM, LOG = 'TB_M_PART_CANDIDATE', 'TB_M_PART_MASTER', 'TB_R_CD_UPLOAD_LOG'
+T, PM, LOG = 'TB_M_PART_CANDIDATE', 'TB_M_PART_MASTER', 'Log'
 SHEET = 'Excel file - sheet Upload (valid rows)'
 STATUS_RULE = ('Status: flag A must be blank (a new part is always Candidate). Flag E: a Candidate part must stay '
                'Candidate (blank or Candidate); an Active part may be changed to Inactive and an Inactive part to '
                'Active; no part can be changed to Candidate.')
+B = ''
+INPUT = ['part_no', 'minimum_mad', 'pcs_case', 'max_case_day', 'status', 'flag_add_edit', 'effective_start_date']
+W_IN = [6, 30, 12, 12, 10, 13, 11, 13, 19]
+SAMPLE = {
+ "title": "Sample Input", "heading": "Sample upload scenarios - Part List Upload",
+ "intro": ["Each scenario is a separate upload file. Today = 13-Sep-2026, mapping of the ongoing calculation period = Sep 2026.",
+           "Input columns follow sheet Upload of the Export Excel; a blank cell is a blank value in the file."],
+ "sections": [
+  {"title": "A. Master data before upload", "columns": ["Part No", "Status", "Min MAD", "Pcs/Case", "Max Case/Day", "Effective Date", "Mapped 123", "Mapped 456", "Mapped 789", "Mapped total"],
+   "widths": [12, 16, 10, 10, 13, 15, 11, 11, 11, 13],
+   "rows": [["PART-A", "Active", 800, 60, 24, "01-Aug-2026", 12, 8, 4, 24],
+            ["PART-C", "Active", 200, 10, 30, "01-Aug-2026", B, 12, 18, 30],
+            ["PART-G", "Active", 150, 50, 22, "01-Aug-2026", B, B, B, 0],
+            ["PART-I", "Candidate", 300, 15, 20, "15-Sep-2026", B, B, B, 0],
+            ["PART-M01", "(not registered)", B, B, B, B, B, B, B, B],
+            ["PART-M02", "(not registered)", B, B, B, B, B, B, B, B],
+            ["PART-M03", "(not registered)", B, B, B, B, B, B, B, B]]},
+  {"title": "B. Normal scenarios (file accepted)", "columns": ["No", "Scenario"] + INPUT + ["Expected result"], "widths": W_IN + [55],
+   "rows": [
+    ["N1", "Add a new part", "PART-M01", 300, 20, 15, B, "A", "14-Sep-2026", "Inserted. Status Candidate, Total Pcs/Day 300, Sync Status No Sync, Part Name from TB_M_PART_MASTER."],
+    ["N2", "Add another part, later date", "PART-M02", 500, 12, 40, B, "A", "16-Sep-2026", "Inserted. Total Pcs/Day 480. Both N1 and N2 can be in one file."],
+    ["N3", "Edit a Candidate part, change values and effective date", "PART-I", 300, 15, 18, "Candidate", "E", "20-Sep-2026", "Updated. Max Case/Day 20 -> 18, effective date changed, Total Pcs/Day 270, Sync Status No Sync."],
+    ["N4", "Edit an Active part, raise Max Case/Day", "PART-A", 800, 60, 30, B, "E", B, "Updated. Max Case/Day 24 -> 30, Total Pcs/Day 1,800, Sync Status Success -> No Sync. Mapping is not changed."],
+    ["N5", "Edit with the same values as the master", "PART-A", 800, 60, 24, "Active", "E", B, "NO CHANGE. Row skipped, Sync Status and last update stay."],
+    ["N6", "File with only some parts (one row)", "PART-I", 300, 15, 18, "Candidate", "E", "20-Sep-2026", "Only PART-I is processed. PART-A, C, G are not in the sheet and are not changed."],
+    ["N7", "Lower Max Case/Day after the mapping was reduced to 20 in Mapping per Destination", "PART-A", 800, 60, 20, B, "E", B, "Updated. Max Case/Day 24 -> 20 (not below mapped 20)."],
+    ["N8", "Change an Active part to Inactive", "PART-G", 150, 50, 22, "Inactive", "E", B, "Updated. Status Active -> Inactive, Sync Status No Sync. Inactive -> Active works the same way."]]},
+  {"title": "C. Error scenarios (whole file rejected, nothing saved)", "columns": ["No", "Scenario"] + INPUT + ["Error (4.2 check no.)"], "widths": W_IN + [55],
+   "rows": [
+    ["E1", "Flag is not A or E", "PART-I", 300, 15, 18, B, "X", "20-Sep-2026", "Check 1: flag_add_edit must be A or E."],
+    ["E2", "Part not in part master", "PART-Z99", 100, 10, 10, B, "E", B, "Check 2: Part No not found in TB_M_PART_MASTER."],
+    ["E3", "Add a part that is already registered", "PART-A", 800, 60, 24, B, "A", "14-Sep-2026", "Check 3: Part No already registered, use flag E."],
+    ["E4", "Edit a part that is not registered", "PART-M03", 300, 20, 15, B, "E", B, "Check 3: Part No not registered, use flag A."],
+    ["E5", "Same part twice in the file (row 1)", "PART-I", 300, 15, 18, "Candidate", "E", "20-Sep-2026", "Check 4: Part No appears more than once."],
+    ["E5", "Same part twice in the file (row 2)", "PART-I", 300, 15, 19, "Candidate", "E", "20-Sep-2026", "Check 4: Part No appears more than once."],
+    ["E6", "Invalid number", "PART-M03", 300, 0, 15, B, "A", "14-Sep-2026", "Check 5: pcs_case must be greater than 0. A blank cell in a required column is also an error."],
+    ["E7", "Change the status of a Candidate part", "PART-I", 300, 15, 20, "Active", "E", "15-Sep-2026", "Check 6: the status of a Candidate part cannot be changed by upload. Change it in the Edit part data modal."],
+    ["E8", "Change an Active part to Candidate", "PART-C", 200, 10, 30, "Candidate", "E", B, "Check 6: no part can be changed to Candidate."],
+    ["E9", "Add with a status", "PART-M03", 300, 20, 15, "Active", "A", "14-Sep-2026", "Check 6: status of a new part is always Candidate, leave it blank."],
+    ["E10", "Add without effective date", "PART-M02", 500, 12, 40, B, "A", B, "Check 7: Effective Start Date is required for Candidate."],
+    ["E11", "Effective date in the past", "PART-M02", 500, 12, 40, B, "A", "12-Sep-2026", "Check 7: Effective Start Date must be today or later."],
+    ["E12", "Change effective date of an Active part", "PART-C", 200, 10, 30, B, "E", "20-Sep-2026", "Check 8: effective date can only change while the part is Candidate."],
+    ["E13", "Max Case/Day below existing mapping", "PART-A", 800, 60, 20, B, "E", B, "Check 9: Max Case/Day 20 is below mapped 24. Reduce the mapping first in Mapping per Destination."],
+    ["E14", "Valid row (= N1) mixed with an error row (= E2), row 1", "PART-M01", 300, 20, 15, B, "A", "14-Sep-2026", "Whole file rejected. The valid row is NOT saved."],
+    ["E14", "Valid row mixed with an error row, row 2", "PART-Z99", 100, 10, 10, B, "E", B, "Check 2 on this row. Result report sheet Re-upload lists the rows to correct."]]},
+  {"title": "D. File-level errors (file check 4.1)", "columns": ["No", "Scenario", "Expected result"],
+   "rows": [["F1", "File is .xls or .csv", "Rejected: file must be .xlsx."],
+            ["F2", "File larger than 5 MB", "Rejected: file size exceeds 5 MB."],
+            ["F3", "More than 5,000 data rows, or no data row", "Rejected: row count out of range."],
+            ["F4", "No sheet named Upload (e.g. only sheet Part List)", "Rejected: sheet Upload not found."],
+            ["F5", "A template column is missing (e.g. flag_add_edit deleted)", "Rejected: required column not found."]]}]}
+
 spec = {
  "doc_type": "batch",
  "header": {"phase": "DR", "project_name": "Crossdock Optimization", "block_name": "Batch",
-            "function_name": "TBD Crossdock Master Setting - Part List Upload",
-            "created_date": "08-Oct-26", "created_by": "FID Rayhan", "updated_date": "12-Oct-26", "updated_by": "FID Rayhan"},
+            "function_name": "X2 Crossdock Master Setting - Part List Upload",
+            "created_date": "08-Oct-26", "created_by": "FID Rayhan", "updated_date": "13-Oct-26", "updated_by": "FID Rayhan"},
  "revisions": [
-  {"revision": "0.1", "author": "FID Rayhan", "date": "08-Oct-26", "reviewed_by": "",
-   "description": "Initial draft based on the validated Candidate Part Batch Flow simulation (rules as of 09-Oct-26, build v2)"},
-  {"revision": "0.2", "author": "FID Rayhan", "date": "09-Oct-26", "reviewed_by": "",
-   "description": "Max Case/Day vs existing mapping rule decided (4.2 no. 9); 4.3 simplified; sample upload scenarios added to Appendix"},
-  {"revision": "0.3", "author": "FID Rayhan", "date": "12-Oct-26", "reviewed_by": "",
-   "description": "Status rule changed (4.2 no. 6): Candidate status cannot be changed by upload, Active <-> Inactive can, nothing can become Candidate; Edit maps status to PART_STATUS. Trigger renamed to [Validate file]. Operation and functional flow diagrams added. Scenarios N8, E7, E8 updated. Tables renamed to TB_M_PART_CANDIDATE (part number level, key PART_NO, no period) and TB_M_PART_CANDIDATE_DEST (part number + period + destination level)."}],
+  {"revision": "0.1", "author": "FID Rayhan", "date": "08-Oct-26", "reviewed_by": "", "description": "Initial draft"},
+  {"revision": "0.2", "author": "FID Rayhan", "date": "13-Oct-26", "reviewed_by": "",
+   "description": "Upload log written as Log (no table definition). Sample upload scenarios moved to sheet Sample Input, one value per column. Saved parts are synchronised by the RPA when D/S clicks [Sync] in Mapping per Destination."}],
  "general": {
   "objective": [
    "To process the Part List file uploaded from the Crossdock Master Setting - Part List screen: from the [Validate file] button of the Upload Excel modal until the data is saved to TB_M_PART_CANDIDATE.",
@@ -45,12 +94,7 @@ spec = {
    {"title": "Parameters", "columns": [{"title": "Name", "width": 14}, {"title": "Description", "width": 34}],
     "rows": [["Uploaded file", "File selected by the user on the Part List screen"], ["User", "Login name of the user who clicks [Validate file]"]]},
    {"title": "Execution Schedule", "columns": [{"title": "Item", "width": 12}, {"title": "Description", "width": 36}],
-    "rows": [["Trigger", "Starts when the user clicks [Validate file] in the Upload Excel modal of the Part List screen (on demand, no schedule)."]]}],
-  "constraints": [
-   "Names TB_M_PART_CANDIDATE, TB_M_PART_CANDIDATE_DEST and TB_M_PART_MASTER are as given; other table names are proposed and must follow the project naming convention.",
-   "Change history of the changed fields is not included yet. TBD: history table, logged events and retention are not decided.",
-   "Data level: TB_M_PART_CANDIDATE (Part List) is at part number level, one record per part (key PART_NO), no calculation period. TB_M_PART_CANDIDATE_DEST (Mapping per Destination) is at part number + calculation period + destination level.",
-   "Upload template: sheet Upload is prefilled by Export Excel of the Part List with all parts (flag E). Only changed rows are saved; unchanged rows are skipped."]
+    "rows": [["Trigger", "Starts when the user clicks [Validate file] in the Upload Excel modal of the Part List screen (on demand, no schedule)."]]}]
  },
  "func_flow": {
   "flow": {"direction": "TB", "nodes": [
@@ -96,6 +140,7 @@ spec = {
      {"source_field": "effective_start_date", "dest_field": "EFFECTIVE_START_DATE"},
      {"dest_field": "PART_STATUS", "description": "Default : 'Candidate' (status column must be blank)"},
      {"dest_field": "SYNC_STATUS", "description": "Default : '0' (No Sync)"},
+     {"dest_field": "SYNC_DT", "description": "Default : NULL"}, {"dest_field": "SYNC_MESSAGE", "description": "Default : NULL"},
      {"dest_field": "LAST_SOURCE", "description": "Default : 'UPLOAD'"},
      {"dest_field": "LAST_UPLOAD_ID", "description": "UPLOAD_ID of this run"},
      {"dest_field": "CREATED_BY", "description": "Login name of the user who uploaded"},
@@ -115,6 +160,7 @@ spec = {
      {"source_field": "effective_start_date", "dest_field": "EFFECTIVE_START_DATE", "description": "Only while PART_STATUS = 'Candidate'"},
      {"source_field": "status", "dest_field": "PART_STATUS", "description": "Active <-> Inactive only; blank = not changed"},
      {"dest_field": "SYNC_STATUS", "description": "Set '0' (No Sync)"},
+     {"dest_field": "SYNC_DT", "description": "Not changed"}, {"dest_field": "SYNC_MESSAGE", "description": "Not changed"},
      {"dest_field": "LAST_SOURCE", "description": "Set 'UPLOAD'"},
      {"dest_field": "LAST_UPLOAD_ID", "description": "UPLOAD_ID of this run"},
      {"dest_field": "CREATED_BY", "description": "Not changed"},
@@ -148,10 +194,10 @@ spec = {
   {"type": "text", "level": 0, "text": "Every row is checked and all errors are collected, so the user can correct the file once."},
   {"type": "heading", "text": "4.3 Saving"},
   {"type": "bullets", "marker": "-", "level": 0, "items": [
-    "If any row is rejected, nothing is saved to TB_M_PART_CANDIDATE. The upload status and the error of every row are recorded in the upload log (TB_R_CD_UPLOAD_LOG).",
+    "If any row is rejected, nothing is saved to TB_M_PART_CANDIDATE. The upload status and the error of every row are recorded in the upload log (Log).",
     "If all rows are valid, the data is saved to TB_M_PART_CANDIDATE: flag A inserts a new part (status Candidate), flag E updates the changed values, including status Active <-> Inactive. Rows with no change are skipped.",
     "The status of a Candidate part is changed only in the Edit part data modal on the screen, not by upload.",
-    "Every saved record gets Sync Status = No Sync. Sync to other systems is done manually by D/S.",
+    "Every saved record gets Sync Status = No Sync. It is sent to the global system by the RPA when D/S clicks [Sync] in Mapping per Destination.",
     "A result report (.xlsx) is created for both cases."]},
   {"type": "column_break"},
   {"type": "table", "level": 0, "row_lines": "all", "columns": [{"title": "No", "width": 3, "align": "center"}, {"title": "Check", "width": 31}, {"title": "Column", "width": 12}], "rows": [
@@ -167,14 +213,13 @@ spec = {
  "logging_messages": [
   {"event": "Batch start", "cause": "Batch is called", "type": "Info", "msg_id": "TBD", "message": "Upload batch <UPLOAD_ID> started.", "action": {"system": "Write the log.", "user": "-"}},
   {"event": "Batch end", "cause": "Batch finishes", "type": "Info", "msg_id": "TBD", "message": "Upload batch <UPLOAD_ID> ended. Status <STATUS>, total <TOTAL_ROWS>, saved <SAVED_ROWS>, no change <NO_CHANGE_ROWS>, error <ERROR_ROWS>.", "action": {"system": "Write the log.", "user": "-"}},
-  {"event": "Database access", "cause": "Cannot connect to the database", "type": "Critical", "msg_id": "TBD", "message": "Cannot connect to the database.", "action": {"system": "Stop the batch. Inform system owner by e-mail.", "user": "Contact system owner."}},
   {"event": "Receive file", "cause": "Uploaded file of <UPLOAD_ID> not found", "type": "Error", "msg_id": "TBD", "message": "Uploaded file of <UPLOAD_ID> not found.", "action": {"system": "Stop the batch.", "user": "Upload the file again."}},
   {"event": "File check", "cause": "Extension, size, row count, sheet Upload or header is invalid", "type": "Error", "msg_id": "TBD", "message": "File check failed: <REASON>.", "action": {"system": "Set STATUS = REJECTED. Create the result report.", "user": "Download the file from the screen again and upload it."}},
   {"event": "Row validation", "cause": "A validation rule in 4.2 fails", "type": "Error", "msg_id": "TBD", "message": "Row <ROW_NO> <COLUMN> : <RULE_MESSAGE>.", "action": {"system": "Reject the whole file. Nothing is saved.", "user": "Correct the rows in sheet Re-upload of the result report, then upload again."}},
   {"event": "Row skipped", "cause": "Edit row has the same values as the master", "type": "Info", "msg_id": "TBD", "message": "Row <ROW_NO> Part No <PART_NO> has no change. Skipped.", "action": {"system": "Do not update the record.", "user": "-"}},
-  {"event": "Save to master", "cause": "Insert or update TB_M_PART_CANDIDATE fails", "type": "Error", "msg_id": "TBD", "message": "Cannot save Part No <PART_NO> to TB_M_PART_CANDIDATE.", "action": {"system": "Roll back. Set STATUS = REJECTED.", "user": "Contact system owner."}},
+  {"event": "Save to master", "cause": "Insert or update TB_M_PART_CANDIDATE fails", "type": "Error", "msg_id": "TBD", "message": "Cannot save Part No <PART_NO> to TB_M_PART_CANDIDATE.", "action": {"system": "Roll back. Set STATUS = REJECTED.", "user": "User contact PIC"}},
   {"event": "Result report", "cause": "Result report cannot be created", "type": "Warning", "msg_id": "TBD", "message": "Result report of <UPLOAD_ID> cannot be created.", "action": {"system": "Continue. RESULT_FILE_PATH stays blank.", "user": "Contact system owner."}},
-  {"event": "Unexpected error", "cause": "Any other system error", "type": "Critical", "msg_id": "TBD", "message": "Unexpected error: <ERROR_DETAIL>.", "action": {"system": "Roll back. Set STATUS = REJECTED. Inform system owner by e-mail.", "user": "Contact system owner."}}],
+  {"event": "Unexpected error", "cause": "Any other system error", "type": "Critical", "msg_id": "TBD", "message": "Unexpected error: <ERROR_DETAIL>.", "action": {"system": "Roll back. Set STATUS = REJECTED.", "user": "User contact PIC"}}],
  "appendix_layout": "full",
  "appendix": [
   {"type": "heading", "text": "Upload template (sheet \"Upload\")"},
@@ -182,48 +227,8 @@ spec = {
     ["part_no", "Part Number"], ["minimum_mad", "Minimum MAD"], ["pcs_case", "Pieces per case"], ["max_case_day", "Max Case/Day"],
     ["status", "Candidate / Active / Inactive. Flag A: blank. Flag E: a Candidate part stays Candidate (blank or Candidate); Active <-> Inactive allowed; never Candidate for an Active or Inactive part."],
     ["flag_add_edit", "A = Add, E = Edit"], ["effective_start_date", "DD-Mon-YYYY"]]},
-  {"type": "heading", "text": "Sample upload scenarios (from the Candidate Part Batch Flow simulation)"},
-  {"type": "text", "level": 0, "text": "Each scenario is a separate upload file. Today = 13-Sep-2026. Mapped Case/Day = mapping of the ongoing calculation period (Sep 2026) in Mapping per Destination. Input columns follow sheet Upload: part_no | minimum_mad | pcs_case | max_case_day | status | flag_add_edit | effective_start_date."},
-  {"type": "text", "level": 0, "bold": True, "text": "A. Master data before upload"},
-  {"type": "table", "level": 0, "row_lines": "all", "columns": [{"title": "Part No", "width": 12}, {"title": "Status", "width": 10}, {"title": "Min MAD", "width": 8, "align": "right"}, {"title": "Pcs/Case", "width": 8, "align": "right"}, {"title": "Max Case/Day", "width": 10, "align": "right"}, {"title": "Mapped Case/Day", "width": 18}, {"title": "Effective Date", "width": 12}], "rows": [
-    ["PART-A", "Active", "800", "60", "24", "24 (123:12, 456:8, 789:4)", "01-Aug-2026"],
-    ["PART-C", "Active", "200", "10", "30", "30 (456:12, 789:18)", "01-Aug-2026"],
-    ["PART-G", "Active", "150", "50", "22", "0 (no mapping)", "01-Aug-2026"],
-    ["PART-I", "Candidate", "300", "15", "20", "0", "15-Sep-2026"],
-    ["PART-M01, M02, M03", "(not registered)", "", "", "", "exist only in TB_M_PART_MASTER", ""]]},
-  {"type": "text", "level": 0, "bold": True, "text": "B. Normal scenarios (file accepted)"},
-  {"type": "table", "level": 0, "row_lines": "all", "columns": [{"title": "No", "width": 4}, {"title": "Scenario", "width": 17}, {"title": "Input row", "width": 27}, {"title": "Expected result", "width": 30}], "rows": [
-    ["N1", "Add a new part", "PART-M01 | 300 | 20 | 15 | (blank) | A | 14-Sep-2026", "Inserted. Status Candidate, Total Pcs/Day 300, Sync Status No Sync, Part Name from TB_M_PART_MASTER."],
-    ["N2", "Add another part, later date", "PART-M02 | 500 | 12 | 40 | (blank) | A | 16-Sep-2026", "Inserted. Total Pcs/Day 480. Both N1 and N2 can be in one file."],
-    ["N3", "Edit a Candidate part, change values and effective date", "PART-I | 300 | 15 | 18 | Candidate | E | 20-Sep-2026", "Updated. Max Case/Day 20 -> 18, effective date changed, Total Pcs/Day 270, Sync Status No Sync."],
-    ["N4", "Edit an Active part, raise Max Case/Day", "PART-A | 800 | 60 | 30 | (blank) | E | (blank)", "Updated. Max Case/Day 24 -> 30, Total Pcs/Day 1,800, Sync Status 1 -> No Sync. Mapping is not changed."],
-    ["N5", "Edit with the same values as the master", "PART-A | 800 | 60 | 24 | Active | E | (blank)", "NO CHANGE. Row skipped, Sync Status and last update stay."],
-    ["N6", "File with only some parts", "PART-I only (one row)", "Only PART-I is processed. PART-A, C, G are not in the sheet and are not changed."],
-    ["N7", "Lower Max Case/Day after the mapping was reduced", "Step 1: reduce PART-A mapping to total 20 in Mapping per Destination. Step 2: PART-A | 800 | 60 | 20 | (blank) | E | (blank)", "Updated. Max Case/Day 24 -> 20 (not below mapped 20)."],
-    ["N8", "Change an Active part to Inactive", "PART-G | 150 | 50 | 22 | Inactive | E | (blank)", "Updated. Status Active -> Inactive, Sync Status No Sync. Inactive -> Active works the same way."]]},
-  {"type": "text", "level": 0, "bold": True, "text": "C. Error scenarios (whole file rejected, nothing saved)"},
-  {"type": "table", "level": 0, "row_lines": "all", "columns": [{"title": "No", "width": 4}, {"title": "Scenario", "width": 17}, {"title": "Input row", "width": 27}, {"title": "Error (4.2 check no.)", "width": 30}], "rows": [
-    ["E1", "Flag is not A or E", "PART-I | 300 | 15 | 18 | (blank) | X | 20-Sep-2026", "Check 1: flag_add_edit must be A or E."],
-    ["E2", "Part not in part master", "PART-Z99 | 100 | 10 | 10 | (blank) | E | (blank)", "Check 2: Part No not found in TB_M_PART_MASTER."],
-    ["E3", "Add a part that is already registered", "PART-A | 800 | 60 | 24 | (blank) | A | 14-Sep-2026", "Check 3: Part No already registered, use flag E."],
-    ["E4", "Edit a part that is not registered", "PART-M03 | 300 | 20 | 15 | (blank) | E | (blank)", "Check 3: Part No not registered, use flag A."],
-    ["E5", "Same part twice in the file", "PART-I (two rows)", "Check 4: Part No appears more than once."],
-    ["E6", "Invalid number", "PART-M03 | 300 | 0 | 15 | (blank) | A | 14-Sep-2026", "Check 5: pcs_case must be greater than 0. Blank cell in a required column is also an error."],
-    ["E7", "Change the status of a Candidate part", "PART-I | 300 | 15 | 20 | Active | E | 15-Sep-2026", "Check 6: the status of a Candidate part cannot be changed by upload. Change it in the Edit part data modal on the screen."],
-    ["E8", "Change an Active part to Candidate", "PART-C | 200 | 10 | 30 | Candidate | E | (blank)", "Check 6: no part can be changed to Candidate."],
-    ["E9", "Add with a status", "PART-M03 | 300 | 20 | 15 | Active | A | 14-Sep-2026", "Check 6: status of a new part is always Candidate, leave it blank."],
-    ["E10", "Add without effective date", "PART-M02 | 500 | 12 | 40 | (blank) | A | (blank)", "Check 7: Effective Start Date is required for Candidate."],
-    ["E11", "Effective date in the past", "PART-M02 | 500 | 12 | 40 | (blank) | A | 12-Sep-2026", "Check 7: Effective Start Date must be today or later."],
-    ["E12", "Change effective date of an Active part", "PART-C | 200 | 10 | 30 | (blank) | E | 20-Sep-2026", "Check 8: effective date can only change while the part is Candidate."],
-    ["E13", "Max Case/Day below existing mapping", "PART-A | 800 | 60 | 20 | (blank) | E | (blank)", "Check 9: Max Case/Day 20 is below mapped 24. Reduce the mapping first in Mapping per Destination."],
-    ["E14", "Valid rows mixed with an error row", "N1 row (valid) + E2 row (error) in one file", "Whole file rejected. N1 is NOT saved. Result report sheet Re-upload lists the rows to correct."]]},
-  {"type": "text", "level": 0, "bold": True, "text": "D. File-level errors (file check 4.1)"},
-  {"type": "table", "level": 0, "row_lines": "all", "columns": [{"title": "No", "width": 4}, {"title": "Scenario", "width": 40}, {"title": "Expected result", "width": 34}], "rows": [
-    ["F1", "File is .xls or .csv", "Rejected: file must be .xlsx."],
-    ["F2", "File larger than 5 MB", "Rejected: file size exceeds 5 MB."],
-    ["F3", "More than 5,000 data rows, or no data row", "Rejected: row count out of range."],
-    ["F4", "No sheet named Upload (e.g. only sheet Part List)", "Rejected: sheet Upload not found."],
-    ["F5", "A template column is missing (e.g. flag_add_edit deleted)", "Rejected: required column not found."]]}],
+  {"type": "text", "level": 0, "text": "Sample upload scenarios (master data, accepted files, rejected files): see sheet Sample Input."}],
+ "sample_sheet": SAMPLE,
  "tables": [
   {"name": T, "kind": "transaction", "proposed": False, "description": "Candidate part setting, one record per part (Part List data, no calculation period). Target of a successful upload.",
    "columns": [["PART_NO", "VARCHAR(TBD)", "Y", "N", "Part number; length follows TB_M_PART_MASTER"],
@@ -232,18 +237,12 @@ spec = {
                ["MAX_CASE_DAY", "INT", "", "N", "Total Case/Day of the part (> 0)"], ["TOTAL_PCS_DAY", "INT", "", "N", "PCS_CASE x MAX_CASE_DAY"],
                ["EFFECTIVE_START_DATE", "DATE", "", "Y", "Effective start date; required while the part is Candidate"],
                ["PART_STATUS", "VARCHAR(TBD)", "", "N", "Candidate / Active / Inactive"],
-               ["SYNC_STATUS", "CHAR(1)", "", "N", "0 = No Sync, 1 = Success, 2 = Failed"],
+               ["SYNC_STATUS", "CHAR(1)", "", "N", "0 = No Sync, 3 = Waiting, 1 = Success, 2 = Failed"],
+               ["SYNC_DT", "DATETIME", "", "Y", "Date-time of the last RPA result"],
+               ["SYNC_MESSAGE", "VARCHAR(TBD)", "", "Y", "Reason of the last Failed sync"],
                ["LAST_SOURCE", "VARCHAR(TBD)", "", "N", "CALC / SCREEN / UPLOAD"],
                ["LAST_UPLOAD_ID", "VARCHAR(TBD)", "", "Y", "Upload that last changed the record"],
                ["CREATED_BY", "VARCHAR(TBD)", "", "N", "User who created the record"], ["CREATED_DT", "DATETIME", "", "N", "Created date and time"],
-               ["CHANGED_BY", "VARCHAR(TBD)", "", "N", "User who last changed the record"], ["CHANGED_DT", "DATETIME", "", "N", "Last changed date and time"]]},
-  {"name": LOG, "kind": "log", "proposed": True, "description": "One record per uploaded file. Created by the batch when it starts, updated with the result.",
-   "columns": [["UPLOAD_ID", "VARCHAR(TBD)", "Y", "N", "Upload ID, generated by the screen"],
-               ["FUNCTION_ID", "VARCHAR(TBD)", "", "N", "PART_LIST or MAPPING"], ["FILE_NAME", "VARCHAR(TBD)", "", "N", "Uploaded file name"],
-               ["STATUS", "VARCHAR(TBD)", "", "N", "PROCESSING / COMPLETED / REJECTED"], ["TOTAL_ROWS", "INT", "", "Y", "Rows in sheet Upload"],
-               ["SAVED_ROWS", "INT", "", "Y", "Rows saved to master"], ["NO_CHANGE_ROWS", "INT", "", "Y", "Rows skipped because nothing changed"],
-               ["ERROR_ROWS", "INT", "", "Y", "Rows with error"], ["RESULT_FILE_PATH", "VARCHAR(TBD)", "", "Y", "Path of the result report .xlsx"],
-               ["START_DT", "DATETIME", "", "Y", "Batch start"], ["END_DT", "DATETIME", "", "Y", "Batch end"],
-               ["CREATED_BY", "VARCHAR(TBD)", "", "N", "User who created the record"], ["CREATED_DT", "DATETIME", "", "N", "Created date and time"]]}]
+               ["CHANGED_BY", "VARCHAR(TBD)", "", "N", "User who last changed the record"], ["CHANGED_DT", "DATETIME", "", "N", "Last changed date and time"]]}]
 }
 json.dump(spec, open(sys.argv[1], 'w'), indent=1)

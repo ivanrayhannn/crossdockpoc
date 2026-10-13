@@ -43,5 +43,6 @@ export interface SyncBadge {
 export function syncBadge(status: SyncStatus): SyncBadge {
   if (status === 1) return { t: 'Success', bg: 'var(--color-accent-2-200)', fg: 'var(--color-accent-2-800)' };
   if (status === 2) return { t: 'Failed', bg: 'var(--color-danger-bg)', fg: 'var(--color-danger)' };
+  if (status === 3) return { t: 'Waiting', bg: 'var(--color-warn-bg)', fg: 'var(--color-warn-fg)' };
   return { t: 'No Sync', bg: 'var(--color-neutral-200)', fg: 'var(--color-neutral-700)' };
 }

@@ -4,9 +4,9 @@
 export type PartStatus = 'Candidate' | 'Active' | 'Inactive';
 export type PartCategory = 'Crossdock' | 'Non-Crossdock';
 
-/** 0 = No sync, 1 = Success, 2 = Failed. Resets to 0 whenever the part's
- * identity (Setting Part) or its destination mapping is edited. */
-export type SyncStatus = 0 | 1 | 2;
+/** 0 = No sync, 1 = Success, 2 = Failed, 3 = Waiting (handed to the RPA by [Sync], result not back yet).
+ * Resets to 0 whenever the part's identity (Setting Part) or its destination mapping is edited. */
+export type SyncStatus = 0 | 1 | 2 | 3;
 
 export interface DestAllocation {
   /** Destination name, e.g. "Thailand". Empty string for a manually-added
@@ -50,7 +50,7 @@ export interface PartQuery {
   name: string;
   dest: string;
   st: 'all' | 'active' | 'inactive' | 'candidate';
-  sync: 'all' | 'notsync' | 'success' | 'failed';
+  sync: 'all' | 'notsync' | 'waiting' | 'success' | 'failed';
   /** Calculation period filter for "Mapping per Destination", e.g. "Sep 2026", or 'all'. */
   per: string;
   /** Last Update sort order for Part List. */

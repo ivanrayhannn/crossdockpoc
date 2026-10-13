@@ -41,14 +41,17 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
           (q.sync === 'all' ||
             (q.sync === 'notsync' && p.syncStatus === 0) ||
             (q.sync === 'success' && p.syncStatus === 1) ||
-            (q.sync === 'failed' && p.syncStatus === 2)),
+            (q.sync === 'failed' && p.syncStatus === 2) ||
+            (q.sync === 'waiting' && p.syncStatus === 3)),
       ),
     [parts, q],
   );
 
   // Sync only ever targets rows that aren't already a confirmed success...
   // ...and only in the ongoing period; past periods are read-only.
-  const syncable = destRowsSrc.filter((p) => p.per === CUR_PER && (p.syncStatus === 0 || p.syncStatus === 2));
+  // [Sync] hands every Active part of the ongoing period that is No Sync (or Failed, to retry) to the RPA,
+  // whatever the filter shows; they wait as "Waiting" until the RPA writes back Success or Failed.
+  const syncable = parts.filter((p) => p.st === 'Active' && p.per === CUR_PER && (p.syncStatus === 0 || p.syncStatus === 2));
   const syncableCount = syncable.length;
 
   const exportExcel = () => {
@@ -120,6 +123,7 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
             <select className="input" value={q.sync} onChange={(e) => setQ((prev) => ({ ...prev, sync: e.target.value as typeof prev.sync }))} style={{ appearance: 'none' }}>
               <option value="all">All</option>
               <option value="notsync">No Sync</option>
+              <option value="waiting">Waiting</option>
               <option value="success">Success</option>
               <option value="failed">Failed</option>
             </select>

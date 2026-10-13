@@ -4,9 +4,11 @@
   "phase": "DR",
   "project_name": "Crossdock Optimization",
   "block_name": "Screen",
-  "function_name": "TBD Crossdock Master Setting - Part List",
+  "function_name": "X1 Crossdock Master Setting - Part List",
   "created_date": "12-Oct-26",
-  "created_by": "FID Rayhan"
+  "created_by": "FID Rayhan",
+  "updated_date": "13-Oct-26",
+  "updated_by": "FID Rayhan"
  },
  "revisions": [
   {
@@ -14,7 +16,14 @@
    "author": "FID Rayhan",
    "date": "12-Oct-26",
    "reviewed_by": "",
-   "description": "Initial draft based on the business decisions for the Crossdock Master Setting Part List sub-menu and the crossdockpoc web prototype as of 12-Oct-26. Upload backend is documented in UISS-Batch \"Crossdock Master Setting - Part List Upload\". Data level: TB_M_PART_CANDIDATE is at part number level (key PART_NO, no calculation period); TB_M_PART_CANDIDATE_DEST (Mapping per Destination) is at part number + calculation period + destination level."
+   "description": "FID Rayhan"
+  },
+  {
+   "revision": "0.2",
+   "author": "FID Rayhan",
+   "date": "13-Oct-26",
+   "reviewed_by": "",
+   "description": "Sync Status Waiting (3) added: Sync of Mapping per Destination hands all Active No Sync parts to the RPA, which writes back Success / Failed. History table TB_R_PARTX_LOG. Message IDs MSG1-MSG13."
   }
  ],
  "general": {
@@ -1267,7 +1276,7 @@
   },
   {
    "name": "Event title",
-   "source": "TBD (history table not defined yet)",
+   "source": "TB_R_PARTX_LOG",
    "field": "TBD",
    "type": "Varchar",
    "len": "",
@@ -1282,7 +1291,7 @@
   },
   {
    "name": "Event date-time",
-   "source": "TBD (history table not defined yet)",
+   "source": "TB_R_PARTX_LOG",
    "field": "TBD",
    "type": "Datetime",
    "len": "",
@@ -1297,7 +1306,7 @@
   },
   {
    "name": "Changed field (old \u2192 new)",
-   "source": "TBD (history table not defined yet)",
+   "source": "TB_R_PARTX_LOG",
    "field": "TBD",
    "type": "Varchar",
    "len": "",
@@ -1312,7 +1321,7 @@
   },
   {
    "name": "User",
-   "source": "TBD (history table not defined yet)",
+   "source": "TB_R_PARTX_LOG",
    "field": "TBD",
    "type": "Varchar",
    "len": "",
@@ -1515,6 +1524,14 @@
       "description": "'0' (No Sync)"
      },
      {
+      "dest_field": "SYNC_DT",
+      "description": "NULL (written by the RPA)"
+     },
+     {
+      "dest_field": "SYNC_MESSAGE",
+      "description": "NULL (written by the RPA)"
+     },
+     {
       "dest_field": "LAST_SOURCE",
       "description": "'SCREEN'"
      },
@@ -1608,7 +1625,7 @@
      ]
     },
     "destination": {
-     "table": "TBD (part history)",
+     "table": "TB_R_PARTX_LOG",
      "operation": "Insert",
      "description": "Add / Edit - [Save]"
     },
@@ -1672,7 +1689,6 @@
    "items": [
     "'Part Number' and 'Part Name' match by 'contains', case-insensitive; 'Status' matches exactly. All criteria are combined with AND.",
     "Changing any criterion, 'Sort by' or 'Rows per page' returns the list to page 1.",
-    "The prototype applies the filter while typing. TBD: whether filtering waits for [Search] or the [Search] button is removed.",
     "If no row matches, hide the table and paging and display message no. 1 with [Reset filter]."
    ]
   },
@@ -1687,7 +1703,6 @@
    "items": [
     "Counter 'N parts \u00b7 M incomplete mappings' is counted over the whole filtered result, not only the current page.",
     "Incomplete mapping: the part has no destination in TB_M_PART_CANDIDATE_DEST, or the sum of destination CASE_DAY differs from MAX_CASE_DAY. Mark the row with a blue bar and count it in 'M incomplete mappings'.",
-    "Min MAD flag: show 'Min MAD' bold in warning colour when the 6-month average MAD is below MIN_MAD, except for status Candidate (no MAD history yet). Source of the MAD history is TBD.",
     "Total Pcs/Day = Pcs/Case x Max Case/Day."
    ]
   },
@@ -1707,9 +1722,9 @@
    "level": 3,
    "items": [
     "Open the 'Add Part Candidate Crossdock' modal. 'Status' = Candidate and locked (a new part is always Candidate); 'Effective Start Date' = system date + 1 day, minimum today.",
-    "'Part No' lists parts of TB_M_PART_MASTER that are not yet registered in TB_M_PART_CANDIDATE, so a Part No cannot be duplicated. No match shows message no. 8.",
+    "'Part No' lists parts of TB_M_PART_MASTER that are not yet registered in TB_M_PART_CANDIDATE, so can not register part into Crossdock master",
     "Selecting a Part No autofills 'Part Name'. 'Max Case/Day' is locked until 'Pcs/Case' is filled.",
-    "[Save] is enabled only when Part No, Pcs/Case > 0 and Max Case/Day > 0 are filled; otherwise its tooltip shows message no. 5, 6 or 7 for the first missing item. Effective Start Date and Minimum MAD are not mandatory (TBD: confirm)."
+    "[Save] is enabled only when Part No, Pcs/Case > 0 and Max Case/Day > 0 are filled; otherwise its tooltip shows message no. 5, 6 or 7 for the first missing item. Effective Start Date"
    ]
   },
   {
@@ -1725,7 +1740,7 @@
    "items": [
     "If the Part No was registered by another user in the meantime, display message no. 3. Stop.",
     "Insert the part into TB_M_PART_CANDIDATE with PART_STATUS = Candidate and SYNC_STATUS = 0 (No Sync) (refer Data Edit Mapping).",
-    "Insert the change history (TBD: history table and logged events not defined yet).",
+    "Insert the change history when any register or update data in Part List",
     "Close the modal, reset the Part Number / Part Name / Status filters, sort Newer to Older and display message no. 9. The new part is shown at the top."
    ]
   },
@@ -1768,7 +1783,7 @@
    "items": [
     "If the record was changed by another user after it was opened, display message no. 4. Stop.",
     "Update TB_M_PART_CANDIDATE and set SYNC_STATUS = 0 (No Sync), CHANGED_BY and CHANGED_DT. Every Save returns the part to No Sync so the D/S user synchronises it again.",
-    "Insert the change history (TBD: history table and logged events not defined yet).",
+    "Insert the change history when any register or update in Part List",
     "Close the modal, move the part to the top of the list and display message no. 9."
    ]
   },
@@ -1781,6 +1796,7 @@
    "marker": "a.",
    "level": 2,
    "items": [
+    "History retrieved from inserted data when user add/modify part list data",
     "User clicks the clock icon on a row: open 'History setting' with the change timeline of the part, newest first.",
     "Each event shows the title, date-time, field name, old value (struck through) \u2192 new value and user.",
     "A part without history shows message no. 12. TBD: history source, logged events and retention."
@@ -1862,16 +1878,26 @@
     ],
     [
      "Sync Status",
+     "Waiting (3)",
+     "[Sync] clicked in Mapping per Destination; waiting for the RPA to send it to the global system."
+    ],
+    [
+     "Sync Status",
      "Success (1)",
-     "Last synchronisation succeeded."
+     "The RPA sent Pcs/Case, Max Case/Day and the destination mapping of the ongoing period."
     ],
     [
      "Sync Status",
      "Failed (2)",
-     "Last synchronisation failed; may be retried by the D/S user."
+     "The RPA could not send the part (reason in SYNC_MESSAGE); retried by the next [Sync]."
     ]
    ],
    "row_lines": "all"
+  },
+  {
+   "type": "text",
+   "level": 2,
+   "text": "Only Active parts are synchronised. A Save while the part is Waiting returns it to No Sync, so the RPA result of the old data is not kept as Success."
   }
  ],
  "display_messages": [
@@ -1882,7 +1908,7 @@
    "event": "Change search criteria",
    "cause": "No part matches the criteria",
    "type": "Info",
-   "msg_id": "TBD",
+   "msg_id": "MSG1",
    "message": "No matching parts - Loosen the search criteria or reset all filters.",
    "action": "Change the criteria or click [Reset filter]"
   },
@@ -1890,8 +1916,8 @@
    "event": "Open Part List",
    "cause": "No part registered yet",
    "type": "Info",
-   "msg_id": "TBD",
-   "message": "No crossdock parts registered yet - Start from the Excel template, or register a single part and map its Max Case/Day to Thailand, Japan and Vietnam.",
+   "msg_id": "MSG2",
+   "message": "No crossdock parts registered yet",
    "action": "Click [Upload Excel] or [Add one part]"
   },
   {
@@ -1901,7 +1927,7 @@
    "event": "Click [Save] button",
    "cause": "Part No already registered (concurrent add)",
    "type": "Error",
-   "msg_id": "MSTD0039AERR",
+   "msg_id": "MSG3",
    "message": "Duplication found for {Part No}",
    "action": "Close the modal and search the part"
   },
@@ -1909,7 +1935,7 @@
    "event": "Click [Save] button",
    "cause": "Record changed by another user",
    "type": "Error",
-   "msg_id": "MSTD0114AERR",
+   "msg_id": "MSG4",
    "message": "Error in Update because of concurrency check.",
    "action": "Close the modal, refresh and edit again"
   },
@@ -1917,7 +1943,7 @@
    "event": "Hover disabled [Save]",
    "cause": "Part No not selected",
    "type": "Info",
-   "msg_id": "TBD",
+   "msg_id": "MSG5",
    "message": "Part No is required",
    "action": "Select a Part No"
   },
@@ -1925,7 +1951,7 @@
    "event": "Hover disabled [Save]",
    "cause": "Pcs/Case not filled",
    "type": "Info",
-   "msg_id": "TBD",
+   "msg_id": "MSG6",
    "message": "Enter Pcs/Case first (step 2)",
    "action": "Fill Pcs/Case"
   },
@@ -1933,7 +1959,7 @@
    "event": "Hover disabled [Save]",
    "cause": "Max Case/Day not filled",
    "type": "Info",
-   "msg_id": "TBD",
+   "msg_id": "MSG7",
    "message": "Enter Max Case/Day (step 2)",
    "action": "Fill Max Case/Day"
   },
@@ -1941,7 +1967,7 @@
    "event": "Type in 'Part No'",
    "cause": "No unregistered part matches the text",
    "type": "Info",
-   "msg_id": "TBD",
+   "msg_id": "MSG8",
    "message": "Part not found",
    "action": "Check the Part No"
   },
@@ -1949,7 +1975,7 @@
    "event": "Click [Save] button",
    "cause": "Part saved successfully",
    "type": "Info",
-   "msg_id": "TBD",
+   "msg_id": "MSG9",
    "message": "Saved successfully - {Part No} \u00b7 {Part Name} has been added/updated. It is now at the top of the Part List.",
    "action": "Click [OK]"
   },
@@ -1957,7 +1983,7 @@
    "event": "Hover 'Effective Start Date'",
    "cause": "Saved status is Active / Inactive",
    "type": "Info",
-   "msg_id": "TBD",
+   "msg_id": "MSG10",
    "message": "Can only be changed while the status is still Candidate",
    "action": "-"
   },
@@ -1968,7 +1994,7 @@
    "event": "Click [Validate file] button",
    "cause": "Upload validated and saved",
    "type": "Info",
-   "msg_id": "TBD",
+   "msg_id": "MSG11",
    "message": "Saved successfully - Upload completed. The file has been validated and the part settings have been saved to the Part List.",
    "action": "Click [OK]"
   },
@@ -1979,7 +2005,7 @@
    "event": "Click History icon",
    "cause": "Part has no history",
    "type": "Info",
-   "msg_id": "TBD",
+   "msg_id": "MSG12",
    "message": "No change history for this part yet.",
    "action": "Click [Close]"
   },
@@ -1990,7 +2016,7 @@
    "event": "Click [Export Excel] button",
    "cause": "Excel file cannot be created",
    "type": "Error",
-   "msg_id": "TBD",
+   "msg_id": "MSG13",
    "message": "Export Excel failed. Please try again.",
    "action": "Click [Export Excel] again; contact administrator if it persists"
   }

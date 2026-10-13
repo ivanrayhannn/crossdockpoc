@@ -1,21 +1,73 @@
 """Spec for UISS_Batch_MappingUpload.xlsx (UISS-Batch, Crossdock Master Setting - Mapping per Destination Upload), v0.3."""
 import json, sys
 
-T, D, LOG, DM = 'TB_M_PART_CANDIDATE', 'TB_M_PART_CANDIDATE_DEST', 'TB_R_CD_UPLOAD_LOG', 'Destination master (TBD)'
+T, D, LOG, DM = 'TB_M_PART_CANDIDATE', 'TB_M_PART_CANDIDATE_DEST', 'Log', 'Destination master (TBD)'
 SHEET = 'Excel file - sheet Upload (valid rows)'
 NAME, PROJ = 'FID Rayhan', 'Crossdock Optimization'
 NC = 'Not changed'
+
+B = ''
+COLS = ['No', 'Scenario', 'part_no', 'dest_code', 'case_day', 'total_case_day']
+W = [6, 34, 12, 11, 10, 15, 60]
+SAMPLE = {
+ "title": "Sample Input", "heading": "Sample upload scenarios - Mapping per Destination Upload",
+ "intro": ["Each scenario is a separate upload file. Ongoing period = Sep 2026. One row per destination; a scenario with several rows uses one Excel row per destination.",
+           "Input columns follow sheet Upload of the Export Excel; a blank cell is a blank value in the file."],
+ "sections": [
+  {"title": "A. Master data before upload (ongoing period)", "columns": ["Part No", "Status", "Max Case/Day", "Mapped 123", "Mapped 456", "Mapped 789", "Mapped total", "Remark"],
+   "widths": [12, 12, 13, 11, 11, 11, 13, 40],
+   "rows": [["PART-A", "Active", 24, 12, 8, 4, 24, B],
+            ["PART-C", "Active", 30, B, B, 18, 18, B],
+            ["PART-G", "Active", 22, B, B, B, 0, "No mapping: placeholder row in the export"],
+            ["PART-I", "Candidate", 20, B, B, B, B, "Not in Mapping per Destination"]]},
+  {"title": "B. Normal scenarios (file accepted)", "columns": COLS + ["Expected result"], "widths": W,
+   "rows": [
+    ["N1", "Change Case/Day", "PART-A", "123", 10, 24, "Replaced. Total 24 (equal to Max). Sync Status No Sync."],
+    ["N1", "Change Case/Day", "PART-A", "456", 8, 24, B],
+    ["N1", "Change Case/Day", "PART-A", "789", 6, 24, B],
+    ["N2", "Remove a destination", "PART-A", "123", 12, 24, "Replaced. 789 removed. Total 20, 4 case/day left (below Max is allowed)."],
+    ["N2", "Remove a destination", "PART-A", "456", 8, 24, B],
+    ["N3", "Add a destination", "PART-C", "789", 18, 30, "Replaced. 456 added. Total 30 (equal to Max)."],
+    ["N3", "Add a destination", "PART-C", "456", 12, 30, B],
+    ["N4", "First mapping from the placeholder row", "PART-G", "123", 22, 22, "Inserted. Total 22. Sync Status No Sync."],
+    ["N5", "Placeholder row left blank", "PART-G", B, B, 22, "NO CHANGE. PART-G stays without mapping."],
+    ["N6", "Same values as the master", "PART-A", "123", 12, 24, "NO CHANGE. Sync Status and last update stay."],
+    ["N6", "Same values as the master", "PART-A", "456", 8, 24, B],
+    ["N6", "Same values as the master", "PART-A", "789", 4, 24, B],
+    ["N7", "File with only some parts (PART-C only)", "PART-C", "789", 18, 30, "Only PART-C is processed (here NO CHANGE). PART-A and PART-G are not changed."]]},
+  {"title": "C. Error scenarios (whole file rejected, nothing saved)", "columns": COLS + ["Error (4.2 check no.)"], "widths": W,
+   "rows": [
+    ["E1", "Part not registered", "PART-Z99", "123", 10, B, "Check 1: Part No is not registered or its status is not Active."],
+    ["E2", "Part is not Active", "PART-I", "123", 10, 20, "Check 1: Part No is not registered or its status is not Active."],
+    ["E3", "Unknown destination", "PART-A", "999", 10, 24, "Check 2: Destination code 999 not found in the destination master."],
+    ["E4", "Invalid Case/Day", "PART-A", "123", 0, 24, "Check 3: case_day must be a whole number greater than 0."],
+    ["E5", "Same destination twice", "PART-A", "123", 10, 24, "Check 4: Destination 123 appears more than once for this part."],
+    ["E5", "Same destination twice", "PART-A", "123", 4, 24, B],
+    ["E6", "Only one of dest_code / case_day", "PART-G", "123", B, 22, "Check 5: dest_code and case_day must both be filled or both blank."],
+    ["E7", "Total above Max Case/Day", "PART-A", "123", 12, 24, "Check 6: Total allocation of 30 case/day exceeds Max Case/Day (24). Reduce one of the destinations."],
+    ["E7", "Total above Max Case/Day", "PART-A", "456", 8, 24, B],
+    ["E7", "Total above Max Case/Day", "PART-A", "789", 10, 24, B],
+    ["E8", "Valid row (= N4) mixed with an error row (= E3)", "PART-G", "123", 22, 22, "Whole file rejected. The valid row is NOT saved."],
+    ["E8", "Valid row mixed with an error row", "PART-A", "999", 10, 24, "Check 2 on this row. Result report sheet Re-upload lists the rows to correct."]]},
+  {"title": "D. File-level errors (file check 4.1)", "columns": ["No", "Scenario", "Expected result"],
+   "rows": [["F1", "File is .xls or .csv", "Rejected: file must be .xlsx."],
+            ["F2", "File larger than 5 MB", "Rejected: file size exceeds 5 MB."],
+            ["F3", "More than 5,000 data rows, or no data row", "Rejected: row count out of range."],
+            ["F4", "No sheet named Upload (e.g. only sheet Mapping per Destination)", "Rejected: sheet Upload not found."],
+            ["F5", "A template column is missing (e.g. case_day deleted)", "Rejected: required column not found."]]}]}
 
 spec = {
  "doc_type": "batch",
  "header": {"phase": "DR", "project_name": PROJ, "block_name": "Batch",
             "function_name": "TBD Crossdock Master Setting - Mapping per Destination Upload",
-            "created_date": "08-Oct-26", "created_by": NAME, "updated_date": "12-Oct-26", "updated_by": NAME},
+            "created_date": "08-Oct-26", "created_by": NAME, "updated_date": "13-Oct-26", "updated_by": NAME},
  "revisions": [
   {"revision": "0.1", "author": NAME, "date": "08-Oct-26", "reviewed_by": "", "description": "Initial draft based on the existing Crossdock batch upload draft."},
   {"revision": "0.2", "author": NAME, "date": "08-Oct-26", "reviewed_by": "", "description": "Completed flow diagrams and table mappings; marked the upload template and backend behaviour as proposed."},
   {"revision": "0.3", "author": NAME, "date": "12-Oct-26", "reviewed_by": "",
-   "description": "Rewritten at business level like the Part List Upload: trigger [Validate file] of the Mapping per Destination screen, no temp table, tables TB_M_PART_CANDIDATE (part number level) and TB_M_PART_CANDIDATE_DEST (part number + period + destination level), row rules 1-7, placeholder rows, sample scenarios. No external document references."}],
+   "description": "Rewritten at business level like the Part List Upload: trigger [Validate file] of the Mapping per Destination screen, no temp table, tables TB_M_PART_CANDIDATE (part number level) and TB_M_PART_CANDIDATE_DEST (part number + period + destination level), row rules 1-7, placeholder rows, sample scenarios. No external document references."},
+  {"revision": "0.4", "author": NAME, "date": "13-Oct-26", "reviewed_by": "",
+   "description": "Upload log written as Log (no table definition). Sample upload scenarios moved to sheet Sample Input, one value per column. Changed parts are sent to the global system by the RPA when D/S clicks [Sync]. SYNC_DT / SYNC_MESSAGE added to TB_M_PART_CANDIDATE."}],
  "general": {
   "objective": [
    "To process the destination mapping file uploaded from the Crossdock Master Setting - Mapping per Destination screen: from the [Validate file] button of the Upload Excel modal until the mapping of the ongoing calculation period is saved to TB_M_PART_CANDIDATE_DEST.",
@@ -46,13 +98,7 @@ spec = {
     "rows": [["Uploaded file", "File selected by the user on the Mapping per Destination screen"], ["User", "Login name of the user who clicks [Validate file]"]]},
    {"title": "Grouping Keys", "columns": [{"title": "Field Name", "width": 20}], "rows": ["part_no"]},
    {"title": "Execution Schedule", "columns": [{"title": "Item", "width": 12}, {"title": "Description", "width": 36}],
-    "rows": [["Trigger", "Starts when the user clicks [Validate file] in the Upload Excel modal of the Mapping per Destination screen (on demand, no schedule). The button is enabled only for the ongoing period."]]}],
-  "constraints": [
-   "Data level: TB_M_PART_CANDIDATE (Part List) is at part number level (key PART_NO). TB_M_PART_CANDIDATE_DEST (Mapping per Destination) is at part number + calculation period + destination level (key PART_NO, PERIOD, DEST_CODE).",
-   "Only the ongoing calculation period is changed. Past periods are read only.",
-   "Names TB_M_PART_CANDIDATE and TB_M_PART_CANDIDATE_DEST are as given; the upload log name is proposed and the destination master table is TBD.",
-   "Upload template: sheet Upload is prefilled by Export Excel (ongoing period selected) with every Active part. Parts not in the file are not changed.",
-   "Change history of the mapping is not included yet. TBD: history table, logged events and retention are not decided."]
+    "rows": [["Trigger", "Starts when the user clicks [Validate file] in the Upload Excel modal of the Mapping per Destination screen (on demand, no schedule). The button is enabled only for the ongoing period."]]}]
  },
  "func_flow": {
   "flow": {"direction": "TB", "nodes": [
@@ -113,6 +159,7 @@ spec = {
      {"dest_field": "PCS_CASE", "description": NC}, {"dest_field": "MAX_CASE_DAY", "description": NC},
      {"dest_field": "TOTAL_PCS_DAY", "description": NC}, {"dest_field": "EFFECTIVE_START_DATE", "description": NC},
      {"dest_field": "PART_STATUS", "description": NC},
+     {"dest_field": "SYNC_DT", "description": NC}, {"dest_field": "SYNC_MESSAGE", "description": NC},
      {"dest_field": "SYNC_STATUS", "description": "Set '0' (No Sync)"},
      {"dest_field": "LAST_SOURCE", "description": "Set 'UPLOAD'"},
      {"dest_field": "LAST_UPLOAD_ID", "description": "UPLOAD_ID of this run"},
@@ -147,11 +194,11 @@ spec = {
   {"type": "text", "level": 0, "text": "Every row is checked and all errors are collected, so the user can correct the file once. Checks 4 and 6 are done per part (all rows with the same part_no)."},
   {"type": "heading", "text": "4.3 Saving"},
   {"type": "bullets", "marker": "-", "level": 0, "items": [
-    "If any row is rejected, nothing is saved. The upload status and the error of every row are recorded in the upload log (TB_R_CD_UPLOAD_LOG).",
+    "If any row is rejected, nothing is saved. The upload status and the error of every row are recorded in the upload log (Log).",
     "If all rows are valid, each part in the file is compared with its current mapping of the ongoing period. A part with the same destinations and Case/Day is skipped (no change); its Sync Status and last update stay.",
     "For a changed part, all its rows of the ongoing period in TB_M_PART_CANDIDATE_DEST are replaced by the rows of the file: destinations in the file are inserted or updated, destinations not in the file are removed.",
     "A part whose rows are all blank (placeholder) is not changed, so a mapping cannot be removed completely by upload (same as the screen: at least one destination).",
-    "Every changed part gets Sync Status = No Sync in TB_M_PART_CANDIDATE. Sync is done manually by D/S on the screen.",
+    "Every changed part gets Sync Status = No Sync in TB_M_PART_CANDIDATE. It is sent to the global system by the RPA when D/S clicks [Sync] on the screen.",
     "A result report (.xlsx) is created for both cases."]},
   {"type": "column_break"},
   {"type": "table", "level": 0, "row_lines": "all", "columns": [{"title": "No", "width": 3, "align": "center"}, {"title": "Check", "width": 31}, {"title": "Column", "width": 12}], "rows": [
@@ -165,14 +212,13 @@ spec = {
  "logging_messages": [
   {"event": "Batch start", "cause": "Batch is called", "type": "Info", "msg_id": "TBD", "message": "Mapping upload batch <UPLOAD_ID> started.", "action": {"system": "Write the log.", "user": "-"}},
   {"event": "Batch end", "cause": "Batch finishes", "type": "Info", "msg_id": "TBD", "message": "Mapping upload batch <UPLOAD_ID> ended. Status <STATUS>, total <TOTAL_ROWS>, saved parts <SAVED_ROWS>, no change <NO_CHANGE_ROWS>, error <ERROR_ROWS>.", "action": {"system": "Write the log.", "user": "-"}},
-  {"event": "Database access", "cause": "Cannot connect to the database", "type": "Critical", "msg_id": "TBD", "message": "Cannot connect to the database.", "action": {"system": "Stop the batch. Inform system owner by e-mail.", "user": "Contact system owner."}},
   {"event": "Receive file", "cause": "Uploaded file of <UPLOAD_ID> not found", "type": "Error", "msg_id": "TBD", "message": "Uploaded file of <UPLOAD_ID> not found.", "action": {"system": "Stop the batch.", "user": "Upload the file again."}},
   {"event": "File check", "cause": "Extension, size, row count, sheet Upload or header is invalid", "type": "Error", "msg_id": "TBD", "message": "File check failed: <REASON>.", "action": {"system": "Set STATUS = REJECTED. Create the result report.", "user": "Download the file from the screen again and upload it."}},
   {"event": "Row validation", "cause": "A validation rule in 4.2 fails", "type": "Error", "msg_id": "TBD", "message": "Row <ROW_NO> <COLUMN> : <RULE_MESSAGE>.", "action": {"system": "Reject the whole file. Nothing is saved.", "user": "Correct the rows in sheet Re-upload of the result report, then upload again."}},
   {"event": "Part skipped", "cause": "Rows of the part equal the current mapping, or all rows are blank", "type": "Info", "msg_id": "TBD", "message": "Part No <PART_NO> has no mapping change. Skipped.", "action": {"system": "Do not change the mapping or the part.", "user": "-"}},
-  {"event": "Save mapping", "cause": "Replace of TB_M_PART_CANDIDATE_DEST or update of TB_M_PART_CANDIDATE fails", "type": "Error", "msg_id": "TBD", "message": "Cannot save the mapping of Part No <PART_NO>.", "action": {"system": "Roll back. Set STATUS = REJECTED.", "user": "Contact system owner."}},
+  {"event": "Save mapping", "cause": "Replace of TB_M_PART_CANDIDATE_DEST or update of TB_M_PART_CANDIDATE fails", "type": "Error", "msg_id": "TBD", "message": "Cannot save the mapping of Part No <PART_NO>.", "action": {"system": "Roll back. Set STATUS = REJECTED.", "user": "User contact PIC"}},
   {"event": "Result report", "cause": "Result report cannot be created", "type": "Warning", "msg_id": "TBD", "message": "Result report of <UPLOAD_ID> cannot be created.", "action": {"system": "Continue. RESULT_FILE_PATH stays blank.", "user": "Contact system owner."}},
-  {"event": "Unexpected error", "cause": "Any other system error", "type": "Critical", "msg_id": "TBD", "message": "Unexpected error: <ERROR_DETAIL>.", "action": {"system": "Roll back. Set STATUS = REJECTED. Inform system owner by e-mail.", "user": "Contact system owner."}}],
+  {"event": "Unexpected error", "cause": "Any other system error", "type": "Critical", "msg_id": "TBD", "message": "Unexpected error: <ERROR_DETAIL>.", "action": {"system": "Roll back. Set STATUS = REJECTED.", "user": "User contact PIC"}}],
  "appendix_layout": "full",
  "appendix": [
   {"type": "heading", "text": "Upload template (sheet \"Upload\")"},
@@ -181,40 +227,8 @@ spec = {
     ["dest_code", "Destination code (123 / 456 / 789). Once per part. Blank together with case_day = placeholder row."],
     ["case_day", "Case/Day of the destination, whole number greater than 0."],
     ["total_case_day", "Max Case/Day of the part, for reference only (not read by the batch)."]]},
-  {"type": "heading", "text": "Sample upload scenarios"},
-  {"type": "text", "level": 0, "text": "Each scenario is a separate upload file. Ongoing period = Sep 2026. Input rows follow sheet Upload: part_no | dest_code | case_day | total_case_day."},
-  {"type": "text", "level": 0, "bold": True, "text": "A. Master data before upload (ongoing period)"},
-  {"type": "table", "level": 0, "row_lines": "all", "columns": [{"title": "Part No", "width": 12}, {"title": "Status", "width": 10}, {"title": "Max Case/Day", "width": 11, "align": "right"}, {"title": "Current mapping (dest_code:case_day)", "width": 30}, {"title": "Total", "width": 8, "align": "right"}], "rows": [
-    ["PART-A", "Active", "24", "123:12, 456:8, 789:4", "24"],
-    ["PART-C", "Active", "30", "789:18", "18"],
-    ["PART-G", "Active", "22", "(no mapping - placeholder row in the export)", "0"],
-    ["PART-I", "Candidate", "20", "(not in Mapping per Destination)", "-"]]},
-  {"type": "text", "level": 0, "bold": True, "text": "B. Normal scenarios (file accepted)"},
-  {"type": "table", "level": 0, "row_lines": "all", "columns": [{"title": "No", "width": 4}, {"title": "Scenario", "width": 17}, {"title": "Input rows", "width": 27}, {"title": "Expected result", "width": 30}], "rows": [
-    ["N1", "Change Case/Day", "PART-A | 123 | 10, PART-A | 456 | 8, PART-A | 789 | 6", "Replaced. Total 24 (equal to Max). Sync Status No Sync."],
-    ["N2", "Remove a destination", "PART-A | 123 | 12, PART-A | 456 | 8", "Replaced. 789 removed. Total 20, 4 case/day left (below Max is allowed)."],
-    ["N3", "Add a destination", "PART-C | 789 | 18, PART-C | 456 | 12", "Replaced. 456 added. Total 30 (equal to Max)."],
-    ["N4", "First mapping from the placeholder row", "PART-G | 123 | 22", "Inserted. Total 22. Sync Status No Sync."],
-    ["N5", "Placeholder row left blank", "PART-G | (blank) | (blank)", "NO CHANGE. PART-G stays without mapping."],
-    ["N6", "Same values as the master", "PART-A | 123 | 12, PART-A | 456 | 8, PART-A | 789 | 4", "NO CHANGE. Sync Status and last update stay."],
-    ["N7", "File with only some parts", "PART-C rows only", "Only PART-C is processed. PART-A and PART-G are not changed."]]},
-  {"type": "text", "level": 0, "bold": True, "text": "C. Error scenarios (whole file rejected, nothing saved)"},
-  {"type": "table", "level": 0, "row_lines": "all", "columns": [{"title": "No", "width": 4}, {"title": "Scenario", "width": 17}, {"title": "Input rows", "width": 27}, {"title": "Error (4.2 check no.)", "width": 30}], "rows": [
-    ["E1", "Part not registered", "PART-Z99 | 123 | 10", "Check 1: Part No is not registered or its status is not Active."],
-    ["E2", "Part is not Active", "PART-I | 123 | 10", "Check 1: Part No is not registered or its status is not Active."],
-    ["E3", "Unknown destination", "PART-A | 999 | 10", "Check 2: Destination code 999 not found in the destination master."],
-    ["E4", "Invalid Case/Day", "PART-A | 123 | 0", "Check 3: case_day must be a whole number greater than 0."],
-    ["E5", "Same destination twice", "PART-A | 123 | 10, PART-A | 123 | 4", "Check 4: Destination 123 appears more than once for this part."],
-    ["E6", "Only one of dest_code / case_day", "PART-G | 123 | (blank)", "Check 5: dest_code and case_day must both be filled or both blank."],
-    ["E7", "Total above Max Case/Day", "PART-A | 123 | 12, PART-A | 456 | 8, PART-A | 789 | 10", "Check 6: Total allocation of 30 case/day exceeds Max Case/Day (24). Reduce one of the destinations."],
-    ["E8", "Valid rows mixed with an error row", "N4 rows (valid) + E3 row (error) in one file", "Whole file rejected. N4 is NOT saved. Result report sheet Re-upload lists the rows to correct."]]},
-  {"type": "text", "level": 0, "bold": True, "text": "D. File-level errors (file check 4.1)"},
-  {"type": "table", "level": 0, "row_lines": "all", "columns": [{"title": "No", "width": 4}, {"title": "Scenario", "width": 40}, {"title": "Expected result", "width": 34}], "rows": [
-    ["F1", "File is .xls or .csv", "Rejected: file must be .xlsx."],
-    ["F2", "File larger than 5 MB", "Rejected: file size exceeds 5 MB."],
-    ["F3", "More than 5,000 data rows, or no data row", "Rejected: row count out of range."],
-    ["F4", "No sheet named Upload (e.g. only sheet Mapping per Destination)", "Rejected: sheet Upload not found."],
-    ["F5", "A template column is missing (e.g. case_day deleted)", "Rejected: required column not found."]]}],
+  {"type": "text", "level": 0, "text": "Sample upload scenarios (master data, accepted files, rejected files): see sheet Sample Input."}],
+ "sample_sheet": SAMPLE,
  "tables": [
   {"name": T, "kind": "transaction", "proposed": False, "description": "Candidate part setting, one record per part (Part List data, no calculation period). Read for status and Max Case/Day; Sync Status updated.",
    "columns": [["PART_NO", "VARCHAR(TBD)", "Y", "N", "Part number; length follows TB_M_PART_MASTER"],
@@ -223,7 +237,9 @@ spec = {
                ["MAX_CASE_DAY", "INT", "", "N", "Total Case/Day of the part (> 0); limit of the mapping"], ["TOTAL_PCS_DAY", "INT", "", "N", "PCS_CASE x MAX_CASE_DAY"],
                ["EFFECTIVE_START_DATE", "DATE", "", "Y", "Effective start date"],
                ["PART_STATUS", "VARCHAR(TBD)", "", "N", "Candidate / Active / Inactive"],
-               ["SYNC_STATUS", "CHAR(1)", "", "N", "0 = No Sync, 1 = Success, 2 = Failed"],
+               ["SYNC_STATUS", "CHAR(1)", "", "N", "0 = No Sync, 3 = Waiting, 1 = Success, 2 = Failed"],
+               ["SYNC_DT", "DATETIME", "", "Y", "Date-time of the last RPA result"],
+               ["SYNC_MESSAGE", "VARCHAR(TBD)", "", "Y", "Reason of the last Failed sync"],
                ["LAST_SOURCE", "VARCHAR(TBD)", "", "N", "CALC / SCREEN / UPLOAD"],
                ["LAST_UPLOAD_ID", "VARCHAR(TBD)", "", "Y", "Upload that last changed the record"],
                ["CREATED_BY", "VARCHAR(TBD)", "", "N", "User who created the record"], ["CREATED_DT", "DATETIME", "", "N", "Created date and time"],
@@ -234,14 +250,6 @@ spec = {
                ["DEST_CODE", "VARCHAR(TBD)", "Y", "N", "Destination code; destination master table TBD"],
                ["CASE_DAY", "INT", "", "N", "Allocated Case/Day of the destination (> 0)"],
                ["CREATED_BY", "VARCHAR(TBD)", "", "N", "User who created the record"], ["CREATED_DT", "DATETIME", "", "N", "Created date and time"],
-               ["CHANGED_BY", "VARCHAR(TBD)", "", "N", "User who last changed the record"], ["CHANGED_DT", "DATETIME", "", "N", "Last changed date and time"]]},
-  {"name": LOG, "kind": "log", "proposed": True, "description": "One record per uploaded file (Part List and Mapping uploads). Created by the batch when it starts, updated with the result.",
-   "columns": [["UPLOAD_ID", "VARCHAR(TBD)", "Y", "N", "Upload ID, generated by the screen"],
-               ["FUNCTION_ID", "VARCHAR(TBD)", "", "N", "PART_LIST or MAPPING"], ["FILE_NAME", "VARCHAR(TBD)", "", "N", "Uploaded file name"],
-               ["STATUS", "VARCHAR(TBD)", "", "N", "PROCESSING / COMPLETED / REJECTED"], ["TOTAL_ROWS", "INT", "", "Y", "Rows in sheet Upload"],
-               ["SAVED_ROWS", "INT", "", "Y", "Parts saved (Mapping) / rows saved (Part List)"], ["NO_CHANGE_ROWS", "INT", "", "Y", "Parts or rows skipped because nothing changed"],
-               ["ERROR_ROWS", "INT", "", "Y", "Rows with error"], ["RESULT_FILE_PATH", "VARCHAR(TBD)", "", "Y", "Path of the result report .xlsx"],
-               ["START_DT", "DATETIME", "", "Y", "Batch start"], ["END_DT", "DATETIME", "", "Y", "Batch end"],
-               ["CREATED_BY", "VARCHAR(TBD)", "", "N", "User who created the record"], ["CREATED_DT", "DATETIME", "", "N", "Created date and time"]]}]
+               ["CHANGED_BY", "VARCHAR(TBD)", "", "N", "User who last changed the record"], ["CHANGED_DT", "DATETIME", "", "N", "Last changed date and time"]]}]
 }
 json.dump(spec, open(sys.argv[1], 'w'), indent=1)
