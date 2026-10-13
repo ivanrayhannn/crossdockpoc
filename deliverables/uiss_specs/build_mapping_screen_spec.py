@@ -153,7 +153,7 @@ spec = {
  "items": [
   {"group": "<Search Criteria Section>"},
   it("Calculation period", "Key-in", "", "Varchar", "", "I", "Combo Box", "Left", "Ongoing period, e.g. 'Sep 2026 (ongoing)'", "N", "Mon YYYY", "",
-     "Options: All periods / every calculation period; the ongoing one is marked '(ongoing)'. The label shows (ongoing) / (past) / (all). TBD: how periods are created and when a period becomes past."),
+     "Options: All periods / every calculation period; the ongoing one is marked '(ongoing)'. The label shows (ongoing) / (past) / (all). Calculation periods are created by the calculation batch; the latest period created is the ongoing period and earlier ones become past. TBD: whether the mapping of the previous period is copied to the new period."),
   it("Part Number", "Key-in", "", "Varchar", "TBD", "I", "Text box with suggestion list", "Left", "Blank", "N", "X..TBD..X", "Contains, case-insensitive",
      "Suggestions = registered Part Numbers. Placeholder 'e.g. PART-B'. Combined with the other criteria by AND."),
   it("Sync Status", "Key-in", "", "Varchar", "", "I", "Combo Box", "Left", "No Sync", "N", "", "", "Options: All / No Sync / Waiting / Success / Failed."),
@@ -337,7 +337,7 @@ spec = {
     ["Sync Status", "Waiting (3)", "[Sync] clicked; waiting for the RPA."],
     ["Sync Status", "Success (1)", "The RPA sent the part to the global system."],
     ["Sync Status", "Failed (2)", "The RPA could not send the part; reason in SYNC_MESSAGE; retried by the next [Sync]."],
-    ["Period", "Ongoing / past", "Ongoing: mapping can be edited and uploaded. Past: read only."]]},
+    ["Period", "Ongoing / past", "Created by the calculation batch. Ongoing (latest period): mapping can be edited and uploaded. Past: read only."]]},
   {"type": "text", "level": 2, "text": "Sync Status is kept per part in TB_M_PART_CANDIDATE because the RPA sends a part as one set (Pcs/Case, Max Case/Day and all destinations). Every mapping change and every Sync result is recorded in the history table TB_H_PART_CANDIDATE (with the period)."}],
  "display_messages": [
   {"group": "Search Operation"},

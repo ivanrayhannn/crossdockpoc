@@ -657,7 +657,7 @@
    "required": "N",
    "format": "Mon YYYY",
    "validation": "",
-   "description": "Options: All periods / every calculation period; the ongoing one is marked '(ongoing)'. The label shows (ongoing) / (past) / (all). TBD: how periods are created and when a period becomes past."
+   "description": "Options: All periods / every calculation period; the ongoing one is marked '(ongoing)'. The label shows (ongoing) / (past) / (all). Calculation periods are created by the calculation batch; the latest period created is the ongoing period and earlier ones become past. TBD: whether the mapping of the previous period is copied to the new period."
   },
   {
    "name": "Part Number",
@@ -1921,7 +1921,7 @@
     [
      "Period",
      "Ongoing / past",
-     "Ongoing: mapping can be edited and uploaded. Past: read only."
+     "Created by the calculation batch. Ongoing (latest period): mapping can be edited and uploaded. Past: read only."
     ]
    ]
   },

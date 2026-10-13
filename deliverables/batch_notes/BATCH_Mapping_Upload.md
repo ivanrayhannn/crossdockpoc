@@ -187,7 +187,7 @@ Di batch ini: event **MAPPING**, source **UPLOAD**, PERIOD = periode berjalan, U
 - Error file: F1–F5.
 
 ## 11. Open points
-- Cara periode baru dibuat.
+- Periode dibuat oleh batch calculation (periode terakhir = periode berjalan). Masih terbuka: mapping periode sebelumnya disalin ke periode baru atau mulai kosong?
 - Panjang VARCHAR; lokasi template & result report; retensi Log.
 - Konfirmasi usulan kolom dan retensi TB_H_PART_CANDIDATE.
 - ~~Batch ID dan MSG ID~~ → X4, LOG1–LOG9. ~~Persentase > 100%~~ → tidak perlu.
