@@ -657,7 +657,7 @@
    "required": "N",
    "format": "Mon YYYY",
    "validation": "",
-   "description": "Options: All periods / every calculation period; the ongoing one is marked '(ongoing)'. The label shows (ongoing) / (past) / (all). Calculation periods are created by the calculation batch; the latest period created is the ongoing period and earlier ones become past. TBD: whether the mapping of the previous period is copied to the new period."
+   "description": "Options: All periods / every calculation period; the ongoing one is marked '(ongoing)'. The label shows (ongoing) / (past) / (all). Calculation periods are created by the calculation batch; the latest period created is the ongoing period and earlier ones become past. A new period starts empty: the mapping of the previous period is not copied. Every Active part is listed with its Max Case/Day from Part List (the quota) but no destination yet (Total Case/Day 0, 0%), until the D/S user assigns it by Edit mapping or Upload Excel."
   },
   {
    "name": "Part Number",
@@ -1663,6 +1663,7 @@
     "The sub-menu is opened only for users logged in with a D/S account.",
     "Search criteria: 'Calculation period' = ongoing period, 'Part Number' blank, 'Sync Status' = No Sync.",
     "Ongoing period: list every Active part of TB_M_PART_CANDIDATE, with its destinations of TB_M_PART_CANDIDATE_DEST for that period (a part without destinations is listed with Total Case/Day 0).",
+    "A new period starts empty: the mapping of the previous period is not copied. Every Active part is listed with its Max Case/Day from Part List (the quota) but no destination yet (Total Case/Day 0, 0%), until the D/S user assigns it by Edit mapping or Upload Excel.",
     "Past period: list every part that has rows in TB_M_PART_CANDIDATE_DEST for that period, whatever its current status. 'All periods' lists both."
    ]
   },

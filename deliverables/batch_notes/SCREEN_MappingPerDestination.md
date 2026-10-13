@@ -29,6 +29,7 @@ Screen ID: **X3**.
 - Default No Sync → part Success / Failed tersembunyi sampai filter diubah.
 - **Paging**: 25 baris per halaman (25 / 50 / 100), info "1–25 of N parts · page 1/n", tombol Prev / Next. Satu part (termasuk panel mapping-nya) = 1 baris. Search, Reset, dan ganti Rows per page → kembali ke halaman 1.
 - Periode kalkulasi dibuat oleh **batch calculation**. Periode terakhir yang dibuat = periode berjalan; periode sebelumnya jadi periode lalu (read only).
+- Periode baru **mulai kosong**: mapping periode sebelumnya tidak disalin. Semua part **Active** tetap muncul dengan jatah Max Case/Day dari Part List, tapi belum di-assign ke destinasi (Total Case/Day 0, 0%, panel "no destination yet") sampai user D/S mengisi lewat Edit mapping atau Upload Excel.
 
 ## 4. Result list
 | Kolom | Keterangan |
@@ -195,6 +196,5 @@ Di layar ini: event **MAPPING** source **SCREEN** saat Save (PERIOD = periode be
 | MSG11 | Hover chip Failed | Info | Sync failed: {SYNC_MESSAGE}. The part is sent again with the next Sync. |
 
 ## 12. Open points
-- Saat batch calculation membuat periode baru: mapping periode sebelumnya disalin atau mulai kosong?
 - Detail fungsi RPA; batas waktu status Waiting.
 - Konfirmasi usulan kolom dan retensi TB_H_PART_CANDIDATE (10.4).

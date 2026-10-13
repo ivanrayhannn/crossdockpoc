@@ -153,7 +153,7 @@ spec = {
  "items": [
   {"group": "<Search Criteria Section>"},
   it("Calculation period", "Key-in", "", "Varchar", "", "I", "Combo Box", "Left", "Ongoing period, e.g. 'Sep 2026 (ongoing)'", "N", "Mon YYYY", "",
-     "Options: All periods / every calculation period; the ongoing one is marked '(ongoing)'. The label shows (ongoing) / (past) / (all). Calculation periods are created by the calculation batch; the latest period created is the ongoing period and earlier ones become past. TBD: whether the mapping of the previous period is copied to the new period."),
+     "Options: All periods / every calculation period; the ongoing one is marked '(ongoing)'. The label shows (ongoing) / (past) / (all). Calculation periods are created by the calculation batch; the latest period created is the ongoing period and earlier ones become past. A new period starts empty: the mapping of the previous period is not copied. Every Active part is listed with its Max Case/Day from Part List (the quota) but no destination yet (Total Case/Day 0, 0%), until the D/S user assigns it by Edit mapping or Upload Excel."),
   it("Part Number", "Key-in", "", "Varchar", "TBD", "I", "Text box with suggestion list", "Left", "Blank", "N", "X..TBD..X", "Contains, case-insensitive",
      "Suggestions = registered Part Numbers. Placeholder 'e.g. PART-B'. Combined with the other criteria by AND."),
   it("Sync Status", "Key-in", "", "Varchar", "", "I", "Combo Box", "Left", "No Sync", "N", "", "", "Options: All / No Sync / Waiting / Success / Failed."),
@@ -258,6 +258,7 @@ spec = {
     "The sub-menu is opened only for users logged in with a D/S account.",
     "Search criteria: 'Calculation period' = ongoing period, 'Part Number' blank, 'Sync Status' = No Sync.",
     f"Ongoing period: list every Active part of {T}, with its destinations of {D} for that period (a part without destinations is listed with Total Case/Day 0).",
+    "A new period starts empty: the mapping of the previous period is not copied. Every Active part is listed with its Max Case/Day from Part List (the quota) but no destination yet (Total Case/Day 0, 0%), until the D/S user assigns it by Edit mapping or Upload Excel.",
     f"Past period: list every part that has rows in {D} for that period, whatever its current status. 'All periods' lists both."]},
   {"type": "heading", "text": "5.2 Specifying Criteria"},
   {"type": "bullets", "marker": "a.", "level": 2, "items": [
