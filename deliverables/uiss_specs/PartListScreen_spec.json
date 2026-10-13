@@ -1283,7 +1283,7 @@
   },
   {
    "name": "Event title",
-   "source": "TB_R_PARTX_LOG",
+   "source": "TBD (history table)",
    "field": "TBD",
    "type": "Varchar",
    "len": "",
@@ -1298,7 +1298,7 @@
   },
   {
    "name": "Event date-time",
-   "source": "TB_R_PARTX_LOG",
+   "source": "TBD (history table)",
    "field": "TBD",
    "type": "Datetime",
    "len": "",
@@ -1313,7 +1313,7 @@
   },
   {
    "name": "Changed field (old \u2192 new)",
-   "source": "TB_R_PARTX_LOG",
+   "source": "TBD (history table)",
    "field": "TBD",
    "type": "Varchar",
    "len": "",
@@ -1328,7 +1328,7 @@
   },
   {
    "name": "User",
-   "source": "TB_R_PARTX_LOG",
+   "source": "TBD (history table)",
    "field": "TBD",
    "type": "Varchar",
    "len": "",
@@ -1634,7 +1634,7 @@
      ]
     },
     "destination": {
-     "table": "TB_R_PARTX_LOG",
+     "table": "TBD (history table)",
      "operation": "Insert",
      "description": "Add / Edit - [Save]"
     },

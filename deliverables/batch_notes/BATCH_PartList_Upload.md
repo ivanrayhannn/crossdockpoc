@@ -126,10 +126,7 @@ Di UISS cukup ditulis **"Log"** tanpa definisi tabel (sesuai arahan). Yang saya 
 | START_DT / END_DT | DATETIME | Mulai / selesai batch |
 | CREATED_BY / CREATED_DT | | Audit |
 
-### 8.5 TB_R_PARTX_LOG — *terkait (history Part List)*
-Tabel history perubahan Part List (dipakai layar History setting). Field yang sudah dipetakan di UISS-Screen: PART_NO, EVENT, FIELD_NAME, OLD_VALUE, NEW_VALUE, CHANGED_BY, CHANGED_DT. **TBD**: apakah upload juga menulis history ke tabel ini.
-
-### 8.6 TB_M_PART_CROSSDOCK_DTL — *terkait, tidak disentuh batch ini*
+### 8.5 TB_M_PART_CROSSDOCK_DTL — *terkait, tidak disentuh batch ini*
 Detail part (Minimum MAD, Case/Day) dari sub-menu Part Detail. Tidak dibaca/ditulis oleh upload Part List.
 
 ---
@@ -157,5 +154,5 @@ MSG ID semua masih **TBD**.
 ## 11. Open points
 - Panjang VARCHAR semua kolom dan nama field Part Name di TB_M_PART_MASTER.
 - Lokasi file template & result report; retensi Log.
-- Apakah upload menulis history ke TB_R_PARTX_LOG.
+- Tabel history perubahan Part List (nama dan isi) dan apakah upload ikut menulis history.
 - Screen/Batch ID final (sekarang X2) dan MSG ID.
