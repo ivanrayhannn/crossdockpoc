@@ -2,7 +2,7 @@
 
 Draft catatan 3 fungsi batch yang menghitung status part dan mapping destinasi.
 Sumber: penjelasan user 13-Oct-26 dan file referensi `20261013_tb_r_actual_demand_summary_since_january-2026.xlsx` (sheet *tb_r_actual_demand_summary* dan *simulasi*).
-Status: **draft**. UISS-Batch belum dibuat. Rumus Fungsi 3 sudah dikonfirmasi 14-Oct-26; aturan pembulatan masih perlu konfirmasi.
+Status: **draft**. UISS-Batch belum dibuat. Rumus dan aturan Fungsi 2 dan 3 dikonfirmasi 14-Oct-26.
 
 > Range bulan dan jadwal scheduler diatur di **system master** (tabel system master tidak dijelaskan di dokumen ini).
 
@@ -41,7 +41,7 @@ Kolom TB_R_ACTUAL_DEMAND_SUMMARY (dari file referensi):
 1. Ambil TB_R_ACTUAL_DEMAND_SUMMARY (NSP), **range bulan historis sebelum bulan berjalan** (jumlah bulan diatur di system master, misalnya 6).
 2. Join ke **TB_M_PART_CANDIDATE**: semua part yang terdaftar, apa pun statusnya (Candidate, Active, Inactive).
 3. Part yang **Effective Start Date-nya belum tiba tidak dihitung**.
-4. Hitung **rata-rata MAD per part** selama range bulan. Hasilnya disimpan ke tabel hasil (usulan nama TB_R_PART_DAD_RESULT).
+4. Hitung **rata-rata MAD per part** = total MAD ÷ **jumlah bulan di system master** (mis. 6). Pembagi selalu tetap, bulan tanpa data dihitung 0. Hasilnya disimpan ke tabel hasil (usulan nama TB_R_PART_DAD_RESULT).
 5. Bandingkan dengan **Min MAD** di TB_M_PART_CANDIDATE:
    - rata-rata ≥ Min MAD → **Active**
    - rata-rata < Min MAD → **Inactive**
@@ -50,6 +50,7 @@ Kolom TB_R_ACTUAL_DEMAND_SUMMARY (dari file referensi):
 
 ### Aturan
 - **All-or-nothing**: kalau ada yang gagal, semua dibatalkan.
+- **Status manual**: batch boleh menimpa status yang sebelumnya diubah manual. User tetap boleh mengubah status lagi lewat layar / upload setelah batch jalan (di luar kendali sistem).
 - Scheduler diatur di system master, **auto retry 3x**.
 - Tombol **trigger manual** di Part List, hanya aktif kalau 3x retry gagal.
 - **Last success date**: satu tanggal per batch run (karena all-or-nothing, semua part ikut berhasil atau gagal bersama). Ditampilkan di Part List.
@@ -75,9 +76,8 @@ Jika Min MAD = 500 → Active. Jika Min MAD = 600 → Inactive.
 | OLD_STATUS / NEW_STATUS | Status sebelum dan sesudah |
 | CREATED_BY / CREATED_DT | Audit |
 
-### Masih terbuka
-- Bulan yang tidak ada datanya: dihitung 0 atau dilewati?
-- Kalau user mengubah status manual di Part List, apakah batch berikutnya boleh menimpanya?
+### Contoh bulan tanpa data (range 6 bulan)
+Part B hanya punya data 4 bulan, masing-masing 600 → rata-rata = 2,400 ÷ **6** = **400** (bukan ÷ 4).
 
 ---
 
@@ -86,11 +86,13 @@ Jika Min MAD = 500 → Active. Jika Min MAD = 600 → Inactive.
 ### Alur
 1. Ambil TB_R_ACTUAL_DEMAND_SUMMARY, **range bulan dari system master**, hanya part **Active** di TB_M_PART_CANDIDATE. Order type N dan S dijumlahkan.
 2. Kelompokkan per part + **GROUPING_BUYER_CD + GROUPING_PD_CD**, jumlahkan MAD → *result MAD*.
-3. Urutkan *result MAD* dari terbesar ke terkecil.
-4. Cek setiap buyer code + PD code ke **TB_M_H0125** (Destination Code + PD code). Tidak ada di master → **error**.
-5. Case/Day destinasi = result MAD / Σ result MAD part × **Max Case/Day** (**dikonfirmasi**). Rumus Excel: `=P10/SUM($P$10:$P$13)*$N$10`.
-6. Setiap destinasi **tetap mendapat minimal 1 case**, walau porsinya kecil.
-7. Simpan ke TB_M_PART_CANDIDATE_DEST untuk periode baru.
+3. **Destination code** = GROUPING_BUYER_CD + GROUPING_PD_CD (7 digit, mis. `9722D` + `10` = `9722D10`). Cek ke Destination Code **TB_M_H0125**. Tidak ada di master → **error**.
+4. Urutkan *result MAD* dari terbesar ke terkecil.
+5. **Dibatasi Max Case/Day**: kalau jumlah destinasi lebih banyak dari Max Case/Day, hanya destinasi teratas (result MAD terbesar) sebanyak Max Case/Day yang dipakai; sisanya tidak di-mapping.
+6. Case/Day destinasi = result MAD / Σ result MAD destinasi terpakai × **Max Case/Day**. Rumus Excel: `=P10/SUM($P$10:$P$13)*$N$10`.
+7. Pembulatan (lihat di bawah); setiap destinasi **minimal 1 case**, total = Max Case/Day.
+8. **Membuat periode baru** di TB_M_PART_CANDIDATE_DEST dan menyimpan mapping hasil kalkulasi. Periode sebelumnya jadi periode lalu (read only).
+9. **All-or-nothing**: satu error (mis. destinasi tidak ada di master) → seluruh batch gagal, tidak ada yang disimpan.
 
 ### Kenapa hasilnya melebihi Max Case/Day
 Rumus di sheet *simulasi* kolom L memakai referensi relatif, jadi penyebutnya bergeser setiap baris:
@@ -114,19 +116,21 @@ P14–P16 kosong, jadi penyebut makin kecil dan rasio makin besar. Hasilnya tota
 
 **Perbaikan (dikonfirmasi)**: penyebut dikunci ke total semua buyer + PD part itu: `=P10/SUM($P$10:$P$13)*$N$10`.
 
-**Usulan pembulatan (perlu konfirmasi)**: Case/Day harus bilangan bulat dan totalnya sama dengan Max Case/Day.
+**Pembulatan (dikonfirmasi)**: Case/Day harus bilangan bulat dan totalnya sama dengan Max Case/Day.
 1. Setiap destinasi diberi 1 case dulu (aturan minimal 1 case).
 2. Sisa case (Max Case/Day − jumlah destinasi) dibagi sesuai rasio, dibulatkan ke bawah.
 3. Case yang masih tersisa dibagikan +1 ke destinasi dengan pecahan terbesar.
 
+Pembulatan biasa (0.1–0.4 ke bawah, 0.5–0.9 ke atas) tidak dipakai sendirian karena totalnya bisa melenceng. Contoh: Max Case/Day 10, 4 destinasi masing-masing 2.5 → dibulatkan 3 + 3 + 3 + 3 = 12. Dengan cara di atas hasilnya 3 + 3 + 2 + 2 = 10.
+
 Contoh dengan range 6 bulan (202604–202609), Max Case/Day 16:
 
-| Buyer + PD | Result MAD (6 bulan) | Rasio × 16 | Case/Day |
+| Destination code | Result MAD (6 bulan) | Rasio × 16 | Case/Day |
 |---|---|---|---|
-| 9722D-10 | 1,536.16 | 7.95 | 8 |
-| 98111-10 | 999.83 | 5.18 | 5 |
-| 96182-01 | 448.66 | 2.32 | 2 |
-| 97153-10 | 105.84 | 0.55 | 1 |
+| 9722D10 | 1,536.16 | 7.95 | 8 |
+| 9811110 | 999.83 | 5.18 | 5 |
+| 9618201 | 448.66 | 2.32 | 2 |
+| 9715310 | 105.84 | 0.55 | 1 |
 | **Total** | 3,090.49 | 16.00 | **16** |
 
 ### Catatan dari simulasi (sudah diputuskan)
@@ -135,8 +139,5 @@ Contoh dengan range 6 bulan (202604–202609), Max Case/Day 16:
 - Rasio dari jumlah total dan dari rata-rata hasilnya sama, selama semua buyer dihitung pada range bulan yang sama.
 
 ### Masih terbuka
-- Aturan pembulatan di atas.
-- Jumlah destinasi lebih banyak dari Max Case/Day (minimal 1 case tidak bisa dipenuhi): error atau dibatasi?
-- PD code: kolom mana di TB_M_H0125 (belum ada di daftar kolom yang diterima)? Apakah TB_M_PART_CANDIDATE_DEST perlu kolom PD code, karena satu buyer bisa punya lebih dari satu PD code?
-- Error buyer tidak ada di master: seluruh batch gagal (all-or-nothing seperti Fungsi 2)?
-- Apakah Fungsi 3 yang membuat periode baru di TB_M_PART_CANDIDATE_DEST?
+- Jadwal Fungsi 3: langsung setelah Fungsi 2 sukses dalam satu rangkaian, dan ikut retry 3x + trigger manual yang sama?
+- Contoh kode destinasi di prototype dan UISS masih dummy 3 digit (123 / 456 / 789) → perlu diganti ke format 7 digit.

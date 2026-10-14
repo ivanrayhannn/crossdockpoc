@@ -1461,10 +1461,10 @@
     ],
     [
      "DEST_CODE",
-     "VARCHAR(TBD)",
+     "CHAR(7)",
      "Y",
      "N",
-     "Destination code; exists in TB_M_H0125 (Destination Master)"
+     "Destination code (buyer code + PD code, 7 digits); exists in TB_M_H0125 (Destination Master)"
     ],
     [
      "CASE_DAY",
@@ -1553,10 +1553,10 @@
     ],
     [
      "DEST_CODE",
-     "VARCHAR(TBD)",
+     "CHAR(7)",
      "",
      "Y",
-     "Destination code for MAPPING; NULL for other events"
+     "Destination code (7 digits) for MAPPING; NULL for other events"
     ],
     [
      "FIELD_NAME",

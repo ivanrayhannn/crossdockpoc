@@ -267,7 +267,7 @@ spec = {
   {"name": D, "kind": "transaction", "proposed": False, "description": "Destination mapping, one record per part, calculation period and destination (Mapping per Destination data). Target of a successful upload.",
    "columns": [["PART_NO", "VARCHAR(TBD)", "Y", "N", "Part number; FK to TB_M_PART_CANDIDATE"],
                ["PERIOD", "CHAR(6)", "Y", "N", "Calculation period, YYYYMM e.g. 202609; displayed as Sep 2026"],
-               ["DEST_CODE", "VARCHAR(TBD)", "Y", "N", "Destination code; exists in TB_M_H0125 (Destination Master)"],
+               ["DEST_CODE", "CHAR(7)", "Y", "N", "Destination code (buyer code + PD code, 7 digits); exists in TB_M_H0125 (Destination Master)"],
                ["CASE_DAY", "INT", "", "N", "Allocated Case/Day of the destination (> 0)"],
                ["CREATED_BY", "VARCHAR(TBD)", "", "N", "User who created the record"], ["CREATED_DT", "DATETIME", "", "N", "Created date and time"],
                ["CHANGED_BY", "VARCHAR(TBD)", "", "N", "User who last changed the record"], ["CHANGED_DT", "DATETIME", "", "N", "Last changed date and time"]]}, hist_table.TABLE, DM_TABLE]

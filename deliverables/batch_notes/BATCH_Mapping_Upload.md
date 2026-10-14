@@ -81,7 +81,7 @@ Diisi otomatis oleh **Export Excel** (periode berjalan dipilih): semua part **Ac
 |---|---|---|---|---|---|
 | PART_NO | VARCHAR(TBD) | Y | N | FK ke TB_M_PART_CANDIDATE | dari file |
 | PERIOD | CHAR(6) | Y | N | Periode kalkulasi YYYYMM, mis. 202609 (tampil Sep 2026) | periode berjalan |
-| DEST_CODE | VARCHAR(TBD) | Y | N | Kode destinasi; ada di TB_M_H0125 | dari file |
+| DEST_CODE | CHAR(7) | Y | N | Kode destinasi 7 digit (buyer code + PD code); ada di TB_M_H0125 | dari file |
 | CASE_DAY | INT | | N | Case/Day destinasi (> 0) | dari file |
 | CREATED_BY | VARCHAR(TBD) | | N | User pembuat | login user |
 | CREATED_DT | DATETIME | | N | Waktu dibuat | system date |
@@ -143,7 +143,7 @@ Tabel history semua perubahan part. **Usulan** definisi fisik (insert only, satu
 | EVENT_TYPE | VARCHAR(10) |  | N | ADD / EDIT / MAPPING / SYNC |
 | SOURCE | VARCHAR(10) |  | N | SCREEN / UPLOAD / RPA |
 | UPLOAD_ID | VARCHAR(TBD) |  | Y | Upload of the change (Log); NULL when not from an upload |
-| DEST_CODE | VARCHAR(TBD) |  | Y | Destination code for MAPPING; NULL for other events |
+| DEST_CODE | CHAR(7) |  | Y | Destination code (7 digits) for MAPPING; NULL for other events |
 | FIELD_NAME | VARCHAR(30) |  | N | Changed field: PCS_CASE, MAX_CASE_DAY, MIN_MAD, PART_STATUS, EFFECTIVE_START_DATE, CASE_DAY, SYNC_STATUS |
 | OLD_VALUE | VARCHAR(255) |  | Y | Value before the change; NULL for ADD or an added destination |
 | NEW_VALUE | VARCHAR(255) |  | Y | Value after the change; NULL for a removed destination |
