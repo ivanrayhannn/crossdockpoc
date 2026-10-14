@@ -31,7 +31,13 @@ Screen ASN Crossdock Creation → pilih delivery plan (Customer Order Date + Par
 | Submit | Konfirmasi "Submit ASN?" → simpan TB_R_ASN_CROSSDOCK_H, isi ASN_NO & CASE_NO di TB_R_INSTRUCTION → unit jadi **In ASN** (terkunci) |
 
 ## Kolom delivery plan
-Customer Order Date, Part Number/Name, Destinations (pcs), Qty, Not assigned, PO No, Last PO Date, Cases, Status (Ready to Delivery / Waiting for Next PO / In ASN), ASN No, expand order lines (Customer Order No, Detailed Item No, Destination, Qty, PO No, PO Date, Assignment).
+**Header (level case):** Customer Order Date, Part Number/Name, Case Qty, Not Assigned (case), PO No, Last PO Date, Status (Ready to Delivery / Waiting for Next PO / In ASN), ASN No. Header tidak menampilkan pcs maupun destinasi.
+
+**Detail (hanya tim D/S, tombol expand tidak tampil untuk supplier):**
+- Destinasi: Destination, Case (selalu 1), Qty (pcs), Not Assigned (pcs).
+- Order lines: Customer Order No, Detailed Item No, Destination, Qty, PO No, PO Date, Assignment.
+
+Not Assigned (case) = jumlah case (destinasi) yang masih punya qty tanpa PO yang sudah rilis.
 
 ## Tabel
 - **TB_R_INSTRUCTION** – dibaca (delivery plan), diupdate ASN_NO & CASE_NO saat submit. Diisi batch **X12**.
@@ -57,7 +63,7 @@ Customer Order Date, Part Number/Name, Destinations (pcs), Qty, Not assigned, PO
 | ID | Kapan | Pesan |
 |---|---|---|
 | MSG1 | Hover checkbox, unit sudah di ASN | Already in {ASN No} |
-| MSG2 | Hover checkbox, Waiting | Waiting for Next PO: {k} pcs of {Part No} / {Customer Order Date} are not assigned to a PO yet |
+| MSG2 | Hover checkbox, Waiting | Waiting for Next PO: {k} of {n} cases of {Part No} / {Customer Order Date} are not assigned to a released PO yet |
 | MSG3 | Search tanpa hasil | No delivery plan matches this search. |
 | MSG4 | Klik Submit ASN | Submit ASN? {n} cases ({q} pcs) will be locked into {ASN No} … |
 | MSG5 | Tidak ada rit cycle | No rit cycle available for {Delivery Date}. Choose another delivery date. |

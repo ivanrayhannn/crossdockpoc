@@ -3,7 +3,7 @@ import json, sys
 from asn_common import ASNH, ASNH_TABLE, DM, INSTR, INSTR_TABLE, btn, header, it, out, revisions
 
 IMG = 'deliverables/uiss_screens/asn_crossdock'
-B = ["Search", "Reset", "Order lines (expand)", "Clear selection", "Create ASN", "Back", "Download Case Label", "Cancel", "Submit ASN", "Yes / No", "OK"]
+B = ["Search", "Reset", "Detail (expand, D/S)", "Clear selection", "Create ASN", "Back", "Download Case Label", "Cancel", "Submit ASN", "Yes / No", "OK"]
 
 
 def modes(on):
@@ -26,7 +26,7 @@ spec = {
   "buttons": [
    {"name": "Search", "function": "Retrieve the delivery plan by Customer Order Date range, Part Number and Status."},
    {"name": "Reset", "function": "Clear criteria and reset the screen to its initial value."},
-   {"name": "Order lines (expand)", "function": "Show / hide the customer order lines of a unit with their PO assignment."},
+   {"name": "Detail (expand, D/S)", "function": "D/S team only: show / hide the destination detail (pcs) and the customer order lines of a unit with their PO assignment."},
    {"name": "Clear selection", "function": "Untick all selected units."},
    {"name": "Create ASN", "function": "Open the Case List sub screen with all cases of the selected units."},
    {"name": "Back", "function": "Return from the Case List to ASN Crossdock Creation without submitting."},
@@ -38,12 +38,12 @@ spec = {
   "screen_modes": [
    {"mode": "List Mode - No Selection", "sections": [
      {"section": "Search Criteria", "description": "Criteria blank (Status = All); all units listed", "buttons": modes(["Search", "Reset"])},
-     {"section": "Delivery plan", "description": "One row per Part Number + Customer Order Date; nothing ticked", "buttons": modes(["Order lines (expand)"])},
+     {"section": "Delivery plan", "description": "One row per Part Number + Customer Order Date; nothing ticked", "buttons": modes(["Detail (expand, D/S)"])},
      {"section": "Selection bar", "description": "Hint text", "buttons": modes([])}]},
    {"mode": "List Mode - Units Selected", "sections": [
      {"section": "Search Criteria", "description": "Refer 1.a", "buttons": modes(["Search", "Reset"])},
-     {"section": "Delivery plan", "description": "One or more Ready to Delivery units ticked", "buttons": modes(["Order lines (expand)"])},
-     {"section": "Selection bar", "description": "Units, cases and pcs selected", "buttons": modes(["Clear selection", "Create ASN"])}]},
+     {"section": "Delivery plan", "description": "One or more Ready to Delivery units ticked", "buttons": modes(["Detail (expand, D/S)"])},
+     {"section": "Selection bar", "description": "Units and cases selected", "buttons": modes(["Clear selection", "Create ASN"])}]},
    {"mode": "Case List Mode (sub screen)", "sections": [
      {"section": "ASN summary", "description": "ASN No auto ('assigned on submit'), supplier, units, cases / qty", "buttons": modes(["Back"])},
      {"section": "Case list", "description": "Delivery Date and Rit Cycle editable; cases read only", "buttons": modes(["Download Case Label"])},
@@ -80,7 +80,7 @@ spec = {
               {"from": "p2", "to": "db", "style": "dashed"}, {"from": "p2", "to": "x"}], "same_rank": [["p2", "db"]]}}],
  "screen_layout": [
   {"caption": "1. Delivery plan (business date 14-Oct): PART-C 13-Oct waits for the PO of 15-Oct (condition 3)", "image": f"{IMG}/c_01_list_bd14.png"},
-  {"caption": "2. Order lines of a Waiting for Next PO unit (assigned / planned PO)", "image": f"{IMG}/c_02_cond3_waiting_detail.png"},
+  {"caption": "2. D/S team view: destination (pcs) and order line detail of a Waiting for Next PO unit", "image": f"{IMG}/c_02_ds_detail.png"},
   {"caption": "3. Delivery plan (business date 15-Oct): PART-C 13-Oct becomes Ready to Delivery", "image": f"{IMG}/c_03_list_bd15.png"},
   {"caption": "4. Units of different Customer Order Dates selected", "image": f"{IMG}/c_04_selected.png"},
   {"caption": "5. Case List sub screen", "image": f"{IMG}/c_05_case_list.png"},
@@ -98,17 +98,21 @@ spec = {
   it("Select (check box)", "Key-in", "-", "Char", "1", "I", "CheckBox", "Center", "<unchecked>", "N", "-", "Enabled only for Ready to Delivery units not in an ASN", "Several units can be ticked. Ticked and disabled when the unit is in an ASN. Refer Screen Mode remark 1)."),
   out("Customer Order Date", INSTR, "ORDER_DT", "Date", "-", "Label", "Left", "DD-Mon-YYYY", "Customer Order Date of the unit."),
   out("Part Number / Part Name", INSTR, "PART_NO", "Char", "15", "Label", "Left", "-", "Part number of the unit; part name from the part master."),
-  out("Destinations (pcs)", INSTR, "DESTINATION_CD", "Char", "-", "Label", "Left", "{short} {qty} · ...", "Qty per destination of the unit."),
-  out("Qty", INSTR, "CUST_ORDER_QTY", "Number", "8", "Label", "Right", "ZZ,ZZ9", "Total customer order qty of the unit."),
-  out("Not assigned", INSTR, "REMAINING_ORDER_QTY", "Number", "8", "Label", "Right", "ZZ,ZZ9", "Qty of the unit without a PO yet; '-' when 0."),
+  out("Case Qty", "Computed", "-", "Number", "-", "Label", "Right", "ZZ9", "Number of cases of the unit (one case per destination); also shown while waiting."),
+  out("Not Assigned (case)", "Computed", "-", "Number", "-", "Label", "Right", "ZZ9", "Cases (destinations) of the unit that still have qty without a released PO (REMAINING_ORDER_QTY > 0); '-' when 0."),
   out("PO No", INSTR, "PO_NO", "Char", "TBD", "Label", "Left", "-", "PO numbers of the unit, separated by ', '."),
   out("Last PO Date", INSTR, "PO_ORDER_DT", "Date", "-", "Label", "Left", "DD-Mon-YYYY", "Latest PO Date of the unit."),
-  out("Cases", "Computed", "-", "Number", "-", "Label", "Right", "ZZ9", "Number of destinations of the unit (one case per destination); also shown while waiting."),
   out("Status", "Computed", "-", "Char", "-", "Label", "Left", "-", "Ready to Delivery (green) / Waiting for Next PO (amber, row highlighted) / In ASN (grey). Refer 5.2."),
   out("ASN No", INSTR, "ASN_NO", "Char", "TBD", "Label", "Left", "-", "ASN of the unit; '-' when none."),
-  btn("Order lines (expand)", "Shows the order lines: Customer Order No, Detailed Item No, Destination, Qty, PO No, PO Date, Assignment."),
+  btn("Detail (expand, D/S)", "Shown to the D/S team only; hidden for the supplier. Opens the detail below."),
+  {"group": "<Delivery Plan Detail (D/S team only)>"},
+  out("Destination", INSTR, "DESTINATION_CD", "Char", "7", "Grid", "Left", "{code} · {name}", "One row per destination (= one case); name from " + DM + "."),
+  out("Case", "Computed", "-", "Number", "-", "Grid", "Right", "9", "Always 1 (one case per destination)."),
+  out("Qty (pcs)", INSTR, "CUST_ORDER_QTY", "Number", "8", "Grid", "Right", "ZZ,ZZ9", "Sum of the order qty of the destination; the detail title shows the unit total."),
+  out("Not Assigned (pcs)", INSTR, "REMAINING_ORDER_QTY", "Number", "8", "Grid", "Right", "ZZ,ZZ9", "Qty of the destination without a released PO; '-' when 0."),
+  out("Order lines", INSTR, "CUSTOMER_ORDER_NO / DETAILED_ITEM_NO / DESTINATION_CD / CUST_ORDER_QTY / PO_NO / PO_ORDER_DT", "Char", "-", "Grid", "Left", "-", "Customer Order No, Detailed Item No, Destination, Qty, PO No, PO Date, Assignment (Assigned / Planned / Not assigned)."),
   {"group": "<Selection Bar Section>"},
-  out("Selection summary", "Computed", "-", "Char", "-", "Label", "Left", "-", "'{n} units selected · {c} cases · {q} pcs · {units}'. Empty: hint that units of different dates can go into one ASN."),
+  out("Selection summary", "Computed", "-", "Char", "-", "Label", "Left", "-", "'{n} units selected · {c} cases · {units}'. Empty: hint that units of different dates can go into one ASN."),
   btn("Clear selection", "Unticks all units.", "Disabled"), btn("Create ASN", "Opens the Case List sub screen. Refer 5.3.", "Disabled"),
   {"group": "<Case List Sub Screen - ASN Summary>"},
   btn("Back", "Returns to ASN Crossdock Creation without submitting."),
@@ -149,7 +153,7 @@ spec = {
   {"type": "bullets", "marker": "a.", "level": 2, "items": [
     "On first display all units of TB_R_INSTRUCTION are listed (criteria blank, Status = All), one row per Part Number + Customer Order Date, sorted by Customer Order Date then Part Number.",
     "[Search] applies the criteria (Customer Order Date range, Part Number, Status). [Reset] clears them. No row: message no. 3.",
-    "The order lines of a unit can be expanded: Customer Order No, Detailed Item No, Destination, Qty, PO No, PO Date and Assignment (Assigned / Not assigned)."]},
+    "The delivery plan header is at case level: Case Qty and Not Assigned (case). Pieces and destinations are not shown in the header.", "The detail of a unit (destination with Case, Qty (pcs), Not Assigned (pcs), and the order lines with Customer Order No, Detailed Item No, Destination, Qty, PO No, PO Date and Assignment) can be expanded by the D/S team only; for the supplier the expand button is hidden."]},
   {"type": "heading", "text": "5.2 Status Rule (Check Ready Status)"},
   {"type": "bullets", "marker": "a.", "level": 2, "items": [
     "Unit = Part Number + Customer Order Date. It is 'Ready to Delivery' when every order line of the unit is assigned to a PO (no row with PO_NO NULL / REMAINING_ORDER_QTY > 0).",
@@ -178,7 +182,7 @@ spec = {
  "display_messages": [
   {"group": "Delivery Plan (tooltip of disabled check box)"},
   {"event": "Hover on disabled check box", "cause": "Unit already in an ASN", "type": "Info", "msg_id": "MSG1", "message": "Already in {ASN No}", "action": "None."},
-  {"event": "Hover on disabled check box", "cause": "Unit is Waiting for Next PO", "type": "Info", "msg_id": "MSG2", "message": "Waiting for Next PO: {k} pcs of {Part No} / {Customer Order Date} are not assigned to a PO yet", "action": "Wait for the next PO."},
+  {"event": "Hover on disabled check box", "cause": "Unit is Waiting for Next PO", "type": "Info", "msg_id": "MSG2", "message": "Waiting for Next PO: {k} of {n} cases of {Part No} / {Customer Order Date} are not assigned to a released PO yet", "action": "Wait for the next PO."},
   {"group": "Search Operation"},
   {"event": "Click [Search] button", "cause": "No unit matches", "type": "Info", "msg_id": "MSG3", "message": "No delivery plan matches this search.", "action": "Change the criteria."},
   {"group": "Case List"},

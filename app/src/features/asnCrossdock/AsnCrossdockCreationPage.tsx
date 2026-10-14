@@ -25,11 +25,25 @@ function matches(u: Unit, q: Query): boolean {
   return true;
 }
 
-function destSummary(u: Unit): string {
-  const m = new Map<string, number>();
-  u.lines.forEach((l) => m.set(l.destCd, (m.get(l.destCd) ?? 0) + l.qty));
-  return [...m.entries()].map(([d, q]) => `${DESTS[d]?.short ?? d} ${q}`).join(' · ');
+interface DestRow {
+  destCd: string;
+  qty: number;
+  notAssigned: number;
 }
+
+/** Destination level of a unit (one case per destination), shown in the D/S detail. */
+function destRows(u: Unit, today: string): DestRow[] {
+  const m = new Map<string, DestRow>();
+  for (const l of u.lines) {
+    const r = m.get(l.destCd) ?? { destCd: l.destCd, qty: 0, notAssigned: 0 };
+    r.qty += l.qty;
+    if (!isAssigned(l, today)) r.notAssigned += l.qty;
+    m.set(l.destCd, r);
+  }
+  return [...m.values()];
+}
+
+type ViewAs = 'sup' | 'ds';
 
 /** Screen ASN Crossdock Creation: delivery plan per Part Number + Customer Order Date, and its Case List sub screen. */
 export function AsnCrossdockCreationPage() {
@@ -45,6 +59,8 @@ export function AsnCrossdockCreationPage() {
   const [confirm, setConfirm] = useState(false);
   const [done, setDone] = useState<string | null>(null);
   const [labelNote, setLabelNote] = useState(false);
+  const [viewAs, setViewAs] = useState<ViewAs>('sup');
+  const isDs = viewAs === 'ds';
 
   const units = useMemo(() => buildUnits(today, asnByUnitOf(asns)), [today, asns]);
   const rows = units.filter((u) => matches(u, query));
@@ -141,7 +157,16 @@ export function AsnCrossdockCreationPage() {
         <div style={{ marginRight: 'auto' }}>
           <h1 style={{ fontSize: 22, margin: 0 }}>ASN Crossdock Creation</h1>
           <div style={{ fontSize: 12.5, color: 'var(--color-neutral-700)', marginTop: 3 }}>
-            Delivery plan per Part Number + Customer Order Date. A unit is Ready to Delivery when all its orders are assigned to a released PO; it then goes into one ASN as a whole.
+            Delivery plan per Part Number + Customer Order Date, in cases. A unit is Ready to Delivery when all its cases are assigned to a released PO; it then goes into one ASN as a whole. The destination and pcs detail is open to the D/S team.
+          </div>
+        </div>
+        <div className="field">
+          <label>View as (prototype)</label>
+          <div style={{ display: 'flex' }}>
+            {([['sup', 'Supplier'], ['ds', 'D/S team']] as const).map(([k, label], i) => (
+              <button key={k} className={`btn ${viewAs === k ? 'btn-primary' : 'btn-secondary'}`} style={{ borderRadius: i ? '0 6px 6px 0' : '6px 0 0 6px', padding: '8px 14px', whiteSpace: 'nowrap' }}
+                onClick={() => { setViewAs(k); if (k === 'sup') setOpen({}); }}>{label}</button>
+            ))}
           </div>
         </div>
         <div className="field" style={{ width: 180 }}>
@@ -196,12 +221,10 @@ export function AsnCrossdockCreationPage() {
                 <th style={{ ...th, width: 34 }} />
                 <th style={th}>Customer Order Date</th>
                 <th style={th}>Part Number</th>
-                <th style={th}>Destinations (pcs)</th>
-                <th style={{ ...th, textAlign: 'right' }}>Qty</th>
-                <th style={{ ...th, textAlign: 'right' }}>Not assigned</th>
+                <th style={{ ...th, textAlign: 'right' }}>Case Qty</th>
+                <th style={{ ...th, textAlign: 'right' }}>Not Assigned (case)</th>
                 <th style={th}>PO No</th>
                 <th style={th}>Last PO Date</th>
-                <th style={{ ...th, textAlign: 'right' }}>Cases</th>
                 <th style={th}>Status</th>
                 <th style={th}>ASN No</th>
                 <th style={{ ...th, width: 34 }} />
@@ -210,25 +233,36 @@ export function AsnCrossdockCreationPage() {
             <tbody>
               {rows.map((u) => {
                 const enabled = u.ready && !u.asnNo;
-                const tip = u.asnNo ? `Already in ${u.asnNo}` : !u.ready ? `Waiting for Next PO: ${u.remainingQty} pcs of ${u.partNo} / ${niceDate(u.orderDt)} are not assigned to a released PO yet` : 'Select to create an ASN';
+                const tip = u.asnNo ? `Already in ${u.asnNo}` : !u.ready ? `Waiting for Next PO: ${u.notAssignedCases} of ${u.caseCount} cases of ${u.partNo} / ${niceDate(u.orderDt)} are not assigned to a released PO yet` : 'Select to create an ASN';
                 return [
                   <tr key={u.key} style={{ background: !u.ready ? 'var(--color-warn-bg, #fff8e6)' : undefined }}>
                     <td style={td}><input type="checkbox" checked={!!u.asnNo || !!sel[u.key]} disabled={!enabled} title={tip} onChange={(e) => setSel({ ...sel, [u.key]: e.target.checked })} /></td>
                     <td style={{ ...td, fontWeight: 600 }}>{niceDate(u.orderDt)}</td>
                     <td style={td}><span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{u.partNo}</span><div className="ax-muted">{PART_NAME[u.partNo]}</div></td>
-                    <td style={td}>{destSummary(u)}</td>
-                    <td style={{ ...td, textAlign: 'right' }}>{u.qty}</td>
-                    <td style={{ ...td, textAlign: 'right', color: u.remainingQty ? 'var(--color-danger)' : undefined }}>{u.remainingQty || '—'}</td>
+                    <td style={{ ...td, textAlign: 'right', fontWeight: 600 }}>{u.caseCount}</td>
+                    <td style={{ ...td, textAlign: 'right', color: u.notAssignedCases ? 'var(--color-danger)' : undefined }}>{u.notAssignedCases || '—'}</td>
                     <td style={td}>{u.pos.join(', ') || '—'}</td>
                     <td style={td}>{niceDate(u.lastPoDate)}</td>
-                    <td style={{ ...td, textAlign: 'right' }}>{u.caseCount}</td>
                     <td style={td}>{u.asnNo ? <Chip tone="neutral">In ASN</Chip> : u.ready ? <Chip tone="ok">Ready to Delivery</Chip> : <Chip tone="warn">Waiting for Next PO</Chip>}</td>
                     <td style={{ ...td, fontFamily: 'var(--font-mono)', fontSize: 11.5 }}>{u.asnNo ?? '—'}</td>
-                    <td style={td}><button className="btn btn-secondary" title="Order lines" style={{ padding: '2px 8px', fontSize: 11 }} onClick={() => setOpen({ ...open, [u.key]: !open[u.key] })}>{open[u.key] ? '▾' : '▸'}</button></td>
+                    <td style={td}>{isDs && <button className="btn btn-secondary" title="Destination and order line detail (D/S team)" style={{ padding: '2px 8px', fontSize: 11 }} onClick={() => setOpen({ ...open, [u.key]: !open[u.key] })}>{open[u.key] ? '▾' : '▸'}</button>}</td>
                   </tr>,
-                  open[u.key] && (
+                  isDs && open[u.key] && (
                     <tr key={`${u.key}-d`}>
-                      <td colSpan={12} style={{ padding: '6px 16px 12px 50px', background: 'var(--color-surface)', borderBottom: '1px solid var(--color-divider)' }}>
+                      <td colSpan={10} style={{ padding: '8px 16px 12px 50px', background: 'var(--color-surface)', borderBottom: '1px solid var(--color-divider)' }}>
+                        <div className="ax-lbl" style={{ marginBottom: 4 }}>Destination · {u.qty} pcs{u.remainingQty ? ` · ${u.remainingQty} pcs not assigned` : ''}</div>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, marginBottom: 10 }}>
+                          <thead><tr>{['Destination', 'Case', 'Qty (pcs)', 'Not Assigned (pcs)'].map((h) => <th key={h} style={{ ...th, background: 'transparent' }}>{h}</th>)}</tr></thead>
+                          <tbody>
+                            {destRows(u, today).map((r) => (
+                              <tr key={r.destCd}>
+                                <td style={td}>{DESTS[r.destCd].code} · {DESTS[r.destCd].name}</td><td style={td}>1</td><td style={td}>{r.qty}</td>
+                                <td style={{ ...td, color: r.notAssigned ? 'var(--color-danger)' : undefined }}>{r.notAssigned || '—'}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                        <div className="ax-lbl" style={{ marginBottom: 4 }}>Order lines</div>
                         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
                           <thead><tr>{['Customer Order No', 'Detailed Item No', 'Destination', 'Qty', 'PO No', 'PO Date', 'Assignment'].map((h) => <th key={h} style={{ ...th, background: 'transparent' }}>{h}</th>)}</tr></thead>
                           <tbody>
@@ -252,7 +286,7 @@ export function AsnCrossdockCreationPage() {
         )}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 16px', borderTop: '1px solid var(--color-divider)', background: 'var(--color-surface)' }}>
           <span style={{ fontSize: 12.5 }}>
-            {selected.length ? <><b>{selected.length} units selected</b> · {cases.length} cases · {selQty} pcs · {selected.map((u) => `${u.partNo} ${niceDate(u.orderDt).slice(0, 6)}`).join(', ')}</> : 'Tick one or more Ready to Delivery units. Units from different Customer Order Dates can go into the same ASN.'}
+            {selected.length ? <><b>{selected.length} units selected</b> · {cases.length} cases · {selected.map((u) => `${u.partNo} ${niceDate(u.orderDt).slice(0, 6)}`).join(', ')}</> : 'Tick one or more Ready to Delivery units. Units from different Customer Order Dates can go into the same ASN.'}
           </span>
           <span style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
             <button className="btn btn-secondary" disabled={!selected.length} onClick={() => setSel({})}>Clear selection</button>
