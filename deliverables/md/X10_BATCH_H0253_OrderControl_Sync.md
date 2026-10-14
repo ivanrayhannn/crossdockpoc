@@ -19,7 +19,7 @@ Sumber: UISS-Batch `X10_UISS_Batch_H0253OrderControlSync.xlsx` (0.1 Initial Draf
 | 4 | ORDER_TIME | VARCHAR(6) | Y | N | No.4 Order Time |
 | 5 | DESTINATION_CD | VARCHAR(7) | Y | N | No.5 Destination Code |
 | 6 | DETAILED_ITEM_NO | VARCHAR(4) | Y | N | No.6 Detailed Item No. |
-| 7 | SERIAL_NO | VARCHAR(7) | Y | N | TBD: in the I/F layout (unique key) but not in the table export - confirm. No.7 Serial No., Card No. |
+| 7 | SERIAL_NO | VARCHAR(7) | Y | N | No.7 Serial No., Card No. Part of the key; distinguishes split records of the same order line (taken from the I/F layout, not in the current table export). |
 | 8 | TOPAS_ORDER_TYPE | VARCHAR(1) |  | Y | No.8 TOPAS Order Type: '1': VOR, '2': E/O, '3': S/O, 'F': F/O |
 | 9 | DEMAND_HISTORY_UPDATE_DT | DATE |  | Y | No.9 Demand History Update Date |
 | 10 | SHIPPING_MAKER_CD | VARCHAR(1) |  | Y | No.10 Shipping Maker Code |
@@ -63,7 +63,7 @@ Sumber: UISS-Batch `X10_UISS_Batch_H0253OrderControlSync.xlsx` (0.1 Initial Draf
 | 48 | UPDATE_BY | VARCHAR(TBD) |  | Y | Updated by (NSP) |
 
 ## Catatan
-- **SERIAL_NO** (Serial No., Card No.) ada di I/F layout sebagai unique key no. 7, tapi tidak ada di export tabel → perlu konfirmasi.
+- **SERIAL_NO** (Serial No., Card No.) **dicantumkan** di tabel NSP: bagian dari unique key I/F (no. 7) untuk membedakan pecahan record dari baris order yang sama. Kolom ini tidak ada di export tabel saat ini; di contoh data, 118 kelompok baris punya 6 kolom kunci yang sama (mis. ID1H4571 item 0004 muncul 2x), jadi tanpa SERIAL_NO kunci tidak unik.
 - Nama kolom no. 43 di tabel: UPDATE_OPERATION_ID (di H0202: UPDATE_OPERATOR_ID).
 
 ## Open points

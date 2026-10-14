@@ -608,7 +608,7 @@ H0253_COLS = [
 "VARCHAR(7)",
 "Y",
 "N",
-"TBD: in the I/F layout (unique key) but not in the table export - confirm. No.7 Serial No., Card No."
+"No.7 Serial No., Card No. Part of the key; distinguishes split records of the same order line (taken from the I/F layout, not in the current table export)."
 ],
 [
 "TOPAS_ORDER_TYPE",
