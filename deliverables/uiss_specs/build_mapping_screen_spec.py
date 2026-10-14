@@ -4,23 +4,28 @@ import hist_table
 
 T, D, DM = 'TB_M_PART_CANDIDATE', 'TB_M_PART_CANDIDATE_DEST', 'TB_M_H0125 (Destination Master)'
 DM_COLS = [
-    ["DESTINATION_CODE", "TBD", "Y", "N", "Destination code, e.g. 123. Used by Crossdock: destination list, upload check 2, DEST_CODE"],
-    ["CUSTOMER_CODE", "TBD", "", "", "Customer code (reference only)"],
-    ["ORDER_TRANSPORTATION_CODE", "TBD", "", "", "Order transportation code (reference only)"],
-    ["BO_INSTRUCTION_CODE", "TBD", "", "", "B/O instruction code (reference only)"],
+    ["DESTINATION_CD", "TBD", "Y", "N", "Destination code, e.g. 123. Used by Crossdock: destination list, upload check 2, DEST_CODE"],
+    ["CUSTOMER_CD", "TBD", "", "", "Customer code (reference only)"],
+    ["ORDER_TRANSPORTATION_CD", "TBD", "", "", "Order transportation code (reference only)"],
+    ["BO_INSTRUCTION_CD", "TBD", "", "", "B/O instruction code (reference only)"],
     ["DESTINATION_NAME", "TBD", "", "", "Destination name, e.g. Thailand. Used by Crossdock: shown with the code ('9722D10 - Thailand') and in Export Excel"],
-    ["REGION_CODE", "TBD", "", "", "Region code (reference only)"],
+    ["REGION_CD", "TBD", "", "", "Region code (reference only)"],
     ["COUNTRY_NAME", "TBD", "", "", "Country name (reference only)"],
-    ["POSTAL_CODE", "TBD", "", "", "Postal code (reference only)"],
-    ["STATE_CODE", "TBD", "", "", "State code (reference only)"],
+    ["POSTAL_CD", "TBD", "", "", "Postal code (reference only)"],
+    ["STATE_CD", "TBD", "", "", "State code (reference only)"],
     ["DESTINATION_ADDRESS1", "TBD", "", "", "Destination address 1 (reference only)"],
     ["DESTINATION_ADDRESS2", "TBD", "", "", "Destination address 2 (reference only)"],
     ["CREATED_BY", "TBD", "", "", "User who created the record"],
     ["CREATED_DT", "TBD", "", "", "Created date and time"],
     ["UPDATED_BY", "TBD", "", "", "User who last updated the record"],
     ["UPDATED_DT", "TBD", "", "", "Last updated date and time"]]
+from h_tables import H0125_COLS as _H125
+_T = {c[0]: c for c in _H125}
+for _c in DM_COLS:
+    if _c[0] in _T:
+        _c[1], _c[3] = _T[_c[0]][1], _T[_c[0]][3]
 DM_TABLE = {"name": "TB_M_H0125", "kind": "master", "proposed": False,
-            "description": "Destination Master (existing NSP table, read only). Only the listed columns are relevant; physical column names follow the existing table (names here are logical).",
+            "description": "Destination Master (existing NSP table, read only). Only the listed columns are relevant; full structure: X11 Destination Master (H0125) Sync.",
             "columns": DM_COLS}
 PERIOD_FMT = "CHAR(6) YYYYMM, e.g. 202609; displayed as 'Sep 2026'"
 IMG = 'deliverables/uiss_screens/mapping'
@@ -196,7 +201,7 @@ spec = {
   btn("Cancel", "Shown in edit mode; discards the changes."),
   btn("Save", "Shown in edit mode. Disabled while the mapping cannot be saved (Operation Description 5.5)."),
   it("Destination (CD)", D, "DEST_CODE", "Varchar", "TBD", "I/O", "Combo Box", "Left", "New row: 'Select destination'", "Y", "XXXXXXX - X..X", "Once per part",
-     f"List = DESTINATION_CODE - DESTINATION_NAME of {DM} (e.g. 9722D10 - Thailand, 9811110 - Japan, 9618201 - Vietnam). Destinations already used by another row of the same part are hidden."),
+     f"List = DESTINATION_CD - DESTINATION_NAME of {DM} (e.g. 9722D10 - Thailand, 9811110 - Japan, 9618201 - Vietnam). Destinations already used by another row of the same part are hidden."),
   it("Case/Day", D, "CASE_DAY", "Number", "TBD", "I/O", "Text box", "Right", "New row: 0", "Y", "ZZ,ZZ9", "Whole number (TBD: upper limit)", "Editable in edit mode only."),
   it("Pcs/Day", "", "", "Number", "", "O", "Label", "Right", "", "", "ZZ,ZZ9", "", "= Pcs/Case x Case/Day of the destination."),
   it("Percentage", "", "", "Number", "", "O", "Label", "Right", "", "", "ZZ9%", "", "= Case/Day of the destination / total Case/Day of the part."),
@@ -344,7 +349,7 @@ spec = {
   {"type": "table", "level": 2, "row_lines": "all", "columns": [{"title": "Item", "width": 12}, {"title": "Value", "width": 9}, {"title": "Definition", "width": 25}], "rows": [
     ["Table", T, "Part List data, part number level (key PART_NO). Holds Max Case/Day, status and Sync Status."],
     ["Table", D, "Mapping data, part number + calculation period + destination level (key PART_NO, PERIOD, DEST_CODE). PERIOD = " + PERIOD_FMT + "."],
-    ["Table", "TB_M_H0125", "Destination Master (existing, read only). Crossdock uses DESTINATION_CODE and DESTINATION_NAME only."],
+    ["Table", "TB_M_H0125", "Destination Master (existing, read only). Crossdock uses DESTINATION_CD and DESTINATION_NAME only."],
     ["Part Status", "Active", "Only Active parts are mapped in the ongoing period."],
     ["Sync Status", "No Sync (0)", "Not sent yet, or changed since the last synchronisation."],
     ["Sync Status", "Waiting (3)", "[Sync] clicked; waiting for the RPA."],

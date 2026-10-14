@@ -1,0 +1,948 @@
+{
+ "doc_type": "batch",
+ "header": {
+  "phase": "DR",
+  "project_name": "Crossdock Optimization",
+  "block_name": "Batch",
+  "function_name": "X11 Crossdock - Destination Master (H0125) Sync to NSP",
+  "created_date": "14-Oct-26",
+  "created_by": "FID Rayhan"
+ },
+ "revisions": [
+  {
+   "revision": "0.1",
+   "author": "FID Rayhan",
+   "date": "14-Oct-26",
+   "reviewed_by": "",
+   "description": "Initial Draft"
+  }
+ ],
+ "general": {
+  "objective": [
+   "To replicate TB_M_H0125 from DB Surrounding to the table with the same name in NSP.",
+   "The NSP table is fully replaced every run (delete - insert). In case any error occurs, the run is rolled back and NSP keeps the data of the last successful run."
+  ],
+  "operation_flow": {
+   "flow": {
+    "direction": "TB",
+    "nodes": [
+     {
+      "id": "a",
+      "label": "Scheduler",
+      "type": "event"
+     },
+     {
+      "id": "b",
+      "label": "Delete + insert TB_M_H0125",
+      "type": "process"
+     },
+     {
+      "id": "c",
+      "label": "Commit / roll back, Log",
+      "type": "process"
+     }
+    ],
+    "edges": [
+     {
+      "from": "a",
+      "to": "b"
+     },
+     {
+      "from": "b",
+      "to": "c"
+     }
+    ]
+   }
+  },
+  "inputs": [
+   {
+    "name": "TB_M_H0125 (DB Surrounding)",
+    "type": "DB",
+    "description": "Destination master (I/F H01-25, DVJO820)"
+   }
+  ],
+  "outputs": [
+   {
+    "name": "TB_M_H0125 (NSP)",
+    "type": "DB",
+    "description": "if successful: same rows as the source"
+   },
+   {
+    "name": "Log",
+    "type": "DB",
+    "description": "One record per run with status SUCCESS / FAILED"
+   }
+  ],
+  "extra_tables": [
+   {
+    "title": "Parameters",
+    "columns": [
+     {
+      "title": "Name",
+      "width": 14
+     },
+     {
+      "title": "Description",
+      "width": 34
+     }
+    ],
+    "rows": [
+     [
+      "-",
+      "No parameter. All rows of the source table are copied."
+     ]
+    ]
+   },
+   {
+    "title": "Execution Schedule",
+    "columns": [
+     {
+      "title": "Item",
+      "width": 12
+     },
+     {
+      "title": "Description",
+      "width": 36
+     }
+    ],
+    "rows": [
+     [
+      "Trigger",
+      "Scheduler set in the system master (schedule TBC), after the data is available."
+     ],
+     [
+      "Source",
+      "G-TOPAS provides the data 1 time/week (21:30)."
+     ]
+    ]
+   }
+  ]
+ },
+ "func_flow": {
+  "flow": {
+   "direction": "TB",
+   "nodes": [
+    {
+     "id": "p1",
+     "label": "Start (scheduler)",
+     "type": "process",
+     "step": 1
+    },
+    {
+     "id": "s",
+     "label": "TB_M_H0125 (DB Surrounding)",
+     "type": "db",
+     "lane": "input"
+    },
+    {
+     "id": "p2",
+     "label": "Delete all rows, insert all source rows",
+     "type": "process",
+     "step": 2
+    },
+    {
+     "id": "d",
+     "label": "TB_M_H0125 (NSP)",
+     "type": "db",
+     "lane": "output"
+    },
+    {
+     "id": "p3",
+     "label": "Commit or roll back, record Log",
+     "type": "process",
+     "step": 3
+    },
+    {
+     "id": "log",
+     "label": "Log",
+     "type": "db",
+     "lane": "output"
+    }
+   ],
+   "edges": [
+    {
+     "from": "p1",
+     "to": "p2"
+    },
+    {
+     "from": "s",
+     "to": "p2"
+    },
+    {
+     "from": "p2",
+     "to": "d"
+    },
+    {
+     "from": "p2",
+     "to": "p3"
+    },
+    {
+     "from": "p3",
+     "to": "log"
+    }
+   ]
+  },
+  "steps": [
+   "The scheduler starts the batch.",
+   "Delete all rows of TB_M_H0125 (NSP) and insert all rows of TB_M_H0125 (DB Surrounding) (same columns and values).",
+   "No error: commit. Error: roll back step 2 (one transaction). Record the result in the Log. Exit."
+  ]
+ },
+ "data_map": {
+  "blocks": [
+   {
+    "source": {
+     "table": "TB_M_H0125 (NSP)"
+    },
+    "destination": {
+     "table": "TB_M_H0125 (NSP)",
+     "operation": "Delete",
+     "description": "All rows (full replace)"
+    },
+    "mappings": [
+     {
+      "dest_field": "DESTINATION_CD",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "CUSTOMER_CD",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "DOMESTIC_OVERSEAS_CLASS_CD",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "ORDER_TRANSPORTATION_CD",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "BO_INSTRUCTION_CD",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "TARIFF_CD_INPUT_REQUIRED_FLAG",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "QUP_PROCESS_CD",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "DEPOT_DESTINATION_JUDG_FLAG",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "REGION_CD",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "REGION_NAME",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "DESTINATION_GROUPING_CD",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "FREIGHT_AGENT_CD_AIR",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "FREIGHT_AGENT_CD_SEA",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "FREIGHT_AGENT_CD_LAND",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "PACKING_TYPE_CD",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "DESTINATION_OPERATOR_CD",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "DESTINATION_OPERATOR_NAME",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "DESTINATION_NAME",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "DESTINATION_NAME_LOCAL",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "COUNTRY_NAME",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "COUNTRY_NAME_LOCAL",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "POSTAL_CD",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "POSTAL_CD_LOCAL",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "STATE_CD",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "STATE_CD_LOCAL",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "DESTINATION_ADDRESS1",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "DESTINATION_ADDRESS2",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "DESTINATION_ADDRESS1_LOCAL",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "DESTINATION_ADDRESS2_LOCAL",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "PHONE_NO",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "FAX_NO",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "REGISTRANT_ID",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "UPDATE_JOB_ID",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "UPDATE_OPERATOR_ID",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "INTF_UPDATE_DT",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "CREATED_BY",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "CREATED_DT",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "UPDATED_BY",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "UPDATED_DT",
+      "description": "Row is deleted"
+     }
+    ]
+   },
+   {
+    "source": {
+     "table": "TB_M_H0125 (DB Surrounding)"
+    },
+    "destination": {
+     "table": "TB_M_H0125 (NSP)",
+     "operation": "Insert",
+     "description": "Every source row"
+    },
+    "mappings": [
+     {
+      "source_field": "DESTINATION_CD",
+      "dest_field": "DESTINATION_CD",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "CUSTOMER_CD",
+      "dest_field": "CUSTOMER_CD",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "DOMESTIC_OVERSEAS_CLASS_CD",
+      "dest_field": "DOMESTIC_OVERSEAS_CLASS_CD",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "ORDER_TRANSPORTATION_CD",
+      "dest_field": "ORDER_TRANSPORTATION_CD",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "BO_INSTRUCTION_CD",
+      "dest_field": "BO_INSTRUCTION_CD",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "TARIFF_CD_INPUT_REQUIRED_FLAG",
+      "dest_field": "TARIFF_CD_INPUT_REQUIRED_FLAG",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "QUP_PROCESS_CD",
+      "dest_field": "QUP_PROCESS_CD",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "DEPOT_DESTINATION_JUDG_FLAG",
+      "dest_field": "DEPOT_DESTINATION_JUDG_FLAG",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "REGION_CD",
+      "dest_field": "REGION_CD",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "REGION_NAME",
+      "dest_field": "REGION_NAME",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "DESTINATION_GROUPING_CD",
+      "dest_field": "DESTINATION_GROUPING_CD",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "FREIGHT_AGENT_CD_AIR",
+      "dest_field": "FREIGHT_AGENT_CD_AIR",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "FREIGHT_AGENT_CD_SEA",
+      "dest_field": "FREIGHT_AGENT_CD_SEA",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "FREIGHT_AGENT_CD_LAND",
+      "dest_field": "FREIGHT_AGENT_CD_LAND",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "PACKING_TYPE_CD",
+      "dest_field": "PACKING_TYPE_CD",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "DESTINATION_OPERATOR_CD",
+      "dest_field": "DESTINATION_OPERATOR_CD",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "DESTINATION_OPERATOR_NAME",
+      "dest_field": "DESTINATION_OPERATOR_NAME",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "DESTINATION_NAME",
+      "dest_field": "DESTINATION_NAME",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "DESTINATION_NAME_LOCAL",
+      "dest_field": "DESTINATION_NAME_LOCAL",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "COUNTRY_NAME",
+      "dest_field": "COUNTRY_NAME",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "COUNTRY_NAME_LOCAL",
+      "dest_field": "COUNTRY_NAME_LOCAL",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "POSTAL_CD",
+      "dest_field": "POSTAL_CD",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "POSTAL_CD_LOCAL",
+      "dest_field": "POSTAL_CD_LOCAL",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "STATE_CD",
+      "dest_field": "STATE_CD",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "STATE_CD_LOCAL",
+      "dest_field": "STATE_CD_LOCAL",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "DESTINATION_ADDRESS1",
+      "dest_field": "DESTINATION_ADDRESS1",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "DESTINATION_ADDRESS2",
+      "dest_field": "DESTINATION_ADDRESS2",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "DESTINATION_ADDRESS1_LOCAL",
+      "dest_field": "DESTINATION_ADDRESS1_LOCAL",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "DESTINATION_ADDRESS2_LOCAL",
+      "dest_field": "DESTINATION_ADDRESS2_LOCAL",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "PHONE_NO",
+      "dest_field": "PHONE_NO",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "FAX_NO",
+      "dest_field": "FAX_NO",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "REGISTRANT_ID",
+      "dest_field": "REGISTRANT_ID",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "UPDATE_JOB_ID",
+      "dest_field": "UPDATE_JOB_ID",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "UPDATE_OPERATOR_ID",
+      "dest_field": "UPDATE_OPERATOR_ID",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "INTF_UPDATE_DT",
+      "dest_field": "INTF_UPDATE_DT",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "CREATED_BY",
+      "dest_field": "CREATED_BY",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "CREATED_DT",
+      "dest_field": "CREATED_DT",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "UPDATED_BY",
+      "dest_field": "UPDATED_BY",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "UPDATED_DT",
+      "dest_field": "UPDATED_DT",
+      "description": "Same value as the source"
+     }
+    ]
+   },
+   {
+    "source": "Result of this run",
+    "destination": {
+     "table": "Log",
+     "operation": "Insert",
+     "description": "One record per run"
+    },
+    "mappings": [
+     {
+      "dest_field": "BATCH_ID",
+      "description": "'H0125_SYNC'"
+     },
+     {
+      "dest_field": "STATUS",
+      "description": "SUCCESS / FAILED"
+     },
+     {
+      "dest_field": "ROW_COUNT",
+      "description": "Rows inserted (0 when FAILED)"
+     },
+     {
+      "dest_field": "MESSAGE",
+      "description": "Error message when FAILED"
+     },
+     {
+      "dest_field": "START_DT",
+      "description": "Start date and time"
+     },
+     {
+      "dest_field": "END_DT",
+      "description": "End date and time"
+     }
+    ]
+   }
+  ]
+ },
+ "func_desc_layout": "full",
+ "func_desc": [
+  {
+   "type": "bullets",
+   "marker": "-",
+   "level": 0,
+   "items": [
+    "Full replace (delete - insert); all columns are copied as they are, no conversion.",
+    "Delete and insert run in one transaction (all-or-nothing). When the run fails, NSP keeps the data of the last successful run.",
+    "Schedule is set in the system master (TBC). Table structure: see Appendix."
+   ]
+  }
+ ],
+ "logging_messages": [
+  {
+   "event": "Batch start",
+   "cause": "Batch is called",
+   "type": "Info",
+   "msg_id": "LOG1",
+   "message": "H0125 sync started.",
+   "action": {
+    "system": "Write the log.",
+    "user": "-"
+   }
+  },
+  {
+   "event": "Batch end",
+   "cause": "Batch finishes",
+   "type": "Info",
+   "msg_id": "LOG2",
+   "message": "H0125 sync ended. Status <STATUS>, rows <ROW_COUNT>.",
+   "action": {
+    "system": "Write the log.",
+    "user": "-"
+   }
+  },
+  {
+   "event": "Copy table",
+   "cause": "Read from DB Surrounding or insert into NSP fails",
+   "type": "Error",
+   "msg_id": "LOG3",
+   "message": "Cannot replicate TB_M_H0125: <ERROR_DETAIL>.",
+   "action": {
+    "system": "Roll back. STATUS = FAILED.",
+    "user": "User contact PIC"
+   }
+  },
+  {
+   "event": "Unexpected error",
+   "cause": "Any other system error",
+   "type": "Critical",
+   "msg_id": "LOG4",
+   "message": "Unexpected error: <ERROR_DETAIL>.",
+   "action": {
+    "system": "Roll back. STATUS = FAILED.",
+    "user": "User contact PIC"
+   }
+  }
+ ],
+ "appendix_layout": "full",
+ "appendix": [],
+ "tables": [
+  {
+   "name": "TB_M_H0125",
+   "kind": "master",
+   "proposed": false,
+   "description": "Destination master (I/F H01-25, DVJO820) replicated from DB Surrounding. Structure from the G-TOPAS I/F layout; physical names follow the existing table. Key (PK) = unique key of the I/F layout.",
+   "columns": [
+    [
+     "DESTINATION_CD",
+     "VARCHAR(7)",
+     "Y",
+     "N",
+     "Used by Crossdock (destination list, upload check, DEST_CODE). No.1 Destination Code"
+    ],
+    [
+     "CUSTOMER_CD",
+     "VARCHAR(7)",
+     "",
+     "N",
+     "No.2 Customer Code"
+    ],
+    [
+     "DOMESTIC_OVERSEAS_CLASS_CD",
+     "VARCHAR(1)",
+     "",
+     "N",
+     "No.3 Domestic/Overseas Classification Code: '1': Domestic, '2': Overseas"
+    ],
+    [
+     "ORDER_TRANSPORTATION_CD",
+     "VARCHAR(1)",
+     "",
+     "N",
+     "No.4 Order Transportation Code: 1':AIR '2':SEA '3':LAND"
+    ],
+    [
+     "BO_INSTRUCTION_CD",
+     "VARCHAR(1)",
+     "",
+     "N",
+     "No.5 B/O Instruction Code: 'K': B/O Cancel, 'F': Follow-up, 'M': Follow-up(S/O only)"
+    ],
+    [
+     "TARIFF_CD_INPUT_REQUIRED_FLAG",
+     "VARCHAR(1)",
+     "",
+     "N",
+     "No.6 Tariff Code Input Required Flag: '0':Not check '1':check"
+    ],
+    [
+     "QUP_PROCESS_CD",
+     "VARCHAR(1)",
+     "",
+     "N",
+     "No.7 QUP Process Code: '1':Round-up '2':Not change '3':Round-down"
+    ],
+    [
+     "DEPOT_DESTINATION_JUDG_FLAG",
+     "VARCHAR(1)",
+     "",
+     "N",
+     "No.8 Depot Destination Judgment Flag: \"0\":Not Depot \"1\":Depot"
+    ],
+    [
+     "REGION_CD",
+     "VARCHAR(2)",
+     "",
+     "N",
+     "No.9 Region Code"
+    ],
+    [
+     "REGION_NAME",
+     "VARCHAR(50)",
+     "",
+     "Y",
+     "No.10 Region Name"
+    ],
+    [
+     "DESTINATION_GROUPING_CD",
+     "VARCHAR(7)",
+     "",
+     "N",
+     "No.11 Destination Grouping Code"
+    ],
+    [
+     "FREIGHT_AGENT_CD_AIR",
+     "VARCHAR(3)",
+     "",
+     "N",
+     "No.12 Freight Agent Code (Air)"
+    ],
+    [
+     "FREIGHT_AGENT_CD_SEA",
+     "VARCHAR(3)",
+     "",
+     "N",
+     "No.13 Freight Agent Code (Sea)"
+    ],
+    [
+     "FREIGHT_AGENT_CD_LAND",
+     "VARCHAR(3)",
+     "",
+     "N",
+     "No.14 Freight Agent Code (Land)"
+    ],
+    [
+     "PACKING_TYPE_CD",
+     "VARCHAR(2)",
+     "",
+     "N",
+     "No.15 Packing Type Code: '1': 40 feet (FCL) '2': 20 feet (FCL) '3': LCL"
+    ],
+    [
+     "DESTINATION_OPERATOR_CD",
+     "VARCHAR(2)",
+     "",
+     "Y",
+     "No.16 Destination Operator Code"
+    ],
+    [
+     "DESTINATION_OPERATOR_NAME",
+     "VARCHAR(20)",
+     "",
+     "Y",
+     "No.17 Destination Operator Name"
+    ],
+    [
+     "DESTINATION_NAME",
+     "VARCHAR(50)",
+     "",
+     "N",
+     "Used by Crossdock (shown with the code). No.18 Destination Name"
+    ],
+    [
+     "DESTINATION_NAME_LOCAL",
+     "VARCHAR(75)",
+     "",
+     "Y",
+     "No.19 Destination Name (Local Language)"
+    ],
+    [
+     "COUNTRY_NAME",
+     "VARCHAR(36)",
+     "",
+     "Y",
+     "No.20 Country Name"
+    ],
+    [
+     "COUNTRY_NAME_LOCAL",
+     "VARCHAR(54)",
+     "",
+     "Y",
+     "No.21 Country Name (Local Language)"
+    ],
+    [
+     "POSTAL_CD",
+     "VARCHAR(10)",
+     "",
+     "Y",
+     "No.22 Postal Code"
+    ],
+    [
+     "POSTAL_CD_LOCAL",
+     "VARCHAR(15)",
+     "",
+     "Y",
+     "No.23 Postal Code (Local Language)"
+    ],
+    [
+     "STATE_CD",
+     "VARCHAR(6)",
+     "",
+     "Y",
+     "No.24 State Code"
+    ],
+    [
+     "STATE_CD_LOCAL",
+     "VARCHAR(9)",
+     "",
+     "Y",
+     "No.25 State Code (Local Language)"
+    ],
+    [
+     "DESTINATION_ADDRESS1",
+     "VARCHAR(50)",
+     "",
+     "N",
+     "No.26 Destination Address1"
+    ],
+    [
+     "DESTINATION_ADDRESS2",
+     "VARCHAR(50)",
+     "",
+     "Y",
+     "No.27 Destination Address2"
+    ],
+    [
+     "DESTINATION_ADDRESS1_LOCAL",
+     "VARCHAR(75)",
+     "",
+     "Y",
+     "No.28 Destination Address1(Local Language)"
+    ],
+    [
+     "DESTINATION_ADDRESS2_LOCAL",
+     "VARCHAR(75)",
+     "",
+     "Y",
+     "No.29 Destination Address2(Local Language)"
+    ],
+    [
+     "PHONE_NO",
+     "VARCHAR(20)",
+     "",
+     "Y",
+     "No.30 Phone No."
+    ],
+    [
+     "FAX_NO",
+     "VARCHAR(20)",
+     "",
+     "Y",
+     "No.31 Fax No."
+    ],
+    [
+     "REGISTRANT_ID",
+     "VARCHAR(13)",
+     "",
+     "Y",
+     "No.32 Registrant ID"
+    ],
+    [
+     "UPDATE_JOB_ID",
+     "VARCHAR(8)",
+     "",
+     "Y",
+     "No.33 Update Job ID"
+    ],
+    [
+     "UPDATE_OPERATOR_ID",
+     "VARCHAR(13)",
+     "",
+     "Y",
+     "No.34 Update Operator ID"
+    ],
+    [
+     "INTF_UPDATE_DT",
+     "TIMESTAMP",
+     "",
+     "Y",
+     "No.35 Update Date & Time"
+    ],
+    [
+     "CREATED_BY",
+     "VARCHAR(TBD)",
+     "",
+     "Y",
+     "Created by (NSP)"
+    ],
+    [
+     "CREATED_DT",
+     "TIMESTAMP",
+     "",
+     "Y",
+     "Created date and time (NSP)"
+    ],
+    [
+     "UPDATED_BY",
+     "VARCHAR(TBD)",
+     "",
+     "Y",
+     "Updated by (NSP)"
+    ],
+    [
+     "UPDATED_DT",
+     "TIMESTAMP",
+     "",
+     "Y",
+     "Updated date and time (NSP)"
+    ]
+   ]
+  }
+ ]
+}

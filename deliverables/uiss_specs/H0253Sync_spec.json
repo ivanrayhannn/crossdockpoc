@@ -58,7 +58,7 @@
    {
     "name": "TB_R_H0253_ORDER_CONTROL_PRE (DB Surrounding)",
     "type": "DB",
-    "description": "Order control (pre)"
+    "description": "Order control data, pre-order picking info (I/F H02-53, DVJO950)"
    }
   ],
   "outputs": [
@@ -108,7 +108,11 @@
     "rows": [
      [
       "Trigger",
-      "Scheduler set in the system master (schedule TBC)."
+      "Scheduler set in the system master (schedule TBC), after the data is available."
+     ],
+     [
+      "Source",
+      "G-TOPAS provides the data 1 time/day (27:30)."
      ]
     ]
    }
@@ -218,6 +222,10 @@
      },
      {
       "dest_field": "DETAILED_ITEM_NO",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "SERIAL_NO",
       "description": "Row is deleted"
      },
      {
@@ -424,6 +432,11 @@
      {
       "source_field": "DETAILED_ITEM_NO",
       "dest_field": "DETAILED_ITEM_NO",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "SERIAL_NO",
+      "dest_field": "SERIAL_NO",
       "description": "Same value as the source"
      },
      {
@@ -735,336 +748,343 @@
    "name": "TB_R_H0253_ORDER_CONTROL_PRE",
    "kind": "transaction",
    "proposed": false,
-   "description": "Order control (pre) replicated from DB Surrounding. Same columns as the source table; types and lengths follow DB Surrounding. Key (PK) TBD.",
+   "description": "Order control data, pre-order picking info (I/F H02-53, DVJO950) replicated from DB Surrounding. Structure from the G-TOPAS I/F layout; physical names follow the existing table. Key (PK) = unique key of the I/F layout.",
    "columns": [
     [
      "CUSTOMER_CD",
-     "VARCHAR(TBD)",
-     "",
+     "VARCHAR(7)",
      "Y",
-     ""
+     "N",
+     "No.1 Customer Code"
     ],
     [
      "CUSTOMER_ORDER_NO",
-     "VARCHAR(TBD)",
-     "",
+     "VARCHAR(8)",
      "Y",
-     ""
+     "N",
+     "No.2 Customer Order No."
     ],
     [
      "ORDER_DT",
      "DATE",
-     "",
      "Y",
-     ""
+     "N",
+     "No.3 Order Date"
     ],
     [
      "ORDER_TIME",
-     "VARCHAR(TBD)",
-     "",
+     "VARCHAR(6)",
      "Y",
-     ""
+     "N",
+     "No.4 Order Time"
     ],
     [
      "DESTINATION_CD",
-     "VARCHAR(TBD)",
-     "",
+     "VARCHAR(7)",
      "Y",
-     ""
+     "N",
+     "No.5 Destination Code"
     ],
     [
      "DETAILED_ITEM_NO",
-     "VARCHAR(TBD)",
-     "",
+     "VARCHAR(4)",
      "Y",
-     ""
+     "N",
+     "No.6 Detailed Item No."
+    ],
+    [
+     "SERIAL_NO",
+     "VARCHAR(7)",
+     "Y",
+     "N",
+     "TBD: in the I/F layout (unique key) but not in the table export - confirm. No.7 Serial No., Card No."
     ],
     [
      "TOPAS_ORDER_TYPE",
-     "VARCHAR(TBD)",
+     "VARCHAR(1)",
      "",
      "Y",
-     ""
+     "No.8 TOPAS Order Type: '1': VOR, '2': E/O, '3': S/O, 'F': F/O"
     ],
     [
      "DEMAND_HISTORY_UPDATE_DT",
      "DATE",
      "",
      "Y",
-     ""
+     "No.9 Demand History Update Date"
     ],
     [
      "SHIPPING_MAKER_CD",
-     "VARCHAR(TBD)",
+     "VARCHAR(1)",
      "",
      "Y",
-     ""
+     "No.10 Shipping Maker Code"
     ],
     [
      "SHIPPING_PART_NO",
-     "VARCHAR(TBD)",
+     "VARCHAR(15)",
      "",
      "Y",
-     ""
+     "No.11 Shipping P/No."
     ],
     [
      "ORIGINAL_SHIPPING_QTY",
-     "NUMBER",
+     "NUMBER(8)",
      "",
      "Y",
-     ""
+     "No.12 Original Shipping Qty or Estimated Shipping Qty"
     ],
     [
      "ORDER_STATUS_QTY",
-     "NUMBER",
+     "NUMBER(8)",
      "",
      "Y",
-     ""
+     "No.13 Order Status Qty"
     ],
     [
      "ORDER_STATUS",
-     "VARCHAR(TBD)",
+     "VARCHAR(1)",
      "",
      "Y",
-     ""
+     "No.14 Order Status: '1': Pending '2': Reject/Cancel '3': B/O '4': Firm Order '5': Vender Direct '6': Allocation '7': Cross Dock"
     ],
     [
      "BO_INSTRUCTION_CD",
-     "VARCHAR(TBD)",
+     "VARCHAR(1)",
      "",
      "Y",
-     ""
+     "No.15 B/O Instruction Code: '1': B/O Cancel, '9': Follow-up"
     ],
     [
      "BO_RELEASE_DT",
      "DATE",
      "",
      "Y",
-     ""
+     "No.16 B/O Release Date"
     ],
     [
      "ORDER_GROUP",
-     "VARCHAR(TBD)",
+     "VARCHAR(2)",
      "",
      "Y",
-     ""
+     "No.17 Order Group"
     ],
     [
      "DIRECT_DELIVERY_CD",
-     "VARCHAR(TBD)",
+     "VARCHAR(1)",
      "",
      "Y",
-     ""
+     "No.18 Direct Delivery Code: Blank: Not vendor direct delivery '1': Vendor direct delivery"
     ],
     [
      "DIRECT_DELIVERY_FLAG",
-     "VARCHAR(TBD)",
+     "VARCHAR(1)",
      "",
      "Y",
-     ""
+     "No.19 Direct Delivery Flag: '0': Not direct delivery, '1': Direct delivery"
     ],
     [
      "CURRENCY_CD",
-     "VARCHAR(TBD)",
+     "VARCHAR(3)",
      "",
      "Y",
-     ""
+     "No.20 Currency Code"
     ],
     [
      "LANDED_COST",
-     "NUMBER",
+     "NUMBER(14,3)",
      "",
      "Y",
-     ""
+     "No.21 Landed Cost: Constant '0'"
     ],
     [
      "NET_PRICE",
-     "NUMBER",
+     "NUMBER(14,3)",
      "",
      "Y",
-     ""
+     "No.22 Nett Price"
     ],
     [
      "SALES_PRICE",
-     "NUMBER",
+     "NUMBER(14,3)",
      "",
      "Y",
-     ""
+     "No.23 Sales Price"
     ],
     [
      "EXPORT_SALES_PRICE",
-     "NUMBER",
+     "NUMBER(14,3)",
      "",
      "Y",
-     ""
+     "No.24 Export Sales Price"
     ],
     [
      "SPECIAL_PRICE_CD",
-     "VARCHAR(TBD)",
+     "VARCHAR(1)",
      "",
      "Y",
-     ""
+     "No.25 Special Price Code: '1': Special price, Blank: Not applicable"
     ],
     [
      "ORDER_DISCOUNT_CD",
-     "VARCHAR(TBD)",
+     "VARCHAR(4)",
      "",
      "Y",
-     ""
+     "No.26 Order Discount Code"
     ],
     [
      "ITEM_DISCOUNT_RATE",
-     "NUMBER",
+     "NUMBER(6,1)",
      "",
      "Y",
-     ""
+     "No.27 Item Discount Rate"
     ],
     [
      "FIRST_ALLOCATION_DT",
      "DATE",
      "",
      "Y",
-     ""
+     "No.28 1st Allocation Date"
     ],
     [
      "BO_HISTORY_CD",
-     "VARCHAR(TBD)",
+     "VARCHAR(1)",
      "",
      "Y",
-     ""
+     "No.29 B/O History Code: '0': Default, '1': B/O"
     ],
     [
      "ORDER_ERROR_CD",
-     "VARCHAR(TBD)",
+     "VARCHAR(2)",
      "",
      "Y",
-     ""
+     "No.30 Order Error Code"
     ],
     [
      "RA_CD",
-     "VARCHAR(TBD)",
+     "VARCHAR(2)",
      "",
      "Y",
-     ""
+     "No.31 R/A Code"
     ],
     [
      "PENDING_ORDER_CD",
-     "VARCHAR(TBD)",
+     "VARCHAR(2)",
      "",
      "Y",
-     ""
+     "No.32 Pending Order Code"
     ],
     [
      "ORDER_PORTION_CD",
-     "VARCHAR(TBD)",
+     "VARCHAR(1)",
      "",
      "Y",
-     ""
+     "No.33 Order Portion Code: '1': Reject '2': Alteration '3': Process '4': Amendment"
     ],
     [
      "ORDER_STATUS_DT",
      "DATE",
      "",
      "Y",
-     ""
+     "No.34 Order Status Date"
     ],
     [
      "SHIPPING_PROCESS_CTRL_CD",
-     "VARCHAR(TBD)",
+     "VARCHAR(1)",
      "",
      "Y",
-     ""
+     "No.35 Shipping Process Control Code: Blank: No change '1': Higher priority to B/O"
     ],
     [
      "PROCUREMENT_PROCESS_CTRL_CD",
-     "VARCHAR(TBD)",
+     "VARCHAR(1)",
      "",
      "Y",
-     ""
+     "No.36 Procurement Process Control Code: '1': Skip substitution check '2': Skip large order division (including skipping irregular order check) '3': '2' + skip order taking check '4"
     ],
     [
      "DANGEROUS_GOODS_CLASS",
-     "VARCHAR(TBD)",
+     "VARCHAR(4)",
      "",
      "Y",
-     ""
+     "No.37 Dangerous Goods Class"
     ],
     [
      "CREATE_DEMAND_FLAG",
-     "VARCHAR(TBD)",
+     "VARCHAR(1)",
      "",
      "Y",
-     ""
+     "No.38 Created Demand Flag: '0': Not created demand, '1': Created demand"
     ],
     [
      "SPECIAL_CUSTOMER_FLAG",
-     "VARCHAR(TBD)",
+     "VARCHAR(1)",
      "",
      "Y",
-     ""
+     "No.39 Special Customer Flag: '0': Regular, '1': Special"
     ],
     [
      "POSS_TRANSMISSION_JUDG_FLAG",
-     "VARCHAR(TBD)",
+     "VARCHAR(1)",
      "",
      "Y",
-     ""
+     "No.40 POSS Transmission Judgment Flag: '0': Out of target, '1': Transmission target"
     ],
     [
      "REGISTRANT_ID",
-     "VARCHAR(TBD)",
+     "VARCHAR(13)",
      "",
      "Y",
-     ""
+     "No.41 Registrant ID"
     ],
     [
      "UPDATE_JOB_ID",
-     "VARCHAR(TBD)",
+     "VARCHAR(8)",
      "",
      "Y",
-     ""
+     "No.42 Update Job ID"
     ],
     [
      "UPDATE_OPERATION_ID",
-     "VARCHAR(TBD)",
+     "VARCHAR(13)",
      "",
      "Y",
-     ""
+     "No.43 Update Operator ID"
     ],
     [
      "INTF_UPDATE_DT",
      "TIMESTAMP",
      "",
      "Y",
-     ""
+     "No.44 Update Date & Time"
     ],
     [
      "CREATE_DT",
      "TIMESTAMP",
      "",
      "Y",
-     ""
+     "Created date and time (NSP)"
     ],
     [
      "CREATE_BY",
      "VARCHAR(TBD)",
      "",
      "Y",
-     ""
+     "Created by (NSP)"
     ],
     [
      "UPDATE_DT",
      "TIMESTAMP",
      "",
      "Y",
-     ""
+     "Updated date and time (NSP)"
     ],
     [
      "UPDATE_BY",
      "VARCHAR(TBD)",
      "",
      "Y",
-     ""
+     "Updated by (NSP)"
     ]
    ]
   }

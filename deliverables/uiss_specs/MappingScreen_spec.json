@@ -1169,7 +1169,7 @@
    "required": "Y",
    "format": "XXXXXXX - X..X",
    "validation": "Once per part",
-   "description": "List = DESTINATION_CODE - DESTINATION_NAME of TB_M_H0125 (Destination Master) (e.g. 9722D10 - Thailand, 9811110 - Japan, 9618201 - Vietnam). Destinations already used by another row of the same part are hidden."
+   "description": "List = DESTINATION_CD - DESTINATION_NAME of TB_M_H0125 (Destination Master) (e.g. 9722D10 - Thailand, 9811110 - Japan, 9618201 - Vietnam). Destinations already used by another row of the same part are hidden."
   },
   {
    "name": "Case/Day",
@@ -1972,7 +1972,7 @@
     [
      "Table",
      "TB_M_H0125",
-     "Destination Master (existing, read only). Crossdock uses DESTINATION_CODE and DESTINATION_NAME only."
+     "Destination Master (existing, read only). Crossdock uses DESTINATION_CD and DESTINATION_NAME only."
     ],
     [
      "Part Status",

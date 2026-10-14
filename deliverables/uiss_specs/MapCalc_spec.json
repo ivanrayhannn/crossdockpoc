@@ -373,7 +373,7 @@
     ]
    },
    {
-    "text": "Check every destination code in TB_M_H0125 (DESTINATION_CODE).",
+    "text": "Check every destination code in TB_M_H0125 (DESTINATION_CD).",
     "children": [
      "Not found: error -> go to step 10 (all-or-nothing)."
     ]
@@ -1409,111 +1409,111 @@
    "name": "TB_M_H0125",
    "kind": "master",
    "proposed": false,
-   "description": "Destination Master (existing NSP table, read only). Only the listed columns are relevant; physical column names follow the existing table.",
+   "description": "Destination Master (existing NSP table, read only). Only the listed columns are relevant; full structure: X11 Destination Master (H0125) Sync.",
    "columns": [
     [
-     "DESTINATION_CODE",
-     "TBD",
+     "DESTINATION_CD",
+     "VARCHAR(7)",
      "Y",
      "N",
      "Destination code, 7 digits (buyer code + PD code), e.g. 9722D10. Used by Crossdock"
     ],
     [
-     "CUSTOMER_CODE",
-     "TBD",
+     "CUSTOMER_CD",
+     "VARCHAR(7)",
      "",
-     "",
+     "N",
      "Customer code (reference only)"
     ],
     [
-     "ORDER_TRANSPORTATION_CODE",
-     "TBD",
+     "ORDER_TRANSPORTATION_CD",
+     "VARCHAR(1)",
      "",
-     "",
+     "N",
      "Order transportation code (reference only)"
     ],
     [
-     "BO_INSTRUCTION_CODE",
-     "TBD",
+     "BO_INSTRUCTION_CD",
+     "VARCHAR(1)",
      "",
-     "",
+     "N",
      "B/O instruction code (reference only)"
     ],
     [
      "DESTINATION_NAME",
-     "TBD",
+     "VARCHAR(50)",
      "",
-     "",
+     "N",
      "Destination name. Used by Crossdock (shown with the code)"
     ],
     [
-     "REGION_CODE",
-     "TBD",
+     "REGION_CD",
+     "VARCHAR(2)",
      "",
-     "",
+     "N",
      "Region code (reference only)"
     ],
     [
      "COUNTRY_NAME",
-     "TBD",
+     "VARCHAR(36)",
      "",
-     "",
+     "Y",
      "Country name (reference only)"
     ],
     [
-     "POSTAL_CODE",
-     "TBD",
+     "POSTAL_CD",
+     "VARCHAR(10)",
      "",
-     "",
+     "Y",
      "Postal code (reference only)"
     ],
     [
-     "STATE_CODE",
-     "TBD",
+     "STATE_CD",
+     "VARCHAR(6)",
      "",
-     "",
+     "Y",
      "State code (reference only)"
     ],
     [
      "DESTINATION_ADDRESS1",
-     "TBD",
+     "VARCHAR(50)",
      "",
-     "",
+     "N",
      "Destination address 1 (reference only)"
     ],
     [
      "DESTINATION_ADDRESS2",
-     "TBD",
+     "VARCHAR(50)",
      "",
-     "",
+     "Y",
      "Destination address 2 (reference only)"
     ],
     [
      "CREATED_BY",
-     "TBD",
+     "VARCHAR(TBD)",
      "",
-     "",
+     "Y",
      "User who created the record"
     ],
     [
      "CREATED_DT",
-     "TBD",
+     "TIMESTAMP",
      "",
-     "",
+     "Y",
      "Created date and time"
     ],
     [
      "UPDATED_BY",
-     "TBD",
+     "VARCHAR(TBD)",
      "",
-     "",
+     "Y",
      "User who last updated the record"
     ],
     [
      "UPDATED_DT",
-     "TBD",
+     "TIMESTAMP",
      "",
-     "",
+     "Y",
      "Last updated date and time"
     ]
    ]

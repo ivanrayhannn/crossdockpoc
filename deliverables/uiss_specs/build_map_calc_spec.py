@@ -99,7 +99,7 @@ spec = {
     "children": ["Destination code = GROUPING_BUYER_CD + GROUPING_PD_CD (7 digits, e.g. 9722D + 10 = 9722D10).",
                  "Result MAD = sum of MAD of the group (order types N + S). Groups with result MAD 0 are not used.",
                  "A part without any result MAD gets no destination (listed with Total Case/Day 0 on the screen)."]},
-   {"text": f"Check every destination code in {DM} (DESTINATION_CODE).",
+   {"text": f"Check every destination code in {DM} (DESTINATION_CD).",
     "children": ["Not found: error -> go to step 10 (all-or-nothing)."]},
    {"text": "Allocate Case/Day per part (see 4.2):",
     "children": ["Sort the destinations by result MAD, largest first, and keep at most Max Case/Day destinations.",

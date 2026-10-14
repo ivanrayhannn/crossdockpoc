@@ -78,23 +78,28 @@ D_TABLE = {"name": D, "kind": "transaction", "proposed": False,
            "columns": D_COLS}
 
 DM_COLS = [
-    ["DESTINATION_CODE", "TBD", "Y", "N", "Destination code, 7 digits (buyer code + PD code), e.g. 9722D10. Used by Crossdock"],
-    ["CUSTOMER_CODE", "TBD", "", "", "Customer code (reference only)"],
-    ["ORDER_TRANSPORTATION_CODE", "TBD", "", "", "Order transportation code (reference only)"],
-    ["BO_INSTRUCTION_CODE", "TBD", "", "", "B/O instruction code (reference only)"],
+    ["DESTINATION_CD", "TBD", "Y", "N", "Destination code, 7 digits (buyer code + PD code), e.g. 9722D10. Used by Crossdock"],
+    ["CUSTOMER_CD", "TBD", "", "", "Customer code (reference only)"],
+    ["ORDER_TRANSPORTATION_CD", "TBD", "", "", "Order transportation code (reference only)"],
+    ["BO_INSTRUCTION_CD", "TBD", "", "", "B/O instruction code (reference only)"],
     ["DESTINATION_NAME", "TBD", "", "", "Destination name. Used by Crossdock (shown with the code)"],
-    ["REGION_CODE", "TBD", "", "", "Region code (reference only)"],
+    ["REGION_CD", "TBD", "", "", "Region code (reference only)"],
     ["COUNTRY_NAME", "TBD", "", "", "Country name (reference only)"],
-    ["POSTAL_CODE", "TBD", "", "", "Postal code (reference only)"],
-    ["STATE_CODE", "TBD", "", "", "State code (reference only)"],
+    ["POSTAL_CD", "TBD", "", "", "Postal code (reference only)"],
+    ["STATE_CD", "TBD", "", "", "State code (reference only)"],
     ["DESTINATION_ADDRESS1", "TBD", "", "", "Destination address 1 (reference only)"],
     ["DESTINATION_ADDRESS2", "TBD", "", "", "Destination address 2 (reference only)"],
     ["CREATED_BY", "TBD", "", "", "User who created the record"],
     ["CREATED_DT", "TBD", "", "", "Created date and time"],
     ["UPDATED_BY", "TBD", "", "", "User who last updated the record"],
     ["UPDATED_DT", "TBD", "", "", "Last updated date and time"]]
+from h_tables import H0125_COLS as _H125
+_T = {c[0]: c for c in _H125}
+for _c in DM_COLS:
+    if _c[0] in _T:
+        _c[1], _c[3] = _T[_c[0]][1], _T[_c[0]][3]
 DM_TABLE = {"name": DM, "kind": "master", "proposed": False,
-            "description": "Destination Master (existing NSP table, read only). Only the listed columns are relevant; physical column names follow the existing table.",
+            "description": "Destination Master (existing NSP table, read only). Only the listed columns are relevant; full structure: X11 Destination Master (H0125) Sync.",
             "columns": DM_COLS}
 
 RES_COLS = [

@@ -3,23 +3,28 @@ import json, sys
 import hist_table
 
 DM_COLS = [
-    ["DESTINATION_CODE", "TBD", "Y", "N", "Destination code, e.g. 123. Used by Crossdock: destination list, upload check 2, DEST_CODE"],
-    ["CUSTOMER_CODE", "TBD", "", "", "Customer code (reference only)"],
-    ["ORDER_TRANSPORTATION_CODE", "TBD", "", "", "Order transportation code (reference only)"],
-    ["BO_INSTRUCTION_CODE", "TBD", "", "", "B/O instruction code (reference only)"],
+    ["DESTINATION_CD", "TBD", "Y", "N", "Destination code, e.g. 123. Used by Crossdock: destination list, upload check 2, DEST_CODE"],
+    ["CUSTOMER_CD", "TBD", "", "", "Customer code (reference only)"],
+    ["ORDER_TRANSPORTATION_CD", "TBD", "", "", "Order transportation code (reference only)"],
+    ["BO_INSTRUCTION_CD", "TBD", "", "", "B/O instruction code (reference only)"],
     ["DESTINATION_NAME", "TBD", "", "", "Destination name, e.g. Thailand. Used by Crossdock: shown with the code ('9722D10 - Thailand') and in Export Excel"],
-    ["REGION_CODE", "TBD", "", "", "Region code (reference only)"],
+    ["REGION_CD", "TBD", "", "", "Region code (reference only)"],
     ["COUNTRY_NAME", "TBD", "", "", "Country name (reference only)"],
-    ["POSTAL_CODE", "TBD", "", "", "Postal code (reference only)"],
-    ["STATE_CODE", "TBD", "", "", "State code (reference only)"],
+    ["POSTAL_CD", "TBD", "", "", "Postal code (reference only)"],
+    ["STATE_CD", "TBD", "", "", "State code (reference only)"],
     ["DESTINATION_ADDRESS1", "TBD", "", "", "Destination address 1 (reference only)"],
     ["DESTINATION_ADDRESS2", "TBD", "", "", "Destination address 2 (reference only)"],
     ["CREATED_BY", "TBD", "", "", "User who created the record"],
     ["CREATED_DT", "TBD", "", "", "Created date and time"],
     ["UPDATED_BY", "TBD", "", "", "User who last updated the record"],
     ["UPDATED_DT", "TBD", "", "", "Last updated date and time"]]
+from h_tables import H0125_COLS as _H125
+_T = {c[0]: c for c in _H125}
+for _c in DM_COLS:
+    if _c[0] in _T:
+        _c[1], _c[3] = _T[_c[0]][1], _T[_c[0]][3]
 DM_TABLE = {"name": "TB_M_H0125", "kind": "master", "proposed": False,
-            "description": "Destination Master (existing NSP table, read only). Only the listed columns are relevant; physical column names follow the existing table (names here are logical).",
+            "description": "Destination Master (existing NSP table, read only). Only the listed columns are relevant; full structure: X11 Destination Master (H0125) Sync.",
             "columns": DM_COLS}
 PERIOD_FMT = "CHAR(6) YYYYMM, e.g. 202609; displayed as 'Sep 2026'"
 T, D, LOG, DM = 'TB_M_PART_CANDIDATE', 'TB_M_PART_CANDIDATE_DEST', 'Log', 'TB_M_H0125 (Destination Master)'
@@ -223,7 +228,7 @@ spec = {
   {"type": "column_break"},
   {"type": "table", "level": 0, "row_lines": "all", "columns": [{"title": "No", "width": 3, "align": "center"}, {"title": "Check", "width": 31}, {"title": "Column", "width": 12}], "rows": [
     ["1", "Part No exists in TB_M_PART_CANDIDATE and its status is Active.", "part_no"],
-    ["2", "Destination code exists in TB_M_H0125 (Destination Master, DESTINATION_CODE).", "dest_code"],
+    ["2", "Destination code exists in TB_M_H0125 (Destination Master, DESTINATION_CD).", "dest_code"],
     ["3", "case_day is a whole number greater than 0 when dest_code is filled.", "case_day"],
     ["4", "A destination code appears only once per part in the file.", "dest_code"],
     ["5", "dest_code and case_day are both filled, or both blank (placeholder row). Only one of the two filled is an error.", "dest_code, case_day"],

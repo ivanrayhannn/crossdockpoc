@@ -1,18 +1,24 @@
-"""Spec builder for the replication batches of H tables (UISS-Batch, structure only, no sample data):
+"""Spec builder for the replication batches of G-TOPAS tables (UISS-Batch, structure only, no sample data):
   X9  TB_R_H0202_DEMAND_HISTORY_SUM  -> X9_UISS_Batch_H0202DemandHistorySync.xlsx
   X10 TB_R_H0253_ORDER_CONTROL_PRE   -> X10_UISS_Batch_H0253OrderControlSync.xlsx
-Usage: build_h_sync_spec.py OUT.json H0202|H0253"""
+  X11 TB_M_H0125 (Destination Master) -> X11_UISS_Batch_H0125DestinationMasterSync.xlsx
+Usage: build_h_sync_spec.py OUT.json H0202|H0253|H0125"""
 import json, sys
 from calc_common import LOG, header, revisions
 
-NOTE = "Same columns as the source table; types and lengths follow DB Surrounding. Key (PK) TBD."
-H2_COLS = [["CUSTOMER_CD", "VARCHAR(TBD)", "", "Y", ""], ["CUSTOMER_ORDER_NO", "VARCHAR(TBD)", "", "Y", ""], ["ORDER_DT", "DATE", "", "Y", ""], ["ORDER_TIME", "VARCHAR(TBD)", "", "Y", ""], ["DESTINATION_CD", "VARCHAR(TBD)", "", "Y", ""], ["DETAILED_ITEM_NO", "VARCHAR(TBD)", "", "Y", ""], ["SERIAL_NO", "VARCHAR(TBD)", "", "Y", ""], ["DEMAND_HISTORY_UPDATE_CD", "VARCHAR(TBD)", "", "Y", ""], ["DEPOT_CD", "VARCHAR(TBD)", "", "Y", ""], ["DOMESTIC_OVERSEAS_CLASS_CD", "VARCHAR(TBD)", "", "Y", ""], ["REGION_CD", "VARCHAR(TBD)", "", "Y", ""], ["ORDER_MAKER_CD", "VARCHAR(TBD)", "", "Y", ""], ["ORDER_PART_NO", "VARCHAR(TBD)", "", "Y", ""], ["SHIPPING_PART_NO", "VARCHAR(TBD)", "", "Y", ""], ["DEMAND_HISTORY_DT", "DATE", "", "Y", ""], ["ORDER_TRANSPORTATION_CD", "VARCHAR(TBD)", "", "Y", ""], ["TOPAS_ORDER_TYPE", "VARCHAR(TBD)", "", "Y", ""], ["SUPPLIER_CD", "VARCHAR(TBD)", "", "Y", ""], ["CREATED_DEMAND_FLAG", "VARCHAR(TBD)", "", "Y", ""], ["ORDER_ERROR_CD", "VARCHAR(TBD)", "", "Y", ""], ["RA_CD", "VARCHAR(TBD)", "", "Y", ""], ["ORDER_PORTION_CD", "VARCHAR(TBD)", "", "Y", ""], ["ORDER_QTY_DEMAND_QTY", "NUMBER", "", "Y", ""], ["SHIPPING_QTY", "NUMBER", "", "Y", ""], ["REJECT_QTY", "NUMBER", "", "Y", ""], ["ETC_CANCEL_QTY", "NUMBER", "", "Y", ""], ["DIRECT_DELIVERY_QTY", "NUMBER", "", "Y", ""], ["FIRM_ORDER_QTY", "NUMBER", "", "Y", ""], ["CROSS_DOCK_QTY", "NUMBER", "", "Y", ""], ["PROCESS_QTY", "NUMBER", "", "Y", ""], ["BO_CANCEL_QTY", "NUMBER", "", "Y", ""], ["NON_TARGET_ORDER_QTY_FLAG", "VARCHAR(TBD)", "", "Y", ""], ["REGISTRANT_ID", "VARCHAR(TBD)", "", "Y", ""], ["UPDATE_JOB_ID", "VARCHAR(TBD)", "", "Y", ""], ["UPDATE_OPERATOR_ID", "VARCHAR(TBD)", "", "Y", ""], ["INTF_UPDATE_DT", "TIMESTAMP", "", "Y", ""], ["CREATE_DT", "TIMESTAMP", "", "Y", ""], ["CREATE_BY", "VARCHAR(TBD)", "", "Y", ""], ["UPDATE_DT", "TIMESTAMP", "", "Y", ""], ["UPDATE_BY", "VARCHAR(TBD)", "", "Y", ""]]
-H3_COLS = [["CUSTOMER_CD", "VARCHAR(TBD)", "", "Y", ""], ["CUSTOMER_ORDER_NO", "VARCHAR(TBD)", "", "Y", ""], ["ORDER_DT", "DATE", "", "Y", ""], ["ORDER_TIME", "VARCHAR(TBD)", "", "Y", ""], ["DESTINATION_CD", "VARCHAR(TBD)", "", "Y", ""], ["DETAILED_ITEM_NO", "VARCHAR(TBD)", "", "Y", ""], ["TOPAS_ORDER_TYPE", "VARCHAR(TBD)", "", "Y", ""], ["DEMAND_HISTORY_UPDATE_DT", "DATE", "", "Y", ""], ["SHIPPING_MAKER_CD", "VARCHAR(TBD)", "", "Y", ""], ["SHIPPING_PART_NO", "VARCHAR(TBD)", "", "Y", ""], ["ORIGINAL_SHIPPING_QTY", "NUMBER", "", "Y", ""], ["ORDER_STATUS_QTY", "NUMBER", "", "Y", ""], ["ORDER_STATUS", "VARCHAR(TBD)", "", "Y", ""], ["BO_INSTRUCTION_CD", "VARCHAR(TBD)", "", "Y", ""], ["BO_RELEASE_DT", "DATE", "", "Y", ""], ["ORDER_GROUP", "VARCHAR(TBD)", "", "Y", ""], ["DIRECT_DELIVERY_CD", "VARCHAR(TBD)", "", "Y", ""], ["DIRECT_DELIVERY_FLAG", "VARCHAR(TBD)", "", "Y", ""], ["CURRENCY_CD", "VARCHAR(TBD)", "", "Y", ""], ["LANDED_COST", "NUMBER", "", "Y", ""], ["NET_PRICE", "NUMBER", "", "Y", ""], ["SALES_PRICE", "NUMBER", "", "Y", ""], ["EXPORT_SALES_PRICE", "NUMBER", "", "Y", ""], ["SPECIAL_PRICE_CD", "VARCHAR(TBD)", "", "Y", ""], ["ORDER_DISCOUNT_CD", "VARCHAR(TBD)", "", "Y", ""], ["ITEM_DISCOUNT_RATE", "NUMBER", "", "Y", ""], ["FIRST_ALLOCATION_DT", "DATE", "", "Y", ""], ["BO_HISTORY_CD", "VARCHAR(TBD)", "", "Y", ""], ["ORDER_ERROR_CD", "VARCHAR(TBD)", "", "Y", ""], ["RA_CD", "VARCHAR(TBD)", "", "Y", ""], ["PENDING_ORDER_CD", "VARCHAR(TBD)", "", "Y", ""], ["ORDER_PORTION_CD", "VARCHAR(TBD)", "", "Y", ""], ["ORDER_STATUS_DT", "DATE", "", "Y", ""], ["SHIPPING_PROCESS_CTRL_CD", "VARCHAR(TBD)", "", "Y", ""], ["PROCUREMENT_PROCESS_CTRL_CD", "VARCHAR(TBD)", "", "Y", ""], ["DANGEROUS_GOODS_CLASS", "VARCHAR(TBD)", "", "Y", ""], ["CREATE_DEMAND_FLAG", "VARCHAR(TBD)", "", "Y", ""], ["SPECIAL_CUSTOMER_FLAG", "VARCHAR(TBD)", "", "Y", ""], ["POSS_TRANSMISSION_JUDG_FLAG", "VARCHAR(TBD)", "", "Y", ""], ["REGISTRANT_ID", "VARCHAR(TBD)", "", "Y", ""], ["UPDATE_JOB_ID", "VARCHAR(TBD)", "", "Y", ""], ["UPDATE_OPERATION_ID", "VARCHAR(TBD)", "", "Y", ""], ["INTF_UPDATE_DT", "TIMESTAMP", "", "Y", ""], ["CREATE_DT", "TIMESTAMP", "", "Y", ""], ["CREATE_BY", "VARCHAR(TBD)", "", "Y", ""], ["UPDATE_DT", "TIMESTAMP", "", "Y", ""], ["UPDATE_BY", "VARCHAR(TBD)", "", "Y", ""]]
+from h_tables import H0125_COLS, H0202_COLS, H0253_COLS
+
+NOTE = "Structure from the G-TOPAS I/F layout; physical names follow the existing table. Key (PK) = unique key of the I/F layout."
 
 CFG = {"H0202": {"fid": "X9", "table": "TB_R_H0202_DEMAND_HISTORY_SUM", "title": "Demand History Summary (H0202) Sync to NSP",
-                 "desc": "Demand history summary", "cols": H2_COLS},
+                 "desc": "Demand history summary (I/F H02-02, DVJO250)", "cols": H0202_COLS, "kind": "transaction",
+                 "freq": "G-TOPAS provides the data 1 time/day (26:00)."},
        "H0253": {"fid": "X10", "table": "TB_R_H0253_ORDER_CONTROL_PRE", "title": "Order Control Pre (H0253) Sync to NSP",
-                 "desc": "Order control (pre)", "cols": H3_COLS}}
+                 "desc": "Order control data, pre-order picking info (I/F H02-53, DVJO950)", "cols": H0253_COLS, "kind": "transaction",
+                 "freq": "G-TOPAS provides the data 1 time/day (27:30)."},
+       "H0125": {"fid": "X11", "table": "TB_M_H0125", "title": "Destination Master (H0125) Sync to NSP",
+                 "desc": "Destination master (I/F H01-25, DVJO820)", "cols": H0125_COLS, "kind": "master",
+                 "freq": "G-TOPAS provides the data 1 time/week (21:30)."}}
 c = CFG[sys.argv[2]]
 T, COLS, KEY = c["table"], c["cols"], sys.argv[2]
 SRC, DST = T + " (DB Surrounding)", T + " (NSP)"
@@ -37,7 +43,7 @@ spec = {
    {"title": "Parameters", "columns": [{"title": "Name", "width": 14}, {"title": "Description", "width": 34}],
     "rows": [["-", "No parameter. All rows of the source table are copied."]]},
    {"title": "Execution Schedule", "columns": [{"title": "Item", "width": 12}, {"title": "Description", "width": 36}],
-    "rows": [["Trigger", "Scheduler set in the system master (schedule TBC)."]]}]
+    "rows": [["Trigger", "Scheduler set in the system master (schedule TBC), after the data is available."], ["Source", c["freq"]]]}]
  },
  "func_flow": {
   "flow": {"direction": "TB", "nodes": [
@@ -75,6 +81,6 @@ spec = {
   {"event": "Unexpected error", "cause": "Any other system error", "type": "Critical", "msg_id": "LOG4", "message": "Unexpected error: <ERROR_DETAIL>.", "action": {"system": "Roll back. STATUS = FAILED.", "user": "User contact PIC"}}],
  "appendix_layout": "full",
  "appendix": [],
- "tables": [{"name": T, "kind": "transaction", "proposed": False, "description": c["desc"] + " replicated from DB Surrounding. " + NOTE, "columns": COLS}]
+ "tables": [{"name": T, "kind": c["kind"], "proposed": False, "description": c["desc"] + " replicated from DB Surrounding. " + NOTE, "columns": COLS}]
 }
 json.dump(spec, open(sys.argv[1], 'w'), indent=1)
