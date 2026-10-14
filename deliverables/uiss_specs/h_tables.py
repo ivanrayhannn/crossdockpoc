@@ -1,5 +1,5 @@
 """Table structures of the replicated G-TOPAS tables (from the I/F layouts H01-25 DVJO820, H02-02 DVJO250, H02-53 DVJO950).
-Column: [name, type, PK, Null, description]. Physical names of H0202 / H0253 follow the table exports; H0125 names are proposed."""
+Column: [name, type, PK, Null, description]. Physical names follow the table exports (TB_R_H0202_DEMAND_HISTORY_SUM, TB_R_H0253_ORDER_CONTROL_PRE, TB_M_H0125_DESTINATION)."""
 
 H0125_COLS = [
 [
@@ -17,7 +17,7 @@ H0125_COLS = [
 "No.2 Customer Code"
 ],
 [
-"DOMESTIC_OVERSEAS_CLASS_CD",
+"DOMESTIC_OVERSEA_CLASS_CD",
 "VARCHAR(1)",
 "",
 "N",
@@ -52,7 +52,7 @@ H0125_COLS = [
 "No.7 QUP Process Code: '1':Round-up '2':Not change '3':Round-down"
 ],
 [
-"DEPOT_DESTINATION_JUDG_FLAG",
+"DEPOT_DEST_JUDGMENT_FLAG",
 "VARCHAR(1)",
 "",
 "N",
@@ -122,7 +122,7 @@ H0125_COLS = [
 "No.17 Destination Operator Name"
 ],
 [
-"DESTINATION_NAME",
+"DESTINATION_NAME_ENG",
 "VARCHAR(50)",
 "",
 "N",
@@ -136,7 +136,7 @@ H0125_COLS = [
 "No.19 Destination Name (Local Language)"
 ],
 [
-"COUNTRY_NAME",
+"COUNTRY_NAME_ENG",
 "VARCHAR(36)",
 "",
 "Y",
@@ -150,7 +150,7 @@ H0125_COLS = [
 "No.21 Country Name (Local Language)"
 ],
 [
-"POSTAL_CD",
+"POSTAL_CD_ENG",
 "VARCHAR(10)",
 "",
 "Y",
@@ -164,7 +164,7 @@ H0125_COLS = [
 "No.23 Postal Code (Local Language)"
 ],
 [
-"STATE_CD",
+"STATE_CD_ENG",
 "VARCHAR(6)",
 "",
 "Y",
@@ -178,28 +178,28 @@ H0125_COLS = [
 "No.25 State Code (Local Language)"
 ],
 [
-"DESTINATION_ADDRESS1",
+"DESTINATION_ADDR1_ENG",
 "VARCHAR(50)",
 "",
 "N",
 "No.26 Destination Address1"
 ],
 [
-"DESTINATION_ADDRESS2",
+"DESTINATION_ADDR2_ENG",
 "VARCHAR(50)",
 "",
 "Y",
 "No.27 Destination Address2"
 ],
 [
-"DESTINATION_ADDRESS1_LOCAL",
+"DESTINATION_ADDR1_LOCAL",
 "VARCHAR(75)",
 "",
 "Y",
 "No.28 Destination Address1(Local Language)"
 ],
 [
-"DESTINATION_ADDRESS2_LOCAL",
+"DESTINATION_ADDR2_LOCAL",
 "VARCHAR(75)",
 "",
 "Y",
@@ -248,32 +248,32 @@ H0125_COLS = [
 "No.35 Update Date & Time"
 ],
 [
-"CREATED_BY",
-"VARCHAR(TBD)",
-"",
-"Y",
-"Created by (NSP)"
-],
-[
-"CREATED_DT",
+"CREATE_DT",
 "TIMESTAMP",
 "",
 "Y",
 "Created date and time (NSP)"
 ],
 [
-"UPDATED_BY",
+"CREATE_BY",
 "VARCHAR(TBD)",
 "",
 "Y",
-"Updated by (NSP)"
+"Created by (NSP)"
 ],
 [
-"UPDATED_DT",
+"UPDATE_DT",
 "TIMESTAMP",
 "",
 "Y",
 "Updated date and time (NSP)"
+],
+[
+"UPDATE_BY",
+"VARCHAR(TBD)",
+"",
+"Y",
+"Updated by (NSP)"
 ]
 ]
 

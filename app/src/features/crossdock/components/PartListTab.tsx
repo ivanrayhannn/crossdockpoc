@@ -293,7 +293,7 @@ export function PartListTab({ parts, q, aq, onSearch, setQ, resetQ, ro, onOpenPa
               </span>
               <h3 style={{ fontSize: 21, margin: '0 0 6px' }}>No crossdock parts registered yet</h3>
               <p style={{ fontSize: 13, maxWidth: 430, color: 'var(--color-neutral-700)', margin: '0 0 17px' }}>
-                Start from the Excel template, or register a single part and map its Max Case/Day to Thailand, Japan and Vietnam.
+                Start from the Excel template, or register a single part and map its Max Case/Day to Thailand, Philippines and Vietnam.
               </p>
               <div style={{ display: 'flex', gap: 9 }}>
                 <button className="btn btn-primary" onClick={onOpenUpload}>

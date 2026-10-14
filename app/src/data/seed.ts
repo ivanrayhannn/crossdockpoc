@@ -1,18 +1,18 @@
 import type { HistoryEvent, Part } from '../types';
 
-export const DESTS = ['Thailand', 'Japan', 'Vietnam'];
+export const DESTS = ['Thailand', 'Philippines', 'Vietnam'];
 
 export const DOTS: Record<string, string> = {
   Thailand: 'var(--color-accent)',
-  Japan: 'var(--color-accent-2-500)',
+  Philippines: 'var(--color-accent-2-500)',
   Vietnam: 'var(--color-neutral-500)',
 };
 
 export const DCODE: Record<string, string> = {
-  // 7-digit destination code = grouping buyer code + PD code (TB_M_H0125); names are dummy.
+  // 7-digit destination code = grouping buyer code + PD code (TB_M_H0125_DESTINATION.DESTINATION_CD).
   Thailand: '9722D10',
-  Japan: '9811110',
-  Vietnam: '9618201',
+  Philippines: '9811110',
+  Vietnam: '9715310',
 };
 
 /** Master destination catalog — populates the destination dropdown when
@@ -111,13 +111,13 @@ const SEED: SeedPart[] = [
   {
     p: 'PART-A', n: 'Dummy Part A', pc: 60, mc: 24, st: 'Active', cat: 'Crossdock',
     mad: [1180, 1240, 1310, 1290, 1420, 1380], minMad: 800, by: 'A. Wibowo', dt: '05-Aug-2026 09:12',
-    dests: [{ d: 'Thailand', al: 12, st: 'Active' }, { d: 'Japan', al: 8, st: 'Active' }, { d: 'Vietnam', al: 4, st: 'Active' }],
+    dests: [{ d: 'Thailand', al: 12, st: 'Active' }, { d: 'Philippines', al: 8, st: 'Active' }, { d: 'Vietnam', al: 4, st: 'Active' }],
     per: 'Sep 2026', syncStatus: 1,
   },
   {
     p: 'PART-B', n: 'Dummy Part B', pc: 12, mc: 40, st: 'Active', cat: 'Crossdock',
     mad: [640, 700, 720, 810, 760, 790], minMad: 500, by: 'R. Pratama', dt: '11-Aug-2026 16:41',
-    dests: [{ d: 'Japan', al: 25, st: 'Active' }, { d: 'Vietnam', al: 15, st: 'Active' }],
+    dests: [{ d: 'Philippines', al: 25, st: 'Active' }, { d: 'Vietnam', al: 15, st: 'Active' }],
     per: 'Aug 2026', syncStatus: 0,
   },
   {
@@ -129,19 +129,19 @@ const SEED: SeedPart[] = [
   {
     p: 'PART-D', n: 'Dummy Part D', pc: 24, mc: 36, st: 'Active', cat: 'Crossdock',
     mad: [980, 1020, 940, 1100, 1060, 1150], minMad: 800, by: 'A. Wibowo', dt: '05-Aug-2026 09:12',
-    dests: [{ d: 'Thailand', al: 20, st: 'Active' }, { d: 'Japan', al: 16, st: 'Active' }],
+    dests: [{ d: 'Thailand', al: 20, st: 'Active' }, { d: 'Philippines', al: 16, st: 'Active' }],
     per: 'Aug 2026', syncStatus: 0,
   },
   {
     p: 'PART-E', n: 'Dummy Part E', pc: 4, mc: 45, st: 'Active', cat: 'Non-Crossdock',
     mad: [140, 120, 90, 110, 80, 60], minMad: 200, by: 'S. Hartono', dt: '05-Aug-2026 09:12',
-    dests: [{ d: 'Japan', al: 25, st: 'Active' }, { d: 'Thailand', al: 20, st: 'Active' }],
+    dests: [{ d: 'Philippines', al: 25, st: 'Active' }, { d: 'Thailand', al: 20, st: 'Active' }],
     per: 'Aug 2026', syncStatus: 1,
   },
   {
     p: 'PART-F', n: 'Dummy Part F', pc: 40, mc: 26, st: 'Active', cat: 'Crossdock',
     mad: [480, 520, 560, 540, 610, 650], minMad: 400, by: 'R. Pratama', dt: '08-Aug-2026 11:03',
-    dests: [{ d: 'Vietnam', al: 12, st: 'Active' }, { d: 'Thailand', al: 8, st: 'Active' }, { d: 'Japan', al: 6, st: 'Inactive' }],
+    dests: [{ d: 'Vietnam', al: 12, st: 'Active' }, { d: 'Thailand', al: 8, st: 'Active' }, { d: 'Philippines', al: 6, st: 'Inactive' }],
     per: 'Sep 2026', syncStatus: 2,
   },
   {
@@ -153,7 +153,7 @@ const SEED: SeedPart[] = [
   {
     p: 'PART-H', n: 'Dummy Part H', pc: 10, mc: 32, st: 'Inactive', cat: 'Crossdock',
     mad: [860, 900, 840, 780, 820, 800], minMad: 600, by: 'S. Hartono', dt: '05-Aug-2026 09:12',
-    dests: [{ d: 'Thailand', al: 20, st: 'Active' }, { d: 'Japan', al: 12, st: 'Inactive' }],
+    dests: [{ d: 'Thailand', al: 20, st: 'Active' }, { d: 'Philippines', al: 12, st: 'Inactive' }],
     per: 'Sep 2026', syncStatus: 1,
   },
   {

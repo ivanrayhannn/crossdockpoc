@@ -84,7 +84,7 @@ Part B hanya punya data 4 bulan, masing-masing 600 → rata-rata = 2,400 ÷ **6*
 ### Alur
 1. Ambil TB_R_ACTUAL_DEMAND_SUMMARY, **range bulan dari system master**, hanya part **Active** di TB_M_PART_CANDIDATE. Order type N dan S dijumlahkan.
 2. Kelompokkan per part + **GROUPING_BUYER_CD + GROUPING_PD_CD**, jumlahkan MAD → *result MAD*.
-3. **Destination code** = GROUPING_BUYER_CD + GROUPING_PD_CD (7 digit, mis. `9722D` + `10` = `9722D10`). Cek ke Destination Code **TB_M_H0125**. Tidak ada di master → **error**.
+3. **Destination code** = GROUPING_BUYER_CD + GROUPING_PD_CD (7 digit, mis. `9722D` + `10` = `9722D10`). Cek ke Destination Code **TB_M_H0125_DESTINATION**. Tidak ada di master → **error**.
 4. Urutkan *result MAD* dari terbesar ke terkecil.
 5. **Dibatasi Max Case/Day**: kalau jumlah destinasi lebih banyak dari Max Case/Day, hanya destinasi teratas (result MAD terbesar) sebanyak Max Case/Day yang dipakai; sisanya tidak di-mapping.
 6. Case/Day destinasi = result MAD / Σ result MAD destinasi terpakai × **Max Case/Day**. Rumus Excel: `=P10/SUM($P$10:$P$13)*$N$10`.

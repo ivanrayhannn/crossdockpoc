@@ -7,27 +7,27 @@ DM_COLS = [
     ["CUSTOMER_CD", "TBD", "", "", "Customer code (reference only)"],
     ["ORDER_TRANSPORTATION_CD", "TBD", "", "", "Order transportation code (reference only)"],
     ["BO_INSTRUCTION_CD", "TBD", "", "", "B/O instruction code (reference only)"],
-    ["DESTINATION_NAME", "TBD", "", "", "Destination name, e.g. Thailand. Used by Crossdock: shown with the code ('9722D10 - Thailand') and in Export Excel"],
+    ["DESTINATION_NAME_ENG", "TBD", "", "", "Destination name, e.g. Thailand. Used by Crossdock: shown with the code ('9722D10 - Thailand') and in Export Excel"],
     ["REGION_CD", "TBD", "", "", "Region code (reference only)"],
-    ["COUNTRY_NAME", "TBD", "", "", "Country name (reference only)"],
-    ["POSTAL_CD", "TBD", "", "", "Postal code (reference only)"],
-    ["STATE_CD", "TBD", "", "", "State code (reference only)"],
-    ["DESTINATION_ADDRESS1", "TBD", "", "", "Destination address 1 (reference only)"],
-    ["DESTINATION_ADDRESS2", "TBD", "", "", "Destination address 2 (reference only)"],
-    ["CREATED_BY", "TBD", "", "", "User who created the record"],
-    ["CREATED_DT", "TBD", "", "", "Created date and time"],
-    ["UPDATED_BY", "TBD", "", "", "User who last updated the record"],
-    ["UPDATED_DT", "TBD", "", "", "Last updated date and time"]]
+    ["COUNTRY_NAME_ENG", "TBD", "", "", "Country name (reference only)"],
+    ["POSTAL_CD_ENG", "TBD", "", "", "Postal code (reference only)"],
+    ["STATE_CD_ENG", "TBD", "", "", "State code (reference only)"],
+    ["DESTINATION_ADDR1_ENG", "TBD", "", "", "Destination address 1 (reference only)"],
+    ["DESTINATION_ADDR2_ENG", "TBD", "", "", "Destination address 2 (reference only)"],
+    ["CREATE_BY", "TBD", "", "", "User who created the record"],
+    ["CREATE_DT", "TBD", "", "", "Created date and time"],
+    ["UPDATE_BY", "TBD", "", "", "User who last updated the record"],
+    ["UPDATE_DT", "TBD", "", "", "Last updated date and time"]]
 from h_tables import H0125_COLS as _H125
 _T = {c[0]: c for c in _H125}
 for _c in DM_COLS:
     if _c[0] in _T:
         _c[1], _c[3] = _T[_c[0]][1], _T[_c[0]][3]
-DM_TABLE = {"name": "TB_M_H0125", "kind": "master", "proposed": False,
+DM_TABLE = {"name": "TB_M_H0125_DESTINATION", "kind": "master", "proposed": False,
             "description": "Destination Master (existing NSP table, read only). Only the listed columns are relevant; full structure: X11 Destination Master (H0125) Sync.",
             "columns": DM_COLS}
 PERIOD_FMT = "CHAR(6) YYYYMM, e.g. 202609; displayed as 'Sep 2026'"
-T, D, LOG, DM = 'TB_M_PART_CANDIDATE', 'TB_M_PART_CANDIDATE_DEST', 'Log', 'TB_M_H0125 (Destination Master)'
+T, D, LOG, DM = 'TB_M_PART_CANDIDATE', 'TB_M_PART_CANDIDATE_DEST', 'Log', 'TB_M_H0125_DESTINATION (Destination Master)'
 SHEET = 'Excel file - sheet Upload (valid rows)'
 NAME, PROJ = 'FID Rayhan', 'Crossdock Optimization'
 NC = 'Not changed'
@@ -40,7 +40,7 @@ SAMPLE = {
  "intro": ["Each scenario is a separate upload file. Ongoing period = Sep 2026. One row per destination; a scenario with several rows uses one Excel row per destination.",
            "Input columns follow sheet Upload of the Export Excel; a blank cell is a blank value in the file."],
  "sections": [
-  {"title": "A. Master data before upload (ongoing period)", "columns": ["Part No", "Status", "Max Case/Day", "Mapped 9722D10", "Mapped 9811110", "Mapped 9618201", "Mapped total", "Remark"],
+  {"title": "A. Master data before upload (ongoing period)", "columns": ["Part No", "Status", "Max Case/Day", "Mapped 9722D10", "Mapped 9811110", "Mapped 9715310", "Mapped total", "Remark"],
    "widths": [12, 12, 13, 11, 11, 11, 13, 40],
    "rows": [["PART-A", "Active", 24, 12, 8, 4, 24, B],
             ["PART-C", "Active", 30, B, B, 18, 18, B],
@@ -50,29 +50,29 @@ SAMPLE = {
    "rows": [
     ["N1", "Change Case/Day", "PART-A", "9722D10", 10, 24, "Replaced. Total 24 (equal to Max). Sync Status No Sync."],
     ["N1", "Change Case/Day", "PART-A", "9811110", 8, 24, B],
-    ["N1", "Change Case/Day", "PART-A", "9618201", 6, 24, B],
-    ["N2", "Remove a destination", "PART-A", "9722D10", 12, 24, "Replaced. 9618201 removed. Total 20, 4 case/day left (below Max is allowed)."],
+    ["N1", "Change Case/Day", "PART-A", "9715310", 6, 24, B],
+    ["N2", "Remove a destination", "PART-A", "9722D10", 12, 24, "Replaced. 9715310 removed. Total 20, 4 case/day left (below Max is allowed)."],
     ["N2", "Remove a destination", "PART-A", "9811110", 8, 24, B],
-    ["N3", "Add a destination", "PART-C", "9618201", 18, 30, "Replaced. 9811110 added. Total 30 (equal to Max)."],
+    ["N3", "Add a destination", "PART-C", "9715310", 18, 30, "Replaced. 9811110 added. Total 30 (equal to Max)."],
     ["N3", "Add a destination", "PART-C", "9811110", 12, 30, B],
     ["N4", "First mapping from the placeholder row", "PART-G", "9722D10", 22, 22, "Inserted. Total 22. Sync Status No Sync."],
     ["N5", "Placeholder row left blank", "PART-G", B, B, 22, "NO CHANGE. PART-G stays without mapping."],
     ["N6", "Same values as the master", "PART-A", "9722D10", 12, 24, "NO CHANGE. Sync Status and last update stay."],
     ["N6", "Same values as the master", "PART-A", "9811110", 8, 24, B],
-    ["N6", "Same values as the master", "PART-A", "9618201", 4, 24, B],
-    ["N7", "File with only some parts (PART-C only)", "PART-C", "9618201", 18, 30, "Only PART-C is processed (here NO CHANGE). PART-A and PART-G are not changed."]]},
+    ["N6", "Same values as the master", "PART-A", "9715310", 4, 24, B],
+    ["N7", "File with only some parts (PART-C only)", "PART-C", "9715310", 18, 30, "Only PART-C is processed (here NO CHANGE). PART-A and PART-G are not changed."]]},
   {"title": "C. Error scenarios (whole file rejected, nothing saved)", "columns": COLS + ["Error (4.2 check no.)"], "widths": W,
    "rows": [
     ["E1", "Part not registered", "PART-Z99", "9722D10", 10, B, "Check 1: Part No is not registered or its status is not Active."],
     ["E2", "Part is not Active", "PART-I", "9722D10", 10, 20, "Check 1: Part No is not registered or its status is not Active."],
-    ["E3", "Unknown destination", "PART-A", "ZZZZZ99", 10, 24, "Check 2: Destination code ZZZZZ99 not found in the destination master (TB_M_H0125)."],
+    ["E3", "Unknown destination", "PART-A", "ZZZZZ99", 10, 24, "Check 2: Destination code ZZZZZ99 not found in the destination master (TB_M_H0125_DESTINATION)."],
     ["E4", "Invalid Case/Day", "PART-A", "9722D10", 0, 24, "Check 3: case_day must be a whole number greater than 0."],
     ["E5", "Same destination twice", "PART-A", "9722D10", 10, 24, "Check 4: Destination 9722D10 appears more than once for this part."],
     ["E5", "Same destination twice", "PART-A", "9722D10", 4, 24, B],
     ["E6", "Only one of dest_code / case_day", "PART-G", "9722D10", B, 22, "Check 5: dest_code and case_day must both be filled or both blank."],
     ["E7", "Total above Max Case/Day", "PART-A", "9722D10", 12, 24, "Check 6: Total allocation of 30 case/day exceeds Max Case/Day (24). Reduce one of the destinations."],
     ["E7", "Total above Max Case/Day", "PART-A", "9811110", 8, 24, B],
-    ["E7", "Total above Max Case/Day", "PART-A", "9618201", 10, 24, B],
+    ["E7", "Total above Max Case/Day", "PART-A", "9715310", 10, 24, B],
     ["E8", "Valid row (= N4) mixed with an error row (= E3)", "PART-G", "9722D10", 22, 22, "Whole file rejected. The valid row is NOT saved."],
     ["E8", "Valid row mixed with an error row", "PART-A", "ZZZZZ99", 10, 24, "Check 2 on this row. Result report sheet Re-upload lists the rows to correct."]]},
   {"title": "D. File-level errors (file check 4.1)", "columns": ["No", "Scenario", "Expected result"],
@@ -107,7 +107,7 @@ spec = {
    {"name": "Mapping file (sheet Upload)", "type": "Excel", "description": "Uploaded by the D/S user on the Mapping per Destination screen ([Validate file]). Only sheet Upload is read. Max 5 MB, 5,000 rows."},
    {"name": T, "type": "DB", "description": "Part status (must be Active) and Max Case/Day of each part"},
    {"name": D, "type": "DB", "description": "Current mapping of the ongoing period, to detect parts with no change"},
-   {"name": DM, "type": "DB", "description": "Valid destination codes (9722D10 Thailand, 9811110 Japan, 9618201 Vietnam)"}],
+   {"name": DM, "type": "DB", "description": "Valid destination codes (9722D10 Thailand, 9811110 Philippines, 9715310 Vietnam)"}],
   "outputs": [
    {"name": D, "type": "DB", "description": "if successful: mapping of each changed part replaced (ongoing period)"},
    {"name": T, "type": "DB", "description": "if successful: Sync Status = No Sync for each changed part"},
@@ -228,7 +228,7 @@ spec = {
   {"type": "column_break"},
   {"type": "table", "level": 0, "row_lines": "all", "columns": [{"title": "No", "width": 3, "align": "center"}, {"title": "Check", "width": 31}, {"title": "Column", "width": 12}], "rows": [
     ["1", "Part No exists in TB_M_PART_CANDIDATE and its status is Active.", "part_no"],
-    ["2", "Destination code exists in TB_M_H0125 (Destination Master, DESTINATION_CD).", "dest_code"],
+    ["2", "Destination code exists in TB_M_H0125_DESTINATION (Destination Master, DESTINATION_CD).", "dest_code"],
     ["3", "case_day is a whole number greater than 0 when dest_code is filled.", "case_day"],
     ["4", "A destination code appears only once per part in the file.", "dest_code"],
     ["5", "dest_code and case_day are both filled, or both blank (placeholder row). Only one of the two filled is an error.", "dest_code, case_day"],
@@ -249,7 +249,7 @@ spec = {
   {"type": "heading", "text": "Upload template (sheet \"Upload\")"},
   {"type": "table", "level": 0, "row_lines": "all", "columns": [{"title": "Column", "width": 16}, {"title": "Content", "width": 60}], "rows": [
     ["part_no", "Part Number of an Active part. One row per destination; all rows of a part together form its new mapping."],
-    ["dest_code", "Destination code (9722D10 / 9811110 / 9618201). Once per part. Blank together with case_day = placeholder row."],
+    ["dest_code", "Destination code (9722D10 / 9811110 / 9715310). Once per part. Blank together with case_day = placeholder row."],
     ["case_day", "Case/Day of the destination, whole number greater than 0."],
     ["total_case_day", "Max Case/Day of the part, for reference only (not read by the batch)."]]},
   {"type": "text", "level": 0, "text": "Sample upload scenarios (master data, accepted files, rejected files): see sheet Sample Input."}],
@@ -272,7 +272,7 @@ spec = {
   {"name": D, "kind": "transaction", "proposed": False, "description": "Destination mapping, one record per part, calculation period and destination (Mapping per Destination data). Target of a successful upload.",
    "columns": [["PART_NO", "VARCHAR(TBD)", "Y", "N", "Part number; FK to TB_M_PART_CANDIDATE"],
                ["PERIOD", "CHAR(6)", "Y", "N", "Calculation period, YYYYMM e.g. 202609; displayed as Sep 2026"],
-               ["DEST_CODE", "CHAR(7)", "Y", "N", "Destination code (buyer code + PD code, 7 digits); exists in TB_M_H0125 (Destination Master)"],
+               ["DEST_CODE", "CHAR(7)", "Y", "N", "Destination code (buyer code + PD code, 7 digits); exists in TB_M_H0125_DESTINATION (Destination Master)"],
                ["CASE_DAY", "INT", "", "N", "Allocated Case/Day of the destination (> 0)"],
                ["CREATED_BY", "VARCHAR(TBD)", "", "N", "User who created the record"], ["CREATED_DT", "DATETIME", "", "N", "Created date and time"],
                ["CHANGED_BY", "VARCHAR(TBD)", "", "N", "User who last changed the record"], ["CHANGED_DT", "DATETIME", "", "N", "Last changed date and time"]]}, hist_table.TABLE, DM_TABLE]

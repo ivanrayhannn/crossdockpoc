@@ -1,7 +1,7 @@
 """Spec builder for the replication batches of G-TOPAS tables (UISS-Batch, structure only, no sample data):
   X9  TB_R_H0202_DEMAND_HISTORY_SUM  -> X9_UISS_Batch_H0202DemandHistorySync.xlsx
   X10 TB_R_H0253_ORDER_CONTROL_PRE   -> X10_UISS_Batch_H0253OrderControlSync.xlsx
-  X11 TB_M_H0125 (Destination Master) -> X11_UISS_Batch_H0125DestinationMasterSync.xlsx
+  X11 TB_M_H0125_DESTINATION (Destination Master) -> X11_UISS_Batch_H0125DestinationMasterSync.xlsx
 Usage: build_h_sync_spec.py OUT.json H0202|H0253|H0125"""
 import json, sys
 from calc_common import LOG, header, revisions
@@ -16,7 +16,7 @@ CFG = {"H0202": {"fid": "X9", "table": "TB_R_H0202_DEMAND_HISTORY_SUM", "title":
        "H0253": {"fid": "X10", "table": "TB_R_H0253_ORDER_CONTROL_PRE", "title": "Order Control Pre (H0253) Sync to NSP",
                  "desc": "Order control data, pre-order picking info (I/F H02-53, DVJO950)", "cols": H0253_COLS, "kind": "transaction",
                  "freq": "G-TOPAS provides the data 1 time/day (27:30)."},
-       "H0125": {"fid": "X11", "table": "TB_M_H0125", "title": "Destination Master (H0125) Sync to NSP",
+       "H0125": {"fid": "X11", "table": "TB_M_H0125_DESTINATION", "title": "Destination Master (H0125) Sync to NSP",
                  "desc": "Destination master (I/F H01-25, DVJO820)", "cols": H0125_COLS, "kind": "master",
                  "freq": "G-TOPAS provides the data 1 time/week (21:30)."}}
 c = CFG[sys.argv[2]]

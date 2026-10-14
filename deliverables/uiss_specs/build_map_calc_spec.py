@@ -30,7 +30,7 @@ SAMPLE = {
             ["N3", "Candidate or Inactive part", "Not calculated (Active parts only)."],
             ["N4", "Result equal to the mapping of the previous period", "Rows inserted for the new period; Sync Status not changed; no history record."],
             ["N5", "Manual re-run in the same month", "Rows of period 202610 deleted and calculated again (replace)."],
-            ["E1", "Destination code 9715310 not in TB_M_H0125", "Error: whole run rolled back (no new period), Log FAILED, auto retry (max 3)."],
+            ["E1", "Destination code 9715310 not in TB_M_H0125_DESTINATION", "Error: whole run rolled back (no new period), Log FAILED, auto retry (max 3)."],
             ["E2", "Scheduled run and 3 retries failed", "[Run calculation] enabled on Mapping per Destination; last success date unchanged."]]}]}
 
 spec = {
@@ -44,7 +44,7 @@ spec = {
   "operation_flow": {"flow": {"direction": "TB", "nodes": [
      {"id": "a", "label": "Scheduler / retry / Mapping per Destination [Run calculation]", "type": "event"},
      {"id": "b", "label": "Result MAD per part + destination", "type": "process"},
-     {"id": "c", "label": "Check TB_M_H0125, limit to Max Case/Day", "type": "process"},
+     {"id": "c", "label": "Check TB_M_H0125_DESTINATION, limit to Max Case/Day", "type": "process"},
      {"id": "d", "label": "Allocate Case/Day (min 1, total = Max)", "type": "process"},
      {"id": "e", "label": "Create new period, Log", "type": "process"}],
     "edges": [{"from": "a", "to": "b"}, {"from": "b", "to": "c"}, {"from": "c", "to": "d"}, {"from": "d", "to": "e"}]}},
@@ -123,7 +123,7 @@ spec = {
    "mappings": [
      {"source_field": "PART_NO", "dest_field": "PART_NO"},
      {"dest_field": "PERIOD", "description": "New period (run month YYYYMM)"},
-     {"source_field": "GROUPING_BUYER_CD + GROUPING_PD_CD", "dest_field": "DEST_CODE", "description": "7-digit destination code; must exist in TB_M_H0125"},
+     {"source_field": "GROUPING_BUYER_CD + GROUPING_PD_CD", "dest_field": "DEST_CODE", "description": "7-digit destination code; must exist in TB_M_H0125_DESTINATION"},
      {"source_field": "MAD", "dest_field": "CASE_DAY", "description": "Allocated Case/Day from SUM(MAD) of the destination (see 4.2)"},
      {"dest_field": "CREATED_BY", "description": "Batch user ID (login user when manual)"},
      {"dest_field": "CREATED_DT", "description": "Server system date and time"},
@@ -158,7 +158,7 @@ spec = {
   {"type": "bullets", "marker": "-", "level": 0, "items": [
     "Only Active parts of TB_M_PART_CANDIDATE are calculated.",
     "Range: the N months before the run month (N from the system master).",
-    "Destination code = GROUPING_BUYER_CD + GROUPING_PD_CD (7 digits). It must exist in TB_M_H0125; otherwise the run fails (all-or-nothing).",
+    "Destination code = GROUPING_BUYER_CD + GROUPING_PD_CD (7 digits). It must exist in TB_M_H0125_DESTINATION; otherwise the run fails (all-or-nothing).",
     "Result MAD = sum of MAD of the part for that destination within the range; order types N and S are summed. Destinations with result MAD 0 are not used."]},
   {"type": "heading", "text": "4.2 Case/Day Allocation"},
   {"type": "bullets", "marker": "1.", "level": 0, "items": [
@@ -186,7 +186,7 @@ spec = {
   {"event": "Batch start", "cause": "Batch is called", "type": "Info", "msg_id": "LOG1", "message": "Mapping destination calculation started (<RUN_TYPE>, retry <RETRY_NO>). Period <PERIOD>, range <MONTH_FROM> - <MONTH_TO>.", "action": {"system": "Write the log.", "user": "-"}},
   {"event": "Batch end", "cause": "Batch finishes", "type": "Info", "msg_id": "LOG2", "message": "Mapping destination calculation ended. Status <STATUS>, parts <COUNT>, mapping changed <CHANGED>.", "action": {"system": "Write the log.", "user": "-"}},
   {"event": "Range of months", "cause": "Range is not set in the system master", "type": "Error", "msg_id": "LOG3", "message": "Range of months for the mapping destination calculation is not set.", "action": {"system": "Stop. STATUS = FAILED.", "user": "User contact PIC"}},
-  {"event": "Destination check", "cause": "Destination code not in TB_M_H0125", "type": "Error", "msg_id": "LOG4", "message": "Destination code <DEST_CODE> of Part No <PART_NO> not found in TB_M_H0125.", "action": {"system": "Roll back. STATUS = FAILED. Retry.", "user": "Register the destination in TB_M_H0125, then run again."}},
+  {"event": "Destination check", "cause": "Destination code not in TB_M_H0125_DESTINATION", "type": "Error", "msg_id": "LOG4", "message": "Destination code <DEST_CODE> of Part No <PART_NO> not found in TB_M_H0125_DESTINATION.", "action": {"system": "Roll back. STATUS = FAILED. Retry.", "user": "Register the destination in TB_M_H0125_DESTINATION, then run again."}},
   {"event": "Destinations limited", "cause": "More destinations than Max Case/Day", "type": "Info", "msg_id": "LOG5", "message": "Part No <PART_NO>: <COUNT> destinations, limited to Max Case/Day <MAX>.", "action": {"system": "Continue.", "user": "-"}},
   {"event": "Save", "cause": "Insert / update fails", "type": "Error", "msg_id": "LOG6", "message": "Cannot save the mapping of Part No <PART_NO>, period <PERIOD>: <ERROR_DETAIL>.", "action": {"system": "Roll back. STATUS = FAILED. Retry.", "user": "User contact PIC"}},
   {"event": "Retry exhausted", "cause": "Scheduled run and 3 retries failed", "type": "Warning", "msg_id": "LOG7", "message": "Mapping destination calculation failed 3 times. Manual run is enabled on Mapping per Destination.", "action": {"system": "Enable [Run calculation] on Mapping per Destination.", "user": "Check the cause, then click [Run calculation]."}},

@@ -7,7 +7,7 @@ Screen ID: **X3**.
 ---
 
 ## 1. Tujuan
-- Membagi Max Case/Day setiap part **Active** ke destinasi (Thailand, Japan, Vietnam) untuk **periode kalkulasi berjalan**.
+- Membagi Max Case/Day setiap part **Active** ke destinasi (Thailand, Philippines, Vietnam) untuk **periode kalkulasi berjalan**.
 - Menampilkan mapping per part dan periode, termasuk periode lalu (read only).
 - Menyerahkan part yang berubah ke **RPA** untuk dikirim ke global system dan menampilkan Sync Status.
 - Export mapping ke Excel dan upload mapping periode berjalan dari Excel.
@@ -108,7 +108,7 @@ Gagal dibuat → MSG9.
 |---|---|---|---|
 | PART_NO | Y | FK ke TB_M_PART_CANDIDATE | Part yang diedit |
 | PERIOD | Y | Periode kalkulasi, CHAR(6) YYYYMM mis. 202609, tampil "Sep 2026" | Periode berjalan |
-| DEST_CODE | Y | Kode destinasi (ada di TB_M_H0125) | Dari draft |
+| DEST_CODE | Y | Kode destinasi (ada di TB_M_H0125_DESTINATION) | Dari draft |
 | CASE_DAY | | Case/Day destinasi (> 0) | Dari draft |
 | CREATED_BY / CREATED_DT | | Audit | Login user / system date |
 | CHANGED_BY / CHANGED_DT | | Audit, juga concurrency check | Login user / system date |
@@ -125,27 +125,27 @@ Cara simpan: hapus semua baris part + periode berjalan, lalu insert baris draft 
 | SYNC_DT, SYNC_MESSAGE | Diisi RPA; SYNC_MESSAGE jadi tooltip Failed |
 | CHANGED_BY / CHANGED_DT | Diupdate saat Save; dibandingkan RPA |
 
-### 10.3 TB_M_H0125 (Destination Master) — *dibaca*
+### 10.3 TB_M_H0125_DESTINATION (Destination Master) — *dibaca*
 Tabel master existing NSP, **hanya dibaca**. Kolom yang relevan (kolom lain diabaikan; nama fisik mengikuti tabel existing):
 
 | Kolom | Dipakai Crossdock |
 |---|---|
-| Destination Code (PK) | **Ya** – list Destination (CD), cek upload no. 2, disimpan sebagai DEST_CODE |
+| Destination Code (DESTINATION_CD, PK) | **Ya** – list Destination (CD), cek upload no. 2, disimpan sebagai DEST_CODE |
 | Customer Code | Referensi |
 | Order Transportation Code | Referensi |
 | B/O Instruction Code | Referensi |
-| Destination Name | **Ya** – tampil bersama kode ("9722D10 - Thailand") dan di Export Excel |
+| Destination Name (DESTINATION_NAME_ENG) | **Ya** – tampil bersama kode ("9722D10 - Thailand") dan di Export Excel |
 | Region Code | Referensi |
 | Country Name | Referensi |
 | Postal Code | Referensi |
 | State Code | Referensi |
 | Destination Address 1 / 2 | Referensi |
-| CREATED_BY | Audit – user pembuat |
-| CREATED_DT | Audit – waktu dibuat |
-| UPDATED_BY | Audit – user terakhir |
-| UPDATED_DT | Audit – waktu terakhir diubah |
+| CREATE_BY | Audit – user pembuat |
+| CREATE_DT | Audit – waktu dibuat |
+| UPDATE_BY | Audit – user terakhir |
+| UPDATE_DT | Audit – waktu terakhir diubah |
 
-Contoh data: 9722D10 Thailand, 9811110 Japan, 9618201 Vietnam.
+Contoh data: 9722D10 Thailand, 9811110 Philippines, 9715310 Vietnam.
 
 ### 10.4 TB_H_PART_CANDIDATE — *ditulis* (history)
 Tabel history semua perubahan part. **Usulan** definisi fisik (insert only, satu record per field yang berubah; index PART_NO + CREATED_DT):

@@ -19,7 +19,7 @@
  ],
  "general": {
   "objective": [
-   "To replicate TB_M_H0125 from DB Surrounding to the table with the same name in NSP.",
+   "To replicate TB_M_H0125_DESTINATION from DB Surrounding to the table with the same name in NSP.",
    "The NSP table is fully replaced every run (delete - insert). In case any error occurs, the run is rolled back and NSP keeps the data of the last successful run."
   ],
   "operation_flow": {
@@ -33,7 +33,7 @@
      },
      {
       "id": "b",
-      "label": "Delete + insert TB_M_H0125",
+      "label": "Delete + insert TB_M_H0125_DESTINATION",
       "type": "process"
      },
      {
@@ -56,14 +56,14 @@
   },
   "inputs": [
    {
-    "name": "TB_M_H0125 (DB Surrounding)",
+    "name": "TB_M_H0125_DESTINATION (DB Surrounding)",
     "type": "DB",
     "description": "Destination master (I/F H01-25, DVJO820)"
    }
   ],
   "outputs": [
    {
-    "name": "TB_M_H0125 (NSP)",
+    "name": "TB_M_H0125_DESTINATION (NSP)",
     "type": "DB",
     "description": "if successful: same rows as the source"
    },
@@ -130,7 +130,7 @@
     },
     {
      "id": "s",
-     "label": "TB_M_H0125 (DB Surrounding)",
+     "label": "TB_M_H0125_DESTINATION (DB Surrounding)",
      "type": "db",
      "lane": "input"
     },
@@ -142,7 +142,7 @@
     },
     {
      "id": "d",
-     "label": "TB_M_H0125 (NSP)",
+     "label": "TB_M_H0125_DESTINATION (NSP)",
      "type": "db",
      "lane": "output"
     },
@@ -184,7 +184,7 @@
   },
   "steps": [
    "The scheduler starts the batch.",
-   "Delete all rows of TB_M_H0125 (NSP) and insert all rows of TB_M_H0125 (DB Surrounding) (same columns and values).",
+   "Delete all rows of TB_M_H0125_DESTINATION (NSP) and insert all rows of TB_M_H0125_DESTINATION (DB Surrounding) (same columns and values).",
    "No error: commit. Error: roll back step 2 (one transaction). Record the result in the Log. Exit."
   ]
  },
@@ -192,10 +192,10 @@
   "blocks": [
    {
     "source": {
-     "table": "TB_M_H0125 (NSP)"
+     "table": "TB_M_H0125_DESTINATION (NSP)"
     },
     "destination": {
-     "table": "TB_M_H0125 (NSP)",
+     "table": "TB_M_H0125_DESTINATION (NSP)",
      "operation": "Delete",
      "description": "All rows (full replace)"
     },
@@ -209,7 +209,7 @@
       "description": "Row is deleted"
      },
      {
-      "dest_field": "DOMESTIC_OVERSEAS_CLASS_CD",
+      "dest_field": "DOMESTIC_OVERSEA_CLASS_CD",
       "description": "Row is deleted"
      },
      {
@@ -229,7 +229,7 @@
       "description": "Row is deleted"
      },
      {
-      "dest_field": "DEPOT_DESTINATION_JUDG_FLAG",
+      "dest_field": "DEPOT_DEST_JUDGMENT_FLAG",
       "description": "Row is deleted"
      },
      {
@@ -269,7 +269,7 @@
       "description": "Row is deleted"
      },
      {
-      "dest_field": "DESTINATION_NAME",
+      "dest_field": "DESTINATION_NAME_ENG",
       "description": "Row is deleted"
      },
      {
@@ -277,7 +277,7 @@
       "description": "Row is deleted"
      },
      {
-      "dest_field": "COUNTRY_NAME",
+      "dest_field": "COUNTRY_NAME_ENG",
       "description": "Row is deleted"
      },
      {
@@ -285,7 +285,7 @@
       "description": "Row is deleted"
      },
      {
-      "dest_field": "POSTAL_CD",
+      "dest_field": "POSTAL_CD_ENG",
       "description": "Row is deleted"
      },
      {
@@ -293,7 +293,7 @@
       "description": "Row is deleted"
      },
      {
-      "dest_field": "STATE_CD",
+      "dest_field": "STATE_CD_ENG",
       "description": "Row is deleted"
      },
      {
@@ -301,19 +301,19 @@
       "description": "Row is deleted"
      },
      {
-      "dest_field": "DESTINATION_ADDRESS1",
+      "dest_field": "DESTINATION_ADDR1_ENG",
       "description": "Row is deleted"
      },
      {
-      "dest_field": "DESTINATION_ADDRESS2",
+      "dest_field": "DESTINATION_ADDR2_ENG",
       "description": "Row is deleted"
      },
      {
-      "dest_field": "DESTINATION_ADDRESS1_LOCAL",
+      "dest_field": "DESTINATION_ADDR1_LOCAL",
       "description": "Row is deleted"
      },
      {
-      "dest_field": "DESTINATION_ADDRESS2_LOCAL",
+      "dest_field": "DESTINATION_ADDR2_LOCAL",
       "description": "Row is deleted"
      },
      {
@@ -341,29 +341,29 @@
       "description": "Row is deleted"
      },
      {
-      "dest_field": "CREATED_BY",
+      "dest_field": "CREATE_DT",
       "description": "Row is deleted"
      },
      {
-      "dest_field": "CREATED_DT",
+      "dest_field": "CREATE_BY",
       "description": "Row is deleted"
      },
      {
-      "dest_field": "UPDATED_BY",
+      "dest_field": "UPDATE_DT",
       "description": "Row is deleted"
      },
      {
-      "dest_field": "UPDATED_DT",
+      "dest_field": "UPDATE_BY",
       "description": "Row is deleted"
      }
     ]
    },
    {
     "source": {
-     "table": "TB_M_H0125 (DB Surrounding)"
+     "table": "TB_M_H0125_DESTINATION (DB Surrounding)"
     },
     "destination": {
-     "table": "TB_M_H0125 (NSP)",
+     "table": "TB_M_H0125_DESTINATION (NSP)",
      "operation": "Insert",
      "description": "Every source row"
     },
@@ -379,8 +379,8 @@
       "description": "Same value as the source"
      },
      {
-      "source_field": "DOMESTIC_OVERSEAS_CLASS_CD",
-      "dest_field": "DOMESTIC_OVERSEAS_CLASS_CD",
+      "source_field": "DOMESTIC_OVERSEA_CLASS_CD",
+      "dest_field": "DOMESTIC_OVERSEA_CLASS_CD",
       "description": "Same value as the source"
      },
      {
@@ -404,8 +404,8 @@
       "description": "Same value as the source"
      },
      {
-      "source_field": "DEPOT_DESTINATION_JUDG_FLAG",
-      "dest_field": "DEPOT_DESTINATION_JUDG_FLAG",
+      "source_field": "DEPOT_DEST_JUDGMENT_FLAG",
+      "dest_field": "DEPOT_DEST_JUDGMENT_FLAG",
       "description": "Same value as the source"
      },
      {
@@ -454,8 +454,8 @@
       "description": "Same value as the source"
      },
      {
-      "source_field": "DESTINATION_NAME",
-      "dest_field": "DESTINATION_NAME",
+      "source_field": "DESTINATION_NAME_ENG",
+      "dest_field": "DESTINATION_NAME_ENG",
       "description": "Same value as the source"
      },
      {
@@ -464,8 +464,8 @@
       "description": "Same value as the source"
      },
      {
-      "source_field": "COUNTRY_NAME",
-      "dest_field": "COUNTRY_NAME",
+      "source_field": "COUNTRY_NAME_ENG",
+      "dest_field": "COUNTRY_NAME_ENG",
       "description": "Same value as the source"
      },
      {
@@ -474,8 +474,8 @@
       "description": "Same value as the source"
      },
      {
-      "source_field": "POSTAL_CD",
-      "dest_field": "POSTAL_CD",
+      "source_field": "POSTAL_CD_ENG",
+      "dest_field": "POSTAL_CD_ENG",
       "description": "Same value as the source"
      },
      {
@@ -484,8 +484,8 @@
       "description": "Same value as the source"
      },
      {
-      "source_field": "STATE_CD",
-      "dest_field": "STATE_CD",
+      "source_field": "STATE_CD_ENG",
+      "dest_field": "STATE_CD_ENG",
       "description": "Same value as the source"
      },
      {
@@ -494,23 +494,23 @@
       "description": "Same value as the source"
      },
      {
-      "source_field": "DESTINATION_ADDRESS1",
-      "dest_field": "DESTINATION_ADDRESS1",
+      "source_field": "DESTINATION_ADDR1_ENG",
+      "dest_field": "DESTINATION_ADDR1_ENG",
       "description": "Same value as the source"
      },
      {
-      "source_field": "DESTINATION_ADDRESS2",
-      "dest_field": "DESTINATION_ADDRESS2",
+      "source_field": "DESTINATION_ADDR2_ENG",
+      "dest_field": "DESTINATION_ADDR2_ENG",
       "description": "Same value as the source"
      },
      {
-      "source_field": "DESTINATION_ADDRESS1_LOCAL",
-      "dest_field": "DESTINATION_ADDRESS1_LOCAL",
+      "source_field": "DESTINATION_ADDR1_LOCAL",
+      "dest_field": "DESTINATION_ADDR1_LOCAL",
       "description": "Same value as the source"
      },
      {
-      "source_field": "DESTINATION_ADDRESS2_LOCAL",
-      "dest_field": "DESTINATION_ADDRESS2_LOCAL",
+      "source_field": "DESTINATION_ADDR2_LOCAL",
+      "dest_field": "DESTINATION_ADDR2_LOCAL",
       "description": "Same value as the source"
      },
      {
@@ -544,23 +544,23 @@
       "description": "Same value as the source"
      },
      {
-      "source_field": "CREATED_BY",
-      "dest_field": "CREATED_BY",
+      "source_field": "CREATE_DT",
+      "dest_field": "CREATE_DT",
       "description": "Same value as the source"
      },
      {
-      "source_field": "CREATED_DT",
-      "dest_field": "CREATED_DT",
+      "source_field": "CREATE_BY",
+      "dest_field": "CREATE_BY",
       "description": "Same value as the source"
      },
      {
-      "source_field": "UPDATED_BY",
-      "dest_field": "UPDATED_BY",
+      "source_field": "UPDATE_DT",
+      "dest_field": "UPDATE_DT",
       "description": "Same value as the source"
      },
      {
-      "source_field": "UPDATED_DT",
-      "dest_field": "UPDATED_DT",
+      "source_field": "UPDATE_BY",
+      "dest_field": "UPDATE_BY",
       "description": "Same value as the source"
      }
     ]
@@ -642,7 +642,7 @@
    "cause": "Read from DB Surrounding or insert into NSP fails",
    "type": "Error",
    "msg_id": "LOG3",
-   "message": "Cannot replicate TB_M_H0125: <ERROR_DETAIL>.",
+   "message": "Cannot replicate TB_M_H0125_DESTINATION: <ERROR_DETAIL>.",
    "action": {
     "system": "Roll back. STATUS = FAILED.",
     "user": "User contact PIC"
@@ -664,7 +664,7 @@
  "appendix": [],
  "tables": [
   {
-   "name": "TB_M_H0125",
+   "name": "TB_M_H0125_DESTINATION",
    "kind": "master",
    "proposed": false,
    "description": "Destination master (I/F H01-25, DVJO820) replicated from DB Surrounding. Structure from the G-TOPAS I/F layout; physical names follow the existing table. Key (PK) = unique key of the I/F layout.",
@@ -684,7 +684,7 @@
      "No.2 Customer Code"
     ],
     [
-     "DOMESTIC_OVERSEAS_CLASS_CD",
+     "DOMESTIC_OVERSEA_CLASS_CD",
      "VARCHAR(1)",
      "",
      "N",
@@ -719,7 +719,7 @@
      "No.7 QUP Process Code: '1':Round-up '2':Not change '3':Round-down"
     ],
     [
-     "DEPOT_DESTINATION_JUDG_FLAG",
+     "DEPOT_DEST_JUDGMENT_FLAG",
      "VARCHAR(1)",
      "",
      "N",
@@ -789,7 +789,7 @@
      "No.17 Destination Operator Name"
     ],
     [
-     "DESTINATION_NAME",
+     "DESTINATION_NAME_ENG",
      "VARCHAR(50)",
      "",
      "N",
@@ -803,7 +803,7 @@
      "No.19 Destination Name (Local Language)"
     ],
     [
-     "COUNTRY_NAME",
+     "COUNTRY_NAME_ENG",
      "VARCHAR(36)",
      "",
      "Y",
@@ -817,7 +817,7 @@
      "No.21 Country Name (Local Language)"
     ],
     [
-     "POSTAL_CD",
+     "POSTAL_CD_ENG",
      "VARCHAR(10)",
      "",
      "Y",
@@ -831,7 +831,7 @@
      "No.23 Postal Code (Local Language)"
     ],
     [
-     "STATE_CD",
+     "STATE_CD_ENG",
      "VARCHAR(6)",
      "",
      "Y",
@@ -845,28 +845,28 @@
      "No.25 State Code (Local Language)"
     ],
     [
-     "DESTINATION_ADDRESS1",
+     "DESTINATION_ADDR1_ENG",
      "VARCHAR(50)",
      "",
      "N",
      "No.26 Destination Address1"
     ],
     [
-     "DESTINATION_ADDRESS2",
+     "DESTINATION_ADDR2_ENG",
      "VARCHAR(50)",
      "",
      "Y",
      "No.27 Destination Address2"
     ],
     [
-     "DESTINATION_ADDRESS1_LOCAL",
+     "DESTINATION_ADDR1_LOCAL",
      "VARCHAR(75)",
      "",
      "Y",
      "No.28 Destination Address1(Local Language)"
     ],
     [
-     "DESTINATION_ADDRESS2_LOCAL",
+     "DESTINATION_ADDR2_LOCAL",
      "VARCHAR(75)",
      "",
      "Y",
@@ -915,32 +915,32 @@
      "No.35 Update Date & Time"
     ],
     [
-     "CREATED_BY",
-     "VARCHAR(TBD)",
-     "",
-     "Y",
-     "Created by (NSP)"
-    ],
-    [
-     "CREATED_DT",
+     "CREATE_DT",
      "TIMESTAMP",
      "",
      "Y",
      "Created date and time (NSP)"
     ],
     [
-     "UPDATED_BY",
+     "CREATE_BY",
      "VARCHAR(TBD)",
      "",
      "Y",
-     "Updated by (NSP)"
+     "Created by (NSP)"
     ],
     [
-     "UPDATED_DT",
+     "UPDATE_DT",
      "TIMESTAMP",
      "",
      "Y",
      "Updated date and time (NSP)"
+    ],
+    [
+     "UPDATE_BY",
+     "VARCHAR(TBD)",
+     "",
+     "Y",
+     "Updated by (NSP)"
     ]
    ]
   }

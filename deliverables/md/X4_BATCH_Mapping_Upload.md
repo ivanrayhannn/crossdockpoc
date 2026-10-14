@@ -21,7 +21,7 @@ Batch ID: **X4**.
 | Input | File Mapping (sheet **Upload**) | Excel | Hanya sheet "Upload". Max 5 MB, 5.000 baris |
 | Input | TB_M_PART_CANDIDATE | DB | Status part (harus Active) dan Max Case/Day |
 | Input | TB_M_PART_CANDIDATE_DEST | DB | Mapping sekarang periode berjalan (deteksi tanpa perubahan) |
-| Input | TB_M_H0125 (Destination Master) | DB | Kode destinasi valid: 9722D10 Thailand, 9811110 Japan, 9618201 Vietnam |
+| Input | TB_M_H0125_DESTINATION (Destination Master) | DB | Kode destinasi valid: 9722D10 Thailand, 9811110 Philippines, 9715310 Vietnam |
 | Output | TB_M_PART_CANDIDATE_DEST | DB | Mapping part yang berubah di-**replace** (periode berjalan) |
 | Output | TB_M_PART_CANDIDATE | DB | Sync Status = No Sync untuk part yang berubah |
 | Output | TB_H_PART_CANDIDATE | DB | History per destinasi yang ditambah / diubah / dihapus (event MAPPING, source UPLOAD) |
@@ -34,7 +34,7 @@ Diisi otomatis oleh **Export Excel** (periode berjalan dipilih): semua part **Ac
 | Kolom | Isi |
 |---|---|
 | part_no | Part Number part Active |
-| dest_code | Kode destinasi (9722D10 / 9811110 / 9618201), sekali per part |
+| dest_code | Kode destinasi (9722D10 / 9811110 / 9715310), sekali per part |
 | case_day | Case/Day destinasi, bilangan bulat > 0 |
 | total_case_day | Max Case/Day part, **hanya referensi** (tidak dibaca batch) |
 
@@ -58,7 +58,7 @@ Diisi otomatis oleh **Export Excel** (periode berjalan dipilih): semua part **Ac
 | No | Aturan | Kolom |
 |---|---|---|
 | 1 | Part No ada di TB_M_PART_CANDIDATE dan status **Active** | part_no |
-| 2 | Kode destinasi ada di TB_M_H0125 (Destination Code) | dest_code |
+| 2 | Kode destinasi ada di TB_M_H0125_DESTINATION (Destination Code) | dest_code |
 | 3 | case_day bilangan bulat > 0 kalau dest_code diisi | case_day |
 | 4 | Satu kode destinasi hanya sekali per part | dest_code |
 | 5 | dest_code dan case_day **keduanya diisi atau keduanya kosong** (placeholder) | dest_code, case_day |
@@ -81,7 +81,7 @@ Diisi otomatis oleh **Export Excel** (periode berjalan dipilih): semua part **Ac
 |---|---|---|---|---|---|
 | PART_NO | VARCHAR(TBD) | Y | N | FK ke TB_M_PART_CANDIDATE | dari file |
 | PERIOD | CHAR(6) | Y | N | Periode kalkulasi YYYYMM, mis. 202609 (tampil Sep 2026) | periode berjalan |
-| DEST_CODE | CHAR(7) | Y | N | Kode destinasi 7 digit (buyer code + PD code); ada di TB_M_H0125 | dari file |
+| DEST_CODE | CHAR(7) | Y | N | Kode destinasi 7 digit (buyer code + PD code); ada di TB_M_H0125_DESTINATION | dari file |
 | CASE_DAY | INT | | N | Case/Day destinasi (> 0) | dari file |
 | CREATED_BY | VARCHAR(TBD) | | N | User pembuat | login user |
 | CREATED_DT | DATETIME | | N | Waktu dibuat | system date |
@@ -107,27 +107,27 @@ Diisi otomatis oleh **Export Excel** (periode berjalan dipilih): semua part **Ac
 | CREATED_BY / CREATED_DT | | | N | Audit | tidak berubah |
 | CHANGED_BY / CHANGED_DT | | | N | Audit | login user / system date |
 
-### 8.3 TB_M_H0125 (Destination Master) — *dibaca*
+### 8.3 TB_M_H0125_DESTINATION (Destination Master) — *dibaca*
 Tabel master existing NSP, **hanya dibaca**. Kolom yang relevan (kolom lain diabaikan; nama fisik mengikuti tabel existing):
 
 | Kolom | Dipakai Crossdock |
 |---|---|
-| Destination Code (PK) | **Ya** – list Destination (CD), cek upload no. 2, disimpan sebagai DEST_CODE |
+| Destination Code (DESTINATION_CD, PK) | **Ya** – list Destination (CD), cek upload no. 2, disimpan sebagai DEST_CODE |
 | Customer Code | Referensi |
 | Order Transportation Code | Referensi |
 | B/O Instruction Code | Referensi |
-| Destination Name | **Ya** – tampil bersama kode ("9722D10 - Thailand") dan di Export Excel |
+| Destination Name (DESTINATION_NAME_ENG) | **Ya** – tampil bersama kode ("9722D10 - Thailand") dan di Export Excel |
 | Region Code | Referensi |
 | Country Name | Referensi |
 | Postal Code | Referensi |
 | State Code | Referensi |
 | Destination Address 1 / 2 | Referensi |
-| CREATED_BY | Audit – user pembuat |
-| CREATED_DT | Audit – waktu dibuat |
-| UPDATED_BY | Audit – user terakhir |
-| UPDATED_DT | Audit – waktu terakhir diubah |
+| CREATE_BY | Audit – user pembuat |
+| CREATE_DT | Audit – waktu dibuat |
+| UPDATE_BY | Audit – user terakhir |
+| UPDATE_DT | Audit – waktu terakhir diubah |
 
-Contoh data: 9722D10 Thailand, 9811110 Japan, 9618201 Vietnam.
+Contoh data: 9722D10 Thailand, 9811110 Philippines, 9715310 Vietnam.
 
 ### 8.4 Log (upload log) — *ditulis*
 Di UISS ditulis **"Log"** saja. Struktur yang diketahui sama dengan Part List Upload (UPLOAD_ID, FUNCTION_ID = MAPPING, FILE_NAME, STATUS, jumlah baris, RESULT_FILE_PATH, START_DT/END_DT, audit). Untuk mapping: SAVED_ROWS = jumlah part yang di-replace, NO_CHANGE_ROWS = jumlah part yang di-skip.

@@ -4,7 +4,7 @@ Mapping Destination Calculation)."""
 NAME, PROJ = 'FID Rayhan', 'Crossdock Optimization'
 NC = 'Not changed'
 T, D, ADS, DM, RES, LOG = ('TB_M_PART_CANDIDATE', 'TB_M_PART_CANDIDATE_DEST', 'TB_R_ACTUAL_DEMAND_SUMMARY',
-                           'TB_M_H0125', 'TB_R_PART_DAD_RESULT', 'Log')
+                           'TB_M_H0125_DESTINATION', 'TB_R_PART_DAD_RESULT', 'Log')
 SYSM = 'System master'
 SYSM_NOTE = "Range of months and schedule are set in the system master (not explained in this document)."
 
@@ -67,7 +67,7 @@ T_TABLE = {"name": T, "kind": "transaction", "proposed": False,
 D_COLS = [
     ["PART_NO", "VARCHAR(TBD)", "Y", "N", "Part number (FK to TB_M_PART_CANDIDATE)"],
     ["PERIOD", "CHAR(6)", "Y", "N", "Calculation period YYYYMM, e.g. 202610; displayed as 'Oct 2026'"],
-    ["DEST_CODE", "CHAR(7)", "Y", "N", "Destination code (buyer code + PD code, 7 digits); exists in TB_M_H0125"],
+    ["DEST_CODE", "CHAR(7)", "Y", "N", "Destination code (buyer code + PD code, 7 digits); exists in TB_M_H0125_DESTINATION"],
     ["CASE_DAY", "INT", "", "N", "Allocated Case/Day of the destination (> 0)"],
     ["CREATED_BY", "VARCHAR(TBD)", "", "N", "User who created the record"],
     ["CREATED_DT", "DATETIME", "", "N", "Created date and time"],
@@ -82,17 +82,17 @@ DM_COLS = [
     ["CUSTOMER_CD", "TBD", "", "", "Customer code (reference only)"],
     ["ORDER_TRANSPORTATION_CD", "TBD", "", "", "Order transportation code (reference only)"],
     ["BO_INSTRUCTION_CD", "TBD", "", "", "B/O instruction code (reference only)"],
-    ["DESTINATION_NAME", "TBD", "", "", "Destination name. Used by Crossdock (shown with the code)"],
+    ["DESTINATION_NAME_ENG", "TBD", "", "", "Destination name. Used by Crossdock (shown with the code)"],
     ["REGION_CD", "TBD", "", "", "Region code (reference only)"],
-    ["COUNTRY_NAME", "TBD", "", "", "Country name (reference only)"],
-    ["POSTAL_CD", "TBD", "", "", "Postal code (reference only)"],
-    ["STATE_CD", "TBD", "", "", "State code (reference only)"],
-    ["DESTINATION_ADDRESS1", "TBD", "", "", "Destination address 1 (reference only)"],
-    ["DESTINATION_ADDRESS2", "TBD", "", "", "Destination address 2 (reference only)"],
-    ["CREATED_BY", "TBD", "", "", "User who created the record"],
-    ["CREATED_DT", "TBD", "", "", "Created date and time"],
-    ["UPDATED_BY", "TBD", "", "", "User who last updated the record"],
-    ["UPDATED_DT", "TBD", "", "", "Last updated date and time"]]
+    ["COUNTRY_NAME_ENG", "TBD", "", "", "Country name (reference only)"],
+    ["POSTAL_CD_ENG", "TBD", "", "", "Postal code (reference only)"],
+    ["STATE_CD_ENG", "TBD", "", "", "State code (reference only)"],
+    ["DESTINATION_ADDR1_ENG", "TBD", "", "", "Destination address 1 (reference only)"],
+    ["DESTINATION_ADDR2_ENG", "TBD", "", "", "Destination address 2 (reference only)"],
+    ["CREATE_BY", "TBD", "", "", "User who created the record"],
+    ["CREATE_DT", "TBD", "", "", "Created date and time"],
+    ["UPDATE_BY", "TBD", "", "", "User who last updated the record"],
+    ["UPDATE_DT", "TBD", "", "", "Last updated date and time"]]
 from h_tables import H0125_COLS as _H125
 _T = {c[0]: c for c in _H125}
 for _c in DM_COLS:

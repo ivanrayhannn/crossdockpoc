@@ -19,7 +19,7 @@
  ],
  "general": {
   "objective": [
-   "To split the Max Case/Day of each Active part over destinations (Thailand, Japan, Vietnam) for the ongoing calculation period.",
+   "To split the Max Case/Day of each Active part over destinations (Thailand, Philippines, Vietnam) for the ongoing calculation period.",
    "To display the destination mapping per part and calculation period, including past periods (read only).",
    "To hand changed parts to the RPA, which sends them to the global system, and show the Sync Status of each part.",
    "To export the mapping to Excel and upload the mapping of the ongoing period from Excel.",
@@ -1169,7 +1169,7 @@
    "required": "Y",
    "format": "XXXXXXX - X..X",
    "validation": "Once per part",
-   "description": "List = DESTINATION_CD - DESTINATION_NAME of TB_M_H0125 (Destination Master) (e.g. 9722D10 - Thailand, 9811110 - Japan, 9618201 - Vietnam). Destinations already used by another row of the same part are hidden."
+   "description": "List = DESTINATION_CD - DESTINATION_NAME of TB_M_H0125_DESTINATION (Destination Master) (e.g. 9722D10 - Thailand, 9811110 - Philippines, 9715310 - Vietnam). Destinations already used by another row of the same part are hidden."
   },
   {
    "name": "Case/Day",
@@ -1971,7 +1971,7 @@
     ],
     [
      "Table",
-     "TB_M_H0125",
+     "TB_M_H0125_DESTINATION",
      "Destination Master (existing, read only). Crossdock uses DESTINATION_CD and DESTINATION_NAME only."
     ],
     [
