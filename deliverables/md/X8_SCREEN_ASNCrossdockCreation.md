@@ -1,7 +1,7 @@
 # Screen – ASN Crossdock Creation (X8)
 
 Sumber: UISS-Screen `X8_UISS_Screen_ASNCrossdockCreation.xlsx` (0.1 Initial Draft), mengikuti flow **ASN_Flow_Normal.xlsx**.
-Prototype: menu **ASN → ASN Creation**. Menggantikan UISS Delivery Plan + ASN Draft sebelumnya.
+Prototype: menu **ASN → ASN Creation** (https://ivanrayhannn.github.io/crossdockpoc/#/asn-creation). Menggantikan UISS Delivery Plan + ASN Draft sebelumnya.
 
 ## Tujuan
 - Menampilkan delivery plan part crossdock per **Part Number + Customer Order Date** (= *unit*) dari TB_R_INSTRUCTION.
@@ -69,9 +69,18 @@ Not Assigned (case) = jumlah case (destinasi) yang masih punya qty tanpa PO yang
 | MSG5 | Tidak ada rit cycle | No rit cycle available for {Delivery Date}. Choose another delivery date. |
 | MSG6 | Submit sukses | {ASN No} submitted. {n} cases are locked. … The ASN is shown in ASN Inquiry. |
 
+## Hak akses tampilan
+| Pengguna | Header delivery plan (level case) | Detail destinasi & pcs (expand) | Create ASN |
+|---|---|---|---|
+| Supplier | Ya | **Tidak** (tombol expand disembunyikan) | Ya |
+| Tim D/S | Ya | **Ya** | Ya (TBC) |
+
 ## Catatan prototype
 - Switch **Business date** (14 / 15 / 16-Oct) hanya untuk simulasi rilis PO (kondisi 3), bukan bagian layar asli.
+- Toggle **View as (Supplier / D/S team)** hanya untuk simulasi hak akses; di sistem asli ditentukan dari role login.
 
 ## Open points
 - Format label (Download Case Label); aturan nomor urut ASN; apakah 1 ASN harus 1 supplier / plant.
 - Nama & struktur tabel route master (Rit Cycle) dan TB_R_ASN_CROSSDOCK_H.
+- Sub screen Case List untuk supplier: apakah juga level case saja (sembunyikan Customer Order No (qty) dan Qty pcs)?
+- Apakah tim D/S juga boleh Create / Submit ASN, atau hanya melihat?
