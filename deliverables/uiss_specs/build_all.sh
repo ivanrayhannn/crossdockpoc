@@ -14,7 +14,7 @@ while read -r spec out; do
   echo "built $O/$out"
 done <<'LIST'
 PartListScreen_spec.json UISS_Screen_PartList.xlsx
-PartListUpload_v2_spec.json UISS_Batch_PartListUpload_v2.xlsx
+PartListUpload_v2_spec.json UISS_Batch_PartListUpload.xlsx
 MappingScreen_spec.json UISS_Screen_MappingPerDestination.xlsx
 MappingUpload_v3_spec.json UISS_Batch_MappingUpload.xlsx
 AdsSync_spec.json UISS_Batch_ActualDemandSummarySync.xlsx

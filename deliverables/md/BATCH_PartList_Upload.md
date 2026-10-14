@@ -1,7 +1,7 @@
 # Batch – Crossdock Master Setting – Part List Upload (X2)
 
 Ringkasan poin-poin batch upload Part List: pemicu, alur, validasi, cara simpan, dan **semua tabel yang terlibat**.
-Sumber: UISS-Batch `UISS_Batch_PartListUpload_v2.xlsx` (0.1 Initial Draft) dan keputusan bisnis sampai 13-Oct-26.
+Sumber: UISS-Batch `UISS_Batch_PartListUpload.xlsx` (0.1 Initial Draft) dan keputusan bisnis sampai 13-Oct-26.
 
 ---
 

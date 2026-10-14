@@ -1,4 +1,4 @@
-"""Spec for UISS_Batch_PartListUpload_v2.xlsx (rebuilt from the v0.2 workbook, then updated to v0.3)."""
+"""Spec for UISS_Batch_PartListUpload.xlsx (rebuilt from the v0.2 workbook, then updated to v0.3)."""
 import json, sys
 import hist_table
 T, PM, LOG = 'TB_M_PART_CANDIDATE', 'TB_M_PART_MASTER', 'Log'
