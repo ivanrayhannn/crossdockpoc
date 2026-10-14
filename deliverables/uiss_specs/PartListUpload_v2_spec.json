@@ -1562,7 +1562,7 @@
    "name": "TB_H_PART_CANDIDATE",
    "kind": "history",
    "proposed": true,
-   "description": "History of every change of a crossdock part (Add / Edit by screen or upload, mapping changes, Sync results). Read by the History setting modal of Part List (index PART_NO, CREATED_DT). Proposed retention: 24 months online by CREATED_DT; a monthly housekeeping job deletes older records (period configurable in system master). To be confirmed.",
+   "description": "History of every change of a crossdock part (Add / Edit by screen or upload, mapping changes, Sync results, status changes and mappings made by the calculation batches). Read by the History setting modal of Part List (index PART_NO, CREATED_DT). Proposed retention: 24 months online by CREATED_DT; a monthly housekeeping job deletes older records (period configurable in system master). To be confirmed.",
    "columns": [
     [
      "HIST_ID",
@@ -1583,21 +1583,21 @@
      "CHAR(6)",
      "",
      "Y",
-     "Calculation period YYYYMM for MAPPING / SYNC; NULL for ADD / EDIT (Part List has no period)"
+     "Calculation period YYYYMM for MAPPING / SYNC / CALC; NULL for ADD / EDIT (Part List has no period)"
     ],
     [
      "EVENT_TYPE",
      "VARCHAR(10)",
      "",
      "N",
-     "ADD / EDIT / MAPPING / SYNC"
+     "ADD / EDIT / MAPPING / SYNC / CALC"
     ],
     [
      "SOURCE",
      "VARCHAR(10)",
      "",
      "N",
-     "SCREEN / UPLOAD / RPA"
+     "SCREEN / UPLOAD / RPA / BATCH"
     ],
     [
      "UPLOAD_ID",
@@ -1646,7 +1646,7 @@
      "VARCHAR(20)",
      "",
      "N",
-     "User who made the change (RPA user ID for SYNC)"
+     "User who made the change (RPA user ID for SYNC, batch user ID for BATCH)"
     ],
     [
      "CREATED_DT",

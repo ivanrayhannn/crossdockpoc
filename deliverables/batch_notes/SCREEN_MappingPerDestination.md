@@ -155,8 +155,8 @@ Tabel history semua perubahan part. **Usulan** definisi fisik (insert only, satu
 | HIST_ID | BIGINT | Y | N | Running number (identity) |
 | PART_NO | VARCHAR(TBD) |  | N | Part number; length follows TB_M_PART_MASTER |
 | PERIOD | CHAR(6) |  | Y | Calculation period YYYYMM for MAPPING / SYNC; NULL for ADD / EDIT (Part List has no period) |
-| EVENT_TYPE | VARCHAR(10) |  | N | ADD / EDIT / MAPPING / SYNC |
-| SOURCE | VARCHAR(10) |  | N | SCREEN / UPLOAD / RPA |
+| EVENT_TYPE | VARCHAR(10) |  | N | ADD / EDIT / MAPPING / SYNC / CALC |
+| SOURCE | VARCHAR(10) |  | N | SCREEN / UPLOAD / RPA / BATCH |
 | UPLOAD_ID | VARCHAR(TBD) |  | Y | Upload of the change (Log); NULL when not from an upload |
 | DEST_CODE | CHAR(7) |  | Y | Destination code (7 digits) for MAPPING; NULL for other events |
 | FIELD_NAME | VARCHAR(30) |  | N | Changed field: PCS_CASE, MAX_CASE_DAY, MIN_MAD, PART_STATUS, EFFECTIVE_START_DATE, CASE_DAY, SYNC_STATUS |
@@ -174,6 +174,8 @@ Tabel history semua perubahan part. **Usulan** definisi fisik (insert only, satu
 | EDIT | SCREEN / UPLOAD | Ubah data part (Edit di layar / flag E) | Field yang berubah; OLD → NEW; PERIOD = NULL |
 | MAPPING | SCREEN / UPLOAD | Tambah / ubah / hapus destinasi (periode berjalan) | DEST_CODE terisi, FIELD_NAME = CASE_DAY; OLD NULL = ditambah, NEW NULL = dihapus |
 | SYNC | RPA | Hasil Sync | FIELD_NAME = SYNC_STATUS; Waiting → Success / Failed (atau No Sync kalau berubah saat RPA jalan); REMARK = SYNC_MESSAGE |
+| CALC | BATCH | Status diubah DAD Volume Calculation | FIELD_NAME = PART_STATUS; OLD → NEW status; REMARK = rata-rata MAD vs Min MAD |
+| MAPPING | BATCH | Mapping periode baru dari Mapping Destination Calculation | Sama dengan MAPPING di atas (OLD = periode sebelumnya) |
 
 UPLOAD_ID diisi untuk source UPLOAD (link ke Log).
 

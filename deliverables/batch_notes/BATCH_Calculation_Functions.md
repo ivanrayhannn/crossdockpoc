@@ -2,7 +2,7 @@
 
 Draft catatan 3 fungsi batch yang menghitung status part dan mapping destinasi.
 Sumber: penjelasan user 13-Oct-26 dan file referensi `20261013_tb_r_actual_demand_summary_since_january-2026.xlsx` (sheet *tb_r_actual_demand_summary* dan *simulasi*).
-Status: **draft**. UISS-Batch belum dibuat. Rumus dan aturan Fungsi 2 dan 3 dikonfirmasi 14-Oct-26.
+UISS-Batch (0.1 Initial Draft): **X6** `UISS_Batch_ActualDemandSummarySync.xlsx`, **X7** `UISS_Batch_DADVolumeCalculation.xlsx`, **X8** `UISS_Batch_MappingDestinationCalculation.xlsx`. Rumus dan aturan dikonfirmasi 14-Oct-26.
 
 > Range bulan dan jadwal scheduler diatur di **system master** (tabel system master tidak dijelaskan di dokumen ini).
 
@@ -39,12 +39,12 @@ Kolom TB_R_ACTUAL_DEMAND_SUMMARY (dari file referensi):
 1. Ambil TB_R_ACTUAL_DEMAND_SUMMARY (NSP), **range bulan historis sebelum bulan berjalan** (jumlah bulan diatur di system master, misalnya 6).
 2. Join ke **TB_M_PART_CANDIDATE**: semua part yang terdaftar, apa pun statusnya (Candidate, Active, Inactive).
 3. Part yang **Effective Start Date-nya belum tiba tidak dihitung**.
-4. Hitung **rata-rata MAD per part** = total MAD ÷ **jumlah bulan di system master** (mis. 6). Pembagi selalu tetap, bulan tanpa data dihitung 0. Hasilnya disimpan ke tabel hasil (usulan nama TB_R_PART_DAD_RESULT).
+4. Hitung **rata-rata MAD per part** (disimpan 2 desimal, dibandingkan apa adanya) = total MAD ÷ **jumlah bulan di system master** (mis. 6). Pembagi selalu tetap, bulan tanpa data dihitung 0. Hasilnya disimpan ke tabel hasil (usulan nama TB_R_PART_DAD_RESULT).
 5. Bandingkan dengan **Min MAD** di TB_M_PART_CANDIDATE:
    - rata-rata ≥ Min MAD → **Active**
    - rata-rata < Min MAD → **Inactive**
    - Perpindahan yang mungkin: Candidate → Active / Inactive, Inactive → Active, Active → Inactive.
-6. Perubahan status dicatat di TB_H_PART_CANDIDATE (usulan: event **CALC**, source **BATCH**).
+6. Perubahan status dicatat di TB_H_PART_CANDIDATE (event **CALC**, source **BATCH**).
 
 ### Aturan
 - **All-or-nothing**: kalau ada yang gagal, semua dibatalkan.
@@ -63,7 +63,7 @@ MAD part per bulan = jumlah MAD semua buyer / PD / order type di bulan itu:
 
 Jika Min MAD = 500 → Active. Jika Min MAD = 600 → Inactive.
 
-### Usulan tabel hasil TB_R_PART_DAD_RESULT
+### Tabel hasil TB_R_PART_DAD_RESULT (usulan nama, lihat Appendix UISS X7)
 | Kolom | Keterangan |
 |---|---|
 | PERIOD (PK) | Periode kalkulasi YYYYMM |
@@ -116,9 +116,12 @@ P14–P16 kosong, jadi penyebut makin kecil dan rasio makin besar. Hasilnya tota
 **Perbaikan (dikonfirmasi)**: penyebut dikunci ke total semua buyer + PD part itu: `=P10/SUM($P$10:$P$13)*$N$10`.
 
 **Pembulatan (dikonfirmasi 14-Oct-26)**: Case/Day harus bilangan bulat dan totalnya sama dengan Max Case/Day.
-1. Setiap destinasi diberi 1 case dulu (aturan minimal 1 case).
-2. Sisa case (Max Case/Day − jumlah destinasi) dibagi sesuai rasio, dibulatkan ke bawah.
-3. Case yang masih tersisa dibagikan +1 ke destinasi dengan pecahan terbesar.
+1. Target = result MAD / Σ result MAD × Max Case/Day (destinasi teratas, maks. sebanyak Max Case/Day).
+2. Case/Day = target dibulatkan ke bawah, **minimal 1**.
+3. Total masih kurang dari Max Case/Day → +1 ke destinasi dengan pecahan terbesar (pecahan sama: result MAD lebih besar dulu).
+4. Total lebih dari Max Case/Day (karena minimal 1) → −1 dari destinasi dengan pecahan terkecil yang masih punya lebih dari 1 case.
+
+Contoh: Max 5, MAD 900 / 50 / 30 / 20 → target 4.50 / 0.25 / 0.15 / 0.10 → 4 / 1 / 1 / 1 = 7 → dikurangi jadi **2 / 1 / 1 / 1** = 5.
 
 Pembulatan biasa (0.1–0.4 ke bawah, 0.5–0.9 ke atas) tidak dipakai sendirian karena totalnya bisa melenceng. Contoh: Max Case/Day 10, 4 destinasi masing-masing 2.5 → dibulatkan 3 + 3 + 3 + 3 = 12. Dengan cara di atas hasilnya 3 + 3 + 2 + 2 = 10.
 
