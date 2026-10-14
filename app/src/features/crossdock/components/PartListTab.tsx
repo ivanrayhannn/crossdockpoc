@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { fmt, madAvg, num, parseDt } from '../../../lib/format';
+import { fmt, num, parseDt } from '../../../lib/format';
 import type { Part, PartQuery, PartStatus } from '../../../types';
 import { selectParts } from '../partList';
+import { CalcRunBar, type CalcRun } from './CalcRunBar';
 
 const STATUS_STYLE: Record<PartStatus, { bg: string; fg: string }> = {
   Active: { bg: 'var(--color-accent-2-200)', fg: 'var(--color-accent-2-800)' },
@@ -12,6 +13,9 @@ const STATUS_STYLE: Record<PartStatus, { bg: string; fg: string }> = {
 interface PartListTabProps {
   parts: Part[];
   q: PartQuery;
+  /** Criteria applied by [Search] (with the current sort). */
+  aq: PartQuery;
+  onSearch: () => void;
   setQ: (updater: (prev: PartQuery) => PartQuery) => void;
   resetQ: () => void;
   ro: boolean;
@@ -19,6 +23,8 @@ interface PartListTabProps {
   onOpenHistory: (id: string) => void;
   onAddPart: () => void;
   onOpenUpload: () => void;
+  dadRun: CalcRun;
+  onRunCalc: () => void;
 }
 
 const th: React.CSSProperties = {
@@ -48,15 +54,15 @@ const td: React.CSSProperties = {
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100];
 
-export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHistory, onAddPart, onOpenUpload }: PartListTabProps) {
+export function PartListTab({ parts, q, aq, onSearch, setQ, resetQ, ro, onOpenPart, onOpenHistory, onAddPart, onOpenUpload, dadRun, onRunCalc }: PartListTabProps) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
 
-  const rowsSrc = useMemo(() => selectParts(parts, q), [parts, q]);
+  const rowsSrc = useMemo(() => selectParts(parts, aq), [parts, aq]);
 
   useEffect(() => {
     setPage(1);
-  }, [q, pageSize]);
+  }, [aq, pageSize]);
 
   const empty = parts.length === 0;
   const noResult = !empty && rowsSrc.length === 0;
@@ -75,14 +81,12 @@ export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHist
   const pageSrc = rowsSrc.slice(pageStart, pageStart + pageSize);
 
   const rows = pageSrc.map((p) => {
-    const avg = madAvg(p.mad);
-    // Candidate parts have no MAD history yet, so the Min MAD warning doesn't apply.
-    const below = p.st !== 'Candidate' && avg < num(p.minMad);
+    const hasMad = p.minMad !== '' && p.minMad != null;
     return {
       p,
-      minMad: fmt(num(p.minMad)),
-      minMadFg: below ? 'var(--color-warn-fg)' : 'var(--color-neutral-800)',
-      minMadW: below ? 700 : 400,
+      minMad: hasMad ? fmt(num(p.minMad)) : '—',
+      minMadFg: 'var(--color-neutral-800)',
+      minMadW: 400,
       stBg: STATUS_STYLE[p.st].bg,
       stFg: STATUS_STYLE[p.st].fg,
     };
@@ -103,6 +107,7 @@ export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHist
                   className="input"
                   value={q.part}
                   onChange={(e) => setQ((prev) => ({ ...prev, part: e.target.value }))}
+                  onKeyDown={(e) => e.key === 'Enter' && onSearch()}
                   placeholder="e.g. PART-B"
                   list="part-number-options"
                   role="combobox"
@@ -128,7 +133,7 @@ export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHist
             </div>
             <div className="field" style={{ width: 260 }}>
               <label>Part Name</label>
-              <input className="input" value={q.name} onChange={(e) => setQ((prev) => ({ ...prev, name: e.target.value }))} placeholder="Part name" />
+              <input className="input" value={q.name} onChange={(e) => setQ((prev) => ({ ...prev, name: e.target.value }))} onKeyDown={(e) => e.key === 'Enter' && onSearch()} placeholder="Part name" />
             </div>
             <div className="field" style={{ width: 200 }}>
               <label>Status</label>
@@ -151,7 +156,7 @@ export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHist
               <button className="btn btn-secondary" onClick={resetQ}>
                 Reset
               </button>
-              <button className="btn btn-primary">
+              <button className="btn btn-primary" onClick={onSearch}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round">
                   <circle cx="11" cy="11" r="7" />
                   <line x1="16.5" y1="16.5" x2="21" y2="21" />
@@ -169,6 +174,9 @@ export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHist
             <span style={{ fontSize: 12.5, fontWeight: 600 }}>Registered parts</span>
             <span style={{ fontSize: 11.5, color: 'var(--color-neutral-600)', fontVariantNumeric: 'tabular-nums' }}>
               {rowsSrc.length} {rowsSrc.length === 1 ? 'part' : 'parts'} · {incompleteCount} incomplete {incompleteCount === 1 ? 'mapping' : 'mappings'}
+            </span>
+            <span style={{ marginLeft: 'auto' }}>
+              <CalcRunBar label="DAD calculation" run={dadRun} ro={ro} onRun={onRunCalc} />
             </span>
             {ro && (
               <span
@@ -239,6 +247,9 @@ export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHist
                       </td>
                       <td style={{ ...td, padding: '0 10px' }}>
                         <span style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
+                          <button className="btn btn-secondary" onClick={() => onOpenPart(p.p)} style={{ fontSize: 12, padding: '4px 12px', whiteSpace: 'nowrap' }}>
+                            {ro ? 'View' : 'Edit'}
+                          </button>
                           <button
                             onClick={() => onOpenHistory(p.p)}
                             title="History"
@@ -282,7 +293,7 @@ export function PartListTab({ parts, q, setQ, resetQ, ro, onOpenPart, onOpenHist
               </span>
               <h3 style={{ fontSize: 21, margin: '0 0 6px' }}>No crossdock parts registered yet</h3>
               <p style={{ fontSize: 13, maxWidth: 430, color: 'var(--color-neutral-700)', margin: '0 0 17px' }}>
-                Start from the Excel template, or register a single part and map its Max Case/Day to Thailand, Japan and Vietnam.
+                Start from the Excel template, or register a single part and map its Max Case/Day to Thailand, Philippines and Vietnam.
               </p>
               <div style={{ display: 'flex', gap: 9 }}>
                 <button className="btn btn-primary" onClick={onOpenUpload}>

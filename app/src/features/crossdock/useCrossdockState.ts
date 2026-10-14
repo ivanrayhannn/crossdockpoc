@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { blankPart, cloneSeedParts, CUR_PER } from '../../data/seed';
 import { nowStamp, num } from '../../lib/format';
 import type { DestAllocation, ModalKind, Part, PartQuery, TabView, UserRole } from '../../types';
+import type { CalcRun } from './components/CalcRunBar';
 
 const DEFAULT_Q: PartQuery = {
   part: '',
@@ -15,12 +16,11 @@ const DEFAULT_Q: PartQuery = {
 
 const EDITOR = 'D. Anggraini';
 
-/** Shown in the success popup after a part is saved from the Add/Edit form. */
-export interface SaveNotice {
-  mode: 'add' | 'edit';
-  part: string;
-  name: string;
-}
+/** Shown in the success popup after a part is saved from the Add/Edit form, or after an upload is saved. */
+export type SaveNotice =
+  | { mode: 'add' | 'edit'; part: string; name: string }
+  | { mode: 'upload'; target: 'part' | 'mapping' }
+  | { mode: 'calc'; target: 'dad' | 'mapping' };
 
 /** Deep-ish clone of a part's destination list, so edits inside a modal/draft
  * never mutate the committed `parts` array until explicitly saved. */
@@ -37,15 +37,22 @@ export function useCrossdockState() {
   const [expand, setExpand] = useState<Record<string, boolean>>({});
   const [editDest, setEditDest] = useState<string | null>(null);
   const [draftDests, setDraftDests] = useState<DestAllocation[] | null>(null);
+  // q = criteria being typed; aq = criteria applied by [Search]. Lists filter on aq only.
   const [q, setQ] = useState<PartQuery>(DEFAULT_Q);
+  const [aq, setAq] = useState<PartQuery>(DEFAULT_Q);
   const [notice, setNotice] = useState<SaveNotice | null>(null);
+  // Demo states: the DAD calculation ran fine; the mapping calculation failed 3 scheduled attempts.
+  const [dadRun, setDadRun] = useState<CalcRun>({ lastSuccess: '01-Oct-2026 02:00', failedRetries: 0 });
+  const [mapRun, setMapRun] = useState<CalcRun>({ lastSuccess: '01-Sep-2026 03:00', failedRetries: 3 });
 
   // No auth backend in this build — always full read/write access.
   const ro = false;
   // Prototype-only preview switch: the real system opens exactly one sub-menu
   // (Part List or Mapping per Destination) according to the logged-in account.
   const view: TabView = role === 'ds' ? 'dest' : 'part';
-  const switchRole = useCallback(() => setRole(null), []);
+  const switchRole = useCallback(() => {
+    setRole(null);
+  }, []);
 
   const openFor = useCallback(
     (id: string | null, modalKind: ModalKind, mutate?: (f: Part) => void) => {
@@ -122,9 +129,10 @@ export function useCrossdockState() {
     setDraftDests(null);
   }, [editDest, draftDests]);
 
+  // The RPA writes Success / Failed back later; the prototype stops at Waiting.
   const syncParts = useCallback((ids: string[]) => {
     const idSet = new Set(ids);
-    setParts((prevParts) => prevParts.map((p) => (idSet.has(p.p) ? { ...p, syncStatus: 1, dt: nowStamp() } : p)));
+    setParts((prevParts) => prevParts.map((p) => (idSet.has(p.p) ? { ...p, syncStatus: 3 } : p)));
   }, []);
 
   const closeModal = useCallback(() => {
@@ -141,7 +149,9 @@ export function useCrossdockState() {
     // The saved part goes to the top of the list, whether it was added or edited.
     setParts((prevParts) => [f, ...prevParts.filter((p) => p.p !== f.p)]);
     // Show it right away: drop filters that could hide it and sort newest first.
-    setQ((prev) => ({ ...prev, part: '', name: '', st: 'all', sort: 'dt_desc' }));
+    const showSaved = (prev: PartQuery): PartQuery => ({ ...prev, part: '', name: '', st: 'all', sort: 'dt_desc' });
+    setQ(showSaved);
+    setAq(showSaved);
     setNotice({ mode: editId ? 'edit' : 'add', part: f.p, name: f.n });
     setModal(null);
     setForm(null);
@@ -152,10 +162,34 @@ export function useCrossdockState() {
 
   const addPart = useCallback(() => openFor(null, 'part'), [openFor]);
   const openUpload = useCallback(() => setModal('upload'), []);
+  const openMappingUpload = useCallback(() => setModal('upload-mapping'), []);
+
+  /** "Validate file" is the save button of the upload: it closes the modal and confirms the save (OP-02).
+   * The prototype does not read the file, so the Part List itself stays unchanged. */
+  const submitUpload = useCallback((target: 'part' | 'mapping') => {
+    setModal(null);
+    setNotice({ mode: 'upload', target });
+  }, []);
+
+  /** [Search] applies the criteria; Sort by is not a filter and applies at once (see sortedQ). */
+  const runSearch = useCallback(() => setAq(q), [q]);
+
+  /** Manual trigger of a calculation batch (prototype: always succeeds). */
+  const runCalc = useCallback((target: 'dad' | 'mapping') => {
+    const done: CalcRun = { lastSuccess: nowStamp(), failedRetries: 0 };
+    if (target === 'dad') setDadRun(done);
+    else setMapRun(done);
+    setNotice({ mode: 'calc', target });
+  }, []);
 
   const resetQ = useCallback(() => {
-    setQ((prev) => ({ ...DEFAULT_Q, dest: prev.dest || 'Thailand' }));
+    const reset = (prev: PartQuery): PartQuery => ({ ...DEFAULT_Q, dest: prev.dest || 'Thailand' });
+    setQ(reset);
+    setAq(reset);
   }, []);
+
+  // Applied filters with the current sort order.
+  const sortedQ: PartQuery = { ...aq, sort: q.sort };
 
   return {
     parts,
@@ -171,8 +205,13 @@ export function useCrossdockState() {
     draftDests,
     q,
     setQ,
+    aq: sortedQ,
+    runSearch,
     notice,
     dismissNotice,
+    dadRun,
+    mapRun,
+    runCalc,
     ro,
     openFor,
     patch,
@@ -186,6 +225,8 @@ export function useCrossdockState() {
     commit,
     addPart,
     openUpload,
+    openMappingUpload,
+    submitUpload,
     resetQ,
   };
 }

@@ -1,0 +1,823 @@
+{
+ "doc_type": "screen",
+ "header": {
+  "phase": "DR",
+  "project_name": "Crossdock Optimization",
+  "block_name": "Screen",
+  "function_name": "X13 ASN Inquiry",
+  "created_date": "14-Oct-26",
+  "created_by": "FID Rayhan"
+ },
+ "revisions": [
+  {
+   "revision": "0.1",
+   "author": "FID Rayhan",
+   "date": "14-Oct-26",
+   "reviewed_by": "",
+   "description": "Initial Draft"
+  }
+ ],
+ "general": {
+  "objective": [
+   "To search the ASNs submitted in ASN Crossdock Creation (X8).",
+   "To display the cases of one ASN (read only) and download its case labels."
+  ],
+  "display_order": [
+   {
+    "section": "ASN list",
+    "fields": [
+     {
+      "field": "Submit date-time (CREATED_DT)",
+      "order": "Descending"
+     }
+    ]
+   },
+   {
+    "section": "Cases",
+    "fields": [
+     {
+      "field": "Case No",
+      "order": "Ascending"
+     }
+    ]
+   }
+  ],
+  "buttons": [
+   {
+    "name": "Search",
+    "function": "Retrieve ASNs by ASN No, Delivery Date range and Part Number."
+   },
+   {
+    "name": "Reset",
+    "function": "Clear criteria and reset the screen to its initial value."
+   },
+   {
+    "name": "ASN No (link)",
+    "function": "Open the detail of the ASN."
+   },
+   {
+    "name": "Back",
+    "function": "Return from the detail to the ASN list."
+   },
+   {
+    "name": "Download Case Label",
+    "function": "Download the labels of all cases of the ASN. TBD: label format."
+   }
+  ],
+  "screen_modes": [
+   {
+    "mode": "List Mode",
+    "sections": [
+     {
+      "section": "Search Criteria",
+      "description": "Criteria blank; all ASNs listed",
+      "buttons": {
+       "Search": "E",
+       "Reset": "E",
+       "ASN No (link)": "D",
+       "Back": "D",
+       "Download Case Label": "D"
+      }
+     },
+     {
+      "section": "ASN list",
+      "description": "One row per ASN",
+      "buttons": {
+       "Search": "D",
+       "Reset": "D",
+       "ASN No (link)": "E",
+       "Back": "D",
+       "Download Case Label": "D"
+      }
+     }
+    ]
+   },
+   {
+    "mode": "Detail Mode",
+    "sections": [
+     {
+      "section": "ASN summary",
+      "description": "Delivery Date, Rit Cycle, units, cases / qty, created",
+      "buttons": {
+       "Search": "D",
+       "Reset": "D",
+       "ASN No (link)": "D",
+       "Back": "E",
+       "Download Case Label": "D"
+      }
+     },
+     {
+      "section": "Cases",
+      "description": "Read-only case list",
+      "buttons": {
+       "Search": "D",
+       "Reset": "D",
+       "ASN No (link)": "D",
+       "Back": "D",
+       "Download Case Label": "E"
+      }
+     }
+    ]
+   }
+  ]
+ },
+ "screen_flow": [
+  {
+   "title": "Screen Flow - ASN Inquiry",
+   "flow": {
+    "direction": "LR",
+    "nodes": [
+     {
+      "id": "c",
+      "label": "ASN Crossdock Creation (X8)",
+      "type": "screen"
+     },
+     {
+      "id": "l",
+      "label": "ASN Inquiry - list",
+      "type": "screen"
+     },
+     {
+      "id": "d",
+      "label": "ASN Inquiry - detail",
+      "type": "screen"
+     }
+    ],
+    "edges": [
+     {
+      "from": "c",
+      "to": "l",
+      "label": "submitted ASN"
+     },
+     {
+      "from": "l",
+      "to": "d",
+      "label": "ASN No"
+     },
+     {
+      "from": "d",
+      "to": "l",
+      "label": "Back"
+     }
+    ]
+   }
+  }
+ ],
+ "screen_layout": [
+  {
+   "caption": "1. List Mode",
+   "image": "deliverables/uiss_screens/asn_crossdock/c_09_inquiry.png"
+  },
+  {
+   "caption": "2. Detail Mode",
+   "image": "deliverables/uiss_screens/asn_crossdock/c_10_inquiry_detail.png"
+  }
+ ],
+ "items": [
+  {
+   "group": "<Search Criteria Section>"
+  },
+  {
+   "name": "ASN No",
+   "source": "Key-in",
+   "field": "-",
+   "type": "Char",
+   "len": "TBD",
+   "io": "I",
+   "control": "Text box",
+   "justified": "Left",
+   "initial": "Blank",
+   "required": "N",
+   "format": "-",
+   "validation": "Contains, case-insensitive",
+   "description": "Enter = [Search]."
+  },
+  {
+   "name": "Delivery Date - From / To",
+   "source": "Key-in",
+   "field": "-",
+   "type": "Date",
+   "len": "-",
+   "io": "I",
+   "control": "Date picker",
+   "justified": "Left",
+   "initial": "Blank",
+   "required": "N",
+   "format": "DD-Mon-YYYY",
+   "validation": "-",
+   "description": "Range of Delivery Date, inclusive."
+  },
+  {
+   "name": "Part Number",
+   "source": "Key-in",
+   "field": "-",
+   "type": "Char",
+   "len": "15",
+   "io": "I",
+   "control": "Combo Box",
+   "justified": "Left",
+   "initial": "All",
+   "required": "N",
+   "format": "-",
+   "validation": "-",
+   "description": "ASNs that contain the part."
+  },
+  {
+   "name": "Search",
+   "source": "-",
+   "field": "-",
+   "type": "-",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "Enabled",
+   "required": "N",
+   "format": "-",
+   "validation": "-",
+   "description": "Refer Operation Description 5.1."
+  },
+  {
+   "name": "Reset",
+   "source": "-",
+   "field": "-",
+   "type": "-",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "Enabled",
+   "required": "N",
+   "format": "-",
+   "validation": "-",
+   "description": "Refer Operation Description 5.1."
+  },
+  {
+   "group": "<ASN List Section>"
+  },
+  {
+   "name": "ASN No",
+   "source": "TB_R_ASN_CROSSDOCK_H",
+   "field": "ASN_NO",
+   "type": "Char",
+   "len": "TBD",
+   "io": "O",
+   "control": "Link",
+   "justified": "Left",
+   "initial": "-",
+   "required": "N",
+   "format": "-",
+   "validation": "-",
+   "description": "Opens Detail Mode."
+  },
+  {
+   "name": "Delivery Date",
+   "source": "TB_R_ASN_CROSSDOCK_H",
+   "field": "DELIVERY_DT",
+   "type": "Date",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Left",
+   "initial": "-",
+   "required": "N",
+   "format": "DD-Mon-YYYY",
+   "validation": "-",
+   "description": ""
+  },
+  {
+   "name": "Rit Cycle / Route",
+   "source": "TB_R_ASN_CROSSDOCK_H",
+   "field": "RIT_CYCLE / ROUTE",
+   "type": "Char",
+   "len": "TBD",
+   "io": "O",
+   "control": "Label",
+   "justified": "Left",
+   "initial": "-",
+   "required": "N",
+   "format": "-",
+   "validation": "-",
+   "description": ""
+  },
+  {
+   "name": "Part / Customer Order Date",
+   "source": "TB_R_INSTRUCTION",
+   "field": "PART_NO / ORDER_DT",
+   "type": "Char",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Left",
+   "initial": "-",
+   "required": "N",
+   "format": "-",
+   "validation": "-",
+   "description": "Units of the ASN."
+  },
+  {
+   "name": "Cases / Qty",
+   "source": "TB_R_ASN_CROSSDOCK_H",
+   "field": "TOTAL_CASE / TOTAL_QTY",
+   "type": "Number",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Right",
+   "initial": "-",
+   "required": "N",
+   "format": "ZZ9 / ZZ,ZZ9",
+   "validation": "-",
+   "description": ""
+  },
+  {
+   "name": "Status",
+   "source": "TB_R_ASN_CROSSDOCK_H",
+   "field": "ASN_STATUS",
+   "type": "Char",
+   "len": "TBD",
+   "io": "O",
+   "control": "Label",
+   "justified": "Left",
+   "initial": "-",
+   "required": "N",
+   "format": "-",
+   "validation": "-",
+   "description": "Submitted (green)."
+  },
+  {
+   "name": "Created",
+   "source": "TB_R_ASN_CROSSDOCK_H",
+   "field": "CREATED_BY / CREATED_DT",
+   "type": "Char",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Left",
+   "initial": "-",
+   "required": "N",
+   "format": "DD-Mon-YYYY HH:MM",
+   "validation": "-",
+   "description": "User and date-time of submit."
+  },
+  {
+   "group": "<Detail Mode>"
+  },
+  {
+   "name": "Back",
+   "source": "-",
+   "field": "-",
+   "type": "-",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "Enabled",
+   "required": "N",
+   "format": "-",
+   "validation": "-",
+   "description": "Returns to the ASN list."
+  },
+  {
+   "name": "ASN summary",
+   "source": "TB_R_ASN_CROSSDOCK_H",
+   "field": "-",
+   "type": "Char",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Left",
+   "initial": "-",
+   "required": "N",
+   "format": "-",
+   "validation": "-",
+   "description": "Delivery Date, Rit Cycle \u00b7 Route, units, cases \u00b7 qty, created."
+  },
+  {
+   "name": "Download Case Label",
+   "source": "-",
+   "field": "-",
+   "type": "-",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "Enabled",
+   "required": "N",
+   "format": "-",
+   "validation": "-",
+   "description": "Downloads the labels of all cases (TBD format)."
+  },
+  {
+   "name": "Case No",
+   "source": "TB_R_INSTRUCTION",
+   "field": "CASE_NO",
+   "type": "Char",
+   "len": "TBD",
+   "io": "O",
+   "control": "Grid",
+   "justified": "Left",
+   "initial": "-",
+   "required": "N",
+   "format": "-",
+   "validation": "-",
+   "description": "Case number of the ASN."
+  },
+  {
+   "name": "Part Number / Customer Order Date / Destination",
+   "source": "TB_R_INSTRUCTION",
+   "field": "PART_NO / ORDER_DT / DESTINATION_CD",
+   "type": "Char",
+   "len": "-",
+   "io": "O",
+   "control": "Grid",
+   "justified": "Left",
+   "initial": "-",
+   "required": "N",
+   "format": "-",
+   "validation": "-",
+   "description": "Key of the case."
+  },
+  {
+   "name": "Customer Order No (qty) / PO No / Qty",
+   "source": "TB_R_INSTRUCTION",
+   "field": "CUSTOMER_ORDER_NO / PO_NO / ASSIGNED_QTY",
+   "type": "Char",
+   "len": "-",
+   "io": "O",
+   "control": "Grid",
+   "justified": "Left",
+   "initial": "-",
+   "required": "N",
+   "format": "-",
+   "validation": "-",
+   "description": "Order lines packed in the case; total of all cases."
+  }
+ ],
+ "data_map": {
+  "blocks": []
+ },
+ "operation": [
+  {
+   "type": "heading",
+   "text": "5.1 List Mode"
+  },
+  {
+   "type": "bullets",
+   "marker": "a.",
+   "level": 2,
+   "items": [
+    "On first display all ASNs of TB_R_ASN_CROSSDOCK_H are listed, newest first.",
+    "[Search] applies ASN No (contains), Delivery Date range and Part Number (ASNs whose cases contain the part). [Reset] clears them. No row: message no. 1.",
+    "Clicking an ASN No opens Detail Mode."
+   ]
+  },
+  {
+   "type": "heading",
+   "text": "5.2 Detail Mode"
+  },
+  {
+   "type": "bullets",
+   "marker": "a.",
+   "level": 2,
+   "items": [
+    "Shows the ASN summary and its cases from TB_R_INSTRUCTION (lines with the ASN_NO), grouped by CASE_NO. All items are read only.",
+    "[Download Case Label]: TBD (format, file name, content). [Back] returns to the list in the current search state.",
+    "The screen does not change data (display only)."
+   ]
+  }
+ ],
+ "display_messages": [
+  {
+   "group": "Search Operation"
+  },
+  {
+   "event": "Click [Search] button",
+   "cause": "No ASN matches",
+   "type": "Info",
+   "msg_id": "MSG1",
+   "message": "No ASN matches this search.",
+   "action": "Change the criteria."
+  }
+ ],
+ "logging_messages": [],
+ "tables": [
+  {
+   "name": "TB_R_ASN_CROSSDOCK_H",
+   "kind": "transaction",
+   "proposed": true,
+   "description": "ASN header of ASN Crossdock Creation; cases and lines are in TB_R_INSTRUCTION (ASN_NO, CASE_NO). Name and columns proposed.",
+   "columns": [
+    [
+     "ASN_NO",
+     "VARCHAR(TBD)",
+     "Y",
+     "N",
+     "ASN-{Supplier}-{YYMMDD of Delivery Date}-{Seq}"
+    ],
+    [
+     "SUPPLIER_CD",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "Supplier of the cases"
+    ],
+    [
+     "SUPPLIER_PLANT",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "Supplier plant"
+    ],
+    [
+     "DELIVERY_DT",
+     "DATE",
+     "",
+     "N",
+     "Delivery Date"
+    ],
+    [
+     "RIT_CYCLE",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "Rit Cycle"
+    ],
+    [
+     "ROUTE",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "Route of the Rit Cycle"
+    ],
+    [
+     "TOTAL_CASE",
+     "NUMBER",
+     "",
+     "N",
+     "Number of cases"
+    ],
+    [
+     "TOTAL_QTY",
+     "NUMBER",
+     "",
+     "N",
+     "Total pieces"
+    ],
+    [
+     "ASN_STATUS",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "'SUBMITTED'"
+    ],
+    [
+     "CREATED_BY",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "User who submitted the ASN"
+    ],
+    [
+     "CREATED_DT",
+     "DATETIME",
+     "",
+     "N",
+     "Submit date and time"
+    ],
+    [
+     "CHANGED_BY",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "User who last changed the record"
+    ],
+    [
+     "CHANGED_DT",
+     "DATETIME",
+     "",
+     "N",
+     "Last changed date and time"
+    ]
+   ]
+  },
+  {
+   "name": "TB_R_INSTRUCTION",
+   "kind": "transaction",
+   "proposed": true,
+   "description": "Customer order line (H0253, order status 7) paired with a supplier PO (Pra Daily Order), FIFO by Customer Order Date. One row per line x PO assignment, plus one row with PO_NO NULL for the qty still without a PO. Columns proposed.",
+   "columns": [
+    [
+     "INSTRUCTION_ID",
+     "BIGINT",
+     "Y",
+     "N",
+     "Running number (identity)"
+    ],
+    [
+     "CUSTOMER_CD",
+     "VARCHAR(7)",
+     "",
+     "N",
+     "H0253.CUSTOMER_CD"
+    ],
+    [
+     "CUSTOMER_ORDER_NO",
+     "VARCHAR(8)",
+     "",
+     "N",
+     "H0253.CUSTOMER_ORDER_NO"
+    ],
+    [
+     "ORDER_DT",
+     "DATE",
+     "",
+     "N",
+     "Customer Order Date (H0253.ORDER_DT)"
+    ],
+    [
+     "DESTINATION_CD",
+     "VARCHAR(7)",
+     "",
+     "N",
+     "H0253.DESTINATION_CD (TB_M_H0125_DESTINATION)"
+    ],
+    [
+     "DETAILED_ITEM_NO",
+     "VARCHAR(4)",
+     "",
+     "N",
+     "H0253.DETAILED_ITEM_NO"
+    ],
+    [
+     "SERIAL_NO",
+     "VARCHAR(7)",
+     "",
+     "N",
+     "H0253.SERIAL_NO"
+    ],
+    [
+     "PART_NO",
+     "VARCHAR(15)",
+     "",
+     "N",
+     "Order part number (H0253.SHIPPING_PART_NO)"
+    ],
+    [
+     "ORDER_STATUS",
+     "VARCHAR(1)",
+     "",
+     "N",
+     "H0253.ORDER_STATUS ('7' Cross Dock)"
+    ],
+    [
+     "CUST_ORDER_QTY",
+     "NUMBER(8)",
+     "",
+     "N",
+     "Order status qty of the customer order line (H0253.ORDER_STATUS_QTY)"
+    ],
+    [
+     "ASSIGNED_QTY",
+     "NUMBER(8)",
+     "",
+     "N",
+     "Qty of the line assigned to this PO (0 for the not-assigned row)"
+    ],
+    [
+     "REMAINING_ORDER_QTY",
+     "NUMBER(8)",
+     "",
+     "N",
+     "Qty of the line still without a PO after this assignment"
+    ],
+    [
+     "PO_NO",
+     "VARCHAR(TBD)",
+     "",
+     "Y",
+     "Supplier PO number (Pra Daily Order Manifest); NULL while not assigned"
+    ],
+    [
+     "MANIFEST_NO",
+     "VARCHAR(TBD)",
+     "",
+     "Y",
+     "Manifest number"
+    ],
+    [
+     "MANIFEST_ITEM_NO",
+     "VARCHAR(TBD)",
+     "",
+     "Y",
+     "Manifest item number (Pra Daily Order Part)"
+    ],
+    [
+     "PO_ORDER_DT",
+     "DATE",
+     "",
+     "Y",
+     "Order date of the PO (PO Date)"
+    ],
+    [
+     "PO_ORDER_QTY",
+     "NUMBER(TBD)",
+     "",
+     "Y",
+     "Order qty of the PO part"
+    ],
+    [
+     "SUPPLIER_CD",
+     "VARCHAR(TBD)",
+     "",
+     "Y",
+     "Supplier code"
+    ],
+    [
+     "SUPPLIER_PLANT",
+     "VARCHAR(TBD)",
+     "",
+     "Y",
+     "Supplier plant"
+    ],
+    [
+     "SUB_SUPPLIER_CD",
+     "VARCHAR(TBD)",
+     "",
+     "Y",
+     "Sub supplier code"
+    ],
+    [
+     "SUB_SUPPLIER_PLANT",
+     "VARCHAR(TBD)",
+     "",
+     "Y",
+     "Sub supplier plant"
+    ],
+    [
+     "ORDER_TYPE",
+     "VARCHAR(TBD)",
+     "",
+     "Y",
+     "Order type of the PO"
+    ],
+    [
+     "DOCK_CD",
+     "VARCHAR(TBD)",
+     "",
+     "Y",
+     "Dock code"
+    ],
+    [
+     "ETD_ORI",
+     "DATE",
+     "",
+     "Y",
+     "Original ETD"
+    ],
+    [
+     "ASN_NO",
+     "VARCHAR(TBD)",
+     "",
+     "Y",
+     "ASN number; filled by ASN Crossdock Creation [Submit ASN]"
+    ],
+    [
+     "CASE_NO",
+     "VARCHAR(TBD)",
+     "",
+     "Y",
+     "Case number; filled by ASN Crossdock Creation [Submit ASN]"
+    ],
+    [
+     "CREATED_BY",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "User who created the record"
+    ],
+    [
+     "CREATED_DT",
+     "DATETIME",
+     "",
+     "N",
+     "Created date and time"
+    ],
+    [
+     "CHANGED_BY",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "User who last changed the record"
+    ],
+    [
+     "CHANGED_DT",
+     "DATETIME",
+     "",
+     "N",
+     "Last changed date and time"
+    ]
+   ]
+  }
+ ]
+}

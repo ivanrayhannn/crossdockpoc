@@ -1,9 +1,12 @@
-import { useMemo } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { CUR_PER, DOTS, MASTER_DESTS, PERIODS } from '../../../data/seed';
 import { fmt, num, syncBadge } from '../../../lib/format';
 import type { DestAllocation, Part } from '../../../types';
 import { exportMappingXlsx } from '../mappingExport';
+import { CalcRunBar } from './CalcRunBar';
 import type { CrossdockState } from '../useCrossdockState';
+
+const PAGE_SIZE_OPTIONS = [25, 50, 100];
 
 const th: React.CSSProperties = {
   textAlign: 'left',
@@ -26,7 +29,9 @@ const td: React.CSSProperties = {
 };
 
 export function DestMappingTab({ state }: { state: CrossdockState }) {
-  const { parts, q, setQ, resetQ, ro, expand, editDest, draftDests, toggleExpand, startEditDest, cancelEditDest, patchDraft, saveDest, syncParts } = state;
+  const { parts, q, aq, setQ, runSearch, resetQ, ro, expand, editDest, draftDests, toggleExpand, startEditDest, cancelEditDest, patchDraft, saveDest, syncParts, openMappingUpload, mapRun, runCalc } = state;
+  // Only the ongoing period can be changed, so the upload is disabled for past periods and "All periods".
+  const uploadLocked = ro || aq.per !== CUR_PER;
 
   const destRowsSrc = useMemo(
     () =>
@@ -34,27 +39,41 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
         (p) =>
           // The ongoing period only works with Active parts; past periods list every part.
           (p.st === 'Active' || p.per !== CUR_PER) &&
-          (q.per === 'all' || p.per === q.per) &&
-          (!q.part || p.p.toLowerCase().includes(q.part.toLowerCase())) &&
-          (q.sync === 'all' ||
-            (q.sync === 'notsync' && p.syncStatus === 0) ||
-            (q.sync === 'success' && p.syncStatus === 1) ||
-            (q.sync === 'failed' && p.syncStatus === 2)),
+          (aq.per === 'all' || p.per === aq.per) &&
+          (!aq.part || p.p.toLowerCase().includes(aq.part.toLowerCase())) &&
+          (aq.sync === 'all' ||
+            (aq.sync === 'notsync' && p.syncStatus === 0) ||
+            (aq.sync === 'success' && p.syncStatus === 1) ||
+            (aq.sync === 'failed' && p.syncStatus === 2) ||
+            (aq.sync === 'waiting' && p.syncStatus === 3)),
       ),
-    [parts, q],
+    [parts, aq],
   );
 
   // Sync only ever targets rows that aren't already a confirmed success...
   // ...and only in the ongoing period; past periods are read-only.
-  const syncable = destRowsSrc.filter((p) => p.per === CUR_PER && (p.syncStatus === 0 || p.syncStatus === 2));
+  // [Sync] hands every Active part of the ongoing period that is No Sync (or Failed, to retry) to the RPA,
+  // whatever the filter shows; they wait as "Waiting" until the RPA writes back Success or Failed.
+  const syncable = parts.filter((p) => p.st === 'Active' && p.per === CUR_PER && (p.syncStatus === 0 || p.syncStatus === 2));
   const syncableCount = syncable.length;
 
   const exportExcel = () => {
-    exportMappingXlsx(destRowsSrc, q.per).catch((err) => {
+    exportMappingXlsx(destRowsSrc, aq.per, parts).catch((err) => {
       console.error('Export Excel failed', err);
       window.alert('Export Excel failed. Please try again.');
     });
   };
+
+  // Paging: back to page 1 whenever the applied criteria or the page size change.
+  const [pageSize, setPageSize] = useState(25);
+  const pageKey = `${JSON.stringify(aq)}|${pageSize}`;
+  const [pageState, setPageState] = useState({ key: pageKey, page: 1 });
+  const page = pageState.key === pageKey ? pageState.page : 1;
+  const setPage = (n: number) => setPageState({ key: pageKey, page: n });
+  const totalPages = Math.max(1, Math.ceil(destRowsSrc.length / pageSize));
+  const pageClamped = Math.min(page, totalPages);
+  const pageStart = (pageClamped - 1) * pageSize;
+  const pageRows = destRowsSrc.slice(pageStart, pageStart + pageSize);
 
   const numberOptions = useMemo(() => {
     const seen = new Set<string>();
@@ -90,6 +109,7 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
                 className="input"
                 value={q.part}
                 onChange={(e) => setQ((prev) => ({ ...prev, part: e.target.value }))}
+                onKeyDown={(e) => e.key === 'Enter' && runSearch()}
                 placeholder="e.g. PART-B"
                 list="dest-part-number-options"
                 role="combobox"
@@ -118,6 +138,7 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
             <select className="input" value={q.sync} onChange={(e) => setQ((prev) => ({ ...prev, sync: e.target.value as typeof prev.sync }))} style={{ appearance: 'none' }}>
               <option value="all">All</option>
               <option value="notsync">No Sync</option>
+              <option value="waiting">Waiting</option>
               <option value="success">Success</option>
               <option value="failed">Failed</option>
             </select>
@@ -126,7 +147,7 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
             <button className="btn btn-secondary" onClick={resetQ}>
               Reset
             </button>
-            <button className="btn btn-primary">
+            <button className="btn btn-primary" onClick={runSearch}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round">
                 <circle cx="11" cy="11" r="7" />
                 <line x1="16.5" y1="16.5" x2="21" y2="21" />
@@ -140,7 +161,9 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
       <div style={{ border: '1px solid var(--color-divider)', borderRadius: 8, background: 'var(--color-neutral-100)', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '10px 16px', borderBottom: '1px solid var(--color-divider)' }}>
           <span style={{ fontSize: 12.5, fontWeight: 600 }}>Destination mapping per part</span>
-          <span style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+          <span style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
+            <CalcRunBar label="mapping calculation" run={mapRun} ro={ro} onRun={() => runCalc('mapping')} />
+            <span style={{ width: 1, height: 22, background: 'var(--color-divider)' }} />
             <button
               className="btn btn-secondary"
               onClick={() => syncParts(syncable.map((p) => p.p))}
@@ -152,6 +175,18 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
                 <path d="M21 4v5h-5" />
               </svg>
               Sync{syncableCount ? ` (${syncableCount})` : ''}
+            </button>
+            <button
+              className="btn btn-secondary"
+              onClick={openMappingUpload}
+              disabled={uploadLocked}
+              title={uploadLocked ? 'Past period — read only. Select the ongoing period to upload.' : 'Upload the destination mapping from Excel'}
+              style={{ fontSize: 12, padding: '4px 12px' }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <path d="M12 21V9M7 14l5-5 5 5M5 3h14" />
+              </svg>
+              Upload Excel
             </button>
             <button className="btn btn-primary" onClick={exportExcel} style={{ fontSize: 12, padding: '4px 12px' }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
@@ -178,7 +213,7 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
                 </tr>
               </thead>
               <tbody>
-                {destRowsSrc.map((p) => (
+                {pageRows.map((p) => (
                   <DestRow
                     key={p.p}
                     p={p}
@@ -195,6 +230,30 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {destRowsSrc.length > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 13, padding: '9px 16px', borderTop: '1px solid var(--color-divider)', fontSize: 12 }}>
+            <span style={{ color: 'var(--color-neutral-700)' }}>Rows per page</span>
+            <select className="input" value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} style={{ width: 72, minHeight: 28, fontSize: 12, padding: '2px 10px' }}>
+              {PAGE_SIZE_OPTIONS.map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
+            </select>
+            <span style={{ marginLeft: 'auto', color: 'var(--color-neutral-700)', fontVariantNumeric: 'tabular-nums' }}>
+              {pageStart + 1}–{Math.min(pageStart + pageSize, destRowsSrc.length)} of {destRowsSrc.length} {destRowsSrc.length === 1 ? 'part' : 'parts'} · page {pageClamped}/{totalPages}
+            </span>
+            <span style={{ display: 'flex', gap: 3 }}>
+              <button className="btn btn-secondary" onClick={() => setPage(Math.max(1, pageClamped - 1))} disabled={pageClamped <= 1} style={{ fontSize: 12, padding: '3px 11px' }}>
+                Prev
+              </button>
+              <button className="btn btn-secondary" onClick={() => setPage(Math.min(totalPages, pageClamped + 1))} disabled={pageClamped >= totalPages} style={{ fontSize: 12, padding: '3px 11px' }}>
+                Next
+              </button>
+            </span>
           </div>
         )}
 
@@ -231,6 +290,9 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
   const dAlloc = dList.reduce((x, d) => x + num(d.al), 0);
   const dOver = dAlloc > m;
   const dUnder = dAlloc < m;
+  // Every row needs a destination before the mapping can be saved (OP-04).
+  const dMissing = dList.some((d) => !d.d);
+  const saveBlockedTitle = !dList.length ? 'Add at least one destination' : dOver ? 'Allocation exceeds Max Case/Day' : dMissing ? 'Select a destination for every row' : 'Save mapping';
   const share = m ? `${Math.round((a / m) * 100)}%` : '—';
 
   const editViewDisp = ro || isEditing || !edok ? 'none' : 'inline-flex';
@@ -311,7 +373,7 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
               <button className="btn btn-ghost" onClick={onCancelEdit} style={{ display: editingDisp, fontSize: 12, padding: '4px 12px' }}>
                 Cancel
               </button>
-              <button className="btn btn-primary" onClick={onSave} disabled={dOver || !dList.length} style={{ display: editingDisp, fontSize: 12, padding: '4px 16px' }}>
+              <button className="btn btn-primary" onClick={onSave} disabled={dOver || dMissing || !dList.length} title={saveBlockedTitle} style={{ display: editingDisp, fontSize: 12, padding: '4px 16px' }}>
                 Save
               </button>
             </span>
@@ -357,7 +419,7 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
                                 x[i].cd = sel ? sel.code : '';
                               })}
                               disabled={!isEditing}
-                              style={{ width: 150, minHeight: 32, padding: '2px 8px', fontSize: 13, fontFamily: 'var(--font-mono)', fontWeight: 600, background: inputBg, appearance: 'none' }}
+                              style={{ width: 210, minHeight: 32, padding: '2px 8px', fontSize: 13, fontFamily: 'var(--font-mono)', fontWeight: 600, background: inputBg, appearance: 'none' }}
                             >
                               <option value="">Select destination</option>
                               {MASTER_DESTS.filter((m) => m.name === d.d || !dList.some((row, ri) => ri !== i && row.d === m.name)).map((m) => (
@@ -427,20 +489,24 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
             )}
           </div>
 
-          {dOver && (
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 11, padding: '11px 14px', borderRadius: 13, background: 'var(--color-accent-100)', border: '1px solid var(--color-accent-300)', marginTop: 11, fontSize: 12.5, color: 'var(--color-accent-800)' }}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" style={{ flex: 'none', marginTop: 1 }}>
-                <line x1="12" y1="8" x2="12" y2="13" />
-                <line x1="12" y1="17" x2="12" y2="17" />
-                <circle cx="12" cy="12" r="9" />
-              </svg>
-              <span>
-                Allocation of {fmt(dAlloc)} case/day exceeds Max Case/Day ({fmt(m)}). Reduce one of the destinations.
-              </span>
-            </div>
-          )}
+          {dOver && <MappingAlert>Allocation of {fmt(dAlloc)} case/day exceeds Max Case/Day ({fmt(m)}). Reduce one of the destinations.</MappingAlert>}
+          {isEditing && dMissing && <MappingAlert>Select a destination for every row, or remove the empty row, before saving.</MappingAlert>}
         </td>
       </tr>
     </>
+  );
+}
+
+/** Banner under the destination table explaining why the mapping cannot be saved. */
+function MappingAlert({ children }: { children: ReactNode }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 11, padding: '11px 14px', borderRadius: 13, background: 'var(--color-accent-100)', border: '1px solid var(--color-accent-300)', marginTop: 11, fontSize: 12.5, color: 'var(--color-accent-800)' }}>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" style={{ flex: 'none', marginTop: 1 }}>
+        <line x1="12" y1="8" x2="12" y2="13" />
+        <line x1="12" y1="17" x2="12" y2="17" />
+        <circle cx="12" cy="12" r="9" />
+      </svg>
+      <span>{children}</span>
+    </div>
   );
 }

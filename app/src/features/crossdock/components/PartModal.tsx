@@ -1,4 +1,4 @@
-import { MASTER_PARTS } from '../../../data/seed';
+import { CUR_PER, MASTER_PARTS } from '../../../data/seed';
 import { fmt, num } from '../../../lib/format';
 import type { PartStatus } from '../../../types';
 import type { CrossdockState } from '../useCrossdockState';
@@ -55,11 +55,22 @@ export function PartModal({ state }: { state: CrossdockState }) {
   const totalPcsDay = pc && mc ? fmt(pc * mc) : '—';
   const totalFg = pc && mc ? 'var(--color-text)' : 'var(--color-neutral-500)';
 
-  const saveDisabled = !f.p || !pc || !mc;
-  const saveTitle = !f.p ? 'Part No is required' : !pc ? 'Enter Pcs/Case first (step 2)' : !mc ? 'Enter Max Case/Day (step 2)' : 'Save part data';
+  // Edit only: Max Case/Day can not go below what is already mapped to destinations in the ongoing period.
+  const ongoing = editId ? parts.find((p) => p.p === f.p && p.per === CUR_PER) : undefined;
+  const mapped = ongoing ? ongoing.dests.reduce((a, d) => a + num(d.al), 0) : 0;
+  const belowMapped = !!editId && !!mc && mc < mapped;
+  const belowMsg = `Max Case/Day can not be less than the mapped total (${fmt(mapped)} case/day) of the ongoing period. Reduce the mapping in Mapping per Destination first.`;
 
-  // Effective Start Date is set once when the part is added; editing keeps the original value.
-  const effDateLocked = inputRO || !!editId;
+  // Min MAD is mandatory: whole number, 0 or more (reference for the MAD result of the calculation).
+  const minMadStr = String(f.minMad == null ? '' : f.minMad).trim();
+  const minMadOk = /^\d+$/.test(minMadStr);
+
+  const saveDisabled = !f.p || !minMadOk || !pc || !mc || belowMapped;
+  const saveTitle = !f.p ? 'Part No is required' : !minMadOk ? 'Enter Min MAD (whole number, 0 or more)' : !pc ? 'Enter Pcs/Case first (step 2)' : !mc ? 'Enter Max Case/Day (step 2)' : belowMapped ? belowMsg : 'Save part data';
+
+  // Effective Start Date can only change while the saved part is still Candidate (BR-06).
+  const savedStatus = editId ? parts.find((p) => p.p === editId)?.st : undefined;
+  const effDateLocked = inputRO || (!!editId && savedStatus !== 'Candidate');
 
   // A newly added part always starts as Candidate; the status only becomes
   // editable once the part exists.
@@ -147,12 +158,12 @@ export function PartModal({ state }: { state: CrossdockState }) {
                     min={todayStr()}
                     onChange={(e) => patch((x) => { x.effDate = e.target.value; })}
                     disabled={effDateLocked}
-                    title={effDateLocked && !inputRO ? 'Effective Start Date cannot be changed after the part is added' : undefined}
+                    title={effDateLocked && !inputRO ? 'Can only be changed while the status is still Candidate' : undefined}
                     style={{ background: effDateLocked ? 'var(--color-neutral-200)' : inputBg }}
                   />
                 </div>
                 <div className="field">
-                  <label>Minimum MAD</label>
+                  <label>Min MAD *</label>
                   <input
                     className="input"
                     value={String(f.minMad == null ? '' : f.minMad)}
@@ -195,12 +206,19 @@ export function PartModal({ state }: { state: CrossdockState }) {
                     disabled={maxLocked}
                     placeholder="0"
                     title={maxTitle}
-                    style={{ textAlign: 'right', fontSize: 13, fontVariantNumeric: 'tabular-nums', background: maxBg }}
+                    aria-invalid={belowMapped}
+                    style={{ textAlign: 'right', fontSize: 13, fontVariantNumeric: 'tabular-nums', background: maxBg, borderColor: belowMapped ? 'var(--color-danger)' : undefined }}
                   />
                 </div>
               </div>
             </div>
           </div>
+
+          {belowMapped && (
+            <div role="alert" style={{ margin: '0 0 11px 34px', padding: '8px 12px', borderRadius: 10, fontSize: 12, background: 'var(--color-danger-bg)', border: '1px solid var(--color-danger-bd)', color: 'var(--color-danger)' }}>
+              {belowMsg}
+            </div>
+          )}
 
           {/* Step 3 — total */}
           <div style={{ display: 'flex', gap: 11 }}>

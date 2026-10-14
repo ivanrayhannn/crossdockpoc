@@ -4,9 +4,9 @@
 export type PartStatus = 'Candidate' | 'Active' | 'Inactive';
 export type PartCategory = 'Crossdock' | 'Non-Crossdock';
 
-/** 0 = No sync, 1 = Success, 2 = Failed. Resets to 0 whenever the part's
- * identity (Setting Part) or its destination mapping is edited. */
-export type SyncStatus = 0 | 1 | 2;
+/** 0 = No sync, 1 = Success, 2 = Failed, 3 = Waiting (handed to the RPA by [Sync], result not back yet).
+ * Resets to 0 whenever the part's identity (Setting Part) or its destination mapping is edited. */
+export type SyncStatus = 0 | 1 | 2 | 3;
 
 export interface DestAllocation {
   /** Destination name, e.g. "Thailand". Empty string for a manually-added
@@ -33,6 +33,7 @@ export interface Part {
   cat: PartCategory;
   /** MAD (Moving Average Demand) for the last 6 months. */
   mad: number[];
+  /** Min MAD (mandatory): reference compared with the MAD result of the calculation ('' only while the form is being filled). */
   minMad: number | string;
   by: string;
   dt: string;
@@ -50,15 +51,16 @@ export interface PartQuery {
   name: string;
   dest: string;
   st: 'all' | 'active' | 'inactive' | 'candidate';
-  sync: 'all' | 'notsync' | 'success' | 'failed';
+  sync: 'all' | 'notsync' | 'waiting' | 'success' | 'failed';
   /** Calculation period filter for "Mapping per Destination", e.g. "Sep 2026", or 'all'. */
   per: string;
   /** Last Update sort order for Part List. */
   sort: 'default' | 'pn_asc' | 'dt_desc' | 'dt_asc';
 }
 
-export type ModalKind = 'part' | 'upload' | 'history' | null;
+export type ModalKind = 'part' | 'upload' | 'upload-mapping' | 'history' | null;
 export type TabView = 'part' | 'dest';
+
 export type UserRole = 'procurement' | 'ds';
 
 export interface HistoryEvent {

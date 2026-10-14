@@ -1,0 +1,927 @@
+{
+ "doc_type": "batch",
+ "header": {
+  "phase": "DR",
+  "project_name": "Crossdock Optimization",
+  "block_name": "Batch",
+  "function_name": "X5 Crossdock - Actual Demand Summary Sync to NSP",
+  "created_date": "14-Oct-26",
+  "created_by": "FID Rayhan"
+ },
+ "revisions": [
+  {
+   "revision": "0.1",
+   "author": "FID Rayhan",
+   "date": "14-Oct-26",
+   "reviewed_by": "",
+   "description": "Initial Draft"
+  }
+ ],
+ "general": {
+  "objective": [
+   "To replicate TB_R_ACTUAL_DEMAND_SUMMARY from DB Surrounding to the table with the same name in NSP, so the DAD Volume Calculation and the Mapping Destination Calculation read the actual demand inside NSP.",
+   "The NSP table is fully replaced every run (delete - insert). In case any error occurs, the run is rolled back and NSP keeps the data of the last successful run."
+  ],
+  "operation_flow": {
+   "flow": {
+    "direction": "TB",
+    "nodes": [
+     {
+      "id": "a",
+      "label": "Scheduler (monthly)",
+      "type": "event"
+     },
+     {
+      "id": "b",
+      "label": "Read source table",
+      "type": "process"
+     },
+     {
+      "id": "c",
+      "label": "Delete NSP table + insert all rows",
+      "type": "process"
+     },
+     {
+      "id": "d",
+      "label": "Success?",
+      "type": "decision"
+     },
+     {
+      "id": "e",
+      "label": "Commit, Log SUCCESS",
+      "type": "process"
+     },
+     {
+      "id": "f",
+      "label": "Roll back, Log FAILED",
+      "type": "process"
+     }
+    ],
+    "edges": [
+     {
+      "from": "a",
+      "to": "b"
+     },
+     {
+      "from": "b",
+      "to": "c"
+     },
+     {
+      "from": "c",
+      "to": "d"
+     },
+     {
+      "from": "d",
+      "to": "e",
+      "label": "Yes"
+     },
+     {
+      "from": "d",
+      "to": "f",
+      "label": "No"
+     }
+    ]
+   }
+  },
+  "inputs": [
+   {
+    "name": "TB_R_ACTUAL_DEMAND_SUMMARY (DB Surrounding)",
+    "type": "DB",
+    "description": "All rows of the actual demand summary"
+   }
+  ],
+  "outputs": [
+   {
+    "name": "TB_R_ACTUAL_DEMAND_SUMMARY (NSP)",
+    "type": "DB",
+    "description": "if successful: same rows as the source (delete - insert)"
+   },
+   {
+    "name": "Log",
+    "type": "DB",
+    "description": "One record per run with status SUCCESS / FAILED"
+   }
+  ],
+  "extra_tables": [
+   {
+    "title": "Parameters",
+    "columns": [
+     {
+      "title": "Name",
+      "width": 14
+     },
+     {
+      "title": "Description",
+      "width": 34
+     }
+    ],
+    "rows": [
+     [
+      "-",
+      "No parameter. All rows of the source table are copied."
+     ]
+    ]
+   },
+   {
+    "title": "Execution Schedule",
+    "columns": [
+     {
+      "title": "Item",
+      "width": 12
+     },
+     {
+      "title": "Description",
+      "width": 36
+     }
+    ],
+    "rows": [
+     [
+      "Trigger",
+      "Scheduler set in the system master: monthly (date and time TBC)."
+     ],
+     [
+      "Order",
+      "Must finish before the DAD Volume Calculation runs."
+     ]
+    ]
+   }
+  ]
+ },
+ "func_flow": {
+  "flow": {
+   "direction": "TB",
+   "nodes": [
+    {
+     "id": "p1",
+     "label": "Start (scheduler)",
+     "type": "process",
+     "step": 1
+    },
+    {
+     "id": "src",
+     "label": "TB_R_ACTUAL_DEMAND_SUMMARY (DB Surrounding)",
+     "type": "db",
+     "lane": "input"
+    },
+    {
+     "id": "p2",
+     "label": "Read all source rows",
+     "type": "process",
+     "step": 2
+    },
+    {
+     "id": "p3",
+     "label": "Delete all rows of NSP table",
+     "type": "process",
+     "step": 3
+    },
+    {
+     "id": "p4",
+     "label": "Insert all rows",
+     "type": "process",
+     "step": 4
+    },
+    {
+     "id": "dst",
+     "label": "TB_R_ACTUAL_DEMAND_SUMMARY (NSP)",
+     "type": "db",
+     "lane": "output"
+    },
+    {
+     "id": "d",
+     "label": "Any error?",
+     "type": "decision",
+     "step": 5
+    },
+    {
+     "id": "p6",
+     "label": "Commit",
+     "type": "process",
+     "step": 6
+    },
+    {
+     "id": "p7",
+     "label": "Roll back",
+     "type": "process",
+     "step": 6
+    },
+    {
+     "id": "p8",
+     "label": "Record result in Log",
+     "type": "process",
+     "step": 7
+    },
+    {
+     "id": "log",
+     "label": "Log",
+     "type": "db",
+     "lane": "output"
+    }
+   ],
+   "edges": [
+    {
+     "from": "p1",
+     "to": "p2"
+    },
+    {
+     "from": "src",
+     "to": "p2"
+    },
+    {
+     "from": "p2",
+     "to": "p3"
+    },
+    {
+     "from": "p3",
+     "to": "p4"
+    },
+    {
+     "from": "p4",
+     "to": "dst"
+    },
+    {
+     "from": "p4",
+     "to": "d"
+    },
+    {
+     "from": "d",
+     "to": "p6",
+     "label": "No"
+    },
+    {
+     "from": "d",
+     "to": "p7",
+     "label": "Yes"
+    },
+    {
+     "from": "p6",
+     "to": "p8"
+    },
+    {
+     "from": "p7",
+     "to": "p8"
+    },
+    {
+     "from": "p8",
+     "to": "log"
+    }
+   ]
+  },
+  "steps": [
+   "The scheduler starts the batch (monthly, set in the system master).",
+   "Read all rows of TB_R_ACTUAL_DEMAND_SUMMARY (DB Surrounding).",
+   "Delete all rows of TB_R_ACTUAL_DEMAND_SUMMARY (NSP).",
+   "Insert every source row with the same column values (see Data Map).",
+   "Check whether any error occurred during steps 2 to 4.",
+   {
+    "text": "No error: commit. Error: roll back steps 3 and 4.",
+    "children": [
+     "Delete and insert run in one transaction, so a failed run never leaves the NSP table empty or half filled."
+    ]
+   },
+   "Record the result (SUCCESS / FAILED, row count, error message) in the Log. Exit."
+  ]
+ },
+ "data_map": {
+  "blocks": [
+   {
+    "source": {
+     "table": "TB_R_ACTUAL_DEMAND_SUMMARY (NSP)"
+    },
+    "destination": {
+     "table": "TB_R_ACTUAL_DEMAND_SUMMARY (NSP)",
+     "operation": "Delete",
+     "description": "All rows (full replace)"
+    },
+    "mappings": [
+     {
+      "dest_field": "GROUPING_BUYER_CD",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "GROUPING_PD_CD",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "ORDER_TYPE_GROUP",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "DEMAND_MONTH_YEAR",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "PART_NO",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "MAD",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "DAD",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "CREATE_DT",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "CREATE_BY",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "UPDATE_DT",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "UPDATE_BY",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "N01_QTY",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "N02_QTY",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "N03_QTY",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "N04_QTY",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "N05_QTY",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "N06_QTY",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "NUM_OF_OLD_PART_NO",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "NUM_OF_WORKINGDAY_6M",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "EM_MS_FLAG",
+      "description": "Row is deleted"
+     }
+    ]
+   },
+   {
+    "source": {
+     "table": "TB_R_ACTUAL_DEMAND_SUMMARY (DB Surrounding)"
+    },
+    "destination": {
+     "table": "TB_R_ACTUAL_DEMAND_SUMMARY (NSP)",
+     "operation": "Insert",
+     "description": "Every source row"
+    },
+    "mappings": [
+     {
+      "source_field": "GROUPING_BUYER_CD",
+      "dest_field": "GROUPING_BUYER_CD",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "GROUPING_PD_CD",
+      "dest_field": "GROUPING_PD_CD",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "ORDER_TYPE_GROUP",
+      "dest_field": "ORDER_TYPE_GROUP",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "DEMAND_MONTH_YEAR",
+      "dest_field": "DEMAND_MONTH_YEAR",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "PART_NO",
+      "dest_field": "PART_NO",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "MAD",
+      "dest_field": "MAD",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "DAD",
+      "dest_field": "DAD",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "CREATE_DT",
+      "dest_field": "CREATE_DT",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "CREATE_BY",
+      "dest_field": "CREATE_BY",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "UPDATE_DT",
+      "dest_field": "UPDATE_DT",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "UPDATE_BY",
+      "dest_field": "UPDATE_BY",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "N01_QTY",
+      "dest_field": "N01_QTY",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "N02_QTY",
+      "dest_field": "N02_QTY",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "N03_QTY",
+      "dest_field": "N03_QTY",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "N04_QTY",
+      "dest_field": "N04_QTY",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "N05_QTY",
+      "dest_field": "N05_QTY",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "N06_QTY",
+      "dest_field": "N06_QTY",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "NUM_OF_OLD_PART_NO",
+      "dest_field": "NUM_OF_OLD_PART_NO",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "NUM_OF_WORKINGDAY_6M",
+      "dest_field": "NUM_OF_WORKINGDAY_6M",
+      "description": "Same value as the source"
+     },
+     {
+      "source_field": "EM_MS_FLAG",
+      "dest_field": "EM_MS_FLAG",
+      "description": "Same value as the source"
+     }
+    ]
+   },
+   {
+    "source": "Result of this run",
+    "destination": {
+     "table": "Log",
+     "operation": "Insert",
+     "description": "One record per run"
+    },
+    "mappings": [
+     {
+      "dest_field": "BATCH_ID",
+      "description": "'ADS_SYNC'"
+     },
+     {
+      "dest_field": "STATUS",
+      "description": "SUCCESS / FAILED"
+     },
+     {
+      "dest_field": "ROW_COUNT",
+      "description": "Rows inserted (0 when FAILED)"
+     },
+     {
+      "dest_field": "MESSAGE",
+      "description": "Error message when FAILED"
+     },
+     {
+      "dest_field": "START_DT",
+      "description": "Start date and time"
+     },
+     {
+      "dest_field": "END_DT",
+      "description": "End date and time"
+     }
+    ]
+   }
+  ]
+ },
+ "func_desc_layout": "two",
+ "func_desc": [
+  {
+   "type": "text",
+   "level": 0,
+   "text": "This batch copies the actual demand summary from DB Surrounding into NSP once a month. Range of months and schedule are set in the system master (not explained in this document)."
+  },
+  {
+   "type": "bullets",
+   "marker": "-",
+   "level": 0,
+   "items": [
+    "Full replace: all rows of the NSP table are deleted and all source rows are inserted (delete - insert). No row is compared or merged.",
+    "All columns are copied with the same names and values; no conversion is done.",
+    "Delete and insert run in one transaction (all-or-nothing). When the run fails, NSP keeps the data of the last successful run.",
+    "The batch must finish before the DAD Volume Calculation starts."
+   ]
+  },
+  {
+   "type": "column_break"
+  },
+  {
+   "type": "heading",
+   "text": "Columns used by Crossdock"
+  },
+  {
+   "type": "table",
+   "level": 0,
+   "row_lines": "all",
+   "columns": [
+    {
+     "title": "Column",
+     "width": 18
+    },
+    {
+     "title": "Used by",
+     "width": 28
+    }
+   ],
+   "rows": [
+    [
+     "GROUPING_BUYER_CD + GROUPING_PD_CD",
+     "Mapping Destination Calculation (7-digit destination code)"
+    ],
+    [
+     "ORDER_TYPE_GROUP",
+     "N and S are summed"
+    ],
+    [
+     "DEMAND_MONTH_YEAR",
+     "Range of months (system master)"
+    ],
+    [
+     "PART_NO",
+     "Join to TB_M_PART_CANDIDATE"
+    ],
+    [
+     "MAD",
+     "DAD Volume Calculation and Mapping Destination Calculation"
+    ]
+   ]
+  }
+ ],
+ "logging_messages": [
+  {
+   "event": "Batch start",
+   "cause": "Batch is called",
+   "type": "Info",
+   "msg_id": "LOG1",
+   "message": "Actual demand summary sync started.",
+   "action": {
+    "system": "Write the log.",
+    "user": "-"
+   }
+  },
+  {
+   "event": "Batch end",
+   "cause": "Batch finishes",
+   "type": "Info",
+   "msg_id": "LOG2",
+   "message": "Actual demand summary sync ended. Status <STATUS>, rows <ROW_COUNT>.",
+   "action": {
+    "system": "Write the log.",
+    "user": "-"
+   }
+  },
+  {
+   "event": "Read source",
+   "cause": "DB Surrounding cannot be reached or read",
+   "type": "Error",
+   "msg_id": "LOG3",
+   "message": "Cannot read TB_R_ACTUAL_DEMAND_SUMMARY from DB Surrounding: <ERROR_DETAIL>.",
+   "action": {
+    "system": "Roll back. STATUS = FAILED.",
+    "user": "User contact PIC"
+   }
+  },
+  {
+   "event": "Insert",
+   "cause": "Insert into the NSP table fails",
+   "type": "Error",
+   "msg_id": "LOG4",
+   "message": "Cannot insert TB_R_ACTUAL_DEMAND_SUMMARY into NSP: <ERROR_DETAIL>.",
+   "action": {
+    "system": "Roll back. STATUS = FAILED.",
+    "user": "User contact PIC"
+   }
+  },
+  {
+   "event": "Unexpected error",
+   "cause": "Any other system error",
+   "type": "Critical",
+   "msg_id": "LOG5",
+   "message": "Unexpected error: <ERROR_DETAIL>.",
+   "action": {
+    "system": "Roll back. STATUS = FAILED.",
+    "user": "User contact PIC"
+   }
+  }
+ ],
+ "appendix_layout": "full",
+ "appendix": [
+  {
+   "type": "text",
+   "level": 0,
+   "text": "Sample rows and scenarios: see sheet Sample Input."
+  }
+ ],
+ "sample_sheet": {
+  "title": "Sample Input",
+  "heading": "Sample data - Actual Demand Summary Sync to NSP",
+  "intro": [
+   "Rows taken from the reference file 20261013_tb_r_actual_demand_summary_since_january-2026.xlsx (part 52119BZV60).",
+   "The batch copies every row of the source table; the NSP table is emptied first (delete - insert)."
+  ],
+  "sections": [
+   {
+    "title": "A. Source rows in DB Surrounding (excerpt)",
+    "columns": [
+     "GROUPING_BUYER_CD",
+     "GROUPING_PD_CD",
+     "ORDER_TYPE_GROUP",
+     "DEMAND_MONTH_YEAR",
+     "PART_NO",
+     "MAD",
+     "DAD"
+    ],
+    "widths": [
+     18,
+     15,
+     17,
+     18,
+     14,
+     10,
+     8
+    ],
+    "rows": [
+     [
+      "9722D",
+      "10",
+      "N",
+      "202604",
+      "52119BZV60",
+      239,
+      "-"
+     ],
+     [
+      "98111",
+      "10",
+      "N",
+      "202604",
+      "52119BZV60",
+      156.17,
+      "-"
+     ],
+     [
+      "96182",
+      "01",
+      "N",
+      "202604",
+      "52119BZV60",
+      77.33,
+      "-"
+     ],
+     [
+      "97153",
+      "10",
+      "N",
+      "202604",
+      "52119BZV60",
+      23.17,
+      "-"
+     ],
+     [
+      "98111",
+      "10",
+      "S",
+      "202604",
+      "52119BZV60",
+      2,
+      "-"
+     ],
+     [
+      "9722D",
+      "10",
+      "S",
+      "202604",
+      "52119BZV60",
+      1,
+      "-"
+     ]
+    ]
+   },
+   {
+    "title": "B. Scenarios",
+    "columns": [
+     "No",
+     "Scenario",
+     "Expected result"
+    ],
+    "widths": [
+     6,
+     50,
+     60
+    ],
+    "rows": [
+     [
+      "N1",
+      "Monthly run, source has 349,225 rows",
+      "NSP table emptied, 349,225 rows inserted. Log STATUS = SUCCESS."
+     ],
+     [
+      "N2",
+      "A row was deleted in the source since the last run",
+      "The row no longer exists in NSP (full replace)."
+     ],
+     [
+      "E1",
+      "DB Surrounding cannot be reached",
+      "Rolled back: NSP keeps the data of the last successful run. Log STATUS = FAILED."
+     ],
+     [
+      "E2",
+      "Insert fails in the middle of the run",
+      "Rolled back (delete and insert in one transaction). Log STATUS = FAILED."
+     ]
+    ]
+   }
+  ]
+ },
+ "tables": [
+  {
+   "name": "TB_R_ACTUAL_DEMAND_SUMMARY",
+   "kind": "transaction",
+   "proposed": false,
+   "description": "Actual demand summary replicated from DB Surrounding to NSP (same columns). Key (PK) proposed from the data; types follow the source table.",
+   "columns": [
+    [
+     "GROUPING_BUYER_CD",
+     "VARCHAR(5)",
+     "Y",
+     "N",
+     "Grouping buyer code, e.g. 9722D. With GROUPING_PD_CD it forms the 7-digit destination code"
+    ],
+    [
+     "GROUPING_PD_CD",
+     "VARCHAR(2)",
+     "Y",
+     "N",
+     "Grouping PD code, e.g. 10"
+    ],
+    [
+     "ORDER_TYPE_GROUP",
+     "CHAR(1)",
+     "Y",
+     "N",
+     "Order type group: N / S (both are summed by Crossdock)"
+    ],
+    [
+     "DEMAND_MONTH_YEAR",
+     "CHAR(6)",
+     "Y",
+     "N",
+     "Demand month YYYYMM, e.g. 202604"
+    ],
+    [
+     "PART_NO",
+     "VARCHAR(TBD)",
+     "Y",
+     "N",
+     "Part number"
+    ],
+    [
+     "MAD",
+     "NUMBER(TBD,2)",
+     "",
+     "Y",
+     "Monthly average demand of the row; used by Crossdock"
+    ],
+    [
+     "DAD",
+     "NUMBER(TBD,2)",
+     "",
+     "Y",
+     "Daily average demand (not used by Crossdock)"
+    ],
+    [
+     "CREATE_DT",
+     "TIMESTAMP",
+     "",
+     "Y",
+     "Created date and time (from source)"
+    ],
+    [
+     "CREATE_BY",
+     "VARCHAR(TBD)",
+     "",
+     "Y",
+     "Created by (from source)"
+    ],
+    [
+     "UPDATE_DT",
+     "TIMESTAMP",
+     "",
+     "Y",
+     "Updated date and time (from source)"
+    ],
+    [
+     "UPDATE_BY",
+     "VARCHAR(TBD)",
+     "",
+     "Y",
+     "Updated by (from source)"
+    ],
+    [
+     "N01_QTY",
+     "NUMBER",
+     "",
+     "Y",
+     "Quantity month N-1 (not used by Crossdock)"
+    ],
+    [
+     "N02_QTY",
+     "NUMBER",
+     "",
+     "Y",
+     "Quantity month N-2 (not used by Crossdock)"
+    ],
+    [
+     "N03_QTY",
+     "NUMBER",
+     "",
+     "Y",
+     "Quantity month N-3 (not used by Crossdock)"
+    ],
+    [
+     "N04_QTY",
+     "NUMBER",
+     "",
+     "Y",
+     "Quantity month N-4 (not used by Crossdock)"
+    ],
+    [
+     "N05_QTY",
+     "NUMBER",
+     "",
+     "Y",
+     "Quantity month N-5 (not used by Crossdock)"
+    ],
+    [
+     "N06_QTY",
+     "NUMBER",
+     "",
+     "Y",
+     "Quantity month N-6 (not used by Crossdock)"
+    ],
+    [
+     "NUM_OF_OLD_PART_NO",
+     "NUMBER",
+     "",
+     "Y",
+     "Number of old part numbers (not used by Crossdock)"
+    ],
+    [
+     "NUM_OF_WORKINGDAY_6M",
+     "NUMBER",
+     "",
+     "Y",
+     "Working days in 6 months (not used by Crossdock)"
+    ],
+    [
+     "EM_MS_FLAG",
+     "CHAR(1)",
+     "",
+     "Y",
+     "EM / MS flag (not used by Crossdock)"
+    ]
+   ]
+  }
+ ]
+}

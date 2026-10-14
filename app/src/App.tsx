@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { AppShell } from './components/shell/AppShell';
 import { Breadcrumb } from './components/shell/Breadcrumb';
-import { AsnCreationPage } from './features/asnCreation/AsnCreationPage';
+import { AsnCrossdockCreationPage } from './features/asnCrossdock/AsnCrossdockCreationPage';
+import { AsnInquiryPage } from './features/asnCrossdock/AsnInquiryPage';
 import { CaseConsolidationPage } from './features/caseConsolidation/CaseConsolidationPage';
 import { CrossdockMasterSettingPage } from './features/crossdock/CrossdockMasterSettingPage';
 import { BatchProcessPage } from './features/batchProcess/BatchProcessPage';
@@ -33,8 +34,16 @@ function App() {
 
   if (route === 'asn-creation') {
     return (
-      <AppShell activeItem="ASN Creation" onNavigate={navigate} breadcrumb={<Breadcrumb group="ASN" label="ASN Creation" />}>
-        <AsnCreationPage />
+      <AppShell activeItem="ASN Creation" onNavigate={navigate} breadcrumb={<Breadcrumb group="ASN" label="ASN Crossdock Creation" />}>
+        <AsnCrossdockCreationPage />
+      </AppShell>
+    );
+  }
+
+  if (route === 'asn-inquiry') {
+    return (
+      <AppShell activeItem="ASN Inquiry" onNavigate={navigate} breadcrumb={<Breadcrumb group="ASN" label="ASN Inquiry" />}>
+        <AsnInquiryPage />
       </AppShell>
     );
   }

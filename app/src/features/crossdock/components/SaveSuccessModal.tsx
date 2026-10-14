@@ -1,12 +1,10 @@
 import { useEffect, useRef } from 'react';
 import type { SaveNotice } from '../useCrossdockState';
 
-/** Popup shown after a part is added or edited from the Part List form. */
+/** Popup shown after a part is added or edited from the Part List form, or after an upload is saved. */
 export function SaveSuccessModal({ notice, onClose }: { notice: SaveNotice; onClose: () => void }) {
   const okRef = useRef<HTMLButtonElement>(null);
   useEffect(() => okRef.current?.focus(), []);
-
-  const verb = notice.mode === 'add' ? 'added' : 'updated';
 
   return (
     <div
@@ -25,11 +23,23 @@ export function SaveSuccessModal({ notice, onClose }: { notice: SaveNotice; onCl
           </svg>
         </span>
         <h3 id="save-success-title" style={{ fontSize: 19, margin: '0 0 6px' }}>
-          Saved successfully
+          {notice.mode === 'calc' ? 'Calculation completed' : 'Saved successfully'}
         </h3>
         <p style={{ fontSize: 13, color: 'var(--color-neutral-700)', margin: '0 0 18px' }}>
-          <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{notice.part}</span>
-          {notice.name && ` · ${notice.name}`} has been {verb}. It is now at the top of the Part List.
+          {notice.mode === 'calc' ? (
+            notice.target === 'dad'
+              ? 'DAD volume calculation completed. Part statuses have been updated from the average MAD against Min MAD.'
+              : 'Mapping destination calculation completed. The destination mapping of the new period has been created.'
+          ) : notice.mode === 'upload' ? (
+            notice.target === 'mapping'
+              ? 'Upload completed. The file has been validated and the destination mapping has been saved to Mapping per Destination.'
+              : 'Upload completed. The file has been validated and the part settings have been saved to the Part List.'
+          ) : (
+            <>
+              <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{notice.part}</span>
+              {notice.name && ` · ${notice.name}`} has been {notice.mode === 'add' ? 'added' : 'updated'}. It is now at the top of the Part List.
+            </>
+          )}
         </p>
         <button ref={okRef} className="btn btn-primary" onClick={onClose} style={{ minWidth: 96 }}>
           OK

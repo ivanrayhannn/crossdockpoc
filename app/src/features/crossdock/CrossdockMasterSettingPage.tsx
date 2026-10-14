@@ -9,6 +9,7 @@ import { PartListTab } from './components/PartListTab';
 import { PartModal } from './components/PartModal';
 import { RoleGate } from './components/RoleGate';
 import { SaveSuccessModal } from './components/SaveSuccessModal';
+import { MappingUploadModal } from './components/MappingUploadModal';
 import { UploadModal } from './components/UploadModal';
 import { ViewTabs } from './components/ViewTabs';
 import { exportPartsXlsx, selectParts } from './partList';
@@ -19,15 +20,15 @@ const ACTIVE_ITEM = 'Crossdock Master Setting';
 
 export function CrossdockMasterSettingPage({ onNavigate }: { onNavigate: (route: RouteKey) => void }) {
   const state = useCrossdockState();
-  const { parts, q, setQ, resetQ, ro, role, setRole, switchRole, view, modal, addPart, openUpload, openFor, notice, dismissNotice } = state;
+  const { parts, q, aq, setQ, runSearch, resetQ, ro, role, setRole, switchRole, view, modal, addPart, openUpload, openFor, notice, dismissNotice, dadRun, runCalc } = state;
 
-  // Export what the Part List table shows: same filter and sort, all pages.
+  // Sheet 1 follows the Part List table (same filter and sort, all pages); sheet "Upload" holds every part.
   const exportExcel = useCallback(() => {
-    exportPartsXlsx(selectParts(parts, q)).catch((err) => {
+    exportPartsXlsx(selectParts(parts, aq), parts).catch((err) => {
       console.error('Export Excel failed', err);
       window.alert('Export Excel failed. Please try again.');
     });
-  }, [parts, q]);
+  }, [parts, aq]);
 
   if (!role) {
     return (
@@ -48,19 +49,24 @@ export function CrossdockMasterSettingPage({ onNavigate }: { onNavigate: (route:
         <PartListTab
           parts={parts}
           q={q}
+          aq={aq}
           setQ={setQ}
+          onSearch={runSearch}
           resetQ={resetQ}
           ro={ro}
           onOpenPart={(id) => openFor(id, 'part')}
           onOpenHistory={(id) => openFor(id, 'history')}
           onAddPart={addPart}
           onOpenUpload={openUpload}
+          dadRun={dadRun}
+          onRunCalc={() => runCalc('dad')}
         />
       )}
       {view === 'dest' && <DestMappingTab state={state} />}
 
       {modal === 'part' && <PartModal state={state} />}
       {modal === 'upload' && <UploadModal state={state} />}
+      {modal === 'upload-mapping' && <MappingUploadModal state={state} />}
       {modal === 'history' && <HistoryModal state={state} />}
       {notice && <SaveSuccessModal notice={notice} onClose={dismissNotice} />}
     </AppShell>

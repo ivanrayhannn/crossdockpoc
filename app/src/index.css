@@ -1,1 +1,5 @@
 @import './styles/theme.css';
+
+/* ASN Crossdock pages */
+.ax-muted { font-size: 11.5px; color: var(--color-neutral-600); }
+.ax-lbl { font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--color-neutral-700); margin-bottom: 3px; }
