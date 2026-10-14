@@ -9,9 +9,10 @@ export const DOTS: Record<string, string> = {
 };
 
 export const DCODE: Record<string, string> = {
-  Thailand: '123',
-  Japan: '456',
-  Vietnam: '789',
+  // 7-digit destination code = grouping buyer code + PD code (TB_M_H0125); names are dummy.
+  Thailand: '9722D10',
+  Japan: '9811110',
+  Vietnam: '9618201',
 };
 
 /** Master destination catalog — populates the destination dropdown when

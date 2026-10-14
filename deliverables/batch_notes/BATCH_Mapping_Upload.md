@@ -21,7 +21,7 @@ Batch ID: **X4**.
 | Input | File Mapping (sheet **Upload**) | Excel | Hanya sheet "Upload". Max 5 MB, 5.000 baris |
 | Input | TB_M_PART_CANDIDATE | DB | Status part (harus Active) dan Max Case/Day |
 | Input | TB_M_PART_CANDIDATE_DEST | DB | Mapping sekarang periode berjalan (deteksi tanpa perubahan) |
-| Input | TB_M_H0125 (Destination Master) | DB | Kode destinasi valid: 123 Thailand, 456 Japan, 789 Vietnam |
+| Input | TB_M_H0125 (Destination Master) | DB | Kode destinasi valid: 9722D10 Thailand, 9811110 Japan, 9618201 Vietnam |
 | Output | TB_M_PART_CANDIDATE_DEST | DB | Mapping part yang berubah di-**replace** (periode berjalan) |
 | Output | TB_M_PART_CANDIDATE | DB | Sync Status = No Sync untuk part yang berubah |
 | Output | TB_H_PART_CANDIDATE | DB | History per destinasi yang ditambah / diubah / dihapus (event MAPPING, source UPLOAD) |
@@ -34,7 +34,7 @@ Diisi otomatis oleh **Export Excel** (periode berjalan dipilih): semua part **Ac
 | Kolom | Isi |
 |---|---|
 | part_no | Part Number part Active |
-| dest_code | Kode destinasi (123 / 456 / 789), sekali per part |
+| dest_code | Kode destinasi (9722D10 / 9811110 / 9618201), sekali per part |
 | case_day | Case/Day destinasi, bilangan bulat > 0 |
 | total_case_day | Max Case/Day part, **hanya referensi** (tidak dibaca batch) |
 
@@ -116,7 +116,7 @@ Tabel master existing NSP, **hanya dibaca**. Kolom yang relevan (kolom lain diab
 | Customer Code | Referensi |
 | Order Transportation Code | Referensi |
 | B/O Instruction Code | Referensi |
-| Destination Name | **Ya** – tampil bersama kode ("123 - Thailand") dan di Export Excel |
+| Destination Name | **Ya** – tampil bersama kode ("9722D10 - Thailand") dan di Export Excel |
 | Region Code | Referensi |
 | Country Name | Referensi |
 | Postal Code | Referensi |
@@ -127,7 +127,7 @@ Tabel master existing NSP, **hanya dibaca**. Kolom yang relevan (kolom lain diab
 | UPDATED_BY | Audit – user terakhir |
 | UPDATED_DT | Audit – waktu terakhir diubah |
 
-Contoh data: 123 Thailand, 456 Japan, 789 Vietnam.
+Contoh data: 9722D10 Thailand, 9811110 Japan, 9618201 Vietnam.
 
 ### 8.4 Log (upload log) — *ditulis*
 Di UISS ditulis **"Log"** saja. Struktur yang diketahui sama dengan Part List Upload (UPLOAD_ID, FUNCTION_ID = MAPPING, FILE_NAME, STATUS, jumlah baris, RESULT_FILE_PATH, START_DT/END_DT, audit). Untuk mapping: SAVED_ROWS = jumlah part yang di-replace, NO_CHANGE_ROWS = jumlah part yang di-skip.

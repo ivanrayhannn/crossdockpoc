@@ -6,8 +6,6 @@ Status: **draft**. UISS-Batch belum dibuat. Rumus dan aturan Fungsi 2 dan 3 diko
 
 > Range bulan dan jadwal scheduler diatur di **system master** (tabel system master tidak dijelaskan di dokumen ini).
 
-Urutan jalan setiap bulan: **Fungsi 1 → Fungsi 2 → Fungsi 3**.
-
 ---
 
 ## Fungsi 1 – Actual Demand Summary Sync to NSP
@@ -93,6 +91,7 @@ Part B hanya punya data 4 bulan, masing-masing 600 → rata-rata = 2,400 ÷ **6*
 7. Pembulatan (lihat di bawah); setiap destinasi **minimal 1 case**, total = Max Case/Day.
 8. **Membuat periode baru** di TB_M_PART_CANDIDATE_DEST dan menyimpan mapping hasil kalkulasi. Periode sebelumnya jadi periode lalu (read only).
 9. **All-or-nothing**: satu error (mis. destinasi tidak ada di master) → seluruh batch gagal, tidak ada yang disimpan.
+10. **Scheduler sendiri** (diatur di system master), **auto retry 3x**, tombol **trigger manual** aktif kalau 3x retry gagal; last success date disimpan.
 
 ### Kenapa hasilnya melebihi Max Case/Day
 Rumus di sheet *simulasi* kolom L memakai referensi relatif, jadi penyebutnya bergeser setiap baris:
@@ -116,7 +115,7 @@ P14–P16 kosong, jadi penyebut makin kecil dan rasio makin besar. Hasilnya tota
 
 **Perbaikan (dikonfirmasi)**: penyebut dikunci ke total semua buyer + PD part itu: `=P10/SUM($P$10:$P$13)*$N$10`.
 
-**Pembulatan (dikonfirmasi)**: Case/Day harus bilangan bulat dan totalnya sama dengan Max Case/Day.
+**Pembulatan (dikonfirmasi 14-Oct-26)**: Case/Day harus bilangan bulat dan totalnya sama dengan Max Case/Day.
 1. Setiap destinasi diberi 1 case dulu (aturan minimal 1 case).
 2. Sisa case (Max Case/Day − jumlah destinasi) dibagi sesuai rasio, dibulatkan ke bawah.
 3. Case yang masih tersisa dibagikan +1 ke destinasi dengan pecahan terbesar.
@@ -139,5 +138,4 @@ Contoh dengan range 6 bulan (202604–202609), Max Case/Day 16:
 - Rasio dari jumlah total dan dari rata-rata hasilnya sama, selama semua buyer dihitung pada range bulan yang sama.
 
 ### Masih terbuka
-- Jadwal Fungsi 3: langsung setelah Fungsi 2 sukses dalam satu rangkaian, dan ikut retry 3x + trigger manual yang sama?
-- Contoh kode destinasi di prototype dan UISS masih dummy 3 digit (123 / 456 / 789) → perlu diganti ke format 7 digit.
+- Lokasi tombol trigger manual Fungsi 3 (usul: sub-menu Mapping per Destination).

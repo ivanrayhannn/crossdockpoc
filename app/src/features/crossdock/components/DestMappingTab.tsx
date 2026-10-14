@@ -416,7 +416,7 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
                                 x[i].cd = sel ? sel.code : '';
                               })}
                               disabled={!isEditing}
-                              style={{ width: 150, minHeight: 32, padding: '2px 8px', fontSize: 13, fontFamily: 'var(--font-mono)', fontWeight: 600, background: inputBg, appearance: 'none' }}
+                              style={{ width: 210, minHeight: 32, padding: '2px 8px', fontSize: 13, fontFamily: 'var(--font-mono)', fontWeight: 600, background: inputBg, appearance: 'none' }}
                             >
                               <option value="">Select destination</option>
                               {MASTER_DESTS.filter((m) => m.name === d.d || !dList.some((row, ri) => ri !== i && row.d === m.name)).map((m) => (

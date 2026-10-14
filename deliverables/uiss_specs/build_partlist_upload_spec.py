@@ -14,7 +14,7 @@ SAMPLE = {
  "intro": ["Each scenario is a separate upload file. Today = 13-Sep-2026, mapping of the ongoing calculation period = Sep 2026.",
            "Input columns follow sheet Upload of the Export Excel; a blank cell is a blank value in the file."],
  "sections": [
-  {"title": "A. Master data before upload", "columns": ["Part No", "Status", "Min MAD", "Pcs/Case", "Max Case/Day", "Effective Date", "Mapped 123", "Mapped 456", "Mapped 789", "Mapped total"],
+  {"title": "A. Master data before upload", "columns": ["Part No", "Status", "Min MAD", "Pcs/Case", "Max Case/Day", "Effective Date", "Mapped 9722D10", "Mapped 9811110", "Mapped 9618201", "Mapped total"],
    "widths": [12, 16, 10, 10, 13, 15, 11, 11, 11, 13],
    "rows": [["PART-A", "Active", 800, 60, 24, "01-Aug-2026", 12, 8, 4, 24],
             ["PART-C", "Active", 200, 10, 30, "01-Aug-2026", B, 12, 18, 30],

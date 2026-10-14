@@ -115,7 +115,7 @@
    {
     "name": "TB_M_H0125 (Destination Master)",
     "type": "DB",
-    "description": "Valid destination codes (123 Thailand, 456 Japan, 789 Vietnam)"
+    "description": "Valid destination codes (9722D10 Thailand, 9811110 Japan, 9618201 Vietnam)"
    }
   ],
   "outputs": [
@@ -912,7 +912,7 @@
     ],
     [
      "dest_code",
-     "Destination code (123 / 456 / 789). Once per part. Blank together with case_day = placeholder row."
+     "Destination code (9722D10 / 9811110 / 9618201). Once per part. Blank together with case_day = placeholder row."
     ],
     [
      "case_day",
@@ -944,9 +944,9 @@
      "Part No",
      "Status",
      "Max Case/Day",
-     "Mapped 123",
-     "Mapped 456",
-     "Mapped 789",
+     "Mapped 9722D10",
+     "Mapped 9811110",
+     "Mapped 9618201",
      "Mapped total",
      "Remark"
     ],
@@ -1028,7 +1028,7 @@
       "N1",
       "Change Case/Day",
       "PART-A",
-      "123",
+      "9722D10",
       10,
       24,
       "Replaced. Total 24 (equal to Max). Sync Status No Sync."
@@ -1037,7 +1037,7 @@
       "N1",
       "Change Case/Day",
       "PART-A",
-      "456",
+      "9811110",
       8,
       24,
       ""
@@ -1046,7 +1046,7 @@
       "N1",
       "Change Case/Day",
       "PART-A",
-      "789",
+      "9618201",
       6,
       24,
       ""
@@ -1055,16 +1055,16 @@
       "N2",
       "Remove a destination",
       "PART-A",
-      "123",
+      "9722D10",
       12,
       24,
-      "Replaced. 789 removed. Total 20, 4 case/day left (below Max is allowed)."
+      "Replaced. 9618201 removed. Total 20, 4 case/day left (below Max is allowed)."
      ],
      [
       "N2",
       "Remove a destination",
       "PART-A",
-      "456",
+      "9811110",
       8,
       24,
       ""
@@ -1073,16 +1073,16 @@
       "N3",
       "Add a destination",
       "PART-C",
-      "789",
+      "9618201",
       18,
       30,
-      "Replaced. 456 added. Total 30 (equal to Max)."
+      "Replaced. 9811110 added. Total 30 (equal to Max)."
      ],
      [
       "N3",
       "Add a destination",
       "PART-C",
-      "456",
+      "9811110",
       12,
       30,
       ""
@@ -1091,7 +1091,7 @@
       "N4",
       "First mapping from the placeholder row",
       "PART-G",
-      "123",
+      "9722D10",
       22,
       22,
       "Inserted. Total 22. Sync Status No Sync."
@@ -1109,7 +1109,7 @@
       "N6",
       "Same values as the master",
       "PART-A",
-      "123",
+      "9722D10",
       12,
       24,
       "NO CHANGE. Sync Status and last update stay."
@@ -1118,7 +1118,7 @@
       "N6",
       "Same values as the master",
       "PART-A",
-      "456",
+      "9811110",
       8,
       24,
       ""
@@ -1127,7 +1127,7 @@
       "N6",
       "Same values as the master",
       "PART-A",
-      "789",
+      "9618201",
       4,
       24,
       ""
@@ -1136,7 +1136,7 @@
       "N7",
       "File with only some parts (PART-C only)",
       "PART-C",
-      "789",
+      "9618201",
       18,
       30,
       "Only PART-C is processed (here NO CHANGE). PART-A and PART-G are not changed."
@@ -1168,7 +1168,7 @@
       "E1",
       "Part not registered",
       "PART-Z99",
-      "123",
+      "9722D10",
       10,
       "",
       "Check 1: Part No is not registered or its status is not Active."
@@ -1177,7 +1177,7 @@
       "E2",
       "Part is not Active",
       "PART-I",
-      "123",
+      "9722D10",
       10,
       20,
       "Check 1: Part No is not registered or its status is not Active."
@@ -1186,16 +1186,16 @@
       "E3",
       "Unknown destination",
       "PART-A",
-      "999",
+      "ZZZZZ99",
       10,
       24,
-      "Check 2: Destination code 999 not found in the destination master (TB_M_H0125)."
+      "Check 2: Destination code ZZZZZ99 not found in the destination master (TB_M_H0125)."
      ],
      [
       "E4",
       "Invalid Case/Day",
       "PART-A",
-      "123",
+      "9722D10",
       0,
       24,
       "Check 3: case_day must be a whole number greater than 0."
@@ -1204,16 +1204,16 @@
       "E5",
       "Same destination twice",
       "PART-A",
-      "123",
+      "9722D10",
       10,
       24,
-      "Check 4: Destination 123 appears more than once for this part."
+      "Check 4: Destination 9722D10 appears more than once for this part."
      ],
      [
       "E5",
       "Same destination twice",
       "PART-A",
-      "123",
+      "9722D10",
       4,
       24,
       ""
@@ -1222,7 +1222,7 @@
       "E6",
       "Only one of dest_code / case_day",
       "PART-G",
-      "123",
+      "9722D10",
       "",
       22,
       "Check 5: dest_code and case_day must both be filled or both blank."
@@ -1231,7 +1231,7 @@
       "E7",
       "Total above Max Case/Day",
       "PART-A",
-      "123",
+      "9722D10",
       12,
       24,
       "Check 6: Total allocation of 30 case/day exceeds Max Case/Day (24). Reduce one of the destinations."
@@ -1240,7 +1240,7 @@
       "E7",
       "Total above Max Case/Day",
       "PART-A",
-      "456",
+      "9811110",
       8,
       24,
       ""
@@ -1249,7 +1249,7 @@
       "E7",
       "Total above Max Case/Day",
       "PART-A",
-      "789",
+      "9618201",
       10,
       24,
       ""
@@ -1258,7 +1258,7 @@
       "E8",
       "Valid row (= N4) mixed with an error row (= E3)",
       "PART-G",
-      "123",
+      "9722D10",
       22,
       22,
       "Whole file rejected. The valid row is NOT saved."
@@ -1267,7 +1267,7 @@
       "E8",
       "Valid row mixed with an error row",
       "PART-A",
-      "999",
+      "ZZZZZ99",
       10,
       24,
       "Check 2 on this row. Result report sheet Re-upload lists the rows to correct."
@@ -1641,7 +1641,7 @@
      "TBD",
      "",
      "",
-     "Destination name, e.g. Thailand. Used by Crossdock: shown with the code ('123 - Thailand') and in Export Excel"
+     "Destination name, e.g. Thailand. Used by Crossdock: shown with the code ('9722D10 - Thailand') and in Export Excel"
     ],
     [
      "REGION_CODE",

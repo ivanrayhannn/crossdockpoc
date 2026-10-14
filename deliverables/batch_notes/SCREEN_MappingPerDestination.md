@@ -129,7 +129,7 @@ Tabel master existing NSP, **hanya dibaca**. Kolom yang relevan (kolom lain diab
 | Customer Code | Referensi |
 | Order Transportation Code | Referensi |
 | B/O Instruction Code | Referensi |
-| Destination Name | **Ya** – tampil bersama kode ("123 - Thailand") dan di Export Excel |
+| Destination Name | **Ya** – tampil bersama kode ("9722D10 - Thailand") dan di Export Excel |
 | Region Code | Referensi |
 | Country Name | Referensi |
 | Postal Code | Referensi |
@@ -140,7 +140,7 @@ Tabel master existing NSP, **hanya dibaca**. Kolom yang relevan (kolom lain diab
 | UPDATED_BY | Audit – user terakhir |
 | UPDATED_DT | Audit – waktu terakhir diubah |
 
-Contoh data: 123 Thailand, 456 Japan, 789 Vietnam.
+Contoh data: 9722D10 Thailand, 9811110 Japan, 9618201 Vietnam.
 
 ### 10.4 TB_H_PART_CANDIDATE — *ditulis* (history)
 Tabel history semua perubahan part. **Usulan** definisi fisik (insert only, satu record per field yang berubah; index PART_NO + CREATED_DT):
