@@ -37,8 +37,8 @@ def btn(name, desc):
 
 
 B = ["Reset", "Search", "Sync", "Upload Excel", "Export Excel", "Expand (arrow)", "Edit mapping", "Split evenly",
-     "Add destination", "Remove destination", "Cancel", "Save", "Close", "Validate file", "OK", "Prev / Next"]
-LIST = ["Reset", "Search", "Sync", "Upload Excel", "Export Excel", "Expand (arrow)", "Prev / Next"]
+     "Add destination", "Remove destination", "Cancel", "Save", "Close", "Validate file", "OK", "Prev / Next", "Run calculation"]
+LIST = ["Reset", "Search", "Sync", "Upload Excel", "Export Excel", "Expand (arrow)", "Prev / Next", "Run calculation"]
 EDIT = ["Split evenly", "Add destination", "Remove destination", "Cancel", "Save"]
 
 
@@ -64,6 +64,7 @@ spec = {
   "buttons": [
    {"name": "Reset", "function": "Clear criteria and reset the screen to its initial value."},
    {"name": "Search", "function": "To retrieve records according to the specified criteria. The criteria are applied only when [Search] is clicked (or Enter is pressed in a text box); Sort by is applied at once."},
+   {"name": "Run calculation", "function": "Start the Mapping Destination Calculation batch manually. Enabled only when the scheduled run and its 3 auto retries have failed."},
    {"name": "Sync", "function": "Hand every Active part of the ongoing period with Sync Status No Sync or Failed to the RPA, whatever the filter shows; the parts become Waiting. The label shows the number of parts, e.g. Sync (9)."},
    {"name": "Upload Excel", "function": "Open the \"Upload Excel - destination mapping\" modal. Enabled only when the ongoing calculation period is selected."},
    {"name": "Export Excel", "function": "Download the mapping as .xlsx: sheet \"Mapping per Destination\" (active filter) and sheet \"Upload\" (base file for the upload)."},
@@ -99,6 +100,7 @@ spec = {
    "1) Sync is enabled only when at least one Active part of the ongoing period is No Sync or Failed (not limited to the listed rows).",
    "2) Split evenly is shown only in edit mode when the part has more than one destination row.",
    "4) Prev is disabled on the first page and Next on the last page.",
+   "5) Run calculation is enabled only when the scheduled Mapping Destination Calculation has failed 3 times (auto retry); otherwise disabled with message no. 13 as tooltip.",
    "3) A user logged in with a read-only account cannot use Edit mapping, Sync or Upload Excel. TBD: which accounts are read-only is not defined yet."]
  },
  "screen_flow": [
@@ -149,7 +151,8 @@ spec = {
   {"caption": "12. Before Sync - Sync (9): 4 No Sync + 5 Failed Active parts of the ongoing period", "image": f"{IMG}/c_12_before_sync.png"},
   {"caption": "13. After Sync - the 9 parts are Waiting for the RPA (viewed with Sync Status = All)", "image": f"{IMG}/c_13_after_sync.png"},
   {"caption": "14. Upload Mode - Upload Excel modal", "image": f"{IMG}/c_14_upload.png"},
-  {"caption": "15. Upload Mode - Saved successfully popup after Validate file", "image": f"{IMG}/c_15_upload_success.png"}],
+  {"caption": "15. Upload Mode - Saved successfully popup after Validate file", "image": f"{IMG}/c_15_upload_success.png"},
+  {"caption": "16. Run calculation - Calculation completed popup", "image": f"{IMG}/c_16_calc_success.png"}],
  "items": [
   {"group": "<Search Criteria Section>"},
   it("Calculation period", "Key-in", "", "Varchar", "", "I", "Combo Box", "Left", "Ongoing period, e.g. 'Sep 2026 (ongoing)'", "N", "Mon YYYY", "",
@@ -161,6 +164,9 @@ spec = {
   btn("Search", "Applies the criteria to the result list. Typing or selecting a criterion alone does not change the list; Enter in a text box = [Search]."),
   {"group": "<Result List Section>"},
   it("Section title", "", "", "Varchar", "", "O", "Label", "Left", "'Destination mapping per part'", "", "", "", ""),
+  it("Last mapping calculation", "", "", "Datetime", "", "O", "Label", "Left", "", "", "DD-Mon-YYYY HH:MM", "", "Date-time of the last successful run of the Mapping Destination Calculation batch (one date per batch run)."),
+  it("Failed badge", "", "", "Varchar", "", "O", "Label", "Left", "", "", "", "", "'Scheduled run failed 3x'; shown when the scheduled run and its 3 auto retries have failed."),
+  btn("Run calculation", "Manual trigger of the Mapping Destination Calculation batch. Refer Operation Description 5.9 and Screen Mode remark 5)."),
   btn("Sync (n)", "n = Active parts of the ongoing period with Sync Status No Sync or Failed, whatever the filter. Disabled when n = 0. Refer Operation Description 5.6."),
   btn("Upload Excel", "Disabled for a past period or All periods (tooltip message no. 6). Refer Operation Description 5.7."),
   btn("Export Excel", "Refer Operation Description 5.8."),
@@ -328,7 +334,13 @@ spec = {
     "Sheet 'Mapping per Destination': rows of the active filter, one row per destination (a part without destination gives one row with blank destination columns). Columns: Period, Part Number, Part Name, Pcs/Case, Total Case/Day, Pcs/Day, Percentage, Sync Status, Destination Code, Destination, Dest Case/Day, Dest Pcs/Day, Dest Percentage. Information only.",
     "Sheet 'Upload': every Active part of the ongoing period with part_no, dest_code, case_day, total_case_day (= Max Case/Day); one row per destination, and one row with dest_code and case_day blank for a part without mapping. Empty when a past period or All periods is selected.",
     "If the file cannot be created, display message no. 9."]},
-  {"type": "heading", "text": "5.9 Data Level and Status Definitions"},
+  {"type": "heading", "text": "5.9 Run Mapping Calculation"},
+  {"type": "bullets", "marker": "a.", "level": 2, "items": [
+    "The Mapping Destination Calculation batch runs on its own scheduler (set in system master) with 3 auto retries. It creates the new calculation period and its destination mapping (refer UISS-Batch Mapping Destination Calculation).",
+    "The section header shows 'Last mapping calculation' (last successful run) and, when the scheduled run and its 3 retries have failed, the badge 'Scheduled run failed 3x'.",
+    "[Run calculation] is enabled only in that failed state; otherwise it is disabled with message no. 13 as tooltip.",
+    "User clicks [Run calculation]: start the batch. When it completes, update 'Last mapping calculation', hide the badge and display message no. 12. When it fails, the batch logs the error (all-or-nothing) and the button stays enabled."]},
+  {"type": "heading", "text": "5.10 Data Level and Status Definitions"},
   {"type": "table", "level": 2, "row_lines": "all", "columns": [{"title": "Item", "width": 12}, {"title": "Value", "width": 9}, {"title": "Definition", "width": 25}], "rows": [
     ["Table", T, "Part List data, part number level (key PART_NO). Holds Max Case/Day, status and Sync Status."],
     ["Table", D, "Mapping data, part number + calculation period + destination level (key PART_NO, PERIOD, DEST_CODE). PERIOD = " + PERIOD_FMT + "."],
@@ -368,7 +380,12 @@ spec = {
   {"event": "Click [Sync] button", "cause": "Parts handed to the RPA", "type": "Info", "msg_id": "MSG10",
    "message": "Sync requested for {n} part(s). They stay Waiting until the RPA has sent them to the global system.", "action": "-"},
   {"event": "Hover a Failed Sync Status chip", "cause": "The RPA could not send the part", "type": "Info", "msg_id": "MSG11",
-   "message": "Sync failed: {SYNC_MESSAGE}. The part is sent again with the next Sync.", "action": "Correct the cause if needed and click [Sync]"}],
+   "message": "Sync failed: {SYNC_MESSAGE}. The part is sent again with the next Sync.", "action": "Correct the cause if needed and click [Sync]"},
+  {"group": "Calculation Operation"},
+  {"event": "Click [Run calculation] button", "cause": "Mapping Destination Calculation completed", "type": "Info", "msg_id": "MSG12",
+   "message": "Calculation completed - Mapping destination calculation completed. The destination mapping of the new period has been created.", "action": "Click [OK]"},
+  {"event": "Hover disabled [Run calculation]", "cause": "Scheduled run has not failed 3 times", "type": "Info", "msg_id": "MSG13",
+   "message": "Enabled only when the scheduled run has failed 3 times", "action": "-"}],
  "logging_messages": [
   {"event": "Click [Save] button", "cause": f"Database error on replace of {D}", "type": "Error", "msg_id": "LOG1",
    "message": "Failed to save mapping of part <PART_NO>, period <PERIOD>: <DB error message>.", "exception": "Y", "action": "Show [Corresponding Screen Message] on screen (TBD)"},

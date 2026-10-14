@@ -55,6 +55,10 @@
     "function": "To retrieve records according to the specified criteria. The criteria are applied only when [Search] is clicked (or Enter is pressed in a text box); Sort by is applied at once."
    },
    {
+    "name": "Run calculation",
+    "function": "Start the Mapping Destination Calculation batch manually. Enabled only when the scheduled run and its 3 auto retries have failed."
+   },
+   {
     "name": "Sync",
     "function": "Hand every Active part of the ongoing period with Sync Status No Sync or Failed to the RPA, whatever the filter shows; the parts become Waiting. The label shows the number of parts, e.g. Sync (9)."
    },
@@ -134,7 +138,8 @@
        "Close": "D",
        "Validate file": "D",
        "OK": "D",
-       "Prev / Next": "E"
+       "Prev / Next": "E",
+       "Run calculation": "E"
       }
      },
      {
@@ -156,7 +161,8 @@
        "Close": "D",
        "Validate file": "D",
        "OK": "D",
-       "Prev / Next": "E"
+       "Prev / Next": "E",
+       "Run calculation": "E"
       }
      }
     ]
@@ -183,7 +189,8 @@
        "Close": "D",
        "Validate file": "D",
        "OK": "D",
-       "Prev / Next": "E"
+       "Prev / Next": "E",
+       "Run calculation": "E"
       }
      },
      {
@@ -205,7 +212,8 @@
        "Close": "D",
        "Validate file": "D",
        "OK": "D",
-       "Prev / Next": "D"
+       "Prev / Next": "D",
+       "Run calculation": "D"
       }
      },
      {
@@ -227,7 +235,8 @@
        "Close": "D",
        "Validate file": "D",
        "OK": "D",
-       "Prev / Next": "D"
+       "Prev / Next": "D",
+       "Run calculation": "D"
       }
      }
     ]
@@ -254,7 +263,8 @@
        "Close": "D",
        "Validate file": "D",
        "OK": "D",
-       "Prev / Next": "E"
+       "Prev / Next": "E",
+       "Run calculation": "E"
       }
      },
      {
@@ -276,7 +286,8 @@
        "Close": "D",
        "Validate file": "D",
        "OK": "D",
-       "Prev / Next": "D"
+       "Prev / Next": "D",
+       "Run calculation": "D"
       }
      }
     ]
@@ -303,7 +314,8 @@
        "Close": "D",
        "Validate file": "D",
        "OK": "D",
-       "Prev / Next": "E"
+       "Prev / Next": "E",
+       "Run calculation": "E"
       }
      },
      {
@@ -325,7 +337,8 @@
        "Close": "D",
        "Validate file": "D",
        "OK": "D",
-       "Prev / Next": "E"
+       "Prev / Next": "E",
+       "Run calculation": "E"
       }
      }
     ]
@@ -352,7 +365,8 @@
        "Close": "E",
        "Validate file": "E",
        "OK": "D",
-       "Prev / Next": "D"
+       "Prev / Next": "D",
+       "Run calculation": "D"
       }
      },
      {
@@ -374,7 +388,8 @@
        "Close": "D",
        "Validate file": "D",
        "OK": "E",
-       "Prev / Next": "D"
+       "Prev / Next": "D",
+       "Run calculation": "D"
       }
      }
     ]
@@ -384,6 +399,7 @@
    "1) Sync is enabled only when at least one Active part of the ongoing period is No Sync or Failed (not limited to the listed rows).",
    "2) Split evenly is shown only in edit mode when the part has more than one destination row.",
    "4) Prev is disabled on the first page and Next on the last page.",
+   "5) Run calculation is enabled only when the scheduled Mapping Destination Calculation has failed 3 times (auto retry); otherwise disabled with message no. 13 as tooltip.",
    "3) A user logged in with a read-only account cannot use Edit mapping, Sync or Upload Excel. TBD: which accounts are read-only is not defined yet."
   ]
  },
@@ -638,6 +654,10 @@
   {
    "caption": "15. Upload Mode - Saved successfully popup after Validate file",
    "image": "deliverables/uiss_screens/mapping/c_15_upload_success.png"
+  },
+  {
+   "caption": "16. Run calculation - Calculation completed popup",
+   "image": "deliverables/uiss_screens/mapping/c_16_calc_success.png"
   }
  ],
  "items": [
@@ -736,6 +756,51 @@
    "format": "",
    "validation": "",
    "description": ""
+  },
+  {
+   "name": "Last mapping calculation",
+   "source": "",
+   "field": "",
+   "type": "Datetime",
+   "len": "",
+   "io": "O",
+   "control": "Label",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "DD-Mon-YYYY HH:MM",
+   "validation": "",
+   "description": "Date-time of the last successful run of the Mapping Destination Calculation batch (one date per batch run)."
+  },
+  {
+   "name": "Failed badge",
+   "source": "",
+   "field": "",
+   "type": "Varchar",
+   "len": "",
+   "io": "O",
+   "control": "Label",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "",
+   "validation": "",
+   "description": "'Scheduled run failed 3x'; shown when the scheduled run and its 3 auto retries have failed."
+  },
+  {
+   "name": "Run calculation",
+   "source": "",
+   "field": "",
+   "type": "",
+   "len": "",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "",
+   "validation": "",
+   "description": "Manual trigger of the Mapping Destination Calculation batch. Refer Operation Description 5.9 and Screen Mode remark 5)."
   },
   {
    "name": "Sync (n)",
@@ -1858,7 +1923,22 @@
   },
   {
    "type": "heading",
-   "text": "5.9 Data Level and Status Definitions"
+   "text": "5.9 Run Mapping Calculation"
+  },
+  {
+   "type": "bullets",
+   "marker": "a.",
+   "level": 2,
+   "items": [
+    "The Mapping Destination Calculation batch runs on its own scheduler (set in system master) with 3 auto retries. It creates the new calculation period and its destination mapping (refer UISS-Batch Mapping Destination Calculation).",
+    "The section header shows 'Last mapping calculation' (last successful run) and, when the scheduled run and its 3 retries have failed, the badge 'Scheduled run failed 3x'.",
+    "[Run calculation] is enabled only in that failed state; otherwise it is disabled with message no. 13 as tooltip.",
+    "User clicks [Run calculation]: start the batch. When it completes, update 'Last mapping calculation', hide the badge and display message no. 12. When it fails, the batch logs the error (all-or-nothing) and the button stays enabled."
+   ]
+  },
+  {
+   "type": "heading",
+   "text": "5.10 Data Level and Status Definitions"
   },
   {
    "type": "table",
@@ -2038,6 +2118,25 @@
    "msg_id": "MSG11",
    "message": "Sync failed: {SYNC_MESSAGE}. The part is sent again with the next Sync.",
    "action": "Correct the cause if needed and click [Sync]"
+  },
+  {
+   "group": "Calculation Operation"
+  },
+  {
+   "event": "Click [Run calculation] button",
+   "cause": "Mapping Destination Calculation completed",
+   "type": "Info",
+   "msg_id": "MSG12",
+   "message": "Calculation completed - Mapping destination calculation completed. The destination mapping of the new period has been created.",
+   "action": "Click [OK]"
+  },
+  {
+   "event": "Hover disabled [Run calculation]",
+   "cause": "Scheduled run has not failed 3 times",
+   "type": "Info",
+   "msg_id": "MSG13",
+   "message": "Enabled only when the scheduled run has failed 3 times",
+   "action": "-"
   }
  ],
  "logging_messages": [

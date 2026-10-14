@@ -91,7 +91,7 @@ Part B hanya punya data 4 bulan, masing-masing 600 → rata-rata = 2,400 ÷ **6*
 7. Pembulatan (lihat di bawah); setiap destinasi **minimal 1 case**, total = Max Case/Day.
 8. **Membuat periode baru** di TB_M_PART_CANDIDATE_DEST dan menyimpan mapping hasil kalkulasi. Periode sebelumnya jadi periode lalu (read only).
 9. **All-or-nothing**: satu error (mis. destinasi tidak ada di master) → seluruh batch gagal, tidak ada yang disimpan.
-10. **Scheduler sendiri** (diatur di system master), **auto retry 3x**, tombol **trigger manual** aktif kalau 3x retry gagal; last success date disimpan.
+10. **Scheduler sendiri** (diatur di system master), **auto retry 3x**, tombol **trigger manual di sub-menu Mapping per Destination**, aktif kalau 3x retry gagal; last success date disimpan dan ditampilkan di sub-menu itu.
 
 ### Kenapa hasilnya melebihi Max Case/Day
 Rumus di sheet *simulasi* kolom L memakai referensi relatif, jadi penyebutnya bergeser setiap baris:
@@ -136,6 +136,3 @@ Contoh dengan range 6 bulan (202604–202609), Max Case/Day 16:
 - SUMIF di file menjumlahkan semua 8 bulan → di batch dipakai **range bulan dari system master**.
 - SUMIF di file hanya per buyer code → di batch dikelompokkan per **buyer code + PD code**.
 - Rasio dari jumlah total dan dari rata-rata hasilnya sama, selama semua buyer dihitung pada range bulan yang sama.
-
-### Masih terbuka
-- Lokasi tombol trigger manual Fungsi 3 (usul: sub-menu Mapping per Destination).

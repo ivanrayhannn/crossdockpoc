@@ -78,6 +78,10 @@
     "function": "Download the Part List as .xlsx: sheet \"Part List\" (active filter) and sheet \"Upload\" (base file for Edit uploads)."
    },
    {
+    "name": "Run calculation",
+    "function": "Start the DAD Volume Calculation batch manually. Enabled only when the scheduled run and its 3 auto retries have failed."
+   },
+   {
     "name": "Reset",
     "function": "Clear criteria and reset the screen to its initial value."
    },
@@ -138,7 +142,8 @@
        "Cancel": "D",
        "Close": "D",
        "Validate file": "D",
-       "OK": "D"
+       "OK": "D",
+       "Run calculation": "D"
       }
      },
      {
@@ -157,7 +162,8 @@
        "Cancel": "D",
        "Close": "D",
        "Validate file": "D",
-       "OK": "D"
+       "OK": "D",
+       "Run calculation": "D"
       }
      }
     ]
@@ -181,7 +187,8 @@
        "Cancel": "D",
        "Close": "D",
        "Validate file": "D",
-       "OK": "D"
+       "OK": "D",
+       "Run calculation": "D"
       }
      },
      {
@@ -200,7 +207,8 @@
        "Cancel": "D",
        "Close": "D",
        "Validate file": "D",
-       "OK": "D"
+       "OK": "D",
+       "Run calculation": "D"
       }
      }
     ]
@@ -224,7 +232,8 @@
        "Cancel": "E",
        "Close": "E",
        "Validate file": "D",
-       "OK": "D"
+       "OK": "D",
+       "Run calculation": "D"
       }
      },
      {
@@ -243,7 +252,8 @@
        "Cancel": "E",
        "Close": "E",
        "Validate file": "D",
-       "OK": "D"
+       "OK": "D",
+       "Run calculation": "D"
       }
      },
      {
@@ -262,7 +272,8 @@
        "Cancel": "E",
        "Close": "E",
        "Validate file": "D",
-       "OK": "D"
+       "OK": "D",
+       "Run calculation": "D"
       }
      }
     ]
@@ -286,7 +297,8 @@
        "Cancel": "E",
        "Close": "E",
        "Validate file": "D",
-       "OK": "D"
+       "OK": "D",
+       "Run calculation": "D"
       }
      },
      {
@@ -305,7 +317,8 @@
        "Cancel": "E",
        "Close": "E",
        "Validate file": "D",
-       "OK": "D"
+       "OK": "D",
+       "Run calculation": "D"
       }
      }
     ]
@@ -329,7 +342,8 @@
        "Cancel": "D",
        "Close": "E",
        "Validate file": "D",
-       "OK": "D"
+       "OK": "D",
+       "Run calculation": "D"
       }
      }
     ]
@@ -353,7 +367,8 @@
        "Cancel": "D",
        "Close": "E",
        "Validate file": "E",
-       "OK": "D"
+       "OK": "D",
+       "Run calculation": "D"
       }
      },
      {
@@ -372,7 +387,8 @@
        "Cancel": "D",
        "Close": "D",
        "Validate file": "D",
-       "OK": "E"
+       "OK": "E",
+       "Run calculation": "D"
       }
      }
     ]
@@ -380,7 +396,8 @@
   ],
   "screen_mode_remarks": [
    "1) Prev is disabled on the first page and Next on the last page.",
-   "2) A user logged in with a read-only account sees [View] instead of [Edit] and cannot use Add Part / Upload Excel / Save. TBD: which accounts are read-only is not defined yet."
+   "2) A user logged in with a read-only account sees [View] instead of [Edit] and cannot use Add Part / Upload Excel / Save. TBD: which accounts are read-only is not defined yet.",
+   "3) Run calculation is shown as D (disabled) by default; it is enabled only when the scheduled DAD Volume Calculation has failed 3 times (auto retry)."
   ]
  },
  "screen_flow": [
@@ -791,6 +808,51 @@
    "format": "N parts · M incomplete mappings",
    "validation": "",
    "description": "N = number of filtered rows (all pages). M = filtered rows whose mapping is incomplete (no destination, or total destination Case/Day differs from Max Case/Day)."
+  },
+  {
+   "name": "Last DAD calculation",
+   "source": "",
+   "field": "",
+   "type": "Datetime",
+   "len": "",
+   "io": "O",
+   "control": "Label",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "DD-Mon-YYYY HH:MM",
+   "validation": "",
+   "description": "Date-time of the last successful run of the DAD Volume Calculation batch (one date per batch run, all-or-nothing)."
+  },
+  {
+   "name": "Failed badge",
+   "source": "",
+   "field": "",
+   "type": "Varchar",
+   "len": "",
+   "io": "O",
+   "control": "Label",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "",
+   "validation": "",
+   "description": "'Scheduled run failed 3x'; shown when the scheduled run and its 3 auto retries have failed."
+  },
+  {
+   "name": "Run calculation",
+   "source": "",
+   "field": "",
+   "type": "",
+   "len": "",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "",
+   "validation": "",
+   "description": "Manual trigger of the DAD Volume Calculation batch. Enabled only when the scheduled run has failed 3 times; otherwise disabled with message no. 17 as tooltip. Refer Operation Description 5.9."
   },
   {
    "name": "Incomplete mapping marker",
@@ -1997,7 +2059,23 @@
   },
   {
    "type": "heading",
-   "text": "5.9 Status Definitions"
+   "text": "5.9 Run DAD Calculation"
+  },
+  {
+   "type": "bullets",
+   "marker": "a.",
+   "level": 2,
+   "items": [
+    "The DAD Volume Calculation batch runs on its own scheduler (set in system master) with 3 auto retries. It compares the average MAD of each part with Min MAD and sets the part status to Active or Inactive (refer UISS-Batch DAD Volume Calculation).",
+    "The result list header shows 'Last DAD calculation' (last successful run) and, when the scheduled run and its 3 retries have failed, the badge 'Scheduled run failed 3x'.",
+    "[Run calculation] is enabled only in that failed state; otherwise it is disabled with message no. 17 as tooltip.",
+    "User clicks [Run calculation]: start the batch. When it completes, update 'Last DAD calculation', hide the badge, refresh the list and display message no. 16. When it fails, the batch logs the error (all-or-nothing) and the button stays enabled.",
+    "A status change made by the batch does not change the Sync Status. The user may still change the status afterwards by screen or upload."
+   ]
+  },
+  {
+   "type": "heading",
+   "text": "5.10 Status Definitions"
   },
   {
    "type": "table",
@@ -2196,6 +2274,25 @@
    "msg_id": "MSG15",
    "message": "Enter Min MAD (whole number, 0 or more)",
    "action": "Fill Min MAD"
+  },
+  {
+   "group": "Calculation Operation"
+  },
+  {
+   "event": "Click [Run calculation] button",
+   "cause": "DAD Volume Calculation completed",
+   "type": "Info",
+   "msg_id": "MSG16",
+   "message": "Calculation completed - DAD volume calculation completed. Part statuses have been updated from the average MAD against Min MAD.",
+   "action": "Click [OK]"
+  },
+  {
+   "event": "Hover disabled [Run calculation]",
+   "cause": "Scheduled run has not failed 3 times",
+   "type": "Info",
+   "msg_id": "MSG17",
+   "message": "Enabled only when the scheduled run has failed 3 times",
+   "action": "-"
   }
  ],
  "logging_messages": [

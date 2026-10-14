@@ -94,6 +94,13 @@ File `Crossdock_Part_List_YYYYMMDD.xlsx`:
 
 Gagal dibuat → MSG13.
 
+## 9a. Run DAD calculation
+- Header result list menampilkan **Last DAD calculation** (tanggal sukses terakhir, satu tanggal per batch run).
+- Badge **Scheduled run failed 3x** muncul kalau jadwal + 3x auto retry gagal.
+- Tombol **[Run calculation]** hanya aktif dalam kondisi gagal itu; selain itu disabled dengan tooltip MSG17.
+- Klik → batch DAD Volume Calculation jalan. Sukses → tanggal diperbarui, badge hilang, list di-refresh, MSG16. Detail batch: `BATCH_Calculation_Functions.md`.
+- Perubahan status oleh batch tidak mengubah Sync Status; user tetap boleh mengubah status lagi lewat layar / upload.
+
 ## 10. Status
 | Status | Nilai | Arti |
 |---|---|---|
@@ -189,6 +196,8 @@ Di layar ini: **ditulis** event ADD / EDIT dengan source SCREEN (PERIOD NULL, Pa
 | MSG12 | History kosong | Info | No change history for this part yet. |
 | MSG13 | Export gagal | Error | Export Excel failed. Please try again. |
 | MSG15 | Hover Save, Min MAD kosong / bukan bilangan bulat | Info | Enter Min MAD (whole number, 0 or more) |
+| MSG16 | Run calculation sukses | Info | Calculation completed - DAD volume calculation completed. … |
+| MSG17 | Hover Run calculation disabled | Info | Enabled only when the scheduled run has failed 3 times |
 | MSG14 | Edit, Max Case/Day < total mapping | Error | Max Case/Day can not be less than the mapped total ({n} case/day) of the ongoing period. Reduce the mapping in Mapping per Destination first. |
 
 Logging message: LOG1 (gagal simpan), LOG2 (gagal export).

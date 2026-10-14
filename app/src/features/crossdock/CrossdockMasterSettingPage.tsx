@@ -20,7 +20,7 @@ const ACTIVE_ITEM = 'Crossdock Master Setting';
 
 export function CrossdockMasterSettingPage({ onNavigate }: { onNavigate: (route: RouteKey) => void }) {
   const state = useCrossdockState();
-  const { parts, q, aq, setQ, runSearch, resetQ, ro, role, setRole, switchRole, view, modal, addPart, openUpload, openFor, notice, dismissNotice } = state;
+  const { parts, q, aq, setQ, runSearch, resetQ, ro, role, setRole, switchRole, view, modal, addPart, openUpload, openFor, notice, dismissNotice, dadRun, runCalc } = state;
 
   // Sheet 1 follows the Part List table (same filter and sort, all pages); sheet "Upload" holds every part.
   const exportExcel = useCallback(() => {
@@ -58,6 +58,8 @@ export function CrossdockMasterSettingPage({ onNavigate }: { onNavigate: (route:
           onOpenHistory={(id) => openFor(id, 'history')}
           onAddPart={addPart}
           onOpenUpload={openUpload}
+          dadRun={dadRun}
+          onRunCalc={() => runCalc('dad')}
         />
       )}
       {view === 'dest' && <DestMappingTab state={state} />}

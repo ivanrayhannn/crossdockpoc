@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { blankPart, cloneSeedParts, CUR_PER } from '../../data/seed';
 import { nowStamp, num } from '../../lib/format';
 import type { DestAllocation, ModalKind, Part, PartQuery, TabView, UserRole } from '../../types';
+import type { CalcRun } from './components/CalcRunBar';
 
 const DEFAULT_Q: PartQuery = {
   part: '',
@@ -16,7 +17,10 @@ const DEFAULT_Q: PartQuery = {
 const EDITOR = 'D. Anggraini';
 
 /** Shown in the success popup after a part is saved from the Add/Edit form, or after an upload is saved. */
-export type SaveNotice = { mode: 'add' | 'edit'; part: string; name: string } | { mode: 'upload'; target: 'part' | 'mapping' };
+export type SaveNotice =
+  | { mode: 'add' | 'edit'; part: string; name: string }
+  | { mode: 'upload'; target: 'part' | 'mapping' }
+  | { mode: 'calc'; target: 'dad' | 'mapping' };
 
 /** Deep-ish clone of a part's destination list, so edits inside a modal/draft
  * never mutate the committed `parts` array until explicitly saved. */
@@ -37,6 +41,9 @@ export function useCrossdockState() {
   const [q, setQ] = useState<PartQuery>(DEFAULT_Q);
   const [aq, setAq] = useState<PartQuery>(DEFAULT_Q);
   const [notice, setNotice] = useState<SaveNotice | null>(null);
+  // Demo states: the DAD calculation ran fine; the mapping calculation failed 3 scheduled attempts.
+  const [dadRun, setDadRun] = useState<CalcRun>({ lastSuccess: '01-Oct-2026 02:00', failedRetries: 0 });
+  const [mapRun, setMapRun] = useState<CalcRun>({ lastSuccess: '01-Sep-2026 03:00', failedRetries: 3 });
 
   // No auth backend in this build — always full read/write access.
   const ro = false;
@@ -167,6 +174,14 @@ export function useCrossdockState() {
   /** [Search] applies the criteria; Sort by is not a filter and applies at once (see sortedQ). */
   const runSearch = useCallback(() => setAq(q), [q]);
 
+  /** Manual trigger of a calculation batch (prototype: always succeeds). */
+  const runCalc = useCallback((target: 'dad' | 'mapping') => {
+    const done: CalcRun = { lastSuccess: nowStamp(), failedRetries: 0 };
+    if (target === 'dad') setDadRun(done);
+    else setMapRun(done);
+    setNotice({ mode: 'calc', target });
+  }, []);
+
   const resetQ = useCallback(() => {
     const reset = (prev: PartQuery): PartQuery => ({ ...DEFAULT_Q, dest: prev.dest || 'Thailand' });
     setQ(reset);
@@ -194,6 +209,9 @@ export function useCrossdockState() {
     runSearch,
     notice,
     dismissNotice,
+    dadRun,
+    mapRun,
+    runCalc,
     ro,
     openFor,
     patch,

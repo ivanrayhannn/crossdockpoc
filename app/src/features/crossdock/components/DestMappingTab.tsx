@@ -3,6 +3,7 @@ import { CUR_PER, DOTS, MASTER_DESTS, PERIODS } from '../../../data/seed';
 import { fmt, num, syncBadge } from '../../../lib/format';
 import type { DestAllocation, Part } from '../../../types';
 import { exportMappingXlsx } from '../mappingExport';
+import { CalcRunBar } from './CalcRunBar';
 import type { CrossdockState } from '../useCrossdockState';
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100];
@@ -28,7 +29,7 @@ const td: React.CSSProperties = {
 };
 
 export function DestMappingTab({ state }: { state: CrossdockState }) {
-  const { parts, q, aq, setQ, runSearch, resetQ, ro, expand, editDest, draftDests, toggleExpand, startEditDest, cancelEditDest, patchDraft, saveDest, syncParts, openMappingUpload } = state;
+  const { parts, q, aq, setQ, runSearch, resetQ, ro, expand, editDest, draftDests, toggleExpand, startEditDest, cancelEditDest, patchDraft, saveDest, syncParts, openMappingUpload, mapRun, runCalc } = state;
   // Only the ongoing period can be changed, so the upload is disabled for past periods and "All periods".
   const uploadLocked = ro || aq.per !== CUR_PER;
 
@@ -160,7 +161,9 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
       <div style={{ border: '1px solid var(--color-divider)', borderRadius: 8, background: 'var(--color-neutral-100)', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '10px 16px', borderBottom: '1px solid var(--color-divider)' }}>
           <span style={{ fontSize: 12.5, fontWeight: 600 }}>Destination mapping per part</span>
-          <span style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+          <span style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
+            <CalcRunBar label="mapping calculation" run={mapRun} ro={ro} onRun={() => runCalc('mapping')} />
+            <span style={{ width: 1, height: 22, background: 'var(--color-divider)' }} />
             <button
               className="btn btn-secondary"
               onClick={() => syncParts(syncable.map((p) => p.p))}

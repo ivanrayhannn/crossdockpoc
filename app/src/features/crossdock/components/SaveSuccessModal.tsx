@@ -23,10 +23,14 @@ export function SaveSuccessModal({ notice, onClose }: { notice: SaveNotice; onCl
           </svg>
         </span>
         <h3 id="save-success-title" style={{ fontSize: 19, margin: '0 0 6px' }}>
-          Saved successfully
+          {notice.mode === 'calc' ? 'Calculation completed' : 'Saved successfully'}
         </h3>
         <p style={{ fontSize: 13, color: 'var(--color-neutral-700)', margin: '0 0 18px' }}>
-          {notice.mode === 'upload' ? (
+          {notice.mode === 'calc' ? (
+            notice.target === 'dad'
+              ? 'DAD volume calculation completed. Part statuses have been updated from the average MAD against Min MAD.'
+              : 'Mapping destination calculation completed. The destination mapping of the new period has been created.'
+          ) : notice.mode === 'upload' ? (
             notice.target === 'mapping'
               ? 'Upload completed. The file has been validated and the destination mapping has been saved to Mapping per Destination.'
               : 'Upload completed. The file has been validated and the part settings have been saved to the Part List.'

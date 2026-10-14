@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { fmt, num, parseDt } from '../../../lib/format';
 import type { Part, PartQuery, PartStatus } from '../../../types';
 import { selectParts } from '../partList';
+import { CalcRunBar, type CalcRun } from './CalcRunBar';
 
 const STATUS_STYLE: Record<PartStatus, { bg: string; fg: string }> = {
   Active: { bg: 'var(--color-accent-2-200)', fg: 'var(--color-accent-2-800)' },
@@ -22,6 +23,8 @@ interface PartListTabProps {
   onOpenHistory: (id: string) => void;
   onAddPart: () => void;
   onOpenUpload: () => void;
+  dadRun: CalcRun;
+  onRunCalc: () => void;
 }
 
 const th: React.CSSProperties = {
@@ -51,7 +54,7 @@ const td: React.CSSProperties = {
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100];
 
-export function PartListTab({ parts, q, aq, onSearch, setQ, resetQ, ro, onOpenPart, onOpenHistory, onAddPart, onOpenUpload }: PartListTabProps) {
+export function PartListTab({ parts, q, aq, onSearch, setQ, resetQ, ro, onOpenPart, onOpenHistory, onAddPart, onOpenUpload, dadRun, onRunCalc }: PartListTabProps) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
 
@@ -171,6 +174,9 @@ export function PartListTab({ parts, q, aq, onSearch, setQ, resetQ, ro, onOpenPa
             <span style={{ fontSize: 12.5, fontWeight: 600 }}>Registered parts</span>
             <span style={{ fontSize: 11.5, color: 'var(--color-neutral-600)', fontVariantNumeric: 'tabular-nums' }}>
               {rowsSrc.length} {rowsSrc.length === 1 ? 'part' : 'parts'} · {incompleteCount} incomplete {incompleteCount === 1 ? 'mapping' : 'mappings'}
+            </span>
+            <span style={{ marginLeft: 'auto' }}>
+              <CalcRunBar label="DAD calculation" run={dadRun} ro={ro} onRun={onRunCalc} />
             </span>
             {ro && (
               <span

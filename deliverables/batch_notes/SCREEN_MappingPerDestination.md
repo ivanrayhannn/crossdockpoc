@@ -78,6 +78,11 @@ Tombol di atas tabel: **[Sync (n)]**, **[Upload Excel]**, **[Export Excel]**.
 6. Part Failed: tooltip MSG11, ikut lagi di Sync berikutnya. Candidate / Inactive tidak pernah di-sync.
 Detail: `BATCH_RPA_Sync.md`.
 
+## 7a. Run mapping calculation
+- Header section menampilkan **Last mapping calculation** (tanggal sukses terakhir) dan badge **Scheduled run failed 3x** kalau jadwal + 3x auto retry gagal.
+- Tombol **[Run calculation]** hanya aktif dalam kondisi gagal itu; selain itu disabled dengan tooltip MSG13.
+- Klik → batch Mapping Destination Calculation jalan (membuat periode baru + mapping). Sukses → tanggal diperbarui, badge hilang, MSG12. Detail batch: `BATCH_Calculation_Functions.md`.
+
 ## 8. Upload Excel
 - Aktif **hanya** kalau periode berjalan dipilih; periode lalu / All periods → disabled, tooltip MSG6.
 - Kolom template: part_no, dest_code, case_day, total_case_day (referensi). File .xlsx, max 5 MB, max 5.000 baris.
@@ -180,7 +185,7 @@ Di layar ini: event **MAPPING** source **SCREEN** saat Save (PERIOD = periode be
 
 ---
 
-## 11. Pesan layar (MSG1–MSG11; logging LOG1–LOG3)
+## 11. Pesan layar (MSG1–MSG13; logging LOG1–LOG3)
 | ID | Kapan | Tipe | Pesan |
 |---|---|---|---|
 | MSG1 | Filter tanpa hasil | Info | No parts match these filters - Change the period or sync status, or press Reset to show all parts. |
@@ -194,6 +199,8 @@ Di layar ini: event **MAPPING** source **SCREEN** saat Save (PERIOD = periode be
 | MSG9 | Export gagal | Error | Export Excel failed. Please try again. |
 | MSG10 | Klik Sync | Info | Sync requested for {n} part(s). They stay Waiting until the RPA has sent them to the global system. |
 | MSG11 | Hover chip Failed | Info | Sync failed: {SYNC_MESSAGE}. The part is sent again with the next Sync. |
+| MSG12 | Run calculation sukses | Info | Calculation completed - Mapping destination calculation completed. … |
+| MSG13 | Hover Run calculation disabled | Info | Enabled only when the scheduled run has failed 3 times |
 
 ## 12. Open points
 - Detail fungsi RPA; batas waktu status Waiting.
