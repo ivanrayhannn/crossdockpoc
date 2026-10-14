@@ -1,7 +1,7 @@
 # Batch – Crossdock Master Setting – Part List Upload (X2)
 
 Ringkasan poin-poin batch upload Part List: pemicu, alur, validasi, cara simpan, dan **semua tabel yang terlibat**.
-Sumber: UISS-Batch `UISS_Batch_PartListUpload.xlsx` (0.1 Initial Draft) dan keputusan bisnis sampai 13-Oct-26.
+Sumber: UISS-Batch `X2_UISS_Batch_PartListUpload.xlsx` (0.1 Initial Draft) dan keputusan bisnis sampai 13-Oct-26.
 
 ---
 
@@ -77,7 +77,7 @@ Urutan kolom = sheet "Upload" hasil **Export Excel** Part List (prefill semua pa
 - Flag A → insert: PART_STATUS = Candidate, SYNC_STATUS = 0, LAST_SOURCE = UPLOAD, PART_NAME dari part master, TOTAL_PCS_DAY = PCS_CASE × MAX_CASE_DAY, MIN_MAD dari file.
 - Flag E → update hanya kalau ada perubahan; status hanya Active ↔ Inactive.
 - Status part **Candidate** hanya bisa diubah lewat modal *Edit part data* di layar, bukan upload.
-- Part yang tersimpan dikirim ke global system oleh **RPA** saat D/S klik [Sync] di Mapping per Destination (lihat `BATCH_RPA_Sync.md`).
+- Part yang tersimpan dikirim ke global system oleh **RPA** saat D/S klik [Sync] di Mapping per Destination (lihat `X3_RPA_Sync.md`).
 
 ---
 
@@ -110,7 +110,7 @@ Satu record per part, **tanpa periode**.
 Part master existing NSP. Yang dipakai: **PART_NO** (cek keberadaan, check 2) dan **PART_NAME** (nama field TBD). Skema fisik lain TBD.
 
 ### 8.3 TB_M_PART_CANDIDATE_DEST — *dibaca*
-Mapping per Destination, level **part number + periode + destinasi** (detail lihat `BATCH_Mapping_Upload.md`).
+Mapping per Destination, level **part number + periode + destinasi** (detail lihat `X4_BATCH_Mapping_Upload.md`).
 Dipakai di check 9: `SUM(CASE_DAY)` per PART_NO untuk **periode berjalan**.
 
 ### 8.4 Log (upload log) — *ditulis*

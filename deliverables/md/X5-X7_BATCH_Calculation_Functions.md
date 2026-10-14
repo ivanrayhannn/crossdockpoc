@@ -2,7 +2,7 @@
 
 Draft catatan 3 fungsi batch yang menghitung status part dan mapping destinasi.
 Sumber: penjelasan user 13-Oct-26 dan file referensi `20261013_tb_r_actual_demand_summary_since_january-2026.xlsx` (sheet *tb_r_actual_demand_summary* dan *simulasi*).
-UISS-Batch (0.1 Initial Draft): **X6** `UISS_Batch_ActualDemandSummarySync.xlsx`, **X7** `UISS_Batch_DADVolumeCalculation.xlsx`, **X8** `UISS_Batch_MappingDestinationCalculation.xlsx`. Rumus dan aturan dikonfirmasi 14-Oct-26.
+UISS-Batch (0.1 Initial Draft): **X5** `X5_UISS_Batch_ActualDemandSummarySync.xlsx`, **X6** `X6_UISS_Batch_DADVolumeCalculation.xlsx`, **X7** `X7_UISS_Batch_MappingDestinationCalculation.xlsx`. Rumus dan aturan dikonfirmasi 14-Oct-26.
 
 > Range bulan dan jadwal scheduler diatur di **system master** (tabel system master tidak dijelaskan di dokumen ini).
 
@@ -63,7 +63,7 @@ MAD part per bulan = jumlah MAD semua buyer / PD / order type di bulan itu:
 
 Jika Min MAD = 500 → Active. Jika Min MAD = 600 → Inactive.
 
-### Tabel hasil TB_R_PART_DAD_RESULT (usulan nama, lihat Appendix UISS X7)
+### Tabel hasil TB_R_PART_DAD_RESULT (usulan nama, lihat Appendix UISS X6)
 | Kolom | Keterangan |
 |---|---|
 | PERIOD (PK) | Periode kalkulasi YYYYMM |

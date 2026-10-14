@@ -1,7 +1,7 @@
 # Batch – Crossdock Master Setting – Mapping per Destination Upload
 
 Ringkasan poin-poin batch upload Mapping per Destination: pemicu, alur, validasi, cara simpan, dan **semua tabel yang terlibat**.
-Sumber: UISS-Batch `UISS_Batch_MappingUpload.xlsx` (0.1 Initial Draft) dan keputusan bisnis sampai 13-Oct-26.
+Sumber: UISS-Batch `X4_UISS_Batch_MappingUpload.xlsx` (0.1 Initial Draft) dan keputusan bisnis sampai 13-Oct-26.
 Batch ID: **X4**.
 
 ---
@@ -70,7 +70,7 @@ Diisi otomatis oleh **Export Excel** (periode berjalan dipilih): semua part **Ac
 - Part yang tidak ada di file: tidak diubah.
 - TB_H_PART_CANDIDATE: satu record per destinasi yang ditambah / diubah / dihapus.
 - TB_M_PART_CANDIDATE part yang berubah: SYNC_STATUS = 0, LAST_SOURCE = UPLOAD, LAST_UPLOAD_ID, CHANGED_BY/DT. Kolom lain tidak berubah.
-- Pengiriman ke global system dilakukan **RPA** saat D/S klik [Sync] (lihat `BATCH_RPA_Sync.md`).
+- Pengiriman ke global system dilakukan **RPA** saat D/S klik [Sync] (lihat `X3_RPA_Sync.md`).
 
 ---
 

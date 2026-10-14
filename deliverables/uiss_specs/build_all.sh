@@ -13,11 +13,11 @@ while read -r spec out; do
   python3 $S/uiss_build.py "$S/$spec" -o "$O/$out" > /dev/null
   echo "built $O/$out"
 done <<'LIST'
-PartListScreen_spec.json UISS_Screen_PartList.xlsx
-PartListUpload_v2_spec.json UISS_Batch_PartListUpload.xlsx
-MappingScreen_spec.json UISS_Screen_MappingPerDestination.xlsx
-MappingUpload_v3_spec.json UISS_Batch_MappingUpload.xlsx
-AdsSync_spec.json UISS_Batch_ActualDemandSummarySync.xlsx
-DadCalc_spec.json UISS_Batch_DADVolumeCalculation.xlsx
-MapCalc_spec.json UISS_Batch_MappingDestinationCalculation.xlsx
+PartListScreen_spec.json X1_UISS_Screen_PartList.xlsx
+PartListUpload_v2_spec.json X2_UISS_Batch_PartListUpload.xlsx
+MappingScreen_spec.json X3_UISS_Screen_MappingPerDestination.xlsx
+MappingUpload_v3_spec.json X4_UISS_Batch_MappingUpload.xlsx
+AdsSync_spec.json X5_UISS_Batch_ActualDemandSummarySync.xlsx
+DadCalc_spec.json X6_UISS_Batch_DADVolumeCalculation.xlsx
+MapCalc_spec.json X7_UISS_Batch_MappingDestinationCalculation.xlsx
 LIST

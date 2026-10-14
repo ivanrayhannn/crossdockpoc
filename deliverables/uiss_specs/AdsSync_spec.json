@@ -4,7 +4,7 @@
   "phase": "DR",
   "project_name": "Crossdock Optimization",
   "block_name": "Batch",
-  "function_name": "X6 Crossdock - Actual Demand Summary Sync to NSP",
+  "function_name": "X5 Crossdock - Actual Demand Summary Sync to NSP",
   "created_date": "14-Oct-26",
   "created_by": "FID Rayhan"
  },

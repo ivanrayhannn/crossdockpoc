@@ -31,7 +31,7 @@ SAMPLE = {
 
 spec = {
  "doc_type": "batch",
- "header": header("X7", "DAD Volume Calculation"),
+ "header": header("X6", "DAD Volume Calculation"),
  "revisions": revisions(),
  "general": {
   "objective": [

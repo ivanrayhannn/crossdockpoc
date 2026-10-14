@@ -1,7 +1,7 @@
 # Screen – Crossdock Master Setting – Mapping per Destination
 
 Ringkasan poin-poin layar Mapping per Destination: akses, kriteria, panel mapping, aturan Save, Sync via RPA, Upload / Export, pesan, dan **semua tabel yang terlibat**.
-Sumber: UISS-Screen `UISS_Screen_MappingPerDestination.xlsx` (0.1 Initial Draft) dan keputusan bisnis sampai 13-Oct-26.
+Sumber: UISS-Screen `X3_UISS_Screen_MappingPerDestination.xlsx` (0.1 Initial Draft) dan keputusan bisnis sampai 13-Oct-26.
 Screen ID: **X3**.
 
 ---
@@ -76,18 +76,18 @@ Tombol di atas tabel: **[Sync (n)]**, **[Upload Excel]**, **[Export Excel]**.
 4. Part diubah setelah dibaca RPA (CHANGED_DT beda) → SYNC_STATUS = 0, bukan Success.
 5. Setiap hasil dicatat di **TB_H_PART_CANDIDATE** (event **SYNC**, source **RPA**).
 6. Part Failed: tooltip MSG11, ikut lagi di Sync berikutnya. Candidate / Inactive tidak pernah di-sync.
-Detail: `BATCH_RPA_Sync.md`.
+Detail: `X3_RPA_Sync.md`.
 
 ## 7a. Run mapping calculation
 - Header section menampilkan **Last mapping calculation** (tanggal sukses terakhir) dan badge **Scheduled run failed 3x** kalau jadwal + 3x auto retry gagal.
 - Tombol **[Run calculation]** hanya aktif dalam kondisi gagal itu; selain itu disabled dengan tooltip MSG13.
-- Klik → batch Mapping Destination Calculation jalan (membuat periode baru + mapping). Sukses → tanggal diperbarui, badge hilang, MSG12. Detail batch: `BATCH_Calculation_Functions.md`.
+- Klik → batch Mapping Destination Calculation jalan (membuat periode baru + mapping). Sukses → tanggal diperbarui, badge hilang, MSG12. Detail batch: `X5-X7_BATCH_Calculation_Functions.md`.
 
 ## 8. Upload Excel
 - Aktif **hanya** kalau periode berjalan dipilih; periode lalu / All periods → disabled, tooltip MSG6.
 - Kolom template: part_no, dest_code, case_day, total_case_day (referensi). File .xlsx, max 5 MB, max 5.000 baris.
 - Base file: sheet **Upload** dari Export Excel (periode berjalan). Part di file → seluruh mapping di-replace; part yang tidak ada di file tidak berubah.
-- [Validate file] = tombol simpan upload → batch Mapping per Destination Upload (all-or-nothing, Log). Detail: `BATCH_Mapping_Upload.md`.
+- [Validate file] = tombol simpan upload → batch Mapping per Destination Upload (all-or-nothing, Log). Detail: `X4_BATCH_Mapping_Upload.md`.
 - Sukses → tutup modal, MSG7. Ditolak → hasil batch (daftar error). Part yang berubah → No Sync.
 
 ## 9. Export Excel

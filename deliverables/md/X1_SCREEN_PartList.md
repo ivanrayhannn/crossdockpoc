@@ -1,7 +1,7 @@
 # Screen – Crossdock Master Setting – Part List (X1)
 
 Ringkasan poin-poin layar Part List: akses, item, aturan Add / Edit, History, Upload / Export, pesan, dan **semua tabel yang terlibat**.
-Sumber: UISS-Screen `UISS_Screen_PartList.xlsx` (X1, 0.1 Initial Draft) dan keputusan bisnis sampai 13-Oct-26.
+Sumber: UISS-Screen `X1_UISS_Screen_PartList.xlsx` (X1, 0.1 Initial Draft) dan keputusan bisnis sampai 13-Oct-26.
 
 ---
 
@@ -81,7 +81,7 @@ Sumber: UISS-Screen `UISS_Screen_PartList.xlsx` (X1, 0.1 Initial Draft) dan kepu
 - Kolom: part_no, min_mad (wajib), pcs_case, max_case_day, status, flag_add_edit (A/E), effective_start_date.
 - Base file Edit = sheet **Upload** dari Export Excel (flag E sudah terisi).
 - Aturan status: Candidate **tidak bisa diubah** lewat upload; Active ↔ Inactive boleh; tidak ada yang bisa diubah ke Candidate.
-- [Validate file] = tombol simpan upload → batch Part List Upload (validasi, simpan all-or-nothing, Log). Detail: `BATCH_PartList_Upload.md`.
+- [Validate file] = tombol simpan upload → batch Part List Upload (validasi, simpan all-or-nothing, Log). Detail: `X2_BATCH_PartList_Upload.md`.
 - Sukses → tutup modal, MSG11. Ditolak → hasil batch (daftar error).
 - Part yang berubah → Sync Status No Sync.
 
@@ -98,7 +98,7 @@ Gagal dibuat → MSG13.
 - Header result list menampilkan **Last DAD calculation** (tanggal sukses terakhir, satu tanggal per batch run).
 - Badge **Scheduled run failed 3x** muncul kalau jadwal + 3x auto retry gagal.
 - Tombol **[Run calculation]** hanya aktif dalam kondisi gagal itu; selain itu disabled dengan tooltip MSG17.
-- Klik → batch DAD Volume Calculation jalan. Sukses → tanggal diperbarui, badge hilang, list di-refresh, MSG16. Detail batch: `BATCH_Calculation_Functions.md`.
+- Klik → batch DAD Volume Calculation jalan. Sukses → tanggal diperbarui, badge hilang, list di-refresh, MSG16. Detail batch: `X5-X7_BATCH_Calculation_Functions.md`.
 - Perubahan status oleh batch tidak mengubah Sync Status; user tetap boleh mengubah status lagi lewat layar / upload.
 
 ## 10. Status

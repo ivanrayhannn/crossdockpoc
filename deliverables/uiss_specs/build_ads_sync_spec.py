@@ -27,7 +27,7 @@ SAMPLE = {
 
 spec = {
  "doc_type": "batch",
- "header": header("X6", "Actual Demand Summary Sync to NSP"),
+ "header": header("X5", "Actual Demand Summary Sync to NSP"),
  "revisions": revisions(),
  "general": {
   "objective": [

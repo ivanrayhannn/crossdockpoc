@@ -35,7 +35,7 @@ SAMPLE = {
 
 spec = {
  "doc_type": "batch",
- "header": header("X8", "Mapping Destination Calculation"),
+ "header": header("X7", "Mapping Destination Calculation"),
  "revisions": revisions(),
  "general": {
   "objective": [

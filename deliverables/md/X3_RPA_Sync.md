@@ -1,7 +1,7 @@
 # Batch / RPA – Crossdock Master Setting – Sync ke Global System
 
 Ringkasan poin-poin fungsi Sync lewat **RPA**: pemicu, data yang dikirim, status, write-back, dan **semua tabel yang terlibat**.
-Sumber: UISS-Screen `UISS_Screen_MappingPerDestination.xlsx` (Operation Description 5.6, Data Map) dan keputusan bisnis 13-Oct-26.
+Sumber: UISS-Screen `X3_UISS_Screen_MappingPerDestination.xlsx` (Operation Description 5.6, Data Map) dan keputusan bisnis 13-Oct-26.
 Belum ada UISS-Batch tersendiri untuk RPA ini (**TBD**).
 
 ---
@@ -54,7 +54,7 @@ Disimpan **per part** di TB_M_PART_CANDIDATE karena RPA mengirim part sebagai sa
 | SYNC_MESSAGE | Diisi RPA: alasan Failed (kosong kalau Success) |
 | CHANGED_DT | Dibandingkan RPA untuk deteksi perubahan selama proses |
 
-Kolom lain (lihat `BATCH_PartList_Upload.md` 8.1): PART_NAME, MIN_MAD, TOTAL_PCS_DAY, EFFECTIVE_START_DATE, LAST_SOURCE, LAST_UPLOAD_ID, audit — tidak disentuh Sync.
+Kolom lain (lihat `X2_BATCH_PartList_Upload.md` 8.1): PART_NAME, MIN_MAD, TOTAL_PCS_DAY, EFFECTIVE_START_DATE, LAST_SOURCE, LAST_UPLOAD_ID, audit — tidak disentuh Sync.
 
 ### 5.2 TB_M_PART_CANDIDATE_DEST — *dibaca*
 | Kolom | Peran di Sync |
