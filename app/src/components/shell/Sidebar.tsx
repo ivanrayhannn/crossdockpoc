@@ -13,7 +13,7 @@ const NAV_GROUPS: [string, string[]][] = [
 ];
 
 /** Nav items that are new in this build, flagged with a "New" badge until they're familiar. */
-const NEW_ITEMS = new Set(['Crossdock Master Setting', 'Case Consolidation Simulation', 'ASN Creation', 'Batch Process Simulation', 'Candidate Part Batch Flow']);
+const NEW_ITEMS = new Set(['Crossdock Master Setting', 'Case Consolidation Simulation', 'ASN Creation', 'ASN Inquiry', 'Batch Process Simulation', 'Candidate Part Batch Flow']);
 
 export function Sidebar({ activeItem, onNavigate }: { activeItem: string; onNavigate: (route: RouteKey) => void }) {
   return (
