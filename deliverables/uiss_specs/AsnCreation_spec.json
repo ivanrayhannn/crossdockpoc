@@ -70,8 +70,8 @@
     "function": "Clear criteria and reset the screen to its initial value."
    },
    {
-    "name": "Order lines (expand)",
-    "function": "Show / hide the customer order lines of a unit with their PO assignment."
+    "name": "Detail (expand, D/S)",
+    "function": "D/S team only: show / hide the destination detail (pcs) and the customer order lines of a unit with their PO assignment."
    },
    {
     "name": "Clear selection",
@@ -116,7 +116,7 @@
       "buttons": {
        "Search": "E",
        "Reset": "E",
-       "Order lines (expand)": "D",
+       "Detail (expand, D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
        "Back": "D",
@@ -133,7 +133,7 @@
       "buttons": {
        "Search": "D",
        "Reset": "D",
-       "Order lines (expand)": "E",
+       "Detail (expand, D/S)": "E",
        "Clear selection": "D",
        "Create ASN": "D",
        "Back": "D",
@@ -150,7 +150,7 @@
       "buttons": {
        "Search": "D",
        "Reset": "D",
-       "Order lines (expand)": "D",
+       "Detail (expand, D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
        "Back": "D",
@@ -172,7 +172,7 @@
       "buttons": {
        "Search": "E",
        "Reset": "E",
-       "Order lines (expand)": "D",
+       "Detail (expand, D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
        "Back": "D",
@@ -189,7 +189,7 @@
       "buttons": {
        "Search": "D",
        "Reset": "D",
-       "Order lines (expand)": "E",
+       "Detail (expand, D/S)": "E",
        "Clear selection": "D",
        "Create ASN": "D",
        "Back": "D",
@@ -202,11 +202,11 @@
      },
      {
       "section": "Selection bar",
-      "description": "Units, cases and pcs selected",
+      "description": "Units and cases selected",
       "buttons": {
        "Search": "D",
        "Reset": "D",
-       "Order lines (expand)": "D",
+       "Detail (expand, D/S)": "D",
        "Clear selection": "E",
        "Create ASN": "E",
        "Back": "D",
@@ -228,7 +228,7 @@
       "buttons": {
        "Search": "D",
        "Reset": "D",
-       "Order lines (expand)": "D",
+       "Detail (expand, D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
        "Back": "E",
@@ -245,7 +245,7 @@
       "buttons": {
        "Search": "D",
        "Reset": "D",
-       "Order lines (expand)": "D",
+       "Detail (expand, D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
        "Back": "D",
@@ -262,7 +262,7 @@
       "buttons": {
        "Search": "D",
        "Reset": "D",
-       "Order lines (expand)": "D",
+       "Detail (expand, D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
        "Back": "D",
@@ -284,7 +284,7 @@
       "buttons": {
        "Search": "D",
        "Reset": "D",
-       "Order lines (expand)": "D",
+       "Detail (expand, D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
        "Back": "D",
@@ -301,7 +301,7 @@
       "buttons": {
        "Search": "D",
        "Reset": "D",
-       "Order lines (expand)": "D",
+       "Detail (expand, D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
        "Back": "D",
@@ -495,8 +495,8 @@
    "image": "deliverables/uiss_screens/asn_crossdock/c_01_list_bd14.png"
   },
   {
-   "caption": "2. Order lines of a Waiting for Next PO unit (assigned / planned PO)",
-   "image": "deliverables/uiss_screens/asn_crossdock/c_02_cond3_waiting_detail.png"
+   "caption": "2. D/S team view: destination (pcs) and order line detail of a Waiting for Next PO unit",
+   "image": "deliverables/uiss_screens/asn_crossdock/c_02_ds_detail.png"
   },
   {
    "caption": "3. Delivery plan (business date 15-Oct): PART-C 13-Oct becomes Ready to Delivery",
@@ -666,49 +666,34 @@
    "description": "Part number of the unit; part name from the part master."
   },
   {
-   "name": "Destinations (pcs)",
-   "source": "TB_R_INSTRUCTION",
-   "field": "DESTINATION_CD",
-   "type": "Char",
+   "name": "Case Qty",
+   "source": "Computed",
+   "field": "-",
+   "type": "Number",
    "len": "-",
    "io": "O",
    "control": "Label",
-   "justified": "Left",
+   "justified": "Right",
    "initial": "-",
    "required": "N",
-   "format": "{short} {qty} \u00b7 ...",
+   "format": "ZZ9",
    "validation": "-",
-   "description": "Qty per destination of the unit."
+   "description": "Number of cases of the unit (one case per destination); also shown while waiting."
   },
   {
-   "name": "Qty",
-   "source": "TB_R_INSTRUCTION",
-   "field": "CUST_ORDER_QTY",
+   "name": "Not Assigned (case)",
+   "source": "Computed",
+   "field": "-",
    "type": "Number",
-   "len": "8",
+   "len": "-",
    "io": "O",
    "control": "Label",
    "justified": "Right",
    "initial": "-",
    "required": "N",
-   "format": "ZZ,ZZ9",
+   "format": "ZZ9",
    "validation": "-",
-   "description": "Total customer order qty of the unit."
-  },
-  {
-   "name": "Not assigned",
-   "source": "TB_R_INSTRUCTION",
-   "field": "REMAINING_ORDER_QTY",
-   "type": "Number",
-   "len": "8",
-   "io": "O",
-   "control": "Label",
-   "justified": "Right",
-   "initial": "-",
-   "required": "N",
-   "format": "ZZ,ZZ9",
-   "validation": "-",
-   "description": "Qty of the unit without a PO yet; '-' when 0."
+   "description": "Cases (destinations) of the unit that still have qty without a released PO (REMAINING_ORDER_QTY > 0); '-' when 0."
   },
   {
    "name": "PO No",
@@ -741,21 +726,6 @@
    "description": "Latest PO Date of the unit."
   },
   {
-   "name": "Cases",
-   "source": "Computed",
-   "field": "-",
-   "type": "Number",
-   "len": "-",
-   "io": "O",
-   "control": "Label",
-   "justified": "Right",
-   "initial": "-",
-   "required": "N",
-   "format": "ZZ9",
-   "validation": "-",
-   "description": "Number of destinations of the unit (one case per destination); also shown while waiting."
-  },
-  {
    "name": "Status",
    "source": "Computed",
    "field": "-",
@@ -786,7 +756,7 @@
    "description": "ASN of the unit; '-' when none."
   },
   {
-   "name": "Order lines (expand)",
+   "name": "Detail (expand, D/S)",
    "source": "-",
    "field": "-",
    "type": "-",
@@ -798,7 +768,85 @@
    "required": "N",
    "format": "-",
    "validation": "-",
-   "description": "Shows the order lines: Customer Order No, Detailed Item No, Destination, Qty, PO No, PO Date, Assignment."
+   "description": "Shown to the D/S team only; hidden for the supplier. Opens the detail below."
+  },
+  {
+   "group": "<Delivery Plan Detail (D/S team only)>"
+  },
+  {
+   "name": "Destination",
+   "source": "TB_R_INSTRUCTION",
+   "field": "DESTINATION_CD",
+   "type": "Char",
+   "len": "7",
+   "io": "O",
+   "control": "Grid",
+   "justified": "Left",
+   "initial": "-",
+   "required": "N",
+   "format": "{code} \u00b7 {name}",
+   "validation": "-",
+   "description": "One row per destination (= one case); name from TB_M_H0125_DESTINATION."
+  },
+  {
+   "name": "Case",
+   "source": "Computed",
+   "field": "-",
+   "type": "Number",
+   "len": "-",
+   "io": "O",
+   "control": "Grid",
+   "justified": "Right",
+   "initial": "-",
+   "required": "N",
+   "format": "9",
+   "validation": "-",
+   "description": "Always 1 (one case per destination)."
+  },
+  {
+   "name": "Qty (pcs)",
+   "source": "TB_R_INSTRUCTION",
+   "field": "CUST_ORDER_QTY",
+   "type": "Number",
+   "len": "8",
+   "io": "O",
+   "control": "Grid",
+   "justified": "Right",
+   "initial": "-",
+   "required": "N",
+   "format": "ZZ,ZZ9",
+   "validation": "-",
+   "description": "Sum of the order qty of the destination; the detail title shows the unit total."
+  },
+  {
+   "name": "Not Assigned (pcs)",
+   "source": "TB_R_INSTRUCTION",
+   "field": "REMAINING_ORDER_QTY",
+   "type": "Number",
+   "len": "8",
+   "io": "O",
+   "control": "Grid",
+   "justified": "Right",
+   "initial": "-",
+   "required": "N",
+   "format": "ZZ,ZZ9",
+   "validation": "-",
+   "description": "Qty of the destination without a released PO; '-' when 0."
+  },
+  {
+   "name": "Order lines",
+   "source": "TB_R_INSTRUCTION",
+   "field": "CUSTOMER_ORDER_NO / DETAILED_ITEM_NO / DESTINATION_CD / CUST_ORDER_QTY / PO_NO / PO_ORDER_DT",
+   "type": "Char",
+   "len": "-",
+   "io": "O",
+   "control": "Grid",
+   "justified": "Left",
+   "initial": "-",
+   "required": "N",
+   "format": "-",
+   "validation": "-",
+   "description": "Customer Order No, Detailed Item No, Destination, Qty, PO No, PO Date, Assignment (Assigned / Planned / Not assigned)."
   },
   {
    "group": "<Selection Bar Section>"
@@ -816,7 +864,7 @@
    "required": "N",
    "format": "-",
    "validation": "-",
-   "description": "'{n} units selected \u00b7 {c} cases \u00b7 {q} pcs \u00b7 {units}'. Empty: hint that units of different dates can go into one ASN."
+   "description": "'{n} units selected \u00b7 {c} cases \u00b7 {units}'. Empty: hint that units of different dates can go into one ASN."
   },
   {
    "name": "Clear selection",
@@ -1324,7 +1372,8 @@
    "items": [
     "On first display all units of TB_R_INSTRUCTION are listed (criteria blank, Status = All), one row per Part Number + Customer Order Date, sorted by Customer Order Date then Part Number.",
     "[Search] applies the criteria (Customer Order Date range, Part Number, Status). [Reset] clears them. No row: message no. 3.",
-    "The order lines of a unit can be expanded: Customer Order No, Detailed Item No, Destination, Qty, PO No, PO Date and Assignment (Assigned / Not assigned)."
+    "The delivery plan header is at case level: Case Qty and Not Assigned (case). Pieces and destinations are not shown in the header.",
+    "The detail of a unit (destination with Case, Qty (pcs), Not Assigned (pcs), and the order lines with Customer Order No, Detailed Item No, Destination, Qty, PO No, PO Date and Assignment) can be expanded by the D/S team only; for the supplier the expand button is hidden."
    ]
   },
   {
@@ -1406,7 +1455,7 @@
    "cause": "Unit is Waiting for Next PO",
    "type": "Info",
    "msg_id": "MSG2",
-   "message": "Waiting for Next PO: {k} pcs of {Part No} / {Customer Order Date} are not assigned to a PO yet",
+   "message": "Waiting for Next PO: {k} of {n} cases of {Part No} / {Customer Order Date} are not assigned to a released PO yet",
    "action": "Wait for the next PO."
   },
   {

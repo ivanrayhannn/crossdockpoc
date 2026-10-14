@@ -121,6 +121,8 @@ export interface Unit {
   lastPoDate: string | null;
   /** One case per destination. */
   caseCount: number;
+  /** Cases (destinations) that still hold qty without a released PO. */
+  notAssignedCases: number;
   ready: boolean;
   asnNo: string | null;
 }
@@ -151,6 +153,7 @@ export function buildUnits(today: string, asnByUnit: Record<string, string>): Un
         pos: [...new Set(ls.map((l) => l.poNo).filter((p): p is string => !!p))],
         lastPoDate: poDates.length ? poDates[poDates.length - 1] : null,
         caseCount: new Set(ls.map((l) => l.destCd)).size,
+        notAssignedCases: new Set(ls.filter((l) => !isAssigned(l, today)).map((l) => l.destCd)).size,
         ready: qty === assignedQty,
         asnNo: asnByUnit[key] ?? null,
       };
