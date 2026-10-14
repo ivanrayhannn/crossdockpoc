@@ -9,7 +9,9 @@ python3 $S/build_mapping_upload_spec.py $S/MappingUpload_v3_spec.json
 python3 $S/build_ads_sync_spec.py $S/AdsSync_spec.json
 python3 $S/build_dad_calc_spec.py $S/DadCalc_spec.json
 python3 $S/build_map_calc_spec.py $S/MapCalc_spec.json
-python3 $S/build_caseconsol_screen_spec.py $S/CaseConsolScreen_spec.json
+python3 $S/build_asn_creation_spec.py $S/AsnCreation_spec.json
+python3 $S/build_instruction_spec.py $S/Instruction_spec.json
+python3 $S/build_asn_inquiry_spec.py $S/AsnInquiry_spec.json
 python3 $S/build_h_sync_spec.py $S/H0202Sync_spec.json H0202
 python3 $S/build_h_sync_spec.py $S/H0253Sync_spec.json H0253
 python3 $S/build_h_sync_spec.py $S/H0125Sync_spec.json H0125
@@ -24,8 +26,10 @@ MappingUpload_v3_spec.json X4_UISS_Batch_MappingUpload.xlsx
 AdsSync_spec.json X5_UISS_Batch_ActualDemandSummarySync.xlsx
 DadCalc_spec.json X6_UISS_Batch_DADVolumeCalculation.xlsx
 MapCalc_spec.json X7_UISS_Batch_MappingDestinationCalculation.xlsx
-CaseConsolScreen_spec.json X8_UISS_Screen_DeliveryPlan_ASNDraft.xlsx
+AsnCreation_spec.json X8_UISS_Screen_ASNCrossdockCreation.xlsx
 H0202Sync_spec.json X9_UISS_Batch_H0202DemandHistorySync.xlsx
 H0253Sync_spec.json X10_UISS_Batch_H0253OrderControlSync.xlsx
 H0125Sync_spec.json X11_UISS_Batch_H0125DestinationMasterSync.xlsx
+Instruction_spec.json X12_UISS_Batch_CustomerOrderPOMapping.xlsx
+AsnInquiry_spec.json X13_UISS_Screen_ASNInquiry.xlsx
 LIST
