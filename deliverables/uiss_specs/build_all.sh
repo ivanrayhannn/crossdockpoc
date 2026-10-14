@@ -10,7 +10,8 @@ python3 $S/build_ads_sync_spec.py $S/AdsSync_spec.json
 python3 $S/build_dad_calc_spec.py $S/DadCalc_spec.json
 python3 $S/build_map_calc_spec.py $S/MapCalc_spec.json
 python3 $S/build_caseconsol_screen_spec.py $S/CaseConsolScreen_spec.json
-python3 $S/build_h_sync_spec.py $S/HSync_spec.json
+python3 $S/build_h_sync_spec.py $S/H0202Sync_spec.json H0202
+python3 $S/build_h_sync_spec.py $S/H0253Sync_spec.json H0253
 while read -r spec out; do
   python3 $S/uiss_build.py "$S/$spec" -o "$O/$out" > /dev/null
   echo "built $O/$out"
@@ -23,5 +24,6 @@ AdsSync_spec.json X5_UISS_Batch_ActualDemandSummarySync.xlsx
 DadCalc_spec.json X6_UISS_Batch_DADVolumeCalculation.xlsx
 MapCalc_spec.json X7_UISS_Batch_MappingDestinationCalculation.xlsx
 CaseConsolScreen_spec.json X8_UISS_Screen_DeliveryPlan_ASNDraft.xlsx
-HSync_spec.json X9_UISS_Batch_DemandHistoryOrderControlSync.xlsx
+H0202Sync_spec.json X9_UISS_Batch_H0202DemandHistorySync.xlsx
+H0253Sync_spec.json X10_UISS_Batch_H0253OrderControlSync.xlsx
 LIST

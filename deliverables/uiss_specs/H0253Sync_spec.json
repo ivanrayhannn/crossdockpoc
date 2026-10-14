@@ -4,7 +4,7 @@
   "phase": "DR",
   "project_name": "Crossdock Optimization",
   "block_name": "Batch",
-  "function_name": "X9 Crossdock - Demand History and Order Control Sync to NSP",
+  "function_name": "X10 Crossdock - Order Control Pre (H0253) Sync to NSP",
   "created_date": "14-Oct-26",
   "created_by": "FID Rayhan"
  },
@@ -19,8 +19,8 @@
  ],
  "general": {
   "objective": [
-   "To replicate TB_R_H0202_DEMAND_HISTORY_SUM and TB_R_H0253_ORDER_CONTROL_PRE from DB Surrounding to the tables with the same names in NSP.",
-   "Each NSP table is fully replaced every run (delete - insert). In case any error occurs, the run is rolled back and NSP keeps the data of the last successful run."
+   "To replicate TB_R_H0253_ORDER_CONTROL_PRE from DB Surrounding to the table with the same name in NSP.",
+   "The NSP table is fully replaced every run (delete - insert). In case any error occurs, the run is rolled back and NSP keeps the data of the last successful run."
   ],
   "operation_flow": {
    "flow": {
@@ -33,16 +33,11 @@
      },
      {
       "id": "b",
-      "label": "Replace TB_R_H0202_DEMAND_HISTORY_SUM",
+      "label": "Delete + insert TB_R_H0253_ORDER_CONTROL_PRE",
       "type": "process"
      },
      {
       "id": "c",
-      "label": "Replace TB_R_H0253_ORDER_CONTROL_PRE",
-      "type": "process"
-     },
-     {
-      "id": "d",
       "label": "Commit / roll back, Log",
       "type": "process"
      }
@@ -55,20 +50,11 @@
      {
       "from": "b",
       "to": "c"
-     },
-     {
-      "from": "c",
-      "to": "d"
      }
     ]
    }
   },
   "inputs": [
-   {
-    "name": "TB_R_H0202_DEMAND_HISTORY_SUM (DB Surrounding)",
-    "type": "DB",
-    "description": "Demand history summary"
-   },
    {
     "name": "TB_R_H0253_ORDER_CONTROL_PRE (DB Surrounding)",
     "type": "DB",
@@ -76,11 +62,6 @@
    }
   ],
   "outputs": [
-   {
-    "name": "TB_R_H0202_DEMAND_HISTORY_SUM (NSP)",
-    "type": "DB",
-    "description": "if successful: same rows as the source"
-   },
    {
     "name": "TB_R_H0253_ORDER_CONTROL_PRE (NSP)",
     "type": "DB",
@@ -108,7 +89,7 @@
     "rows": [
      [
       "-",
-      "No parameter. All rows of both source tables are copied."
+      "No parameter. All rows of the source table are copied."
      ]
     ]
    },
@@ -144,46 +125,28 @@
      "step": 1
     },
     {
-     "id": "s2",
-     "label": "TB_R_H0202_DEMAND_HISTORY_SUM (DB Surrounding)",
-     "type": "db",
-     "lane": "input"
-    },
-    {
-     "id": "p2",
-     "label": "Delete + insert TB_R_H0202_DEMAND_HISTORY_SUM",
-     "type": "process",
-     "step": 2
-    },
-    {
-     "id": "d2",
-     "label": "TB_R_H0202_DEMAND_HISTORY_SUM (NSP)",
-     "type": "db",
-     "lane": "output"
-    },
-    {
-     "id": "s3",
+     "id": "s",
      "label": "TB_R_H0253_ORDER_CONTROL_PRE (DB Surrounding)",
      "type": "db",
      "lane": "input"
     },
     {
-     "id": "p3",
-     "label": "Delete + insert TB_R_H0253_ORDER_CONTROL_PRE",
+     "id": "p2",
+     "label": "Delete all rows, insert all source rows",
      "type": "process",
-     "step": 3
+     "step": 2
     },
     {
-     "id": "d3",
+     "id": "d",
      "label": "TB_R_H0253_ORDER_CONTROL_PRE (NSP)",
      "type": "db",
      "lane": "output"
     },
     {
-     "id": "p4",
+     "id": "p3",
      "label": "Commit or roll back, record Log",
      "type": "process",
-     "step": 4
+     "step": 3
     },
     {
      "id": "log",
@@ -198,428 +161,31 @@
      "to": "p2"
     },
     {
-     "from": "s2",
+     "from": "s",
      "to": "p2"
     },
     {
      "from": "p2",
-     "to": "d2"
+     "to": "d"
     },
     {
      "from": "p2",
      "to": "p3"
     },
     {
-     "from": "s3",
-     "to": "p3"
-    },
-    {
      "from": "p3",
-     "to": "d3"
-    },
-    {
-     "from": "p3",
-     "to": "p4"
-    },
-    {
-     "from": "p4",
      "to": "log"
     }
    ]
   },
   "steps": [
    "The scheduler starts the batch.",
-   "Delete all rows of TB_R_H0202_DEMAND_HISTORY_SUM (NSP) and insert all rows of TB_R_H0202_DEMAND_HISTORY_SUM (DB Surrounding) (same columns and values).",
    "Delete all rows of TB_R_H0253_ORDER_CONTROL_PRE (NSP) and insert all rows of TB_R_H0253_ORDER_CONTROL_PRE (DB Surrounding) (same columns and values).",
-   "No error: commit. Error: roll back steps 2 and 3 (one transaction). Record the result in the Log. Exit."
+   "No error: commit. Error: roll back step 2 (one transaction). Record the result in the Log. Exit."
   ]
  },
  "data_map": {
   "blocks": [
-   {
-    "source": {
-     "table": "TB_R_H0202_DEMAND_HISTORY_SUM (NSP)"
-    },
-    "destination": {
-     "table": "TB_R_H0202_DEMAND_HISTORY_SUM (NSP)",
-     "operation": "Delete",
-     "description": "All rows (full replace)"
-    },
-    "mappings": [
-     {
-      "dest_field": "CUSTOMER_CD",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "CUSTOMER_ORDER_NO",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "ORDER_DT",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "ORDER_TIME",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "DESTINATION_CD",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "DETAILED_ITEM_NO",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "SERIAL_NO",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "DEMAND_HISTORY_UPDATE_CD",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "DEPOT_CD",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "DOMESTIC_OVERSEAS_CLASS_CD",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "REGION_CD",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "ORDER_MAKER_CD",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "ORDER_PART_NO",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "SHIPPING_PART_NO",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "DEMAND_HISTORY_DT",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "ORDER_TRANSPORTATION_CD",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "TOPAS_ORDER_TYPE",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "SUPPLIER_CD",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "CREATED_DEMAND_FLAG",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "ORDER_ERROR_CD",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "RA_CD",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "ORDER_PORTION_CD",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "ORDER_QTY_DEMAND_QTY",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "SHIPPING_QTY",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "REJECT_QTY",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "ETC_CANCEL_QTY",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "DIRECT_DELIVERY_QTY",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "FIRM_ORDER_QTY",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "CROSS_DOCK_QTY",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "PROCESS_QTY",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "BO_CANCEL_QTY",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "NON_TARGET_ORDER_QTY_FLAG",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "REGISTRANT_ID",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "UPDATE_JOB_ID",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "UPDATE_OPERATOR_ID",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "INTF_UPDATE_DT",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "CREATE_DT",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "CREATE_BY",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "UPDATE_DT",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "UPDATE_BY",
-      "description": "Row is deleted"
-     }
-    ]
-   },
-   {
-    "source": {
-     "table": "TB_R_H0202_DEMAND_HISTORY_SUM (DB Surrounding)"
-    },
-    "destination": {
-     "table": "TB_R_H0202_DEMAND_HISTORY_SUM (NSP)",
-     "operation": "Insert",
-     "description": "Every source row"
-    },
-    "mappings": [
-     {
-      "source_field": "CUSTOMER_CD",
-      "dest_field": "CUSTOMER_CD",
-      "description": "Same value as the source"
-     },
-     {
-      "source_field": "CUSTOMER_ORDER_NO",
-      "dest_field": "CUSTOMER_ORDER_NO",
-      "description": "Same value as the source"
-     },
-     {
-      "source_field": "ORDER_DT",
-      "dest_field": "ORDER_DT",
-      "description": "Same value as the source"
-     },
-     {
-      "source_field": "ORDER_TIME",
-      "dest_field": "ORDER_TIME",
-      "description": "Same value as the source"
-     },
-     {
-      "source_field": "DESTINATION_CD",
-      "dest_field": "DESTINATION_CD",
-      "description": "Same value as the source"
-     },
-     {
-      "source_field": "DETAILED_ITEM_NO",
-      "dest_field": "DETAILED_ITEM_NO",
-      "description": "Same value as the source"
-     },
-     {
-      "source_field": "SERIAL_NO",
-      "dest_field": "SERIAL_NO",
-      "description": "Same value as the source"
-     },
-     {
-      "source_field": "DEMAND_HISTORY_UPDATE_CD",
-      "dest_field": "DEMAND_HISTORY_UPDATE_CD",
-      "description": "Same value as the source"
-     },
-     {
-      "source_field": "DEPOT_CD",
-      "dest_field": "DEPOT_CD",
-      "description": "Same value as the source"
-     },
-     {
-      "source_field": "DOMESTIC_OVERSEAS_CLASS_CD",
-      "dest_field": "DOMESTIC_OVERSEAS_CLASS_CD",
-      "description": "Same value as the source"
-     },
-     {
-      "source_field": "REGION_CD",
-      "dest_field": "REGION_CD",
-      "description": "Same value as the source"
-     },
-     {
-      "source_field": "ORDER_MAKER_CD",
-      "dest_field": "ORDER_MAKER_CD",
-      "description": "Same value as the source"
-     },
-     {
-      "source_field": "ORDER_PART_NO",
-      "dest_field": "ORDER_PART_NO",
-      "description": "Same value as the source"
-     },
-     {
-      "source_field": "SHIPPING_PART_NO",
-      "dest_field": "SHIPPING_PART_NO",
-      "description": "Same value as the source"
-     },
-     {
-      "source_field": "DEMAND_HISTORY_DT",
-      "dest_field": "DEMAND_HISTORY_DT",
-      "description": "Same value as the source"
-     },
-     {
-      "source_field": "ORDER_TRANSPORTATION_CD",
-      "dest_field": "ORDER_TRANSPORTATION_CD",
-      "description": "Same value as the source"
-     },
-     {
-      "source_field": "TOPAS_ORDER_TYPE",
-      "dest_field": "TOPAS_ORDER_TYPE",
-      "description": "Same value as the source"
-     },
-     {
-      "source_field": "SUPPLIER_CD",
-      "dest_field": "SUPPLIER_CD",
-      "description": "Same value as the source"
-     },
-     {
-      "source_field": "CREATED_DEMAND_FLAG",
-      "dest_field": "CREATED_DEMAND_FLAG",
-      "description": "Same value as the source"
-     },
-     {
-      "source_field": "ORDER_ERROR_CD",
-      "dest_field": "ORDER_ERROR_CD",
-      "description": "Same value as the source"
-     },
-     {
-      "source_field": "RA_CD",
-      "dest_field": "RA_CD",
-      "description": "Same value as the source"
-     },
-     {
-      "source_field": "ORDER_PORTION_CD",
-      "dest_field": "ORDER_PORTION_CD",
-      "description": "Same value as the source"
-     },
-     {
-      "source_field": "ORDER_QTY_DEMAND_QTY",
-      "dest_field": "ORDER_QTY_DEMAND_QTY",
-      "description": "Same value as the source"
-     },
-     {
-      "source_field": "SHIPPING_QTY",
-      "dest_field": "SHIPPING_QTY",
-      "description": "Same value as the source"
-     },
-     {
-      "source_field": "REJECT_QTY",
-      "dest_field": "REJECT_QTY",
-      "description": "Same value as the source"
-     },
-     {
-      "source_field": "ETC_CANCEL_QTY",
-      "dest_field": "ETC_CANCEL_QTY",
-      "description": "Same value as the source"
-     },
-     {
-      "source_field": "DIRECT_DELIVERY_QTY",
-      "dest_field": "DIRECT_DELIVERY_QTY",
-      "description": "Same value as the source"
-     },
-     {
-      "source_field": "FIRM_ORDER_QTY",
-      "dest_field": "FIRM_ORDER_QTY",
-      "description": "Same value as the source"
-     },
-     {
-      "source_field": "CROSS_DOCK_QTY",
-      "dest_field": "CROSS_DOCK_QTY",
-      "description": "Same value as the source"
-     },
-     {
-      "source_field": "PROCESS_QTY",
-      "dest_field": "PROCESS_QTY",
-      "description": "Same value as the source"
-     },
-     {
-      "source_field": "BO_CANCEL_QTY",
-      "dest_field": "BO_CANCEL_QTY",
-      "description": "Same value as the source"
-     },
-     {
-      "source_field": "NON_TARGET_ORDER_QTY_FLAG",
-      "dest_field": "NON_TARGET_ORDER_QTY_FLAG",
-      "description": "Same value as the source"
-     },
-     {
-      "source_field": "REGISTRANT_ID",
-      "dest_field": "REGISTRANT_ID",
-      "description": "Same value as the source"
-     },
-     {
-      "source_field": "UPDATE_JOB_ID",
-      "dest_field": "UPDATE_JOB_ID",
-      "description": "Same value as the source"
-     },
-     {
-      "source_field": "UPDATE_OPERATOR_ID",
-      "dest_field": "UPDATE_OPERATOR_ID",
-      "description": "Same value as the source"
-     },
-     {
-      "source_field": "INTF_UPDATE_DT",
-      "dest_field": "INTF_UPDATE_DT",
-      "description": "Same value as the source"
-     },
-     {
-      "source_field": "CREATE_DT",
-      "dest_field": "CREATE_DT",
-      "description": "Same value as the source"
-     },
-     {
-      "source_field": "CREATE_BY",
-      "dest_field": "CREATE_BY",
-      "description": "Same value as the source"
-     },
-     {
-      "source_field": "UPDATE_DT",
-      "dest_field": "UPDATE_DT",
-      "description": "Same value as the source"
-     },
-     {
-      "source_field": "UPDATE_BY",
-      "dest_field": "UPDATE_BY",
-      "description": "Same value as the source"
-     }
-    ]
-   },
    {
     "source": {
      "table": "TB_R_H0253_ORDER_CONTROL_PRE (NSP)"
@@ -1077,7 +643,7 @@
     "mappings": [
      {
       "dest_field": "BATCH_ID",
-      "description": "'H0202_H0253_SYNC'"
+      "description": "'H0253_SYNC'"
      },
      {
       "dest_field": "STATUS",
@@ -1085,7 +651,7 @@
      },
      {
       "dest_field": "ROW_COUNT",
-      "description": "Rows inserted per table (0 when FAILED)"
+      "description": "Rows inserted (0 when FAILED)"
      },
      {
       "dest_field": "MESSAGE",
@@ -1110,9 +676,9 @@
    "marker": "-",
    "level": 0,
    "items": [
-    "Full replace of both tables (delete - insert); all columns are copied as they are, no conversion.",
-    "Both tables are replaced in one transaction (all-or-nothing). When the run fails, NSP keeps the data of the last successful run.",
-    "Schedule is set in the system master (TBC). Table structures: see Appendix."
+    "Full replace (delete - insert); all columns are copied as they are, no conversion.",
+    "Delete and insert run in one transaction (all-or-nothing). When the run fails, NSP keeps the data of the last successful run.",
+    "Schedule is set in the system master (TBC). Table structure: see Appendix."
    ]
   }
  ],
@@ -1122,7 +688,7 @@
    "cause": "Batch is called",
    "type": "Info",
    "msg_id": "LOG1",
-   "message": "H0202 / H0253 sync started.",
+   "message": "H0253 sync started.",
    "action": {
     "system": "Write the log.",
     "user": "-"
@@ -1133,7 +699,7 @@
    "cause": "Batch finishes",
    "type": "Info",
    "msg_id": "LOG2",
-   "message": "H0202 / H0253 sync ended. Status <STATUS>, rows H0202 <COUNT1>, H0253 <COUNT2>.",
+   "message": "H0253 sync ended. Status <STATUS>, rows <ROW_COUNT>.",
    "action": {
     "system": "Write the log.",
     "user": "-"
@@ -1144,7 +710,7 @@
    "cause": "Read from DB Surrounding or insert into NSP fails",
    "type": "Error",
    "msg_id": "LOG3",
-   "message": "Cannot replicate <TABLE>: <ERROR_DETAIL>.",
+   "message": "Cannot replicate TB_R_H0253_ORDER_CONTROL_PRE: <ERROR_DETAIL>.",
    "action": {
     "system": "Roll back. STATUS = FAILED.",
     "user": "User contact PIC"
@@ -1165,294 +731,6 @@
  "appendix_layout": "full",
  "appendix": [],
  "tables": [
-  {
-   "name": "TB_R_H0202_DEMAND_HISTORY_SUM",
-   "kind": "transaction",
-   "proposed": false,
-   "description": "Demand history summary replicated from DB Surrounding. Same columns as the source table; types and lengths follow DB Surrounding. Key (PK) TBD.",
-   "columns": [
-    [
-     "CUSTOMER_CD",
-     "VARCHAR(TBD)",
-     "",
-     "Y",
-     ""
-    ],
-    [
-     "CUSTOMER_ORDER_NO",
-     "VARCHAR(TBD)",
-     "",
-     "Y",
-     ""
-    ],
-    [
-     "ORDER_DT",
-     "DATE",
-     "",
-     "Y",
-     ""
-    ],
-    [
-     "ORDER_TIME",
-     "VARCHAR(TBD)",
-     "",
-     "Y",
-     ""
-    ],
-    [
-     "DESTINATION_CD",
-     "VARCHAR(TBD)",
-     "",
-     "Y",
-     ""
-    ],
-    [
-     "DETAILED_ITEM_NO",
-     "VARCHAR(TBD)",
-     "",
-     "Y",
-     ""
-    ],
-    [
-     "SERIAL_NO",
-     "VARCHAR(TBD)",
-     "",
-     "Y",
-     ""
-    ],
-    [
-     "DEMAND_HISTORY_UPDATE_CD",
-     "VARCHAR(TBD)",
-     "",
-     "Y",
-     ""
-    ],
-    [
-     "DEPOT_CD",
-     "VARCHAR(TBD)",
-     "",
-     "Y",
-     ""
-    ],
-    [
-     "DOMESTIC_OVERSEAS_CLASS_CD",
-     "VARCHAR(TBD)",
-     "",
-     "Y",
-     ""
-    ],
-    [
-     "REGION_CD",
-     "VARCHAR(TBD)",
-     "",
-     "Y",
-     ""
-    ],
-    [
-     "ORDER_MAKER_CD",
-     "VARCHAR(TBD)",
-     "",
-     "Y",
-     ""
-    ],
-    [
-     "ORDER_PART_NO",
-     "VARCHAR(TBD)",
-     "",
-     "Y",
-     ""
-    ],
-    [
-     "SHIPPING_PART_NO",
-     "VARCHAR(TBD)",
-     "",
-     "Y",
-     ""
-    ],
-    [
-     "DEMAND_HISTORY_DT",
-     "DATE",
-     "",
-     "Y",
-     ""
-    ],
-    [
-     "ORDER_TRANSPORTATION_CD",
-     "VARCHAR(TBD)",
-     "",
-     "Y",
-     ""
-    ],
-    [
-     "TOPAS_ORDER_TYPE",
-     "VARCHAR(TBD)",
-     "",
-     "Y",
-     ""
-    ],
-    [
-     "SUPPLIER_CD",
-     "VARCHAR(TBD)",
-     "",
-     "Y",
-     ""
-    ],
-    [
-     "CREATED_DEMAND_FLAG",
-     "VARCHAR(TBD)",
-     "",
-     "Y",
-     ""
-    ],
-    [
-     "ORDER_ERROR_CD",
-     "VARCHAR(TBD)",
-     "",
-     "Y",
-     ""
-    ],
-    [
-     "RA_CD",
-     "VARCHAR(TBD)",
-     "",
-     "Y",
-     ""
-    ],
-    [
-     "ORDER_PORTION_CD",
-     "VARCHAR(TBD)",
-     "",
-     "Y",
-     ""
-    ],
-    [
-     "ORDER_QTY_DEMAND_QTY",
-     "NUMBER",
-     "",
-     "Y",
-     ""
-    ],
-    [
-     "SHIPPING_QTY",
-     "NUMBER",
-     "",
-     "Y",
-     ""
-    ],
-    [
-     "REJECT_QTY",
-     "NUMBER",
-     "",
-     "Y",
-     ""
-    ],
-    [
-     "ETC_CANCEL_QTY",
-     "NUMBER",
-     "",
-     "Y",
-     ""
-    ],
-    [
-     "DIRECT_DELIVERY_QTY",
-     "NUMBER",
-     "",
-     "Y",
-     ""
-    ],
-    [
-     "FIRM_ORDER_QTY",
-     "NUMBER",
-     "",
-     "Y",
-     ""
-    ],
-    [
-     "CROSS_DOCK_QTY",
-     "NUMBER",
-     "",
-     "Y",
-     ""
-    ],
-    [
-     "PROCESS_QTY",
-     "NUMBER",
-     "",
-     "Y",
-     ""
-    ],
-    [
-     "BO_CANCEL_QTY",
-     "NUMBER",
-     "",
-     "Y",
-     ""
-    ],
-    [
-     "NON_TARGET_ORDER_QTY_FLAG",
-     "VARCHAR(TBD)",
-     "",
-     "Y",
-     ""
-    ],
-    [
-     "REGISTRANT_ID",
-     "VARCHAR(TBD)",
-     "",
-     "Y",
-     ""
-    ],
-    [
-     "UPDATE_JOB_ID",
-     "VARCHAR(TBD)",
-     "",
-     "Y",
-     ""
-    ],
-    [
-     "UPDATE_OPERATOR_ID",
-     "VARCHAR(TBD)",
-     "",
-     "Y",
-     ""
-    ],
-    [
-     "INTF_UPDATE_DT",
-     "TIMESTAMP",
-     "",
-     "Y",
-     ""
-    ],
-    [
-     "CREATE_DT",
-     "TIMESTAMP",
-     "",
-     "Y",
-     ""
-    ],
-    [
-     "CREATE_BY",
-     "VARCHAR(TBD)",
-     "",
-     "Y",
-     ""
-    ],
-    [
-     "UPDATE_DT",
-     "TIMESTAMP",
-     "",
-     "Y",
-     ""
-    ],
-    [
-     "UPDATE_BY",
-     "VARCHAR(TBD)",
-     "",
-     "Y",
-     ""
-    ]
-   ]
-  },
   {
    "name": "TB_R_H0253_ORDER_CONTROL_PRE",
    "kind": "transaction",
