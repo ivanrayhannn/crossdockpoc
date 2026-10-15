@@ -4,7 +4,7 @@ from asn_common import (ASND, ASND_COLS, ASND_TABLE, ASNH, ASNH_TABLE, DM, DRAFT
                         btn, header, it, out, revisions)
 
 IMG = 'deliverables/uiss_screens/asn_crossdock'
-B = ["Search", "Detail (expand, D/S)", "Hold / Release (D/S)", "Clear selection", "Create ASN",
+B = ["Search", "Detail (expand, D/S)", "Customer orders (expand, D/S)", "Hold / Release (D/S)", "Clear selection", "Create ASN",
      "Back", "PO detail (expand)", "Download Case Label", "Cancel", "Submit ASN", "Yes / No", "OK"]
 
 
@@ -30,7 +30,8 @@ spec = {
    {"section": "Case List", "fields": [{"field": "Selected unit (Part Number, Customer Order Date)", "order": "Ascending"}, {"field": "Destination, by first appearance in the unit", "order": "-"}]}],
   "buttons": [
    {"name": "Search", "function": "Run X12 (Get Order): get the customer orders and pre-map them to POs for the chosen Delivery Date and Rit; display the delivery plan."},
-   {"name": "Detail (expand, D/S)", "function": "D/S team only: show / hide the destinations (cases) of a unit with Qty and Hold Flag."},
+   {"name": "Detail (expand, D/S)", "function": "D/S team only: show / hide the destinations (cases) of a unit with Qty, Pcs/Case and Hold Flag."},
+   {"name": "Customer orders (expand, D/S)", "function": "D/S team only: show / hide the customer order lines of a destination (Customer Order No, Detailed Item No, Qty, PO No, PO Date)."},
    {"name": "Hold / Release (D/S)", "function": "D/S team only: set HOLD_FLAG of every order line of the destination (part number + customer order date + destination) to 'Y' (hold) or 'N' (release)."},
    {"name": "Clear selection", "function": "Untick all selected units."},
    {"name": "Create ASN", "function": "Map the selected units to their POs, build the ASN draft and open the Case List sub screen."},
@@ -50,7 +51,7 @@ spec = {
      {"section": "Delivery plan", "description": "Header only (case level); Part Number / Status filters", "buttons": modes([])},
      {"section": "Selection bar", "description": "Enabled when Ready units are ticked", "buttons": modes(["Clear selection", "Create ASN"])}]},
    {"mode": "List Mode - D/S Team", "sections": [
-     {"section": "Delivery plan", "description": "Same as supplier plus the destination detail with Hold Flag; a unit with all destinations on hold is listed as On Hold", "buttons": modes(["Detail (expand, D/S)", "Hold / Release (D/S)"])},
+     {"section": "Delivery plan", "description": "Same as supplier plus the destination detail with Hold Flag; a unit with all destinations on hold is listed as On Hold", "buttons": modes(["Detail (expand, D/S)", "Customer orders (expand, D/S)", "Hold / Release (D/S)"])},
      {"section": "Selection bar", "description": "Refer 2.c", "buttons": modes(["Clear selection", "Create ASN"])}]},
    {"mode": "Case List Mode (sub screen)", "sections": [
      {"section": "ASN summary", "description": "ASN No (assigned on submit), supplier, Delivery Date · Rit · Route, Delivery Qty, cases", "buttons": modes(["Back"])},
@@ -91,7 +92,7 @@ spec = {
  "screen_layout": [
   {"caption": "1. Initial Mode: choose Delivery Date and Rit, then Search", "image": f"{IMG}/c_01_initial.png"},
   {"caption": "2. Delivery plan after Search (supplier view, case level)", "image": f"{IMG}/c_02_delivery_plan.png"},
-  {"caption": "3. D/S team: destination detail with Hold Flag of a Not Ready unit", "image": f"{IMG}/c_03_ds_detail.png"},
+  {"caption": "3. D/S team: destination detail (Pcs/Case, Hold Flag) and customer orders of a destination", "image": f"{IMG}/c_03_ds_detail.png"},
   {"caption": "4. D/S team: destination on hold; the unit is computed again (Ready)", "image": f"{IMG}/c_04_ds_hold.png"},
   {"caption": "5. Units of different Customer Order Dates selected", "image": f"{IMG}/c_05_selected.png"},
   {"caption": "6. Case List sub screen", "image": f"{IMG}/c_06_case_list.png"},
@@ -120,6 +121,11 @@ spec = {
   out("Destination", INSTR, "DESTINATION_CD", "Char", "7", "Grid", "Left", "{code} · {name}", "One row per destination (= one case); name from " + DM + "."),
   out("Case", "Computed", "-", "Number", "-", "Grid", "Right", "9", "1; 0 when the destination is on hold."),
   out("Qty (pcs)", INSTR, "CUST_ORDER_QTY", "Number", "8", "Grid", "Right", "ZZ,ZZ9", "Sum of the order qty of the destination; '(on hold)' when held."),
+  out("Pcs/Case", "Part master", "PCS_PER_CASE", "Number", "-", "Grid", "Right", "ZZ9", "Pieces per case of the part (next to Qty)."),
+  btn("Customer orders (expand, D/S)", "Opens the customer order lines of the destination."),
+  {"group": "<Customer Orders of a Destination (D/S team only)>"},
+  out("Customer Order No / Detailed Item No", INSTR, "CUSTOMER_ORDER_NO / DETAILED_ITEM_NO", "Char", "-", "Grid", "Left", "-", "Original order row, e.g. order A 4 pcs and order B 2 pcs to Vietnam."),
+  out("Qty (pcs) / PO No / PO Date", INSTR, "CUST_ORDER_QTY / PO_NO / PO_ORDER_DT", "Char", "-", "Grid", "Left", "-", "Pre-mapping of the line."),
   btn("Hold / Release (D/S)", "Hold Flag of the destination: 'N · Hold' sets Y, 'Y · Release' sets N on every order line of the destination. Refer 5.3."),
   {"group": "<Selection Bar Section>"},
   out("Selection summary", "Computed", "-", "Char", "-", "Label", "Left", "-", "'{n} units selected · {c} cases · {units}'. Empty: hint that units of different dates can go into one ASN."),
@@ -187,7 +193,7 @@ spec = {
     "Created: the unit is in a submitted ASN (ASN status '1'); it is no longer listed (shown in ASN Inquiry)."]},
   {"type": "heading", "text": "5.3 Detail and Hold (D/S team)"},
   {"type": "bullets", "marker": "a.", "level": 2, "items": [
-    "The D/S team can expand a unit: one row per destination with Case, Qty (pcs) and Hold Flag. Customer order lines are not shown. The supplier sees the header only.",
+    "The D/S team can expand a unit: one row per destination with Case, Qty (pcs), Pcs/Case and Hold Flag; each destination can be expanded to its customer order lines (Customer Order No, Detailed Item No, Qty, PO No, PO Date). The supplier sees the header only.",
     "Hold / Release is done per destination: it updates HOLD_FLAG of every order line of the unit and destination in TB_R_H0253_ORDER_CONTROL_PRE (refer Data Edit Mapping). A held destination is not taken by Search; the unit is computed without it. A unit with all destinations on hold is shown as On Hold to the D/S team only.",
     "HOLD_FLAG is 'N' when the line is first replicated (X10) and is kept on the next replications."]},
   {"type": "heading", "text": "5.4 Select Units and Create ASN"},

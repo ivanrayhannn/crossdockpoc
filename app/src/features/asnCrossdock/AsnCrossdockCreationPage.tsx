@@ -71,6 +71,7 @@ export function AsnCrossdockCreationPage() {
   const [hold, setHold] = useState<Record<string, boolean>>({});
   const [sel, setSel] = useState<Record<string, boolean>>({});
   const [open, setOpen] = useState<Record<string, boolean>>({});
+  const [openDest, setOpenDest] = useState<Record<string, boolean>>({});
   const [openCase, setOpenCase] = useState<Record<number, boolean>>({});
   const [page, setPage] = useState<'list' | 'cases'>('list');
   const [confirm, setConfirm] = useState(false);
@@ -213,7 +214,7 @@ export function AsnCrossdockCreationPage() {
           <div style={{ display: 'flex' }}>
             {([['sup', 'Supplier'], ['ds', 'D/S team']] as const).map(([k, label], i) => (
               <button key={k} className={`btn ${viewAs === k ? 'btn-primary' : 'btn-secondary'}`} style={{ borderRadius: i ? '0 6px 6px 0' : '6px 0 0 6px', padding: '8px 14px', whiteSpace: 'nowrap' }}
-                onClick={() => { setViewAs(k); if (k === 'sup') setOpen({}); }}>{label}</button>
+                onClick={() => { setViewAs(k); if (k === 'sup') { setOpen({}); setOpenDest({}); } }}>{label}</button>
             ))}
           </div>
         </div>
@@ -312,22 +313,43 @@ export function AsnCrossdockCreationPage() {
                       <td colSpan={7} style={{ padding: '8px 16px 12px 50px', background: 'var(--color-surface)', borderBottom: '1px solid var(--color-divider)' }}>
                         <div className="ax-lbl" style={{ marginBottom: 4 }}>Destination · {u.qty} pcs</div>
                         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-                          <thead><tr>{['Destination', 'Case', 'Qty (pcs)', 'Hold Flag'].map((h) => <th key={h} style={{ ...th, background: 'transparent' }}>{h}</th>)}</tr></thead>
+                          <thead><tr><th style={{ ...th, background: 'transparent', width: 30 }} />{['Destination', 'Case', 'Qty (pcs)', 'Pcs/Case', 'Hold Flag'].map((h) => <th key={h} style={{ ...th, background: 'transparent' }}>{h}</th>)}</tr></thead>
                           <tbody>
                             {destRows(u).map((r) => {
                               const held = r.lines.every((l) => hold[l.id]);
-                              return (
-                                <tr key={r.destCd} style={{ color: held ? 'var(--color-neutral-600)' : undefined }}>
+                              const dk = `${u.key}|${r.destCd}`;
+                              return [
+                                <tr key={dk} style={{ color: held ? 'var(--color-neutral-600)' : undefined }}>
+                                  <td style={td}><button className="btn btn-secondary" title="Customer orders" style={{ padding: '1px 7px', fontSize: 10.5 }} onClick={() => setOpenDest({ ...openDest, [dk]: !openDest[dk] })}>{openDest[dk] ? '▾' : '▸'}</button></td>
                                   <td style={td}>{DESTS[r.destCd].code} · {DESTS[r.destCd].name}</td>
                                   <td style={td}>{held ? 0 : 1}</td>
                                   <td style={td}>{held ? `${r.lines.reduce((a, l) => a + l.qty, 0)} (on hold)` : r.qty}</td>
+                                  <td style={td}>{PCS_PER_CASE}</td>
                                   <td style={td}>
                                     <button className="btn btn-secondary" style={{ padding: '1px 8px', fontSize: 11 }} onClick={() => toggleHoldDest(r.lines, held)}>
                                       {held ? 'Y · Release' : 'N · Hold'}
                                     </button>
                                   </td>
-                                </tr>
-                              );
+                                </tr>,
+                                openDest[dk] && (
+                                  <tr key={`${dk}-l`}>
+                                    <td />
+                                    <td colSpan={5} style={{ padding: '4px 0 10px' }}>
+                                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11.5, background: 'var(--color-neutral-100)' }}>
+                                        <thead><tr>{['Customer Order No', 'Detailed Item No', 'Qty (pcs)', 'PO No', 'PO Date'].map((h) => <th key={h} style={{ ...th, height: 28 }}>{h}</th>)}</tr></thead>
+                                        <tbody>
+                                          {r.lines.map((l) => (
+                                            <tr key={l.id}>
+                                              <td style={td}>{l.custOrderNo}</td><td style={td}>{l.detailedItemNo}</td><td style={td}>{l.qty}</td>
+                                              <td style={td}>{l.poNo ?? '—'}</td><td style={td}>{niceDate(l.poDate)}</td>
+                                            </tr>
+                                          ))}
+                                        </tbody>
+                                      </table>
+                                    </td>
+                                  </tr>
+                                ),
+                              ];
                             })}
                           </tbody>
                         </table>

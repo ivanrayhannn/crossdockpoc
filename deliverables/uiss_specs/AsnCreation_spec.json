@@ -72,7 +72,11 @@
    },
    {
     "name": "Detail (expand, D/S)",
-    "function": "D/S team only: show / hide the destinations (cases) of a unit with Qty and Hold Flag."
+    "function": "D/S team only: show / hide the destinations (cases) of a unit with Qty, Pcs/Case and Hold Flag."
+   },
+   {
+    "name": "Customer orders (expand, D/S)",
+    "function": "D/S team only: show / hide the customer order lines of a destination (Customer Order No, Detailed Item No, Qty, PO No, PO Date)."
    },
    {
     "name": "Hold / Release (D/S)",
@@ -125,6 +129,7 @@
       "buttons": {
        "Search": "E",
        "Detail (expand, D/S)": "D",
+       "Customer orders (expand, D/S)": "D",
        "Hold / Release (D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
@@ -143,6 +148,7 @@
       "buttons": {
        "Search": "D",
        "Detail (expand, D/S)": "D",
+       "Customer orders (expand, D/S)": "D",
        "Hold / Release (D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
@@ -166,6 +172,7 @@
       "buttons": {
        "Search": "E",
        "Detail (expand, D/S)": "D",
+       "Customer orders (expand, D/S)": "D",
        "Hold / Release (D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
@@ -184,6 +191,7 @@
       "buttons": {
        "Search": "D",
        "Detail (expand, D/S)": "D",
+       "Customer orders (expand, D/S)": "D",
        "Hold / Release (D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
@@ -202,6 +210,7 @@
       "buttons": {
        "Search": "D",
        "Detail (expand, D/S)": "D",
+       "Customer orders (expand, D/S)": "D",
        "Hold / Release (D/S)": "D",
        "Clear selection": "E",
        "Create ASN": "E",
@@ -225,6 +234,7 @@
       "buttons": {
        "Search": "D",
        "Detail (expand, D/S)": "E",
+       "Customer orders (expand, D/S)": "E",
        "Hold / Release (D/S)": "E",
        "Clear selection": "D",
        "Create ASN": "D",
@@ -243,6 +253,7 @@
       "buttons": {
        "Search": "D",
        "Detail (expand, D/S)": "D",
+       "Customer orders (expand, D/S)": "D",
        "Hold / Release (D/S)": "D",
        "Clear selection": "E",
        "Create ASN": "E",
@@ -266,6 +277,7 @@
       "buttons": {
        "Search": "D",
        "Detail (expand, D/S)": "D",
+       "Customer orders (expand, D/S)": "D",
        "Hold / Release (D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
@@ -284,6 +296,7 @@
       "buttons": {
        "Search": "D",
        "Detail (expand, D/S)": "D",
+       "Customer orders (expand, D/S)": "D",
        "Hold / Release (D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
@@ -302,6 +315,7 @@
       "buttons": {
        "Search": "D",
        "Detail (expand, D/S)": "D",
+       "Customer orders (expand, D/S)": "D",
        "Hold / Release (D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
@@ -325,6 +339,7 @@
       "buttons": {
        "Search": "D",
        "Detail (expand, D/S)": "D",
+       "Customer orders (expand, D/S)": "D",
        "Hold / Release (D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
@@ -343,6 +358,7 @@
       "buttons": {
        "Search": "D",
        "Detail (expand, D/S)": "D",
+       "Customer orders (expand, D/S)": "D",
        "Hold / Release (D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
@@ -552,7 +568,7 @@
    "image": "deliverables/uiss_screens/asn_crossdock/c_02_delivery_plan.png"
   },
   {
-   "caption": "3. D/S team: destination detail with Hold Flag of a Not Ready unit",
+   "caption": "3. D/S team: destination detail (Pcs/Case, Hold Flag) and customer orders of a destination",
    "image": "deliverables/uiss_screens/asn_crossdock/c_03_ds_detail.png"
   },
   {
@@ -848,6 +864,69 @@
    "format": "ZZ,ZZ9",
    "validation": "-",
    "description": "Sum of the order qty of the destination; '(on hold)' when held."
+  },
+  {
+   "name": "Pcs/Case",
+   "source": "Part master",
+   "field": "PCS_PER_CASE",
+   "type": "Number",
+   "len": "-",
+   "io": "O",
+   "control": "Grid",
+   "justified": "Right",
+   "initial": "-",
+   "required": "N",
+   "format": "ZZ9",
+   "validation": "-",
+   "description": "Pieces per case of the part (next to Qty)."
+  },
+  {
+   "name": "Customer orders (expand, D/S)",
+   "source": "-",
+   "field": "-",
+   "type": "-",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "Enabled",
+   "required": "N",
+   "format": "-",
+   "validation": "-",
+   "description": "Opens the customer order lines of the destination."
+  },
+  {
+   "group": "<Customer Orders of a Destination (D/S team only)>"
+  },
+  {
+   "name": "Customer Order No / Detailed Item No",
+   "source": "#TB_R_INSTRUCTION",
+   "field": "CUSTOMER_ORDER_NO / DETAILED_ITEM_NO",
+   "type": "Char",
+   "len": "-",
+   "io": "O",
+   "control": "Grid",
+   "justified": "Left",
+   "initial": "-",
+   "required": "N",
+   "format": "-",
+   "validation": "-",
+   "description": "Original order row, e.g. order A 4 pcs and order B 2 pcs to Vietnam."
+  },
+  {
+   "name": "Qty (pcs) / PO No / PO Date",
+   "source": "#TB_R_INSTRUCTION",
+   "field": "CUST_ORDER_QTY / PO_NO / PO_ORDER_DT",
+   "type": "Char",
+   "len": "-",
+   "io": "O",
+   "control": "Grid",
+   "justified": "Left",
+   "initial": "-",
+   "required": "N",
+   "format": "-",
+   "validation": "-",
+   "description": "Pre-mapping of the line."
   },
   {
    "name": "Hold / Release (D/S)",
@@ -1860,7 +1939,7 @@
    "marker": "a.",
    "level": 2,
    "items": [
-    "The D/S team can expand a unit: one row per destination with Case, Qty (pcs) and Hold Flag. Customer order lines are not shown. The supplier sees the header only.",
+    "The D/S team can expand a unit: one row per destination with Case, Qty (pcs), Pcs/Case and Hold Flag; each destination can be expanded to its customer order lines (Customer Order No, Detailed Item No, Qty, PO No, PO Date). The supplier sees the header only.",
     "Hold / Release is done per destination: it updates HOLD_FLAG of every order line of the unit and destination in TB_R_H0253_ORDER_CONTROL_PRE (refer Data Edit Mapping). A held destination is not taken by Search; the unit is computed without it. A unit with all destinations on hold is shown as On Hold to the D/S team only.",
     "HOLD_FLAG is 'N' when the line is first replicated (X10) and is kept on the next replications."
    ]
