@@ -27,7 +27,7 @@ FUNCTIONS = [
      'G-TOPAS H0253', 'NSP TB_R_H0253_ORDER_CONTROL_PRE', 'N/A'),
     ('X11', 'H0125 Destination Master Sync', 'Batch', 'System', 'A. Master setup', 'Weekly (TBC)',
      'G-TOPAS H0125', 'NSP TB_M_H0125_DESTINATION', 'N/A'),
-    ('X12', 'Get Order - Customer Order PO Pre-mapping', 'Function', 'Supplier (button in X8)', 'B. Daily operation', 'On demand ([Get Order])',
+    ('X12', 'Get Order - Customer Order PO Pre-mapping', 'Function', 'Supplier (button in X8)', 'B. Daily operation', 'On demand ([Search] in X8)',
      'H0253 (status 7, Hold N), Pra Daily Order', '#TB_R_INSTRUCTION (temp, FIFO)', 'Yes (in X8)'),
     ('X13', 'ASN Inquiry', 'Screen', 'Supplier / D/S team', 'B. Daily operation', 'On demand',
      'TB_R_ASN_CROSSDOCK_H / _D', 'Display, case label', 'Yes'),
@@ -85,5 +85,5 @@ DONE = [
     'Struktur tabel H0202 / H0253 / H0125 dari I/F layout G-TOPAS, termasuk SERIAL_NO',
     'Alur ASN baru sesuai ASN_Flow_Normal.xlsx (unit Part + Customer Order Date, 1 case per destinasi, FIFO)',
     'Header delivery plan level case; detail destinasi & pcs hanya untuk tim D/S',
-    'ASN flow versi 15-Oct: Get Order (X12 on-demand pre-mapping), Hold Flag oleh D/S, Create ASN (mapping), status Ready / Not Ready / Created',
+    'ASN flow versi 15-Oct: Search (X12 on-demand pre-mapping), Hold Flag per destinasi oleh D/S, Create ASN (mapping), status Ready / Not Ready / Created',
 ]

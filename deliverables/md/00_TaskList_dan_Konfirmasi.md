@@ -28,7 +28,7 @@ Status per **15-Oct-2026**. Sumber data: `deliverables/exec/project_items.py` (s
 - Struktur tabel H0202 / H0253 / H0125 dari I/F layout G-TOPAS, termasuk SERIAL_NO
 - Alur ASN baru sesuai ASN_Flow_Normal.xlsx (unit Part + Customer Order Date, 1 case per destinasi, FIFO)
 - Header delivery plan level case; detail destinasi & pcs hanya untuk tim D/S
-- ASN flow versi 15-Oct: Get Order (X12 on-demand pre-mapping), Hold Flag oleh D/S, Create ASN (mapping), status Ready / Not Ready / Created
+- ASN flow versi 15-Oct: Search (X12 on-demand pre-mapping), Hold Flag per destinasi oleh D/S, Create ASN (mapping), status Ready / Not Ready / Created
 
 ## Task list (belum dikerjakan)
 

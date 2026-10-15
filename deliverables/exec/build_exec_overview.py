@@ -186,7 +186,7 @@ COLS = [
     None,  # phase separator
     [(G, 'Source', 'Customer order\n(crossdock, status 7)', False)],
     [(N, 'X9 · X10', 'Replicate orders +\nsupplier PO\n(Pra Daily Order)', False)],
-    [(S, 'X8 → X12', 'Get Order: order ↔ PO\npre-mapping (FIFO)\n→ Ready / Not Ready', False), (D, 'X8 detail', 'Monitor detail &\nhold order line', False)],
+    [(S, 'X8 → X12', 'Search (Get Order):\norder ↔ PO pre-mapping\n→ Ready / Not Ready', False), (D, 'X8 detail', 'Monitor detail &\nhold destination', False)],
     [(S, 'X8', 'Create ASN (mapping)\n→ Case List\n→ Submit (Created)', False)],
     [(S, 'X13', 'ASN Inquiry &\ncase label', False)],
     [(S, 'Next scope', 'Deliver cases to\ncrossdock', True)],
@@ -298,9 +298,9 @@ rules_a = ['Part didaftarkan Procurement dengan Min MAD sebagai acuan.',
            'Mapping calc: Max Case/Day dibagi per destinasi sesuai porsi MAD (min. 1 case).',
            'D/S team bisa menyesuaikan mapping; perubahan dikirim ke global system via RPA.']
 rules_b = ['Unit ASN = Part Number + Customer Order Date, selalu masuk 1 ASN utuh.',
-           'Get Order: order dipasangkan ke PO secara FIFO (pre-mapping); mapping final saat Create ASN.',
+           'Search: order dipasangkan ke PO secara FIFO (pre-mapping); mapping final saat Create ASN.',
            '1 case per Part + Order Date + destinasi; beda part = beda case.',
-           'Supplier melihat level case; detail & Hold Flag order line hanya untuk D/S team.']
+           'Supplier melihat level case; detail & Hold Flag destinasi hanya untuk D/S team.']
 for (hdr, rules, c0, c1) in (('Aturan kunci – Fase A', rules_a, step_col(0), step_col(5)), ('Aturan kunci – Fase B', rules_b, step_col(7), step_col(12))):
     bf.merge_cells(start_row=kr, start_column=c0, end_row=kr, end_column=c1)
     h = bf.cell(kr, c0, hdr)
@@ -381,7 +381,7 @@ ex.merge_cells(start_row=r + 1, start_column=8, end_row=r + 1, end_column=13)
 phases = [
     ('A. Master setup (bulanan)', 'X1, X2 Part List · X5, X11 replikasi data · X6 DAD calc · X7 mapping calc · X3, X4 mapping & sync',
      'Daftar part crossdock Active dan kapasitas case/day per destinasi untuk periode baru, tersinkron ke global system.'),
-    ('B. Operasi harian', 'X9, X10 replikasi order · X8 ASN Crossdock Creation (Get Order → X12 pre-mapping, Create ASN, Submit) · X13 ASN Inquiry',
+    ('B. Operasi harian', 'X9, X10 replikasi order · X8 ASN Crossdock Creation (Search → X12 pre-mapping, Create ASN, Submit) · X13 ASN Inquiry',
      'Supplier membuat ASN per case dari order yang sudah dapat PO; D/S team memantau detail destinasi & pcs.'),
 ]
 for i, (p, fx, out) in enumerate(phases):
