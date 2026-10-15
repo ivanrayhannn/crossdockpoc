@@ -5,14 +5,14 @@
   "project_name": "Crossdock Optimization",
   "block_name": "Screen",
   "function_name": "X13 ASN Inquiry",
-  "created_date": "14-Oct-26",
+  "created_date": "15-Oct-26",
   "created_by": "FID Rayhan"
  },
  "revisions": [
   {
    "revision": "0.1",
    "author": "FID Rayhan",
-   "date": "14-Oct-26",
+   "date": "15-Oct-26",
    "reviewed_by": "",
    "description": "Initial Draft"
   }
@@ -166,11 +166,11 @@
  "screen_layout": [
   {
    "caption": "1. List Mode",
-   "image": "deliverables/uiss_screens/asn_crossdock/c_09_inquiry.png"
+   "image": "deliverables/uiss_screens/asn_crossdock/c_11_inquiry.png"
   },
   {
    "caption": "2. Detail Mode",
-   "image": "deliverables/uiss_screens/asn_crossdock/c_10_inquiry_detail.png"
+   "image": "deliverables/uiss_screens/asn_crossdock/c_12_inquiry_detail.png"
   }
  ],
  "items": [
@@ -302,7 +302,7 @@
   },
   {
    "name": "Part / Customer Order Date",
-   "source": "TB_R_INSTRUCTION",
+   "source": "TB_R_ASN_CROSSDOCK_D",
    "field": "PART_NO / ORDER_DT",
    "type": "Char",
    "len": "-",
@@ -343,7 +343,7 @@
    "required": "N",
    "format": "-",
    "validation": "-",
-   "description": "Submitted (green)."
+   "description": "'1' Created (green)."
   },
   {
    "name": "Created",
@@ -410,7 +410,7 @@
   },
   {
    "name": "Case No",
-   "source": "TB_R_INSTRUCTION",
+   "source": "TB_R_ASN_CROSSDOCK_D",
    "field": "CASE_NO",
    "type": "Char",
    "len": "TBD",
@@ -425,7 +425,7 @@
   },
   {
    "name": "Part Number / Customer Order Date / Destination",
-   "source": "TB_R_INSTRUCTION",
+   "source": "TB_R_ASN_CROSSDOCK_D",
    "field": "PART_NO / ORDER_DT / DESTINATION_CD",
    "type": "Char",
    "len": "-",
@@ -440,8 +440,8 @@
   },
   {
    "name": "Customer Order No (qty) / PO No / Qty",
-   "source": "TB_R_INSTRUCTION",
-   "field": "CUSTOMER_ORDER_NO / PO_NO / ASSIGNED_QTY",
+   "source": "TB_R_ASN_CROSSDOCK_D",
+   "field": "CUSTOMER_ORDER_NO / PO_NO / QTY",
    "type": "Char",
    "len": "-",
    "io": "O",
@@ -481,7 +481,7 @@
    "marker": "a.",
    "level": 2,
    "items": [
-    "Shows the ASN summary and its cases from TB_R_INSTRUCTION (lines with the ASN_NO), grouped by CASE_NO. All items are read only.",
+    "Shows the ASN summary and its cases from TB_R_ASN_CROSSDOCK_D (rows with the ASN_NO), grouped by CASE_NO. All items are read only.",
     "[Download Case Label]: TBD (format, file name, content). [Back] returns to the list in the current search state.",
     "The screen does not change data (display only)."
    ]
@@ -506,14 +506,14 @@
    "name": "TB_R_ASN_CROSSDOCK_H",
    "kind": "transaction",
    "proposed": true,
-   "description": "ASN header of ASN Crossdock Creation; cases and lines are in TB_R_INSTRUCTION (ASN_NO, CASE_NO). Name and columns proposed.",
+   "description": "ASN header of ASN Crossdock Creation; its cases are in TB_R_ASN_CROSSDOCK_D. Name and columns proposed.",
    "columns": [
     [
      "ASN_NO",
      "VARCHAR(TBD)",
      "Y",
      "N",
-     "ASN-{Supplier}-{YYMMDD of Delivery Date}-{Seq}"
+     "ASN number (existing numbering)"
     ],
     [
      "SUPPLIER_CD",
@@ -541,14 +541,14 @@
      "VARCHAR(TBD)",
      "",
      "N",
-     "Rit Cycle"
+     "Rit"
     ],
     [
      "ROUTE",
      "VARCHAR(TBD)",
      "",
      "N",
-     "Route of the Rit Cycle"
+     "Route of the Rit"
     ],
     [
      "TOTAL_CASE",
@@ -562,14 +562,14 @@
      "NUMBER",
      "",
      "N",
-     "Total pieces"
+     "Delivery Qty (total pieces)"
     ],
     [
      "ASN_STATUS",
-     "VARCHAR(TBD)",
+     "VARCHAR(1)",
      "",
      "N",
-     "'SUBMITTED'"
+     "'1' Created (set on submit)"
     ],
     [
      "CREATED_BY",
@@ -602,206 +602,129 @@
    ]
   },
   {
-   "name": "TB_R_INSTRUCTION",
+   "name": "TB_R_ASN_CROSSDOCK_D",
    "kind": "transaction",
    "proposed": true,
-   "description": "Customer order line (H0253, order status 7) paired with a supplier PO (Pra Daily Order), FIFO by Customer Order Date. One row per line x PO assignment, plus one row with PO_NO NULL for the qty still without a PO. Columns proposed.",
+   "description": "Cases of a submitted ASN: one row per case x order line x PO. Name and columns proposed.",
    "columns": [
     [
-     "INSTRUCTION_ID",
-     "BIGINT",
+     "ASN_NO",
+     "VARCHAR(TBD)",
      "Y",
      "N",
-     "Running number (identity)"
+     "ASN number (TB_R_ASN_CROSSDOCK_H)"
     ],
     [
-     "CUSTOMER_CD",
-     "VARCHAR(7)",
-     "",
+     "CASE_NO",
+     "VARCHAR(TBD)",
+     "Y",
      "N",
-     "H0253.CUSTOMER_CD"
+     "Case number; format and sequence follow the existing numbering (last sequence table)"
     ],
     [
-     "CUSTOMER_ORDER_NO",
-     "VARCHAR(8)",
-     "",
+     "LINE_SEQ",
+     "NUMBER(4)",
+     "Y",
      "N",
-     "H0253.CUSTOMER_ORDER_NO"
-    ],
-    [
-     "ORDER_DT",
-     "DATE",
-     "",
-     "N",
-     "Customer Order Date (H0253.ORDER_DT)"
-    ],
-    [
-     "DESTINATION_CD",
-     "VARCHAR(7)",
-     "",
-     "N",
-     "H0253.DESTINATION_CD (TB_M_H0125_DESTINATION)"
-    ],
-    [
-     "DETAILED_ITEM_NO",
-     "VARCHAR(4)",
-     "",
-     "N",
-     "H0253.DETAILED_ITEM_NO"
-    ],
-    [
-     "SERIAL_NO",
-     "VARCHAR(7)",
-     "",
-     "N",
-     "H0253.SERIAL_NO"
+     "Order line x PO within the case"
     ],
     [
      "PART_NO",
      "VARCHAR(15)",
      "",
      "N",
-     "Order part number (H0253.SHIPPING_PART_NO)"
+     "Part number of the case"
     ],
     [
-     "ORDER_STATUS",
-     "VARCHAR(1)",
+     "ORDER_DT",
+     "DATE",
      "",
      "N",
-     "H0253.ORDER_STATUS ('7' Cross Dock)"
+     "Customer Order Date"
     ],
     [
-     "CUST_ORDER_QTY",
+     "DESTINATION_CD",
+     "VARCHAR(7)",
+     "",
+     "N",
+     "Destination of the case"
+    ],
+    [
+     "CUSTOMER_CD",
+     "VARCHAR(7)",
+     "",
+     "N",
+     "Customer code"
+    ],
+    [
+     "CUSTOMER_ORDER_NO",
+     "VARCHAR(8)",
+     "",
+     "N",
+     "Customer order number"
+    ],
+    [
+     "DETAILED_ITEM_NO",
+     "VARCHAR(4)",
+     "",
+     "N",
+     "Detailed item number"
+    ],
+    [
+     "SERIAL_NO",
+     "VARCHAR(7)",
+     "",
+     "N",
+     "Serial number"
+    ],
+    [
+     "QTY",
      "NUMBER(8)",
      "",
      "N",
-     "Order status qty of the customer order line (H0253.ORDER_STATUS_QTY)"
-    ],
-    [
-     "ASSIGNED_QTY",
-     "NUMBER(8)",
-     "",
-     "N",
-     "Qty of the line assigned to this PO (0 for the not-assigned row)"
-    ],
-    [
-     "REMAINING_ORDER_QTY",
-     "NUMBER(8)",
-     "",
-     "N",
-     "Qty of the line still without a PO after this assignment"
+     "Qty of the line in the case"
     ],
     [
      "PO_NO",
      "VARCHAR(TBD)",
      "",
-     "Y",
-     "Supplier PO number (Pra Daily Order Manifest); NULL while not assigned"
+     "N",
+     "PO number"
     ],
     [
      "MANIFEST_NO",
      "VARCHAR(TBD)",
      "",
-     "Y",
+     "N",
      "Manifest number"
     ],
     [
      "MANIFEST_ITEM_NO",
      "VARCHAR(TBD)",
      "",
-     "Y",
-     "Manifest item number (Pra Daily Order Part)"
-    ],
-    [
-     "PO_ORDER_DT",
-     "DATE",
-     "",
-     "Y",
-     "Order date of the PO (PO Date)"
+     "N",
+     "Manifest item number"
     ],
     [
      "PO_ORDER_QTY",
      "NUMBER(TBD)",
      "",
-     "Y",
-     "Order qty of the PO part"
-    ],
-    [
-     "SUPPLIER_CD",
-     "VARCHAR(TBD)",
-     "",
-     "Y",
-     "Supplier code"
-    ],
-    [
-     "SUPPLIER_PLANT",
-     "VARCHAR(TBD)",
-     "",
-     "Y",
-     "Supplier plant"
-    ],
-    [
-     "SUB_SUPPLIER_CD",
-     "VARCHAR(TBD)",
-     "",
-     "Y",
-     "Sub supplier code"
-    ],
-    [
-     "SUB_SUPPLIER_PLANT",
-     "VARCHAR(TBD)",
-     "",
-     "Y",
-     "Sub supplier plant"
-    ],
-    [
-     "ORDER_TYPE",
-     "VARCHAR(TBD)",
-     "",
-     "Y",
-     "Order type of the PO"
-    ],
-    [
-     "DOCK_CD",
-     "VARCHAR(TBD)",
-     "",
-     "Y",
-     "Dock code"
-    ],
-    [
-     "ETD_ORI",
-     "DATE",
-     "",
-     "Y",
-     "Original ETD"
-    ],
-    [
-     "ASN_NO",
-     "VARCHAR(TBD)",
-     "",
-     "Y",
-     "ASN number; filled by ASN Crossdock Creation [Submit ASN]"
-    ],
-    [
-     "CASE_NO",
-     "VARCHAR(TBD)",
-     "",
-     "Y",
-     "Case number; filled by ASN Crossdock Creation [Submit ASN]"
+     "N",
+     "PO qty"
     ],
     [
      "CREATED_BY",
      "VARCHAR(TBD)",
      "",
      "N",
-     "User who created the record"
+     "User who submitted the ASN"
     ],
     [
      "CREATED_DT",
      "DATETIME",
      "",
      "N",
-     "Created date and time"
+     "Submit date and time"
     ],
     [
      "CHANGED_BY",

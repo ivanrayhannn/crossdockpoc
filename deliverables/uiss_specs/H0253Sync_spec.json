@@ -184,7 +184,7 @@
   },
   "steps": [
    "The scheduler starts the batch.",
-   "Delete all rows of TB_R_H0253_ORDER_CONTROL_PRE (NSP) and insert all rows of TB_R_H0253_ORDER_CONTROL_PRE (DB Surrounding) (same columns and values).",
+   "Delete all rows of TB_R_H0253_ORDER_CONTROL_PRE (NSP) and insert all rows of TB_R_H0253_ORDER_CONTROL_PRE (DB Surrounding) (same columns and values). HOLD_FLAG and PO_MAPPED_FLAG are NSP-only columns (set in ASN Crossdock Creation): before the delete their values are kept per unique key and put back on the inserted rows; a new key gets 'N'.",
    "No error: commit. Error: roll back step 2 (one transaction). Record the result in the Log. Exit."
   ]
  },
@@ -374,6 +374,14 @@
      },
      {
       "dest_field": "INTF_UPDATE_DT",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "HOLD_FLAG",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "PO_MAPPED_FLAG",
       "description": "Row is deleted"
      },
      {
@@ -625,6 +633,14 @@
       "description": "Same value as the source"
      },
      {
+      "dest_field": "HOLD_FLAG",
+      "description": "Value of the deleted NSP row with the same unique key; 'N' for a new key"
+     },
+     {
+      "dest_field": "PO_MAPPED_FLAG",
+      "description": "Value of the deleted NSP row with the same unique key; 'N' for a new key"
+     },
+     {
       "source_field": "CREATE_DT",
       "dest_field": "CREATE_DT",
       "description": "Same value as the source"
@@ -689,7 +705,7 @@
    "marker": "-",
    "level": 0,
    "items": [
-    "Full replace (delete - insert); all columns are copied as they are, no conversion.",
+    "Full replace (delete - insert); all columns are copied as they are, no conversion. HOLD_FLAG and PO_MAPPED_FLAG are NSP-only columns (set in ASN Crossdock Creation): before the delete their values are kept per unique key and put back on the inserted rows; a new key gets 'N'.",
     "Delete and insert run in one transaction (all-or-nothing). When the run fails, NSP keeps the data of the last successful run.",
     "Schedule is set in the system master (TBC). Table structure: see Appendix."
    ]
@@ -1057,6 +1073,20 @@
      "",
      "Y",
      "No.44 Update Date & Time"
+    ],
+    [
+     "HOLD_FLAG",
+     "VARCHAR(1)",
+     "",
+     "N",
+     "NSP column: hold by the D/S team in ASN Crossdock Creation ('Y' / 'N'); default 'N' on insert, kept on re-sync"
+    ],
+    [
+     "PO_MAPPED_FLAG",
+     "VARCHAR(1)",
+     "",
+     "N",
+     "NSP column: line mapped to a PO by [Create ASN] ('Y' / 'N'); default 'N' on insert, kept on re-sync"
     ],
     [
      "CREATE_DT",

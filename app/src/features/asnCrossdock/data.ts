@@ -1,4 +1,4 @@
-/* ASN Crossdock — mock TB_R_INSTRUCTION (customer order line ↔ supplier PO, FIFO by order date) and
+/* ASN Crossdock — mock data of the Get Order pre-mapping (#TB_R_INSTRUCTION: customer order line ↔ supplier PO, FIFO by order date) and
    the rules of the ASN flow: the unit is Part Number + Customer Order Date, one case per
    Part + Customer Order Date + destination, and an ASN may hold several such units. */
 
@@ -20,7 +20,7 @@ export const DESTS: Record<string, Dest> = {
   '9722D10': { code: '9722D10', short: 'TH', name: 'Thailand' },
 };
 
-/** One row of TB_R_INSTRUCTION: a customer order line (H0253, order status 7) paired with a supplier PO. */
+/** One row of #TB_R_INSTRUCTION: a customer order line (H0253, order status 7) paired with a supplier PO. */
 export interface InstrLine {
   id: string;
   custOrderNo: string;
@@ -35,6 +35,7 @@ export interface InstrLine {
   /** PO Date (ISO). A PO dated after the business date is planned, not released yet. */
   poDate: string | null;
   manifestNo: string | null;
+  manifestItemNo: string | null;
 }
 
 export const PART_NAME: Record<string, string> = {
@@ -61,6 +62,7 @@ function lines(orderDt: string, partNo: string, raw: Raw[]): InstrLine[] {
     poNo: po,
     poDate,
     manifestNo: po ? `M${po.replace('PO', '')}0${i % 3}` : null,
+    manifestItemNo: po ? String((i % 3) + 1).padStart(3, '0') : null,
   }));
 }
 
@@ -108,12 +110,17 @@ export function isAssigned(l: InstrLine, today: string): boolean {
   return !!l.poNo && !!l.poDate && l.poDate <= today;
 }
 
+export type UnitStatus = 'ready' | 'notReady' | 'created' | 'hold';
+
 export interface Unit {
   /** Part Number + Customer Order Date. */
   key: string;
   partNo: string;
   orderDt: string;
+  /** Order lines taken by Get Order (Hold Flag = N). */
   lines: InstrLine[];
+  /** Order lines put on hold by the D/S team (Hold Flag = Y); shown in the D/S detail only. */
+  heldLines: InstrLine[];
   qty: number;
   assignedQty: number;
   remainingQty: number;
@@ -123,42 +130,56 @@ export interface Unit {
   caseCount: number;
   /** Cases (destinations) that still hold qty without a released PO. */
   notAssignedCases: number;
+  /** PO Readiness: cases whose whole qty is assigned to a released PO. */
+  readyCases: number;
   ready: boolean;
   asnNo: string | null;
+  status: UnitStatus;
 }
 
 export function unitKey(partNo: string, orderDt: string): string {
   return `${partNo}|${orderDt}`;
 }
 
-export function buildUnits(today: string, asnByUnit: Record<string, string>): Unit[] {
+const STATUS_ORDER: Record<UnitStatus, number> = { ready: 0, notReady: 1, hold: 2, created: 3 };
+
+/** Get Order: customer orders (Hold Flag = N) pre-mapped to released POs, FIFO by order date. */
+export function buildUnits(today: string, asnByUnit: Record<string, string>, hold: Record<string, boolean> = {}): Unit[] {
   const map = new Map<string, InstrLine[]>();
   for (const l of INSTRUCTIONS) {
     const k = unitKey(l.partNo, l.orderDt);
     map.set(k, [...(map.get(k) ?? []), l]);
   }
   return [...map.entries()]
-    .map(([key, ls]) => {
+    .map(([key, all]) => {
+      const ls = all.filter((l) => !hold[l.id]);
       const qty = ls.reduce((a, l) => a + l.qty, 0);
       const assignedQty = ls.filter((l) => isAssigned(l, today)).reduce((a, l) => a + l.qty, 0);
       const poDates = ls.map((l) => l.poDate).filter((d): d is string => !!d).sort();
+      const caseCount = new Set(ls.map((l) => l.destCd)).size;
+      const notAssignedCases = new Set(ls.filter((l) => !isAssigned(l, today)).map((l) => l.destCd)).size;
+      const asnNo = asnByUnit[key] ?? null;
+      const ready = ls.length > 0 && qty === assignedQty;
       return {
         key,
-        partNo: ls[0].partNo,
-        orderDt: ls[0].orderDt,
+        partNo: all[0].partNo,
+        orderDt: all[0].orderDt,
         lines: ls,
+        heldLines: all.filter((l) => hold[l.id]),
         qty,
         assignedQty,
         remainingQty: qty - assignedQty,
         pos: [...new Set(ls.map((l) => l.poNo).filter((p): p is string => !!p))],
         lastPoDate: poDates.length ? poDates[poDates.length - 1] : null,
-        caseCount: new Set(ls.map((l) => l.destCd)).size,
-        notAssignedCases: new Set(ls.filter((l) => !isAssigned(l, today)).map((l) => l.destCd)).size,
-        ready: qty === assignedQty,
-        asnNo: asnByUnit[key] ?? null,
+        caseCount,
+        notAssignedCases,
+        readyCases: caseCount - notAssignedCases,
+        ready,
+        asnNo,
+        status: (asnNo ? 'created' : !ls.length ? 'hold' : ready ? 'ready' : 'notReady') as UnitStatus,
       };
     })
-    .sort((a, b) => a.orderDt.localeCompare(b.orderDt) || a.partNo.localeCompare(b.partNo));
+    .sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status] || a.partNo.localeCompare(b.partNo) || a.orderDt.localeCompare(b.orderDt));
 }
 
 export interface AsnCase {
@@ -213,4 +234,9 @@ export interface SubmittedAsn {
   cases: AsnCase[];
   createdBy: string;
   createdAt: string;
+}
+
+/** Mock PO order qty of a part: total qty of all lines assigned to the PO. */
+export function poQtyOf(poNo: string, partNo: string): number {
+  return INSTRUCTIONS.filter((l) => l.poNo === poNo && l.partNo === partNo).reduce((a, l) => a + l.qty, 0);
 }

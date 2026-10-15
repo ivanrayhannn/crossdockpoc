@@ -1,95 +1,131 @@
 import { useMemo, useState } from 'react';
 import { addAsn, asnByUnitOf, useAsns } from './asnStore';
 import {
-  addDays, asnNoFor, BUSINESS_DATES, buildCases, buildUnits, DESTS, isAssigned, niceDate, PART_NAME, PCS_PER_CASE,
-  ritCyclesFor, SUPPLIER_CODE, SUPPLIER_NAME, SUPPLIER_PLANT, type Unit,
+  addDays, asnNoFor, BUSINESS_DATES, buildCases, buildUnits, DESTS, isAssigned, niceDate, PART_NAME, PCS_PER_CASE, poQtyOf,
+  ritCyclesFor, SUPPLIER_CODE, SUPPLIER_NAME, SUPPLIER_PLANT, type AsnCase, type InstrLine, type Unit, type UnitStatus,
 } from './data';
-import { CaseTable, Chip, Modal } from './ui';
+import { Chip, Modal } from './ui';
 import { card, th, td } from './styles';
 
-interface Query {
-  from: string;
-  to: string;
-  part: string;
-  st: 'all' | 'ready' | 'waiting' | 'asn';
-}
-const EMPTY: Query = { from: '', to: '', part: '', st: 'all' };
+type ViewAs = 'sup' | 'ds';
+type StatusFilter = 'all' | UnitStatus;
 
-function matches(u: Unit, q: Query): boolean {
-  if (q.from && u.orderDt < q.from) return false;
-  if (q.to && u.orderDt > q.to) return false;
-  if (q.part && u.partNo !== q.part) return false;
-  if (q.st === 'ready') return u.ready && !u.asnNo;
-  if (q.st === 'waiting') return !u.ready;
-  if (q.st === 'asn') return !!u.asnNo;
-  return true;
+interface Loaded {
+  deliveryDate: string;
+  ritNo: string;
+  route: string;
+}
+
+const STATUS_LABEL: Record<UnitStatus, string> = { ready: 'Ready', notReady: 'Not Ready', created: 'Created', hold: 'On Hold' };
+
+function StatusChip({ s }: { s: UnitStatus }) {
+  return <Chip tone={s === 'ready' ? 'ok' : s === 'notReady' ? 'warn' : 'neutral'}>{STATUS_LABEL[s]}</Chip>;
 }
 
 interface DestRow {
   destCd: string;
   qty: number;
   notAssigned: number;
+  lines: InstrLine[];
 }
 
-/** Destination level of a unit (one case per destination), shown in the D/S detail. */
+/** Destination level of a unit (one case per destination); held lines are listed but not counted. */
 function destRows(u: Unit, today: string): DestRow[] {
   const m = new Map<string, DestRow>();
-  for (const l of u.lines) {
-    const r = m.get(l.destCd) ?? { destCd: l.destCd, qty: 0, notAssigned: 0 };
-    r.qty += l.qty;
-    if (!isAssigned(l, today)) r.notAssigned += l.qty;
+  for (const l of [...u.lines, ...u.heldLines]) {
+    const r = m.get(l.destCd) ?? { destCd: l.destCd, qty: 0, notAssigned: 0, lines: [] };
+    r.lines.push(l);
+    if (!u.heldLines.includes(l)) {
+      r.qty += l.qty;
+      if (!isAssigned(l, today)) r.notAssigned += l.qty;
+    }
     m.set(l.destCd, r);
   }
   return [...m.values()];
 }
 
-type ViewAs = 'sup' | 'ds';
+interface PoRow {
+  poNo: string;
+  manifestNo: string;
+  manifestItemNo: string;
+  poQty: number;
+}
 
-/** Screen ASN Crossdock Creation: delivery plan per Part Number + Customer Order Date, and its Case List sub screen. */
+function poRowsOf(c: AsnCase): PoRow[] {
+  const m = new Map<string, PoRow>();
+  for (const l of c.lines) {
+    if (!l.poNo) continue;
+    const k = `${l.poNo}|${l.manifestNo}|${l.manifestItemNo}`;
+    if (!m.has(k)) m.set(k, { poNo: l.poNo, manifestNo: l.manifestNo ?? '—', manifestItemNo: l.manifestItemNo ?? '—', poQty: poQtyOf(l.poNo, c.partNo) });
+  }
+  return [...m.values()];
+}
+
+/** Screen ASN Crossdock Creation: Get Order (X12 pre-mapping), delivery plan, Create ASN and the Case List sub screen. */
 export function AsnCrossdockCreationPage() {
   const asns = useAsns();
   const [today, setToday] = useState('2026-10-15');
-  const [filter, setFilter] = useState<Query>(EMPTY);
-  const [query, setQuery] = useState<Query>(EMPTY);
-  const [sel, setSel] = useState<Record<string, boolean>>({});
-  const [open, setOpen] = useState<Record<string, boolean>>({});
-  const [page, setPage] = useState<'list' | 'cases'>('list');
+  const [viewAs, setViewAs] = useState<ViewAs>('sup');
+  const isDs = viewAs === 'ds';
   const [deliveryDate, setDeliveryDate] = useState(() => addDays('2026-10-15', 1));
   const [ritNo, setRitNo] = useState('');
+  const [loaded, setLoaded] = useState<Loaded | null>(null);
+  const [partFilter, setPartFilter] = useState('');
+  const [stFilter, setStFilter] = useState<StatusFilter>('all');
+  const [hold, setHold] = useState<Record<string, boolean>>({});
+  const [sel, setSel] = useState<Record<string, boolean>>({});
+  const [open, setOpen] = useState<Record<string, boolean>>({});
+  const [openDest, setOpenDest] = useState<Record<string, boolean>>({});
+  const [openCase, setOpenCase] = useState<Record<number, boolean>>({});
+  const [page, setPage] = useState<'list' | 'cases'>('list');
   const [confirm, setConfirm] = useState(false);
   const [done, setDone] = useState<string | null>(null);
   const [labelNote, setLabelNote] = useState(false);
-  const [viewAs, setViewAs] = useState<ViewAs>('sup');
-  const isDs = viewAs === 'ds';
 
-  const units = useMemo(() => buildUnits(today, asnByUnitOf(asns)), [today, asns]);
-  const rows = units.filter((u) => matches(u, query));
-  const selected = units.filter((u) => sel[u.key] && u.ready && !u.asnNo);
-  const cases = useMemo(() => buildCases(selected), [selected]);
-  const selQty = selected.reduce((a, u) => a + u.qty, 0);
   const rits = ritCyclesFor(deliveryDate);
   const rit = rits.find((r) => r.no === ritNo) ?? rits[0];
-  const nextAsnNo = asnNoFor(deliveryDate || today, asns.filter((a) => a.deliveryDate === deliveryDate).length + 1);
+  const units = useMemo(() => buildUnits(today, asnByUnitOf(asns), hold), [today, asns, hold]);
+  const visible = units.filter((u) => isDs || u.status !== 'hold');
+  const rows = visible.filter((u) => (!partFilter || u.partNo === partFilter) && (stFilter === 'all' || u.status === stFilter));
+  const selected = units.filter((u) => sel[u.key] && u.status === 'ready');
+  const cases = useMemo(() => buildCases(selected), [selected]);
+  const selQty = selected.reduce((a, u) => a + u.qty, 0);
+  const asnDate = loaded?.deliveryDate ?? deliveryDate;
+  const nextAsnNo = asnNoFor(asnDate, asns.filter((a) => a.deliveryDate === asnDate).length + 1);
 
   const changeToday = (d: string) => {
     setToday(d);
     setSel({});
+    setLoaded(null);
     setDeliveryDate(addDays(d, 1));
+    setRitNo('');
+  };
+
+  const getOrder = () => {
+    if (!rit) return;
+    setLoaded({ deliveryDate, ritNo: rit.no, route: rit.route });
+    setSel({});
+    setOpen({});
+  };
+
+  const toggleHold = (id: string) => {
+    setHold({ ...hold, [id]: !hold[id] });
+    setSel({});
   };
 
   const submit = () => {
-    if (!rit) return;
+    if (!loaded) return;
     addAsn({
-      asnNo: nextAsnNo, deliveryDate, rit, unitKeys: selected.map((u) => u.key), cases,
+      asnNo: nextAsnNo, deliveryDate: loaded.deliveryDate, rit: { no: loaded.ritNo, route: loaded.route }, unitKeys: selected.map((u) => u.key), cases,
       createdBy: 'D. Anggraini', createdAt: `${niceDate(today)} ${new Date().toTimeString().slice(0, 5)}`,
     });
-    setDone(`${nextAsnNo} submitted. ${cases.length} cases are locked. Delivery ${niceDate(deliveryDate)} · ${rit.no}.`);
+    setDone(`${nextAsnNo} submitted with status Created. ${cases.length} cases are locked. Delivery ${niceDate(loaded.deliveryDate)} · ${loaded.ritNo}.`);
     setConfirm(false);
     setSel({});
     setPage('list');
   };
 
-  if (page === 'cases') {
+  if (page === 'cases' && loaded) {
     return (
       <div style={{ padding: '18px 24px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
         <div>
@@ -100,46 +136,59 @@ export function AsnCrossdockCreationPage() {
           <Chip tone="neutral">Draft</Chip>
         </div>
         <div style={{ ...card, padding: '12px 16px', fontSize: 12.5, background: 'var(--color-accent-100, #eef4fb)' }}>
-          Each Part Number + Customer Order Date is included completely. One case per Part Number, Customer Order Date and destination (max {PCS_PER_CASE} pcs/case).
+          The selected units are mapped to their POs. Each Part Number + Customer Order Date is included completely; one case per Part Number, Customer Order Date and destination (max {PCS_PER_CASE} pcs/case).
         </div>
-        <div style={{ ...card, padding: 16, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, fontSize: 12.5 }}>
+        <div style={{ ...card, padding: 16, display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 16, fontSize: 12.5 }}>
           <div><div className="ax-lbl">ASN No</div><div style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{nextAsnNo}</div><div className="ax-muted">auto · assigned on submit</div></div>
           <div><div className="ax-lbl">Supplier · Plant</div><div style={{ fontWeight: 600 }}>{SUPPLIER_CODE} · {SUPPLIER_PLANT}</div><div className="ax-muted">{SUPPLIER_NAME}</div></div>
-          <div><div className="ax-lbl">Part / Customer Order Date</div>{selected.map((u) => <div key={u.key} style={{ fontWeight: 600 }}>{u.partNo} · {niceDate(u.orderDt)}</div>)}</div>
-          <div><div className="ax-lbl">Cases · Qty</div><div style={{ fontWeight: 600 }}>{cases.length} cases · {selQty} pcs</div></div>
+          <div><div className="ax-lbl">Delivery Date · Rit · Route</div><div style={{ fontWeight: 600 }}>{niceDate(loaded.deliveryDate)} · {loaded.ritNo} · {loaded.route}</div></div>
+          <div><div className="ax-lbl">Delivery Qty</div><div style={{ fontWeight: 600 }}>{selQty} pcs</div></div>
+          <div><div className="ax-lbl">Cases</div><div style={{ fontWeight: 600 }}>{cases.length} cases</div></div>
         </div>
         <div style={{ ...card }}>
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 13, padding: '12px 16px', borderBottom: '1px solid var(--color-divider)' }}>
-            <span style={{ fontSize: 12.5, fontWeight: 600, marginRight: 'auto', alignSelf: 'center' }}>Case list in this ASN</span>
-            <div className="field" style={{ width: 170 }}>
-              <label>Delivery Date *</label>
-              <input className="input" type="date" value={deliveryDate} min={today} onChange={(e) => { setDeliveryDate(e.target.value); setRitNo(''); }} />
-            </div>
-            <div className="field" style={{ width: 150 }}>
-              <label>Rit Cycle *</label>
-              <select className="input" value={rit?.no ?? ''} disabled={!rits.length} onChange={(e) => setRitNo(e.target.value)}>
-                {rits.length ? rits.map((r) => <option key={r.no} value={r.no}>{r.no}</option>) : <option value="">No rit cycle</option>}
-              </select>
-            </div>
-            <div className="field" style={{ width: 90 }}>
-              <label>Route</label>
-              <input className="input" value={rit?.route ?? '—'} disabled />
-            </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 13, padding: '10px 16px', borderBottom: '1px solid var(--color-divider)' }}>
+            <span style={{ fontSize: 12.5, fontWeight: 600, marginRight: 'auto' }}>Case list in this ASN</span>
             <button className="btn btn-secondary" disabled={!cases.length} onClick={() => setLabelNote(true)}>Download Case Label</button>
           </div>
-          <CaseTable cases={cases} caseLabel={(c) => `Case ${c.seq}`} />
+          <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: 12.5 }}>
+            <thead><tr><th style={{ ...th, width: 34 }} /><th style={th}>Case Number</th><th style={th}>Part Number</th><th style={{ ...th, textAlign: 'right' }}>Qty</th></tr></thead>
+            <tbody>
+              {cases.map((c) => [
+                <tr key={c.seq}>
+                  <td style={td}><button className="btn btn-secondary" title="PO detail" style={{ padding: '2px 8px', fontSize: 11 }} onClick={() => setOpenCase({ ...openCase, [c.seq]: !openCase[c.seq] })}>{openCase[c.seq] ? '▾' : '▸'}</button></td>
+                  <td style={{ ...td, fontFamily: 'var(--font-mono)', fontWeight: 600 }}>Case {c.seq}</td>
+                  <td style={{ ...td, fontFamily: 'var(--font-mono)' }}>{c.partNo}</td>
+                  <td style={{ ...td, textAlign: 'right', fontWeight: 600 }}>{c.qty}</td>
+                </tr>,
+                openCase[c.seq] && (
+                  <tr key={`${c.seq}-d`}>
+                    <td colSpan={4} style={{ padding: '6px 16px 10px 50px', background: 'var(--color-surface)', borderBottom: '1px solid var(--color-divider)' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                        <thead><tr>{['PO No', 'Manifest No', 'Manifest Item No', 'PO Qty'].map((h) => <th key={h} style={{ ...th, background: 'transparent' }}>{h}</th>)}</tr></thead>
+                        <tbody>
+                          {poRowsOf(c).map((r) => (
+                            <tr key={`${r.poNo}-${r.manifestNo}-${r.manifestItemNo}`}><td style={td}>{r.poNo}</td><td style={td}>{r.manifestNo}</td><td style={td}>{r.manifestItemNo}</td><td style={td}>{r.poQty}</td></tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </td>
+                  </tr>
+                ),
+              ])}
+              <tr><td colSpan={3} style={{ ...td, textAlign: 'right', fontWeight: 600 }}>Total</td><td style={{ ...td, textAlign: 'right', fontWeight: 700 }}>{selQty}</td></tr>
+            </tbody>
+          </table>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '11px 16px', borderTop: '1px solid var(--color-divider)' }}>
-            {!rits.length && <span style={{ color: 'var(--color-danger)', fontSize: 12 }}>No rit cycle available for {niceDate(deliveryDate)}. Choose another delivery date.</span>}
             <span style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
               <button className="btn btn-secondary" onClick={() => setPage('list')}>Cancel</button>
-              <button className="btn btn-primary" disabled={!cases.length || !deliveryDate || !rit} onClick={() => setConfirm(true)}>Submit ASN</button>
+              <button className="btn btn-primary" disabled={!cases.length} onClick={() => setConfirm(true)}>Submit ASN</button>
             </span>
           </div>
         </div>
         {confirm && (
           <Modal title="Submit ASN?" onClose={() => setConfirm(false)}
             actions={<><button className="btn btn-secondary" onClick={() => setConfirm(false)}>No</button><button className="btn btn-primary" onClick={submit}>Yes, submit</button></>}>
-            {cases.length} cases ({selQty} pcs) will be locked into {nextAsnNo}, delivery {niceDate(deliveryDate)} · {rit?.no}.
+            {cases.length} cases ({selQty} pcs) will be locked into {nextAsnNo}, delivery {niceDate(loaded.deliveryDate)} · {loaded.ritNo}.
           </Modal>
         )}
         {labelNote && (
@@ -157,7 +206,7 @@ export function AsnCrossdockCreationPage() {
         <div style={{ marginRight: 'auto' }}>
           <h1 style={{ fontSize: 22, margin: 0 }}>ASN Crossdock Creation</h1>
           <div style={{ fontSize: 12.5, color: 'var(--color-neutral-700)', marginTop: 3 }}>
-            Delivery plan per Part Number + Customer Order Date, in cases. A unit is Ready to Delivery when all its cases are assigned to a released PO; it then goes into one ASN as a whole. The destination and pcs detail is open to the D/S team.
+            Choose the Delivery Date and Rit, then Get Order: customer orders are taken FIFO by order date and pre-mapped to supplier POs. A unit (Part Number + Customer Order Date) is Ready when all its cases are assigned to a PO.
           </div>
         </div>
         <div className="field">
@@ -165,7 +214,7 @@ export function AsnCrossdockCreationPage() {
           <div style={{ display: 'flex' }}>
             {([['sup', 'Supplier'], ['ds', 'D/S team']] as const).map(([k, label], i) => (
               <button key={k} className={`btn ${viewAs === k ? 'btn-primary' : 'btn-secondary'}`} style={{ borderRadius: i ? '0 6px 6px 0' : '6px 0 0 6px', padding: '8px 14px', whiteSpace: 'nowrap' }}
-                onClick={() => { setViewAs(k); if (k === 'sup') setOpen({}); }}>{label}</button>
+                onClick={() => { setViewAs(k); if (k === 'sup') { setOpen({}); setOpenDest({}); } }}>{label}</button>
             ))}
           </div>
         </div>
@@ -178,42 +227,61 @@ export function AsnCrossdockCreationPage() {
       </div>
 
       <div style={{ ...card, padding: '14px 16px 16px' }}>
-        <div style={{ fontSize: 10.5, fontWeight: 600, letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: 11 }}>Search criteria</div>
+        <div style={{ fontSize: 10.5, fontWeight: 600, letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: 11 }}>Delivery</div>
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 13 }}>
-          <div className="field" style={{ width: 170 }}><label>Customer Order Date - From</label><input className="input" type="date" value={filter.from} onChange={(e) => setFilter({ ...filter, from: e.target.value })} /></div>
-          <div className="field" style={{ width: 170 }}><label>To</label><input className="input" type="date" value={filter.to} onChange={(e) => setFilter({ ...filter, to: e.target.value })} /></div>
-          <div className="field" style={{ width: 160 }}>
-            <label>Part Number</label>
-            <select className="input" value={filter.part} onChange={(e) => setFilter({ ...filter, part: e.target.value })}>
-              <option value="">All</option>
-              {Object.keys(PART_NAME).map((p) => <option key={p} value={p}>{p}</option>)}
+          <div className="field" style={{ width: 170 }}>
+            <label>Delivery Date *</label>
+            <input className="input" type="date" value={deliveryDate} min={today} onChange={(e) => { setDeliveryDate(e.target.value); setRitNo(''); }} />
+          </div>
+          <div className="field" style={{ width: 150 }}>
+            <label>Rit *</label>
+            <select className="input" value={rit?.no ?? ''} disabled={!rits.length} onChange={(e) => setRitNo(e.target.value)}>
+              {rits.length ? rits.map((r) => <option key={r.no} value={r.no}>{r.no}</option>) : <option value="">No rit cycle</option>}
             </select>
           </div>
-          <div className="field" style={{ width: 200 }}>
-            <label>Status</label>
-            <select className="input" value={filter.st} onChange={(e) => setFilter({ ...filter, st: e.target.value as Query['st'] })}>
-              <option value="all">All</option>
-              <option value="ready">Ready to Delivery</option>
-              <option value="waiting">Waiting for Next PO</option>
-              <option value="asn">In ASN</option>
-            </select>
+          <div className="field" style={{ width: 100 }}>
+            <label>Route</label>
+            <input className="input" value={rit?.route ?? '—'} disabled />
           </div>
-          <span style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-            <button className="btn btn-secondary" onClick={() => { setFilter(EMPTY); setQuery(EMPTY); }}>Reset</button>
-            <button className="btn btn-primary" onClick={() => setQuery(filter)}>Search</button>
+          {!rits.length && <span style={{ color: 'var(--color-danger)', fontSize: 12, alignSelf: 'center' }}>No rit cycle available for {niceDate(deliveryDate)}. Choose another delivery date.</span>}
+          <span style={{ marginLeft: 'auto' }}>
+            <button className="btn btn-primary" disabled={!deliveryDate || !rit} onClick={getOrder}>Get Order</button>
           </span>
         </div>
       </div>
 
       <div style={{ ...card, overflow: 'hidden' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '10px 16px', borderBottom: '1px solid var(--color-divider)' }}>
-          <span style={{ fontSize: 12.5, fontWeight: 600 }}>Delivery plan</span>
-          <span style={{ fontSize: 11.5, color: 'var(--color-neutral-600)' }}>
-            {rows.length} units · {rows.filter((u) => u.ready && !u.asnNo).length} ready · {rows.filter((u) => !u.ready).length} waiting
-          </span>
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 13, padding: '10px 16px', borderBottom: '1px solid var(--color-divider)' }}>
+          <div style={{ marginRight: 'auto', alignSelf: 'center' }}>
+            <span style={{ fontSize: 12.5, fontWeight: 600 }}>Delivery plan</span>{' '}
+            {loaded && (
+              <span style={{ fontSize: 11.5, color: 'var(--color-neutral-600)' }}>
+                {niceDate(loaded.deliveryDate)} · {loaded.ritNo} · {loaded.route} — {rows.length} units · {rows.filter((u) => u.status === 'ready').length} ready · {rows.filter((u) => u.status === 'notReady').length} not ready
+              </span>
+            )}
+          </div>
+          <div className="field" style={{ width: 150 }}>
+            <label>Part Number</label>
+            <select className="input" value={partFilter} disabled={!loaded} onChange={(e) => setPartFilter(e.target.value)}>
+              <option value="">All</option>
+              {Object.keys(PART_NAME).map((p) => <option key={p} value={p}>{p}</option>)}
+            </select>
+          </div>
+          <div className="field" style={{ width: 150 }}>
+            <label>Status</label>
+            <select className="input" value={stFilter} disabled={!loaded} onChange={(e) => setStFilter(e.target.value as StatusFilter)}>
+              <option value="all">All</option>
+              <option value="ready">Ready</option>
+              <option value="notReady">Not Ready</option>
+              <option value="created">Created</option>
+              {isDs && <option value="hold">On Hold</option>}
+            </select>
+          </div>
         </div>
-        {rows.length === 0 ? (
-          <div style={{ padding: '40px 24px', textAlign: 'center', fontSize: 13 }}>No delivery plan matches this search.</div>
+        {!loaded ? (
+          <div style={{ padding: '40px 24px', textAlign: 'center', fontSize: 13, color: 'var(--color-neutral-700)' }}>Choose the Delivery Date and Rit, then click Get Order.</div>
+        ) : rows.length === 0 ? (
+          <div style={{ padding: '40px 24px', textAlign: 'center', fontSize: 13 }}>No customer order matches this filter.</div>
         ) : (
           <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: 12.5 }}>
             <thead>
@@ -222,58 +290,71 @@ export function AsnCrossdockCreationPage() {
                 <th style={th}>Customer Order Date</th>
                 <th style={th}>Part Number</th>
                 <th style={{ ...th, textAlign: 'right' }}>Case Qty</th>
-                <th style={{ ...th, textAlign: 'right' }}>Not Assigned (case)</th>
-                <th style={th}>PO No</th>
-                <th style={th}>Last PO Date</th>
-                <th style={th}>Status</th>
-                <th style={th}>ASN No</th>
+                <th style={{ ...th, textAlign: 'right' }}>PO Readiness (case)</th>
+                <th style={th}>ASN Status</th>
                 <th style={{ ...th, width: 34 }} />
               </tr>
             </thead>
             <tbody>
               {rows.map((u) => {
-                const enabled = u.ready && !u.asnNo;
-                const tip = u.asnNo ? `Already in ${u.asnNo}` : !u.ready ? `Waiting for Next PO: ${u.notAssignedCases} of ${u.caseCount} cases of ${u.partNo} / ${niceDate(u.orderDt)} are not assigned to a released PO yet` : 'Select to create an ASN';
+                const enabled = u.status === 'ready';
+                const tip = u.status === 'created' ? `Already in ${u.asnNo}` : u.status === 'notReady' ? `Not Ready: ${u.notAssignedCases} of ${u.caseCount} cases of ${u.partNo} / ${niceDate(u.orderDt)} are not assigned to a PO yet` : u.status === 'hold' ? 'All order lines are on hold' : 'Select to create an ASN';
                 return [
-                  <tr key={u.key} style={{ background: !u.ready ? 'var(--color-warn-bg, #fff8e6)' : undefined }}>
-                    <td style={td}><input type="checkbox" checked={!!u.asnNo || !!sel[u.key]} disabled={!enabled} title={tip} onChange={(e) => setSel({ ...sel, [u.key]: e.target.checked })} /></td>
+                  <tr key={u.key} style={{ background: u.status === 'notReady' ? 'var(--color-warn-bg, #fff8e6)' : undefined }}>
+                    <td style={td}><input type="checkbox" checked={u.status === 'created' || !!sel[u.key]} disabled={!enabled} title={tip} onChange={(e) => setSel({ ...sel, [u.key]: e.target.checked })} /></td>
                     <td style={{ ...td, fontWeight: 600 }}>{niceDate(u.orderDt)}</td>
                     <td style={td}><span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{u.partNo}</span><div className="ax-muted">{PART_NAME[u.partNo]}</div></td>
                     <td style={{ ...td, textAlign: 'right', fontWeight: 600 }}>{u.caseCount}</td>
-                    <td style={{ ...td, textAlign: 'right', color: u.notAssignedCases ? 'var(--color-danger)' : undefined }}>{u.notAssignedCases || '—'}</td>
-                    <td style={td}>{u.pos.join(', ') || '—'}</td>
-                    <td style={td}>{niceDate(u.lastPoDate)}</td>
-                    <td style={td}>{u.asnNo ? <Chip tone="neutral">In ASN</Chip> : u.ready ? <Chip tone="ok">Ready to Delivery</Chip> : <Chip tone="warn">Waiting for Next PO</Chip>}</td>
-                    <td style={{ ...td, fontFamily: 'var(--font-mono)', fontSize: 11.5 }}>{u.asnNo ?? '—'}</td>
-                    <td style={td}>{isDs && <button className="btn btn-secondary" title="Destination and order line detail (D/S team)" style={{ padding: '2px 8px', fontSize: 11 }} onClick={() => setOpen({ ...open, [u.key]: !open[u.key] })}>{open[u.key] ? '▾' : '▸'}</button>}</td>
+                    <td style={{ ...td, textAlign: 'right', color: u.readyCases < u.caseCount ? 'var(--color-danger)' : undefined }}>{u.readyCases}</td>
+                    <td style={td} title={tip}><StatusChip s={u.status} />{u.heldLines.length > 0 && isDs && <div className="ax-muted">{u.heldLines.length} line(s) on hold</div>}</td>
+                    <td style={td}>{isDs && <button className="btn btn-secondary" title="Destination detail (D/S team)" style={{ padding: '2px 8px', fontSize: 11 }} onClick={() => setOpen({ ...open, [u.key]: !open[u.key] })}>{open[u.key] ? '▾' : '▸'}</button>}</td>
                   </tr>,
                   isDs && open[u.key] && (
                     <tr key={`${u.key}-d`}>
-                      <td colSpan={10} style={{ padding: '8px 16px 12px 50px', background: 'var(--color-surface)', borderBottom: '1px solid var(--color-divider)' }}>
+                      <td colSpan={7} style={{ padding: '8px 16px 12px 50px', background: 'var(--color-surface)', borderBottom: '1px solid var(--color-divider)' }}>
                         <div className="ax-lbl" style={{ marginBottom: 4 }}>Destination · {u.qty} pcs{u.remainingQty ? ` · ${u.remainingQty} pcs not assigned` : ''}</div>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, marginBottom: 10 }}>
-                          <thead><tr>{['Destination', 'Case', 'Qty (pcs)', 'Not Assigned (pcs)'].map((h) => <th key={h} style={{ ...th, background: 'transparent' }}>{h}</th>)}</tr></thead>
-                          <tbody>
-                            {destRows(u, today).map((r) => (
-                              <tr key={r.destCd}>
-                                <td style={td}>{DESTS[r.destCd].code} · {DESTS[r.destCd].name}</td><td style={td}>1</td><td style={td}>{r.qty}</td>
-                                <td style={{ ...td, color: r.notAssigned ? 'var(--color-danger)' : undefined }}>{r.notAssigned || '—'}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                        <div className="ax-lbl" style={{ marginBottom: 4 }}>Order lines</div>
                         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-                          <thead><tr>{['Customer Order No', 'Detailed Item No', 'Destination', 'Qty', 'PO No', 'PO Date', 'Assignment'].map((h) => <th key={h} style={{ ...th, background: 'transparent' }}>{h}</th>)}</tr></thead>
+                          <thead><tr><th style={{ ...th, background: 'transparent', width: 30 }} />{['Destination', 'Case', 'Qty (pcs)', 'Not Assigned (pcs)'].map((h) => <th key={h} style={{ ...th, background: 'transparent' }}>{h}</th>)}</tr></thead>
                           <tbody>
-                            {u.lines.map((l) => (
-                              <tr key={l.id}>
-                                <td style={td}>{l.custOrderNo}</td><td style={td}>{l.detailedItemNo}</td>
-                                <td style={td}>{DESTS[l.destCd].code} · {DESTS[l.destCd].name}</td><td style={td}>{l.qty}</td>
-                                <td style={td}>{l.poNo ?? '—'}</td><td style={td}>{niceDate(l.poDate)}</td>
-                                <td style={td}>{isAssigned(l, today) ? 'Assigned' : l.poNo ? `Planned (PO ${niceDate(l.poDate)})` : 'Not assigned'}</td>
-                              </tr>
-                            ))}
+                            {destRows(u, today).map((r) => {
+                              const dk = `${u.key}|${r.destCd}`;
+                              return [
+                                <tr key={dk}>
+                                  <td style={td}><button className="btn btn-secondary" title="Order lines" style={{ padding: '1px 7px', fontSize: 10.5 }} onClick={() => setOpenDest({ ...openDest, [dk]: !openDest[dk] })}>{openDest[dk] ? '▾' : '▸'}</button></td>
+                                  <td style={td}>{DESTS[r.destCd].code} · {DESTS[r.destCd].name}</td>
+                                  <td style={td}>{r.qty ? 1 : 0}</td>
+                                  <td style={td}>{r.qty}</td>
+                                  <td style={{ ...td, color: r.notAssigned ? 'var(--color-danger)' : undefined }}>{r.notAssigned || '—'}</td>
+                                </tr>,
+                                openDest[dk] && (
+                                  <tr key={`${dk}-l`}>
+                                    <td />
+                                    <td colSpan={4} style={{ padding: '4px 0 10px' }}>
+                                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11.5, background: 'var(--color-neutral-100)' }}>
+                                        <thead><tr>{['Customer Order No', 'Detailed Item No', 'Qty', 'PO No', 'PO Date', 'Assignment', 'Hold Flag'].map((h) => <th key={h} style={{ ...th, height: 28 }}>{h}</th>)}</tr></thead>
+                                        <tbody>
+                                          {r.lines.map((l) => {
+                                            const held = !!hold[l.id];
+                                            return (
+                                              <tr key={l.id} style={{ color: held ? 'var(--color-neutral-600)' : undefined }}>
+                                                <td style={td}>{l.custOrderNo}</td><td style={td}>{l.detailedItemNo}</td><td style={td}>{l.qty}</td>
+                                                <td style={td}>{l.poNo ?? '—'}</td><td style={td}>{niceDate(l.poDate)}</td>
+                                                <td style={td}>{held ? 'Excluded (hold)' : isAssigned(l, today) ? 'Assigned' : l.poNo ? `Planned (PO ${niceDate(l.poDate)})` : 'Not assigned'}</td>
+                                                <td style={td}>
+                                                  <button className="btn btn-secondary" disabled={u.status === 'created'} style={{ padding: '1px 8px', fontSize: 11 }} onClick={() => toggleHold(l.id)}>
+                                                    {held ? 'Y · Release' : 'N · Hold'}
+                                                  </button>
+                                                </td>
+                                              </tr>
+                                            );
+                                          })}
+                                        </tbody>
+                                      </table>
+                                    </td>
+                                  </tr>
+                                ),
+                              ];
+                            })}
                           </tbody>
                         </table>
                       </td>
@@ -286,11 +367,11 @@ export function AsnCrossdockCreationPage() {
         )}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 16px', borderTop: '1px solid var(--color-divider)', background: 'var(--color-surface)' }}>
           <span style={{ fontSize: 12.5 }}>
-            {selected.length ? <><b>{selected.length} units selected</b> · {cases.length} cases · {selected.map((u) => `${u.partNo} ${niceDate(u.orderDt).slice(0, 6)}`).join(', ')}</> : 'Tick one or more Ready to Delivery units. Units from different Customer Order Dates can go into the same ASN.'}
+            {selected.length ? <><b>{selected.length} units selected</b> · {cases.length} cases · {selected.map((u) => `${u.partNo} ${niceDate(u.orderDt).slice(0, 6)}`).join(', ')}</> : 'Tick one or more Ready units. Units from different Customer Order Dates can go into the same ASN.'}
           </span>
           <span style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
             <button className="btn btn-secondary" disabled={!selected.length} onClick={() => setSel({})}>Clear selection</button>
-            <button className="btn btn-primary" disabled={!selected.length} onClick={() => setPage('cases')}>Create ASN</button>
+            <button className="btn btn-primary" disabled={!selected.length} onClick={() => { setOpenCase({}); setPage('cases'); }}>Create ASN</button>
           </span>
         </div>
       </div>
@@ -303,4 +384,3 @@ export function AsnCrossdockCreationPage() {
     </div>
   );
 }
-

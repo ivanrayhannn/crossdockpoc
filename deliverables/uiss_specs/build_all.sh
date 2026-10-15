@@ -30,6 +30,6 @@ AsnCreation_spec.json X8_UISS_Screen_ASNCrossdockCreation.xlsx
 H0202Sync_spec.json X9_UISS_Batch_H0202DemandHistorySync.xlsx
 H0253Sync_spec.json X10_UISS_Batch_H0253OrderControlSync.xlsx
 H0125Sync_spec.json X11_UISS_Batch_H0125DestinationMasterSync.xlsx
-Instruction_spec.json X12_UISS_Batch_CustomerOrderPOMapping.xlsx
+Instruction_spec.json X12_UISS_Batch_GetOrderPOPreMapping.xlsx
 AsnInquiry_spec.json X13_UISS_Screen_ASNInquiry.xlsx
 LIST
