@@ -5,40 +5,54 @@
   "project_name": "Crossdock Optimization",
   "block_name": "Screen",
   "function_name": "X8 ASN Crossdock Creation",
-  "created_date": "14-Oct-26",
+  "created_date": "15-Oct-26",
   "created_by": "FID Rayhan"
  },
  "revisions": [
   {
    "revision": "0.1",
    "author": "FID Rayhan",
-   "date": "14-Oct-26",
+   "date": "15-Oct-26",
    "reviewed_by": "",
    "description": "Initial Draft"
   }
  ],
  "general": {
   "objective": [
-   "To display the delivery plan of crossdock parts per Part Number + Customer Order Date, with its status Ready to Delivery / Waiting for Next PO (from TB_R_INSTRUCTION).",
-   "To select one or more Ready to Delivery units, also of different Customer Order Dates, and create one ASN with them.",
-   "To review the cases of the ASN (one case per Part Number + Customer Order Date + destination), enter Delivery Date and Rit Cycle, download the case labels and submit the ASN."
+   "To get the crossdock customer orders for a Delivery Date and Rit and pre-map them to supplier POs ([Get Order], function X12).",
+   "To display the delivery plan per Part Number + Customer Order Date at case level (Case Qty, PO Readiness, ASN Status Ready / Not Ready / Created).",
+   "To let the D/S team see the destination and order line detail and hold / release customer order lines.",
+   "To select one or more Ready units, map them to their POs, review the cases, download the case labels and submit the ASN."
   ],
   "display_order": [
    {
     "section": "Delivery plan",
     "fields": [
      {
-      "field": "Customer Order Date",
-      "order": "Ascending"
+      "field": "ASN Status (Ready, Not Ready, Created)",
+      "order": "-"
      },
      {
       "field": "Part Number",
+      "order": "Ascending"
+     },
+     {
+      "field": "Customer Order Date",
       "order": "Ascending"
      }
     ]
    },
    {
-    "section": "Order lines",
+    "section": "Destination detail (D/S)",
+    "fields": [
+     {
+      "field": "Destination, by first appearance in the unit",
+      "order": "-"
+     }
+    ]
+   },
+   {
+    "section": "Order lines (D/S)",
     "fields": [
      {
       "field": "Detailed Item No",
@@ -50,7 +64,7 @@
     "section": "Case List",
     "fields": [
      {
-      "field": "Selected unit (Customer Order Date, Part Number)",
+      "field": "Selected unit (Part Number, Customer Order Date)",
       "order": "Ascending"
      },
      {
@@ -62,16 +76,20 @@
   ],
   "buttons": [
    {
-    "name": "Search",
-    "function": "Retrieve the delivery plan by Customer Order Date range, Part Number and Status."
-   },
-   {
-    "name": "Reset",
-    "function": "Clear criteria and reset the screen to its initial value."
+    "name": "Get Order",
+    "function": "Run X12: get the customer orders and pre-map them to POs for the chosen Delivery Date and Rit; display the delivery plan."
    },
    {
     "name": "Detail (expand, D/S)",
-    "function": "D/S team only: show / hide the destination detail (pcs) and the customer order lines of a unit with their PO assignment."
+    "function": "D/S team only: show / hide the destinations (cases) of a unit with Qty and Not Assigned pcs."
+   },
+   {
+    "name": "Order lines (expand, D/S)",
+    "function": "D/S team only: show / hide the original order lines of a destination (Customer Order No, Detailed Item No)."
+   },
+   {
+    "name": "Hold / Release (D/S)",
+    "function": "D/S team only: set HOLD_FLAG of an order line to 'Y' (hold) or 'N' (release)."
    },
    {
     "name": "Clear selection",
@@ -79,11 +97,15 @@
    },
    {
     "name": "Create ASN",
-    "function": "Open the Case List sub screen with all cases of the selected units."
+    "function": "Map the selected units to their POs, build the ASN draft and open the Case List sub screen."
    },
    {
     "name": "Back",
-    "function": "Return from the Case List to ASN Crossdock Creation without submitting."
+    "function": "Return from the Case List to ASN Crossdock Creation without submitting; the mapping of the draft is released."
+   },
+   {
+    "name": "PO detail (expand)",
+    "function": "Show / hide PO No, Manifest No, Manifest Item No and PO Qty of a case."
    },
    {
     "name": "Download Case Label",
@@ -95,7 +117,7 @@
    },
    {
     "name": "Submit ASN",
-    "function": "Ask for confirmation, then submit the ASN and lock its units."
+    "function": "Ask for confirmation, then save the ASN with status Created."
    },
    {
     "name": "Yes / No",
@@ -108,18 +130,20 @@
   ],
   "screen_modes": [
    {
-    "mode": "List Mode - No Selection",
+    "mode": "Initial Mode",
     "sections": [
      {
-      "section": "Search Criteria",
-      "description": "Criteria blank (Status = All); all units listed",
+      "section": "Delivery",
+      "description": "Delivery Date = business date + 1; Rit = first rit of the date; Route displayed",
       "buttons": {
-       "Search": "E",
-       "Reset": "E",
+       "Get Order": "E",
        "Detail (expand, D/S)": "D",
+       "Order lines (expand, D/S)": "D",
+       "Hold / Release (D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
        "Back": "D",
+       "PO detail (expand)": "D",
        "Download Case Label": "D",
        "Cancel": "D",
        "Submit ASN": "D",
@@ -129,31 +153,16 @@
      },
      {
       "section": "Delivery plan",
-      "description": "One row per Part Number + Customer Order Date; nothing ticked",
+      "description": "Empty: 'Choose the Delivery Date and Rit, then click Get Order.' Filters disabled",
       "buttons": {
-       "Search": "D",
-       "Reset": "D",
-       "Detail (expand, D/S)": "E",
-       "Clear selection": "D",
-       "Create ASN": "D",
-       "Back": "D",
-       "Download Case Label": "D",
-       "Cancel": "D",
-       "Submit ASN": "D",
-       "Yes / No": "D",
-       "OK": "D"
-      }
-     },
-     {
-      "section": "Selection bar",
-      "description": "Hint text",
-      "buttons": {
-       "Search": "D",
-       "Reset": "D",
+       "Get Order": "D",
        "Detail (expand, D/S)": "D",
+       "Order lines (expand, D/S)": "D",
+       "Hold / Release (D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
        "Back": "D",
+       "PO detail (expand)": "D",
        "Download Case Label": "D",
        "Cancel": "D",
        "Submit ASN": "D",
@@ -164,18 +173,20 @@
     ]
    },
    {
-    "mode": "List Mode - Units Selected",
+    "mode": "List Mode - Supplier",
     "sections": [
      {
-      "section": "Search Criteria",
+      "section": "Delivery",
       "description": "Refer 1.a",
       "buttons": {
-       "Search": "E",
-       "Reset": "E",
+       "Get Order": "E",
        "Detail (expand, D/S)": "D",
+       "Order lines (expand, D/S)": "D",
+       "Hold / Release (D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
        "Back": "D",
+       "PO detail (expand)": "D",
        "Download Case Label": "D",
        "Cancel": "D",
        "Submit ASN": "D",
@@ -185,14 +196,16 @@
      },
      {
       "section": "Delivery plan",
-      "description": "One or more Ready to Delivery units ticked",
+      "description": "Header only (case level); Part Number / Status filters",
       "buttons": {
-       "Search": "D",
-       "Reset": "D",
-       "Detail (expand, D/S)": "E",
+       "Get Order": "D",
+       "Detail (expand, D/S)": "D",
+       "Order lines (expand, D/S)": "D",
+       "Hold / Release (D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
        "Back": "D",
+       "PO detail (expand)": "D",
        "Download Case Label": "D",
        "Cancel": "D",
        "Submit ASN": "D",
@@ -202,14 +215,59 @@
      },
      {
       "section": "Selection bar",
-      "description": "Units and cases selected",
+      "description": "Enabled when Ready units are ticked",
       "buttons": {
-       "Search": "D",
-       "Reset": "D",
+       "Get Order": "D",
        "Detail (expand, D/S)": "D",
+       "Order lines (expand, D/S)": "D",
+       "Hold / Release (D/S)": "D",
        "Clear selection": "E",
        "Create ASN": "E",
        "Back": "D",
+       "PO detail (expand)": "D",
+       "Download Case Label": "D",
+       "Cancel": "D",
+       "Submit ASN": "D",
+       "Yes / No": "D",
+       "OK": "D"
+      }
+     }
+    ]
+   },
+   {
+    "mode": "List Mode - D/S Team",
+    "sections": [
+     {
+      "section": "Delivery plan",
+      "description": "Same as supplier plus the expand of destination and order lines; status On Hold also listed",
+      "buttons": {
+       "Get Order": "D",
+       "Detail (expand, D/S)": "E",
+       "Order lines (expand, D/S)": "E",
+       "Hold / Release (D/S)": "E",
+       "Clear selection": "D",
+       "Create ASN": "D",
+       "Back": "D",
+       "PO detail (expand)": "D",
+       "Download Case Label": "D",
+       "Cancel": "D",
+       "Submit ASN": "D",
+       "Yes / No": "D",
+       "OK": "D"
+      }
+     },
+     {
+      "section": "Selection bar",
+      "description": "Refer 2.c",
+      "buttons": {
+       "Get Order": "D",
+       "Detail (expand, D/S)": "D",
+       "Order lines (expand, D/S)": "D",
+       "Hold / Release (D/S)": "D",
+       "Clear selection": "E",
+       "Create ASN": "E",
+       "Back": "D",
+       "PO detail (expand)": "D",
        "Download Case Label": "D",
        "Cancel": "D",
        "Submit ASN": "D",
@@ -224,14 +282,16 @@
     "sections": [
      {
       "section": "ASN summary",
-      "description": "ASN No auto ('assigned on submit'), supplier, units, cases / qty",
+      "description": "ASN No (assigned on submit), supplier, Delivery Date \u00b7 Rit \u00b7 Route, Delivery Qty, cases",
       "buttons": {
-       "Search": "D",
-       "Reset": "D",
+       "Get Order": "D",
        "Detail (expand, D/S)": "D",
+       "Order lines (expand, D/S)": "D",
+       "Hold / Release (D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
        "Back": "E",
+       "PO detail (expand)": "D",
        "Download Case Label": "D",
        "Cancel": "D",
        "Submit ASN": "D",
@@ -241,14 +301,16 @@
      },
      {
       "section": "Case list",
-      "description": "Delivery Date and Rit Cycle editable; cases read only",
+      "description": "Case Number, Part Number, Qty; expand PO detail",
       "buttons": {
-       "Search": "D",
-       "Reset": "D",
+       "Get Order": "D",
        "Detail (expand, D/S)": "D",
+       "Order lines (expand, D/S)": "D",
+       "Hold / Release (D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
        "Back": "D",
+       "PO detail (expand)": "E",
        "Download Case Label": "E",
        "Cancel": "D",
        "Submit ASN": "D",
@@ -258,14 +320,16 @@
      },
      {
       "section": "Footer",
-      "description": "Submit enabled when there are cases, a Delivery Date and a Rit Cycle",
+      "description": "Submit enabled when there are cases",
       "buttons": {
-       "Search": "D",
-       "Reset": "D",
+       "Get Order": "D",
        "Detail (expand, D/S)": "D",
+       "Order lines (expand, D/S)": "D",
+       "Hold / Release (D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
        "Back": "D",
+       "PO detail (expand)": "D",
        "Download Case Label": "D",
        "Cancel": "E",
        "Submit ASN": "E",
@@ -282,12 +346,14 @@
       "section": "Submit confirmation",
       "description": "'Submit ASN?' Yes / No",
       "buttons": {
-       "Search": "D",
-       "Reset": "D",
+       "Get Order": "D",
        "Detail (expand, D/S)": "D",
+       "Order lines (expand, D/S)": "D",
+       "Hold / Release (D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
        "Back": "D",
+       "PO detail (expand)": "D",
        "Download Case Label": "D",
        "Cancel": "D",
        "Submit ASN": "D",
@@ -297,14 +363,16 @@
      },
      {
       "section": "Success notification",
-      "description": "ASN submitted; back to the list",
+      "description": "ASN submitted (Created); back to the list",
       "buttons": {
-       "Search": "D",
-       "Reset": "D",
+       "Get Order": "D",
        "Detail (expand, D/S)": "D",
+       "Order lines (expand, D/S)": "D",
+       "Hold / Release (D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
        "Back": "D",
+       "PO detail (expand)": "D",
        "Download Case Label": "D",
        "Cancel": "D",
        "Submit ASN": "D",
@@ -316,9 +384,10 @@
    }
   ],
   "screen_mode_remarks": [
-   "1) The check box of a unit is enabled only when its status is Ready to Delivery and it is not in an ASN yet (message no. 1 or 2 as tooltip otherwise).",
+   "1) The check box of a unit is enabled only when its ASN Status is Ready (message no. 1 or 2 as tooltip otherwise).",
    "2) Units of different Customer Order Dates and Part Numbers can be ticked together; each unit always goes into the ASN as a whole.",
-   "3) Submit ASN is enabled only when the case list is not empty, Delivery Date is filled and a Rit Cycle is available."
+   "3) The expand buttons and Hold / Release are shown to the D/S team only; the supplier sees the header (case level) only.",
+   "4) Get Order is enabled when Delivery Date is filled and a Rit is available (message no. 5 otherwise)."
   ]
  },
  "screen_flow": [
@@ -357,7 +426,7 @@
      {
       "from": "l",
       "to": "c",
-      "label": "Back / Cancel / Submit? N"
+      "label": "Back / Cancel"
      },
      {
       "from": "l",
@@ -378,7 +447,7 @@
    }
   },
   {
-   "title": "Screen Flow - Check Ready Status and Create ASN",
+   "title": "Screen Flow - Get Order, Check Ready Status and Create ASN",
    "flow": {
     "direction": "TB",
     "nodes": [
@@ -389,27 +458,32 @@
      },
      {
       "id": "e",
-      "label": "Select delivery plan by Customer Order Date and Part Number",
+      "label": "Choose Delivery Date and Rit, click Get Order",
       "type": "event"
      },
      {
+      "id": "g",
+      "label": "X12: get customer orders, pre-map to PO (#TB_R_INSTRUCTION)",
+      "type": "process"
+     },
+     {
       "id": "d",
-      "label": "Ready to Delivery? (all orders of the unit assigned to a PO)",
+      "label": "ASN Status Ready? (all cases of the unit pre-mapped)",
       "type": "decision"
      },
      {
       "id": "w",
-      "label": "Waiting for Next PO: Create ASN disabled",
+      "label": "Not Ready: check box disabled",
       "type": "message"
      },
      {
       "id": "p",
-      "label": "Tick unit(s): Create ASN enabled",
+      "label": "Tick unit(s), Create ASN: map to PO, #TEMP_ASN_DRAFT",
       "type": "process"
      },
      {
       "id": "l",
-      "label": "Case List: Delivery Date, Rit Cycle, Download Case Label",
+      "label": "Case List: Download Case Label",
       "type": "process"
      },
      {
@@ -419,12 +493,12 @@
      },
      {
       "id": "p2",
-      "label": "Save ASN, lock units, show success",
+      "label": "Save ASN (status 1 Created), show success",
       "type": "process"
      },
      {
       "id": "db",
-      "label": "TB_R_ASN_CROSSDOCK_H / TB_R_INSTRUCTION",
+      "label": "TB_R_ASN_CROSSDOCK_H / _D",
       "type": "db"
      },
      {
@@ -440,6 +514,10 @@
      },
      {
       "from": "e",
+      "to": "g"
+     },
+     {
+      "from": "g",
       "to": "d"
      },
      {
@@ -491,44 +569,52 @@
  ],
  "screen_layout": [
   {
-   "caption": "1. Delivery plan (business date 14-Oct): PART-C 13-Oct waits for the PO of 15-Oct (condition 3)",
-   "image": "deliverables/uiss_screens/asn_crossdock/c_01_list_bd14.png"
+   "caption": "1. Initial Mode: choose Delivery Date and Rit, then Get Order",
+   "image": "deliverables/uiss_screens/asn_crossdock/c_01_initial.png"
   },
   {
-   "caption": "2. D/S team view: destination (pcs) and order line detail of a Waiting for Next PO unit",
-   "image": "deliverables/uiss_screens/asn_crossdock/c_02_ds_detail.png"
+   "caption": "2. Delivery plan after Get Order (supplier view, case level)",
+   "image": "deliverables/uiss_screens/asn_crossdock/c_02_delivery_plan.png"
   },
   {
-   "caption": "3. Delivery plan (business date 15-Oct): PART-C 13-Oct becomes Ready to Delivery",
-   "image": "deliverables/uiss_screens/asn_crossdock/c_03_list_bd15.png"
+   "caption": "3. D/S team: destination detail and order lines of a Not Ready unit",
+   "image": "deliverables/uiss_screens/asn_crossdock/c_03_ds_detail.png"
   },
   {
-   "caption": "4. Units of different Customer Order Dates selected",
-   "image": "deliverables/uiss_screens/asn_crossdock/c_04_selected.png"
+   "caption": "4. D/S team: order line on hold; the unit is computed again (Ready)",
+   "image": "deliverables/uiss_screens/asn_crossdock/c_04_ds_hold.png"
   },
   {
-   "caption": "5. Case List sub screen",
-   "image": "deliverables/uiss_screens/asn_crossdock/c_05_case_list.png"
+   "caption": "5. Units of different Customer Order Dates selected",
+   "image": "deliverables/uiss_screens/asn_crossdock/c_05_selected.png"
   },
   {
-   "caption": "6. Submit confirmation",
-   "image": "deliverables/uiss_screens/asn_crossdock/c_06_confirm.png"
+   "caption": "6. Case List sub screen",
+   "image": "deliverables/uiss_screens/asn_crossdock/c_06_case_list.png"
   },
   {
-   "caption": "7. Success notification",
-   "image": "deliverables/uiss_screens/asn_crossdock/c_07_submitted.png"
+   "caption": "7. Case List: PO detail of a case",
+   "image": "deliverables/uiss_screens/asn_crossdock/c_07_case_expand.png"
   },
   {
-   "caption": "8. Delivery plan after submit (units In ASN)",
-   "image": "deliverables/uiss_screens/asn_crossdock/c_08_list_after.png"
+   "caption": "8. Submit confirmation",
+   "image": "deliverables/uiss_screens/asn_crossdock/c_08_confirm.png"
+  },
+  {
+   "caption": "9. Success notification",
+   "image": "deliverables/uiss_screens/asn_crossdock/c_09_submitted.png"
+  },
+  {
+   "caption": "10. Delivery plan after submit (unit Created)",
+   "image": "deliverables/uiss_screens/asn_crossdock/c_10_list_after.png"
   }
  ],
  "items": [
   {
-   "group": "<Search Criteria Section>"
+   "group": "<Delivery Section>"
   },
   {
-   "name": "Customer Order Date - From / To",
+   "name": "Delivery Date",
    "source": "Key-in",
    "field": "-",
    "type": "Date",
@@ -536,59 +622,44 @@
    "io": "I",
    "control": "Date picker",
    "justified": "Left",
-   "initial": "Blank",
-   "required": "N",
+   "initial": "Business date + 1",
+   "required": "Y",
    "format": "DD-Mon-YYYY",
-   "validation": "-",
-   "description": "Range of Customer Order Date, inclusive. Blank = no limit."
+   "validation": "Mandatory; today or later",
+   "description": "Changing it reloads the Rit list."
   },
   {
-   "name": "Part Number",
-   "source": "Key-in",
-   "field": "-",
+   "name": "Rit",
+   "source": "TBD (Route Master)",
+   "field": "TBD",
    "type": "Char",
-   "len": "15",
+   "len": "TBD",
    "io": "I",
    "control": "Combo Box",
    "justified": "Left",
-   "initial": "All",
-   "required": "N",
+   "initial": "First rit of the date",
+   "required": "Y",
    "format": "-",
-   "validation": "-",
-   "description": "All / part numbers in TB_R_INSTRUCTION."
+   "validation": "Mandatory",
+   "description": "Rits of the Delivery Date; Sunday none ('No rit cycle'), Saturday one."
   },
   {
-   "name": "Status",
-   "source": "Key-in",
-   "field": "-",
+   "name": "Route",
+   "source": "TBD (Route Master)",
+   "field": "TBD",
    "type": "Char",
-   "len": "-",
-   "io": "I",
-   "control": "Combo Box",
+   "len": "TBD",
+   "io": "O",
+   "control": "Text box (disabled)",
    "justified": "Left",
-   "initial": "All",
+   "initial": "-",
    "required": "N",
    "format": "-",
    "validation": "-",
-   "description": "All / Ready to Delivery / Waiting for Next PO / In ASN."
+   "description": "Route of the Rit."
   },
   {
-   "name": "Search",
-   "source": "-",
-   "field": "-",
-   "type": "-",
-   "len": "-",
-   "io": "I",
-   "control": "Button",
-   "justified": "Center",
-   "initial": "Enabled",
-   "required": "N",
-   "format": "-",
-   "validation": "-",
-   "description": "Refer Operation Description 5.1."
-  },
-  {
-   "name": "Reset",
+   "name": "Get Order",
    "source": "-",
    "field": "-",
    "type": "-",
@@ -618,7 +689,37 @@
    "required": "N",
    "format": "-",
    "validation": "-",
-   "description": "'{n} units \u00b7 {r} ready \u00b7 {w} waiting'."
+   "description": "'{Delivery Date} \u00b7 {Rit} \u00b7 {Route} \u2014 {n} units \u00b7 {r} ready \u00b7 {w} not ready'."
+  },
+  {
+   "name": "Part Number (filter)",
+   "source": "Key-in",
+   "field": "-",
+   "type": "Char",
+   "len": "15",
+   "io": "I",
+   "control": "Combo Box",
+   "justified": "Left",
+   "initial": "All",
+   "required": "N",
+   "format": "-",
+   "validation": "-",
+   "description": "Filters the delivery plan at once."
+  },
+  {
+   "name": "Status (filter)",
+   "source": "Key-in",
+   "field": "-",
+   "type": "Char",
+   "len": "-",
+   "io": "I",
+   "control": "Combo Box",
+   "justified": "Left",
+   "initial": "All",
+   "required": "N",
+   "format": "-",
+   "validation": "-",
+   "description": "All / Ready / Not Ready / Created (D/S team also On Hold). Filters at once."
   },
   {
    "name": "Select (check box)",
@@ -632,12 +733,12 @@
    "initial": "<unchecked>",
    "required": "N",
    "format": "-",
-   "validation": "Enabled only for Ready to Delivery units not in an ASN",
-   "description": "Several units can be ticked. Ticked and disabled when the unit is in an ASN. Refer Screen Mode remark 1)."
+   "validation": "Enabled only for Ready units",
+   "description": "Several units can be ticked. Ticked and disabled when Created. Refer Screen Mode remark 1)."
   },
   {
    "name": "Customer Order Date",
-   "source": "TB_R_INSTRUCTION",
+   "source": "#TB_R_INSTRUCTION",
    "field": "ORDER_DT",
    "type": "Date",
    "len": "-",
@@ -652,7 +753,7 @@
   },
   {
    "name": "Part Number / Part Name",
-   "source": "TB_R_INSTRUCTION",
+   "source": "#TB_R_INSTRUCTION",
    "field": "PART_NO",
    "type": "Char",
    "len": "15",
@@ -663,7 +764,7 @@
    "required": "N",
    "format": "-",
    "validation": "-",
-   "description": "Part number of the unit; part name from the part master."
+   "description": "Part number of the unit (distinct per Customer Order Date); part name from the part master."
   },
   {
    "name": "Case Qty",
@@ -678,10 +779,10 @@
    "required": "N",
    "format": "ZZ9",
    "validation": "-",
-   "description": "Number of cases of the unit (one case per destination); also shown while waiting."
+   "description": "Number of cases of the unit: the qty of each destination is summed into one case."
   },
   {
-   "name": "Not Assigned (case)",
+   "name": "PO Readiness (case)",
    "source": "Computed",
    "field": "-",
    "type": "Number",
@@ -693,14 +794,14 @@
    "required": "N",
    "format": "ZZ9",
    "validation": "-",
-   "description": "Cases (destinations) of the unit that still have qty without a released PO (REMAINING_ORDER_QTY > 0); '-' when 0."
+   "description": "Cases whose whole qty is pre-mapped to a PO; red when lower than Case Qty."
   },
   {
-   "name": "PO No",
-   "source": "TB_R_INSTRUCTION",
-   "field": "PO_NO",
+   "name": "ASN Status",
+   "source": "#TB_R_INSTRUCTION",
+   "field": "CROSSDOCK_STATUS",
    "type": "Char",
-   "len": "TBD",
+   "len": "1",
    "io": "O",
    "control": "Label",
    "justified": "Left",
@@ -708,52 +809,7 @@
    "required": "N",
    "format": "-",
    "validation": "-",
-   "description": "PO numbers of the unit, separated by ', '."
-  },
-  {
-   "name": "Last PO Date",
-   "source": "TB_R_INSTRUCTION",
-   "field": "PO_ORDER_DT",
-   "type": "Date",
-   "len": "-",
-   "io": "O",
-   "control": "Label",
-   "justified": "Left",
-   "initial": "-",
-   "required": "N",
-   "format": "DD-Mon-YYYY",
-   "validation": "-",
-   "description": "Latest PO Date of the unit."
-  },
-  {
-   "name": "Status",
-   "source": "Computed",
-   "field": "-",
-   "type": "Char",
-   "len": "-",
-   "io": "O",
-   "control": "Label",
-   "justified": "Left",
-   "initial": "-",
-   "required": "N",
-   "format": "-",
-   "validation": "-",
-   "description": "Ready to Delivery (green) / Waiting for Next PO (amber, row highlighted) / In ASN (grey). Refer 5.2."
-  },
-  {
-   "name": "ASN No",
-   "source": "TB_R_INSTRUCTION",
-   "field": "ASN_NO",
-   "type": "Char",
-   "len": "TBD",
-   "io": "O",
-   "control": "Label",
-   "justified": "Left",
-   "initial": "-",
-   "required": "N",
-   "format": "-",
-   "validation": "-",
-   "description": "ASN of the unit; '-' when none."
+   "description": "'6' Ready (green) / '7' Not Ready (amber, row highlighted) / Created (ASN status '1', grey) / On Hold (D/S only). Refer 5.2."
   },
   {
    "name": "Detail (expand, D/S)",
@@ -768,14 +824,14 @@
    "required": "N",
    "format": "-",
    "validation": "-",
-   "description": "Shown to the D/S team only; hidden for the supplier. Opens the detail below."
+   "description": "Shown to the D/S team only. Opens the destination detail."
   },
   {
-   "group": "<Delivery Plan Detail (D/S team only)>"
+   "group": "<Destination Detail (D/S team only)>"
   },
   {
    "name": "Destination",
-   "source": "TB_R_INSTRUCTION",
+   "source": "#TB_R_INSTRUCTION",
    "field": "DESTINATION_CD",
    "type": "Char",
    "len": "7",
@@ -801,11 +857,11 @@
    "required": "N",
    "format": "9",
    "validation": "-",
-   "description": "Always 1 (one case per destination)."
+   "description": "1 (0 when all lines of the destination are on hold)."
   },
   {
    "name": "Qty (pcs)",
-   "source": "TB_R_INSTRUCTION",
+   "source": "#TB_R_INSTRUCTION",
    "field": "CUST_ORDER_QTY",
    "type": "Number",
    "len": "8",
@@ -816,11 +872,11 @@
    "required": "N",
    "format": "ZZ,ZZ9",
    "validation": "-",
-   "description": "Sum of the order qty of the destination; the detail title shows the unit total."
+   "description": "Sum of the order qty of the destination (lines on hold not counted)."
   },
   {
    "name": "Not Assigned (pcs)",
-   "source": "TB_R_INSTRUCTION",
+   "source": "#TB_R_INSTRUCTION",
    "field": "REMAINING_ORDER_QTY",
    "type": "Number",
    "len": "8",
@@ -831,12 +887,30 @@
    "required": "N",
    "format": "ZZ,ZZ9",
    "validation": "-",
-   "description": "Qty of the destination without a released PO; '-' when 0."
+   "description": "Qty of the destination without a PO; '-' when 0."
   },
   {
-   "name": "Order lines",
-   "source": "TB_R_INSTRUCTION",
-   "field": "CUSTOMER_ORDER_NO / DETAILED_ITEM_NO / DESTINATION_CD / CUST_ORDER_QTY / PO_NO / PO_ORDER_DT",
+   "name": "Order lines (expand, D/S)",
+   "source": "-",
+   "field": "-",
+   "type": "-",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "Enabled",
+   "required": "N",
+   "format": "-",
+   "validation": "-",
+   "description": "Opens the order lines of the destination."
+  },
+  {
+   "group": "<Order Lines (D/S team only)>"
+  },
+  {
+   "name": "Customer Order No / Detailed Item No",
+   "source": "#TB_R_INSTRUCTION",
+   "field": "CUSTOMER_ORDER_NO / DETAILED_ITEM_NO",
    "type": "Char",
    "len": "-",
    "io": "O",
@@ -846,7 +920,52 @@
    "required": "N",
    "format": "-",
    "validation": "-",
-   "description": "Customer Order No, Detailed Item No, Destination, Qty, PO No, PO Date, Assignment (Assigned / Planned / Not assigned)."
+   "description": "Original order row, e.g. order A 4 pcs and order B 2 pcs to Vietnam."
+  },
+  {
+   "name": "Qty / PO No / PO Date",
+   "source": "#TB_R_INSTRUCTION",
+   "field": "CUST_ORDER_QTY / PO_NO / PO_ORDER_DT",
+   "type": "Char",
+   "len": "-",
+   "io": "O",
+   "control": "Grid",
+   "justified": "Left",
+   "initial": "-",
+   "required": "N",
+   "format": "-",
+   "validation": "-",
+   "description": "Pre-mapping of the line."
+  },
+  {
+   "name": "Assignment",
+   "source": "Computed",
+   "field": "-",
+   "type": "Char",
+   "len": "-",
+   "io": "O",
+   "control": "Grid",
+   "justified": "Left",
+   "initial": "-",
+   "required": "N",
+   "format": "-",
+   "validation": "-",
+   "description": "Assigned / Not assigned / Excluded (hold)."
+  },
+  {
+   "name": "Hold / Release (D/S)",
+   "source": "-",
+   "field": "-",
+   "type": "-",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "Enabled",
+   "required": "N",
+   "format": "-",
+   "validation": "-",
+   "description": "Hold Flag of the line: 'N \u00b7 Hold' sets Y, 'Y \u00b7 Release' sets N. Disabled for a Created unit. Refer 5.3."
   },
   {
    "group": "<Selection Bar Section>"
@@ -894,7 +1013,7 @@
    "required": "N",
    "format": "-",
    "validation": "-",
-   "description": "Opens the Case List sub screen. Refer 5.3."
+   "description": "Refer Operation Description 5.4."
   },
   {
    "group": "<Case List Sub Screen - ASN Summary>"
@@ -912,7 +1031,7 @@
    "required": "N",
    "format": "-",
    "validation": "-",
-   "description": "Returns to ASN Crossdock Creation without submitting."
+   "description": "Returns to ASN Crossdock Creation without submitting; the draft mapping is released."
   },
   {
    "name": "ASN No",
@@ -925,13 +1044,13 @@
    "justified": "Left",
    "initial": "-",
    "required": "N",
-   "format": "ASN-{Supplier}-{YYMMDD}-{Seq}",
+   "format": "-",
    "validation": "-",
-   "description": "Generated from the Delivery Date; 'auto \u00b7 assigned on submit'. Sequence rule TBD."
+   "description": "Existing numbering; 'auto \u00b7 assigned on submit'."
   },
   {
    "name": "Supplier \u00b7 Plant",
-   "source": "TB_R_INSTRUCTION",
+   "source": "#TB_R_INSTRUCTION",
    "field": "SUPPLIER_CD / SUPPLIER_PLANT",
    "type": "Char",
    "len": "TBD",
@@ -945,9 +1064,9 @@
    "description": "Supplier of the cases."
   },
   {
-   "name": "Part / Customer Order Date",
-   "source": "Computed",
-   "field": "-",
+   "name": "Delivery Date \u00b7 Rit \u00b7 Route",
+   "source": "#TEMP_ASN_DRAFT",
+   "field": "DELIVERY_DT / RIT_CYCLE / ROUTE",
    "type": "Char",
    "len": "-",
    "io": "O",
@@ -957,70 +1076,40 @@
    "required": "N",
    "format": "-",
    "validation": "-",
-   "description": "Selected units."
+   "description": "From the Get Order."
   },
   {
-   "name": "Cases \u00b7 Qty",
+   "name": "Delivery Qty",
    "source": "Computed",
    "field": "-",
-   "type": "Char",
+   "type": "Number",
    "len": "-",
    "io": "O",
    "control": "Label",
    "justified": "Left",
    "initial": "-",
    "required": "N",
-   "format": "N cases \u00b7 N pcs",
+   "format": "ZZ,ZZ9 pcs",
    "validation": "-",
-   "description": "Number of cases and total pieces."
+   "description": "Total pieces of the ASN."
+  },
+  {
+   "name": "Cases",
+   "source": "Computed",
+   "field": "-",
+   "type": "Number",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Left",
+   "initial": "-",
+   "required": "N",
+   "format": "N cases",
+   "validation": "-",
+   "description": "Number of cases."
   },
   {
    "group": "<Case List Sub Screen - Case List>"
-  },
-  {
-   "name": "Delivery Date",
-   "source": "Key-in",
-   "field": "-",
-   "type": "Date",
-   "len": "-",
-   "io": "I",
-   "control": "Date picker",
-   "justified": "Left",
-   "initial": "Business date + 1",
-   "required": "Y",
-   "format": "DD-Mon-YYYY",
-   "validation": "Mandatory; today or later",
-   "description": "Changing it reloads the Rit Cycle list."
-  },
-  {
-   "name": "Rit Cycle",
-   "source": "TBD (Route Master)",
-   "field": "TBD",
-   "type": "Char",
-   "len": "TBD",
-   "io": "I",
-   "control": "Combo Box",
-   "justified": "Left",
-   "initial": "First rit cycle of the date",
-   "required": "Y",
-   "format": "-",
-   "validation": "Mandatory",
-   "description": "Rit cycles of the Delivery Date; Sunday none ('No rit cycle'), Saturday one."
-  },
-  {
-   "name": "Route",
-   "source": "TBD (Route Master)",
-   "field": "TBD",
-   "type": "Char",
-   "len": "TBD",
-   "io": "O",
-   "control": "Text box (disabled)",
-   "justified": "Left",
-   "initial": "-",
-   "required": "N",
-   "format": "-",
-   "validation": "-",
-   "description": "Route of the Rit Cycle."
   },
   {
    "name": "Download Case Label",
@@ -1038,9 +1127,24 @@
    "description": "Downloads the labels of all cases. TBD format."
   },
   {
-   "name": "Case",
-   "source": "Computed",
+   "name": "PO detail (expand)",
+   "source": "-",
    "field": "-",
+   "type": "-",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "Enabled",
+   "required": "N",
+   "format": "-",
+   "validation": "-",
+   "description": "Opens the PO detail of the case."
+  },
+  {
+   "name": "Case Number",
+   "source": "#TEMP_ASN_DRAFT",
+   "field": "CASE_SEQ",
    "type": "Char",
    "len": "-",
    "io": "O",
@@ -1050,14 +1154,14 @@
    "required": "N",
    "format": "Case {n}",
    "validation": "-",
-   "description": "Case sequence; case number assigned on submit."
+   "description": "Case sequence; the case number (existing numbering) is assigned on submit."
   },
   {
-   "name": "Part Number / Customer Order Date / Destination",
-   "source": "TB_R_INSTRUCTION",
-   "field": "PART_NO / ORDER_DT / DESTINATION_CD",
+   "name": "Part Number",
+   "source": "#TEMP_ASN_DRAFT",
+   "field": "PART_NO",
    "type": "Char",
-   "len": "-",
+   "len": "15",
    "io": "O",
    "control": "Grid",
    "justified": "Left",
@@ -1065,42 +1169,12 @@
    "required": "N",
    "format": "-",
    "validation": "-",
-   "description": "Key of the case (one case per Part Number + Customer Order Date + destination); destination name from TB_M_H0125_DESTINATION."
-  },
-  {
-   "name": "Customer Order No (qty)",
-   "source": "TB_R_INSTRUCTION",
-   "field": "CUSTOMER_ORDER_NO / ASSIGNED_QTY",
-   "type": "Char",
-   "len": "-",
-   "io": "O",
-   "control": "Grid",
-   "justified": "Left",
-   "initial": "-",
-   "required": "N",
-   "format": "-",
-   "validation": "-",
-   "description": "Order lines packed in the case."
-  },
-  {
-   "name": "PO No",
-   "source": "TB_R_INSTRUCTION",
-   "field": "PO_NO",
-   "type": "Char",
-   "len": "TBD",
-   "io": "O",
-   "control": "Grid",
-   "justified": "Left",
-   "initial": "-",
-   "required": "N",
-   "format": "-",
-   "validation": "-",
-   "description": "PO numbers of the case."
+   "description": "One case per Part Number + Customer Order Date + destination."
   },
   {
    "name": "Qty / Total",
-   "source": "Computed",
-   "field": "-",
+   "source": "#TEMP_ASN_DRAFT",
+   "field": "QTY",
    "type": "Number",
    "len": "-",
    "io": "O",
@@ -1111,6 +1185,21 @@
    "format": "ZZ,ZZ9",
    "validation": "-",
    "description": "Pieces of the case; total of all cases."
+  },
+  {
+   "name": "PO No / Manifest No / Manifest Item No / PO Qty",
+   "source": "#TEMP_ASN_DRAFT",
+   "field": "PO_NO / MANIFEST_NO / MANIFEST_ITEM_NO / PO_ORDER_QTY",
+   "type": "Char",
+   "len": "-",
+   "io": "O",
+   "control": "Grid",
+   "justified": "Left",
+   "initial": "-",
+   "required": "N",
+   "format": "-",
+   "validation": "-",
+   "description": "Expanded PO detail of the case."
   },
   {
    "name": "Cancel",
@@ -1140,7 +1229,7 @@
    "required": "N",
    "format": "-",
    "validation": "-",
-   "description": "Refer Operation Description 5.4 and Screen Mode remark 3)."
+   "description": "Refer Operation Description 5.5."
   },
   {
    "name": "No rit cycle message",
@@ -1155,13 +1244,537 @@
    "required": "N",
    "format": "-",
    "validation": "-",
-   "description": "Message no. 5 when no rit cycle is available."
+   "description": "Message no. 5 when no rit is available."
   }
  ],
  "data_map": {
   "blocks": [
    {
-    "source": "Key-in from screen",
+    "source": "Hold / Release (D/S)",
+    "destination": {
+     "table": "TB_R_H0253_ORDER_CONTROL_PRE",
+     "operation": "Update",
+     "description": "Order line of the button",
+     "keys": [
+      {
+       "field": "Unique key (customer order line incl. SERIAL_NO)",
+       "value": "Line of the button"
+      }
+     ]
+    },
+    "mappings": [
+     {
+      "dest_field": "HOLD_FLAG",
+      "description": "'Y' (hold) / 'N' (release)"
+     },
+     {
+      "dest_field": "PO_MAPPED_FLAG",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "UPDATE_BY",
+      "description": "Login user ID"
+     },
+     {
+      "dest_field": "UPDATE_DT",
+      "description": "Server system date-time"
+     },
+     {
+      "dest_field": "CUSTOMER_CD",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "CUSTOMER_ORDER_NO",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "ORDER_DT",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "ORDER_TIME",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "DESTINATION_CD",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "DETAILED_ITEM_NO",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "SERIAL_NO",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "TOPAS_ORDER_TYPE",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "DEMAND_HISTORY_UPDATE_DT",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "SHIPPING_MAKER_CD",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "SHIPPING_PART_NO",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "ORIGINAL_SHIPPING_QTY",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "ORDER_STATUS_QTY",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "ORDER_STATUS",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "BO_INSTRUCTION_CD",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "BO_RELEASE_DT",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "ORDER_GROUP",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "DIRECT_DELIVERY_CD",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "DIRECT_DELIVERY_FLAG",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "CURRENCY_CD",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "LANDED_COST",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "NET_PRICE",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "SALES_PRICE",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "EXPORT_SALES_PRICE",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "SPECIAL_PRICE_CD",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "ORDER_DISCOUNT_CD",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "ITEM_DISCOUNT_RATE",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "FIRST_ALLOCATION_DT",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "BO_HISTORY_CD",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "ORDER_ERROR_CD",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "RA_CD",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "PENDING_ORDER_CD",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "ORDER_PORTION_CD",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "ORDER_STATUS_DT",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "SHIPPING_PROCESS_CTRL_CD",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "PROCUREMENT_PROCESS_CTRL_CD",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "DANGEROUS_GOODS_CLASS",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "CREATE_DEMAND_FLAG",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "SPECIAL_CUSTOMER_FLAG",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "POSS_TRANSMISSION_JUDG_FLAG",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "REGISTRANT_ID",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "UPDATE_JOB_ID",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "UPDATE_OPERATION_ID",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "INTF_UPDATE_DT",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "CREATE_DT",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "CREATE_BY",
+      "description": "Not changed"
+     }
+    ]
+   },
+   {
+    "source": "#TB_R_INSTRUCTION (selected units)",
+    "destination": {
+     "table": "TB_R_H0253_ORDER_CONTROL_PRE",
+     "operation": "Update",
+     "description": "[Create ASN]: every line of the selected units",
+     "keys": [
+      {
+       "field": "Unique key (customer order line incl. SERIAL_NO)",
+       "value": "Lines of the selected units"
+      }
+     ]
+    },
+    "mappings": [
+     {
+      "dest_field": "PO_MAPPED_FLAG",
+      "description": "'Y' (mapped); back to 'N' on Back / Cancel"
+     },
+     {
+      "dest_field": "HOLD_FLAG",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "UPDATE_BY",
+      "description": "Login user ID"
+     },
+     {
+      "dest_field": "UPDATE_DT",
+      "description": "Server system date-time"
+     },
+     {
+      "dest_field": "CUSTOMER_CD",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "CUSTOMER_ORDER_NO",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "ORDER_DT",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "ORDER_TIME",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "DESTINATION_CD",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "DETAILED_ITEM_NO",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "SERIAL_NO",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "TOPAS_ORDER_TYPE",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "DEMAND_HISTORY_UPDATE_DT",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "SHIPPING_MAKER_CD",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "SHIPPING_PART_NO",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "ORIGINAL_SHIPPING_QTY",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "ORDER_STATUS_QTY",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "ORDER_STATUS",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "BO_INSTRUCTION_CD",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "BO_RELEASE_DT",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "ORDER_GROUP",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "DIRECT_DELIVERY_CD",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "DIRECT_DELIVERY_FLAG",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "CURRENCY_CD",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "LANDED_COST",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "NET_PRICE",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "SALES_PRICE",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "EXPORT_SALES_PRICE",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "SPECIAL_PRICE_CD",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "ORDER_DISCOUNT_CD",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "ITEM_DISCOUNT_RATE",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "FIRST_ALLOCATION_DT",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "BO_HISTORY_CD",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "ORDER_ERROR_CD",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "RA_CD",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "PENDING_ORDER_CD",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "ORDER_PORTION_CD",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "ORDER_STATUS_DT",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "SHIPPING_PROCESS_CTRL_CD",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "PROCUREMENT_PROCESS_CTRL_CD",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "DANGEROUS_GOODS_CLASS",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "CREATE_DEMAND_FLAG",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "SPECIAL_CUSTOMER_FLAG",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "POSS_TRANSMISSION_JUDG_FLAG",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "REGISTRANT_ID",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "UPDATE_JOB_ID",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "UPDATE_OPERATION_ID",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "INTF_UPDATE_DT",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "CREATE_DT",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "CREATE_BY",
+      "description": "Not changed"
+     }
+    ]
+   },
+   {
+    "source": "#TB_R_INSTRUCTION (selected units)",
+    "destination": {
+     "table": "TB_R_PRA_DAILY_ORDER_PART",
+     "operation": "Update",
+     "description": "[Create ASN]: PO parts used by the selected units"
+    },
+    "mappings": [
+     {
+      "dest_field": "Mapped qty (column TBD)",
+      "description": "+ ASSIGNED_QTY of the selected units; back on Back / Cancel"
+     }
+    ]
+   },
+   {
+    "source": "#TB_R_INSTRUCTION (selected units)",
+    "destination": {
+     "table": "#TEMP_ASN_DRAFT",
+     "operation": "Insert",
+     "description": "[Create ASN]: one row per case x line x PO"
+    },
+    "mappings": [
+     {
+      "dest_field": "CASE_SEQ",
+      "description": "Case sequence: selected unit, then first appearance of the destination"
+     },
+     {
+      "dest_field": "LINE_SEQ",
+      "description": "Sequence within the case"
+     },
+     {
+      "source_field": "PART_NO",
+      "dest_field": "PART_NO"
+     },
+     {
+      "source_field": "ORDER_DT",
+      "dest_field": "ORDER_DT"
+     },
+     {
+      "source_field": "DESTINATION_CD",
+      "dest_field": "DESTINATION_CD"
+     },
+     {
+      "source_field": "CUSTOMER_CD",
+      "dest_field": "CUSTOMER_CD"
+     },
+     {
+      "source_field": "CUSTOMER_ORDER_NO",
+      "dest_field": "CUSTOMER_ORDER_NO"
+     },
+     {
+      "source_field": "DETAILED_ITEM_NO",
+      "dest_field": "DETAILED_ITEM_NO"
+     },
+     {
+      "source_field": "SERIAL_NO",
+      "dest_field": "SERIAL_NO"
+     },
+     {
+      "source_field": "PO_NO",
+      "dest_field": "PO_NO"
+     },
+     {
+      "source_field": "MANIFEST_NO",
+      "dest_field": "MANIFEST_NO"
+     },
+     {
+      "source_field": "MANIFEST_ITEM_NO",
+      "dest_field": "MANIFEST_ITEM_NO"
+     },
+     {
+      "source_field": "PO_ORDER_QTY",
+      "dest_field": "PO_ORDER_QTY"
+     },
+     {
+      "source_field": "ASSIGNED_QTY",
+      "dest_field": "QTY"
+     },
+     {
+      "source_field": "Delivery Date",
+      "dest_field": "DELIVERY_DT"
+     },
+     {
+      "source_field": "Rit",
+      "dest_field": "RIT_CYCLE"
+     },
+     {
+      "source_field": "Route",
+      "dest_field": "ROUTE"
+     }
+    ]
+   },
+   {
+    "source": "#TEMP_ASN_DRAFT",
     "destination": {
      "table": "TB_R_ASN_CROSSDOCK_H",
      "operation": "Insert",
@@ -1170,7 +1783,7 @@
     "mappings": [
      {
       "dest_field": "ASN_NO",
-      "description": "Generated from the Delivery Date"
+      "description": "Existing ASN numbering"
      },
      {
       "source_field": "Supplier",
@@ -1181,15 +1794,15 @@
       "dest_field": "SUPPLIER_PLANT"
      },
      {
-      "source_field": "Delivery Date",
+      "source_field": "DELIVERY_DT",
       "dest_field": "DELIVERY_DT"
      },
      {
-      "source_field": "Rit Cycle",
+      "source_field": "RIT_CYCLE",
       "dest_field": "RIT_CYCLE"
      },
      {
-      "source_field": "Route",
+      "source_field": "ROUTE",
       "dest_field": "ROUTE"
      },
      {
@@ -1198,11 +1811,11 @@
      },
      {
       "dest_field": "TOTAL_QTY",
-      "description": "Sum of case qty"
+      "description": "Delivery Qty (sum of QTY)"
      },
      {
       "dest_field": "ASN_STATUS",
-      "description": "'SUBMITTED'"
+      "description": "'1' Created"
      },
      {
       "dest_field": "CREATED_BY",
@@ -1223,17 +1836,11 @@
     ]
    },
    {
-    "source": "Case List (screen)",
+    "source": "#TEMP_ASN_DRAFT",
     "destination": {
-     "table": "TB_R_INSTRUCTION",
-     "operation": "Update",
-     "description": "Every line of the selected units",
-     "keys": [
-      {
-       "field": "PART_NO + ORDER_DT",
-       "value": "Selected unit"
-      }
-     ]
+     "table": "TB_R_ASN_CROSSDOCK_D",
+     "operation": "Insert",
+     "description": "Case List - [Submit ASN] Yes: every draft row"
     },
     "mappings": [
      {
@@ -1242,7 +1849,67 @@
      },
      {
       "dest_field": "CASE_NO",
-      "description": "{ASN No}-{case seq}; one case per Part Number + Customer Order Date + destination"
+      "description": "Existing case numbering (last sequence table), one per CASE_SEQ"
+     },
+     {
+      "source_field": "LINE_SEQ",
+      "dest_field": "LINE_SEQ"
+     },
+     {
+      "source_field": "PART_NO",
+      "dest_field": "PART_NO"
+     },
+     {
+      "source_field": "ORDER_DT",
+      "dest_field": "ORDER_DT"
+     },
+     {
+      "source_field": "DESTINATION_CD",
+      "dest_field": "DESTINATION_CD"
+     },
+     {
+      "source_field": "CUSTOMER_CD",
+      "dest_field": "CUSTOMER_CD"
+     },
+     {
+      "source_field": "CUSTOMER_ORDER_NO",
+      "dest_field": "CUSTOMER_ORDER_NO"
+     },
+     {
+      "source_field": "DETAILED_ITEM_NO",
+      "dest_field": "DETAILED_ITEM_NO"
+     },
+     {
+      "source_field": "SERIAL_NO",
+      "dest_field": "SERIAL_NO"
+     },
+     {
+      "source_field": "QTY",
+      "dest_field": "QTY"
+     },
+     {
+      "source_field": "PO_NO",
+      "dest_field": "PO_NO"
+     },
+     {
+      "source_field": "MANIFEST_NO",
+      "dest_field": "MANIFEST_NO"
+     },
+     {
+      "source_field": "MANIFEST_ITEM_NO",
+      "dest_field": "MANIFEST_ITEM_NO"
+     },
+     {
+      "source_field": "PO_ORDER_QTY",
+      "dest_field": "PO_ORDER_QTY"
+     },
+     {
+      "dest_field": "CREATED_BY",
+      "description": "Login user ID"
+     },
+     {
+      "dest_field": "CREATED_DT",
+      "description": "Server system date-time"
      },
      {
       "dest_field": "CHANGED_BY",
@@ -1251,110 +1918,6 @@
      {
       "dest_field": "CHANGED_DT",
       "description": "Server system date-time"
-     },
-     {
-      "dest_field": "INSTRUCTION_ID",
-      "description": "Not changed"
-     },
-     {
-      "dest_field": "CUSTOMER_CD",
-      "description": "Not changed"
-     },
-     {
-      "dest_field": "CUSTOMER_ORDER_NO",
-      "description": "Not changed"
-     },
-     {
-      "dest_field": "ORDER_DT",
-      "description": "Not changed"
-     },
-     {
-      "dest_field": "DESTINATION_CD",
-      "description": "Not changed"
-     },
-     {
-      "dest_field": "DETAILED_ITEM_NO",
-      "description": "Not changed"
-     },
-     {
-      "dest_field": "SERIAL_NO",
-      "description": "Not changed"
-     },
-     {
-      "dest_field": "PART_NO",
-      "description": "Not changed"
-     },
-     {
-      "dest_field": "ORDER_STATUS",
-      "description": "Not changed"
-     },
-     {
-      "dest_field": "CUST_ORDER_QTY",
-      "description": "Not changed"
-     },
-     {
-      "dest_field": "ASSIGNED_QTY",
-      "description": "Not changed"
-     },
-     {
-      "dest_field": "REMAINING_ORDER_QTY",
-      "description": "Not changed"
-     },
-     {
-      "dest_field": "PO_NO",
-      "description": "Not changed"
-     },
-     {
-      "dest_field": "MANIFEST_NO",
-      "description": "Not changed"
-     },
-     {
-      "dest_field": "MANIFEST_ITEM_NO",
-      "description": "Not changed"
-     },
-     {
-      "dest_field": "PO_ORDER_DT",
-      "description": "Not changed"
-     },
-     {
-      "dest_field": "PO_ORDER_QTY",
-      "description": "Not changed"
-     },
-     {
-      "dest_field": "SUPPLIER_CD",
-      "description": "Not changed"
-     },
-     {
-      "dest_field": "SUPPLIER_PLANT",
-      "description": "Not changed"
-     },
-     {
-      "dest_field": "SUB_SUPPLIER_CD",
-      "description": "Not changed"
-     },
-     {
-      "dest_field": "SUB_SUPPLIER_PLANT",
-      "description": "Not changed"
-     },
-     {
-      "dest_field": "ORDER_TYPE",
-      "description": "Not changed"
-     },
-     {
-      "dest_field": "DOCK_CD",
-      "description": "Not changed"
-     },
-     {
-      "dest_field": "ETD_ORI",
-      "description": "Not changed"
-     },
-     {
-      "dest_field": "CREATED_BY",
-      "description": "Not changed"
-     },
-     {
-      "dest_field": "CREATED_DT",
-      "description": "Not changed"
      }
     ]
    }
@@ -1363,78 +1926,89 @@
  "operation": [
   {
    "type": "heading",
-   "text": "5.1 Initial Display and Search"
+   "text": "5.1 Initial Display and Get Order"
   },
   {
    "type": "bullets",
    "marker": "a.",
    "level": 2,
    "items": [
-    "On first display all units of TB_R_INSTRUCTION are listed (criteria blank, Status = All), one row per Part Number + Customer Order Date, sorted by Customer Order Date then Part Number.",
-    "[Search] applies the criteria (Customer Order Date range, Part Number, Status). [Reset] clears them. No row: message no. 3.",
-    "The delivery plan header is at case level: Case Qty and Not Assigned (case). Pieces and destinations are not shown in the header.",
-    "The detail of a unit (destination with Case, Qty (pcs), Not Assigned (pcs), and the order lines with Customer Order No, Detailed Item No, Destination, Qty, PO No, PO Date and Assignment) can be expanded by the D/S team only; for the supplier the expand button is hidden."
+    "On first display Delivery Date = business date + 1, Rit = first rit of the date, Route displayed (disabled). The delivery plan is empty.",
+    "[Get Order] runs the function X12 (UISS X12): customer orders of H0253 with order status 7, Hold Flag N, not mapped, earliest order date first per part number (FIFO), pre-mapped to the PO parts of the Pra Daily Order (FIFO PO date) in the temporary table #TB_R_INSTRUCTION.",
+    "The delivery plan shows one row per Part Number + Customer Order Date, sorted Ready, Not Ready, Created, then Part Number ascending. Part Number and Status filters apply at once. No row: message no. 3.",
+    "Delivery Date and Rit do not filter the orders; they are carried to the ASN."
    ]
   },
   {
    "type": "heading",
-   "text": "5.2 Status Rule (Check Ready Status)"
+   "text": "5.2 Status Rule"
   },
   {
    "type": "bullets",
    "marker": "a.",
    "level": 2,
    "items": [
-    "Unit = Part Number + Customer Order Date. It is 'Ready to Delivery' when every order line of the unit is assigned to a PO (no row with PO_NO NULL / REMAINING_ORDER_QTY > 0).",
-    "Otherwise it is 'Waiting for Next PO': the unit still has remaining order qty with the same Customer Order Date not assigned to a PO; its check box is disabled (message no. 2). The planned cases are already shown.",
-    "Condition 1 and 2: all lines of the unit assigned (in any line sequence): Ready to Delivery; one case per destination.",
-    "Condition 3: the lines of the unit are assigned to several POs with different PO Dates: the unit is Ready to Delivery only from the last PO Date (when the last PO is released); before that Create ASN cannot use it, but its cases can be checked.",
-    "A unit in an ASN shows 'In ASN' with its ASN No; it is ticked and locked."
+    "Unit = Part Number + Customer Order Date. Case = one per destination; the qty of a destination is summed into one case (it never exceeds pcs/case, it may be split over several lines, e.g. 4 + 2).",
+    "Case Qty = number of destinations. PO Readiness (case) = cases whose whole qty is pre-mapped to a PO.",
+    "Ready ('6'): every line of the unit is pre-mapped to a PO. Not Ready ('7'): at least one line of the unit has no PO yet (check box disabled, message no. 2). With POs of different PO Dates the unit becomes Ready when the last PO is available (condition 3).",
+    "Created: the unit is in a submitted ASN (ASN status '1'); ticked and locked (message no. 1)."
    ]
   },
   {
    "type": "heading",
-   "text": "5.3 Select Units and Create ASN"
+   "text": "5.3 Detail and Hold (D/S team)"
   },
   {
    "type": "bullets",
    "marker": "a.",
    "level": 2,
    "items": [
-    "The user ticks one or more Ready to Delivery units. Units of different Customer Order Dates and Part Numbers can be combined in one ASN (e.g. PART-B and PART-C of 13-Oct with PART-A of 14-Oct).",
-    "A unit is never split: all its order lines go into the same ASN. Other parts of the same Customer Order Date do not have to be included.",
-    "The selection bar shows the number of units, cases and pieces. [Create ASN] opens the Case List sub screen; [Clear selection] unticks all units."
+    "The D/S team can expand a unit (destinations with Case, Qty, Not Assigned pcs) and a destination (original order lines with Customer Order No, Detailed Item No, Qty, PO No, PO Date, Assignment). The supplier sees the header only.",
+    "Hold / Release updates HOLD_FLAG of the line in TB_R_H0253_ORDER_CONTROL_PRE (refer Data Edit Mapping). A held line is not taken by Get Order; the unit is computed without it. A unit whose lines are all on hold is shown as On Hold to the D/S team only.",
+    "HOLD_FLAG is 'N' when the line is first replicated (X10) and is kept on the next replications."
    ]
   },
   {
    "type": "heading",
-   "text": "5.4 Case List and Submit ASN"
+   "text": "5.4 Select Units and Create ASN"
   },
   {
    "type": "bullets",
    "marker": "a.",
    "level": 2,
    "items": [
-    "Cases: one case per Part Number + Customer Order Date + destination. Different part numbers are never in the same case. The order lines of one destination may be in any sequence (conditions 1 and 2); their total is within one case (the qty of H0253 per part and destination does not exceed pcs/case, it may be split over several lines, e.g. 4 + 2 or 1 + 1 + 3).",
-    "Cases are numbered in order of the selected units and the first appearance of each destination in the unit.",
-    "Delivery Date defaults to business date + 1 (today or later). The Rit Cycle list depends on the Delivery Date; Sunday has none (message no. 5, Submit disabled), Saturday has one. Route follows the Rit Cycle.",
+    "The user ticks one or more Ready units, also of different Customer Order Dates and Part Numbers. A unit is never split.",
+    "[Create ASN] does the real mapping of the selected units in one transaction: PO_MAPPED_FLAG = 'Y' on their H0253 lines, mapped qty on the Pra Daily Order parts, and the ASN draft in #TEMP_ASN_DRAFT (one case per Part Number + Customer Order Date + destination). Then the Case List opens.",
+    "If a unit is no longer Ready (changed by another user), the creation is rejected (message no. 7) and the delivery plan is refreshed.",
+    "[Back] / [Cancel] on the Case List release the mapping (flags and mapped qty back) and clear the draft."
+   ]
+  },
+  {
+   "type": "heading",
+   "text": "5.5 Case List and Submit ASN"
+  },
+  {
+   "type": "bullets",
+   "marker": "a.",
+   "level": 2,
+   "items": [
+    "The summary shows ASN No (assigned on submit), supplier, Delivery Date \u00b7 Rit \u00b7 Route of the Get Order, Delivery Qty (pcs) and number of cases.",
+    "Each case shows Case Number, Part Number and Qty; the expand shows PO No, Manifest No, Manifest Item No and PO Qty. Customer order data is not shown here.",
     "[Download Case Label]: TBD (format, file name, content).",
-    "[Submit ASN]: confirmation 'Submit ASN?' (message no. 4). No: stay on the Case List. Yes: generate the ASN No from the Delivery Date, insert TB_R_ASN_CROSSDOCK_H, fill ASN_NO and CASE_NO of every line of the selected units in TB_R_INSTRUCTION (refer Data Edit Mapping), display message no. 6 and return to ASN Crossdock Creation, where the units show 'In ASN'.",
-    "Reject the submit (message TBD) if a unit is no longer Ready to Delivery or already in an ASN (changed by another user)."
+    "[Submit ASN]: confirmation (message no. 4). Yes: insert TB_R_ASN_CROSSDOCK_H with ASN_STATUS '1' Created and TB_R_ASN_CROSSDOCK_D from the draft; ASN No and Case No follow the existing numbering (last sequence table). Display message no. 6; the units show Created."
    ]
   },
   {
    "type": "heading",
-   "text": "5.5 Notes"
+   "text": "5.6 Notes"
   },
   {
    "type": "bullets",
    "marker": "-",
    "level": 2,
    "items": [
-    "TB_R_INSTRUCTION is filled by the batch X12 (Customer Order - PO Mapping, FIFO by Customer Order Date). Submitted ASNs are shown in ASN Inquiry (X13).",
-    "The prototype has a 'Business date' switch to simulate the release of later POs (condition 3); it is not part of the real screen.",
-    "Supplier rule for one ASN (one supplier / plant per ASN) is TBD."
+    "#TB_R_INSTRUCTION and #TEMP_ASN_DRAFT are temporary tables. Submitted ASNs are shown in ASN Inquiry (X13).",
+    "The prototype has a 'Business date' switch (PO release) and a 'View as' switch (Supplier / D/S team); they are not part of the real screen."
    ]
   }
  ],
@@ -1444,7 +2018,7 @@
   },
   {
    "event": "Hover on disabled check box",
-   "cause": "Unit already in an ASN",
+   "cause": "Unit is Created",
    "type": "Info",
    "msg_id": "MSG1",
    "message": "Already in {ASN No}",
@@ -1452,75 +2026,92 @@
   },
   {
    "event": "Hover on disabled check box",
-   "cause": "Unit is Waiting for Next PO",
+   "cause": "Unit is Not Ready",
    "type": "Info",
    "msg_id": "MSG2",
-   "message": "Waiting for Next PO: {k} of {n} cases of {Part No} / {Customer Order Date} are not assigned to a released PO yet",
+   "message": "Not Ready: {k} of {n} cases of {Part No} / {Customer Order Date} are not assigned to a PO yet",
    "action": "Wait for the next PO."
   },
   {
-   "group": "Search Operation"
+   "group": "Get Order"
   },
   {
-   "event": "Click [Search] button",
-   "cause": "No unit matches",
+   "event": "Click [Get Order] / change filter",
+   "cause": "No unit",
    "type": "Info",
    "msg_id": "MSG3",
-   "message": "No delivery plan matches this search.",
-   "action": "Change the criteria."
-  },
-  {
-   "group": "Case List"
-  },
-  {
-   "event": "Click [Submit ASN] button",
-   "cause": "Confirmation",
-   "type": "Confirm",
-   "msg_id": "MSG4",
-   "message": "Submit ASN? {n} cases ({q} pcs) will be locked into {ASN No}, delivery {Delivery Date} \u00b7 {Rit Cycle}.",
-   "action": "Click [Yes, submit] or [No]."
+   "message": "No customer order matches this filter.",
+   "action": "Change the Delivery Date, Rit or filter."
   },
   {
    "event": "Change [Delivery Date]",
-   "cause": "No rit cycle on the date (Sunday)",
+   "cause": "No rit on the date (Sunday)",
    "type": "Info",
    "msg_id": "MSG5",
    "message": "No rit cycle available for {Delivery Date}. Choose another delivery date.",
    "action": "Choose another Delivery Date."
   },
   {
+   "group": "Create ASN / Case List"
+  },
+  {
+   "event": "Click [Create ASN]",
+   "cause": "A selected unit is no longer Ready",
+   "type": "Error",
+   "msg_id": "MSG7",
+   "message": "{Part No} / {Customer Order Date} is no longer Ready. The delivery plan is refreshed.",
+   "action": "Select again."
+  },
+  {
+   "event": "Click [Submit ASN] button",
+   "cause": "Confirmation",
+   "type": "Confirm",
+   "msg_id": "MSG4",
+   "message": "Submit ASN? {n} cases ({q} pcs) will be locked into {ASN No}, delivery {Delivery Date} \u00b7 {Rit}.",
+   "action": "Click [Yes, submit] or [No]."
+  },
+  {
    "event": "Click [Yes, submit]",
    "cause": "ASN submitted",
    "type": "Info",
    "msg_id": "MSG6",
-   "message": "{ASN No} submitted. {n} cases are locked. Delivery {Delivery Date} \u00b7 {Rit Cycle}. The ASN is shown in ASN Inquiry.",
+   "message": "{ASN No} submitted with status Created. {n} cases are locked. The ASN is shown in ASN Inquiry.",
    "action": "Click [OK]."
   }
  ],
  "logging_messages": [
   {
-   "event": "Click [Yes, submit]",
-   "cause": "Database error on insert / update",
+   "event": "Click [Create ASN]",
+   "cause": "Database error on mapping / draft",
    "type": "Error",
    "msg_id": "LOG1",
+   "message": "Failed to create the ASN draft: <DB error message>.",
+   "exception": "Y",
+   "action": "Roll back; show [Corresponding Screen Message] on screen (TBD)"
+  },
+  {
+   "event": "Click [Yes, submit]",
+   "cause": "Database error on insert",
+   "type": "Error",
+   "msg_id": "LOG2",
    "message": "Failed to submit ASN <ASN_NO>: <DB error message>.",
    "exception": "Y",
-   "action": "Show [Corresponding Screen Message] on screen (TBD)"
+   "action": "Roll back; show [Corresponding Screen Message] on screen (TBD)"
   }
  ],
  "tables": [
   {
-   "name": "TB_R_INSTRUCTION",
-   "kind": "transaction",
+   "name": "#TB_R_INSTRUCTION",
+   "kind": "temp",
    "proposed": true,
-   "description": "Customer order line (H0253, order status 7) paired with a supplier PO (Pra Daily Order), FIFO by Customer Order Date. One row per line x PO assignment, plus one row with PO_NO NULL for the qty still without a PO. Columns proposed.",
+   "description": "Temporary table of one Get Order run (session): customer order line (H0253, order status 7, Hold Flag N, not mapped) pre-mapped to a supplier PO (Pra Daily Order), FIFO by order date. One row per line x PO, plus one row with PO_NO NULL for the qty still without a PO. Columns proposed.",
    "columns": [
     [
      "INSTRUCTION_ID",
      "BIGINT",
      "Y",
      "N",
-     "Running number (identity)"
+     "Running number within the session"
     ],
     [
      "CUSTOMER_CD",
@@ -1590,7 +2181,7 @@
      "NUMBER(8)",
      "",
      "N",
-     "Qty of the line assigned to this PO (0 for the not-assigned row)"
+     "Qty of the line pre-mapped to this PO (0 for the not-assigned row)"
     ],
     [
      "REMAINING_ORDER_QTY",
@@ -1684,46 +2275,138 @@
      "Original ETD"
     ],
     [
-     "ASN_NO",
-     "VARCHAR(TBD)",
+     "CROSSDOCK_STATUS",
+     "VARCHAR(1)",
      "",
+     "N",
+     "Status of the unit (Part Number + Customer Order Date): '6' Ready / '7' Not Ready"
+    ]
+   ]
+  },
+  {
+   "name": "#TEMP_ASN_DRAFT",
+   "kind": "temp",
+   "proposed": true,
+   "description": "Temporary ASN draft built by [Create ASN] (mapping of the selected units); read by the Case List and by [Submit ASN]. Columns proposed.",
+   "columns": [
+    [
+     "CASE_SEQ",
+     "NUMBER(4)",
      "Y",
-     "ASN number; filled by ASN Crossdock Creation [Submit ASN]"
+     "N",
+     "Case sequence in the draft (Case 1, 2, ...)"
     ],
     [
-     "CASE_NO",
-     "VARCHAR(TBD)",
-     "",
+     "LINE_SEQ",
+     "NUMBER(4)",
      "Y",
-     "Case number; filled by ASN Crossdock Creation [Submit ASN]"
+     "N",
+     "Order line x PO within the case"
     ],
     [
-     "CREATED_BY",
+     "PART_NO",
+     "VARCHAR(15)",
+     "",
+     "N",
+     "Part number of the case"
+    ],
+    [
+     "ORDER_DT",
+     "DATE",
+     "",
+     "N",
+     "Customer Order Date of the case"
+    ],
+    [
+     "DESTINATION_CD",
+     "VARCHAR(7)",
+     "",
+     "N",
+     "Destination of the case"
+    ],
+    [
+     "CUSTOMER_CD",
+     "VARCHAR(7)",
+     "",
+     "N",
+     "Customer code"
+    ],
+    [
+     "CUSTOMER_ORDER_NO",
+     "VARCHAR(8)",
+     "",
+     "N",
+     "Customer order number"
+    ],
+    [
+     "DETAILED_ITEM_NO",
+     "VARCHAR(4)",
+     "",
+     "N",
+     "Detailed item number"
+    ],
+    [
+     "SERIAL_NO",
+     "VARCHAR(7)",
+     "",
+     "N",
+     "Serial number"
+    ],
+    [
+     "QTY",
+     "NUMBER(8)",
+     "",
+     "N",
+     "Qty of the line in the case (mapped to the PO)"
+    ],
+    [
+     "PO_NO",
      "VARCHAR(TBD)",
      "",
      "N",
-     "User who created the record"
+     "PO number"
     ],
     [
-     "CREATED_DT",
-     "DATETIME",
-     "",
-     "N",
-     "Created date and time"
-    ],
-    [
-     "CHANGED_BY",
+     "MANIFEST_NO",
      "VARCHAR(TBD)",
      "",
      "N",
-     "User who last changed the record"
+     "Manifest number"
     ],
     [
-     "CHANGED_DT",
-     "DATETIME",
+     "MANIFEST_ITEM_NO",
+     "VARCHAR(TBD)",
      "",
      "N",
-     "Last changed date and time"
+     "Manifest item number"
+    ],
+    [
+     "PO_ORDER_QTY",
+     "NUMBER(TBD)",
+     "",
+     "N",
+     "PO qty"
+    ],
+    [
+     "DELIVERY_DT",
+     "DATE",
+     "",
+     "N",
+     "Delivery Date of the Get Order"
+    ],
+    [
+     "RIT_CYCLE",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "Rit of the Get Order"
+    ],
+    [
+     "ROUTE",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "Route of the Rit"
     ]
    ]
   },
@@ -1731,14 +2414,14 @@
    "name": "TB_R_ASN_CROSSDOCK_H",
    "kind": "transaction",
    "proposed": true,
-   "description": "ASN header of ASN Crossdock Creation; cases and lines are in TB_R_INSTRUCTION (ASN_NO, CASE_NO). Name and columns proposed.",
+   "description": "ASN header of ASN Crossdock Creation; its cases are in TB_R_ASN_CROSSDOCK_D. Name and columns proposed.",
    "columns": [
     [
      "ASN_NO",
      "VARCHAR(TBD)",
      "Y",
      "N",
-     "ASN-{Supplier}-{YYMMDD of Delivery Date}-{Seq}"
+     "ASN number (existing numbering)"
     ],
     [
      "SUPPLIER_CD",
@@ -1766,14 +2449,14 @@
      "VARCHAR(TBD)",
      "",
      "N",
-     "Rit Cycle"
+     "Rit"
     ],
     [
      "ROUTE",
      "VARCHAR(TBD)",
      "",
      "N",
-     "Route of the Rit Cycle"
+     "Route of the Rit"
     ],
     [
      "TOTAL_CASE",
@@ -1787,14 +2470,155 @@
      "NUMBER",
      "",
      "N",
-     "Total pieces"
+     "Delivery Qty (total pieces)"
     ],
     [
      "ASN_STATUS",
+     "VARCHAR(1)",
+     "",
+     "N",
+     "'1' Created (set on submit)"
+    ],
+    [
+     "CREATED_BY",
      "VARCHAR(TBD)",
      "",
      "N",
-     "'SUBMITTED'"
+     "User who submitted the ASN"
+    ],
+    [
+     "CREATED_DT",
+     "DATETIME",
+     "",
+     "N",
+     "Submit date and time"
+    ],
+    [
+     "CHANGED_BY",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "User who last changed the record"
+    ],
+    [
+     "CHANGED_DT",
+     "DATETIME",
+     "",
+     "N",
+     "Last changed date and time"
+    ]
+   ]
+  },
+  {
+   "name": "TB_R_ASN_CROSSDOCK_D",
+   "kind": "transaction",
+   "proposed": true,
+   "description": "Cases of a submitted ASN: one row per case x order line x PO. Name and columns proposed.",
+   "columns": [
+    [
+     "ASN_NO",
+     "VARCHAR(TBD)",
+     "Y",
+     "N",
+     "ASN number (TB_R_ASN_CROSSDOCK_H)"
+    ],
+    [
+     "CASE_NO",
+     "VARCHAR(TBD)",
+     "Y",
+     "N",
+     "Case number; format and sequence follow the existing numbering (last sequence table)"
+    ],
+    [
+     "LINE_SEQ",
+     "NUMBER(4)",
+     "Y",
+     "N",
+     "Order line x PO within the case"
+    ],
+    [
+     "PART_NO",
+     "VARCHAR(15)",
+     "",
+     "N",
+     "Part number of the case"
+    ],
+    [
+     "ORDER_DT",
+     "DATE",
+     "",
+     "N",
+     "Customer Order Date"
+    ],
+    [
+     "DESTINATION_CD",
+     "VARCHAR(7)",
+     "",
+     "N",
+     "Destination of the case"
+    ],
+    [
+     "CUSTOMER_CD",
+     "VARCHAR(7)",
+     "",
+     "N",
+     "Customer code"
+    ],
+    [
+     "CUSTOMER_ORDER_NO",
+     "VARCHAR(8)",
+     "",
+     "N",
+     "Customer order number"
+    ],
+    [
+     "DETAILED_ITEM_NO",
+     "VARCHAR(4)",
+     "",
+     "N",
+     "Detailed item number"
+    ],
+    [
+     "SERIAL_NO",
+     "VARCHAR(7)",
+     "",
+     "N",
+     "Serial number"
+    ],
+    [
+     "QTY",
+     "NUMBER(8)",
+     "",
+     "N",
+     "Qty of the line in the case"
+    ],
+    [
+     "PO_NO",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "PO number"
+    ],
+    [
+     "MANIFEST_NO",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "Manifest number"
+    ],
+    [
+     "MANIFEST_ITEM_NO",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "Manifest item number"
+    ],
+    [
+     "PO_ORDER_QTY",
+     "NUMBER(TBD)",
+     "",
+     "N",
+     "PO qty"
     ],
     [
      "CREATED_BY",

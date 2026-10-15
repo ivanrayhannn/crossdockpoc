@@ -1,6 +1,6 @@
 # Task List & Daftar Konfirmasi – Crossdock Optimization
 
-Status per **14-Oct-2026**. Sumber data: `deliverables/exec/project_items.py` (sama dengan Excel `deliverables/exec/Crossdock_Executive_Overview.xlsx`).
+Status per **15-Oct-2026**. Sumber data: `deliverables/exec/project_items.py` (sama dengan Excel `deliverables/exec/Crossdock_Executive_Overview.xlsx`).
 
 ## Index dokumen
 
@@ -17,7 +17,7 @@ Status per **14-Oct-2026**. Sumber data: `deliverables/exec/project_items.py` (s
 | X9 | H0202 Demand History Sync | Batch | System | B. Daily operation | `X9_UISS_Batch_H0202DemandHistorySync.xlsx` | X9_BATCH_H0202_DemandHistory_Sync.md |
 | X10 | H0253 Order Control Sync | Batch | System | B. Daily operation | `X10_UISS_Batch_H0253OrderControlSync.xlsx` | X10_BATCH_H0253_OrderControl_Sync.md |
 | X11 | H0125 Destination Master Sync | Batch | System | A. Master setup | `X11_UISS_Batch_H0125DestinationMasterSync.xlsx` | X11_BATCH_H0125_DestinationMaster_Sync.md |
-| X12 | Customer Order - PO Mapping | Batch | System | B. Daily operation | `X12_UISS_Batch_CustomerOrderPOMapping.xlsx` | X12_BATCH_CustomerOrder_PO_Mapping.md |
+| X12 | Get Order - Customer Order PO Pre-mapping | Function | Supplier (button in X8) | B. Daily operation | `X12_UISS_Batch_GetOrderPOPreMapping.xlsx` | X12_FUNCTION_GetOrder_PO_PreMapping.md |
 | X13 | ASN Inquiry | Screen | Supplier / D/S team | B. Daily operation | `X13_UISS_Screen_ASNInquiry.xlsx` | X13_SCREEN_ASNInquiry.md |
 
 ## Sudah selesai
@@ -28,21 +28,22 @@ Status per **14-Oct-2026**. Sumber data: `deliverables/exec/project_items.py` (s
 - Struktur tabel H0202 / H0253 / H0125 dari I/F layout G-TOPAS, termasuk SERIAL_NO
 - Alur ASN baru sesuai ASN_Flow_Normal.xlsx (unit Part + Customer Order Date, 1 case per destinasi, FIFO)
 - Header delivery plan level case; detail destinasi & pcs hanya untuk tim D/S
+- ASN flow versi 15-Oct: Get Order (X12 on-demand pre-mapping), Hold Flag oleh D/S, Create ASN (mapping), status Ready / Not Ready / Created
 
 ## Task list (belum dikerjakan)
 
 | No | Task | Function | Kategori | PIC | Tergantung | Status | Prioritas |
 |---|---|---|---|---|---|---|---|
-| 1 | Update UISS X8 / X13 setelah konfirmasi case label, nomor ASN, route master | X8 / X13 | Dokumen | FID Rayhan | Konfirmasi no. 1-8 | Waiting confirmation | High |
-| 2 | Finalisasi logika FIFO dan struktur Pra Daily Order di UISS X12 | X12 | Dokumen | FID Rayhan | Konfirmasi no. 9 | Waiting confirmation | High |
-| 3 | Isi jadwal & retry di Schedule sheet UISS X5, X9-X12 | X5, X9-X12 | Dokumen | FID Rayhan | Konfirmasi no. 10-12 | Waiting confirmation | Medium |
+| 1 | Update UISS X8 / X13 setelah konfirmasi case label, isi 1 ASN, route master, tabel ASN | X8 / X13 | Dokumen | FID Rayhan | Konfirmasi no. 1-5 | Waiting confirmation | High |
+| 2 | Finalisasi struktur Pra Daily Order (mapped qty) di UISS X8 / X12 | X8 / X12 | Dokumen | FID Rayhan | Konfirmasi no. 9 | Waiting confirmation | High |
+| 3 | Isi jadwal & retry di Schedule sheet UISS X5, X9-X11 | X5, X9-X11 | Dokumen | FID Rayhan | Konfirmasi no. 10-12 | Waiting confirmation | Medium |
 | 4 | Buat UISS-Batch RPA Sync (jika disetujui) | X3 | Dokumen | FID Rayhan | Konfirmasi no. 16-17 | Not started | Medium |
 | 5 | Lengkapi panjang VARCHAR dan nama field di Appendix semua UISS | X1-X13 | Dokumen | FID Rayhan | Konfirmasi no. 20 | Waiting confirmation | Low |
 | 6 | Review UISS X1-X13 versi 0.1 oleh user / reviewer | X1-X13 | Review | User | - | Not started | High |
 | 7 | Tambah kolom SERIAL_NO di tabel / query H0253 sumber | X10 | Data | Tim DB Surrounding | Konfirmasi no. 15 | Not started | High |
-| 8 | Konfirmasi struktur tabel Pra Daily Order dan route master | X8, X12 | Data | Tim NSP / IT | - | Not started | High |
-| 9 | Prototype: Download Case Label sesuai format | X8 / X13 | Prototype | FID Rayhan | Konfirmasi no. 1 | Waiting confirmation | Medium |
-| 10 | Prototype: Case List supplier level case & akses D/S | X8 | Prototype | FID Rayhan | Konfirmasi no. 4-5 | Waiting confirmation | Medium |
+| 8 | Tambah kolom HOLD_FLAG / PO_MAPPED_FLAG di H0253 NSP dan cara mempertahankannya saat sync | X10 | Data | Tim NSP / IT | Konfirmasi no. 7 | Not started | High |
+| 9 | Konfirmasi struktur tabel Pra Daily Order dan route master | X8, X12 | Data | Tim NSP / IT | - | Not started | High |
+| 10 | Prototype: Download Case Label sesuai format | X8 / X13 | Prototype | FID Rayhan | Konfirmasi no. 1 | Waiting confirmation | Medium |
 | 11 | Prototype: Cancel ASN di ASN Inquiry (jika diperlukan) | X13 | Prototype | FID Rayhan | Konfirmasi no. 8 | Waiting confirmation | Low |
 | 12 | Susun testing strategy & test scenario (unit, integration, UAT) X1-X13 | X1-X13 | Testing | FID Rayhan | UISS final | Not started | High |
 | 13 | Definisikan proses lanjutan setelah ASN (penerimaan di crossdock, pengiriman ke destinasi) | Next scope | Analisis | FID Rayhan / User | Arahan user | Not started | Medium |
@@ -53,15 +54,15 @@ Status per **14-Oct-2026**. Sumber data: `deliverables/exec/project_items.py` (s
 | No | Function | Topik | Pertanyaan | Usulan BSA | Dampak jika belum diputuskan |
 |---|---|---|---|---|---|
 | 1 | X8 / X13 | Case label | Format, isi, dan nama file case label (Download Case Label). | Ikuti format case label NSP existing. | Case label belum bisa dicetak; UISS X8 / X13 masih TBD. |
-| 2 | X8 | Nomor ASN | Aturan nomor urut ASN. | ASN-{Supplier}-{YYMMDD Delivery Date}-{Seq 3 digit}, reset per hari per supplier. | Format ASN No di X8 / X13 masih usulan. |
-| 3 | X8 | Isi 1 ASN | Apakah 1 ASN wajib 1 supplier / plant? | Ya, 1 ASN = 1 supplier + plant. | Validasi pilihan unit di Create ASN. |
-| 4 | X8 | Case List supplier | Sub screen Case List untuk supplier juga level case saja (sembunyikan Customer Order No dan pcs)? | Ya, samakan dengan header (level case). | Kolom Case List di UISS X8. |
-| 5 | X8 | Akses D/S | Apakah tim D/S juga boleh Create / Submit ASN, atau hanya melihat? | Hanya melihat (read only). | Hak akses tombol Create ASN. |
-| 6 | X8 | Route master | Nama dan struktur tabel route master (Rit Cycle / Route). | Pakai route master NSP existing. | Combo Rit Cycle masih mock. |
-| 7 | X8 / X13 | Tabel header ASN | Konfirmasi nama dan kolom TB_R_ASN_CROSSDOCK_H (usulan). | Pakai usulan di Appendix UISS X8. | Data mapping Submit ASN. |
+| 2 | X8 | Isi 1 ASN | Apakah 1 ASN wajib 1 supplier / plant? | Ya, 1 ASN = 1 supplier + plant. | Validasi pilihan unit di Create ASN. |
+| 3 | X8 | Akses D/S | Apakah tim D/S juga boleh Create / Submit ASN, atau hanya melihat + hold? | Hanya melihat + hold. | Hak akses tombol Create ASN. |
+| 4 | X8 | Route master | Nama dan struktur tabel route master (Rit / Route). | Pakai route master NSP existing. | Combo Rit masih mock. |
+| 5 | X8 / X13 | Tabel ASN | Konfirmasi TB_R_ASN_CROSSDOCK_H / _D (usulan) atau pakai tabel ASN existing. | Pakai usulan di Appendix UISS X8. | Data mapping Submit ASN. |
+| 6 | X8 | Back / Cancel | Back / Cancel di Case List melepas mapping (PO_MAPPED_FLAG dan qty PO kembali). Setuju? | Ya. | Order bisa terkunci tanpa ASN. |
+| 7 | X10 | Flag H0253 | HOLD_FLAG dan PO_MAPPED_FLAG dipertahankan per unique key saat delete - insert X10. Setuju? | Ya (cara teknis oleh tim IT). | Hold / mapping hilang setiap sync. |
 | 8 | X13 | Cancel ASN | Perlu cancel / revisi ASN dari ASN Inquiry? | Perlu cancel selama barang belum dikirim. | Tambahan fungsi dan status ASN. |
-| 9 | X12 | Pra Daily Order | Struktur fisik TB_R_PRA_DAILY_ORDER_MANIFEST / PART dan cara menandai PO yang sudah terpasang. | Tambah flag / qty terpakai di PART. | Logika FIFO X12 belum final. |
-| 10 | X9-X12 | Jadwal & retry | Jadwal scheduler NSP untuk X9, X10, X11, X12 dan perlu auto retry seperti X6 / X7? | Setelah data G-TOPAS tersedia; auto retry 3x. | Schedule sheet di UISS masih TBC. |
+| 9 | X8 / X12 | Pra Daily Order | Struktur fisik TB_R_PRA_DAILY_ORDER_MANIFEST / PART dan kolom qty terpakai (mapped qty). | Tambah kolom MAPPED_QTY di PART. | Logika FIFO X12 / Create ASN belum final. |
+| 10 | X9-X11 | Jadwal & retry | Jadwal scheduler NSP untuk X9, X10, X11 dan perlu auto retry seperti X6 / X7? | Setelah data G-TOPAS tersedia; auto retry 3x. | Schedule sheet di UISS masih TBC. |
 | 11 | X5 | Jadwal X5 | Tanggal / jam scheduler bulanan X5. | Tanggal 1 jam 01:00, sebelum X6. | Schedule sheet X5 / X6. |
 | 12 | X5 / X6 | X5 gagal | Kalau X5 gagal, apakah X6 dibatalkan? | Ya, X6 tidak jalan. | Aturan dependensi batch. |
 | 13 | X5 | Kolom DAD | Kolom DAD di Actual Demand Summary dipakai atau tidak? | Tidak dipakai (hanya MAD). | Mapping kolom X5. |

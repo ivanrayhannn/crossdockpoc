@@ -21,6 +21,11 @@ CFG = {"H0202": {"fid": "X9", "table": "TB_R_H0202_DEMAND_HISTORY_SUM", "title":
                  "freq": "G-TOPAS provides the data 1 time/week (21:30)."}}
 c = CFG[sys.argv[2]]
 T, COLS, KEY = c["table"], c["cols"], sys.argv[2]
+# NSP-only columns of H0253 (set in ASN Crossdock Creation); they survive the full replace
+KEEP = {"HOLD_FLAG", "PO_MAPPED_FLAG"} if KEY == "H0253" else set()
+KEEP_TXT = ("HOLD_FLAG and PO_MAPPED_FLAG are NSP-only columns (set in ASN Crossdock Creation): before the delete their values are kept per unique key "
+            "and put back on the inserted rows; a new key gets 'N'.") if KEEP else ""
+
 SRC, DST = T + " (DB Surrounding)", T + " (NSP)"
 
 spec = {
@@ -56,14 +61,15 @@ spec = {
    "edges": [{"from": "p1", "to": "p2"}, {"from": "s", "to": "p2"}, {"from": "p2", "to": "d"}, {"from": "p2", "to": "p3"}, {"from": "p3", "to": "log"}]},
   "steps": [
    "The scheduler starts the batch.",
-   f"Delete all rows of {DST} and insert all rows of {SRC} (same columns and values).",
+   f"Delete all rows of {DST} and insert all rows of {SRC} (same columns and values)." + (" " + KEEP_TXT if KEEP else ""),
    "No error: commit. Error: roll back step 2 (one transaction). Record the result in the Log. Exit."]
  },
  "data_map": {"blocks": [
   {"source": {"table": DST}, "destination": {"table": DST, "operation": "Delete", "description": "All rows (full replace)"},
    "mappings": [{"dest_field": x[0], "description": "Row is deleted"} for x in COLS]},
   {"source": {"table": SRC}, "destination": {"table": DST, "operation": "Insert", "description": "Every source row"},
-   "mappings": [{"source_field": x[0], "dest_field": x[0], "description": "Same value as the source"} for x in COLS]},
+   "mappings": [{"dest_field": x[0], "description": "Value of the deleted NSP row with the same unique key; 'N' for a new key"} if x[0] in KEEP
+                else {"source_field": x[0], "dest_field": x[0], "description": "Same value as the source"} for x in COLS]},
   {"source": "Result of this run", "destination": {"table": LOG, "operation": "Insert", "description": "One record per run"},
    "mappings": [{"dest_field": "BATCH_ID", "description": f"'{KEY}_SYNC'"}, {"dest_field": "STATUS", "description": "SUCCESS / FAILED"},
                 {"dest_field": "ROW_COUNT", "description": "Rows inserted (0 when FAILED)"}, {"dest_field": "MESSAGE", "description": "Error message when FAILED"},
@@ -71,7 +77,7 @@ spec = {
  "func_desc_layout": "full",
  "func_desc": [
   {"type": "bullets", "marker": "-", "level": 0, "items": [
-    "Full replace (delete - insert); all columns are copied as they are, no conversion.",
+    "Full replace (delete - insert); all columns are copied as they are, no conversion." + (" " + KEEP_TXT if KEEP else ""),
     "Delete and insert run in one transaction (all-or-nothing). When the run fails, NSP keeps the data of the last successful run.",
     "Schedule is set in the system master (TBC). Table structure: see Appendix."]}],
  "logging_messages": [

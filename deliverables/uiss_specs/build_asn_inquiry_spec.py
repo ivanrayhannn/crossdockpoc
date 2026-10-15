@@ -1,6 +1,6 @@
 """Spec for X13_UISS_Screen_ASNInquiry.xlsx (UISS-Screen, ASN Inquiry)."""
 import json, sys
-from asn_common import ASNH, ASNH_TABLE, INSTR, INSTR_TABLE, btn, header, it, out, revisions
+from asn_common import ASND, ASND_TABLE, ASNH, ASNH_TABLE, btn, header, it, out, revisions
 
 IMG = 'deliverables/uiss_screens/asn_crossdock'
 B = ["Search", "Reset", "ASN No (link)", "Back", "Download Case Label"]
@@ -12,8 +12,8 @@ def modes(on):
 
 spec = {
  "doc_type": "screen",
- "header": header("X13", "Screen", "ASN Inquiry"),
- "revisions": revisions(),
+ "header": header("X13", "Screen", "ASN Inquiry", '15-Oct-26'),
+ "revisions": revisions('15-Oct-26'),
  "general": {
   "objective": ["To search the ASNs submitted in ASN Crossdock Creation (X8).", "To display the cases of one ASN (read only) and download its case labels."],
   "display_order": [{"section": "ASN list", "fields": [{"field": "Submit date-time (CREATED_DT)", "order": "Descending"}]},
@@ -39,8 +39,8 @@ spec = {
      {"id": "d", "label": "ASN Inquiry - detail", "type": "screen"}],
     "edges": [{"from": "c", "to": "l", "label": "submitted ASN"}, {"from": "l", "to": "d", "label": "ASN No"}, {"from": "d", "to": "l", "label": "Back"}]}}],
  "screen_layout": [
-  {"caption": "1. List Mode", "image": f"{IMG}/c_09_inquiry.png"},
-  {"caption": "2. Detail Mode", "image": f"{IMG}/c_10_inquiry_detail.png"}],
+  {"caption": "1. List Mode", "image": f"{IMG}/c_11_inquiry.png"},
+  {"caption": "2. Detail Mode", "image": f"{IMG}/c_12_inquiry_detail.png"}],
  "items": [
   {"group": "<Search Criteria Section>"},
   it("ASN No", "Key-in", "-", "Char", "TBD", "I", "Text box", "Left", "Blank", "N", "-", "Contains, case-insensitive", "Enter = [Search]."),
@@ -51,17 +51,17 @@ spec = {
   out("ASN No", ASNH, "ASN_NO", "Char", "TBD", "Link", "Left", "-", "Opens Detail Mode."),
   out("Delivery Date", ASNH, "DELIVERY_DT", "Date", "-", "Label", "Left", "DD-Mon-YYYY", ""),
   out("Rit Cycle / Route", ASNH, "RIT_CYCLE / ROUTE", "Char", "TBD", "Label", "Left", "-", ""),
-  out("Part / Customer Order Date", INSTR, "PART_NO / ORDER_DT", "Char", "-", "Label", "Left", "-", "Units of the ASN."),
+  out("Part / Customer Order Date", ASND, "PART_NO / ORDER_DT", "Char", "-", "Label", "Left", "-", "Units of the ASN."),
   out("Cases / Qty", ASNH, "TOTAL_CASE / TOTAL_QTY", "Number", "-", "Label", "Right", "ZZ9 / ZZ,ZZ9", ""),
-  out("Status", ASNH, "ASN_STATUS", "Char", "TBD", "Label", "Left", "-", "Submitted (green)."),
+  out("Status", ASNH, "ASN_STATUS", "Char", "TBD", "Label", "Left", "-", "'1' Created (green)."),
   out("Created", ASNH, "CREATED_BY / CREATED_DT", "Char", "-", "Label", "Left", "DD-Mon-YYYY HH:MM", "User and date-time of submit."),
   {"group": "<Detail Mode>"},
   btn("Back", "Returns to the ASN list."),
   out("ASN summary", ASNH, "-", "Char", "-", "Label", "Left", "-", "Delivery Date, Rit Cycle · Route, units, cases · qty, created."),
   btn("Download Case Label", "Downloads the labels of all cases (TBD format)."),
-  out("Case No", INSTR, "CASE_NO", "Char", "TBD", "Grid", "Left", "-", "Case number of the ASN."),
-  out("Part Number / Customer Order Date / Destination", INSTR, "PART_NO / ORDER_DT / DESTINATION_CD", "Char", "-", "Grid", "Left", "-", "Key of the case."),
-  out("Customer Order No (qty) / PO No / Qty", INSTR, "CUSTOMER_ORDER_NO / PO_NO / ASSIGNED_QTY", "Char", "-", "Grid", "Left", "-", "Order lines packed in the case; total of all cases.")],
+  out("Case No", ASND, "CASE_NO", "Char", "TBD", "Grid", "Left", "-", "Case number of the ASN."),
+  out("Part Number / Customer Order Date / Destination", ASND, "PART_NO / ORDER_DT / DESTINATION_CD", "Char", "-", "Grid", "Left", "-", "Key of the case."),
+  out("Customer Order No (qty) / PO No / Qty", ASND, "CUSTOMER_ORDER_NO / PO_NO / QTY", "Char", "-", "Grid", "Left", "-", "Order lines packed in the case; total of all cases.")],
  "data_map": {"blocks": []},
  "operation": [
   {"type": "heading", "text": "5.1 List Mode"},
@@ -71,13 +71,13 @@ spec = {
     "Clicking an ASN No opens Detail Mode."]},
   {"type": "heading", "text": "5.2 Detail Mode"},
   {"type": "bullets", "marker": "a.", "level": 2, "items": [
-    "Shows the ASN summary and its cases from TB_R_INSTRUCTION (lines with the ASN_NO), grouped by CASE_NO. All items are read only.",
+    "Shows the ASN summary and its cases from TB_R_ASN_CROSSDOCK_D (rows with the ASN_NO), grouped by CASE_NO. All items are read only.",
     "[Download Case Label]: TBD (format, file name, content). [Back] returns to the list in the current search state.",
     "The screen does not change data (display only)."]}],
  "display_messages": [
   {"group": "Search Operation"},
   {"event": "Click [Search] button", "cause": "No ASN matches", "type": "Info", "msg_id": "MSG1", "message": "No ASN matches this search.", "action": "Change the criteria."}],
  "logging_messages": [],
- "tables": [ASNH_TABLE, INSTR_TABLE]
+ "tables": [ASNH_TABLE, ASND_TABLE]
 }
 json.dump(spec, open(sys.argv[1], 'w'), indent=1)

@@ -870,6 +870,20 @@ H0253_COLS = [
 "No.44 Update Date & Time"
 ],
 [
+"HOLD_FLAG",
+"VARCHAR(1)",
+"",
+"N",
+"NSP column: hold by the D/S team in ASN Crossdock Creation ('Y' / 'N'); default 'N' on insert, kept on re-sync"
+],
+[
+"PO_MAPPED_FLAG",
+"VARCHAR(1)",
+"",
+"N",
+"NSP column: line mapped to a PO by [Create ASN] ('Y' / 'N'); default 'N' on insert, kept on re-sync"
+],
+[
 "CREATE_DT",
 "TIMESTAMP",
 "",

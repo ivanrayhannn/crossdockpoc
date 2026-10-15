@@ -40,7 +40,7 @@ export function AsnInquiryPage() {
         <div><button className="btn btn-secondary" onClick={() => setView(null)} style={{ fontSize: 12, padding: '4px 12px' }}>← Back to ASN Inquiry</button></div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <h1 style={{ fontSize: 22, margin: 0, fontFamily: 'var(--font-mono)' }}>{view.asnNo}</h1>
-          <Chip tone="ok">Submitted</Chip>
+          <Chip tone="ok">Created</Chip>
         </div>
         <div style={{ ...card, padding: 16, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, fontSize: 12.5 }}>
           <div><div className="ax-lbl">Delivery Date</div><b>{niceDate(view.deliveryDate)}</b></div>
@@ -106,7 +106,7 @@ export function AsnInquiryPage() {
                   <td style={td}>{unitsOf(a)}</td>
                   <td style={td}>{a.cases.length}</td>
                   <td style={td}>{a.cases.reduce((s, c) => s + c.qty, 0)}</td>
-                  <td style={td}><Chip tone="ok">Submitted</Chip></td>
+                  <td style={td}><Chip tone="ok">Created</Chip></td>
                   <td style={td}>{a.createdBy}<div className="ax-muted">{a.createdAt}</div></td>
                 </tr>
               ))}
