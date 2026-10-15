@@ -303,7 +303,7 @@ export function AsnCrossdockCreationPage() {
                   <tr key={u.key} style={{ background: u.status === 'notReady' ? 'var(--color-warn-bg, #fff8e6)' : undefined }}>
                     <td style={td}><input type="checkbox" checked={u.status === 'created' || !!sel[u.key]} disabled={!enabled} title={tip} onChange={(e) => setSel({ ...sel, [u.key]: e.target.checked })} /></td>
                     <td style={{ ...td, fontWeight: 600 }}>{niceDate(u.orderDt)}</td>
-                    <td style={td}><span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{u.partNo}</span><div className="ax-muted">{PART_NAME[u.partNo]}</div></td>
+                    <td style={{ ...td, fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{u.partNo}</td>
                     <td style={{ ...td, textAlign: 'right', fontWeight: 600 }}>{u.caseCount}</td>
                     <td style={{ ...td, textAlign: 'right', color: u.readyCases < u.caseCount ? 'var(--color-danger)' : undefined }}>{u.readyCases}</td>
                     <td style={td} title={tip}><StatusChip s={u.status} />{u.heldLines.length > 0 && isDs && <div className="ax-muted">{u.heldLines.length} line(s) on hold</div>}</td>

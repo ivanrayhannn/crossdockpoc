@@ -752,7 +752,7 @@
    "description": "Customer Order Date of the unit."
   },
   {
-   "name": "Part Number / Part Name",
+   "name": "Part Number",
    "source": "#TB_R_INSTRUCTION",
    "field": "PART_NO",
    "type": "Char",
@@ -764,7 +764,7 @@
    "required": "N",
    "format": "-",
    "validation": "-",
-   "description": "Part number of the unit (distinct per Customer Order Date); part name from the part master."
+   "description": "Part number of the unit (distinct per Customer Order Date). Part name is not shown."
   },
   {
    "name": "Case Qty",

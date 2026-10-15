@@ -113,7 +113,7 @@ spec = {
   it("Status (filter)", "Key-in", "-", "Char", "-", "I", "Combo Box", "Left", "All", "N", "-", "-", "All / Ready / Not Ready / Created (D/S team also On Hold). Filters at once."),
   it("Select (check box)", "Key-in", "-", "Char", "1", "I", "CheckBox", "Center", "<unchecked>", "N", "-", "Enabled only for Ready units", "Several units can be ticked. Ticked and disabled when Created. Refer Screen Mode remark 1)."),
   out("Customer Order Date", INSTR, "ORDER_DT", "Date", "-", "Label", "Left", "DD-Mon-YYYY", "Customer Order Date of the unit."),
-  out("Part Number / Part Name", INSTR, "PART_NO", "Char", "15", "Label", "Left", "-", "Part number of the unit (distinct per Customer Order Date); part name from the part master."),
+  out("Part Number", INSTR, "PART_NO", "Char", "15", "Label", "Left", "-", "Part number of the unit (distinct per Customer Order Date). Part name is not shown."),
   out("Case Qty", "Computed", "-", "Number", "-", "Label", "Right", "ZZ9", "Number of cases of the unit: the qty of each destination is summed into one case."),
   out("PO Readiness (case)", "Computed", "-", "Number", "-", "Label", "Right", "ZZ9", "Cases whose whole qty is pre-mapped to a PO; red when lower than Case Qty."),
   out("ASN Status", INSTR, "CROSSDOCK_STATUS", "Char", "1", "Label", "Left", "-", "'6' Ready (green) / '7' Not Ready (amber, row highlighted) / Created (ASN status '1', grey) / On Hold (D/S only). Refer 5.2."),
