@@ -1,6 +1,6 @@
 /* Minimal hash-based routing — the app has only a few pages, so a full router is overkill. */
 
-export type RouteKey = 'crossdock' | 'case-consolidation' | 'asn-creation' | 'asn-inquiry' | 'batch-process' | 'candidate-flow';
+export type RouteKey = 'crossdock' | 'case-consolidation' | 'asn-creation' | 'asn-inquiry' | 'batch-process' | 'candidate-flow' | 'asn-backend' | 'menu-settings' | 'log-monitoring';
 
 /** Sidebar nav items that actually navigate somewhere; everything else in the nav is inert. */
 export const ROUTE_BY_NAV_ITEM: Record<string, RouteKey> = {
@@ -10,11 +10,14 @@ export const ROUTE_BY_NAV_ITEM: Record<string, RouteKey> = {
   'ASN Inquiry': 'asn-inquiry',
   'Batch Process Simulation': 'batch-process',
   'Candidate Part Batch Flow': 'candidate-flow',
+  'ASN Backend Process': 'asn-backend',
+  'Menu Settings': 'menu-settings',
+  'Log Monitoring': 'log-monitoring',
 };
 
 export const DEFAULT_ROUTE: RouteKey = 'crossdock';
 
-const ROUTE_KEYS: RouteKey[] = ['case-consolidation', 'asn-creation', 'asn-inquiry', 'batch-process', 'candidate-flow'];
+const ROUTE_KEYS: RouteKey[] = ['case-consolidation', 'asn-creation', 'asn-inquiry', 'batch-process', 'candidate-flow', 'asn-backend', 'menu-settings', 'log-monitoring'];
 
 export function routeFromHash(hash: string): RouteKey {
   const key = hash.replace(/^#\/?/, '');

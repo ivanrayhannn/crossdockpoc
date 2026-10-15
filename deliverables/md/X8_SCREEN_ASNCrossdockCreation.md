@@ -47,9 +47,9 @@ Kolom PO No, Last PO Date, dan ASN No tidak ada lagi di header.
 - Destinasi dengan Hold Flag Y tidak diambil saat Search; unit dihitung tanpa destinasi itu.
 
 ## Create ASN dan Submit
-- **Create ASN** (1 transaksi): **PO_MAPPED_FLAG = Y** di line H0253 unit terpilih, qty terpakai di Pra Daily Order Part, dan draft ke **#TEMP_ASN_DRAFT** (1 case per Part + Customer Order Date + destinasi). Kalau unit sudah tidak Ready → MSG7.
+- **Create ASN** (1 transaksi): **PO_MAPPED_FLAG = Y** di line H0253 unit terpilih, qty terpakai di Pra Daily Order Part, dan draft ke **#TEMP_ASN_DRAFT** (1 case per Part + Customer Order Date + destinasi). Sebelum mapping, unit yang dicentang **dicek ulang** (row lock line H0253): kalau ada line yang **di-hold tim D/S setelah unit dicentang** (sesi lain), create **gagal** untuk seluruh pilihan → **MSG8 (Hold)**, delivery plan di-refresh dan unit yang ter-hold otomatis tidak tercentang. Kalau unit tidak Ready karena sebab lain → MSG7.
 - **Back / Cancel**: mapping dilepas (flag & qty dikembalikan), draft dihapus.
-- **Submit ASN**: insert **TB_R_ASN_CROSSDOCK_H** (ASN_STATUS `1` Created) dan **TB_R_ASN_CROSSDOCK_D** dari draft. ASN No dan Case No mengikuti **penomoran existing** (last sequence table).
+- **Submit ASN** dijalankan sebagai **batch X14** (lihat md X14): konfirmasi MSG4 → Yes → sistem membuat **Submit ID** dan menyerahkan draft ke batch. Layar kembali ke delivery plan dan menampilkan Submit ID (MSG6); **tidak ada popup sukses**. Hasilnya (insert **TB_R_ASN_CROSSDOCK_H** status `1` Created + **TB_R_ASN_CROSSDOCK_D**, ASN No & Case No penomoran existing) ditulis ke **log existing** (Log Monitoring) dengan Submit ID.
 
 ## Hak akses tampilan
 | Pengguna | Header (level case) | Detail destinasi | Hold / Release (destinasi) | Create ASN |
@@ -83,47 +83,7 @@ Kolom PO No, Last PO Date, dan ASN No tidak ada lagi di header.
 | RIT_CYCLE | VARCHAR(TBD) | Rit of the Get Order |
 | ROUTE | VARCHAR(TBD) | Route of the Rit |
 
-- **TB_R_ASN_CROSSDOCK_H** (usulan) – header ASN:
-
-| Kolom | Tipe | Keterangan |
-|---|---|---|
-| ASN_NO | VARCHAR(TBD) | ASN number (existing numbering) |
-| SUPPLIER_CD | VARCHAR(TBD) | Supplier of the cases |
-| SUPPLIER_PLANT | VARCHAR(TBD) | Supplier plant |
-| DELIVERY_DT | DATE | Delivery Date |
-| RIT_CYCLE | VARCHAR(TBD) | Rit |
-| ROUTE | VARCHAR(TBD) | Route of the Rit |
-| TOTAL_CASE | NUMBER | Number of cases |
-| TOTAL_QTY | NUMBER | Delivery Qty (total pieces) |
-| ASN_STATUS | VARCHAR(1) | '1' Created (set on submit) |
-| CREATED_BY | VARCHAR(TBD) | User who submitted the ASN |
-| CREATED_DT | DATETIME | Submit date and time |
-| CHANGED_BY | VARCHAR(TBD) | User who last changed the record |
-| CHANGED_DT | DATETIME | Last changed date and time |
-
-- **TB_R_ASN_CROSSDOCK_D** (usulan) – case ASN:
-
-| Kolom | Tipe | Keterangan |
-|---|---|---|
-| ASN_NO | VARCHAR(TBD) | ASN number (TB_R_ASN_CROSSDOCK_H) |
-| CASE_NO | VARCHAR(TBD) | Case number; format and sequence follow the existing numbering (last sequence table) |
-| LINE_SEQ | NUMBER(4) | Order line x PO within the case |
-| PART_NO | VARCHAR(15) | Part number of the case |
-| ORDER_DT | DATE | Customer Order Date |
-| DESTINATION_CD | VARCHAR(7) | Destination of the case |
-| CUSTOMER_CD | VARCHAR(7) | Customer code |
-| CUSTOMER_ORDER_NO | VARCHAR(8) | Customer order number |
-| DETAILED_ITEM_NO | VARCHAR(4) | Detailed item number |
-| SERIAL_NO | VARCHAR(7) | Serial number |
-| QTY | NUMBER(8) | Qty of the line in the case |
-| PO_NO | VARCHAR(TBD) | PO number |
-| MANIFEST_NO | VARCHAR(TBD) | Manifest number |
-| MANIFEST_ITEM_NO | VARCHAR(TBD) | Manifest item number |
-| PO_ORDER_QTY | NUMBER(TBD) | PO qty |
-| CREATED_BY | VARCHAR(TBD) | User who submitted the ASN |
-| CREATED_DT | DATETIME | Submit date and time |
-| CHANGED_BY | VARCHAR(TBD) | User who last changed the record |
-| CHANGED_DT | DATETIME | Last changed date and time |
+- **TB_R_ASN_CROSSDOCK_H / _D** (usulan) – ditulis oleh batch **X14** saat Submit ASN (struktur di md X14).
 
 ## Pesan
 | ID | Kapan | Pesan |
@@ -131,10 +91,18 @@ Kolom PO No, Last PO Date, dan ASN No tidak ada lagi di header.
 | MSG1 | Hover checkbox, unit On Hold (D/S) | All destinations are on hold |
 | MSG2 | Hover checkbox, Not Ready | Not Ready: {k} of {n} cases of {Part No} / {Customer Order Date} are not assigned to a PO yet |
 | MSG3 | Search / filter tanpa hasil | No customer order matches this filter. |
-| MSG4 | Klik Submit ASN | Submit ASN? {n} cases ({q} pcs) will be locked into {ASN No}, delivery {Delivery Date} · {Rit}. |
+| MSG4 | Klik Submit ASN | Submit ASN? {n} cases ({q} pcs) will be created into {ASN No}, delivery {Delivery Date} · {Rit}. |
 | MSG5 | Tidak ada rit | No rit cycle available for {Delivery Date}. Choose another delivery date. |
-| MSG6 | Submit sukses | {ASN No} submitted with status Created. {n} cases are locked. The ASN is shown in ASN Inquiry. |
+| MSG6 | Klik Yes, submit | Submit ID {Submit ID} is sent to the ASN submit batch. The result is written to Log Monitoring. |
 | MSG7 | Create ASN, unit sudah tidak Ready | {Part No} / {Customer Order Date} is no longer Ready. The delivery plan is refreshed. |
+| MSG8 | Create ASN, ada order yang sudah di-hold D/S (sesi lain) | **Hold:** Some order has been already hold, please select other records |
+
+Pesan sukses submit (*"{ASN No} submitted with status Created. {n} cases are locked. Delivery {Delivery Date} · {Rit}. The ASN is shown in ASN Inquiry."*) tidak lagi berupa popup; menjadi **LOG2** batch X14 di Log Monitoring.
+
+## Simulasi di prototype
+- **Konflik hold:** View as Supplier → Search → centang PART-A 13-Oct → pindah ke View as D/S team → expand PART-A 13-Oct → N · Hold salah satu destinasi → kembali ke Supplier (centang masih ada) → Create ASN → muncul pesan Hold, unit ter-uncheck, Case List tidak terbuka. Tiap View as punya seleksi sendiri (seperti 2 user).
+- **Submit batch:** Create ASN → Submit ASN → Yes → banner Submit ID → hasil di menu **Log Monitoring**.
+- Penjelasan backend lengkap: menu **Common → ASN Backend Process**.
 
 ## Catatan prototype
 - Switch **Business date** (14 / 15 / 16-Oct) hanya untuk simulasi rilis PO (kondisi 3).

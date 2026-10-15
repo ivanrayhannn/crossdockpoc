@@ -20,7 +20,7 @@ FUNCTIONS = [
     ('X7', 'Mapping Destination Calculation', 'Batch', 'System (manual run in X3)', 'A. Master setup', 'Own scheduler (TBC)',
      'Active parts, actual demand, Max Case/Day', 'New period mapping (case/day per destination)', 'Yes (run bar)'),
     ('X8', 'ASN Crossdock Creation', 'Screen', 'Supplier (detail: D/S team)', 'B. Daily operation', 'On demand',
-     'Delivery Date, Rit; #TB_R_INSTRUCTION (X12)', 'H0253 flags, TB_R_ASN_CROSSDOCK_H / _D', 'Yes'),
+     'Delivery Date, Rit; #TB_R_INSTRUCTION (X12)', 'H0253 flags, #TEMP_ASN_DRAFT, Submit ID to X14', 'Yes'),
     ('X9', 'H0202 Demand History Sync', 'Batch', 'System', 'B. Daily operation', 'Daily (TBC)',
      'G-TOPAS H0202', 'NSP TB_R_H0202', 'N/A'),
     ('X10', 'H0253 Order Control Sync', 'Batch', 'System', 'B. Daily operation', 'Daily (TBC)',
@@ -31,6 +31,8 @@ FUNCTIONS = [
      'H0253 (status 7, Hold N), Pra Daily Order', '#TB_R_INSTRUCTION (temp, FIFO)', 'Yes (in X8)'),
     ('X13', 'ASN Inquiry', 'Screen', 'Supplier / D/S team', 'B. Daily operation', 'On demand',
      'TB_R_ASN_CROSSDOCK_H / _D', 'Display, case label', 'Yes'),
+    ('X14', 'ASN Submit', 'Batch', 'System ([Submit ASN] in X8)', 'B. Daily operation', 'On demand (Submit ID)',
+     '#TEMP_ASN_DRAFT, Submit ID', 'TB_R_ASN_CROSSDOCK_H / _D, log (existing)', 'Yes (in X8 + Log Monitoring)'),
 ]
 
 # function, topic, question, proposal, impact if open
@@ -66,24 +68,25 @@ TASKS = [
     ('Finalisasi struktur Pra Daily Order (mapped qty) di UISS X8 / X12', 'X8 / X12', 'Dokumen', 'FID Rayhan', 'Konfirmasi no. 9', 'Waiting confirmation', 'High'),
     ('Isi jadwal & retry di Schedule sheet UISS X5, X9-X11', 'X5, X9-X11', 'Dokumen', 'FID Rayhan', 'Konfirmasi no. 10-12', 'Waiting confirmation', 'Medium'),
     ('Buat UISS-Batch RPA Sync (jika disetujui)', 'X3', 'Dokumen', 'FID Rayhan', 'Konfirmasi no. 16-17', 'Not started', 'Medium'),
-    ('Lengkapi panjang VARCHAR dan nama field di Appendix semua UISS', 'X1-X13', 'Dokumen', 'FID Rayhan', 'Konfirmasi no. 20', 'Waiting confirmation', 'Low'),
-    ('Review UISS X1-X13 versi 0.1 oleh user / reviewer', 'X1-X13', 'Review', 'User', '-', 'Not started', 'High'),
+    ('Lengkapi panjang VARCHAR dan nama field di Appendix semua UISS', 'X1-X14', 'Dokumen', 'FID Rayhan', 'Konfirmasi no. 20', 'Waiting confirmation', 'Low'),
+    ('Review UISS X1-X14 versi 0.1 oleh user / reviewer', 'X1-X14', 'Review', 'User', '-', 'Not started', 'High'),
     ('Tambah kolom SERIAL_NO di tabel / query H0253 sumber', 'X10', 'Data', 'Tim DB Surrounding', 'Konfirmasi no. 15', 'Not started', 'High'),
     ('Tambah kolom HOLD_FLAG / PO_MAPPED_FLAG di H0253 NSP dan cara mempertahankannya saat sync', 'X10', 'Data', 'Tim NSP / IT', 'Konfirmasi no. 7', 'Not started', 'High'),
     ('Konfirmasi struktur tabel Pra Daily Order dan route master', 'X8, X12', 'Data', 'Tim NSP / IT', '-', 'Not started', 'High'),
     ('Prototype: Download Case Label sesuai format', 'X8 / X13', 'Prototype', 'FID Rayhan', 'Konfirmasi no. 1', 'Waiting confirmation', 'Medium'),
     ('Prototype: Cancel ASN di ASN Inquiry (jika diperlukan)', 'X13', 'Prototype', 'FID Rayhan', 'Konfirmasi no. 8', 'Waiting confirmation', 'Low'),
-    ('Susun testing strategy & test scenario (unit, integration, UAT) X1-X13', 'X1-X13', 'Testing', 'FID Rayhan', 'UISS final', 'Not started', 'High'),
+    ('Susun testing strategy & test scenario (unit, integration, UAT) X1-X14', 'X1-X14', 'Testing', 'FID Rayhan', 'UISS final', 'Not started', 'High'),
     ('Definisikan proses lanjutan setelah ASN (penerimaan di crossdock, pengiriman ke destinasi)', 'Next scope', 'Analisis', 'FID Rayhan / User', 'Arahan user', 'Not started', 'Medium'),
     ('Susun BRD / TSD (jika dibutuhkan proyek)', 'All', 'Dokumen', 'FID Rayhan', 'Arahan user', 'Not started', 'Low'),
 ]
 
 DONE = [
-    'UISS 13 fungsi (X1-X13) versi 0.1 + file .md per fungsi',
+    'UISS 14 fungsi (X1-X14) versi 0.1 + file .md per fungsi',
     'Prototype Part List, Mapping per Destination, ASN Crossdock Creation, ASN Inquiry (GitHub Pages)',
     'Rumus kalkulasi DAD (X6) dan mapping destinasi (X7) termasuk aturan pembulatan, dikonfirmasi 14-Oct-26',
     'Struktur tabel H0202 / H0253 / H0125 dari I/F layout G-TOPAS, termasuk SERIAL_NO',
     'Alur ASN baru sesuai ASN_Flow_Normal.xlsx (unit Part + Customer Order Date, 1 case per destinasi, FIFO)',
     'Header delivery plan level case; detail destinasi & pcs hanya untuk tim D/S',
     'ASN flow versi 15-Oct: Search (X12 on-demand pre-mapping), Hold Flag per destinasi oleh D/S, Create ASN (mapping), status Ready / Not Ready / Created',
+    'Submit ASN sebagai batch X14 (Submit ID, hasil ke log), cek hold saat Create ASN, admin panel Menu Settings, menu ASN Backend Process',
 ]

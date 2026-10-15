@@ -1,21 +1,12 @@
+import { NAV_GROUPS, useHiddenMenus } from '../../lib/nav';
 import { ROUTE_BY_NAV_ITEM } from '../../routes';
 import type { RouteKey } from '../../routes';
 
-const NAV_GROUPS: [string, string[]][] = [
-  ['Ordering', ['Service Part Order']],
-  ['ASN', ['Case Label Printing', 'ASN Creation', 'Delivery Note Creation', 'Case Consolidation Simulation', 'ASN Inquiry']],
-  ['Transfer Posting', ['Stock Inquiry']],
-  ['Timeline', ['Timeline']],
-  ['Master', ['Sub Supplier Maintenance', 'Part Master Maintenance', 'Crossdock Master Setting']],
-  ['Forecast', ['Forecast Inquiry']],
-  ['Common', ['Log Monitoring', 'System Master Maintenance', 'Batch Process Simulation', 'Candidate Part Batch Flow']],
-  ['Inventory Taking', ['Intak Period Maintenance', 'Yellow Line and CY Stock']],
-];
-
 /** Nav items that are new in this build, flagged with a "New" badge until they're familiar. */
-const NEW_ITEMS = new Set(['Crossdock Master Setting', 'Case Consolidation Simulation', 'ASN Creation', 'ASN Inquiry', 'Batch Process Simulation', 'Candidate Part Batch Flow']);
+const NEW_ITEMS = new Set(['Crossdock Master Setting', 'Case Consolidation Simulation', 'ASN Creation', 'ASN Inquiry', 'Batch Process Simulation', 'Candidate Part Batch Flow', 'ASN Backend Process', 'Menu Settings']);
 
 export function Sidebar({ activeItem, onNavigate }: { activeItem: string; onNavigate: (route: RouteKey) => void }) {
+  const hidden = useHiddenMenus();
   return (
     <aside
       style={{
@@ -72,7 +63,9 @@ export function Sidebar({ activeItem, onNavigate }: { activeItem: string; onNavi
       </div>
 
       <nav style={{ padding: '8px 8px 20px' }}>
-        {NAV_GROUPS.map(([label, items]) => {
+        {NAV_GROUPS.map(([label, all]) => {
+          const items = all.filter((i) => !hidden.includes(i));
+          if (!items.length) return null;
           return (
             <div key={label}>
               <div
