@@ -201,6 +201,7 @@ td.num{text-align:right;white-space:nowrap}
       <button id="modeBuyer" data-action="mode" data-mode="buyer">Pembeli</button>
       <button id="modeAdmin" data-action="mode" data-mode="admin">Admin <span class="count" id="pendingCount" hidden></span></button>
     </div>
+    <button class="btn sm" data-action="askReset" title="Kembalikan semua data demo ke kondisi awal">↺ Reset simulasi</button>
   </div>
 </header>
 <main class="wrap" id="app"></main>
@@ -466,7 +467,7 @@ function vSettings(){
   <div class="field"><label for="s-maxre">Maksimal upload ulang setelah ditolak</label><input id="s-maxre" type="number" min="0" max="10" value="${st.maxRe}"></div>
   <div class="field"><label for="s-admin">Nama admin (untuk log)</label><input id="s-admin" value="${esc(st.admin)}"></div>
   </div></div><div class="row between"><span class="small muted">Perubahan berlaku untuk order baru.</span><button class="btn primary" type="submit">Simpan setting</button></div></form>
-  <div class="panel pad row between"><div><h3>Data demo</h3><p class="small muted">Kembalikan katalog, keranjang, dan contoh order ke kondisi awal.</p></div><button class="btn danger" data-action="askReset">Reset data demo</button></div></div>`;
+  <div class="panel pad row between"><div><h3>Data demo</h3><p class="small muted">Kembalikan katalog, keranjang, dan contoh order ke kondisi awal.</p></div><button class="btn danger" data-action="askReset">Reset simulasi</button></div></div>`;
 }
 
 /* modal */
@@ -478,7 +479,7 @@ function renderModal(){
   if(m.type==="approve")html=`<div class="modal" role="dialog" aria-labelledby="mt"><h2 id="mt">Setujui pembayaran ${o.id}?</h2><p>Pastikan dana <b class="mono">${rp(o.amount)}</b> sudah masuk di mutasi rekening. Status akan menjadi <b>Payment Berhasil</b> dan pembeli mendapat notifikasi.</p><div class="row" style="justify-content:flex-end"><button class="btn" data-action="close">Batal</button><button class="btn primary" data-action="approve" data-id="${o.id}">Ya, approve</button></div></div>`;
   if(m.type==="reject"){const last=o.reupload>=S.settings.maxRe;html=`<form class="modal" id="rejectForm" role="dialog" aria-labelledby="mt"><h2 id="mt">Tolak pembayaran ${o.id}</h2><div class="radio">${REASONS.map((r,i)=>`<label><input type="radio" name="reason" id="r-${i}" value="${r}">${r}</label>`).join("")}</div><div class="field"><label for="rnote">Keterangan untuk pembeli <span class="muted">(wajib jika Lainnya)</span></label><textarea id="rnote" placeholder="Contoh: nominal masuk Rp259.000, kurang kode unik 118"></textarea></div>${last?`<p class="note">Batas upload ulang sudah habis. Menolak sekarang akan <b>membatalkan</b> pesanan.</p>`:""}<p class="err" id="rerr" hidden></p><div class="row" style="justify-content:flex-end"><button type="button" class="btn" data-action="close">Batal</button><button type="submit" class="btn danger" data-id="${o.id}">Tolak pembayaran</button></div></form>`;}
   if(m.type==="cancel")html=`<div class="modal"><h2>Batalkan pesanan ${o.id}?</h2><p>Pesanan yang dibatalkan tidak bisa dibayar lagi.</p><div class="row" style="justify-content:flex-end"><button class="btn" data-action="close">Kembali</button><button class="btn danger" data-action="cancel" data-id="${o.id}">Batalkan pesanan</button></div></div>`;
-  if(m.type==="reset")html=`<div class="modal"><h2>Reset data demo?</h2><p>Semua order yang dibuat di demo ini akan dihapus.</p><div class="row" style="justify-content:flex-end"><button class="btn" data-action="close">Batal</button><button class="btn danger" data-action="reset">Reset</button></div></div>`;
+  if(m.type==="reset")html=`<div class="modal" role="dialog" aria-labelledby="mt"><h2 id="mt">Reset simulasi?</h2><p>Simulasi kembali ke kondisi awal:</p><ul class="howto small"><li>Order yang kamu buat dan bukti yang di-upload dihapus.</li><li>Contoh order (Rina, Budi, Agus, Dewi) kembali ke status awal.</li><li>Keranjang, alamat, dan setting pembayaran (termasuk QR) kembali ke default.</li></ul><div class="row" style="justify-content:flex-end"><button class="btn" data-action="close">Batal</button><button class="btn danger" data-action="reset">Reset</button></div></div>`;
   root.innerHTML=`<div class="overlay" data-action="overlay">${html}</div>`;
 }
 
@@ -528,7 +529,7 @@ const A={
   close(){S.modal=null;renderModal();},
   overlay(d,e){if(e.target.classList.contains("overlay")){S.modal=null;renderModal();}},
   askReset(){S.modal={type:"reset"};renderModal();},
-  reset(){S=seed();save();render();toast("Reset","Data demo dikembalikan ke awal.");}
+  reset(){const mode=S.mode;S=seed();S.mode=mode;S.modal=null;save();render();window.scrollTo(0,0);toast("Simulasi direset","Semua data kembali ke kondisi awal.");}
 };
 document.addEventListener("click",e=>{
   const el=e.target.closest("[data-action]");if(!el)return;
