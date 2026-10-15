@@ -20,10 +20,11 @@ Status per **15-Oct-2026**. Sumber data: `deliverables/exec/project_items.py` (s
 | X12 | Get Order - Customer Order PO Pre-mapping | Function | Supplier (button in X8) | B. Daily operation | `X12_UISS_Batch_GetOrderPOPreMapping.xlsx` | X12_FUNCTION_GetOrder_PO_PreMapping.md |
 | X13 | ASN Inquiry | Screen | Supplier / D/S team | B. Daily operation | `X13_UISS_Screen_ASNInquiry.xlsx` | X13_SCREEN_ASNInquiry.md |
 | X14 | ASN Submit | Batch | System ([Submit ASN] in X8) | B. Daily operation | `X14_UISS_Batch_ASNSubmit.xlsx` | X14_BATCH_ASN_Submit.md |
+| X15 | Menu Settings (admin panel) | Screen | Admin | Common | `X15_UISS_Screen_MenuSettings.xlsx` | X15_SCREEN_MenuSettings.md |
 
 ## Sudah selesai
 
-- UISS 14 fungsi (X1-X14) versi 0.1 + file .md per fungsi
+- UISS 15 fungsi (X1-X15) versi 0.1 + file .md per fungsi
 - Prototype Part List, Mapping per Destination, ASN Crossdock Creation, ASN Inquiry (GitHub Pages)
 - Rumus kalkulasi DAD (X6) dan mapping destinasi (X7) termasuk aturan pembulatan, dikonfirmasi 14-Oct-26
 - Struktur tabel H0202 / H0253 / H0125 dari I/F layout G-TOPAS, termasuk SERIAL_NO
@@ -40,14 +41,14 @@ Status per **15-Oct-2026**. Sumber data: `deliverables/exec/project_items.py` (s
 | 2 | Finalisasi struktur Pra Daily Order (mapped qty) di UISS X8 / X12 | X8 / X12 | Dokumen | FID Rayhan | Konfirmasi no. 9 | Waiting confirmation | High |
 | 3 | Isi jadwal & retry di Schedule sheet UISS X5, X9-X11 | X5, X9-X11 | Dokumen | FID Rayhan | Konfirmasi no. 10-12 | Waiting confirmation | Medium |
 | 4 | Buat UISS-Batch RPA Sync (jika disetujui) | X3 | Dokumen | FID Rayhan | Konfirmasi no. 16-17 | Not started | Medium |
-| 5 | Lengkapi panjang VARCHAR dan nama field di Appendix semua UISS | X1-X14 | Dokumen | FID Rayhan | Konfirmasi no. 20 | Waiting confirmation | Low |
-| 6 | Review UISS X1-X14 versi 0.1 oleh user / reviewer | X1-X14 | Review | User | - | Not started | High |
+| 5 | Lengkapi panjang VARCHAR dan nama field di Appendix semua UISS | X1-X15 | Dokumen | FID Rayhan | Konfirmasi no. 20 | Waiting confirmation | Low |
+| 6 | Review UISS X1-X15 versi 0.1 oleh user / reviewer | X1-X15 | Review | User | - | Not started | High |
 | 7 | Tambah kolom SERIAL_NO di tabel / query H0253 sumber | X10 | Data | Tim DB Surrounding | Konfirmasi no. 15 | Not started | High |
 | 8 | Tambah kolom HOLD_FLAG / PO_MAPPED_FLAG di H0253 NSP dan cara mempertahankannya saat sync | X10 | Data | Tim NSP / IT | Konfirmasi no. 7 | Not started | High |
 | 9 | Konfirmasi struktur tabel Pra Daily Order dan route master | X8, X12 | Data | Tim NSP / IT | - | Not started | High |
 | 10 | Prototype: Download Case Label sesuai format | X8 / X13 | Prototype | FID Rayhan | Konfirmasi no. 1 | Waiting confirmation | Medium |
 | 11 | Prototype: Cancel ASN di ASN Inquiry (jika diperlukan) | X13 | Prototype | FID Rayhan | Konfirmasi no. 8 | Waiting confirmation | Low |
-| 12 | Susun testing strategy & test scenario (unit, integration, UAT) X1-X14 | X1-X14 | Testing | FID Rayhan | UISS final | Not started | High |
+| 12 | Susun testing strategy & test scenario (unit, integration, UAT) X1-X15 | X1-X15 | Testing | FID Rayhan | UISS final | Not started | High |
 | 13 | Definisikan proses lanjutan setelah ASN (penerimaan di crossdock, pengiriman ke destinasi) | Next scope | Analisis | FID Rayhan / User | Arahan user | Not started | Medium |
 | 14 | Susun BRD / TSD (jika dibutuhkan proyek) | All | Dokumen | FID Rayhan | Arahan user | Not started | Low |
 
@@ -77,4 +78,5 @@ Status per **15-Oct-2026**. Sumber data: `deliverables/exec/project_items.py` (s
 | 20 | X1-X4 | Panjang kolom | Panjang VARCHAR kolom (PART_NO dll.) dan nama field Part Name di TB_M_PART_MASTER. | Ikuti TB_M_PART_MASTER. | Masih VARCHAR(TBD) di Appendix. |
 | 21 | X2 / X4 | Template & log | Lokasi file template dan result report; retensi Log upload. | Shared folder NSP; retensi 12 bulan. | Operation description upload. |
 | 22 | X1 | Akun read only | Definisi akun read-only ([View]) untuk Part List. | Role Viewer: hanya Search / Export. | Screen mode View. |
-| 23 | X1 | Effective Start Date | Kalimat "Effective Start Date" yang menggantung di Op Desc 5.4 a.4 (UISS X1): aturan apa yang dimaksud? | Default besok, minimum hari ini, wajib diisi. | Op Desc X1 belum lengkap. |
+| 23 | X15 | Menu Settings | Pengaturan show / hide menu berlaku per role atau global, dan siapa yang boleh membuka layar ini? | Per role; hanya admin. | Struktur TB_M_MENU_VISIBILITY. |
+| 24 | X1 | Effective Start Date | Kalimat "Effective Start Date" yang menggantung di Op Desc 5.4 a.4 (UISS X1): aturan apa yang dimaksud? | Default besok, minimum hari ini, wajib diisi. | Op Desc X1 belum lengkap. |

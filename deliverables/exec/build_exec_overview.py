@@ -318,7 +318,7 @@ for (hdr, rules, c0, c1) in (('Aturan kunci – Fase A', rules_a, step_col(0), s
 # legend
 lg = kr + 6
 bf.cell(lg, 2, 'Legenda').font = f(10, True, NAVY)
-items = [('D9E1F2', 'Kotak = langkah / fungsi; kode merah = UISS (X1-X14)'), (ARROW, 'Panah = urutan alur'),
+items = [('D9E1F2', 'Kotak = langkah / fungsi; kode merah = UISS (X1-X15)'), (ARROW, 'Panah = urutan alur'),
          (GREY, 'Abu-abu putus-putus = scope berikutnya (belum didesain)'), (WHITE, 'Garis merah putus-putus = batas fase')]
 for i, (col, txt) in enumerate(items):
     c = bf.cell(lg + 1 + i, 2)
@@ -411,7 +411,7 @@ for i, t in enumerate(high):
     c.alignment = Alignment(wrap_text=True, vertical='top')
 rr = r + 2 + max(len(DONE), len(high))
 ex.merge_cells(start_row=rr, start_column=2, end_row=rr, end_column=13)
-ex.cell(rr, 2, 'Detail: sheet Business Flow (alur), Function Map (X1-X14), Task List, Konfirmasi (keputusan yang dibutuhkan). '
+ex.cell(rr, 2, 'Detail: sheet Business Flow (alur), Function Map (X1-X15), Task List, Konfirmasi (keputusan yang dibutuhkan). '
                'Prototype: https://ivanrayhannn.github.io/crossdockpoc/').font = f(9, italic=True, color=SLATE)
 landscape(ex, f'A1:N{rr + 1}', one_page=True)
 

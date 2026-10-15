@@ -13,6 +13,7 @@ python3 $S/build_asn_creation_spec.py $S/AsnCreation_spec.json
 python3 $S/build_instruction_spec.py $S/Instruction_spec.json
 python3 $S/build_asn_inquiry_spec.py $S/AsnInquiry_spec.json
 python3 $S/build_asn_submit_spec.py $S/AsnSubmit_spec.json
+python3 $S/build_menu_settings_spec.py $S/MenuSettings_spec.json
 python3 $S/build_h_sync_spec.py $S/H0202Sync_spec.json H0202
 python3 $S/build_h_sync_spec.py $S/H0253Sync_spec.json H0253
 python3 $S/build_h_sync_spec.py $S/H0125Sync_spec.json H0125
@@ -34,4 +35,5 @@ H0125Sync_spec.json X11_UISS_Batch_H0125DestinationMasterSync.xlsx
 Instruction_spec.json X12_UISS_Batch_GetOrderPOPreMapping.xlsx
 AsnInquiry_spec.json X13_UISS_Screen_ASNInquiry.xlsx
 AsnSubmit_spec.json X14_UISS_Batch_ASNSubmit.xlsx
+MenuSettings_spec.json X15_UISS_Screen_MenuSettings.xlsx
 LIST

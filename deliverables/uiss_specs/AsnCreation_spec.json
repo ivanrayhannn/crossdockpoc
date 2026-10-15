@@ -1923,7 +1923,7 @@
    "cause": "A ticked unit has an order put on hold by the D/S team after it was ticked",
    "type": "Error",
    "msg_id": "MSG8",
-   "message": "Some order has been already hold, please select other records",
+   "message": "Some order has been already hold, please select other records. The delivery plan has been refreshed.",
    "action": "Click [OK]; the delivery plan is already refreshed and all units are unticked; select again."
   }
  ],
