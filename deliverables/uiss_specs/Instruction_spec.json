@@ -21,7 +21,7 @@
   "objective": [
    "To get the crossdock customer orders (H0253, order status 7, Hold Flag N, not yet mapped) and pre-map them to the crossdock supplier PO parts (Pra Daily Order, crossdock flag X), FIFO by order date, into the temporary table #TB_R_INSTRUCTION.",
    "To give ASN Crossdock Creation (X8) the delivery plan per Part Number + Customer Order Date with Case Qty, PO Readiness (case) and ASN Status Ready / Not Ready.",
-   "It runs when the user clicks [Get Order] on X8; there is no scheduler. The real mapping is done later by [Create ASN] on X8."
+   "It runs when the user clicks [Search] on X8; there is no scheduler. The real mapping is done later by [Create ASN] on X8."
   ],
   "operation_flow": {
    "flow": {
@@ -29,7 +29,7 @@
     "nodes": [
      {
       "id": "a",
-      "label": "[Get Order] on ASN Crossdock Creation",
+      "label": "[Search] on ASN Crossdock Creation",
       "type": "event"
      },
      {
@@ -159,7 +159,7 @@
     "rows": [
      [
       "Trigger",
-      "On demand: [Get Order] on ASN Crossdock Creation (X8). No scheduler."
+      "On demand: [Search] on ASN Crossdock Creation (X8). No scheduler."
      ]
     ]
    }
@@ -171,7 +171,7 @@
    "nodes": [
     {
      "id": "p1",
-     "label": "Start ([Get Order])",
+     "label": "Start ([Search])",
      "type": "process",
      "step": 1
     },
@@ -250,7 +250,7 @@
    ]
   },
   "steps": [
-   "The user clicks [Get Order] on ASN Crossdock Creation (X8) with Delivery Date and Rit. The previous content of the temporary table of the session is cleared.",
+   "The user clicks [Search] on ASN Crossdock Creation (X8) with Delivery Date and Rit. The previous content of the temporary table of the session is cleared.",
    {
     "text": "Get the customer order lines from TB_R_H0253_ORDER_CONTROL_PRE:",
     "children": [
@@ -440,7 +440,7 @@
     "Unit = Part Number + Customer Order Date. Case = one per destination of the unit: the qty of the destination is summed into one case (it never exceeds pcs/case).",
     "Case Qty = number of destinations of the unit. PO Readiness (case) = cases whose whole qty is pre-mapped to a PO.",
     "CROSSDOCK_STATUS '6' Ready: every line of the unit is pre-mapped. '7' Not Ready: at least one line of the unit has no PO yet.",
-    "Shown on X8 as ASN Status Ready / Not Ready; after [Submit ASN] the unit shows Created (ASN status '1').",
+    "Shown on X8 as ASN Status Ready / Not Ready. Units with PO Readiness 0 are not listed on X8; units already in a submitted ASN (ASN status '1' Created) are not taken (PO_MAPPED_FLAG = 'Y').",
     "TBD: physical structure of TB_R_PRA_DAILY_ORDER_MANIFEST / PART and the column for the mapped qty."
    ]
   }
@@ -663,8 +663,8 @@
      ],
      [
       "N3",
-      "A line has Hold Flag Y",
-      "The line is not taken; the unit is computed without it (it may become Ready)."
+      "A destination is on hold (Hold Flag Y on its lines)",
+      "Its lines are not taken; the unit is computed without it (it may become Ready)."
      ],
      [
       "N4",

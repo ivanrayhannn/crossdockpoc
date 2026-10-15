@@ -4,15 +4,15 @@ Sumber: UISS-Screen `X8_UISS_Screen_ASNCrossdockCreation.xlsx` (0.1 Initial Draf
 Prototype: menu **ASN → ASN Creation** (https://ivanrayhannn.github.io/crossdockpoc/#/asn-creation).
 
 ## Tujuan
-- **Get Order**: ambil customer order untuk Delivery Date + Rit dan pre-mapping ke PO (fungsi **X12**).
+- **Search**: ambil customer order untuk Delivery Date + Rit dan pre-mapping ke PO (fungsi **X12 Get Order**).
 - Menampilkan delivery plan per **Part Number + Customer Order Date** (unit) di **level case**.
-- Tim D/S: melihat detail destinasi & order line, dan **hold / release** order line.
+- Tim D/S: melihat detail destinasi dan **hold / release per destinasi**.
 - Memilih unit **Ready**, **Create ASN** (mapping sebenarnya), cek Case List, Download Case Label, **Submit ASN** (status **Created**).
 
 ## Alur
 ```
-Pilih Delivery Date (Route tampil) → pilih Rit → [Get Order] (X12: ambil order FIFO + pre-mapping PO)
-  → Delivery plan: Ready / Not Ready / Created
+Pilih Delivery Date (default hari ini, Route tampil) → pilih Rit → [Search] (X12: ambil order FIFO + pre-mapping PO)
+  → Delivery plan: Ready / Not Ready (readiness 0 dan Created tidak tampil)
   → centang unit Ready → [Create ASN] (mapping ke PO + #TEMP_ASN_DRAFT) → Sub Screen Case List
   → Download Case Label → Submit?  N: tetap di Case List   Y: simpan ASN (status 1 Created) → notifikasi → ASN Inquiry (X13)
   (Back / Cancel di Case List: mapping dilepas, draft dihapus)
@@ -21,13 +21,13 @@ Pilih Delivery Date (Route tampil) → pilih Rit → [Get Order] (X12: ambil ord
 ## Bagian layar
 | Bagian | Isi |
 |---|---|
-| Delivery | Delivery Date (default besok), Rit (dari route master), Route (disabled), tombol **Get Order** |
-| Filter | Part Number, Status (All / Ready / Not Ready / Created; D/S juga On Hold), langsung berlaku |
+| Delivery | Delivery Date (default **hari ini**), Rit (dari route master), Route (disabled), tombol **Search** |
+| Filter | Part Number, Status (All / Ready / Not Ready; D/S juga On Hold), langsung berlaku |
 | Header delivery plan | Customer Order Date, Part Number, **Case Qty**, **PO Readiness (case)**, **ASN Status** |
-| Default sort | ASN Status: Ready → Not Ready → Created, lalu Part Number ascending |
-| Detail (D/S) | Per destinasi: Destination, Case, Qty (pcs), Not Assigned (pcs) |
-| Detail in detail (D/S) | Expand dari destinasi: order asli per Detailed Item No (mis. order A 4 pcs Vietnam, order B 2 pcs Vietnam), PO No, PO Date, Assignment, **Hold Flag** |
-| Case List – ringkasan | ASN No (saat submit), Supplier · Plant, Delivery Date · Rit · Route (dari Get Order), **Delivery Qty** (pcs), jumlah case |
+| Default sort | ASN Status: Ready → Not Ready, lalu Part Number ascending |
+| Tidak ditampilkan | Unit dengan PO Readiness **0** dan unit yang sudah **Created** (lihat di ASN Inquiry) |
+| Detail (D/S) | Per destinasi: Destination, Case, Qty (pcs), **Hold Flag**. Customer order (order line), Assignment, dan Not Assigned (pcs) tidak ditampilkan |
+| Case List – ringkasan | ASN No (saat submit), Supplier · Plant, Delivery Date · Rit · Route (dari Search), **Delivery Qty** (pcs), jumlah case |
 | Case List – tabel | **Case Number – Part Number – Qty**; expand: **PO No – Manifest No – Manifest Item No – PO Qty** |
 
 Kolom PO No, Last PO Date, dan ASN No tidak ada lagi di header.
@@ -36,14 +36,14 @@ Kolom PO No, Last PO Date, dan ASN No tidak ada lagi di header.
 | Status | Arti |
 |---|---|
 | Ready (`6`) | Semua customer order unit sudah berhasil di-assign ke PO (pre-mapping) |
-| Not Ready (`7`) | Masih ada customer order di customer order date yang sama yang belum dapat PO (checkbox disabled) |
-| Created (ASN status `1`) | Setelah Submit ASN; checkbox tercentang dan terkunci |
-| On Hold | Semua line unit di-hold (hanya terlihat oleh tim D/S) |
+| Not Ready (`7`) | Masih ada customer order di customer order date yang sama yang belum dapat PO (checkbox disabled); tampil hanya kalau PO Readiness ≥ 1 |
+| Created (ASN status `1`) | Setelah Submit ASN; tidak tampil lagi di layar ini (lihat ASN Inquiry) |
+| On Hold | Semua destinasi unit di-hold (hanya terlihat oleh tim D/S) |
 
 ## Hold Flag (tim D/S)
 - Kolom tambahan NSP di **TB_R_H0253_ORDER_CONTROL_PRE**; default **N** saat data masuk (X10), dipertahankan saat sync berikutnya.
-- Tim D/S mengubahnya per order line di layar ini (**N · Hold** → Y, **Y · Release** → N).
-- Line dengan Hold Flag Y tidak diambil Get Order; unit dihitung tanpa line itu.
+- Tim D/S mengubahnya **per destinasi** di detail unit (**N · Hold** → Y, **Y · Release** → N); semua order line unit + destinasi itu ikut berubah.
+- Destinasi dengan Hold Flag Y tidak diambil saat Search; unit dihitung tanpa destinasi itu.
 
 ## Create ASN dan Submit
 - **Create ASN** (1 transaksi): **PO_MAPPED_FLAG = Y** di line H0253 unit terpilih, qty terpakai di Pra Daily Order Part, dan draft ke **#TEMP_ASN_DRAFT** (1 case per Part + Customer Order Date + destinasi). Kalau unit sudah tidak Ready → MSG7.
@@ -51,13 +51,13 @@ Kolom PO No, Last PO Date, dan ASN No tidak ada lagi di header.
 - **Submit ASN**: insert **TB_R_ASN_CROSSDOCK_H** (ASN_STATUS `1` Created) dan **TB_R_ASN_CROSSDOCK_D** dari draft. ASN No dan Case No mengikuti **penomoran existing** (last sequence table).
 
 ## Hak akses tampilan
-| Pengguna | Header (level case) | Detail destinasi & order line | Hold / Release | Create ASN |
+| Pengguna | Header (level case) | Detail destinasi | Hold / Release (destinasi) | Create ASN |
 |---|---|---|---|---|
 | Supplier | Ya | Tidak | Tidak | Ya |
 | Tim D/S | Ya | Ya | Ya | Ya (TBC) |
 
 ## Tabel
-- **TB_R_H0253_ORDER_CONTROL_PRE** – dibaca lewat X12; diupdate HOLD_FLAG (D/S) dan PO_MAPPED_FLAG (Create ASN).
+- **TB_R_H0253_ORDER_CONTROL_PRE** – dibaca lewat X12; diupdate HOLD_FLAG (D/S, per destinasi) dan PO_MAPPED_FLAG (Create ASN).
 - **TB_R_PRA_DAILY_ORDER_PART** – qty terpakai diupdate saat Create ASN (kolom TBD).
 - **#TB_R_INSTRUCTION** (temporary) – hasil pre-mapping X12, lihat md X12.
 - **#TEMP_ASN_DRAFT** (temporary, usulan):
@@ -127,9 +127,9 @@ Kolom PO No, Last PO Date, dan ASN No tidak ada lagi di header.
 ## Pesan
 | ID | Kapan | Pesan |
 |---|---|---|
-| MSG1 | Hover checkbox, unit Created | Already in {ASN No} |
+| MSG1 | Hover checkbox, unit On Hold (D/S) | All destinations are on hold |
 | MSG2 | Hover checkbox, Not Ready | Not Ready: {k} of {n} cases of {Part No} / {Customer Order Date} are not assigned to a PO yet |
-| MSG3 | Get Order / filter tanpa hasil | No customer order matches this filter. |
+| MSG3 | Search / filter tanpa hasil | No customer order matches this filter. |
 | MSG4 | Klik Submit ASN | Submit ASN? {n} cases ({q} pcs) will be locked into {ASN No}, delivery {Delivery Date} · {Rit}. |
 | MSG5 | Tidak ada rit | No rit cycle available for {Delivery Date}. Choose another delivery date. |
 | MSG6 | Submit sukses | {ASN No} submitted with status Created. {n} cases are locked. The ASN is shown in ASN Inquiry. |

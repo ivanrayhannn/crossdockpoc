@@ -19,9 +19,9 @@
  ],
  "general": {
   "objective": [
-   "To get the crossdock customer orders for a Delivery Date and Rit and pre-map them to supplier POs ([Get Order], function X12).",
-   "To display the delivery plan per Part Number + Customer Order Date at case level (Case Qty, PO Readiness, ASN Status Ready / Not Ready / Created).",
-   "To let the D/S team see the destination and order line detail and hold / release customer order lines.",
+   "To get the crossdock customer orders for a Delivery Date and Rit and pre-map them to supplier POs ([Search], function X12 Get Order).",
+   "To display the delivery plan per Part Number + Customer Order Date at case level (Case Qty, PO Readiness, ASN Status Ready / Not Ready). Units already Created or without any ready case are not listed.",
+   "To let the D/S team see the destination detail and hold / release a destination of a unit.",
    "To select one or more Ready units, map them to their POs, review the cases, download the case labels and submit the ASN."
   ],
   "display_order": [
@@ -29,7 +29,7 @@
     "section": "Delivery plan",
     "fields": [
      {
-      "field": "ASN Status (Ready, Not Ready, Created)",
+      "field": "ASN Status (Ready, Not Ready)",
       "order": "-"
      },
      {
@@ -52,15 +52,6 @@
     ]
    },
    {
-    "section": "Order lines (D/S)",
-    "fields": [
-     {
-      "field": "Detailed Item No",
-      "order": "Ascending"
-     }
-    ]
-   },
-   {
     "section": "Case List",
     "fields": [
      {
@@ -76,20 +67,16 @@
   ],
   "buttons": [
    {
-    "name": "Get Order",
-    "function": "Run X12: get the customer orders and pre-map them to POs for the chosen Delivery Date and Rit; display the delivery plan."
+    "name": "Search",
+    "function": "Run X12 (Get Order): get the customer orders and pre-map them to POs for the chosen Delivery Date and Rit; display the delivery plan."
    },
    {
     "name": "Detail (expand, D/S)",
-    "function": "D/S team only: show / hide the destinations (cases) of a unit with Qty and Not Assigned pcs."
-   },
-   {
-    "name": "Order lines (expand, D/S)",
-    "function": "D/S team only: show / hide the original order lines of a destination (Customer Order No, Detailed Item No)."
+    "function": "D/S team only: show / hide the destinations (cases) of a unit with Qty and Hold Flag."
    },
    {
     "name": "Hold / Release (D/S)",
-    "function": "D/S team only: set HOLD_FLAG of an order line to 'Y' (hold) or 'N' (release)."
+    "function": "D/S team only: set HOLD_FLAG of every order line of the destination (part number + customer order date + destination) to 'Y' (hold) or 'N' (release)."
    },
    {
     "name": "Clear selection",
@@ -134,11 +121,10 @@
     "sections": [
      {
       "section": "Delivery",
-      "description": "Delivery Date = business date + 1; Rit = first rit of the date; Route displayed",
+      "description": "Delivery Date = today (business date); Rit = first rit of the date; Route displayed",
       "buttons": {
-       "Get Order": "E",
+       "Search": "E",
        "Detail (expand, D/S)": "D",
-       "Order lines (expand, D/S)": "D",
        "Hold / Release (D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
@@ -153,11 +139,10 @@
      },
      {
       "section": "Delivery plan",
-      "description": "Empty: 'Choose the Delivery Date and Rit, then click Get Order.' Filters disabled",
+      "description": "Empty: 'Choose the Delivery Date and Rit, then click Search.' Filters disabled",
       "buttons": {
-       "Get Order": "D",
+       "Search": "D",
        "Detail (expand, D/S)": "D",
-       "Order lines (expand, D/S)": "D",
        "Hold / Release (D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
@@ -179,9 +164,8 @@
       "section": "Delivery",
       "description": "Refer 1.a",
       "buttons": {
-       "Get Order": "E",
+       "Search": "E",
        "Detail (expand, D/S)": "D",
-       "Order lines (expand, D/S)": "D",
        "Hold / Release (D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
@@ -198,9 +182,8 @@
       "section": "Delivery plan",
       "description": "Header only (case level); Part Number / Status filters",
       "buttons": {
-       "Get Order": "D",
+       "Search": "D",
        "Detail (expand, D/S)": "D",
-       "Order lines (expand, D/S)": "D",
        "Hold / Release (D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
@@ -217,9 +200,8 @@
       "section": "Selection bar",
       "description": "Enabled when Ready units are ticked",
       "buttons": {
-       "Get Order": "D",
+       "Search": "D",
        "Detail (expand, D/S)": "D",
-       "Order lines (expand, D/S)": "D",
        "Hold / Release (D/S)": "D",
        "Clear selection": "E",
        "Create ASN": "E",
@@ -239,11 +221,10 @@
     "sections": [
      {
       "section": "Delivery plan",
-      "description": "Same as supplier plus the expand of destination and order lines; status On Hold also listed",
+      "description": "Same as supplier plus the destination detail with Hold Flag; a unit with all destinations on hold is listed as On Hold",
       "buttons": {
-       "Get Order": "D",
+       "Search": "D",
        "Detail (expand, D/S)": "E",
-       "Order lines (expand, D/S)": "E",
        "Hold / Release (D/S)": "E",
        "Clear selection": "D",
        "Create ASN": "D",
@@ -260,9 +241,8 @@
       "section": "Selection bar",
       "description": "Refer 2.c",
       "buttons": {
-       "Get Order": "D",
+       "Search": "D",
        "Detail (expand, D/S)": "D",
-       "Order lines (expand, D/S)": "D",
        "Hold / Release (D/S)": "D",
        "Clear selection": "E",
        "Create ASN": "E",
@@ -284,9 +264,8 @@
       "section": "ASN summary",
       "description": "ASN No (assigned on submit), supplier, Delivery Date \u00b7 Rit \u00b7 Route, Delivery Qty, cases",
       "buttons": {
-       "Get Order": "D",
+       "Search": "D",
        "Detail (expand, D/S)": "D",
-       "Order lines (expand, D/S)": "D",
        "Hold / Release (D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
@@ -303,9 +282,8 @@
       "section": "Case list",
       "description": "Case Number, Part Number, Qty; expand PO detail",
       "buttons": {
-       "Get Order": "D",
+       "Search": "D",
        "Detail (expand, D/S)": "D",
-       "Order lines (expand, D/S)": "D",
        "Hold / Release (D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
@@ -322,9 +300,8 @@
       "section": "Footer",
       "description": "Submit enabled when there are cases",
       "buttons": {
-       "Get Order": "D",
+       "Search": "D",
        "Detail (expand, D/S)": "D",
-       "Order lines (expand, D/S)": "D",
        "Hold / Release (D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
@@ -346,9 +323,8 @@
       "section": "Submit confirmation",
       "description": "'Submit ASN?' Yes / No",
       "buttons": {
-       "Get Order": "D",
+       "Search": "D",
        "Detail (expand, D/S)": "D",
-       "Order lines (expand, D/S)": "D",
        "Hold / Release (D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
@@ -365,9 +341,8 @@
       "section": "Success notification",
       "description": "ASN submitted (Created); back to the list",
       "buttons": {
-       "Get Order": "D",
+       "Search": "D",
        "Detail (expand, D/S)": "D",
-       "Order lines (expand, D/S)": "D",
        "Hold / Release (D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
@@ -387,7 +362,7 @@
    "1) The check box of a unit is enabled only when its ASN Status is Ready (message no. 1 or 2 as tooltip otherwise).",
    "2) Units of different Customer Order Dates and Part Numbers can be ticked together; each unit always goes into the ASN as a whole.",
    "3) The expand buttons and Hold / Release are shown to the D/S team only; the supplier sees the header (case level) only.",
-   "4) Get Order is enabled when Delivery Date is filled and a Rit is available (message no. 5 otherwise)."
+   "4) Search is enabled when Delivery Date is filled and a Rit is available (message no. 5 otherwise)."
   ]
  },
  "screen_flow": [
@@ -447,7 +422,7 @@
    }
   },
   {
-   "title": "Screen Flow - Get Order, Check Ready Status and Create ASN",
+   "title": "Screen Flow - Search, Check Ready Status and Create ASN",
    "flow": {
     "direction": "TB",
     "nodes": [
@@ -458,7 +433,7 @@
      },
      {
       "id": "e",
-      "label": "Choose Delivery Date and Rit, click Get Order",
+      "label": "Choose Delivery Date and Rit, click Search",
       "type": "event"
      },
      {
@@ -569,19 +544,19 @@
  ],
  "screen_layout": [
   {
-   "caption": "1. Initial Mode: choose Delivery Date and Rit, then Get Order",
+   "caption": "1. Initial Mode: choose Delivery Date and Rit, then Search",
    "image": "deliverables/uiss_screens/asn_crossdock/c_01_initial.png"
   },
   {
-   "caption": "2. Delivery plan after Get Order (supplier view, case level)",
+   "caption": "2. Delivery plan after Search (supplier view, case level)",
    "image": "deliverables/uiss_screens/asn_crossdock/c_02_delivery_plan.png"
   },
   {
-   "caption": "3. D/S team: destination detail and order lines of a Not Ready unit",
+   "caption": "3. D/S team: destination detail with Hold Flag of a Not Ready unit",
    "image": "deliverables/uiss_screens/asn_crossdock/c_03_ds_detail.png"
   },
   {
-   "caption": "4. D/S team: order line on hold; the unit is computed again (Ready)",
+   "caption": "4. D/S team: destination on hold; the unit is computed again (Ready)",
    "image": "deliverables/uiss_screens/asn_crossdock/c_04_ds_hold.png"
   },
   {
@@ -605,7 +580,7 @@
    "image": "deliverables/uiss_screens/asn_crossdock/c_09_submitted.png"
   },
   {
-   "caption": "10. Delivery plan after submit (unit Created)",
+   "caption": "10. Delivery plan after submit (Created units are no longer listed)",
    "image": "deliverables/uiss_screens/asn_crossdock/c_10_list_after.png"
   }
  ],
@@ -622,7 +597,7 @@
    "io": "I",
    "control": "Date picker",
    "justified": "Left",
-   "initial": "Business date + 1",
+   "initial": "Today (business date)",
    "required": "Y",
    "format": "DD-Mon-YYYY",
    "validation": "Mandatory; today or later",
@@ -659,7 +634,7 @@
    "description": "Route of the Rit."
   },
   {
-   "name": "Get Order",
+   "name": "Search",
    "source": "-",
    "field": "-",
    "type": "-",
@@ -719,7 +694,7 @@
    "required": "N",
    "format": "-",
    "validation": "-",
-   "description": "All / Ready / Not Ready / Created (D/S team also On Hold). Filters at once."
+   "description": "All / Ready / Not Ready (D/S team also On Hold). Filters at once."
   },
   {
    "name": "Select (check box)",
@@ -734,7 +709,7 @@
    "required": "N",
    "format": "-",
    "validation": "Enabled only for Ready units",
-   "description": "Several units can be ticked. Ticked and disabled when Created. Refer Screen Mode remark 1)."
+   "description": "Several units can be ticked. Refer Screen Mode remark 1)."
   },
   {
    "name": "Customer Order Date",
@@ -809,7 +784,7 @@
    "required": "N",
    "format": "-",
    "validation": "-",
-   "description": "'6' Ready (green) / '7' Not Ready (amber, row highlighted) / Created (ASN status '1', grey) / On Hold (D/S only). Refer 5.2."
+   "description": "'6' Ready (green) / '7' Not Ready (amber, row highlighted) / On Hold (D/S only). Refer 5.2."
   },
   {
    "name": "Detail (expand, D/S)",
@@ -857,7 +832,7 @@
    "required": "N",
    "format": "9",
    "validation": "-",
-   "description": "1 (0 when all lines of the destination are on hold)."
+   "description": "1; 0 when the destination is on hold."
   },
   {
    "name": "Qty (pcs)",
@@ -872,85 +847,7 @@
    "required": "N",
    "format": "ZZ,ZZ9",
    "validation": "-",
-   "description": "Sum of the order qty of the destination (lines on hold not counted)."
-  },
-  {
-   "name": "Not Assigned (pcs)",
-   "source": "#TB_R_INSTRUCTION",
-   "field": "REMAINING_ORDER_QTY",
-   "type": "Number",
-   "len": "8",
-   "io": "O",
-   "control": "Grid",
-   "justified": "Right",
-   "initial": "-",
-   "required": "N",
-   "format": "ZZ,ZZ9",
-   "validation": "-",
-   "description": "Qty of the destination without a PO; '-' when 0."
-  },
-  {
-   "name": "Order lines (expand, D/S)",
-   "source": "-",
-   "field": "-",
-   "type": "-",
-   "len": "-",
-   "io": "I",
-   "control": "Button",
-   "justified": "Center",
-   "initial": "Enabled",
-   "required": "N",
-   "format": "-",
-   "validation": "-",
-   "description": "Opens the order lines of the destination."
-  },
-  {
-   "group": "<Order Lines (D/S team only)>"
-  },
-  {
-   "name": "Customer Order No / Detailed Item No",
-   "source": "#TB_R_INSTRUCTION",
-   "field": "CUSTOMER_ORDER_NO / DETAILED_ITEM_NO",
-   "type": "Char",
-   "len": "-",
-   "io": "O",
-   "control": "Grid",
-   "justified": "Left",
-   "initial": "-",
-   "required": "N",
-   "format": "-",
-   "validation": "-",
-   "description": "Original order row, e.g. order A 4 pcs and order B 2 pcs to Vietnam."
-  },
-  {
-   "name": "Qty / PO No / PO Date",
-   "source": "#TB_R_INSTRUCTION",
-   "field": "CUST_ORDER_QTY / PO_NO / PO_ORDER_DT",
-   "type": "Char",
-   "len": "-",
-   "io": "O",
-   "control": "Grid",
-   "justified": "Left",
-   "initial": "-",
-   "required": "N",
-   "format": "-",
-   "validation": "-",
-   "description": "Pre-mapping of the line."
-  },
-  {
-   "name": "Assignment",
-   "source": "Computed",
-   "field": "-",
-   "type": "Char",
-   "len": "-",
-   "io": "O",
-   "control": "Grid",
-   "justified": "Left",
-   "initial": "-",
-   "required": "N",
-   "format": "-",
-   "validation": "-",
-   "description": "Assigned / Not assigned / Excluded (hold)."
+   "description": "Sum of the order qty of the destination; '(on hold)' when held."
   },
   {
    "name": "Hold / Release (D/S)",
@@ -965,7 +862,7 @@
    "required": "N",
    "format": "-",
    "validation": "-",
-   "description": "Hold Flag of the line: 'N \u00b7 Hold' sets Y, 'Y \u00b7 Release' sets N. Disabled for a Created unit. Refer 5.3."
+   "description": "Hold Flag of the destination: 'N \u00b7 Hold' sets Y, 'Y \u00b7 Release' sets N on every order line of the destination. Refer 5.3."
   },
   {
    "group": "<Selection Bar Section>"
@@ -1076,7 +973,7 @@
    "required": "N",
    "format": "-",
    "validation": "-",
-   "description": "From the Get Order."
+   "description": "From the Search."
   },
   {
    "name": "Delivery Qty",
@@ -1254,11 +1151,11 @@
     "destination": {
      "table": "TB_R_H0253_ORDER_CONTROL_PRE",
      "operation": "Update",
-     "description": "Order line of the button",
+     "description": "Every order line of the destination of the button",
      "keys": [
       {
-       "field": "Unique key (customer order line incl. SERIAL_NO)",
-       "value": "Line of the button"
+       "field": "SHIPPING_PART_NO + ORDER_DT + DESTINATION_CD",
+       "value": "Unit and destination of the button"
       }
      ]
     },
@@ -1926,16 +1823,16 @@
  "operation": [
   {
    "type": "heading",
-   "text": "5.1 Initial Display and Get Order"
+   "text": "5.1 Initial Display and Search"
   },
   {
    "type": "bullets",
    "marker": "a.",
    "level": 2,
    "items": [
-    "On first display Delivery Date = business date + 1, Rit = first rit of the date, Route displayed (disabled). The delivery plan is empty.",
-    "[Get Order] runs the function X12 (UISS X12): customer orders of H0253 with order status 7, Hold Flag N, not mapped, earliest order date first per part number (FIFO), pre-mapped to the PO parts of the Pra Daily Order (FIFO PO date) in the temporary table #TB_R_INSTRUCTION.",
-    "The delivery plan shows one row per Part Number + Customer Order Date, sorted Ready, Not Ready, Created, then Part Number ascending. Part Number and Status filters apply at once. No row: message no. 3.",
+    "On first display Delivery Date = today (business date), Rit = first rit of the date, Route displayed (disabled). The delivery plan is empty.",
+    "[Search] runs the function X12 Get Order (UISS X12): customer orders of H0253 with order status 7, Hold Flag N, not mapped, earliest order date first per part number (FIFO), pre-mapped to the PO parts of the Pra Daily Order (FIFO PO date) in the temporary table #TB_R_INSTRUCTION.",
+    "The delivery plan shows one row per Part Number + Customer Order Date, sorted Ready, Not Ready, then Part Number ascending. Units with PO Readiness 0 and units already Created (in a submitted ASN) are not listed. Part Number and Status filters apply at once. No row: message no. 3.",
     "Delivery Date and Rit do not filter the orders; they are carried to the ASN."
    ]
   },
@@ -1951,7 +1848,7 @@
     "Unit = Part Number + Customer Order Date. Case = one per destination; the qty of a destination is summed into one case (it never exceeds pcs/case, it may be split over several lines, e.g. 4 + 2).",
     "Case Qty = number of destinations. PO Readiness (case) = cases whose whole qty is pre-mapped to a PO.",
     "Ready ('6'): every line of the unit is pre-mapped to a PO. Not Ready ('7'): at least one line of the unit has no PO yet (check box disabled, message no. 2). With POs of different PO Dates the unit becomes Ready when the last PO is available (condition 3).",
-    "Created: the unit is in a submitted ASN (ASN status '1'); ticked and locked (message no. 1)."
+    "Created: the unit is in a submitted ASN (ASN status '1'); it is no longer listed (shown in ASN Inquiry)."
    ]
   },
   {
@@ -1963,8 +1860,8 @@
    "marker": "a.",
    "level": 2,
    "items": [
-    "The D/S team can expand a unit (destinations with Case, Qty, Not Assigned pcs) and a destination (original order lines with Customer Order No, Detailed Item No, Qty, PO No, PO Date, Assignment). The supplier sees the header only.",
-    "Hold / Release updates HOLD_FLAG of the line in TB_R_H0253_ORDER_CONTROL_PRE (refer Data Edit Mapping). A held line is not taken by Get Order; the unit is computed without it. A unit whose lines are all on hold is shown as On Hold to the D/S team only.",
+    "The D/S team can expand a unit: one row per destination with Case, Qty (pcs) and Hold Flag. Customer order lines are not shown. The supplier sees the header only.",
+    "Hold / Release is done per destination: it updates HOLD_FLAG of every order line of the unit and destination in TB_R_H0253_ORDER_CONTROL_PRE (refer Data Edit Mapping). A held destination is not taken by Search; the unit is computed without it. A unit with all destinations on hold is shown as On Hold to the D/S team only.",
     "HOLD_FLAG is 'N' when the line is first replicated (X10) and is kept on the next replications."
    ]
   },
@@ -1992,7 +1889,7 @@
    "marker": "a.",
    "level": 2,
    "items": [
-    "The summary shows ASN No (assigned on submit), supplier, Delivery Date \u00b7 Rit \u00b7 Route of the Get Order, Delivery Qty (pcs) and number of cases.",
+    "The summary shows ASN No (assigned on submit), supplier, Delivery Date \u00b7 Rit \u00b7 Route of the Search, Delivery Qty (pcs) and number of cases.",
     "Each case shows Case Number, Part Number and Qty; the expand shows PO No, Manifest No, Manifest Item No and PO Qty. Customer order data is not shown here.",
     "[Download Case Label]: TBD (format, file name, content).",
     "[Submit ASN]: confirmation (message no. 4). Yes: insert TB_R_ASN_CROSSDOCK_H with ASN_STATUS '1' Created and TB_R_ASN_CROSSDOCK_D from the draft; ASN No and Case No follow the existing numbering (last sequence table). Display message no. 6; the units show Created."
@@ -2018,11 +1915,11 @@
   },
   {
    "event": "Hover on disabled check box",
-   "cause": "Unit is Created",
+   "cause": "Unit is On Hold (D/S)",
    "type": "Info",
    "msg_id": "MSG1",
-   "message": "Already in {ASN No}",
-   "action": "None."
+   "message": "All destinations are on hold",
+   "action": "Release a destination."
   },
   {
    "event": "Hover on disabled check box",
@@ -2033,10 +1930,10 @@
    "action": "Wait for the next PO."
   },
   {
-   "group": "Get Order"
+   "group": "Search"
   },
   {
-   "event": "Click [Get Order] / change filter",
+   "event": "Click [Search] / change filter",
    "cause": "No unit",
    "type": "Info",
    "msg_id": "MSG3",

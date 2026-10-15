@@ -1,4 +1,4 @@
-"""Spec for X12_UISS_Batch_GetOrderPOPreMapping.xlsx (UISS-Batch format): the on-demand function behind [Get Order]
+"""Spec for X12_UISS_Batch_GetOrderPOPreMapping.xlsx (UISS-Batch format): the on-demand function behind [Search]
 of ASN Crossdock Creation (X8). Customer orders are pre-mapped to supplier POs (FIFO) into the temporary #TB_R_INSTRUCTION."""
 import json, sys
 from asn_common import H0253, INSTR, INSTR_COLS, INSTR_TABLE, PRA_M, PRA_P, header, revisions
@@ -20,7 +20,7 @@ SAMPLE = {
   {"title": "C. Result on the screen", "columns": ["No", "Scenario", "Expected result"], "widths": [6, 50, 70],
    "rows": [["N1", "Get Order A", "PART-C 13-Oct: Case Qty 3, PO Readiness 1 (only PH complete), ASN Status Not Ready ('7')."],
             ["N2", "Get Order B", "All lines pre-mapped: PO Readiness 3, ASN Status Ready ('6'); the unit can be selected for Create ASN."],
-            ["N3", "A line has Hold Flag Y", "The line is not taken; the unit is computed without it (it may become Ready)."],
+            ["N3", "A destination is on hold (Hold Flag Y on its lines)", "Its lines are not taken; the unit is computed without it (it may become Ready)."],
             ["N4", "PO qty larger than the open order qty", "The PO remainder stays open for later customer orders (FIFO)."],
             ["E1", "Database error", "Nothing is kept in the temporary table; message on the screen, Log FAILED."]]}]}
 
@@ -32,9 +32,9 @@ spec = {
   "objective": [
    f"To get the crossdock customer orders (H0253, order status 7, Hold Flag N, not yet mapped) and pre-map them to the crossdock supplier PO parts (Pra Daily Order, crossdock flag X), FIFO by order date, into the temporary table {INSTR}.",
    "To give ASN Crossdock Creation (X8) the delivery plan per Part Number + Customer Order Date with Case Qty, PO Readiness (case) and ASN Status Ready / Not Ready.",
-   "It runs when the user clicks [Get Order] on X8; there is no scheduler. The real mapping is done later by [Create ASN] on X8."],
+   "It runs when the user clicks [Search] on X8; there is no scheduler. The real mapping is done later by [Create ASN] on X8."],
   "operation_flow": {"flow": {"direction": "TB", "nodes": [
-     {"id": "a", "label": "[Get Order] on ASN Crossdock Creation", "type": "event"},
+     {"id": "a", "label": "[Search] on ASN Crossdock Creation", "type": "event"},
      {"id": "b", "label": "Get customer orders (H0253)", "type": "process"},
      {"id": "c", "label": "Get PO parts (Pra Daily Order)", "type": "process"},
      {"id": "d", "label": "Pre-map FIFO per part number", "type": "process"},
@@ -52,11 +52,11 @@ spec = {
     "rows": [["Delivery Date", "Chosen on X8; carried to the ASN"], ["Rit / Route", "Chosen on X8; carried to the ASN"], ["Supplier", "Supplier of the login user"]]},
    {"title": "Grouping Keys", "columns": [{"title": "Field Name", "width": 20}], "rows": ["PART_NO", "ORDER_DT (unit)", "DESTINATION_CD (case)"]},
    {"title": "Execution Schedule", "columns": [{"title": "Item", "width": 12}, {"title": "Description", "width": 36}],
-    "rows": [["Trigger", "On demand: [Get Order] on ASN Crossdock Creation (X8). No scheduler."]]}]
+    "rows": [["Trigger", "On demand: [Search] on ASN Crossdock Creation (X8). No scheduler."]]}]
  },
  "func_flow": {
   "flow": {"direction": "TB", "nodes": [
-     {"id": "p1", "label": "Start ([Get Order])", "type": "process", "step": 1},
+     {"id": "p1", "label": "Start ([Search])", "type": "process", "step": 1},
      {"id": "h", "label": H0253, "type": "db", "lane": "input"},
      {"id": "p2", "label": "Get customer order lines", "type": "process", "step": 2},
      {"id": "m", "label": PRA_M + " / " + PRA_P, "type": "db", "lane": "input"},
@@ -67,7 +67,7 @@ spec = {
    "edges": [{"from": "p1", "to": "p2"}, {"from": "h", "to": "p2"}, {"from": "p2", "to": "p3"}, {"from": "m", "to": "p3"}, {"from": "p3", "to": "p4"},
              {"from": "p4", "to": "o"}, {"from": "p4", "to": "p5"}]},
   "steps": [
-   "The user clicks [Get Order] on ASN Crossdock Creation (X8) with Delivery Date and Rit. The previous content of the temporary table of the session is cleared.",
+   "The user clicks [Search] on ASN Crossdock Creation (X8) with Delivery Date and Rit. The previous content of the temporary table of the session is cleared.",
    {"text": f"Get the customer order lines from {H0253}:",
     "children": ["ORDER_STATUS = '7' (Cross Dock), HOLD_FLAG = 'N', PO_MAPPED_FLAG = 'N'; latest data; earliest order date first per part number (FIFO, G-TOPAS key).",
                  "Get: Customer Code, Customer Order No, Order Date, Destination Code, Detailed Item No, Serial No, Part Number, Order Status Qty."]},
@@ -114,7 +114,7 @@ spec = {
     "Unit = Part Number + Customer Order Date. Case = one per destination of the unit: the qty of the destination is summed into one case (it never exceeds pcs/case).",
     "Case Qty = number of destinations of the unit. PO Readiness (case) = cases whose whole qty is pre-mapped to a PO.",
     "CROSSDOCK_STATUS '6' Ready: every line of the unit is pre-mapped. '7' Not Ready: at least one line of the unit has no PO yet.",
-    "Shown on X8 as ASN Status Ready / Not Ready; after [Submit ASN] the unit shows Created (ASN status '1').",
+    "Shown on X8 as ASN Status Ready / Not Ready. Units with PO Readiness 0 are not listed on X8; units already in a submitted ASN (ASN status '1' Created) are not taken (PO_MAPPED_FLAG = 'Y').",
     "TBD: physical structure of TB_R_PRA_DAILY_ORDER_MANIFEST / PART and the column for the mapped qty."]}],
  "logging_messages": [
   {"event": "Get Order", "cause": "Read or insert fails", "type": "Error", "msg_id": "LOG1", "message": "Get Order failed for Delivery Date <DELIVERY_DT> <RIT>: <ERROR_DETAIL>.", "action": {"system": "Clear the temporary table.", "user": "Retry; contact PIC if it persists."}},

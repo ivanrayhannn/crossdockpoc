@@ -1,10 +1,10 @@
 # Function – Get Order: Customer Order – PO Pre-mapping (X12)
 
 Sumber: UISS-Batch `X12_UISS_Batch_GetOrderPOPreMapping.xlsx` (0.1 Initial Draft, update 15-Oct-26), bagian "Get Data → Insert result mapping Cust Order PO Supplier → temp #TB_R_INSTRUCTION" di flow ASN.
-**Bukan batch terjadwal**: fungsi ini jalan saat user klik **[Get Order]** di layar ASN Crossdock Creation (X8).
+**Bukan batch terjadwal**: fungsi ini jalan saat user klik **[Search]** di layar ASN Crossdock Creation (X8).
 
 ## Alur
-1. User memilih **Delivery Date** dan **Rit** di X8 (Route tampil otomatis), lalu klik **[Get Order]**. Delivery Date / Rit **tidak memfilter** order, hanya dibawa ke ASN.
+1. User memilih **Delivery Date** dan **Rit** di X8 (Route tampil otomatis), lalu klik **[Search]**. Delivery Date / Rit **tidak memfilter** order, hanya dibawa ke ASN.
 2. **Customer order** dari **TB_R_H0253_ORDER_CONTROL_PRE** (hasil X10): Order Status = **7**, **HOLD_FLAG = N**, **PO_MAPPED_FLAG = N**, data terbaru; order date paling awal dulu per part number (FIFO, key G-TOPAS).
 3. **PO supplier** dari **TB_R_PRA_DAILY_ORDER_MANIFEST + TB_R_PRA_DAILY_ORDER_PART**: Crossdock Flag = **X**, data terbaru, qty PO yang belum terpakai, urut Order Date naik (FIFO).
 4. **Pre-mapping** per part number, FIFO berdasarkan Customer Order Date (lalu Order Time, Customer Order No, Detailed Item No, Serial No). Satu line boleh terpecah ke beberapa PO; sisa PO tetap terbuka.
@@ -22,12 +22,13 @@ Pre-mapping **tidak mengubah data permanen**. Mapping sebenarnya dilakukan oleh 
 | PO Readiness (case) | Jumlah case yang seluruh qty-nya sudah dapat PO |
 | CROSSDOCK_STATUS `6` Ready | Semua line unit sudah dapat PO |
 | CROSSDOCK_STATUS `7` Not Ready | Masih ada minimal 1 line unit (customer order date yang sama) yang belum dapat PO |
-| Created (ASN status `1`) | Setelah Submit ASN di X8 |
+| Created (ASN status `1`) | Setelah Submit ASN di X8; tidak diambil lagi (PO_MAPPED_FLAG = Y) |
 
 ## Contoh (PART-C, 6 pcs/case)
 - Get Order 14-Oct: hanya PO1 (12 pcs) yang ada → CO-13001 (4), CO-13004 (2), CO-13003 (6) dapat PO; 6 pcs sisa → Case Qty 3, PO Readiness 1, **Not Ready**.
 - Get Order 15-Oct: PO2 (6 pcs) ada → semua line dapat PO → PO Readiness 3, **Ready**.
-- Line dengan HOLD_FLAG = Y tidak diambil; unit dihitung tanpa line itu.
+- Destinasi yang di-hold (HOLD_FLAG = Y di semua line-nya) tidak diambil; unit dihitung tanpa destinasi itu.
+- Di layar X8, unit dengan PO Readiness 0 dan unit yang sudah Created tidak ditampilkan.
 
 ## #TB_R_INSTRUCTION (temporary, usulan struktur)
 | Kolom | Tipe | Keterangan |

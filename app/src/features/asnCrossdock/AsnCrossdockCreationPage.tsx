@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { addAsn, asnByUnitOf, useAsns } from './asnStore';
 import {
-  addDays, asnNoFor, BUSINESS_DATES, buildCases, buildUnits, DESTS, isAssigned, niceDate, PART_NAME, PCS_PER_CASE, poQtyOf,
+  asnNoFor, BUSINESS_DATES, buildCases, buildUnits, DESTS, niceDate, PART_NAME, PCS_PER_CASE, poQtyOf,
   ritCyclesFor, SUPPLIER_CODE, SUPPLIER_NAME, SUPPLIER_PLANT, type AsnCase, type InstrLine, type Unit, type UnitStatus,
 } from './data';
 import { Chip, Modal } from './ui';
@@ -25,20 +25,16 @@ function StatusChip({ s }: { s: UnitStatus }) {
 interface DestRow {
   destCd: string;
   qty: number;
-  notAssigned: number;
   lines: InstrLine[];
 }
 
-/** Destination level of a unit (one case per destination); held lines are listed but not counted. */
-function destRows(u: Unit, today: string): DestRow[] {
+/** Destination level of a unit (one case per destination); a held destination is listed but not counted. */
+function destRows(u: Unit): DestRow[] {
   const m = new Map<string, DestRow>();
   for (const l of [...u.lines, ...u.heldLines]) {
-    const r = m.get(l.destCd) ?? { destCd: l.destCd, qty: 0, notAssigned: 0, lines: [] };
+    const r = m.get(l.destCd) ?? { destCd: l.destCd, qty: 0, lines: [] };
     r.lines.push(l);
-    if (!u.heldLines.includes(l)) {
-      r.qty += l.qty;
-      if (!isAssigned(l, today)) r.notAssigned += l.qty;
-    }
+    if (!u.heldLines.includes(l)) r.qty += l.qty;
     m.set(l.destCd, r);
   }
   return [...m.values()];
@@ -61,13 +57,13 @@ function poRowsOf(c: AsnCase): PoRow[] {
   return [...m.values()];
 }
 
-/** Screen ASN Crossdock Creation: Get Order (X12 pre-mapping), delivery plan, Create ASN and the Case List sub screen. */
+/** Screen ASN Crossdock Creation: Search (X12 Get Order pre-mapping), delivery plan, Create ASN and the Case List sub screen. */
 export function AsnCrossdockCreationPage() {
   const asns = useAsns();
   const [today, setToday] = useState('2026-10-15');
   const [viewAs, setViewAs] = useState<ViewAs>('sup');
   const isDs = viewAs === 'ds';
-  const [deliveryDate, setDeliveryDate] = useState(() => addDays('2026-10-15', 1));
+  const [deliveryDate, setDeliveryDate] = useState('2026-10-15');
   const [ritNo, setRitNo] = useState('');
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const [partFilter, setPartFilter] = useState('');
@@ -75,7 +71,6 @@ export function AsnCrossdockCreationPage() {
   const [hold, setHold] = useState<Record<string, boolean>>({});
   const [sel, setSel] = useState<Record<string, boolean>>({});
   const [open, setOpen] = useState<Record<string, boolean>>({});
-  const [openDest, setOpenDest] = useState<Record<string, boolean>>({});
   const [openCase, setOpenCase] = useState<Record<number, boolean>>({});
   const [page, setPage] = useState<'list' | 'cases'>('list');
   const [confirm, setConfirm] = useState(false);
@@ -85,7 +80,8 @@ export function AsnCrossdockCreationPage() {
   const rits = ritCyclesFor(deliveryDate);
   const rit = rits.find((r) => r.no === ritNo) ?? rits[0];
   const units = useMemo(() => buildUnits(today, asnByUnitOf(asns), hold), [today, asns, hold]);
-  const visible = units.filter((u) => isDs || u.status !== 'hold');
+  // Created units and units without any ready case are not listed; a fully held unit only for the D/S team
+  const visible = units.filter((u) => u.status !== 'created' && (u.readyCases > 0 || (isDs && u.status === 'hold')));
   const rows = visible.filter((u) => (!partFilter || u.partNo === partFilter) && (stFilter === 'all' || u.status === stFilter));
   const selected = units.filter((u) => sel[u.key] && u.status === 'ready');
   const cases = useMemo(() => buildCases(selected), [selected]);
@@ -97,7 +93,7 @@ export function AsnCrossdockCreationPage() {
     setToday(d);
     setSel({});
     setLoaded(null);
-    setDeliveryDate(addDays(d, 1));
+    setDeliveryDate(d);
     setRitNo('');
   };
 
@@ -108,8 +104,11 @@ export function AsnCrossdockCreationPage() {
     setOpen({});
   };
 
-  const toggleHold = (id: string) => {
-    setHold({ ...hold, [id]: !hold[id] });
+  /** Hold Flag at destination level: sets the flag of every order line of the unit's destination. */
+  const toggleHoldDest = (lines: InstrLine[], held: boolean) => {
+    const next = { ...hold };
+    lines.forEach((l) => (next[l.id] = !held));
+    setHold(next);
     setSel({});
   };
 
@@ -206,7 +205,7 @@ export function AsnCrossdockCreationPage() {
         <div style={{ marginRight: 'auto' }}>
           <h1 style={{ fontSize: 22, margin: 0 }}>ASN Crossdock Creation</h1>
           <div style={{ fontSize: 12.5, color: 'var(--color-neutral-700)', marginTop: 3 }}>
-            Choose the Delivery Date and Rit, then Get Order: customer orders are taken FIFO by order date and pre-mapped to supplier POs. A unit (Part Number + Customer Order Date) is Ready when all its cases are assigned to a PO.
+            Choose the Delivery Date and Rit, then Search: customer orders are taken FIFO by order date and pre-mapped to supplier POs. A unit (Part Number + Customer Order Date) is Ready when all its cases are assigned to a PO.
           </div>
         </div>
         <div className="field">
@@ -214,7 +213,7 @@ export function AsnCrossdockCreationPage() {
           <div style={{ display: 'flex' }}>
             {([['sup', 'Supplier'], ['ds', 'D/S team']] as const).map(([k, label], i) => (
               <button key={k} className={`btn ${viewAs === k ? 'btn-primary' : 'btn-secondary'}`} style={{ borderRadius: i ? '0 6px 6px 0' : '6px 0 0 6px', padding: '8px 14px', whiteSpace: 'nowrap' }}
-                onClick={() => { setViewAs(k); if (k === 'sup') { setOpen({}); setOpenDest({}); } }}>{label}</button>
+                onClick={() => { setViewAs(k); if (k === 'sup') setOpen({}); }}>{label}</button>
             ))}
           </div>
         </div>
@@ -245,7 +244,7 @@ export function AsnCrossdockCreationPage() {
           </div>
           {!rits.length && <span style={{ color: 'var(--color-danger)', fontSize: 12, alignSelf: 'center' }}>No rit cycle available for {niceDate(deliveryDate)}. Choose another delivery date.</span>}
           <span style={{ marginLeft: 'auto' }}>
-            <button className="btn btn-primary" disabled={!deliveryDate || !rit} onClick={getOrder}>Get Order</button>
+            <button className="btn btn-primary" disabled={!deliveryDate || !rit} onClick={getOrder}>Search</button>
           </span>
         </div>
       </div>
@@ -273,13 +272,12 @@ export function AsnCrossdockCreationPage() {
               <option value="all">All</option>
               <option value="ready">Ready</option>
               <option value="notReady">Not Ready</option>
-              <option value="created">Created</option>
               {isDs && <option value="hold">On Hold</option>}
             </select>
           </div>
         </div>
         {!loaded ? (
-          <div style={{ padding: '40px 24px', textAlign: 'center', fontSize: 13, color: 'var(--color-neutral-700)' }}>Choose the Delivery Date and Rit, then click Get Order.</div>
+          <div style={{ padding: '40px 24px', textAlign: 'center', fontSize: 13, color: 'var(--color-neutral-700)' }}>Choose the Delivery Date and Rit, then click Search.</div>
         ) : rows.length === 0 ? (
           <div style={{ padding: '40px 24px', textAlign: 'center', fontSize: 13 }}>No customer order matches this filter.</div>
         ) : (
@@ -298,7 +296,7 @@ export function AsnCrossdockCreationPage() {
             <tbody>
               {rows.map((u) => {
                 const enabled = u.status === 'ready';
-                const tip = u.status === 'created' ? `Already in ${u.asnNo}` : u.status === 'notReady' ? `Not Ready: ${u.notAssignedCases} of ${u.caseCount} cases of ${u.partNo} / ${niceDate(u.orderDt)} are not assigned to a PO yet` : u.status === 'hold' ? 'All order lines are on hold' : 'Select to create an ASN';
+                const tip = u.status === 'created' ? `Already in ${u.asnNo}` : u.status === 'notReady' ? `Not Ready: ${u.notAssignedCases} of ${u.caseCount} cases of ${u.partNo} / ${niceDate(u.orderDt)} are not assigned to a PO yet` : u.status === 'hold' ? 'All destinations are on hold' : 'Select to create an ASN';
                 return [
                   <tr key={u.key} style={{ background: u.status === 'notReady' ? 'var(--color-warn-bg, #fff8e6)' : undefined }}>
                     <td style={td}><input type="checkbox" checked={u.status === 'created' || !!sel[u.key]} disabled={!enabled} title={tip} onChange={(e) => setSel({ ...sel, [u.key]: e.target.checked })} /></td>
@@ -306,54 +304,30 @@ export function AsnCrossdockCreationPage() {
                     <td style={{ ...td, fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{u.partNo}</td>
                     <td style={{ ...td, textAlign: 'right', fontWeight: 600 }}>{u.caseCount}</td>
                     <td style={{ ...td, textAlign: 'right', color: u.readyCases < u.caseCount ? 'var(--color-danger)' : undefined }}>{u.readyCases}</td>
-                    <td style={td} title={tip}><StatusChip s={u.status} />{u.heldLines.length > 0 && isDs && <div className="ax-muted">{u.heldLines.length} line(s) on hold</div>}</td>
+                    <td style={td} title={tip}><StatusChip s={u.status} />{u.heldLines.length > 0 && isDs && <div className="ax-muted">{new Set(u.heldLines.map((l) => l.destCd)).size} destination(s) on hold</div>}</td>
                     <td style={td}>{isDs && <button className="btn btn-secondary" title="Destination detail (D/S team)" style={{ padding: '2px 8px', fontSize: 11 }} onClick={() => setOpen({ ...open, [u.key]: !open[u.key] })}>{open[u.key] ? '▾' : '▸'}</button>}</td>
                   </tr>,
                   isDs && open[u.key] && (
                     <tr key={`${u.key}-d`}>
                       <td colSpan={7} style={{ padding: '8px 16px 12px 50px', background: 'var(--color-surface)', borderBottom: '1px solid var(--color-divider)' }}>
-                        <div className="ax-lbl" style={{ marginBottom: 4 }}>Destination · {u.qty} pcs{u.remainingQty ? ` · ${u.remainingQty} pcs not assigned` : ''}</div>
+                        <div className="ax-lbl" style={{ marginBottom: 4 }}>Destination · {u.qty} pcs</div>
                         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-                          <thead><tr><th style={{ ...th, background: 'transparent', width: 30 }} />{['Destination', 'Case', 'Qty (pcs)', 'Not Assigned (pcs)'].map((h) => <th key={h} style={{ ...th, background: 'transparent' }}>{h}</th>)}</tr></thead>
+                          <thead><tr>{['Destination', 'Case', 'Qty (pcs)', 'Hold Flag'].map((h) => <th key={h} style={{ ...th, background: 'transparent' }}>{h}</th>)}</tr></thead>
                           <tbody>
-                            {destRows(u, today).map((r) => {
-                              const dk = `${u.key}|${r.destCd}`;
-                              return [
-                                <tr key={dk}>
-                                  <td style={td}><button className="btn btn-secondary" title="Order lines" style={{ padding: '1px 7px', fontSize: 10.5 }} onClick={() => setOpenDest({ ...openDest, [dk]: !openDest[dk] })}>{openDest[dk] ? '▾' : '▸'}</button></td>
+                            {destRows(u).map((r) => {
+                              const held = r.lines.every((l) => hold[l.id]);
+                              return (
+                                <tr key={r.destCd} style={{ color: held ? 'var(--color-neutral-600)' : undefined }}>
                                   <td style={td}>{DESTS[r.destCd].code} · {DESTS[r.destCd].name}</td>
-                                  <td style={td}>{r.qty ? 1 : 0}</td>
-                                  <td style={td}>{r.qty}</td>
-                                  <td style={{ ...td, color: r.notAssigned ? 'var(--color-danger)' : undefined }}>{r.notAssigned || '—'}</td>
-                                </tr>,
-                                openDest[dk] && (
-                                  <tr key={`${dk}-l`}>
-                                    <td />
-                                    <td colSpan={4} style={{ padding: '4px 0 10px' }}>
-                                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11.5, background: 'var(--color-neutral-100)' }}>
-                                        <thead><tr>{['Customer Order No', 'Detailed Item No', 'Qty', 'PO No', 'PO Date', 'Assignment', 'Hold Flag'].map((h) => <th key={h} style={{ ...th, height: 28 }}>{h}</th>)}</tr></thead>
-                                        <tbody>
-                                          {r.lines.map((l) => {
-                                            const held = !!hold[l.id];
-                                            return (
-                                              <tr key={l.id} style={{ color: held ? 'var(--color-neutral-600)' : undefined }}>
-                                                <td style={td}>{l.custOrderNo}</td><td style={td}>{l.detailedItemNo}</td><td style={td}>{l.qty}</td>
-                                                <td style={td}>{l.poNo ?? '—'}</td><td style={td}>{niceDate(l.poDate)}</td>
-                                                <td style={td}>{held ? 'Excluded (hold)' : isAssigned(l, today) ? 'Assigned' : l.poNo ? `Planned (PO ${niceDate(l.poDate)})` : 'Not assigned'}</td>
-                                                <td style={td}>
-                                                  <button className="btn btn-secondary" disabled={u.status === 'created'} style={{ padding: '1px 8px', fontSize: 11 }} onClick={() => toggleHold(l.id)}>
-                                                    {held ? 'Y · Release' : 'N · Hold'}
-                                                  </button>
-                                                </td>
-                                              </tr>
-                                            );
-                                          })}
-                                        </tbody>
-                                      </table>
-                                    </td>
-                                  </tr>
-                                ),
-                              ];
+                                  <td style={td}>{held ? 0 : 1}</td>
+                                  <td style={td}>{held ? `${r.lines.reduce((a, l) => a + l.qty, 0)} (on hold)` : r.qty}</td>
+                                  <td style={td}>
+                                    <button className="btn btn-secondary" style={{ padding: '1px 8px', fontSize: 11 }} onClick={() => toggleHoldDest(r.lines, held)}>
+                                      {held ? 'Y · Release' : 'N · Hold'}
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
                             })}
                           </tbody>
                         </table>
