@@ -26,7 +26,8 @@ Pilih Delivery Date (default hari ini, Route tampil) → pilih Rit → [Search] 
 | Header delivery plan | Customer Order Date, Part Number, **Case Qty**, **PO Readiness (case)**, **ASN Status** |
 | Default sort | ASN Status: Ready → Not Ready, lalu Part Number ascending |
 | Tidak ditampilkan | Unit dengan PO Readiness **0** dan unit yang sudah **Created** (lihat di ASN Inquiry) |
-| Detail (D/S) | Per destinasi: Destination, Case, Qty (pcs), **Hold Flag**. Customer order (order line), Assignment, dan Not Assigned (pcs) tidak ditampilkan |
+| Detail (D/S) | Per destinasi: Destination, Case, Qty (pcs), **Pcs/Case**, **Hold Flag**. Assignment dan Not Assigned (pcs) tidak ditampilkan |
+| Detail customer order (D/S) | Expand dari destinasi: Customer Order No, Detailed Item No, Qty (pcs), PO No, PO Date (mis. order A 4 pcs + order B 2 pcs ke Vietnam) |
 | Case List – ringkasan | ASN No (saat submit), Supplier · Plant, Delivery Date · Rit · Route (dari Search), **Delivery Qty** (pcs), jumlah case |
 | Case List – tabel | **Case Number – Part Number – Qty**; expand: **PO No – Manifest No – Manifest Item No – PO Qty** |
 
