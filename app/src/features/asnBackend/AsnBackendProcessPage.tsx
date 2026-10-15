@@ -32,7 +32,7 @@ const TIMELINE: ['sup' | 'ds' | 'sys', string][] = [
   ['sys', 'T4 · HOLD_FLAG = Y on the Vietnam lines (TB_R_H0253_ORDER_CONTROL_PRE)'],
   ['sup', 'T5 · Click Create ASN'],
   ['sys', 'T6 · Re-check the ticked units in the same transaction: a line now has HOLD_FLAG = Y → stop, nothing is mapped'],
-  ['sup', 'T7 · Message "Some order has been already hold, please select other records"; the list is refreshed and the unit is unticked'],
+  ['sup', 'T7 · Message "Some order has been already hold, please select other records"; the delivery plan is refreshed automatically and all ticked units are unticked'],
 ];
 
 /** Explanation of the backend of ASN Crossdock Creation: Search, Create ASN with the hold check, and the Submit ASN batch. */
@@ -58,7 +58,7 @@ export function AsnBackendProcessPage() {
       <Section no="2" title="Create ASN – real mapping with the hold check">
         <Steps rows={[
           ['1', 'Lock the H0253 lines of the ticked units (row lock in one transaction).', 'TB_R_H0253_ORDER_CONTROL_PRE'],
-          ['2', 'Re-check each line: HOLD_FLAG must still be N and PO_MAPPED_FLAG N; the unit must still be Ready.', 'If not: roll back, message "Some order has been already hold, please select other records", refresh the list'],
+          ['2', 'Re-check each line: HOLD_FLAG must still be N and PO_MAPPED_FLAG N; the unit must still be Ready.', 'If not: roll back, the whole create fails, message "Some order has been already hold, please select other records", the delivery plan is refreshed automatically and all units are unticked'],
           ['3', 'Set PO_MAPPED_FLAG = Y and add the mapped qty to the PO parts.', 'TB_R_H0253_ORDER_CONTROL_PRE, TB_R_PRA_DAILY_ORDER_PART'],
           ['4', 'Build the ASN draft: one case per Part Number + Customer Order Date + destination.', '#TEMP_ASN_DRAFT (temporary)'],
           ['5', 'Commit and open the Case List. Back / Cancel on the Case List releases the mapping.', 'Screen'],
@@ -67,7 +67,7 @@ export function AsnBackendProcessPage() {
 
       <Section no="3" title="Submit ASN – batch with Submit ID (X14)">
         <Steps rows={[
-          ['1', 'Confirmation "Submit ASN? {n} cases ({q} pcs) will be created into {ASN No}, delivery {date} · {rit}." Yes → a Submit ID is generated and the draft is handed to the batch.', 'Submit request (Submit ID)'],
+          ['1', 'Confirmation "Submit ASN? {n} cases ({q} pcs) will be created into {ASN No}, delivery {date} · {rit}." Yes → the draft is handed to the batch with a Submit ID; the submit process follows the existing ASN.', 'Submit request (existing)'],
           ['2', 'Batch: take the ASN No and Case No from the existing numbering (last sequence table).', 'Existing last sequence table'],
           ['3', 'Batch: insert the ASN header (ASN_STATUS 1 Created) and the cases.', 'TB_R_ASN_CROSSDOCK_H / _D'],
           ['4', 'Batch: write start, result and end messages with the Submit ID to the existing log; no success popup on the screen.', 'Log (existing) → Log Monitoring'],
@@ -86,7 +86,7 @@ export function AsnBackendProcessPage() {
           ])}
         </div>
         <div style={{ marginTop: 10 }}>
-          Rule: the hold always wins. The create fails for the whole selection; the user selects other records and creates again.
+          Rule: the hold always wins. The create fails for the whole selection (also the units that are not held); the user selects again from the refreshed list.
         </div>
       </Section>
 
@@ -96,7 +96,7 @@ export function AsnBackendProcessPage() {
           <li>Tick <b>PART-A 13-Oct-2026</b> (do not click Create yet).</li>
           <li>Switch to <b>View as: D/S team</b> — this is the other session. Expand PART-A 13-Oct and click <b>N · Hold</b> on one destination.</li>
           <li>Switch back to <b>View as: Supplier</b>: the tick is still there (the supplier did not refresh yet).</li>
-          <li>Click <b>Create ASN</b>: the message <i>"Some order has been already hold, please select other records"</i> appears, the unit is unticked and the Case List does not open.</li>
+          <li>Click <b>Create ASN</b>: the message <i>"Some order has been already hold, please select other records"</i> appears, the Case List does not open, all ticks are removed and the delivery plan is refreshed automatically (see "refreshed hh:mm:ss" next to the counter).</li>
           <li>Tick another Ready unit, Create ASN and Submit: the Submit ID banner appears and the result is in <a href="#/log-monitoring">Log Monitoring</a>.</li>
         </ol>
         <div style={{ marginTop: 8, color: 'var(--color-neutral-600)', fontSize: 11.5 }}>
