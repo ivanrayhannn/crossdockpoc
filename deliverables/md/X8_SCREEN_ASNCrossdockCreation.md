@@ -47,9 +47,9 @@ Kolom PO No, Last PO Date, dan ASN No tidak ada lagi di header.
 - Destinasi dengan Hold Flag Y tidak diambil saat Search; unit dihitung tanpa destinasi itu.
 
 ## Create ASN dan Submit
-- **Create ASN** (1 transaksi): **PO_MAPPED_FLAG = Y** di line H0253 unit terpilih, qty terpakai di Pra Daily Order Part, dan draft ke **#TEMP_ASN_DRAFT** (1 case per Part + Customer Order Date + destinasi). Sebelum mapping, unit yang dicentang **dicek ulang** (row lock line H0253): kalau ada line yang **di-hold tim D/S setelah unit dicentang** (sesi lain), create **gagal** untuk seluruh pilihan → **MSG8 (Hold)**, delivery plan di-refresh dan unit yang ter-hold otomatis tidak tercentang. Kalau unit tidak Ready karena sebab lain → MSG7.
+- **Create ASN** (1 transaksi): **PO_MAPPED_FLAG = Y** di line H0253 unit terpilih, qty terpakai di Pra Daily Order Part, dan draft ke **#TEMP_ASN_DRAFT** (1 case per Part + Customer Order Date + destinasi). Sebelum mapping, unit yang dicentang **dicek ulang** (row lock line H0253): kalau ada line yang **di-hold tim D/S setelah unit dicentang** (sesi lain), create **gagal untuk seluruh pilihan** (termasuk unit yang tidak di-hold) → **MSG8 (Hold)**, delivery plan **otomatis di-refresh** dan semua centang dihapus; user memilih ulang. Kalau unit tidak Ready karena sebab lain → MSG7.
 - **Back / Cancel**: mapping dilepas (flag & qty dikembalikan), draft dihapus.
-- **Submit ASN** dijalankan sebagai **batch X14** (lihat md X14): konfirmasi MSG4 → Yes → sistem membuat **Submit ID** dan menyerahkan draft ke batch. Layar kembali ke delivery plan dan menampilkan Submit ID (MSG6); **tidak ada popup sukses**. Hasilnya (insert **TB_R_ASN_CROSSDOCK_H** status `1` Created + **TB_R_ASN_CROSSDOCK_D**, ASN No & Case No penomoran existing) ditulis ke **log existing** (Log Monitoring) dengan Submit ID.
+- **Submit ASN** dijalankan sebagai **batch X14** (lihat md X14): konfirmasi MSG4 → Yes → draft diserahkan ke batch dengan **Submit ID**; **proses submit mengikuti ASN existing**. Layar kembali ke delivery plan dan menampilkan Submit ID (MSG6); **tidak ada popup sukses**. Hasilnya (insert **TB_R_ASN_CROSSDOCK_H** status `1` Created + **TB_R_ASN_CROSSDOCK_D**, ASN No & Case No penomoran existing) ditulis ke **log existing** (Log Monitoring) dengan Submit ID.
 
 ## Hak akses tampilan
 | Pengguna | Header (level case) | Detail destinasi | Hold / Release (destinasi) | Create ASN |
@@ -100,7 +100,7 @@ Kolom PO No, Last PO Date, dan ASN No tidak ada lagi di header.
 Pesan sukses submit (*"{ASN No} submitted with status Created. {n} cases are locked. Delivery {Delivery Date} · {Rit}. The ASN is shown in ASN Inquiry."*) tidak lagi berupa popup; menjadi **LOG2** batch X14 di Log Monitoring.
 
 ## Simulasi di prototype
-- **Konflik hold:** View as Supplier → Search → centang PART-A 13-Oct → pindah ke View as D/S team → expand PART-A 13-Oct → N · Hold salah satu destinasi → kembali ke Supplier (centang masih ada) → Create ASN → muncul pesan Hold, unit ter-uncheck, Case List tidak terbuka. Tiap View as punya seleksi sendiri (seperti 2 user).
+- **Konflik hold:** View as Supplier → Search → centang PART-A 13-Oct → pindah ke View as D/S team → expand PART-A 13-Oct → N · Hold salah satu destinasi → kembali ke Supplier (centang masih ada) → Create ASN → muncul pesan Hold, Case List tidak terbuka, semua centang dihapus dan delivery plan otomatis di-refresh (lihat "refreshed hh:mm:ss" di sebelah counter). Tiap View as punya seleksi sendiri (seperti 2 user).
 - **Submit batch:** Create ASN → Submit ASN → Yes → banner Submit ID → hasil di menu **Log Monitoring**.
 - Penjelasan backend lengkap: menu **Common → ASN Backend Process**.
 

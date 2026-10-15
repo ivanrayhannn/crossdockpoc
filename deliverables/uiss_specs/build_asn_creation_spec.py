@@ -96,7 +96,8 @@ spec = {
   {"caption": "4. D/S team: destination on hold; the unit is computed again (Ready)", "image": f"{IMG}/c_04_ds_hold.png"},
   {"caption": "5. Units of different Customer Order Dates selected", "image": f"{IMG}/c_05_selected.png"},
   {"caption": "5a. Other session (D/S team) holds a destination of a ticked unit", "image": f"{IMG}/c_05a_ds_hold_other_session.png"},
-  {"caption": "5b. Create ASN: hold message, the unit is unticked, create fails", "image": f"{IMG}/c_05c_hold_conflict.png"},
+  {"caption": "5b. Create ASN: hold message, the whole create fails", "image": f"{IMG}/c_05c_hold_conflict.png"},
+  {"caption": "5c. Delivery plan refreshed automatically, all units unticked", "image": f"{IMG}/c_05d_after_refresh.png"},
   {"caption": "6. Case List sub screen", "image": f"{IMG}/c_06_case_list.png"},
   {"caption": "7. Case List: PO detail of a case", "image": f"{IMG}/c_07_case_expand.png"},
   {"caption": "8. Submit confirmation", "image": f"{IMG}/c_08_confirm.png"},
@@ -187,14 +188,14 @@ spec = {
   {"type": "bullets", "marker": "a.", "level": 2, "items": [
     "The user ticks one or more Ready units, also of different Customer Order Dates and Part Numbers. A unit is never split.",
     "[Create ASN] does the real mapping of the selected units in one transaction: PO_MAPPED_FLAG = 'Y' on their H0253 lines, mapped qty on the Pra Daily Order parts, and the ASN draft in #TEMP_ASN_DRAFT (one case per Part Number + Customer Order Date + destination). Then the Case List opens.",
-    "Before mapping, the ticked units are re-checked in the same transaction (row lock on the H0253 lines): if a line got HOLD_FLAG = 'Y' after the unit was ticked (e.g. the D/S team held a destination in another session), the creation fails for the whole selection: message no. 8 (Hold), the delivery plan is refreshed and the held units are unticked. If a unit is no longer Ready for another reason (changed by another user), message no. 7.",
+    "Before mapping, the ticked units are re-checked in the same transaction (row lock on the H0253 lines): if a line got HOLD_FLAG = 'Y' after the unit was ticked (e.g. the D/S team held a destination in another session), the creation fails for the whole selection (also the units that are not held): message no. 8 (Hold), the delivery plan is refreshed automatically and all ticked units are unticked. If a unit is no longer Ready for another reason (changed by another user), message no. 7.",
     "[Back] / [Cancel] on the Case List release the mapping (flags and mapped qty back) and clear the draft."]},
   {"type": "heading", "text": "5.5 Case List and Submit ASN"},
   {"type": "bullets", "marker": "a.", "level": 2, "items": [
     "The summary shows ASN No (assigned on submit), supplier, Delivery Date · Rit · Route of the Search, Delivery Qty (pcs) and number of cases.",
     "Each case shows Case Number, Part Number and Qty; the expand shows PO No, Manifest No, Manifest Item No and PO Qty. Customer order data is not shown here.",
     "[Download Case Label]: TBD (format, file name, content).",
-    "[Submit ASN]: confirmation (message no. 4). Yes: a Submit ID is generated and the draft is handed to the batch X14 ASN Submit (UISS X14), which inserts TB_R_ASN_CROSSDOCK_H (ASN_STATUS '1' Created) and TB_R_ASN_CROSSDOCK_D with the existing ASN / case numbering. The screen returns to the delivery plan and shows the Submit ID (message no. 6); there is no success popup. The result message is written by X14 to the existing log (Log Monitoring)."]},
+    "[Submit ASN]: confirmation (message no. 4). Yes: the draft is handed with a Submit ID to the batch X14 ASN Submit (UISS X14); the submit process follows the existing ASN. X14 inserts TB_R_ASN_CROSSDOCK_H (ASN_STATUS '1' Created) and TB_R_ASN_CROSSDOCK_D with the existing ASN / case numbering. The screen returns to the delivery plan and shows the Submit ID (message no. 6); there is no success popup. The result message is written by X14 to the existing log (Log Monitoring)."]},
   {"type": "heading", "text": "5.6 Notes"},
   {"type": "bullets", "marker": "-", "level": 2, "items": [
     "#TB_R_INSTRUCTION and #TEMP_ASN_DRAFT are temporary tables. Submitted ASNs are shown in ASN Inquiry (X13).",
@@ -210,7 +211,7 @@ spec = {
   {"event": "Click [Create ASN]", "cause": "A selected unit is no longer Ready", "type": "Error", "msg_id": "MSG7", "message": "{Part No} / {Customer Order Date} is no longer Ready. The delivery plan is refreshed.", "action": "Select again."},
   {"event": "Click [Submit ASN] button", "cause": "Confirmation", "type": "Confirm", "msg_id": "MSG4", "message": "Submit ASN? {n} cases ({q} pcs) will be created into {ASN No}, delivery {Delivery Date} · {Rit}.", "action": "Click [Yes, submit] or [No]."},
   {"event": "Click [Yes, submit]", "cause": "Submit handed to the batch X14", "type": "Info", "msg_id": "MSG6", "message": "Submit ID {Submit ID} is sent to the ASN submit batch. The result is written to Log Monitoring.", "action": "Check Log Monitoring."},
-  {"event": "Click [Create ASN]", "cause": "A ticked unit has an order put on hold by the D/S team after it was ticked", "type": "Error", "msg_id": "MSG8", "message": "Some order has been already hold, please select other records", "action": "Click [OK]; the list is refreshed; select other records."}],
+  {"event": "Click [Create ASN]", "cause": "A ticked unit has an order put on hold by the D/S team after it was ticked", "type": "Error", "msg_id": "MSG8", "message": "Some order has been already hold, please select other records", "action": "Click [OK]; the delivery plan is already refreshed and all units are unticked; select again."}],
  "logging_messages": [
   {"event": "Click [Create ASN]", "cause": "Database error on mapping / draft", "type": "Error", "msg_id": "LOG1", "message": "Failed to create the ASN draft: <DB error message>.", "exception": "Y", "action": "Roll back; show [Corresponding Screen Message] on screen (TBD)"}],
  "tables": [INSTR_TABLE, DRAFT_TABLE]

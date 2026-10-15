@@ -584,8 +584,12 @@
    "image": "deliverables/uiss_screens/asn_crossdock/c_05a_ds_hold_other_session.png"
   },
   {
-   "caption": "5b. Create ASN: hold message, the unit is unticked, create fails",
+   "caption": "5b. Create ASN: hold message, the whole create fails",
    "image": "deliverables/uiss_screens/asn_crossdock/c_05c_hold_conflict.png"
+  },
+  {
+   "caption": "5c. Delivery plan refreshed automatically, all units unticked",
+   "image": "deliverables/uiss_screens/asn_crossdock/c_05d_after_refresh.png"
   },
   {
    "caption": "6. Case List sub screen",
@@ -1815,7 +1819,7 @@
    "items": [
     "The user ticks one or more Ready units, also of different Customer Order Dates and Part Numbers. A unit is never split.",
     "[Create ASN] does the real mapping of the selected units in one transaction: PO_MAPPED_FLAG = 'Y' on their H0253 lines, mapped qty on the Pra Daily Order parts, and the ASN draft in #TEMP_ASN_DRAFT (one case per Part Number + Customer Order Date + destination). Then the Case List opens.",
-    "Before mapping, the ticked units are re-checked in the same transaction (row lock on the H0253 lines): if a line got HOLD_FLAG = 'Y' after the unit was ticked (e.g. the D/S team held a destination in another session), the creation fails for the whole selection: message no. 8 (Hold), the delivery plan is refreshed and the held units are unticked. If a unit is no longer Ready for another reason (changed by another user), message no. 7.",
+    "Before mapping, the ticked units are re-checked in the same transaction (row lock on the H0253 lines): if a line got HOLD_FLAG = 'Y' after the unit was ticked (e.g. the D/S team held a destination in another session), the creation fails for the whole selection (also the units that are not held): message no. 8 (Hold), the delivery plan is refreshed automatically and all ticked units are unticked. If a unit is no longer Ready for another reason (changed by another user), message no. 7.",
     "[Back] / [Cancel] on the Case List release the mapping (flags and mapped qty back) and clear the draft."
    ]
   },
@@ -1831,7 +1835,7 @@
     "The summary shows ASN No (assigned on submit), supplier, Delivery Date \u00b7 Rit \u00b7 Route of the Search, Delivery Qty (pcs) and number of cases.",
     "Each case shows Case Number, Part Number and Qty; the expand shows PO No, Manifest No, Manifest Item No and PO Qty. Customer order data is not shown here.",
     "[Download Case Label]: TBD (format, file name, content).",
-    "[Submit ASN]: confirmation (message no. 4). Yes: a Submit ID is generated and the draft is handed to the batch X14 ASN Submit (UISS X14), which inserts TB_R_ASN_CROSSDOCK_H (ASN_STATUS '1' Created) and TB_R_ASN_CROSSDOCK_D with the existing ASN / case numbering. The screen returns to the delivery plan and shows the Submit ID (message no. 6); there is no success popup. The result message is written by X14 to the existing log (Log Monitoring)."
+    "[Submit ASN]: confirmation (message no. 4). Yes: the draft is handed with a Submit ID to the batch X14 ASN Submit (UISS X14); the submit process follows the existing ASN. X14 inserts TB_R_ASN_CROSSDOCK_H (ASN_STATUS '1' Created) and TB_R_ASN_CROSSDOCK_D with the existing ASN / case numbering. The screen returns to the delivery plan and shows the Submit ID (message no. 6); there is no success popup. The result message is written by X14 to the existing log (Log Monitoring)."
    ]
   },
   {
@@ -1920,7 +1924,7 @@
    "type": "Error",
    "msg_id": "MSG8",
    "message": "Some order has been already hold, please select other records",
-   "action": "Click [OK]; the list is refreshed; select other records."
+   "action": "Click [OK]; the delivery plan is already refreshed and all units are unticked; select again."
   }
  ],
  "logging_messages": [

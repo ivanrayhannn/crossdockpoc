@@ -14,7 +14,11 @@ interface Loaded {
   deliveryDate: string;
   ritNo: string;
   route: string;
+  /** Time of the last Search / automatic refresh. */
+  at: string;
 }
+
+const nowTime = () => new Date().toTimeString().slice(0, 8);
 
 const STATUS_LABEL: Record<UnitStatus, string> = { ready: 'Ready', notReady: 'Not Ready', created: 'Created', hold: 'On Hold' };
 
@@ -105,7 +109,7 @@ export function AsnCrossdockCreationPage() {
 
   const getOrder = () => {
     if (!rit) return;
-    setLoaded({ deliveryDate, ritNo: rit.no, route: rit.route });
+    setLoaded({ deliveryDate, ritNo: rit.no, route: rit.route, at: nowTime() });
     setSel({});
     setNotice(null);
     setOpen({});
@@ -122,9 +126,10 @@ export function AsnCrossdockCreationPage() {
   const createAsn = () => {
     const conflict = ticked.filter((u) => u.heldLines.length > (sel[u.key] ?? 0) || u.status !== 'ready');
     if (conflict.length) {
-      const next = { ...sel };
-      conflict.forEach((u) => delete next[u.key]);
-      setSel(next);
+      // The whole create fails: every ticked unit is unticked and the delivery plan is refreshed automatically.
+      setSel({});
+      setOpen({});
+      setLoaded((l) => (l ? { ...l, at: nowTime() } : l));
       setHoldConflict(true);
       return;
     }
@@ -282,7 +287,7 @@ export function AsnCrossdockCreationPage() {
             <span style={{ fontSize: 12.5, fontWeight: 600 }}>Delivery plan</span>{' '}
             {loaded && (
               <span style={{ fontSize: 11.5, color: 'var(--color-neutral-600)' }}>
-                {niceDate(loaded.deliveryDate)} · {loaded.ritNo} · {loaded.route} — {rows.length} units · {rows.filter((u) => u.status === 'ready').length} ready · {rows.filter((u) => u.status === 'notReady').length} not ready
+                {niceDate(loaded.deliveryDate)} · {loaded.ritNo} · {loaded.route} — {rows.length} units · {rows.filter((u) => u.status === 'ready').length} ready · {rows.filter((u) => u.status === 'notReady').length} not ready · refreshed {loaded.at}
               </span>
             )}
           </div>
@@ -400,7 +405,7 @@ export function AsnCrossdockCreationPage() {
 
       {holdConflict && (
         <Modal title="Hold" onClose={() => setHoldConflict(false)} actions={<button className="btn btn-primary" onClick={() => setHoldConflict(false)}>OK</button>}>
-          Some order has been already hold, please select other records.
+          Some order has been already hold, please select other records. The delivery plan has been refreshed.
         </Modal>
       )}
     </div>

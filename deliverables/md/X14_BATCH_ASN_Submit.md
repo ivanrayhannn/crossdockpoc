@@ -3,7 +3,7 @@
 Sumber: UISS-Batch `X14_UISS_Batch_ASNSubmit.xlsx` (0.1 Initial Draft, 15-Oct-26). Dipanggil dari **[Submit ASN] → Yes** di ASN Crossdock Creation (X8).
 
 ## Poin utama
-- Submit ASN dibuat **batch** supaya layar tidak menunggu. X8 membuat **Submit ID**, menyerahkan draft (#TEMP_ASN_DRAFT) ke batch, lalu kembali ke delivery plan dengan banner Submit ID.
+- Submit ASN dibuat **batch** supaya layar tidak menunggu. **Proses submit (Submit ID, pemanggilan batch, log) mengikuti ASN existing.** X8 membuat **Submit ID**, menyerahkan draft (#TEMP_ASN_DRAFT) ke batch, lalu kembali ke delivery plan dengan banner Submit ID.
 - Batch mengambil **ASN No** dan **Case No** dari **penomoran existing** (last sequence table), lalu insert header + case.
 - Hasil ditulis ke **log existing** (Log Monitoring) dengan Submit ID; **tidak ada popup sukses** di layar.
 - **All-or-nothing**: gagal → roll back, mapping dari Create ASN dilepas (PO_MAPPED_FLAG kembali N, qty PO kembali), log error.
@@ -64,5 +64,4 @@ Sumber: UISS-Batch `X14_UISS_Batch_ASNSubmit.xlsx` (0.1 Initial Draft, 15-Oct-26
 | CHANGED_DT | DATETIME | Last changed date and time |
 
 ## Open points
-- Format Submit ID dan tabel log dari framework batch existing.
 - Konfirmasi TB_R_ASN_CROSSDOCK_H / _D atau pakai tabel ASN existing.
