@@ -33,6 +33,8 @@ FUNCTIONS = [
      'TB_R_ASN_CROSSDOCK_H / _D', 'Display, case label', 'Yes'),
     ('X14', 'ASN Submit', 'Batch', 'System ([Submit ASN] in X8)', 'B. Daily operation', 'On demand (Submit ID)',
      '#TEMP_ASN_DRAFT, Submit ID', 'TB_R_ASN_CROSSDOCK_H / _D, log (existing)', 'Yes (in X8 + Log Monitoring)'),
+    ('X15', 'Menu Settings (admin panel)', 'Screen', 'Admin', 'Common', 'On demand',
+     'Sidebar menu list', 'TB_M_MENU_VISIBILITY (show / hide)', 'Yes'),
 ]
 
 # function, topic, question, proposal, impact if open
@@ -59,6 +61,7 @@ CONFIRMATIONS = [
     ('X1-X4', 'Panjang kolom', 'Panjang VARCHAR kolom (PART_NO dll.) dan nama field Part Name di TB_M_PART_MASTER.', 'Ikuti TB_M_PART_MASTER.', 'Masih VARCHAR(TBD) di Appendix.'),
     ('X2 / X4', 'Template & log', 'Lokasi file template dan result report; retensi Log upload.', 'Shared folder NSP; retensi 12 bulan.', 'Operation description upload.'),
     ('X1', 'Akun read only', 'Definisi akun read-only ([View]) untuk Part List.', 'Role Viewer: hanya Search / Export.', 'Screen mode View.'),
+    ('X15', 'Menu Settings', 'Pengaturan show / hide menu berlaku per role atau global, dan siapa yang boleh membuka layar ini?', 'Per role; hanya admin.', 'Struktur TB_M_MENU_VISIBILITY.'),
     ('X1', 'Effective Start Date', 'Kalimat "Effective Start Date" yang menggantung di Op Desc 5.4 a.4 (UISS X1): aturan apa yang dimaksud?', 'Default besok, minimum hari ini, wajib diisi.', 'Op Desc X1 belum lengkap.'),
 ]
 
@@ -68,20 +71,20 @@ TASKS = [
     ('Finalisasi struktur Pra Daily Order (mapped qty) di UISS X8 / X12', 'X8 / X12', 'Dokumen', 'FID Rayhan', 'Konfirmasi no. 9', 'Waiting confirmation', 'High'),
     ('Isi jadwal & retry di Schedule sheet UISS X5, X9-X11', 'X5, X9-X11', 'Dokumen', 'FID Rayhan', 'Konfirmasi no. 10-12', 'Waiting confirmation', 'Medium'),
     ('Buat UISS-Batch RPA Sync (jika disetujui)', 'X3', 'Dokumen', 'FID Rayhan', 'Konfirmasi no. 16-17', 'Not started', 'Medium'),
-    ('Lengkapi panjang VARCHAR dan nama field di Appendix semua UISS', 'X1-X14', 'Dokumen', 'FID Rayhan', 'Konfirmasi no. 20', 'Waiting confirmation', 'Low'),
-    ('Review UISS X1-X14 versi 0.1 oleh user / reviewer', 'X1-X14', 'Review', 'User', '-', 'Not started', 'High'),
+    ('Lengkapi panjang VARCHAR dan nama field di Appendix semua UISS', 'X1-X15', 'Dokumen', 'FID Rayhan', 'Konfirmasi no. 20', 'Waiting confirmation', 'Low'),
+    ('Review UISS X1-X15 versi 0.1 oleh user / reviewer', 'X1-X15', 'Review', 'User', '-', 'Not started', 'High'),
     ('Tambah kolom SERIAL_NO di tabel / query H0253 sumber', 'X10', 'Data', 'Tim DB Surrounding', 'Konfirmasi no. 15', 'Not started', 'High'),
     ('Tambah kolom HOLD_FLAG / PO_MAPPED_FLAG di H0253 NSP dan cara mempertahankannya saat sync', 'X10', 'Data', 'Tim NSP / IT', 'Konfirmasi no. 7', 'Not started', 'High'),
     ('Konfirmasi struktur tabel Pra Daily Order dan route master', 'X8, X12', 'Data', 'Tim NSP / IT', '-', 'Not started', 'High'),
     ('Prototype: Download Case Label sesuai format', 'X8 / X13', 'Prototype', 'FID Rayhan', 'Konfirmasi no. 1', 'Waiting confirmation', 'Medium'),
     ('Prototype: Cancel ASN di ASN Inquiry (jika diperlukan)', 'X13', 'Prototype', 'FID Rayhan', 'Konfirmasi no. 8', 'Waiting confirmation', 'Low'),
-    ('Susun testing strategy & test scenario (unit, integration, UAT) X1-X14', 'X1-X14', 'Testing', 'FID Rayhan', 'UISS final', 'Not started', 'High'),
+    ('Susun testing strategy & test scenario (unit, integration, UAT) X1-X15', 'X1-X15', 'Testing', 'FID Rayhan', 'UISS final', 'Not started', 'High'),
     ('Definisikan proses lanjutan setelah ASN (penerimaan di crossdock, pengiriman ke destinasi)', 'Next scope', 'Analisis', 'FID Rayhan / User', 'Arahan user', 'Not started', 'Medium'),
     ('Susun BRD / TSD (jika dibutuhkan proyek)', 'All', 'Dokumen', 'FID Rayhan', 'Arahan user', 'Not started', 'Low'),
 ]
 
 DONE = [
-    'UISS 14 fungsi (X1-X14) versi 0.1 + file .md per fungsi',
+    'UISS 15 fungsi (X1-X15) versi 0.1 + file .md per fungsi',
     'Prototype Part List, Mapping per Destination, ASN Crossdock Creation, ASN Inquiry (GitHub Pages)',
     'Rumus kalkulasi DAD (X6) dan mapping destinasi (X7) termasuk aturan pembulatan, dikonfirmasi 14-Oct-26',
     'Struktur tabel H0202 / H0253 / H0125 dari I/F layout G-TOPAS, termasuk SERIAL_NO',

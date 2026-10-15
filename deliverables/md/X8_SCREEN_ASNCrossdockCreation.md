@@ -95,7 +95,7 @@ Kolom PO No, Last PO Date, dan ASN No tidak ada lagi di header.
 | MSG5 | Tidak ada rit | No rit cycle available for {Delivery Date}. Choose another delivery date. |
 | MSG6 | Klik Yes, submit | Submit ID {Submit ID} is sent to the ASN submit batch. The result is written to Log Monitoring. |
 | MSG7 | Create ASN, unit sudah tidak Ready | {Part No} / {Customer Order Date} is no longer Ready. The delivery plan is refreshed. |
-| MSG8 | Create ASN, ada order yang sudah di-hold D/S (sesi lain) | **Hold:** Some order has been already hold, please select other records |
+| MSG8 | Create ASN, ada order yang sudah di-hold D/S (sesi lain) | **Hold:** Some order has been already hold, please select other records. The delivery plan has been refreshed. |
 
 Pesan sukses submit (*"{ASN No} submitted with status Created. {n} cases are locked. Delivery {Delivery Date} · {Rit}. The ASN is shown in ASN Inquiry."*) tidak lagi berupa popup; menjadi **LOG2** batch X14 di Log Monitoring.
 

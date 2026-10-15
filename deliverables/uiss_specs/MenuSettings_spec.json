@@ -1,0 +1,382 @@
+{
+ "doc_type": "screen",
+ "header": {
+  "phase": "DR",
+  "project_name": "Crossdock Optimization",
+  "block_name": "Screen",
+  "function_name": "X15 Menu Settings",
+  "created_date": "15-Oct-26",
+  "created_by": "FID Rayhan"
+ },
+ "revisions": [
+  {
+   "revision": "0.1",
+   "author": "FID Rayhan",
+   "date": "15-Oct-26",
+   "reviewed_by": "",
+   "description": "Initial Draft"
+  }
+ ],
+ "general": {
+  "objective": [
+   "To let the admin choose which menus are shown in the sidebar.",
+   "Changes apply at once; Menu Settings itself is always shown so hidden menus can be shown again."
+  ],
+  "display_order": [
+   {
+    "section": "Menu groups",
+    "fields": [
+     {
+      "field": "Sidebar order of groups and menus",
+      "order": "-"
+     }
+    ]
+   }
+  ],
+  "buttons": [
+   {
+    "name": "Show (check box)",
+    "function": "Show (ticked) or hide (unticked) one menu."
+   },
+   {
+    "name": "Show all (group)",
+    "function": "Show every menu of the group."
+   },
+   {
+    "name": "Hide all (group)",
+    "function": "Hide every menu of the group (except Menu Settings)."
+   },
+   {
+    "name": "Show all",
+    "function": "Show every menu of the sidebar."
+   }
+  ],
+  "screen_modes": [
+   {
+    "mode": "Initial Mode",
+    "sections": [
+     {
+      "section": "Header",
+      "description": "'{n} of {m} menus shown'",
+      "buttons": {
+       "Show (check box)": "D",
+       "Show all (group)": "D",
+       "Hide all (group)": "D",
+       "Show all": "E"
+      }
+     },
+     {
+      "section": "Menu groups",
+      "description": "One card per sidebar group with its menus",
+      "buttons": {
+       "Show (check box)": "E",
+       "Show all (group)": "E",
+       "Hide all (group)": "E",
+       "Show all": "D"
+      }
+     }
+    ]
+   }
+  ],
+  "screen_mode_remarks": [
+   "1) The check box of Menu Settings is disabled ('always shown').",
+   "2) [Show all] is disabled when no menu is hidden."
+  ]
+ },
+ "screen_flow": [
+  {
+   "title": "Screen Flow - Menu Settings",
+   "flow": {
+    "direction": "LR",
+    "nodes": [
+     {
+      "id": "m",
+      "label": "Menu Settings",
+      "type": "screen"
+     },
+     {
+      "id": "s",
+      "label": "Sidebar (all screens)",
+      "type": "screen"
+     }
+    ],
+    "edges": [
+     {
+      "from": "m",
+      "to": "s",
+      "label": "show / hide at once"
+     }
+    ]
+   }
+  }
+ ],
+ "screen_layout": [
+  {
+   "caption": "1. Menu Settings: two menus hidden",
+   "image": "deliverables/uiss_screens/asn_crossdock/c_15_menu_settings.png"
+  }
+ ],
+ "items": [
+  {
+   "group": "<Header>"
+  },
+  {
+   "name": "Counter",
+   "source": "Computed",
+   "field": "-",
+   "type": "Char",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Right",
+   "initial": "-",
+   "required": "N",
+   "format": "-",
+   "validation": "-",
+   "description": "'{n} of {m} menus shown'."
+  },
+  {
+   "name": "Show all",
+   "source": "-",
+   "field": "-",
+   "type": "-",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "Enabled",
+   "required": "N",
+   "format": "-",
+   "validation": "-",
+   "description": "Shows every menu; disabled when none is hidden."
+  },
+  {
+   "group": "<Menu Group Card (one per sidebar group)>"
+  },
+  {
+   "name": "Group name / count",
+   "source": "TB_M_MENU_VISIBILITY",
+   "field": "MENU_GROUP",
+   "type": "Char",
+   "len": "50",
+   "io": "O",
+   "control": "Label",
+   "justified": "Left",
+   "initial": "-",
+   "required": "N",
+   "format": "-",
+   "validation": "-",
+   "description": "Group name and '{shown}/{total}'."
+  },
+  {
+   "name": "Show all (group)",
+   "source": "-",
+   "field": "-",
+   "type": "-",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "Enabled",
+   "required": "N",
+   "format": "-",
+   "validation": "-",
+   "description": "Shows the menus of the group."
+  },
+  {
+   "name": "Hide all (group)",
+   "source": "-",
+   "field": "-",
+   "type": "-",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "Enabled",
+   "required": "N",
+   "format": "-",
+   "validation": "-",
+   "description": "Hides the menus of the group except Menu Settings."
+  },
+  {
+   "name": "Show (check box)",
+   "source": "TB_M_MENU_VISIBILITY",
+   "field": "SHOW_FLAG",
+   "type": "Char",
+   "len": "1",
+   "io": "I",
+   "control": "CheckBox",
+   "justified": "Center",
+   "initial": "From the setting",
+   "required": "N",
+   "format": "-",
+   "validation": "Menu Settings always ticked (disabled)",
+   "description": "Ticked = shown in the sidebar."
+  },
+  {
+   "name": "Menu name",
+   "source": "TB_M_MENU_VISIBILITY",
+   "field": "MENU_ITEM",
+   "type": "Char",
+   "len": "100",
+   "io": "O",
+   "control": "Label",
+   "justified": "Left",
+   "initial": "-",
+   "required": "N",
+   "format": "-",
+   "validation": "-",
+   "description": "Greyed when hidden; note 'always shown' for Menu Settings, 'existing menu' for menus not built in this project."
+  }
+ ],
+ "data_map": {
+  "blocks": [
+   {
+    "source": "Key-in from screen",
+    "destination": {
+     "table": "TB_M_MENU_VISIBILITY",
+     "operation": "Update",
+     "description": "Check box / Show all / Hide all",
+     "keys": [
+      {
+       "field": "ROLE_CD + MENU_ITEM",
+       "value": "Menu of the action"
+      }
+     ]
+    },
+    "mappings": [
+     {
+      "dest_field": "SHOW_FLAG",
+      "description": "'Y' when ticked / Show all; 'N' when unticked / Hide all"
+     },
+     {
+      "dest_field": "ROLE_CD",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "MENU_GROUP",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "MENU_ITEM",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "CREATED_BY",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "CREATED_DT",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "CHANGED_BY",
+      "description": "Login user ID"
+     },
+     {
+      "dest_field": "CHANGED_DT",
+      "description": "Server system date-time"
+     }
+    ]
+   }
+  ]
+ },
+ "operation": [
+  {
+   "type": "heading",
+   "text": "5.1 Show / Hide"
+  },
+  {
+   "type": "bullets",
+   "marker": "a.",
+   "level": 2,
+   "items": [
+    "The screen lists every sidebar group as a card with its menus and a check box per menu (ticked = shown).",
+    "Ticking / unticking a menu, [Show all] / [Hide all] of a group and [Show all] of the header save at once and the sidebar is redrawn; there is no Save button.",
+    "A group whose menus are all hidden is not shown in the sidebar.",
+    "Menu Settings can never be hidden."
+   ]
+  },
+  {
+   "type": "heading",
+   "text": "5.2 Notes"
+  },
+  {
+   "type": "bullets",
+   "marker": "-",
+   "level": 2,
+   "items": [
+    "Prototype: the setting is kept in the browser. In NSP it is saved in TB_M_MENU_VISIBILITY (proposed); per role or global is TBD.",
+    "Access to this screen: admin only (TBD)."
+   ]
+  }
+ ],
+ "display_messages": [],
+ "logging_messages": [],
+ "tables": [
+  {
+   "name": "TB_M_MENU_VISIBILITY",
+   "kind": "master",
+   "proposed": true,
+   "description": "Sidebar menu visibility. Name and columns proposed.",
+   "columns": [
+    [
+     "ROLE_CD",
+     "VARCHAR(TBD)",
+     "Y",
+     "N",
+     "Role the setting applies to (TBD: per role or global)"
+    ],
+    [
+     "MENU_GROUP",
+     "VARCHAR(50)",
+     "",
+     "N",
+     "Sidebar group, e.g. ASN, Common"
+    ],
+    [
+     "MENU_ITEM",
+     "VARCHAR(100)",
+     "Y",
+     "N",
+     "Sidebar menu, e.g. Case Consolidation Simulation"
+    ],
+    [
+     "SHOW_FLAG",
+     "VARCHAR(1)",
+     "",
+     "N",
+     "'Y' shown / 'N' hidden"
+    ],
+    [
+     "CREATED_BY",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "User who created the record"
+    ],
+    [
+     "CREATED_DT",
+     "DATETIME",
+     "",
+     "N",
+     "Created date and time"
+    ],
+    [
+     "CHANGED_BY",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "User who last changed the record"
+    ],
+    [
+     "CHANGED_DT",
+     "DATETIME",
+     "",
+     "N",
+     "Last changed date and time"
+    ]
+   ]
+  }
+ ]
+}
