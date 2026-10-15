@@ -1,6 +1,6 @@
 """Spec for X8_UISS_Screen_ASNCrossdockCreation.xlsx (UISS-Screen, ASN Crossdock Creation with its Case List sub screen)."""
 import json, sys
-from asn_common import (ASND, ASND_COLS, ASND_TABLE, ASNH, ASNH_TABLE, DM, DRAFT, DRAFT_COLS, DRAFT_TABLE, H0253, INSTR, INSTR_TABLE, NC, PRA_P,
+from asn_common import (ASNH, DM, DRAFT, DRAFT_COLS, DRAFT_TABLE, H0253, INSTR, INSTR_TABLE, NC, PRA_P,
                         btn, header, it, out, revisions)
 
 IMG = 'deliverables/uiss_screens/asn_crossdock'
@@ -39,7 +39,7 @@ spec = {
    {"name": "PO detail (expand)", "function": "Show / hide PO No, Manifest No, Manifest Item No and PO Qty of a case."},
    {"name": "Download Case Label", "function": "Download the labels of all cases of the ASN. TBD: label format and content."},
    {"name": "Cancel", "function": "Same as Back."},
-   {"name": "Submit ASN", "function": "Ask for confirmation, then save the ASN with status Created."},
+   {"name": "Submit ASN", "function": "Ask for confirmation, then hand the ASN to the batch X14 with a Submit ID; the result is written to the log."},
    {"name": "Yes / No", "function": "Confirmation of Submit ASN (Submit? Y / N)."},
    {"name": "OK", "function": "Close the success notification."}],
   "screen_modes": [
@@ -59,7 +59,7 @@ spec = {
      {"section": "Footer", "description": "Submit enabled when there are cases", "buttons": modes(["Cancel", "Submit ASN"])}]},
    {"mode": "Confirmation / Notification", "sections": [
      {"section": "Submit confirmation", "description": "'Submit ASN?' Yes / No", "buttons": modes(["Yes / No"])},
-     {"section": "Success notification", "description": "ASN submitted (Created); back to the list", "buttons": modes(["OK"])}]}],
+     {"section": "Success notification", "description": "Submit ID banner on the delivery plan; result in Log Monitoring", "buttons": modes(["OK"])}]}],
   "screen_mode_remarks": [
    "1) The check box of a unit is enabled only when its ASN Status is Ready (message no. 1 or 2 as tooltip otherwise).",
    "2) Units of different Customer Order Dates and Part Numbers can be ticked together; each unit always goes into the ASN as a whole.",
@@ -95,10 +95,12 @@ spec = {
   {"caption": "3. D/S team: destination detail (Pcs/Case, Hold Flag) and customer orders of a destination", "image": f"{IMG}/c_03_ds_detail.png"},
   {"caption": "4. D/S team: destination on hold; the unit is computed again (Ready)", "image": f"{IMG}/c_04_ds_hold.png"},
   {"caption": "5. Units of different Customer Order Dates selected", "image": f"{IMG}/c_05_selected.png"},
+  {"caption": "5a. Other session (D/S team) holds a destination of a ticked unit", "image": f"{IMG}/c_05a_ds_hold_other_session.png"},
+  {"caption": "5b. Create ASN: hold message, the unit is unticked, create fails", "image": f"{IMG}/c_05c_hold_conflict.png"},
   {"caption": "6. Case List sub screen", "image": f"{IMG}/c_06_case_list.png"},
   {"caption": "7. Case List: PO detail of a case", "image": f"{IMG}/c_07_case_expand.png"},
   {"caption": "8. Submit confirmation", "image": f"{IMG}/c_08_confirm.png"},
-  {"caption": "9. Success notification", "image": f"{IMG}/c_09_submitted.png"},
+  {"caption": "9. Submit ID banner (result in Log Monitoring)", "image": f"{IMG}/c_09_submit_id.png"},
   {"caption": "10. Delivery plan after submit (Created units are no longer listed)", "image": f"{IMG}/c_10_list_after.png"}],
  "items": [
   {"group": "<Delivery Section>"},
@@ -162,22 +164,7 @@ spec = {
                 {"dest_field": "LINE_SEQ", "description": "Sequence within the case"}] +
                [{"source_field": c[0], "dest_field": c[0]} for c in DRAFT_COLS if c[0] in ("PART_NO", "ORDER_DT", "DESTINATION_CD", "CUSTOMER_CD", "CUSTOMER_ORDER_NO", "DETAILED_ITEM_NO", "SERIAL_NO", "PO_NO", "MANIFEST_NO", "MANIFEST_ITEM_NO", "PO_ORDER_QTY")] +
                [{"source_field": "ASSIGNED_QTY", "dest_field": "QTY"}, {"source_field": "Delivery Date", "dest_field": "DELIVERY_DT"},
-                {"source_field": "Rit", "dest_field": "RIT_CYCLE"}, {"source_field": "Route", "dest_field": "ROUTE"}]},
-  {"source": DRAFT, "destination": {"table": ASNH, "operation": "Insert", "description": "Case List - [Submit ASN] Yes"},
-   "mappings": [
-     {"dest_field": "ASN_NO", "description": "Existing ASN numbering"},
-     {"source_field": "Supplier", "dest_field": "SUPPLIER_CD"}, {"source_field": "Plant", "dest_field": "SUPPLIER_PLANT"},
-     {"source_field": "DELIVERY_DT", "dest_field": "DELIVERY_DT"}, {"source_field": "RIT_CYCLE", "dest_field": "RIT_CYCLE"},
-     {"source_field": "ROUTE", "dest_field": "ROUTE"}, {"dest_field": "TOTAL_CASE", "description": "Number of cases"},
-     {"dest_field": "TOTAL_QTY", "description": "Delivery Qty (sum of QTY)"}, {"dest_field": "ASN_STATUS", "description": "'1' Created"},
-     {"dest_field": "CREATED_BY", "description": "Login user ID"}, {"dest_field": "CREATED_DT", "description": "Server system date-time"},
-     {"dest_field": "CHANGED_BY", "description": "Login user ID"}, {"dest_field": "CHANGED_DT", "description": "Server system date-time"}]},
-  {"source": DRAFT, "destination": {"table": ASND, "operation": "Insert", "description": "Case List - [Submit ASN] Yes: every draft row"},
-   "mappings": [{"dest_field": "ASN_NO", "description": "ASN_NO of the header"},
-                {"dest_field": "CASE_NO", "description": "Existing case numbering (last sequence table), one per CASE_SEQ"}] +
-               [{"source_field": c[0], "dest_field": c[0]} for c in ASND_COLS if c[0] in ("LINE_SEQ", "PART_NO", "ORDER_DT", "DESTINATION_CD", "CUSTOMER_CD", "CUSTOMER_ORDER_NO", "DETAILED_ITEM_NO", "SERIAL_NO", "QTY", "PO_NO", "MANIFEST_NO", "MANIFEST_ITEM_NO", "PO_ORDER_QTY")] +
-               [{"dest_field": "CREATED_BY", "description": "Login user ID"}, {"dest_field": "CREATED_DT", "description": "Server system date-time"},
-                {"dest_field": "CHANGED_BY", "description": "Login user ID"}, {"dest_field": "CHANGED_DT", "description": "Server system date-time"}]}]},
+                {"source_field": "Rit", "dest_field": "RIT_CYCLE"}, {"source_field": "Route", "dest_field": "ROUTE"}]}]},
  "operation": [
   {"type": "heading", "text": "5.1 Initial Display and Search"},
   {"type": "bullets", "marker": "a.", "level": 2, "items": [
@@ -200,14 +187,14 @@ spec = {
   {"type": "bullets", "marker": "a.", "level": 2, "items": [
     "The user ticks one or more Ready units, also of different Customer Order Dates and Part Numbers. A unit is never split.",
     "[Create ASN] does the real mapping of the selected units in one transaction: PO_MAPPED_FLAG = 'Y' on their H0253 lines, mapped qty on the Pra Daily Order parts, and the ASN draft in #TEMP_ASN_DRAFT (one case per Part Number + Customer Order Date + destination). Then the Case List opens.",
-    "If a unit is no longer Ready (changed by another user), the creation is rejected (message no. 7) and the delivery plan is refreshed.",
+    "Before mapping, the ticked units are re-checked in the same transaction (row lock on the H0253 lines): if a line got HOLD_FLAG = 'Y' after the unit was ticked (e.g. the D/S team held a destination in another session), the creation fails for the whole selection: message no. 8 (Hold), the delivery plan is refreshed and the held units are unticked. If a unit is no longer Ready for another reason (changed by another user), message no. 7.",
     "[Back] / [Cancel] on the Case List release the mapping (flags and mapped qty back) and clear the draft."]},
   {"type": "heading", "text": "5.5 Case List and Submit ASN"},
   {"type": "bullets", "marker": "a.", "level": 2, "items": [
     "The summary shows ASN No (assigned on submit), supplier, Delivery Date · Rit · Route of the Search, Delivery Qty (pcs) and number of cases.",
     "Each case shows Case Number, Part Number and Qty; the expand shows PO No, Manifest No, Manifest Item No and PO Qty. Customer order data is not shown here.",
     "[Download Case Label]: TBD (format, file name, content).",
-    "[Submit ASN]: confirmation (message no. 4). Yes: insert TB_R_ASN_CROSSDOCK_H with ASN_STATUS '1' Created and TB_R_ASN_CROSSDOCK_D from the draft; ASN No and Case No follow the existing numbering (last sequence table). Display message no. 6; the units show Created."]},
+    "[Submit ASN]: confirmation (message no. 4). Yes: a Submit ID is generated and the draft is handed to the batch X14 ASN Submit (UISS X14), which inserts TB_R_ASN_CROSSDOCK_H (ASN_STATUS '1' Created) and TB_R_ASN_CROSSDOCK_D with the existing ASN / case numbering. The screen returns to the delivery plan and shows the Submit ID (message no. 6); there is no success popup. The result message is written by X14 to the existing log (Log Monitoring)."]},
   {"type": "heading", "text": "5.6 Notes"},
   {"type": "bullets", "marker": "-", "level": 2, "items": [
     "#TB_R_INSTRUCTION and #TEMP_ASN_DRAFT are temporary tables. Submitted ASNs are shown in ASN Inquiry (X13).",
@@ -221,12 +208,12 @@ spec = {
   {"event": "Change [Delivery Date]", "cause": "No rit on the date (Sunday)", "type": "Info", "msg_id": "MSG5", "message": "No rit cycle available for {Delivery Date}. Choose another delivery date.", "action": "Choose another Delivery Date."},
   {"group": "Create ASN / Case List"},
   {"event": "Click [Create ASN]", "cause": "A selected unit is no longer Ready", "type": "Error", "msg_id": "MSG7", "message": "{Part No} / {Customer Order Date} is no longer Ready. The delivery plan is refreshed.", "action": "Select again."},
-  {"event": "Click [Submit ASN] button", "cause": "Confirmation", "type": "Confirm", "msg_id": "MSG4", "message": "Submit ASN? {n} cases ({q} pcs) will be locked into {ASN No}, delivery {Delivery Date} · {Rit}.", "action": "Click [Yes, submit] or [No]."},
-  {"event": "Click [Yes, submit]", "cause": "ASN submitted", "type": "Info", "msg_id": "MSG6", "message": "{ASN No} submitted with status Created. {n} cases are locked. The ASN is shown in ASN Inquiry.", "action": "Click [OK]."}],
+  {"event": "Click [Submit ASN] button", "cause": "Confirmation", "type": "Confirm", "msg_id": "MSG4", "message": "Submit ASN? {n} cases ({q} pcs) will be created into {ASN No}, delivery {Delivery Date} · {Rit}.", "action": "Click [Yes, submit] or [No]."},
+  {"event": "Click [Yes, submit]", "cause": "Submit handed to the batch X14", "type": "Info", "msg_id": "MSG6", "message": "Submit ID {Submit ID} is sent to the ASN submit batch. The result is written to Log Monitoring.", "action": "Check Log Monitoring."},
+  {"event": "Click [Create ASN]", "cause": "A ticked unit has an order put on hold by the D/S team after it was ticked", "type": "Error", "msg_id": "MSG8", "message": "Some order has been already hold, please select other records", "action": "Click [OK]; the list is refreshed; select other records."}],
  "logging_messages": [
-  {"event": "Click [Create ASN]", "cause": "Database error on mapping / draft", "type": "Error", "msg_id": "LOG1", "message": "Failed to create the ASN draft: <DB error message>.", "exception": "Y", "action": "Roll back; show [Corresponding Screen Message] on screen (TBD)"},
-  {"event": "Click [Yes, submit]", "cause": "Database error on insert", "type": "Error", "msg_id": "LOG2", "message": "Failed to submit ASN <ASN_NO>: <DB error message>.", "exception": "Y", "action": "Roll back; show [Corresponding Screen Message] on screen (TBD)"}],
- "tables": [INSTR_TABLE, DRAFT_TABLE, ASNH_TABLE, ASND_TABLE]
+  {"event": "Click [Create ASN]", "cause": "Database error on mapping / draft", "type": "Error", "msg_id": "LOG1", "message": "Failed to create the ASN draft: <DB error message>.", "exception": "Y", "action": "Roll back; show [Corresponding Screen Message] on screen (TBD)"}],
+ "tables": [INSTR_TABLE, DRAFT_TABLE]
 }
 # Update blocks on H0253: every other column is not changed
 for blk in spec["data_map"]["blocks"][:2]:

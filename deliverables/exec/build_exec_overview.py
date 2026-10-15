@@ -80,7 +80,7 @@ wb = Workbook()
 # ---------------------------------------------------------------- Function Map
 fm = wb.active
 fm.title = 'Function Map'
-title(fm, 'Function Map', f'13 fungsi Crossdock Optimization (UISS X1-X13) · status per {AS_OF}', 12)
+title(fm, 'Function Map', f'{len(FUNCTIONS)} fungsi Crossdock Optimization (UISS X1-X{len(FUNCTIONS)}) · status per {AS_OF}', 12)
 cols = ['ID', 'Function', 'Type', 'User / Actor', 'Phase', 'Trigger / Frequency', 'Input', 'Output', 'Prototype', 'UISS', 'MD']
 header_row(fm, 6, cols)
 for w, col in zip([7, 32, 9, 22, 17, 22, 30, 34, 13, 11, 11], range(2, 13)):
@@ -187,7 +187,7 @@ COLS = [
     [(G, 'Source', 'Customer order\n(crossdock, status 7)', False)],
     [(N, 'X9 · X10', 'Replicate orders +\nsupplier PO\n(Pra Daily Order)', False)],
     [(S, 'X8 → X12', 'Search (Get Order):\norder ↔ PO pre-mapping\n→ Ready / Not Ready', False), (D, 'X8 detail', 'Monitor detail &\nhold destination', False)],
-    [(S, 'X8', 'Create ASN (mapping)\n→ Case List\n→ Submit (Created)', False)],
+    [(S, 'X8 → X14', 'Create ASN (mapping)\n→ Case List → Submit\n(batch, Submit ID)', False)],
     [(S, 'X13', 'ASN Inquiry &\ncase label', False)],
     [(S, 'Next scope', 'Deliver cases to\ncrossdock', True)],
 ]
@@ -318,7 +318,7 @@ for (hdr, rules, c0, c1) in (('Aturan kunci – Fase A', rules_a, step_col(0), s
 # legend
 lg = kr + 6
 bf.cell(lg, 2, 'Legenda').font = f(10, True, NAVY)
-items = [('D9E1F2', 'Kotak = langkah / fungsi; kode merah = UISS (X1-X13)'), (ARROW, 'Panah = urutan alur'),
+items = [('D9E1F2', 'Kotak = langkah / fungsi; kode merah = UISS (X1-X14)'), (ARROW, 'Panah = urutan alur'),
          (GREY, 'Abu-abu putus-putus = scope berikutnya (belum didesain)'), (WHITE, 'Garis merah putus-putus = batas fase')]
 for i, (col, txt) in enumerate(items):
     c = bf.cell(lg + 1 + i, 2)
@@ -381,7 +381,7 @@ ex.merge_cells(start_row=r + 1, start_column=8, end_row=r + 1, end_column=13)
 phases = [
     ('A. Master setup (bulanan)', 'X1, X2 Part List · X5, X11 replikasi data · X6 DAD calc · X7 mapping calc · X3, X4 mapping & sync',
      'Daftar part crossdock Active dan kapasitas case/day per destinasi untuk periode baru, tersinkron ke global system.'),
-    ('B. Operasi harian', 'X9, X10 replikasi order · X8 ASN Crossdock Creation (Search → X12 pre-mapping, Create ASN, Submit) · X13 ASN Inquiry',
+    ('B. Operasi harian', 'X9, X10 replikasi order · X8 ASN Crossdock Creation (Search → X12 pre-mapping, Create ASN, Submit → X14 batch) · X13 ASN Inquiry',
      'Supplier membuat ASN per case dari order yang sudah dapat PO; D/S team memantau detail destinasi & pcs.'),
 ]
 for i, (p, fx, out) in enumerate(phases):
@@ -411,7 +411,7 @@ for i, t in enumerate(high):
     c.alignment = Alignment(wrap_text=True, vertical='top')
 rr = r + 2 + max(len(DONE), len(high))
 ex.merge_cells(start_row=rr, start_column=2, end_row=rr, end_column=13)
-ex.cell(rr, 2, 'Detail: sheet Business Flow (alur), Function Map (13 fungsi), Task List, Konfirmasi (keputusan yang dibutuhkan). '
+ex.cell(rr, 2, 'Detail: sheet Business Flow (alur), Function Map (X1-X14), Task List, Konfirmasi (keputusan yang dibutuhkan). '
                'Prototype: https://ivanrayhannn.github.io/crossdockpoc/').font = f(9, italic=True, color=SLATE)
 landscape(ex, f'A1:N{rr + 1}', one_page=True)
 

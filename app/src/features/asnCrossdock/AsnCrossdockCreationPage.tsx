@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { addAsn, asnByUnitOf, useAsns } from './asnStore';
+import { asnByUnitOf, submitAsnBatch, useAsns } from './asnStore';
 import {
   asnNoFor, BUSINESS_DATES, buildCases, buildUnits, DESTS, niceDate, PART_NAME, PCS_PER_CASE, poQtyOf,
   ritCyclesFor, SUPPLIER_CODE, SUPPLIER_NAME, SUPPLIER_PLANT, type AsnCase, type InstrLine, type Unit, type UnitStatus,
@@ -69,13 +69,17 @@ export function AsnCrossdockCreationPage() {
   const [partFilter, setPartFilter] = useState('');
   const [stFilter, setStFilter] = useState<StatusFilter>('all');
   const [hold, setHold] = useState<Record<string, boolean>>({});
-  const [sel, setSel] = useState<Record<string, boolean>>({});
+  // Each view is its own session (supplier / D/S team); a selection stores the held line count at the time of ticking.
+  const [selByView, setSelByView] = useState<Record<ViewAs, Record<string, number>>>({ sup: {}, ds: {} });
+  const sel = selByView[viewAs];
+  const setSel = (next: Record<string, number>) => setSelByView((all) => ({ ...all, [viewAs]: next }));
+  const [holdConflict, setHoldConflict] = useState(false);
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const [openDest, setOpenDest] = useState<Record<string, boolean>>({});
   const [openCase, setOpenCase] = useState<Record<number, boolean>>({});
   const [page, setPage] = useState<'list' | 'cases'>('list');
   const [confirm, setConfirm] = useState(false);
-  const [done, setDone] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [labelNote, setLabelNote] = useState(false);
 
   const rits = ritCyclesFor(deliveryDate);
@@ -84,7 +88,8 @@ export function AsnCrossdockCreationPage() {
   // Created units and units without any ready case are not listed; a fully held unit only for the D/S team
   const visible = units.filter((u) => u.status !== 'created' && (u.readyCases > 0 || (isDs && u.status === 'hold')));
   const rows = visible.filter((u) => (!partFilter || u.partNo === partFilter) && (stFilter === 'all' || u.status === stFilter));
-  const selected = units.filter((u) => sel[u.key] && u.status === 'ready');
+  const selected = units.filter((u) => sel[u.key] !== undefined && u.status === 'ready');
+  const ticked = units.filter((u) => sel[u.key] !== undefined);
   const cases = useMemo(() => buildCases(selected), [selected]);
   const selQty = selected.reduce((a, u) => a + u.qty, 0);
   const asnDate = loaded?.deliveryDate ?? deliveryDate;
@@ -92,7 +97,7 @@ export function AsnCrossdockCreationPage() {
 
   const changeToday = (d: string) => {
     setToday(d);
-    setSel({});
+    setSelByView({ sup: {}, ds: {} });
     setLoaded(null);
     setDeliveryDate(d);
     setRitNo('');
@@ -102,6 +107,7 @@ export function AsnCrossdockCreationPage() {
     if (!rit) return;
     setLoaded({ deliveryDate, ritNo: rit.no, route: rit.route });
     setSel({});
+    setNotice(null);
     setOpen({});
   };
 
@@ -110,16 +116,29 @@ export function AsnCrossdockCreationPage() {
     const next = { ...hold };
     lines.forEach((l) => (next[l.id] = !held));
     setHold(next);
-    setSel({});
+  };
+
+  /** [Create ASN]: re-check the ticked units first; a hold made by the D/S team in the meantime makes the create fail. */
+  const createAsn = () => {
+    const conflict = ticked.filter((u) => u.heldLines.length > (sel[u.key] ?? 0) || u.status !== 'ready');
+    if (conflict.length) {
+      const next = { ...sel };
+      conflict.forEach((u) => delete next[u.key]);
+      setSel(next);
+      setHoldConflict(true);
+      return;
+    }
+    setOpenCase({});
+    setPage('cases');
   };
 
   const submit = () => {
     if (!loaded) return;
-    addAsn({
+    const submitId = submitAsnBatch({
       asnNo: nextAsnNo, deliveryDate: loaded.deliveryDate, rit: { no: loaded.ritNo, route: loaded.route }, unitKeys: selected.map((u) => u.key), cases,
       createdBy: 'D. Anggraini', createdAt: `${niceDate(today)} ${new Date().toTimeString().slice(0, 5)}`,
-    });
-    setDone(`${nextAsnNo} submitted with status Created. ${cases.length} cases are locked. Delivery ${niceDate(loaded.deliveryDate)} · ${loaded.ritNo}.`);
+    }, today);
+    setNotice(submitId);
     setConfirm(false);
     setSel({});
     setPage('list');
@@ -188,7 +207,7 @@ export function AsnCrossdockCreationPage() {
         {confirm && (
           <Modal title="Submit ASN?" onClose={() => setConfirm(false)}
             actions={<><button className="btn btn-secondary" onClick={() => setConfirm(false)}>No</button><button className="btn btn-primary" onClick={submit}>Yes, submit</button></>}>
-            {cases.length} cases ({selQty} pcs) will be locked into {nextAsnNo}, delivery {niceDate(loaded.deliveryDate)} · {loaded.ritNo}.
+            {cases.length} cases ({selQty} pcs) will be created into {nextAsnNo}, delivery {niceDate(loaded.deliveryDate)} · {loaded.ritNo}.
           </Modal>
         )}
         {labelNote && (
@@ -225,6 +244,13 @@ export function AsnCrossdockCreationPage() {
           </select>
         </div>
       </div>
+
+      {notice && (
+        <div role="status" style={{ ...card, padding: '10px 16px', fontSize: 12.5, display: 'flex', alignItems: 'center', gap: 10, background: 'var(--color-accent-100, #eef4fb)' }}>
+          <span>Submit ID <b style={{ fontFamily: 'var(--font-mono)' }}>{notice}</b> is sent to the ASN submit batch. The result is written to <a href="#/log-monitoring">Log Monitoring</a>.</span>
+          <button className="btn btn-secondary" style={{ marginLeft: 'auto', padding: '2px 10px', fontSize: 11 }} onClick={() => setNotice(null)}>Close</button>
+        </div>
+      )}
 
       <div style={{ ...card, padding: '14px 16px 16px' }}>
         <div style={{ fontSize: 10.5, fontWeight: 600, letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: 11 }}>Delivery</div>
@@ -300,7 +326,7 @@ export function AsnCrossdockCreationPage() {
                 const tip = u.status === 'created' ? `Already in ${u.asnNo}` : u.status === 'notReady' ? `Not Ready: ${u.notAssignedCases} of ${u.caseCount} cases of ${u.partNo} / ${niceDate(u.orderDt)} are not assigned to a PO yet` : u.status === 'hold' ? 'All destinations are on hold' : 'Select to create an ASN';
                 return [
                   <tr key={u.key} style={{ background: u.status === 'notReady' ? 'var(--color-warn-bg, #fff8e6)' : undefined }}>
-                    <td style={td}><input type="checkbox" checked={u.status === 'created' || !!sel[u.key]} disabled={!enabled} title={tip} onChange={(e) => setSel({ ...sel, [u.key]: e.target.checked })} /></td>
+                    <td style={td}><input type="checkbox" checked={sel[u.key] !== undefined} disabled={!enabled} title={tip} onChange={(e) => { const next = { ...sel }; if (e.target.checked) next[u.key] = u.heldLines.length; else delete next[u.key]; setSel(next); }} /></td>
                     <td style={{ ...td, fontWeight: 600 }}>{niceDate(u.orderDt)}</td>
                     <td style={{ ...td, fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{u.partNo}</td>
                     <td style={{ ...td, textAlign: 'right', fontWeight: 600 }}>{u.caseCount}</td>
@@ -366,15 +392,15 @@ export function AsnCrossdockCreationPage() {
             {selected.length ? <><b>{selected.length} units selected</b> · {cases.length} cases · {selected.map((u) => `${u.partNo} ${niceDate(u.orderDt).slice(0, 6)}`).join(', ')}</> : 'Tick one or more Ready units. Units from different Customer Order Dates can go into the same ASN.'}
           </span>
           <span style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-            <button className="btn btn-secondary" disabled={!selected.length} onClick={() => setSel({})}>Clear selection</button>
-            <button className="btn btn-primary" disabled={!selected.length} onClick={() => { setOpenCase({}); setPage('cases'); }}>Create ASN</button>
+            <button className="btn btn-secondary" disabled={!ticked.length} onClick={() => setSel({})}>Clear selection</button>
+            <button className="btn btn-primary" disabled={!ticked.length} onClick={createAsn}>Create ASN</button>
           </span>
         </div>
       </div>
 
-      {done && (
-        <Modal title="ASN submitted" onClose={() => setDone(null)} actions={<button className="btn btn-primary" onClick={() => setDone(null)}>OK</button>}>
-          {done} The ASN is shown in ASN Inquiry.
+      {holdConflict && (
+        <Modal title="Hold" onClose={() => setHoldConflict(false)} actions={<button className="btn btn-primary" onClick={() => setHoldConflict(false)}>OK</button>}>
+          Some order has been already hold, please select other records.
         </Modal>
       )}
     </div>

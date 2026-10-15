@@ -11,7 +11,7 @@ Sumber: UISS-Screen `X13_UISS_Screen_ASNInquiry.xlsx` (0.1 Initial Draft, update
 
 ## Tabel
 - **TB_R_ASN_CROSSDOCK_H** – header ASN.
-- **TB_R_ASN_CROSSDOCK_D** – case & line per ASN (ASN_NO, CASE_NO), diisi saat Submit ASN di X8.
+- **TB_R_ASN_CROSSDOCK_D** – case & line per ASN (ASN_NO, CASE_NO), diisi oleh batch X14 saat Submit ASN di X8.
 
 ## Pesan
 | ID | Kapan | Pesan |

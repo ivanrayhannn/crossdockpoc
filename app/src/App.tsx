@@ -7,6 +7,9 @@ import { CaseConsolidationPage } from './features/caseConsolidation/CaseConsolid
 import { CrossdockMasterSettingPage } from './features/crossdock/CrossdockMasterSettingPage';
 import { BatchProcessPage } from './features/batchProcess/BatchProcessPage';
 import { CandidatePartFlowPage } from './features/candidatePartFlow/CandidatePartFlowPage';
+import { AsnBackendProcessPage } from './features/asnBackend/AsnBackendProcessPage';
+import { LogMonitoringPage } from './features/logMonitoring/LogMonitoringPage';
+import { MenuSettingsPage } from './features/menuSettings/MenuSettingsPage';
 import { hashForRoute, routeFromHash } from './routes';
 import type { RouteKey } from './routes';
 
@@ -60,6 +63,30 @@ function App() {
     return (
       <AppShell activeItem="Candidate Part Batch Flow" onNavigate={navigate} breadcrumb={<Breadcrumb group="Common" label="Candidate Part Batch Flow" />}>
         <CandidatePartFlowPage />
+      </AppShell>
+    );
+  }
+
+  if (route === 'asn-backend') {
+    return (
+      <AppShell activeItem="ASN Backend Process" onNavigate={navigate} breadcrumb={<Breadcrumb group="Common" label="ASN Backend Process" />}>
+        <AsnBackendProcessPage />
+      </AppShell>
+    );
+  }
+
+  if (route === 'menu-settings') {
+    return (
+      <AppShell activeItem="Menu Settings" onNavigate={navigate} breadcrumb={<Breadcrumb group="Common" label="Menu Settings" />}>
+        <MenuSettingsPage />
+      </AppShell>
+    );
+  }
+
+  if (route === 'log-monitoring') {
+    return (
+      <AppShell activeItem="Log Monitoring" onNavigate={navigate} breadcrumb={<Breadcrumb group="Common" label="Log Monitoring" />}>
+        <LogMonitoringPage />
       </AppShell>
     );
   }
