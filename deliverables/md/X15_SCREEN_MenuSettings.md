@@ -17,7 +17,7 @@ Sumber: UISS-Screen `X15_UISS_Screen_MenuSettings.xlsx` (0.1 Initial Draft, 15-O
 - **TB_M_MENU_VISIBILITY** (usulan): ROLE_CD, MENU_GROUP, MENU_ITEM, SHOW_FLAG ('Y' / 'N'), CREATED_BY / DT, CHANGED_BY / DT.
 
 ## Catatan prototype
-- Setting disimpan di browser (localStorage). Di Supplier System disimpan di tabel di atas.
+- Setting disimpan di browser (localStorage). Di NSP disimpan di tabel di atas.
 
 ## Open points
 - Setting berlaku per role atau global (semua user)?

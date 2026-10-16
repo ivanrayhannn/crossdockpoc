@@ -1,13 +1,13 @@
-# Batch – Crossdock – Demand History Summary (H0202) Sync to Supplier System (X9)
+# Batch – Crossdock – Demand History Summary (H0202) Sync to NSP (X9)
 
-Replikasi tabel **TB_R_H0202_DEMAND_HISTORY_SUM** dari **DB Surrounding** ke **DB Supplier System**.
-Sumber: UISS-Batch `X9_UISS_Batch_H0202DemandHistorySync.xlsx` (0.1 Initial Draft). Struktur dari I/F layout T-System **H02-02 / DVJO250 (Demand History Summary File)**.
+Replikasi tabel **TB_R_H0202_DEMAND_HISTORY_SUM** dari **DB Surrounding** ke **DB NSP**.
+Sumber: UISS-Batch `X9_UISS_Batch_H0202DemandHistorySync.xlsx` (0.1 Initial Draft). Struktur dari I/F layout G-TOPAS **H02-02 / DVJO250 (Demand History Summary File)**.
 
 ## Poin utama
-- Nama tabel di Supplier System sama dengan sumber.
-- Cara simpan: **delete – insert** (isi tabel Supplier System diganti semua setiap jalan), semua kolom disalin apa adanya.
-- **All-or-nothing**: gagal → roll back, Supplier System tetap berisi data run sukses terakhir.
-- T-System mengirim data **1x/hari (26:00)**; jadwal Supplier System di system master (**TBC**), setelah data tersedia. Hasil run dicatat di **Log**.
+- Nama tabel di NSP sama dengan sumber.
+- Cara simpan: **delete – insert** (isi tabel NSP diganti semua setiap jalan), semua kolom disalin apa adanya.
+- **All-or-nothing**: gagal → roll back, NSP tetap berisi data run sukses terakhir.
+- G-TOPAS mengirim data **1x/hari (26:00)**; jadwal NSP di system master (**TBC**), setelah data tersedia. Hasil run dicatat di **Log**.
 - PK = unique key di I/F layout.
 
 ## Struktur tabel (40 kolom)
@@ -49,13 +49,13 @@ Sumber: UISS-Batch `X9_UISS_Batch_H0202DemandHistorySync.xlsx` (0.1 Initial Draf
 | 34 | UPDATE_JOB_ID | VARCHAR(8) |  | Y | No.34 Update Job ID |
 | 35 | UPDATE_OPERATOR_ID | VARCHAR(13) |  | Y | No.35 Update Operator ID |
 | 36 | INTF_UPDATE_DT | TIMESTAMP |  | Y | No.36 Update Date & Time |
-| 37 | CREATE_DT | TIMESTAMP |  | Y | Created date and time (Supplier System) |
-| 38 | CREATE_BY | VARCHAR(TBD) |  | Y | Created by (Supplier System) |
-| 39 | UPDATE_DT | TIMESTAMP |  | Y | Updated date and time (Supplier System) |
-| 40 | UPDATE_BY | VARCHAR(TBD) |  | Y | Updated by (Supplier System) |
+| 37 | CREATE_DT | TIMESTAMP |  | Y | Created date and time (NSP) |
+| 38 | CREATE_BY | VARCHAR(TBD) |  | Y | Created by (NSP) |
+| 39 | UPDATE_DT | TIMESTAMP |  | Y | Updated date and time (NSP) |
+| 40 | UPDATE_BY | VARCHAR(TBD) |  | Y | Updated by (NSP) |
 
 ## Catatan
 - Kolom *PO Number, PO Qty, Remaining Order Qty, ASN Number, Case Number* di file export tidak dimasukkan (tidak ada di I/F layout).
 
 ## Open points
-- Jadwal scheduler Supplier System; perlu auto retry seperti X6 / X7?
+- Jadwal scheduler NSP; perlu auto retry seperti X6 / X7?

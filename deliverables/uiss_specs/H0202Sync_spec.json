@@ -4,7 +4,7 @@
   "phase": "DR",
   "project_name": "Crossdock Optimization",
   "block_name": "Batch",
-  "function_name": "X9 Crossdock - Demand History Summary (H0202) Sync to Supplier System",
+  "function_name": "X9 Crossdock - Demand History Summary (H0202) Sync to NSP",
   "created_date": "14-Oct-26",
   "created_by": "FID Rayhan"
  },
@@ -19,8 +19,8 @@
  ],
  "general": {
   "objective": [
-   "To replicate TB_R_H0202_DEMAND_HISTORY_SUM from DB Surrounding to the table with the same name in Supplier System.",
-   "The Supplier System table is fully replaced every run (delete - insert). In case any error occurs, the run is rolled back and Supplier System keeps the data of the last successful run."
+   "To replicate TB_R_H0202_DEMAND_HISTORY_SUM from DB Surrounding to the table with the same name in NSP.",
+   "The NSP table is fully replaced every run (delete - insert). In case any error occurs, the run is rolled back and NSP keeps the data of the last successful run."
   ],
   "operation_flow": {
    "flow": {
@@ -63,7 +63,7 @@
   ],
   "outputs": [
    {
-    "name": "TB_R_H0202_DEMAND_HISTORY_SUM (Supplier System)",
+    "name": "TB_R_H0202_DEMAND_HISTORY_SUM (NSP)",
     "type": "DB",
     "description": "if successful: same rows as the source"
    },
@@ -112,7 +112,7 @@
      ],
      [
       "Source",
-      "T-System provides the data 1 time/day (26:00)."
+      "G-TOPAS provides the data 1 time/day (26:00)."
      ]
     ]
    }
@@ -142,7 +142,7 @@
     },
     {
      "id": "d",
-     "label": "TB_R_H0202_DEMAND_HISTORY_SUM (Supplier System)",
+     "label": "TB_R_H0202_DEMAND_HISTORY_SUM (NSP)",
      "type": "db",
      "lane": "output"
     },
@@ -184,7 +184,7 @@
   },
   "steps": [
    "The scheduler starts the batch.",
-   "Delete all rows of TB_R_H0202_DEMAND_HISTORY_SUM (Supplier System) and insert all rows of TB_R_H0202_DEMAND_HISTORY_SUM (DB Surrounding) (same columns and values).",
+   "Delete all rows of TB_R_H0202_DEMAND_HISTORY_SUM (NSP) and insert all rows of TB_R_H0202_DEMAND_HISTORY_SUM (DB Surrounding) (same columns and values).",
    "No error: commit. Error: roll back step 2 (one transaction). Record the result in the Log. Exit."
   ]
  },
@@ -192,10 +192,10 @@
   "blocks": [
    {
     "source": {
-     "table": "TB_R_H0202_DEMAND_HISTORY_SUM (Supplier System)"
+     "table": "TB_R_H0202_DEMAND_HISTORY_SUM (NSP)"
     },
     "destination": {
-     "table": "TB_R_H0202_DEMAND_HISTORY_SUM (Supplier System)",
+     "table": "TB_R_H0202_DEMAND_HISTORY_SUM (NSP)",
      "operation": "Delete",
      "description": "All rows (full replace)"
     },
@@ -367,7 +367,7 @@
      "table": "TB_R_H0202_DEMAND_HISTORY_SUM (DB Surrounding)"
     },
     "destination": {
-     "table": "TB_R_H0202_DEMAND_HISTORY_SUM (Supplier System)",
+     "table": "TB_R_H0202_DEMAND_HISTORY_SUM (NSP)",
      "operation": "Insert",
      "description": "Every source row"
     },
@@ -618,7 +618,7 @@
    "level": 0,
    "items": [
     "Full replace (delete - insert); all columns are copied as they are, no conversion.",
-    "Delete and insert run in one transaction (all-or-nothing). When the run fails, Supplier System keeps the data of the last successful run.",
+    "Delete and insert run in one transaction (all-or-nothing). When the run fails, NSP keeps the data of the last successful run.",
     "Schedule is set in the system master (TBC). Table structure: see Appendix."
    ]
   }
@@ -648,7 +648,7 @@
   },
   {
    "event": "Copy table",
-   "cause": "Read from DB Surrounding or insert into Supplier System fails",
+   "cause": "Read from DB Surrounding or insert into NSP fails",
    "type": "Error",
    "msg_id": "LOG3",
    "message": "Cannot replicate TB_R_H0202_DEMAND_HISTORY_SUM: <ERROR_DETAIL>.",
@@ -676,7 +676,7 @@
    "name": "TB_R_H0202_DEMAND_HISTORY_SUM",
    "kind": "transaction",
    "proposed": false,
-   "description": "Demand history summary (I/F H02-02, DVJO250) replicated from DB Surrounding. Structure from the T-System I/F layout; physical names follow the existing table. Key (PK) = unique key of the I/F layout.",
+   "description": "Demand history summary (I/F H02-02, DVJO250) replicated from DB Surrounding. Structure from the G-TOPAS I/F layout; physical names follow the existing table. Key (PK) = unique key of the I/F layout.",
    "columns": [
     [
      "CUSTOMER_CD",
@@ -935,28 +935,28 @@
      "TIMESTAMP",
      "",
      "Y",
-     "Created date and time (Supplier System)"
+     "Created date and time (NSP)"
     ],
     [
      "CREATE_BY",
      "VARCHAR(TBD)",
      "",
      "Y",
-     "Created by (Supplier System)"
+     "Created by (NSP)"
     ],
     [
      "UPDATE_DT",
      "TIMESTAMP",
      "",
      "Y",
-     "Updated date and time (Supplier System)"
+     "Updated date and time (NSP)"
     ],
     [
      "UPDATE_BY",
      "VARCHAR(TBD)",
      "",
      "Y",
-     "Updated by (Supplier System)"
+     "Updated by (NSP)"
     ]
    ]
   }

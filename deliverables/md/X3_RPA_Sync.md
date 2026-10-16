@@ -7,7 +7,7 @@ Belum ada UISS-Batch tersendiri untuk RPA ini (**TBD**).
 ---
 
 ## 1. Latar belakang
-- Global system TMMIN **tidak punya interface**, sehingga data dimasukkan oleh **RPA** (robot) yang membaca 2 tabel Supplier System.
+- Global system TMMIN **tidak punya interface**, sehingga data dimasukkan oleh **RPA** (robot) yang membaca 2 tabel NSP.
 - Data yang dikirim per part: **Pcs/Case**, **Max Case/Day**, dan **mapping destinasi** (Case/Day per destinasi) periode berjalan.
 - Perubahan bisa terjadi di mapping, mis. Philippines naik → Thailand turun. Karena itu part dikirim **sebagai satu paket** supaya global system tidak pernah menerima data setengah jadi.
 

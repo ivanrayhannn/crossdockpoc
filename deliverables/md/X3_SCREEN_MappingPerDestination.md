@@ -126,7 +126,7 @@ Cara simpan: hapus semua baris part + periode berjalan, lalu insert baris draft 
 | CHANGED_BY / CHANGED_DT | Diupdate saat Save; dibandingkan RPA |
 
 ### 10.3 TB_M_H0125_DESTINATION (Destination Master) — *dibaca*
-Tabel master existing Supplier System, **hanya dibaca**. Kolom yang relevan (kolom lain diabaikan; nama fisik mengikuti tabel existing):
+Tabel master existing NSP, **hanya dibaca**. Kolom yang relevan (kolom lain diabaikan; nama fisik mengikuti tabel existing):
 
 | Kolom | Dipakai Crossdock |
 |---|---|

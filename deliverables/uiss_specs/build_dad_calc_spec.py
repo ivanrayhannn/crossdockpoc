@@ -47,7 +47,7 @@ spec = {
     "edges": [{"from": "a", "to": "b"}, {"from": "b", "to": "c"}, {"from": "c", "to": "e", "label": ">= Min MAD"},
               {"from": "c", "to": "f", "label": "< Min MAD"}, {"from": "e", "to": "g"}, {"from": "f", "to": "g"}]}},
   "inputs": [
-   {"name": ADS + " (Supplier System)", "type": "DB", "description": "MAD per part, buyer code, PD code, order type and month (replicated by the Actual Demand Summary Sync)"},
+   {"name": ADS + " (NSP)", "type": "DB", "description": "MAD per part, buyer code, PD code, order type and month (replicated by the Actual Demand Summary Sync)"},
    {"name": T, "type": "DB", "description": "Registered parts: Min MAD, Effective Start Date and current status"},
    {"name": "System master", "type": "DB", "description": "Range of months and schedule (not explained in this document)"}],
   "outputs": [

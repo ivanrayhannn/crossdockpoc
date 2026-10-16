@@ -44,10 +44,10 @@ Kolom PO No, Last PO Date, dan ASN No tidak ada lagi di header.
 | On Hold | Semua destinasi unit di-hold (hanya terlihat oleh tim D/S) |
 
 ## Hold Flag (tim D/S)
-- Kolom tambahan Supplier System di **TB_R_H0253_ORDER_CONTROL_PRE**; default **N** saat data masuk (X10), dipertahankan saat sync berikutnya.
+- Kolom tambahan NSP di **TB_R_H0253_ORDER_CONTROL_PRE**; default **N** saat data masuk (X10), dipertahankan saat sync berikutnya.
 - Tim D/S mengubahnya **per destinasi** di detail unit (**N · Hold** → Y, **Y · Release** → N); semua order line unit + destinasi itu ikut berubah.
 - Destinasi dengan Hold Flag Y tidak diambil saat Search; unit dihitung tanpa destinasi itu.
-- **Cancel tidak dilakukan di Supplier System**: cancel datang dari source H0253 dengan **order status `2`** (order crossdock status `7`). Supplier System hanya **hold**; cancel berlaku untuk order yang **HOLD_FLAG = Y** (lihat md X10).
+- **Cancel tidak dilakukan di NSP**: cancel datang dari source H0253 dengan **order status `2`** (order crossdock status `7`). NSP hanya **hold**; cancel berlaku untuk order yang **HOLD_FLAG = Y** (lihat md X10).
 
 ## Create ASN dan Submit
 - **1 ASN = 1 Supplier Code + Supplier Plant** (rule existing). Kalau tim D/S mencentang unit dari lebih dari 1 supplier → **MSG9**, tidak ada yang dibuat.
@@ -149,7 +149,7 @@ Pesan sukses submit (*"{ASN No} submitted with status Created. {n} cases are sav
 - ASN setelah submit → TB_R_DAILY_ORDER_MANIFEST dan TB_R_DAILY_ORDER_PART.
 - Search = pre-mapping (temp); Create ASN → TB_R_INSTRUCTION; Back / Cancel → keluar dari TB_R_INSTRUCTION.
 - Qty terpakai Pra Daily Order → tabel baru TB_R_PRA_DAILY_ORDER_MAPPED.
-- Cancel tidak di Supplier System (source H0253 status 2, untuk order HOLD_FLAG = Y); Supplier System hanya hold.
+- Cancel tidak di NSP (source H0253 status 2, untuk order HOLD_FLAG = Y); NSP hanya hold.
 
 ## Open points
 - Nama fisik kolom TB_R_INSTRUCTION dan TB_R_PRA_DAILY_ORDER_MAPPED (usulan, perlu review DBA).

@@ -72,8 +72,8 @@ spec = {
   {"type": "heading", "text": "5.2 Detail Mode"},
   {"type": "bullets", "marker": "a.", "level": 2, "items": [
     "Shows the ASN summary and its cases from the existing table TB_R_DAILY_ORDER_PART (rows with the ASN No), grouped by CASE_NO. All items are read only.",
-    "[Download Case Label]: follows the existing case label of Supplier System. [Back] returns to the list in the current search state.",
-    "The screen does not change data (display only). There is no Cancel ASN: an order is cancelled in the source (H0253 order status '2') for lines already on hold (HOLD_FLAG = 'Y'), not in Supplier System (refer X10)."]}],
+    "[Download Case Label]: follows the existing case label of NSP. [Back] returns to the list in the current search state.",
+    "The screen does not change data (display only). There is no Cancel ASN: an order is cancelled in the source (H0253 order status '2') for lines already on hold (HOLD_FLAG = 'Y'), not in NSP (refer X10)."]}],
  "display_messages": [
   {"group": "Search Operation"},
   {"event": "Click [Search] button", "cause": "No ASN matches", "type": "Info", "msg_id": "MSG1", "message": "No ASN matches this search.", "action": "Change the criteria."}],

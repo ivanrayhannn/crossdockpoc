@@ -259,7 +259,7 @@
    {
     "text": "Get the customer order lines from TB_R_H0253_ORDER_CONTROL_PRE:",
     "children": [
-     "ORDER_STATUS = '7' (Cross Dock), HOLD_FLAG = 'N', PO_MAPPED_FLAG = 'N'; latest data; earliest order date first per part number (FIFO, T-System key). Status '2' (cancel from the source) is not taken.",
+     "ORDER_STATUS = '7' (Cross Dock), HOLD_FLAG = 'N', PO_MAPPED_FLAG = 'N'; latest data; earliest order date first per part number (FIFO, G-TOPAS key). Status '2' (cancel from the source) is not taken.",
      "Get: Customer Code, Customer Order No, Order Date, Destination Code, Detailed Item No, Serial No, Part Number, Order Status Qty."
     ]
    },

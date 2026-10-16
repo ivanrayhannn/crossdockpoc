@@ -8,12 +8,12 @@ UISS-Batch (0.1 Initial Draft): **X5** `X5_UISS_Batch_ActualDemandSummarySync.xl
 
 ---
 
-## Fungsi 1 – Actual Demand Summary Sync to Supplier System
+## Fungsi 1 – Actual Demand Summary Sync to NSP
 
 | Item | Keputusan |
 |---|---|
-| Tujuan | Menyalin TB_R_ACTUAL_DEMAND_SUMMARY dari DB Surrounding ke tabel yang sama di Supplier System |
-| Cara simpan | **Delete – insert** (isi tabel Supplier System diganti semua setiap jalan) |
+| Tujuan | Menyalin TB_R_ACTUAL_DEMAND_SUMMARY dari DB Surrounding ke tabel yang sama di NSP |
+| Cara simpan | **Delete – insert** (isi tabel NSP diganti semua setiap jalan) |
 | Jadwal | Setiap bulan, **harus selesai sebelum Fungsi 2**. Jam/tanggal scheduler **TBC** |
 | Gagal | TBD: apakah Fungsi 2 dibatalkan kalau Fungsi 1 gagal (usul: ya) |
 
@@ -36,7 +36,7 @@ Kolom TB_R_ACTUAL_DEMAND_SUMMARY (dari file referensi):
 ## Fungsi 2 – DAD Volume Calculation Batch
 
 ### Alur
-1. Ambil TB_R_ACTUAL_DEMAND_SUMMARY (Supplier System), **range bulan historis sebelum bulan berjalan** (jumlah bulan diatur di system master, misalnya 6).
+1. Ambil TB_R_ACTUAL_DEMAND_SUMMARY (NSP), **range bulan historis sebelum bulan berjalan** (jumlah bulan diatur di system master, misalnya 6).
 2. Join ke **TB_M_PART_CANDIDATE**: semua part yang terdaftar, apa pun statusnya (Candidate, Active, Inactive).
 3. Part yang **Effective Start Date-nya belum tiba tidak dihitung**.
 4. Hitung **rata-rata MAD per part** (disimpan 2 desimal, dibandingkan apa adanya) = total MAD ÷ **jumlah bulan di system master** (mis. 6). Pembagi selalu tetap, bulan tanpa data dihitung 0. Hasilnya disimpan ke tabel hasil (usulan nama TB_R_PART_DAD_RESULT).

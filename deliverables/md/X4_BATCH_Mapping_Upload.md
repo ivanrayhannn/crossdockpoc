@@ -108,7 +108,7 @@ Diisi otomatis oleh **Export Excel** (periode berjalan dipilih): semua part **Ac
 | CHANGED_BY / CHANGED_DT | | | N | Audit | login user / system date |
 
 ### 8.3 TB_M_H0125_DESTINATION (Destination Master) — *dibaca*
-Tabel master existing Supplier System, **hanya dibaca**. Kolom yang relevan (kolom lain diabaikan; nama fisik mengikuti tabel existing):
+Tabel master existing NSP, **hanya dibaca**. Kolom yang relevan (kolom lain diabaikan; nama fisik mengikuti tabel existing):
 
 | Kolom | Dipakai Crossdock |
 |---|---|
