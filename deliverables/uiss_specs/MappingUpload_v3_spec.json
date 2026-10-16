@@ -1606,7 +1606,7 @@
    "name": "TB_M_H0125_DESTINATION",
    "kind": "master",
    "proposed": false,
-   "description": "Destination Master (existing Supplier System table, read only). Only the listed columns are relevant; full structure: X11 Destination Master (H0125) Sync.",
+   "description": "Destination Master (existing NSP table, read only). Only the listed columns are relevant; full structure: X11 Destination Master (H0125) Sync.",
    "columns": [
     [
      "DESTINATION_CD",

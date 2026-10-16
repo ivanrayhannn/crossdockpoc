@@ -107,7 +107,7 @@ Satu record per part, **tanpa periode**.
 | CHANGED_DT | DATETIME | | N | Waktu terakhir diubah | system date |
 
 ### 8.2 TB_M_PART_MASTER — *dibaca*
-Part master existing Supplier System. Yang dipakai: **PART_NO** (cek keberadaan, check 2) dan **PART_NAME** (nama field TBD). Skema fisik lain TBD.
+Part master existing NSP. Yang dipakai: **PART_NO** (cek keberadaan, check 2) dan **PART_NAME** (nama field TBD). Skema fisik lain TBD.
 
 ### 8.3 TB_M_PART_CANDIDATE_DEST — *dibaca*
 Mapping per Destination, level **part number + periode + destinasi** (detail lihat `X4_BATCH_Mapping_Upload.md`).

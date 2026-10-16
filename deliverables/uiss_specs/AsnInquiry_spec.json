@@ -482,8 +482,8 @@
    "level": 2,
    "items": [
     "Shows the ASN summary and its cases from the existing table TB_R_DAILY_ORDER_PART (rows with the ASN No), grouped by CASE_NO. All items are read only.",
-    "[Download Case Label]: follows the existing case label of Supplier System. [Back] returns to the list in the current search state.",
-    "The screen does not change data (display only). There is no Cancel ASN: an order is cancelled in the source (H0253 order status '2') for lines already on hold (HOLD_FLAG = 'Y'), not in Supplier System (refer X10)."
+    "[Download Case Label]: follows the existing case label of NSP. [Back] returns to the list in the current search state.",
+    "The screen does not change data (display only). There is no Cancel ASN: an order is cancelled in the source (H0253 order status '2') for lines already on hold (HOLD_FLAG = 'Y'), not in NSP (refer X10)."
    ]
   }
  ],
@@ -506,7 +506,7 @@
    "name": "TB_R_DAILY_ORDER_MANIFEST",
    "kind": "transaction",
    "proposed": false,
-   "description": "Existing ASN header table of Supplier System; the crossdock ASN is saved here after submit. Only the fields used are listed; physical names follow the existing table.",
+   "description": "Existing ASN header table of NSP; the crossdock ASN is saved here after submit. Only the fields used are listed; physical names follow the existing table.",
    "columns": [
     [
      "MANIFEST_NO / ASN_NO",
@@ -570,7 +570,7 @@
    "name": "TB_R_DAILY_ORDER_PART",
    "kind": "transaction",
    "proposed": false,
-   "description": "Existing ASN part / case table of Supplier System. Only the fields used are listed; physical names follow the existing table.",
+   "description": "Existing ASN part / case table of NSP. Only the fields used are listed; physical names follow the existing table.",
    "columns": [
     [
      "MANIFEST_NO / ASN_NO",

@@ -99,7 +99,7 @@ ASNH_COLS = [
     ["STATUS", "existing", "", "N", "Created"],
     ["CREATED_BY / CREATED_DT", "existing", "", "N", "User and date-time of submit"]]
 ASNH_TABLE = {"name": ASNH, "kind": "transaction", "proposed": False,
-              "description": "Existing ASN header table of Supplier System; the crossdock ASN is saved here after submit. Only the fields used are listed; physical names follow the existing table.",
+              "description": "Existing ASN header table of NSP; the crossdock ASN is saved here after submit. Only the fields used are listed; physical names follow the existing table.",
               "columns": ASNH_COLS}
 
 ASND_COLS = [
@@ -111,7 +111,7 @@ ASND_COLS = [
     ["PO_NO / MANIFEST_ITEM_NO", "existing", "", "N", "PO reference of the Pra Daily Order"],
     ["CREATED_BY / CREATED_DT", "existing", "", "N", "User and date-time of submit"]]
 ASND_TABLE = {"name": ASND, "kind": "transaction", "proposed": False,
-              "description": "Existing ASN part / case table of Supplier System. Only the fields used are listed; physical names follow the existing table.",
+              "description": "Existing ASN part / case table of NSP. Only the fields used are listed; physical names follow the existing table.",
               "columns": ASND_COLS}
 
 

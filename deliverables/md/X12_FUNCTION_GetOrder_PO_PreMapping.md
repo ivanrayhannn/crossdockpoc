@@ -5,7 +5,7 @@ Sumber: UISS-Batch `X12_UISS_Batch_GetOrderPOPreMapping.xlsx` (0.1 Initial Draft
 
 ## Alur
 1. User memilih **Delivery Date** dan **Rit** di X8 (Route tampil otomatis), lalu klik **[Search]**. Delivery Date / Rit **tidak memfilter** order, hanya dibawa ke ASN.
-2. **Customer order** dari **TB_R_H0253_ORDER_CONTROL_PRE** (hasil X10): Order Status = **7**, **HOLD_FLAG = N**, **PO_MAPPED_FLAG = N**, data terbaru; order date paling awal dulu per part number (FIFO, key T-System). Status **2** (cancel dari source) tidak diambil.
+2. **Customer order** dari **TB_R_H0253_ORDER_CONTROL_PRE** (hasil X10): Order Status = **7**, **HOLD_FLAG = N**, **PO_MAPPED_FLAG = N**, data terbaru; order date paling awal dulu per part number (FIFO, key G-TOPAS). Status **2** (cancel dari source) tidak diambil.
 3. **PO supplier** dari **TB_R_PRA_DAILY_ORDER_MANIFEST + TB_R_PRA_DAILY_ORDER_PART**: Crossdock Flag = **X**, data terbaru, urut Order Date naik (FIFO). Qty PO terbuka = PO_ORDER_QTY − **MAPPED_QTY** dari tabel baru **TB_R_PRA_DAILY_ORDER_MAPPED** (0 kalau belum ada baris).
 4. **Pre-mapping** per part number, FIFO berdasarkan Customer Order Date (lalu Order Time, Customer Order No, Detailed Item No, Serial No). Satu line boleh terpecah ke beberapa PO; sisa PO tetap terbuka.
 5. Hasil disimpan ke tabel temporary **#TEMP_INSTRUCTION** (per sesi): 1 baris per line × PO; sisa line tanpa PO = 1 baris dengan PO_NO NULL.
