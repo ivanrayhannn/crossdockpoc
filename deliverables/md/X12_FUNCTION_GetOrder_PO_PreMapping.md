@@ -1,17 +1,17 @@
 # Function – Get Order: Customer Order – PO Pre-mapping (X12)
 
-Sumber: UISS-Batch `X12_UISS_Batch_GetOrderPOPreMapping.xlsx` (0.1 Initial Draft, update 15-Oct-26), bagian "Get Data → Insert result mapping Cust Order PO Supplier → temp #TB_R_INSTRUCTION" di flow ASN.
+Sumber: UISS-Batch `X12_UISS_Batch_GetOrderPOPreMapping.xlsx` (0.1 Initial Draft, update 15-Oct-26), bagian "Get Data → Insert result mapping Cust Order PO Supplier → temp #TEMP_INSTRUCTION" di flow ASN.
 **Bukan batch terjadwal**: fungsi ini jalan saat user klik **[Search]** di layar ASN Crossdock Creation (X8).
 
 ## Alur
 1. User memilih **Delivery Date** dan **Rit** di X8 (Route tampil otomatis), lalu klik **[Search]**. Delivery Date / Rit **tidak memfilter** order, hanya dibawa ke ASN.
-2. **Customer order** dari **TB_R_H0253_ORDER_CONTROL_PRE** (hasil X10): Order Status = **7**, **HOLD_FLAG = N**, **PO_MAPPED_FLAG = N**, data terbaru; order date paling awal dulu per part number (FIFO, key G-TOPAS).
-3. **PO supplier** dari **TB_R_PRA_DAILY_ORDER_MANIFEST + TB_R_PRA_DAILY_ORDER_PART**: Crossdock Flag = **X**, data terbaru, qty PO yang belum terpakai, urut Order Date naik (FIFO).
+2. **Customer order** dari **TB_R_H0253_ORDER_CONTROL_PRE** (hasil X10): Order Status = **7**, **HOLD_FLAG = N**, **PO_MAPPED_FLAG = N**, data terbaru; order date paling awal dulu per part number (FIFO, key G-TOPAS). Status **2** (cancel dari source) tidak diambil.
+3. **PO supplier** dari **TB_R_PRA_DAILY_ORDER_MANIFEST + TB_R_PRA_DAILY_ORDER_PART**: Crossdock Flag = **X**, data terbaru, urut Order Date naik (FIFO). Qty PO terbuka = PO_ORDER_QTY − **MAPPED_QTY** dari tabel baru **TB_R_PRA_DAILY_ORDER_MAPPED** (0 kalau belum ada baris).
 4. **Pre-mapping** per part number, FIFO berdasarkan Customer Order Date (lalu Order Time, Customer Order No, Detailed Item No, Serial No). Satu line boleh terpecah ke beberapa PO; sisa PO tetap terbuka.
-5. Hasil disimpan ke tabel temporary **#TB_R_INSTRUCTION** (per sesi): 1 baris per line × PO; sisa line tanpa PO = 1 baris dengan PO_NO NULL.
+5. Hasil disimpan ke tabel temporary **#TEMP_INSTRUCTION** (per sesi): 1 baris per line × PO; sisa line tanpa PO = 1 baris dengan PO_NO NULL.
 6. Status unit (Part Number + Customer Order Date) dihitung lalu dikembalikan ke X8.
 
-Pre-mapping **tidak mengubah data permanen**. Mapping sebenarnya dilakukan oleh **[Create ASN]** di X8.
+Pre-mapping **tidak mengubah data permanen**. Mapping sebenarnya dilakukan oleh **[Create ASN]** di X8 (insert **TB_R_INSTRUCTION**, update MAPPED_QTY di TB_R_PRA_DAILY_ORDER_MAPPED).
 
 ## Unit, case, dan status
 | Item | Aturan |
@@ -30,7 +30,7 @@ Pre-mapping **tidak mengubah data permanen**. Mapping sebenarnya dilakukan oleh 
 - Destinasi yang di-hold (HOLD_FLAG = Y di semua line-nya) tidak diambil; unit dihitung tanpa destinasi itu.
 - Di layar X8, unit dengan PO Readiness 0 dan unit yang sudah Created tidak ditampilkan.
 
-## #TB_R_INSTRUCTION (temporary, usulan struktur)
+## #TEMP_INSTRUCTION (temporary, usulan struktur)
 | Kolom | Tipe | Keterangan |
 |---|---|---|
 | INSTRUCTION_ID | BIGINT | Running number within the session |
@@ -65,5 +65,9 @@ Pre-mapping **tidak mengubah data permanen**. Mapping sebenarnya dilakukan oleh 
 | LOG1 | Gagal baca / insert | Get Order failed for Delivery Date <DELIVERY_DT> <RIT>: <ERROR_DETAIL>. |
 | LOG2 | Error lain | Unexpected error: <ERROR_DETAIL>. |
 
+## Keputusan (konfirmasi 16-Oct)
+- Qty terpakai Pra Daily Order disimpan di **tabel baru TB_R_PRA_DAILY_ORDER_MAPPED** (struktur di md X8), bukan kolom baru.
+- Pre-mapping masuk temp (#TEMP_INSTRUCTION); mapping sebenarnya masuk TB_R_INSTRUCTION saat Create ASN.
+
 ## Open points
-- Struktur fisik TB_R_PRA_DAILY_ORDER_MANIFEST / PART dan kolom qty terpakai (mapped qty).
+- Nama fisik kolom TB_R_PRA_DAILY_ORDER_MAPPED (usulan, review DBA).

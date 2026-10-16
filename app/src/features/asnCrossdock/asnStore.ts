@@ -10,6 +10,7 @@ function seed(): SubmittedAsn[] {
   if (!unit) return [];
   return [{
     asnNo: 'ASN-50221-261013-001',
+    supplier: '50221-1',
     deliveryDate: '2026-10-13',
     rit: { no: 'Rit 1', route: 'SD01' },
     unitKeys: [unit.key],

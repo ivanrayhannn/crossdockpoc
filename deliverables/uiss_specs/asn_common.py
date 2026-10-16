@@ -2,7 +2,10 @@
 
 NAME, PROJ = 'FID Rayhan', 'Crossdock Optimization'
 NC = 'Not changed'
-INSTR, ASNH, ASND, DRAFT = '#TB_R_INSTRUCTION', 'TB_R_ASN_CROSSDOCK_H', 'TB_R_ASN_CROSSDOCK_D', '#TEMP_ASN_DRAFT'
+INSTR, ASNH, ASND, DRAFT = '#TEMP_INSTRUCTION', 'TB_R_DAILY_ORDER_MANIFEST', 'TB_R_DAILY_ORDER_PART', 'TB_R_INSTRUCTION'
+PRA_MAP = 'TB_R_PRA_DAILY_ORDER_MAPPED'
+ROUTE_M = 'Route master (existing)'
+LAST_SEQ = 'Last sequence table (existing)'
 H0253, PRA_M, PRA_P = 'TB_R_H0253_ORDER_CONTROL_PRE', 'TB_R_PRA_DAILY_ORDER_MANIFEST', 'TB_R_PRA_DAILY_ORDER_PART'
 DM = 'TB_M_H0125_DESTINATION'
 
@@ -33,14 +36,17 @@ INSTR_COLS = [
     ["ETD_ORI", "DATE", "", "Y", "Original ETD"],
     ["CROSSDOCK_STATUS", "VARCHAR(1)", "", "N", "Status of the unit (Part Number + Customer Order Date): '6' Ready / '7' Not Ready"]]
 INSTR_TABLE = {"name": INSTR, "kind": "temp", "proposed": True,
-               "description": "Temporary table of one Get Order run (session): customer order line (H0253, order status 7, Hold Flag N, not mapped) "
+               "description": "Temporary table of one Search run (session): customer order line (H0253, order status 7, Hold Flag N, not mapped) "
                               "pre-mapped to a supplier PO (Pra Daily Order), FIFO by order date. One row per line x PO, plus one row with PO_NO NULL "
                               "for the qty still without a PO. Columns proposed.",
                "columns": INSTR_COLS}
 
 DRAFT_COLS = [
-    ["CASE_SEQ", "NUMBER(4)", "Y", "N", "Case sequence in the draft (Case 1, 2, ...)"],
-    ["LINE_SEQ", "NUMBER(4)", "Y", "N", "Order line x PO within the case"],
+    ["INSTRUCTION_ID", "BIGINT", "Y", "N", "Running number (identity)"],
+    ["SUPPLIER_CD", "VARCHAR(TBD)", "", "N", "Supplier code (one ASN = one Supplier Code + Plant)"],
+    ["SUPPLIER_PLANT", "VARCHAR(TBD)", "", "N", "Supplier plant"],
+    ["CASE_SEQ", "NUMBER(4)", "", "N", "Case sequence of the Create ASN (Case 1, 2, ...)"],
+    ["LINE_SEQ", "NUMBER(4)", "", "N", "Order line x PO within the case"],
     ["PART_NO", "VARCHAR(15)", "", "N", "Part number of the case"],
     ["ORDER_DT", "DATE", "", "N", "Customer Order Date of the case"],
     ["DESTINATION_CD", "VARCHAR(7)", "", "N", "Destination of the case"],
@@ -48,58 +54,64 @@ DRAFT_COLS = [
     ["CUSTOMER_ORDER_NO", "VARCHAR(8)", "", "N", "Customer order number"],
     ["DETAILED_ITEM_NO", "VARCHAR(4)", "", "N", "Detailed item number"],
     ["SERIAL_NO", "VARCHAR(7)", "", "N", "Serial number"],
-    ["QTY", "NUMBER(8)", "", "N", "Qty of the line in the case (mapped to the PO)"],
+    ["QTY", "NUMBER(8)", "", "N", "Qty of the line mapped to the PO in this case"],
     ["PO_NO", "VARCHAR(TBD)", "", "N", "PO number"],
-    ["MANIFEST_NO", "VARCHAR(TBD)", "", "N", "Manifest number"],
+    ["MANIFEST_NO", "VARCHAR(TBD)", "", "N", "Manifest number of the Pra Daily Order"],
     ["MANIFEST_ITEM_NO", "VARCHAR(TBD)", "", "N", "Manifest item number"],
     ["PO_ORDER_QTY", "NUMBER(TBD)", "", "N", "PO qty"],
-    ["DELIVERY_DT", "DATE", "", "N", "Delivery Date of the Get Order"],
-    ["RIT_CYCLE", "VARCHAR(TBD)", "", "N", "Rit of the Get Order"],
-    ["ROUTE", "VARCHAR(TBD)", "", "N", "Route of the Rit"]]
-DRAFT_TABLE = {"name": DRAFT, "kind": "temp", "proposed": True,
-               "description": "Temporary ASN draft built by [Create ASN] (mapping of the selected units); read by the Case List and by [Submit ASN]. Columns proposed.",
-               "columns": DRAFT_COLS}
-
-ASNH_COLS = [
-    ["ASN_NO", "VARCHAR(TBD)", "Y", "N", "ASN number (existing numbering)"],
-    ["SUPPLIER_CD", "VARCHAR(TBD)", "", "N", "Supplier of the cases"],
-    ["SUPPLIER_PLANT", "VARCHAR(TBD)", "", "N", "Supplier plant"],
-    ["DELIVERY_DT", "DATE", "", "N", "Delivery Date"],
-    ["RIT_CYCLE", "VARCHAR(TBD)", "", "N", "Rit"],
-    ["ROUTE", "VARCHAR(TBD)", "", "N", "Route of the Rit"],
-    ["TOTAL_CASE", "NUMBER", "", "N", "Number of cases"],
-    ["TOTAL_QTY", "NUMBER", "", "N", "Delivery Qty (total pieces)"],
-    ["ASN_STATUS", "VARCHAR(1)", "", "N", "'1' Created (set on submit)"],
-    ["CREATED_BY", "VARCHAR(TBD)", "", "N", "User who submitted the ASN"],
-    ["CREATED_DT", "DATETIME", "", "N", "Submit date and time"],
+    ["DELIVERY_DT", "DATE", "", "N", "Delivery Date of the Search"],
+    ["RIT_CYCLE", "VARCHAR(TBD)", "", "N", "Rit of the Search (route master, existing)"],
+    ["ROUTE", "VARCHAR(TBD)", "", "N", "Route of the Rit (route master, existing)"],
+    ["ASN_NO", "VARCHAR(TBD)", "", "Y", "ASN number; NULL until the ASN is submitted (X14)"],
+    ["CASE_NO", "VARCHAR(TBD)", "", "Y", "Case number; NULL until submitted (auto generated with the existing last sequence)"],
+    ["CREATED_BY", "VARCHAR(TBD)", "", "N", "User who created the record"],
+    ["CREATED_DT", "DATETIME", "", "N", "Created date and time"],
     ["CHANGED_BY", "VARCHAR(TBD)", "", "N", "User who last changed the record"],
     ["CHANGED_DT", "DATETIME", "", "N", "Last changed date and time"]]
-ASNH_TABLE = {"name": ASNH, "kind": "transaction", "proposed": True,
-              "description": "ASN header of ASN Crossdock Creation; its cases are in TB_R_ASN_CROSSDOCK_D. Name and columns proposed.",
+DRAFT_TABLE = {"name": DRAFT, "kind": "transaction", "proposed": True,
+               "description": "Real mapping made by [Create ASN]: one row per case x customer order line x PO of the selected units. Rows are deleted by [Back] / [Cancel] on the Case List; [Submit ASN] (X14) fills ASN_NO and CASE_NO. Columns proposed.",
+               "columns": DRAFT_COLS}
+
+PRA_MAP_COLS = [
+    ["PO_NO", "VARCHAR(TBD)", "Y", "N", "PO number (Pra Daily Order Manifest)"],
+    ["MANIFEST_NO", "VARCHAR(TBD)", "Y", "N", "Manifest number"],
+    ["MANIFEST_ITEM_NO", "VARCHAR(TBD)", "Y", "N", "Manifest item number (Pra Daily Order Part)"],
+    ["PART_NO", "VARCHAR(15)", "", "N", "Part number"],
+    ["SUPPLIER_CD", "VARCHAR(TBD)", "", "N", "Supplier code"],
+    ["SUPPLIER_PLANT", "VARCHAR(TBD)", "", "N", "Supplier plant"],
+    ["PO_ORDER_QTY", "NUMBER(TBD)", "", "N", "PO qty of the part"],
+    ["MAPPED_QTY", "NUMBER(TBD)", "", "N", "Qty already mapped to customer orders by [Create ASN]; open qty = PO_ORDER_QTY - MAPPED_QTY"],
+    ["CREATED_BY", "VARCHAR(TBD)", "", "N", "User who created the record"],
+    ["CREATED_DT", "DATETIME", "", "N", "Created date and time"],
+    ["CHANGED_BY", "VARCHAR(TBD)", "", "N", "User who last changed the record"],
+    ["CHANGED_DT", "DATETIME", "", "N", "Last changed date and time"]]
+PRA_MAP_TABLE = {"name": PRA_MAP, "kind": "transaction", "proposed": True,
+                 "description": "New table: mapped qty per Pra Daily Order PO part (instead of a new column in the Pra Daily Order). Name and columns proposed.",
+                 "columns": PRA_MAP_COLS}
+
+ASNH_COLS = [
+    ["MANIFEST_NO / ASN_NO", "existing", "Y", "N", "ASN number (auto generated as today, existing numbering)"],
+    ["SUPPLIER_CD", "existing", "", "N", "Supplier code"],
+    ["SUPPLIER_PLANT", "existing", "", "N", "Supplier plant"],
+    ["DELIVERY_DT", "existing", "", "N", "Delivery Date"],
+    ["RIT / ROUTE", "existing", "", "N", "Rit and route (route master, existing)"],
+    ["TOTAL_CASE / TOTAL_QTY", "existing", "", "N", "Number of cases / Delivery Qty"],
+    ["STATUS", "existing", "", "N", "Created"],
+    ["CREATED_BY / CREATED_DT", "existing", "", "N", "User and date-time of submit"]]
+ASNH_TABLE = {"name": ASNH, "kind": "transaction", "proposed": False,
+              "description": "Existing ASN header table of NSP; the crossdock ASN is saved here after submit. Only the fields used are listed; physical names follow the existing table.",
               "columns": ASNH_COLS}
 
 ASND_COLS = [
-    ["ASN_NO", "VARCHAR(TBD)", "Y", "N", "ASN number (TB_R_ASN_CROSSDOCK_H)"],
-    ["CASE_NO", "VARCHAR(TBD)", "Y", "N", "Case number; format and sequence follow the existing numbering (last sequence table)"],
-    ["LINE_SEQ", "NUMBER(4)", "Y", "N", "Order line x PO within the case"],
-    ["PART_NO", "VARCHAR(15)", "", "N", "Part number of the case"],
-    ["ORDER_DT", "DATE", "", "N", "Customer Order Date"],
-    ["DESTINATION_CD", "VARCHAR(7)", "", "N", "Destination of the case"],
-    ["CUSTOMER_CD", "VARCHAR(7)", "", "N", "Customer code"],
-    ["CUSTOMER_ORDER_NO", "VARCHAR(8)", "", "N", "Customer order number"],
-    ["DETAILED_ITEM_NO", "VARCHAR(4)", "", "N", "Detailed item number"],
-    ["SERIAL_NO", "VARCHAR(7)", "", "N", "Serial number"],
-    ["QTY", "NUMBER(8)", "", "N", "Qty of the line in the case"],
-    ["PO_NO", "VARCHAR(TBD)", "", "N", "PO number"],
-    ["MANIFEST_NO", "VARCHAR(TBD)", "", "N", "Manifest number"],
-    ["MANIFEST_ITEM_NO", "VARCHAR(TBD)", "", "N", "Manifest item number"],
-    ["PO_ORDER_QTY", "NUMBER(TBD)", "", "N", "PO qty"],
-    ["CREATED_BY", "VARCHAR(TBD)", "", "N", "User who submitted the ASN"],
-    ["CREATED_DT", "DATETIME", "", "N", "Submit date and time"],
-    ["CHANGED_BY", "VARCHAR(TBD)", "", "N", "User who last changed the record"],
-    ["CHANGED_DT", "DATETIME", "", "N", "Last changed date and time"]]
-ASND_TABLE = {"name": ASND, "kind": "transaction", "proposed": True,
-              "description": "Cases of a submitted ASN: one row per case x order line x PO. Name and columns proposed.",
+    ["MANIFEST_NO / ASN_NO", "existing", "Y", "N", "ASN number"],
+    ["CASE_NO", "existing", "Y", "N", "Case number, auto generated with the existing last sequence"],
+    ["PART_NO", "existing", "", "N", "Part number of the case"],
+    ["DESTINATION_CD", "existing", "", "N", "Destination of the case"],
+    ["QTY", "existing", "", "N", "Qty of the case"],
+    ["PO_NO / MANIFEST_ITEM_NO", "existing", "", "N", "PO reference of the Pra Daily Order"],
+    ["CREATED_BY / CREATED_DT", "existing", "", "N", "User and date-time of submit"]]
+ASND_TABLE = {"name": ASND, "kind": "transaction", "proposed": False,
+              "description": "Existing ASN part / case table of NSP. Only the fields used are listed; physical names follow the existing table.",
               "columns": ASND_COLS}
 
 

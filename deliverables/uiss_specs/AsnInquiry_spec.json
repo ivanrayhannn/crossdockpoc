@@ -61,7 +61,7 @@
    },
    {
     "name": "Download Case Label",
-    "function": "Download the labels of all cases of the ASN. TBD: label format."
+    "function": "Download the labels of all cases of the ASN. Label format follows the existing case label."
    }
   ],
   "screen_modes": [
@@ -257,7 +257,7 @@
   },
   {
    "name": "ASN No",
-   "source": "TB_R_ASN_CROSSDOCK_H",
+   "source": "TB_R_DAILY_ORDER_MANIFEST",
    "field": "ASN_NO",
    "type": "Char",
    "len": "TBD",
@@ -272,7 +272,7 @@
   },
   {
    "name": "Delivery Date",
-   "source": "TB_R_ASN_CROSSDOCK_H",
+   "source": "TB_R_DAILY_ORDER_MANIFEST",
    "field": "DELIVERY_DT",
    "type": "Date",
    "len": "-",
@@ -287,7 +287,7 @@
   },
   {
    "name": "Rit Cycle / Route",
-   "source": "TB_R_ASN_CROSSDOCK_H",
+   "source": "TB_R_DAILY_ORDER_MANIFEST",
    "field": "RIT_CYCLE / ROUTE",
    "type": "Char",
    "len": "TBD",
@@ -302,7 +302,7 @@
   },
   {
    "name": "Part / Customer Order Date",
-   "source": "TB_R_ASN_CROSSDOCK_D",
+   "source": "TB_R_DAILY_ORDER_PART",
    "field": "PART_NO / ORDER_DT",
    "type": "Char",
    "len": "-",
@@ -317,7 +317,7 @@
   },
   {
    "name": "Cases / Qty",
-   "source": "TB_R_ASN_CROSSDOCK_H",
+   "source": "TB_R_DAILY_ORDER_MANIFEST",
    "field": "TOTAL_CASE / TOTAL_QTY",
    "type": "Number",
    "len": "-",
@@ -332,7 +332,7 @@
   },
   {
    "name": "Status",
-   "source": "TB_R_ASN_CROSSDOCK_H",
+   "source": "TB_R_DAILY_ORDER_MANIFEST",
    "field": "ASN_STATUS",
    "type": "Char",
    "len": "TBD",
@@ -347,7 +347,7 @@
   },
   {
    "name": "Created",
-   "source": "TB_R_ASN_CROSSDOCK_H",
+   "source": "TB_R_DAILY_ORDER_MANIFEST",
    "field": "CREATED_BY / CREATED_DT",
    "type": "Char",
    "len": "-",
@@ -380,7 +380,7 @@
   },
   {
    "name": "ASN summary",
-   "source": "TB_R_ASN_CROSSDOCK_H",
+   "source": "TB_R_DAILY_ORDER_MANIFEST",
    "field": "-",
    "type": "Char",
    "len": "-",
@@ -406,11 +406,11 @@
    "required": "N",
    "format": "-",
    "validation": "-",
-   "description": "Downloads the labels of all cases (TBD format)."
+   "description": "Downloads the labels of all cases (existing label format)."
   },
   {
    "name": "Case No",
-   "source": "TB_R_ASN_CROSSDOCK_D",
+   "source": "TB_R_DAILY_ORDER_PART",
    "field": "CASE_NO",
    "type": "Char",
    "len": "TBD",
@@ -425,7 +425,7 @@
   },
   {
    "name": "Part Number / Customer Order Date / Destination",
-   "source": "TB_R_ASN_CROSSDOCK_D",
+   "source": "TB_R_DAILY_ORDER_PART",
    "field": "PART_NO / ORDER_DT / DESTINATION_CD",
    "type": "Char",
    "len": "-",
@@ -440,7 +440,7 @@
   },
   {
    "name": "Customer Order No (qty) / PO No / Qty",
-   "source": "TB_R_ASN_CROSSDOCK_D",
+   "source": "TB_R_DAILY_ORDER_PART",
    "field": "CUSTOMER_ORDER_NO / PO_NO / QTY",
    "type": "Char",
    "len": "-",
@@ -467,7 +467,7 @@
    "marker": "a.",
    "level": 2,
    "items": [
-    "On first display all ASNs of TB_R_ASN_CROSSDOCK_H are listed, newest first.",
+    "On first display all crossdock ASNs of the existing table TB_R_DAILY_ORDER_MANIFEST are listed, newest first. Supplier: its own Supplier Code + Plant; D/S team: all suppliers.",
     "[Search] applies ASN No (contains), Delivery Date range and Part Number (ASNs whose cases contain the part). [Reset] clears them. No row: message no. 1.",
     "Clicking an ASN No opens Detail Mode."
    ]
@@ -481,9 +481,9 @@
    "marker": "a.",
    "level": 2,
    "items": [
-    "Shows the ASN summary and its cases from TB_R_ASN_CROSSDOCK_D (rows with the ASN_NO), grouped by CASE_NO. All items are read only.",
-    "[Download Case Label]: TBD (format, file name, content). [Back] returns to the list in the current search state.",
-    "The screen does not change data (display only)."
+    "Shows the ASN summary and its cases from the existing table TB_R_DAILY_ORDER_PART (rows with the ASN No), grouped by CASE_NO. All items are read only.",
+    "[Download Case Label]: follows the existing case label of NSP. [Back] returns to the list in the current search state.",
+    "The screen does not change data (display only). There is no Cancel ASN: an order is cancelled in the source (H0253 order status '2') for lines already on hold (HOLD_FLAG = 'Y'), not in NSP (refer X10)."
    ]
   }
  ],
@@ -503,242 +503,123 @@
  "logging_messages": [],
  "tables": [
   {
-   "name": "TB_R_ASN_CROSSDOCK_H",
+   "name": "TB_R_DAILY_ORDER_MANIFEST",
    "kind": "transaction",
-   "proposed": true,
-   "description": "ASN header of ASN Crossdock Creation; its cases are in TB_R_ASN_CROSSDOCK_D. Name and columns proposed.",
+   "proposed": false,
+   "description": "Existing ASN header table of NSP; the crossdock ASN is saved here after submit. Only the fields used are listed; physical names follow the existing table.",
    "columns": [
     [
-     "ASN_NO",
-     "VARCHAR(TBD)",
+     "MANIFEST_NO / ASN_NO",
+     "existing",
      "Y",
      "N",
-     "ASN number (existing numbering)"
+     "ASN number (auto generated as today, existing numbering)"
     ],
     [
      "SUPPLIER_CD",
-     "VARCHAR(TBD)",
+     "existing",
      "",
      "N",
-     "Supplier of the cases"
+     "Supplier code"
     ],
     [
      "SUPPLIER_PLANT",
-     "VARCHAR(TBD)",
+     "existing",
      "",
      "N",
      "Supplier plant"
     ],
     [
      "DELIVERY_DT",
-     "DATE",
+     "existing",
      "",
      "N",
      "Delivery Date"
     ],
     [
-     "RIT_CYCLE",
-     "VARCHAR(TBD)",
+     "RIT / ROUTE",
+     "existing",
      "",
      "N",
-     "Rit"
+     "Rit and route (route master, existing)"
     ],
     [
-     "ROUTE",
-     "VARCHAR(TBD)",
+     "TOTAL_CASE / TOTAL_QTY",
+     "existing",
      "",
      "N",
-     "Route of the Rit"
+     "Number of cases / Delivery Qty"
     ],
     [
-     "TOTAL_CASE",
-     "NUMBER",
+     "STATUS",
+     "existing",
      "",
      "N",
-     "Number of cases"
+     "Created"
     ],
     [
-     "TOTAL_QTY",
-     "NUMBER",
+     "CREATED_BY / CREATED_DT",
+     "existing",
      "",
      "N",
-     "Delivery Qty (total pieces)"
-    ],
-    [
-     "ASN_STATUS",
-     "VARCHAR(1)",
-     "",
-     "N",
-     "'1' Created (set on submit)"
-    ],
-    [
-     "CREATED_BY",
-     "VARCHAR(TBD)",
-     "",
-     "N",
-     "User who submitted the ASN"
-    ],
-    [
-     "CREATED_DT",
-     "DATETIME",
-     "",
-     "N",
-     "Submit date and time"
-    ],
-    [
-     "CHANGED_BY",
-     "VARCHAR(TBD)",
-     "",
-     "N",
-     "User who last changed the record"
-    ],
-    [
-     "CHANGED_DT",
-     "DATETIME",
-     "",
-     "N",
-     "Last changed date and time"
+     "User and date-time of submit"
     ]
    ]
   },
   {
-   "name": "TB_R_ASN_CROSSDOCK_D",
+   "name": "TB_R_DAILY_ORDER_PART",
    "kind": "transaction",
-   "proposed": true,
-   "description": "Cases of a submitted ASN: one row per case x order line x PO. Name and columns proposed.",
+   "proposed": false,
+   "description": "Existing ASN part / case table of NSP. Only the fields used are listed; physical names follow the existing table.",
    "columns": [
     [
-     "ASN_NO",
-     "VARCHAR(TBD)",
+     "MANIFEST_NO / ASN_NO",
+     "existing",
      "Y",
      "N",
-     "ASN number (TB_R_ASN_CROSSDOCK_H)"
+     "ASN number"
     ],
     [
      "CASE_NO",
-     "VARCHAR(TBD)",
+     "existing",
      "Y",
      "N",
-     "Case number; format and sequence follow the existing numbering (last sequence table)"
-    ],
-    [
-     "LINE_SEQ",
-     "NUMBER(4)",
-     "Y",
-     "N",
-     "Order line x PO within the case"
+     "Case number, auto generated with the existing last sequence"
     ],
     [
      "PART_NO",
-     "VARCHAR(15)",
+     "existing",
      "",
      "N",
      "Part number of the case"
     ],
     [
-     "ORDER_DT",
-     "DATE",
-     "",
-     "N",
-     "Customer Order Date"
-    ],
-    [
      "DESTINATION_CD",
-     "VARCHAR(7)",
+     "existing",
      "",
      "N",
      "Destination of the case"
     ],
     [
-     "CUSTOMER_CD",
-     "VARCHAR(7)",
-     "",
-     "N",
-     "Customer code"
-    ],
-    [
-     "CUSTOMER_ORDER_NO",
-     "VARCHAR(8)",
-     "",
-     "N",
-     "Customer order number"
-    ],
-    [
-     "DETAILED_ITEM_NO",
-     "VARCHAR(4)",
-     "",
-     "N",
-     "Detailed item number"
-    ],
-    [
-     "SERIAL_NO",
-     "VARCHAR(7)",
-     "",
-     "N",
-     "Serial number"
-    ],
-    [
      "QTY",
-     "NUMBER(8)",
+     "existing",
      "",
      "N",
-     "Qty of the line in the case"
+     "Qty of the case"
     ],
     [
-     "PO_NO",
-     "VARCHAR(TBD)",
+     "PO_NO / MANIFEST_ITEM_NO",
+     "existing",
      "",
      "N",
-     "PO number"
+     "PO reference of the Pra Daily Order"
     ],
     [
-     "MANIFEST_NO",
-     "VARCHAR(TBD)",
+     "CREATED_BY / CREATED_DT",
+     "existing",
      "",
      "N",
-     "Manifest number"
-    ],
-    [
-     "MANIFEST_ITEM_NO",
-     "VARCHAR(TBD)",
-     "",
-     "N",
-     "Manifest item number"
-    ],
-    [
-     "PO_ORDER_QTY",
-     "NUMBER(TBD)",
-     "",
-     "N",
-     "PO qty"
-    ],
-    [
-     "CREATED_BY",
-     "VARCHAR(TBD)",
-     "",
-     "N",
-     "User who submitted the ASN"
-    ],
-    [
-     "CREATED_DT",
-     "DATETIME",
-     "",
-     "N",
-     "Submit date and time"
-    ],
-    [
-     "CHANGED_BY",
-     "VARCHAR(TBD)",
-     "",
-     "N",
-     "User who last changed the record"
-    ],
-    [
-     "CHANGED_DT",
-     "DATETIME",
-     "",
-     "N",
-     "Last changed date and time"
+     "User and date-time of submit"
     ]
    ]
   }

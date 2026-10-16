@@ -49,8 +49,8 @@ export function AsnBackendProcessPage() {
       <Section no="1" title="Search – Get Order (X12, on demand)">
         <Steps rows={[
           ['1', 'Read customer orders of H0253: ORDER_STATUS 7, HOLD_FLAG N, PO_MAPPED_FLAG N; FIFO by order date per part number.', 'TB_R_H0253_ORDER_CONTROL_PRE'],
-          ['2', 'Read PO parts of the Pra Daily Order: CROSSDOCK_FLAG X, PO qty not yet mapped; FIFO by PO date.', 'TB_R_PRA_DAILY_ORDER_MANIFEST / PART'],
-          ['3', 'Pre-map per part number (no permanent change); compute Case Qty, PO Readiness and status Ready (6) / Not Ready (7).', '#TB_R_INSTRUCTION (temporary)'],
+          ['2', 'Read PO parts of the Pra Daily Order: CROSSDOCK_FLAG X; open qty = PO qty minus the mapped qty; FIFO by PO date.', 'TB_R_PRA_DAILY_ORDER_MANIFEST / PART, TB_R_PRA_DAILY_ORDER_MAPPED (new)'],
+          ['3', 'Pre-map per part number (no permanent change); compute Case Qty, PO Readiness and status Ready (6) / Not Ready (7).', '#TEMP_INSTRUCTION (temporary)'],
           ['4', 'Return the delivery plan; units with PO Readiness 0 and Created units are not listed.', 'Screen'],
         ]} />
       </Section>
@@ -59,19 +59,19 @@ export function AsnBackendProcessPage() {
         <Steps rows={[
           ['1', 'Lock the H0253 lines of the ticked units (row lock in one transaction).', 'TB_R_H0253_ORDER_CONTROL_PRE'],
           ['2', 'Re-check each line: HOLD_FLAG must still be N and PO_MAPPED_FLAG N; the unit must still be Ready.', 'If not: roll back, the whole create fails, message "Some order has been already hold, please select other records", the delivery plan is refreshed automatically and all units are unticked'],
-          ['3', 'Set PO_MAPPED_FLAG = Y and add the mapped qty to the PO parts.', 'TB_R_H0253_ORDER_CONTROL_PRE, TB_R_PRA_DAILY_ORDER_PART'],
-          ['4', 'Build the ASN draft: one case per Part Number + Customer Order Date + destination.', '#TEMP_ASN_DRAFT (temporary)'],
-          ['5', 'Commit and open the Case List. Back / Cancel on the Case List releases the mapping.', 'Screen'],
+          ['3', 'Check that all ticked units are of one Supplier Code + Plant (one ASN = one supplier + plant). Set PO_MAPPED_FLAG = Y and add the mapped qty per PO part.', 'TB_R_H0253_ORDER_CONTROL_PRE, TB_R_PRA_DAILY_ORDER_MAPPED (new)'],
+          ['4', 'Insert the real mapping: one row per case x order line x PO (one case per Part Number + Customer Order Date + destination).', 'TB_R_INSTRUCTION'],
+          ['5', 'Commit and open the Case List. Back / Cancel deletes the rows from TB_R_INSTRUCTION and releases the flags and mapped qty.', 'Screen'],
         ]} />
       </Section>
 
       <Section no="3" title="Submit ASN – batch with Submit ID (X14)">
         <Steps rows={[
           ['1', 'Confirmation "Submit ASN? {n} cases ({q} pcs) will be created into {ASN No}, delivery {date} · {rit}." Yes → the draft is handed to the batch with a Submit ID; the submit process follows the existing ASN.', 'Submit request (existing)'],
-          ['2', 'Batch: take the ASN No and Case No from the existing numbering (last sequence table).', 'Existing last sequence table'],
-          ['3', 'Batch: insert the ASN header (ASN_STATUS 1 Created) and the cases.', 'TB_R_ASN_CROSSDOCK_H / _D'],
+          ['2', 'Batch: ASN No and Case No are generated automatically as today (existing): the last sequence is read from and saved in the existing last sequence table.', 'Existing last sequence table'],
+          ['3', 'Batch: insert the ASN (status Created) into the existing ASN tables and write ASN_NO / CASE_NO back to TB_R_INSTRUCTION.', 'TB_R_DAILY_ORDER_MANIFEST / TB_R_DAILY_ORDER_PART, TB_R_INSTRUCTION'],
           ['4', 'Batch: write start, result and end messages with the Submit ID to the existing log; no success popup on the screen.', 'Log (existing) → Log Monitoring'],
-          ['5', 'Error: roll back the batch, log the error with the Submit ID; the mapping of the draft is released.', 'Log (existing)'],
+          ['5', 'Error: roll back the batch, log the error with the Submit ID; the mapping in TB_R_INSTRUCTION is released.', 'Log (existing)'],
         ]} />
         <div style={{ marginTop: 8 }}>
           Log message on success: <i>"ASN-50221-261015-001 submitted with status Created. 3 cases are locked. Delivery 15-Oct-2026 · Rit 1. The ASN is shown in ASN Inquiry."</i>
@@ -90,13 +90,22 @@ export function AsnBackendProcessPage() {
         </div>
       </Section>
 
-      <Section no="5" title="How to simulate it in this prototype">
+      <Section no="5" title="Cancel of an order (not in NSP)">
+        <Steps rows={[
+          ['1', 'The D/S team holds the destination in ASN Creation (HOLD_FLAG = Y); NSP never cancels an order itself.', 'TB_R_H0253_ORDER_CONTROL_PRE'],
+          ['2', 'The order is cancelled in the source system: the H0253 line comes with ORDER_STATUS 2 (cancel) instead of 7 (cross dock).', 'H0253 (G-TOPAS) → X10'],
+          ['3', 'Lines with HOLD_FLAG = Y and ORDER_STATUS 2 are treated as cancelled: not taken by Search, no ASN. There is no Cancel ASN button in ASN Inquiry.', 'TB_R_H0253_ORDER_CONTROL_PRE'],
+        ]} />
+      </Section>
+
+      <Section no="6" title="How to simulate it in this prototype">
         <ol style={{ margin: '4px 0 0', paddingLeft: 20 }}>
           <li>Open <a href="#/asn-creation">ASN Creation</a>, keep <b>View as: Supplier</b>, click <b>Search</b>.</li>
           <li>Tick <b>PART-A 13-Oct-2026</b> (do not click Create yet).</li>
           <li>Switch to <b>View as: D/S team</b> — this is the other session. Expand PART-A 13-Oct and click <b>N · Hold</b> on one destination.</li>
           <li>Switch back to <b>View as: Supplier</b>: the tick is still there (the supplier did not refresh yet).</li>
           <li>Click <b>Create ASN</b>: the message <i>"Some order has been already hold, please select other records"</i> appears, the Case List does not open, all ticks are removed and the delivery plan is refreshed automatically (see "refreshed hh:mm:ss" next to the counter).</li>
+          <li>One ASN = one Supplier Code + Plant: in View as D/S team (super admin, all suppliers) tick a PART-A unit (50221) and PART-D (50330) and click Create ASN → message "One ASN is for one Supplier Code and Supplier Plant".</li>
           <li>Tick another Ready unit, Create ASN and Submit: the Submit ID banner appears and the result is in <a href="#/log-monitoring">Log Monitoring</a>.</li>
         </ol>
         <div style={{ marginTop: 8, color: 'var(--color-neutral-600)', fontSize: 11.5 }}>

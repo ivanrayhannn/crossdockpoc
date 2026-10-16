@@ -19,7 +19,7 @@
  ],
  "general": {
   "objective": [
-   "To get the crossdock customer orders (H0253, order status 7, Hold Flag N, not yet mapped) and pre-map them to the crossdock supplier PO parts (Pra Daily Order, crossdock flag X), FIFO by order date, into the temporary table #TB_R_INSTRUCTION.",
+   "To get the crossdock customer orders (H0253, order status 7, Hold Flag N, not yet mapped) and pre-map them to the crossdock supplier PO parts (Pra Daily Order, crossdock flag X), FIFO by order date, into the temporary table #TEMP_INSTRUCTION.",
    "To give ASN Crossdock Creation (X8) the delivery plan per Part Number + Customer Order Date with Case Qty, PO Readiness (case) and ASN Status Ready / Not Ready.",
    "It runs when the user clicks [Search] on X8; there is no scheduler. The real mapping is done later by [Create ASN] on X8."
   ],
@@ -49,7 +49,7 @@
      },
      {
       "id": "e",
-      "label": "Fill #TB_R_INSTRUCTION, set status",
+      "label": "Fill #TEMP_INSTRUCTION, set status",
       "type": "process"
      }
     ],
@@ -87,12 +87,17 @@
    {
     "name": "TB_R_PRA_DAILY_ORDER_MANIFEST / TB_R_PRA_DAILY_ORDER_PART",
     "type": "DB",
-    "description": "CROSSDOCK_FLAG = 'X', latest data, PO qty not yet mapped to a customer order, by Order Date ascending"
+    "description": "CROSSDOCK_FLAG = 'X', latest data, by Order Date ascending"
+   },
+   {
+    "name": "TB_R_PRA_DAILY_ORDER_MAPPED",
+    "type": "DB",
+    "description": "New table: MAPPED_QTY per PO part; open PO qty = PO_ORDER_QTY - MAPPED_QTY"
    }
   ],
   "outputs": [
    {
-    "name": "#TB_R_INSTRUCTION",
+    "name": "#TEMP_INSTRUCTION",
     "type": "Temp",
     "description": "One row per line x PO; one row with PO_NO NULL for the qty still without a PO"
    },
@@ -207,7 +212,7 @@
     },
     {
      "id": "o",
-     "label": "#TB_R_INSTRUCTION",
+     "label": "#TEMP_INSTRUCTION",
      "type": "db",
      "lane": "output"
     },
@@ -254,19 +259,19 @@
    {
     "text": "Get the customer order lines from TB_R_H0253_ORDER_CONTROL_PRE:",
     "children": [
-     "ORDER_STATUS = '7' (Cross Dock), HOLD_FLAG = 'N', PO_MAPPED_FLAG = 'N'; latest data; earliest order date first per part number (FIFO, G-TOPAS key).",
+     "ORDER_STATUS = '7' (Cross Dock), HOLD_FLAG = 'N', PO_MAPPED_FLAG = 'N'; latest data; earliest order date first per part number (FIFO, G-TOPAS key). Status '2' (cancel from the source) is not taken.",
      "Get: Customer Code, Customer Order No, Order Date, Destination Code, Detailed Item No, Serial No, Part Number, Order Status Qty."
     ]
    },
    {
     "text": "Get the PO parts from TB_R_PRA_DAILY_ORDER_MANIFEST + TB_R_PRA_DAILY_ORDER_PART:",
     "children": [
-     "CROSSDOCK_FLAG = 'X'; latest data; PO qty not yet mapped to a customer order; ordered by Order Date ascending (FIFO).",
+     "CROSSDOCK_FLAG = 'X'; latest data; open PO qty = PO_ORDER_QTY - MAPPED_QTY of TB_R_PRA_DAILY_ORDER_MAPPED (0 when no row) > 0; ordered by Order Date ascending (FIFO).",
      "Get: PO Number, Manifest Number, Supplier Code / Plant, Sub Supplier Code / Plant, Order Type, Dock Code, PO Order Qty, Order Date, ETD Ori, Manifest Item No, Part Number."
     ]
    },
    {
-    "text": "Pre-map per part number, FIFO (see 4.1), and insert the result in #TB_R_INSTRUCTION.",
+    "text": "Pre-map per part number, FIFO (see 4.1), and insert the result in #TEMP_INSTRUCTION.",
     "children": [
      "Each PO qty is given to the oldest open lines first; a line may be split over several POs; the open qty of a line is one row with PO_NO NULL."
     ]
@@ -292,7 +297,7 @@
      ]
     },
     "destination": {
-     "table": "#TB_R_INSTRUCTION",
+     "table": "#TEMP_INSTRUCTION",
      "operation": "Insert",
      "description": "Line x PO pre-mapping (temporary)"
     },
@@ -441,7 +446,8 @@
     "Case Qty = number of destinations of the unit. PO Readiness (case) = cases whose whole qty is pre-mapped to a PO.",
     "CROSSDOCK_STATUS '6' Ready: every line of the unit is pre-mapped. '7' Not Ready: at least one line of the unit has no PO yet.",
     "Shown on X8 as ASN Status Ready / Not Ready. Units with PO Readiness 0 are not listed on X8; units already in a submitted ASN (ASN status '1' Created) are not taken (PO_MAPPED_FLAG = 'Y').",
-    "TBD: physical structure of TB_R_PRA_DAILY_ORDER_MANIFEST / PART and the column for the mapped qty."
+    "The mapped qty is kept in the new table TB_R_PRA_DAILY_ORDER_MAPPED (no new column in the Pra Daily Order); it is updated by [Create ASN] on X8, not by this function.",
+    "Nothing is saved by this function: #TEMP_INSTRUCTION is the pre-mapping only; the real mapping is inserted into TB_R_INSTRUCTION by [Create ASN]."
    ]
   }
  ],
@@ -682,10 +688,10 @@
  },
  "tables": [
   {
-   "name": "#TB_R_INSTRUCTION",
+   "name": "#TEMP_INSTRUCTION",
    "kind": "temp",
    "proposed": true,
-   "description": "Temporary table of one Get Order run (session): customer order line (H0253, order status 7, Hold Flag N, not mapped) pre-mapped to a supplier PO (Pra Daily Order), FIFO by order date. One row per line x PO, plus one row with PO_NO NULL for the qty still without a PO. Columns proposed.",
+   "description": "Temporary table of one Search run (session): customer order line (H0253, order status 7, Hold Flag N, not mapped) pre-mapped to a supplier PO (Pra Daily Order), FIFO by order date. One row per line x PO, plus one row with PO_NO NULL for the qty still without a PO. Columns proposed.",
    "columns": [
     [
      "INSTRUCTION_ID",
@@ -861,6 +867,98 @@
      "",
      "N",
      "Status of the unit (Part Number + Customer Order Date): '6' Ready / '7' Not Ready"
+    ]
+   ]
+  },
+  {
+   "name": "TB_R_PRA_DAILY_ORDER_MAPPED",
+   "kind": "transaction",
+   "proposed": true,
+   "description": "New table: mapped qty per Pra Daily Order PO part (instead of a new column in the Pra Daily Order). Name and columns proposed.",
+   "columns": [
+    [
+     "PO_NO",
+     "VARCHAR(TBD)",
+     "Y",
+     "N",
+     "PO number (Pra Daily Order Manifest)"
+    ],
+    [
+     "MANIFEST_NO",
+     "VARCHAR(TBD)",
+     "Y",
+     "N",
+     "Manifest number"
+    ],
+    [
+     "MANIFEST_ITEM_NO",
+     "VARCHAR(TBD)",
+     "Y",
+     "N",
+     "Manifest item number (Pra Daily Order Part)"
+    ],
+    [
+     "PART_NO",
+     "VARCHAR(15)",
+     "",
+     "N",
+     "Part number"
+    ],
+    [
+     "SUPPLIER_CD",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "Supplier code"
+    ],
+    [
+     "SUPPLIER_PLANT",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "Supplier plant"
+    ],
+    [
+     "PO_ORDER_QTY",
+     "NUMBER(TBD)",
+     "",
+     "N",
+     "PO qty of the part"
+    ],
+    [
+     "MAPPED_QTY",
+     "NUMBER(TBD)",
+     "",
+     "N",
+     "Qty already mapped to customer orders by [Create ASN]; open qty = PO_ORDER_QTY - MAPPED_QTY"
+    ],
+    [
+     "CREATED_BY",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "User who created the record"
+    ],
+    [
+     "CREATED_DT",
+     "DATETIME",
+     "",
+     "N",
+     "Created date and time"
+    ],
+    [
+     "CHANGED_BY",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "User who last changed the record"
+    ],
+    [
+     "CHANGED_DT",
+     "DATETIME",
+     "",
+     "N",
+     "Last changed date and time"
     ]
    ]
   }

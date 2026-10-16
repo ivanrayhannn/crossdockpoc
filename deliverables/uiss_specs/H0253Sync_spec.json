@@ -184,7 +184,7 @@
   },
   "steps": [
    "The scheduler starts the batch.",
-   "Delete all rows of TB_R_H0253_ORDER_CONTROL_PRE (NSP) and insert all rows of TB_R_H0253_ORDER_CONTROL_PRE (DB Surrounding) (same columns and values). HOLD_FLAG and PO_MAPPED_FLAG are NSP-only columns (set in ASN Crossdock Creation): before the delete their values are kept per unique key and put back on the inserted rows; a new key gets 'N'.",
+   "Delete all rows of TB_R_H0253_ORDER_CONTROL_PRE (NSP) and insert all rows of TB_R_H0253_ORDER_CONTROL_PRE (DB Surrounding) (same columns and values). HOLD_FLAG and PO_MAPPED_FLAG are NSP-only columns (set in ASN Crossdock Creation): before the delete their values are kept per unique key and put back on the inserted rows; a new key gets 'N'. Cancel is not done in NSP: the source sends the cancelled order with ORDER_STATUS '2' (crossdock orders have '7'); NSP only holds, so a cancel applies to lines already on hold (HOLD_FLAG = 'Y'). Lines with status '2' are not taken by X12.",
    "No error: commit. Error: roll back step 2 (one transaction). Record the result in the Log. Exit."
   ]
  },
@@ -705,7 +705,7 @@
    "marker": "-",
    "level": 0,
    "items": [
-    "Full replace (delete - insert); all columns are copied as they are, no conversion. HOLD_FLAG and PO_MAPPED_FLAG are NSP-only columns (set in ASN Crossdock Creation): before the delete their values are kept per unique key and put back on the inserted rows; a new key gets 'N'.",
+    "Full replace (delete - insert); all columns are copied as they are, no conversion. HOLD_FLAG and PO_MAPPED_FLAG are NSP-only columns (set in ASN Crossdock Creation): before the delete their values are kept per unique key and put back on the inserted rows; a new key gets 'N'. Cancel is not done in NSP: the source sends the cancelled order with ORDER_STATUS '2' (crossdock orders have '7'); NSP only holds, so a cancel applies to lines already on hold (HOLD_FLAG = 'Y'). Lines with status '2' are not taken by X12.",
     "Delete and insert run in one transaction (all-or-nothing). When the run fails, NSP keeps the data of the last successful run.",
     "Schedule is set in the system master (TBC). Table structure: see Appendix."
    ]
