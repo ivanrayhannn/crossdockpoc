@@ -1,4 +1,4 @@
-"""Table structures of the replicated G-TOPAS tables (from the I/F layouts H01-25 DVJO820, H02-02 DVJO250, H02-53 DVJO950).
+"""Table structures of the replicated T-System tables (from the I/F layouts H01-25 DVJO820, H02-02 DVJO250, H02-53 DVJO950).
 Column: [name, type, PK, Null, description]. Physical names follow the table exports (TB_R_H0202_DEMAND_HISTORY_SUM, TB_R_H0253_ORDER_CONTROL_PRE, TB_M_H0125_DESTINATION)."""
 
 H0125_COLS = [
@@ -252,28 +252,28 @@ H0125_COLS = [
 "TIMESTAMP",
 "",
 "Y",
-"Created date and time (NSP)"
+"Created date and time (Supplier System)"
 ],
 [
 "CREATE_BY",
 "VARCHAR(TBD)",
 "",
 "Y",
-"Created by (NSP)"
+"Created by (Supplier System)"
 ],
 [
 "UPDATE_DT",
 "TIMESTAMP",
 "",
 "Y",
-"Updated date and time (NSP)"
+"Updated date and time (Supplier System)"
 ],
 [
 "UPDATE_BY",
 "VARCHAR(TBD)",
 "",
 "Y",
-"Updated by (NSP)"
+"Updated by (Supplier System)"
 ]
 ]
 
@@ -535,28 +535,28 @@ H0202_COLS = [
 "TIMESTAMP",
 "",
 "Y",
-"Created date and time (NSP)"
+"Created date and time (Supplier System)"
 ],
 [
 "CREATE_BY",
 "VARCHAR(TBD)",
 "",
 "Y",
-"Created by (NSP)"
+"Created by (Supplier System)"
 ],
 [
 "UPDATE_DT",
 "TIMESTAMP",
 "",
 "Y",
-"Updated date and time (NSP)"
+"Updated date and time (Supplier System)"
 ],
 [
 "UPDATE_BY",
 "VARCHAR(TBD)",
 "",
 "Y",
-"Updated by (NSP)"
+"Updated by (Supplier System)"
 ]
 ]
 
@@ -874,41 +874,41 @@ H0253_COLS = [
 "VARCHAR(1)",
 "",
 "N",
-"NSP column: hold by the D/S team in ASN Crossdock Creation ('Y' / 'N'); default 'N' on insert, kept on re-sync"
+"Supplier System column: hold by the D/S team in ASN Crossdock Creation ('Y' / 'N'); default 'N' on insert, kept on re-sync"
 ],
 [
 "PO_MAPPED_FLAG",
 "VARCHAR(1)",
 "",
 "N",
-"NSP column: line mapped to a PO by [Create ASN] ('Y' / 'N'); default 'N' on insert, kept on re-sync"
+"Supplier System column: line mapped to a PO by [Create ASN] ('Y' / 'N'); default 'N' on insert, kept on re-sync"
 ],
 [
 "CREATE_DT",
 "TIMESTAMP",
 "",
 "Y",
-"Created date and time (NSP)"
+"Created date and time (Supplier System)"
 ],
 [
 "CREATE_BY",
 "VARCHAR(TBD)",
 "",
 "Y",
-"Created by (NSP)"
+"Created by (Supplier System)"
 ],
 [
 "UPDATE_DT",
 "TIMESTAMP",
 "",
 "Y",
-"Updated date and time (NSP)"
+"Updated date and time (Supplier System)"
 ],
 [
 "UPDATE_BY",
 "VARCHAR(TBD)",
 "",
 "Y",
-"Updated by (NSP)"
+"Updated by (Supplier System)"
 ]
 ]

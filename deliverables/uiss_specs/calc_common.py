@@ -40,7 +40,7 @@ ADS_COLS = [
     ["NUM_OF_WORKINGDAY_6M", "NUMBER", "", "Y", "Working days in 6 months (not used by Crossdock)"],
     ["EM_MS_FLAG", "CHAR(1)", "", "Y", "EM / MS flag (not used by Crossdock)"]]
 ADS_TABLE = {"name": ADS, "kind": "transaction", "proposed": False,
-             "description": "Actual demand summary replicated from DB Surrounding to NSP (same columns). Key (PK) proposed from the data; types follow the source table.",
+             "description": "Actual demand summary replicated from DB Surrounding to Supplier System (same columns). Key (PK) proposed from the data; types follow the source table.",
              "columns": ADS_COLS}
 
 T_COLS = [
@@ -99,7 +99,7 @@ for _c in DM_COLS:
     if _c[0] in _T:
         _c[1], _c[3] = _T[_c[0]][1], _T[_c[0]][3]
 DM_TABLE = {"name": DM, "kind": "master", "proposed": False,
-            "description": "Destination Master (existing NSP table, read only). Only the listed columns are relevant; full structure: X11 Destination Master (H0125) Sync.",
+            "description": "Destination Master (existing Supplier System table, read only). Only the listed columns are relevant; full structure: X11 Destination Master (H0125) Sync.",
             "columns": DM_COLS}
 
 RES_COLS = [

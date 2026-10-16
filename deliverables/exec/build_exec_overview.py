@@ -166,8 +166,8 @@ landscape(kf, f'A1:K{KF_LAST + 1}')
 # ---------------------------------------------------------------- Business Flow (swimlane)
 bf = wb.create_sheet('Business Flow')
 LANES = [
-    ('G-TOPAS /\nDB Surrounding', 'E7E6E6'),
-    ('NSP Batch\n(System)', 'D9E1F2'),
+    ('T-System /\nDB Surrounding', 'E7E6E6'),
+    ('Supplier System Batch\n(System)', 'D9E1F2'),
     ('Procurement', 'E2EFDA'),
     ('D/S Team', 'FCE4D6'),
     ('Supplier', 'FFF2CC'),
@@ -175,10 +175,10 @@ LANES = [
 ]
 LANE_IDX = {n.split('\n')[0].split(' /')[0].split(' (')[0]: i for i, (n, _) in enumerate(LANES)}
 # column -> list of (lane key, ids, text, next_scope)
-G, N, P, D, S, GS = 'G-TOPAS', 'NSP Batch', 'Procurement', 'D/S Team', 'Supplier', 'Global System'
+G, N, P, D, S, GS = 'T-System', 'Supplier System Batch', 'Procurement', 'D/S Team', 'Supplier', 'Global System'
 COLS = [
     [(G, 'Source', 'Actual demand &\ndestination master', False)],
-    [(N, 'X5 · X11', 'Replicate data\nto NSP', False), (P, 'X1 · X2', 'Register candidate part\n(Min MAD, Pcs/Case,\nMax Case/Day)', False)],
+    [(N, 'X5 · X11', 'Replicate data\nto Supplier System', False), (P, 'X1 · X2', 'Register candidate part\n(Min MAD, Pcs/Case,\nMax Case/Day)', False)],
     [(N, 'X6', 'DAD volume calc:\navg MAD ≥ Min MAD\n→ Active / Inactive', False)],
     [(N, 'X7', 'Mapping destination calc:\nsplit Max Case/Day\nper destination', False)],
     [(D, 'X3 · X4', 'Review & adjust\nmapping per\ndestination', False)],
@@ -330,7 +330,7 @@ landscape(bf, f'A1:{L(last_col + 1)}{lg + 5}', one_page=True)
 
 # ---------------------------------------------------------------- Executive Summary
 ex = wb.create_sheet('Executive Summary', 0)
-title(ex, 'Crossdock Optimization – Executive Summary', f'NSP · disusun oleh FID Rayhan (BSA) · status per {AS_OF}', 13)
+title(ex, 'Crossdock Optimization – Executive Summary', f'Supplier System · disusun oleh FID Rayhan (BSA) · status per {AS_OF}', 13)
 for col in range(2, 14):
     ex.column_dimensions[L(col)].width = 13
 ex['B6'] = 'Tujuan'

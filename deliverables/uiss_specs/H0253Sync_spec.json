@@ -4,7 +4,7 @@
   "phase": "DR",
   "project_name": "Crossdock Optimization",
   "block_name": "Batch",
-  "function_name": "X10 Crossdock - Order Control Pre (H0253) Sync to NSP",
+  "function_name": "X10 Crossdock - Order Control Pre (H0253) Sync to Supplier System",
   "created_date": "14-Oct-26",
   "created_by": "FID Rayhan"
  },
@@ -19,8 +19,8 @@
  ],
  "general": {
   "objective": [
-   "To replicate TB_R_H0253_ORDER_CONTROL_PRE from DB Surrounding to the table with the same name in NSP.",
-   "The NSP table is fully replaced every run (delete - insert). In case any error occurs, the run is rolled back and NSP keeps the data of the last successful run."
+   "To replicate TB_R_H0253_ORDER_CONTROL_PRE from DB Surrounding to the table with the same name in Supplier System.",
+   "The Supplier System table is fully replaced every run (delete - insert). In case any error occurs, the run is rolled back and Supplier System keeps the data of the last successful run."
   ],
   "operation_flow": {
    "flow": {
@@ -63,7 +63,7 @@
   ],
   "outputs": [
    {
-    "name": "TB_R_H0253_ORDER_CONTROL_PRE (NSP)",
+    "name": "TB_R_H0253_ORDER_CONTROL_PRE (Supplier System)",
     "type": "DB",
     "description": "if successful: same rows as the source"
    },
@@ -112,7 +112,7 @@
      ],
      [
       "Source",
-      "G-TOPAS provides the data 1 time/day (27:30)."
+      "T-System provides the data 1 time/day (27:30)."
      ]
     ]
    }
@@ -142,7 +142,7 @@
     },
     {
      "id": "d",
-     "label": "TB_R_H0253_ORDER_CONTROL_PRE (NSP)",
+     "label": "TB_R_H0253_ORDER_CONTROL_PRE (Supplier System)",
      "type": "db",
      "lane": "output"
     },
@@ -184,7 +184,7 @@
   },
   "steps": [
    "The scheduler starts the batch.",
-   "Delete all rows of TB_R_H0253_ORDER_CONTROL_PRE (NSP) and insert all rows of TB_R_H0253_ORDER_CONTROL_PRE (DB Surrounding) (same columns and values). HOLD_FLAG and PO_MAPPED_FLAG are NSP-only columns (set in ASN Crossdock Creation): before the delete their values are kept per unique key and put back on the inserted rows; a new key gets 'N'. Cancel is not done in NSP: the source sends the cancelled order with ORDER_STATUS '2' (crossdock orders have '7'); NSP only holds, so a cancel applies to lines already on hold (HOLD_FLAG = 'Y'). Lines with status '2' are not taken by X12.",
+   "Delete all rows of TB_R_H0253_ORDER_CONTROL_PRE (Supplier System) and insert all rows of TB_R_H0253_ORDER_CONTROL_PRE (DB Surrounding) (same columns and values). HOLD_FLAG and PO_MAPPED_FLAG are Supplier System-only columns (set in ASN Crossdock Creation): before the delete their values are kept per unique key and put back on the inserted rows; a new key gets 'N'. Cancel is not done in Supplier System: the source sends the cancelled order with ORDER_STATUS '2' (crossdock orders have '7'); Supplier System only holds, so a cancel applies to lines already on hold (HOLD_FLAG = 'Y'). Lines with status '2' are not taken by X12.",
    "No error: commit. Error: roll back step 2 (one transaction). Record the result in the Log. Exit."
   ]
  },
@@ -192,10 +192,10 @@
   "blocks": [
    {
     "source": {
-     "table": "TB_R_H0253_ORDER_CONTROL_PRE (NSP)"
+     "table": "TB_R_H0253_ORDER_CONTROL_PRE (Supplier System)"
     },
     "destination": {
-     "table": "TB_R_H0253_ORDER_CONTROL_PRE (NSP)",
+     "table": "TB_R_H0253_ORDER_CONTROL_PRE (Supplier System)",
      "operation": "Delete",
      "description": "All rows (full replace)"
     },
@@ -407,7 +407,7 @@
      "table": "TB_R_H0253_ORDER_CONTROL_PRE (DB Surrounding)"
     },
     "destination": {
-     "table": "TB_R_H0253_ORDER_CONTROL_PRE (NSP)",
+     "table": "TB_R_H0253_ORDER_CONTROL_PRE (Supplier System)",
      "operation": "Insert",
      "description": "Every source row"
     },
@@ -634,11 +634,11 @@
      },
      {
       "dest_field": "HOLD_FLAG",
-      "description": "Value of the deleted NSP row with the same unique key; 'N' for a new key"
+      "description": "Value of the deleted Supplier System row with the same unique key; 'N' for a new key"
      },
      {
       "dest_field": "PO_MAPPED_FLAG",
-      "description": "Value of the deleted NSP row with the same unique key; 'N' for a new key"
+      "description": "Value of the deleted Supplier System row with the same unique key; 'N' for a new key"
      },
      {
       "source_field": "CREATE_DT",
@@ -705,8 +705,8 @@
    "marker": "-",
    "level": 0,
    "items": [
-    "Full replace (delete - insert); all columns are copied as they are, no conversion. HOLD_FLAG and PO_MAPPED_FLAG are NSP-only columns (set in ASN Crossdock Creation): before the delete their values are kept per unique key and put back on the inserted rows; a new key gets 'N'. Cancel is not done in NSP: the source sends the cancelled order with ORDER_STATUS '2' (crossdock orders have '7'); NSP only holds, so a cancel applies to lines already on hold (HOLD_FLAG = 'Y'). Lines with status '2' are not taken by X12.",
-    "Delete and insert run in one transaction (all-or-nothing). When the run fails, NSP keeps the data of the last successful run.",
+    "Full replace (delete - insert); all columns are copied as they are, no conversion. HOLD_FLAG and PO_MAPPED_FLAG are Supplier System-only columns (set in ASN Crossdock Creation): before the delete their values are kept per unique key and put back on the inserted rows; a new key gets 'N'. Cancel is not done in Supplier System: the source sends the cancelled order with ORDER_STATUS '2' (crossdock orders have '7'); Supplier System only holds, so a cancel applies to lines already on hold (HOLD_FLAG = 'Y'). Lines with status '2' are not taken by X12.",
+    "Delete and insert run in one transaction (all-or-nothing). When the run fails, Supplier System keeps the data of the last successful run.",
     "Schedule is set in the system master (TBC). Table structure: see Appendix."
    ]
   }
@@ -736,7 +736,7 @@
   },
   {
    "event": "Copy table",
-   "cause": "Read from DB Surrounding or insert into NSP fails",
+   "cause": "Read from DB Surrounding or insert into Supplier System fails",
    "type": "Error",
    "msg_id": "LOG3",
    "message": "Cannot replicate TB_R_H0253_ORDER_CONTROL_PRE: <ERROR_DETAIL>.",
@@ -764,7 +764,7 @@
    "name": "TB_R_H0253_ORDER_CONTROL_PRE",
    "kind": "transaction",
    "proposed": false,
-   "description": "Order control data, pre-order picking info (I/F H02-53, DVJO950) replicated from DB Surrounding. Structure from the G-TOPAS I/F layout; physical names follow the existing table. Key (PK) = unique key of the I/F layout.",
+   "description": "Order control data, pre-order picking info (I/F H02-53, DVJO950) replicated from DB Surrounding. Structure from the T-System I/F layout; physical names follow the existing table. Key (PK) = unique key of the I/F layout.",
    "columns": [
     [
      "CUSTOMER_CD",
@@ -1079,42 +1079,42 @@
      "VARCHAR(1)",
      "",
      "N",
-     "NSP column: hold by the D/S team in ASN Crossdock Creation ('Y' / 'N'); default 'N' on insert, kept on re-sync"
+     "Supplier System column: hold by the D/S team in ASN Crossdock Creation ('Y' / 'N'); default 'N' on insert, kept on re-sync"
     ],
     [
      "PO_MAPPED_FLAG",
      "VARCHAR(1)",
      "",
      "N",
-     "NSP column: line mapped to a PO by [Create ASN] ('Y' / 'N'); default 'N' on insert, kept on re-sync"
+     "Supplier System column: line mapped to a PO by [Create ASN] ('Y' / 'N'); default 'N' on insert, kept on re-sync"
     ],
     [
      "CREATE_DT",
      "TIMESTAMP",
      "",
      "Y",
-     "Created date and time (NSP)"
+     "Created date and time (Supplier System)"
     ],
     [
      "CREATE_BY",
      "VARCHAR(TBD)",
      "",
      "Y",
-     "Created by (NSP)"
+     "Created by (Supplier System)"
     ],
     [
      "UPDATE_DT",
      "TIMESTAMP",
      "",
      "Y",
-     "Updated date and time (NSP)"
+     "Updated date and time (Supplier System)"
     ],
     [
      "UPDATE_BY",
      "VARCHAR(TBD)",
      "",
      "Y",
-     "Updated by (NSP)"
+     "Updated by (Supplier System)"
     ]
    ]
   }

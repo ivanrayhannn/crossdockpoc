@@ -1,13 +1,13 @@
-# Batch – Crossdock – Destination Master (H0125) Sync to NSP (X11)
+# Batch – Crossdock – Destination Master (H0125) Sync to Supplier System (X11)
 
-Replikasi tabel **TB_M_H0125_DESTINATION** dari **DB Surrounding** ke **DB NSP**.
-Sumber: UISS-Batch `X11_UISS_Batch_H0125DestinationMasterSync.xlsx` (0.1 Initial Draft). Struktur dari I/F layout G-TOPAS **H01-25 / DVJO820 (Destination Master)**; nama kolom dari contoh data tabel (20261014_tb_m_h0125_destination.xlsx).
+Replikasi tabel **TB_M_H0125_DESTINATION** dari **DB Surrounding** ke **DB Supplier System**.
+Sumber: UISS-Batch `X11_UISS_Batch_H0125DestinationMasterSync.xlsx` (0.1 Initial Draft). Struktur dari I/F layout T-System **H01-25 / DVJO820 (Destination Master)**; nama kolom dari contoh data tabel (20261014_tb_m_h0125_destination.xlsx).
 
 ## Poin utama
-- Nama tabel di NSP sama dengan sumber.
-- Cara simpan: **delete – insert** (isi tabel NSP diganti semua setiap jalan), semua kolom disalin apa adanya.
-- **All-or-nothing**: gagal → roll back, NSP tetap berisi data run sukses terakhir.
-- G-TOPAS mengirim data **1x/minggu (21:30)**; jadwal NSP di system master (**TBC**), setelah data tersedia. Hasil run dicatat di **Log**.
+- Nama tabel di Supplier System sama dengan sumber.
+- Cara simpan: **delete – insert** (isi tabel Supplier System diganti semua setiap jalan), semua kolom disalin apa adanya.
+- **All-or-nothing**: gagal → roll back, Supplier System tetap berisi data run sukses terakhir.
+- T-System mengirim data **1x/minggu (21:30)**; jadwal Supplier System di system master (**TBC**), setelah data tersedia. Hasil run dicatat di **Log**.
 - PK = DESTINATION_CD (unique key di I/F layout).
 
 ## Struktur tabel (39 kolom)
@@ -48,10 +48,10 @@ Sumber: UISS-Batch `X11_UISS_Batch_H0125DestinationMasterSync.xlsx` (0.1 Initial
 | 33 | UPDATE_JOB_ID | VARCHAR(8) |  | Y | No.33 Update Job ID |
 | 34 | UPDATE_OPERATOR_ID | VARCHAR(13) |  | Y | No.34 Update Operator ID |
 | 35 | INTF_UPDATE_DT | TIMESTAMP |  | Y | No.35 Update Date & Time |
-| 36 | CREATE_DT | TIMESTAMP |  | Y | Created date and time (NSP) |
-| 37 | CREATE_BY | VARCHAR(TBD) |  | Y | Created by (NSP) |
-| 38 | UPDATE_DT | TIMESTAMP |  | Y | Updated date and time (NSP) |
-| 39 | UPDATE_BY | VARCHAR(TBD) |  | Y | Updated by (NSP) |
+| 36 | CREATE_DT | TIMESTAMP |  | Y | Created date and time (Supplier System) |
+| 37 | CREATE_BY | VARCHAR(TBD) |  | Y | Created by (Supplier System) |
+| 38 | UPDATE_DT | TIMESTAMP |  | Y | Updated date and time (Supplier System) |
+| 39 | UPDATE_BY | VARCHAR(TBD) |  | Y | Updated by (Supplier System) |
 
 ## Catatan
 - Dipakai Crossdock: **DESTINATION_CD** (7 digit = grouping buyer code + PD code; dicek di X4 dan X7) dan **DESTINATION_NAME_ENG** (tampil bersama kode di X3).
@@ -60,4 +60,4 @@ Sumber: UISS-Batch `X11_UISS_Batch_H0125DestinationMasterSync.xlsx` (0.1 Initial
 - Contoh kode: 9722D10 Toyota Motor Asia (Thailand), 9811110 Toyota Motor Philippines, 9715310 Toyota Motor Vietnam, 9618201 Abdul Latif Jameel (ALJ).
 
 ## Open points
-- Jadwal scheduler NSP; perlu auto retry seperti X6 / X7?
+- Jadwal scheduler Supplier System; perlu auto retry seperti X6 / X7?

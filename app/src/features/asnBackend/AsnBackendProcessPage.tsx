@@ -22,7 +22,7 @@ function Steps({ rows }: { rows: [string, string, string][] }) {
 const LANE: Record<'sup' | 'ds' | 'sys', { label: string; bg: string }> = {
   sup: { label: 'Supplier session', bg: '#fff2cc' },
   ds: { label: 'D/S team session', bg: '#fce4d6' },
-  sys: { label: 'NSP backend', bg: '#d9e1f2' },
+  sys: { label: 'Supplier System backend', bg: '#d9e1f2' },
 };
 
 const TIMELINE: ['sup' | 'ds' | 'sys', string][] = [
@@ -74,7 +74,7 @@ export function AsnBackendProcessPage() {
           ['5', 'Error: roll back the batch, log the error with the Submit ID; the mapping in TB_R_INSTRUCTION is released.', 'Log (existing)'],
         ]} />
         <div style={{ marginTop: 8 }}>
-          Log message on success: <i>"ASN-50221-261015-001 submitted with status Created. 3 cases are locked. Delivery 15-Oct-2026 · Rit 1. The ASN is shown in ASN Inquiry."</i>
+          Log message on success: <i>"ASN-50221-261015-001 submitted with status Created. 3 cases are saved. Delivery 15-Oct-2026 · Rit 1. The ASN is shown in ASN Inquiry."</i>
         </div>
       </Section>
 
@@ -90,10 +90,10 @@ export function AsnBackendProcessPage() {
         </div>
       </Section>
 
-      <Section no="5" title="Cancel of an order (not in NSP)">
+      <Section no="5" title="Cancel of an order (not in Supplier System)">
         <Steps rows={[
-          ['1', 'The D/S team holds the destination in ASN Creation (HOLD_FLAG = Y); NSP never cancels an order itself.', 'TB_R_H0253_ORDER_CONTROL_PRE'],
-          ['2', 'The order is cancelled in the source system: the H0253 line comes with ORDER_STATUS 2 (cancel) instead of 7 (cross dock).', 'H0253 (G-TOPAS) → X10'],
+          ['1', 'The D/S team holds the destination in ASN Creation (HOLD_FLAG = Y); Supplier System never cancels an order itself.', 'TB_R_H0253_ORDER_CONTROL_PRE'],
+          ['2', 'The order is cancelled in the source system: the H0253 line comes with ORDER_STATUS 2 (cancel) instead of 7 (cross dock).', 'H0253 (T-System) → X10'],
           ['3', 'Lines with HOLD_FLAG = Y and ORDER_STATUS 2 are treated as cancelled: not taken by Search, no ASN. There is no Cancel ASN button in ASN Inquiry.', 'TB_R_H0253_ORDER_CONTROL_PRE'],
         ]} />
       </Section>

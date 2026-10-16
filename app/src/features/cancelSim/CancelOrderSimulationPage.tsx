@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { card, th, td } from '../asnCrossdock/styles';
 
-/* Simulation of a customer order cancelled in G-TOPAS (H0253 order status 2) after part of it is already in a submitted ASN.
+/* Simulation of a customer order cancelled in T-System (H0253 order status 2) after part of it is already in a submitted ASN.
  * Part PART-X, 6 pcs/case. All data is illustrative. */
 
 type Lane = 'sup' | 'ds' | 'gt' | 'sys';
@@ -16,8 +16,8 @@ interface Step { lane: Lane; title: string; text: string; orders: Order[]; pos: 
 const LANE: Record<Lane, { label: string; bg: string }> = {
   sup: { label: 'Supplier', bg: '#fff2cc' },
   ds: { label: 'D/S team', bg: '#fce4d6' },
-  gt: { label: 'G-TOPAS (source H0253)', bg: '#e2efda' },
-  sys: { label: 'NSP backend', bg: '#d9e1f2' },
+  gt: { label: 'T-System (source H0253)', bg: '#e2efda' },
+  sys: { label: 'Supplier System backend', bg: '#d9e1f2' },
 };
 
 const A0: Order = { co: 'CO-A', dt: '13-Oct', dest: 'VN · Vietnam', qty: 24, st7: 24, st2: 0, hold: 'N', inAsn: 0, po: 'PO-1 (24)' };
@@ -42,38 +42,38 @@ const S2: Step = {
   lane: 'sup', title: 'ASN submitted for 6 pcs of CO-A',
   text: 'The supplier submits ASN-001 with Case 1 (6 pcs, label Vietnam / CO-A). The other 18 pcs of CO-A are still mapped and wait for the next rit. Case 1 is packed and shipped.',
   orders: [A_ASN, B0, C0, D0], pos: [P1, P2], instr: [I_A6, I_A18, I_B, I_C], recv: [{ cs: 'Case 1', label: 'VN · CO-A', qty: 6, alloc: 'In transit' }],
-  flags: [['ok', 'ASN-001 Created (TB_R_DAILY_ORDER_MANIFEST / PART). ASN cannot be cancelled in NSP.']],
+  flags: [['ok', 'ASN-001 Created (TB_R_DAILY_ORDER_MANIFEST / PART). ASN cannot be cancelled in Supplier System.']],
 };
 
 const SCENARIOS: { key: string; name: string; tag: Level; summary: string; steps: Step[] }[] = [
   {
     key: 'a', name: 'A · Cancel 24 without control (current risk)', tag: 'err',
-    summary: 'G-TOPAS cancels the whole 24 pcs although 6 pcs are already in an ASN. The shipped case has no order any more.',
+    summary: 'T-System cancels the whole 24 pcs although 6 pcs are already in an ASN. The shipped case has no order any more.',
     steps: [S1, S2,
       {
-        lane: 'gt', title: 'G-TOPAS cancels CO-A 24 pcs (status 2)',
-        text: 'The cancel is done in the source system. CO-A is not on hold in NSP and nobody checked the qty already in the ASN.',
+        lane: 'gt', title: 'T-System cancels CO-A 24 pcs (status 2)',
+        text: 'The cancel is done in the source system. CO-A is not on hold in Supplier System and nobody checked the qty already in the ASN.',
         orders: [{ ...A_ASN, st7: 0, st2: 24, bad: true }, B0, C0, D0], pos: [P1, P2], instr: [I_A6, I_A18, I_B, I_C],
         recv: [{ cs: 'Case 1', label: 'VN · CO-A', qty: 6, alloc: 'In transit' }],
         flags: [['err', 'Cancel qty 24 > qty not yet in ASN 18. 6 pcs are already shipped for this order.']],
       },
       {
-        lane: 'sys', title: 'X10 sync: NSP takes status 2',
-        text: 'NSP releases the 18 pcs still mapped (rows deleted from TB_R_INSTRUCTION, MAPPED_QTY of PO-1 back to 6). The next Search pre-maps the free 18 pcs of PO-1 FIFO: CO-D (Vietnam) 6 pcs.',
+        lane: 'sys', title: 'X10 sync: Supplier System takes status 2',
+        text: 'Supplier System releases the 18 pcs still mapped (rows deleted from TB_R_INSTRUCTION, MAPPED_QTY of PO-1 back to 6). The next Search pre-maps the free 18 pcs of PO-1 FIFO: CO-D (Vietnam) 6 pcs.',
         orders: [{ ...A_ASN, st7: 0, st2: 24, bad: true }, B0, C0, { ...D0, po: 'PO-1 (6)' }], pos: [{ ...P1, mapped: 12 }, P2], instr: [I_A6, I_B, I_C, { co: 'CO-D', dest: 'VN', qty: 6, po: 'PO-1', asn: '—' }],
         recv: [{ cs: 'Case 1', label: 'VN · CO-A', qty: 6, alloc: 'In transit' }],
-        flags: [['warn', 'ASN-001 (6 pcs) stays, but its order is cancelled. No alert in NSP.']],
+        flags: [['warn', 'ASN-001 (6 pcs) stays, but its order is cancelled. No alert in Supplier System.']],
       },
       {
-        lane: 'gt', title: 'Case 1 received in G-TOPAS',
-        text: 'The 6 pcs arrive. CO-A is fully cancelled, so G-TOPAS does not auto allocate them: they become stock without an order.',
+        lane: 'gt', title: 'Case 1 received in T-System',
+        text: 'The 6 pcs arrive. CO-A is fully cancelled, so T-System does not auto allocate them: they become stock without an order.',
         orders: [{ ...A_ASN, st7: 0, st2: 24, bad: true }, B0, C0, { ...D0, po: 'PO-1 (6)' }], pos: [{ ...P1, mapped: 12 }, P2], instr: [I_A6, I_B, I_C, { co: 'CO-D', dest: 'VN', qty: 6, po: 'PO-1', asn: '—' }],
         recv: [{ cs: 'Case 1', label: 'VN · CO-A', qty: 6, alloc: 'Not allocated (no order)', bad: true }],
         flags: [['err', 'Orphan stock: 6 pcs with label Vietnam / CO-A and no order.']],
       },
       {
         lane: 'ds', title: 'Manual allocation to the next order (CO-B, Thailand)',
-        text: 'The 6 pcs are allocated to the next open order of PART-X by FIFO: CO-B (Thailand). But CO-B is also mapped to PO-2 (12 pcs) in NSP, so it will get 12 more pcs from the supplier.',
+        text: 'The 6 pcs are allocated to the next open order of PART-X by FIFO: CO-B (Thailand). But CO-B is also mapped to PO-2 (12 pcs) in Supplier System, so it will get 12 more pcs from the supplier.',
         orders: [{ ...A_ASN, st7: 0, st2: 24, bad: true }, { ...B0, st7: 6, po: 'PO-2 (12)', bad: true }, C0, { ...D0, po: 'PO-1 (6)' }], pos: [{ ...P1, mapped: 12 }, P2], instr: [I_A6, I_B, I_C, { co: 'CO-D', dest: 'VN', qty: 6, po: 'PO-1', asn: '—' }],
         recv: [{ cs: 'Case 1', label: 'VN · CO-A', qty: 6, alloc: 'CO-B · Thailand', bad: true }],
         flags: [
@@ -86,17 +86,17 @@ const SCENARIOS: { key: string; name: string; tag: Level; summary: string; steps
   },
   {
     key: 'b', name: 'B · Cancel only the qty not yet in ASN (proposal: prevention)', tag: 'ok',
-    summary: 'Rule: cancel qty ≤ order qty − qty in ASN. D/S checks NSP, holds the remaining 18 pcs, and G-TOPAS cancels 18 pcs only.',
+    summary: 'Rule: cancel qty ≤ order qty − qty in ASN. D/S checks Supplier System, holds the remaining 18 pcs, and T-System cancels 18 pcs only.',
     steps: [S1, S2,
       {
-        lane: 'ds', title: 'D/S checks NSP before the cancel and holds the rest',
-        text: 'NSP shows per customer order: qty in ASN 6, can be cancelled 18. D/S holds the 18 pcs that are not in an ASN (HOLD_FLAG = Y). Their rows are deleted from TB_R_INSTRUCTION and PO-1 has 18 pcs free again.',
+        lane: 'ds', title: 'D/S checks Supplier System before the cancel and holds the rest',
+        text: 'Supplier System shows per customer order: qty in ASN 6, can be cancelled 18. D/S holds the 18 pcs that are not in an ASN (HOLD_FLAG = Y). Their rows are deleted from TB_R_INSTRUCTION and PO-1 has 18 pcs free again.',
         orders: [{ ...A_ASN, hold: 'Y (18)', po: 'PO-1 (6)' }, B0, C0, D0], pos: [{ ...P1, mapped: 6 }, P2], instr: [I_A6, I_B, I_C],
         recv: [{ cs: 'Case 1', label: 'VN · CO-A', qty: 6, alloc: 'In transit' }],
         flags: [['ok', 'Max cancel qty for CO-A = 24 − 6 = 18.']],
       },
       {
-        lane: 'gt', title: 'G-TOPAS partial cancel: 18 pcs (status 2)',
+        lane: 'gt', title: 'T-System partial cancel: 18 pcs (status 2)',
         text: 'Only the held 18 pcs are cancelled. CO-A keeps 6 pcs in status 7, exactly the qty in ASN-001.',
         orders: [{ ...A_ASN, st7: 6, st2: 18, hold: 'Y (18)', po: 'PO-1 (6)' }, B0, C0, D0], pos: [{ ...P1, mapped: 6 }, P2], instr: [I_A6, I_B, I_C],
         recv: [{ cs: 'Case 1', label: 'VN · CO-A', qty: 6, alloc: 'In transit' }],
@@ -104,14 +104,14 @@ const SCENARIOS: { key: string; name: string; tag: Level; summary: string; steps
       },
       {
         lane: 'sys', title: 'X10 sync and next Search',
-        text: 'NSP takes the status 2 qty; no conflict. The free 18 pcs of PO-1 are pre-mapped FIFO to the next order: CO-D (Vietnam) 6 pcs; 12 pcs of PO-1 stay open.',
+        text: 'Supplier System takes the status 2 qty; no conflict. The free 18 pcs of PO-1 are pre-mapped FIFO to the next order: CO-D (Vietnam) 6 pcs; 12 pcs of PO-1 stay open.',
         orders: [{ ...A_ASN, st7: 6, st2: 18, hold: 'Y (18)', po: 'PO-1 (6)' }, B0, C0, { ...D0, po: 'PO-1 (6)' }], pos: [{ ...P1, mapped: 12 }, P2], instr: [I_A6, I_B, I_C, { co: 'CO-D', dest: 'VN', qty: 6, po: 'PO-1', asn: '—' }],
         recv: [{ cs: 'Case 1', label: 'VN · CO-A', qty: 6, alloc: 'In transit' }],
         flags: [['ok', 'No cancel conflict.']],
       },
       {
-        lane: 'gt', title: 'Case 1 received in G-TOPAS',
-        text: 'CO-A still has 6 pcs open, so G-TOPAS auto allocates Case 1 to CO-A. Label and destination match.',
+        lane: 'gt', title: 'Case 1 received in T-System',
+        text: 'CO-A still has 6 pcs open, so T-System auto allocates Case 1 to CO-A. Label and destination match.',
         orders: [{ ...A_ASN, st7: 6, st2: 18, hold: 'Y (18)', po: 'PO-1 (6)' }, B0, C0, { ...D0, po: 'PO-1 (6)' }], pos: [{ ...P1, mapped: 12 }, P2], instr: [I_A6, I_B, I_C, { co: 'CO-D', dest: 'VN', qty: 6, po: 'PO-1', asn: '—' }],
         recv: [{ cs: 'Case 1', label: 'VN · CO-A', qty: 6, alloc: 'CO-A · Vietnam (auto)', good: true }],
         flags: [['ok', 'Case 1 goes to its own order. Orders below are not affected.']],
@@ -123,7 +123,7 @@ const SCENARIOS: { key: string; name: string; tag: Level; summary: string; steps
     summary: 'Safety net when the rule is not followed: X10 detects the cancel conflict, releases the unshipped mapping and alerts D/S to handle the shipped case.',
     steps: [S1, S2,
       {
-        lane: 'gt', title: 'G-TOPAS cancels CO-A 24 pcs (status 2)',
+        lane: 'gt', title: 'T-System cancels CO-A 24 pcs (status 2)',
         text: 'The rule of scenario B is not followed: the whole order is cancelled.',
         orders: [{ ...A_ASN, st7: 0, st2: 24, bad: true }, B0, C0, D0], pos: [P1, P2], instr: [I_A6, I_A18, I_B, I_C],
         recv: [{ cs: 'Case 1', label: 'VN · CO-A', qty: 6, alloc: 'In transit' }],
@@ -141,10 +141,10 @@ const SCENARIOS: { key: string; name: string; tag: Level; summary: string; steps
       },
       {
         lane: 'ds', title: 'D/S handles Case 1 at receiving',
-        text: '(a) An open order with the same destination exists: CO-D (Vietnam, 6 pcs). D/S allocates Case 1 to CO-D in G-TOPAS; the label destination stays valid. (b) If none exists: Case 1 goes to normal warehouse stock.',
+        text: '(a) An open order with the same destination exists: CO-D (Vietnam, 6 pcs). D/S allocates Case 1 to CO-D in T-System; the label destination stays valid. (b) If none exists: Case 1 goes to normal warehouse stock.',
         orders: [{ ...A_ASN, st7: 0, st2: 24, hold: 'Conflict' }, B0, C0, { ...D0, st7: 0, po: 'Filled by Case 1' }], pos: [{ ...P1, po: 'PO-1 (blocked)', mapped: 6 }, P2], instr: [I_A6, I_B, I_C],
         recv: [{ cs: 'Case 1', label: 'VN · CO-A', qty: 6, alloc: 'CO-D · Vietnam (manual)', good: true }],
-        flags: [['ok', 'Same destination: no re-label of destination. CO-D status 7 qty becomes 0 at the next X10 sync, so NSP does not map it again.'], ['warn', 'Customer Order No on the label differs (CO-A → CO-D): confirm whether re-label is needed.']],
+        flags: [['ok', 'Same destination: no re-label of destination. CO-D status 7 qty becomes 0 at the next X10 sync, so Supplier System does not map it again.'], ['warn', 'Customer Order No on the label differs (CO-A → CO-D): confirm whether re-label is needed.']],
       },
       {
         lane: 'sys', title: 'Conflict closed, PO qty free again',
@@ -184,7 +184,7 @@ function Table({ title, cols, rows }: { title: string; cols: string[]; rows: { c
   );
 }
 
-/** Step-by-step simulation: customer order cancelled in G-TOPAS after part of it is in a submitted ASN. */
+/** Step-by-step simulation: customer order cancelled in T-System after part of it is in a submitted ASN. */
 export function CancelOrderSimulationPage() {
   const [sc, setSc] = useState(0);
   const [st, setSt] = useState(0);
@@ -197,7 +197,7 @@ export function CancelOrderSimulationPage() {
       <div>
         <h1 style={{ fontSize: 22, margin: 0 }}>Cancel Order Simulation</h1>
         <div style={{ fontSize: 12.5, color: 'var(--color-neutral-700)', marginTop: 3 }}>
-          Customer order CO-A (24 pcs) is cancelled in G-TOPAS (H0253 order status 2) after 6 pcs are already in a submitted ASN. NSP cannot cancel an ASN. Compare the current risk with the proposed prevention and detection. Data is illustrative (PART-X, 6 pcs/case).
+          Customer order CO-A (24 pcs) is cancelled in T-System (H0253 order status 2) after 6 pcs are already in a submitted ASN. Supplier System cannot cancel an ASN. Compare the current risk with the proposed prevention and detection. Data is illustrative (PART-X, 6 pcs/case).
         </div>
       </div>
 
@@ -253,7 +253,7 @@ export function CancelOrderSimulationPage() {
         <Table title="TB_R_INSTRUCTION (mapping)"
           cols={['Customer Order', 'Dest', 'Qty', 'PO', 'ASN / Case']}
           rows={step.instr.map((r) => ({ cells: [r.co, r.dest, r.qty, r.po, r.asn] }))} />
-        <Table title="Shipment / receiving in G-TOPAS"
+        <Table title="Shipment / receiving in T-System"
           cols={['Case', 'Label', 'Qty', 'Allocated to']}
           rows={step.recv.map((r) => ({ cells: [r.cs, r.label, r.qty, r.alloc], bg: r.bad ? BAD : r.good ? GOOD : undefined }))} />
       </div>
@@ -261,11 +261,11 @@ export function CancelOrderSimulationPage() {
       <div style={{ ...card, padding: '12px 16px', fontSize: 12.5, lineHeight: 1.6 }}>
         <b>Proposal to confirm</b>
         <ol style={{ margin: '4px 0 0', paddingLeft: 18 }}>
-          <li>Rule (SOP): cancel qty ≤ order qty − qty already in ASN; D/S holds the rest in NSP before the cancel in G-TOPAS (scenario B).</li>
-          <li>NSP shows "qty in ASN / can be cancelled" per customer order for D/S.</li>
+          <li>Rule (SOP): cancel qty ≤ order qty − qty already in ASN; D/S holds the rest in Supplier System before the cancel in T-System (scenario B).</li>
+          <li>Supplier System shows "qty in ASN / can be cancelled" per customer order for D/S.</li>
           <li>X10 detects a cancel conflict (status 2 qty &gt; qty not in ASN): log + exception list, release the unshipped mapping, keep the ASN, hold the free PO qty until D/S closes the conflict (scenario C).</li>
           <li>Shipped case without order: allocate manually to an open order with the same destination, otherwise move to warehouse stock.</li>
-          <li>Open: can G-TOPAS cancel partially? Does the case label carry the Customer Order No?</li>
+          <li>Open: can T-System cancel partially? Does the case label carry the Customer Order No?</li>
         </ol>
       </div>
     </div>

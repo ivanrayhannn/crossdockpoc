@@ -300,7 +300,7 @@ function OverviewTab({ jobs, candidateCount, setTab }: { jobs: BatchJob[]; candi
           <FlowLane label="RPA OUTBOUND" source="Crossdock Master" sourceHint="Approved part data" sourceIcon="layers" process="Bot transfers records" target="SAP S/4HANA" targetHint="External ERP" targetIcon="external" onClick={() => setTab('rpa')} />
           <FlowLane label="DATA RETRIEVAL" source="SAP S/4HANA" sourceHint="External ERP" sourceIcon="external" process="Review and retrieve" target="Part Master Candidate" targetHint="Candidate queue" targetIcon="database" onClick={() => setTab('retrieve')} />
         </div>
-        <div className="bp-flow-footer"><span><i className="bp-dot bp-dot--blue" /> Outbound: NSP → SAP</span><span><i className="bp-dot bp-dot--green" /> Inbound: SAP → Candidate queue</span><button className="bp-flow-link" onClick={() => setTab('candidates')}>Open candidate queue <Icon name="arrow" size={14} /></button></div>
+        <div className="bp-flow-footer"><span><i className="bp-dot bp-dot--blue" /> Outbound: Supplier System → SAP</span><span><i className="bp-dot bp-dot--green" /> Inbound: SAP → Candidate queue</span><button className="bp-flow-link" onClick={() => setTab('candidates')}>Open candidate queue <Icon name="arrow" size={14} /></button></div>
       </section>
 
       <div className="bp-overview-grid">
@@ -367,7 +367,7 @@ function RpaTab({ activeRun, onStart }: { activeRun: ActiveRun | null; onStart: 
       <section className="bp-panel bp-process-main">
         <div className="bp-section-heading"><div><div className="bp-step-kicker">PROCESS 02 <span>·</span> OUTBOUND AUTOMATION</div><h2>RPA system transfer</h2><p>Simulate a robot session that sends master records to an external system.</p></div><span className="bp-status bp-status--neutral">Ready to run</span></div>
         <div className="bp-integration-map">
-          <div className="bp-endpoint"><span className="bp-endpoint-symbol bp-endpoint-symbol--nsp">N</span><div><small>SOURCE SYSTEM</small><strong>New Service Part System</strong><span>Crossdock Master Setting</span></div><i className="bp-endpoint-ready" /></div>
+          <div className="bp-endpoint"><span className="bp-endpoint-symbol bp-endpoint-symbol--nsp">S</span><div><small>SOURCE SYSTEM</small><strong>Supplier System</strong><span>Crossdock Master Setting</span></div><i className="bp-endpoint-ready" /></div>
           <div className="bp-integration-middle"><div className="bp-integration-line"><span /><i /><span /></div><small>RPA BOT · OUTBOUND</small></div>
           <div className="bp-endpoint"><span className="bp-endpoint-symbol bp-endpoint-symbol--sap">S</span><div><small>TARGET SYSTEM</small><strong>SAP S/4HANA</strong><span>External ERP · Production</span></div><Icon name="external" size={16} /></div>
         </div>

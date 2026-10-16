@@ -40,7 +40,7 @@ export function asnByUnitOf(list: SubmittedAsn[]): Record<string, string> {
   return out;
 }
 
-/* ---- Submit ASN batch and its log (prototype of the existing NSP log) ---- */
+/* ---- Submit ASN batch and its log (prototype of the existing Supplier System log) ---- */
 
 export interface LogMessage {
   time: string;

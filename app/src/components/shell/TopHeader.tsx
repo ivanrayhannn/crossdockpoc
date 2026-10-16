@@ -23,7 +23,7 @@ export function TopHeader() {
           <path d="M3 6h18M3 12h18M3 18h18" />
         </svg>
       </span>
-      <span style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>New Service Part System</span>
+      <span style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>Supplier System</span>
       <span style={{ marginLeft: 'auto', color: '#cfd6e0', fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{formatClock(now)}</span>
       <span style={{ color: '#cfd6e0', display: 'flex' }}>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

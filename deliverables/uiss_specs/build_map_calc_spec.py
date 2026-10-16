@@ -49,7 +49,7 @@ spec = {
      {"id": "e", "label": "Create new period, Log", "type": "process"}],
     "edges": [{"from": "a", "to": "b"}, {"from": "b", "to": "c"}, {"from": "c", "to": "d"}, {"from": "d", "to": "e"}]}},
   "inputs": [
-   {"name": ADS + " (NSP)", "type": "DB", "description": "MAD per part, buyer code, PD code, order type and month"},
+   {"name": ADS + " (Supplier System)", "type": "DB", "description": "MAD per part, buyer code, PD code, order type and month"},
    {"name": T, "type": "DB", "description": "Active parts and their Max Case/Day"},
    {"name": DM + " (Destination Master)", "type": "DB", "description": "Valid 7-digit destination codes"},
    {"name": D, "type": "DB", "description": "Mapping of the previous period (to detect changes)"},

@@ -85,7 +85,7 @@ cover.merge_cells("A2:D2"); cover["A2"] = "FUNCTIONAL SPECIFICATION DOCUMENT"
 cover["A2"].font = Font(name="Calibri", size=20, bold=True, color=NAVY)
 cover["A3"] = "Crossdock Master Setting - Batch Uploads"
 cover["A3"].font = Font(name="Calibri", size=17, bold=True, color=TEXT)
-cover["A4"] = "New Service Part System (NSP) | Master > Crossdock Master Setting"
+cover["A4"] = "Supplier System | Master > Crossdock Master Setting"
 cover["A4"].font = Font(name="Calibri", size=11, color="555555")
 meta = [
     ("Document", "FSD - Crossdock Batch Uploads"),

@@ -25,7 +25,7 @@ for _c in DM_COLS:
     if _c[0] in _T:
         _c[1], _c[3] = _T[_c[0]][1], _T[_c[0]][3]
 DM_TABLE = {"name": "TB_M_H0125_DESTINATION", "kind": "master", "proposed": False,
-            "description": "Destination Master (existing NSP table, read only). Only the listed columns are relevant; full structure: X11 Destination Master (H0125) Sync.",
+            "description": "Destination Master (existing Supplier System table, read only). Only the listed columns are relevant; full structure: X11 Destination Master (H0125) Sync.",
             "columns": DM_COLS}
 PERIOD_FMT = "CHAR(6) YYYYMM, e.g. 202609; displayed as 'Sep 2026'"
 IMG = 'deliverables/uiss_screens/mapping'
