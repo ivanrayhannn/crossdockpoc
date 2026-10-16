@@ -33,9 +33,9 @@ export function Sidebar({ activeItem, onNavigate }: { activeItem: string; onNavi
             fontSize: 13,
           }}
         >
-          N
+          S
         </span>
-        <span style={{ color: '#fff', fontWeight: 700, fontSize: 18, letterSpacing: '.02em' }}>NSP</span>
+        <span style={{ color: '#fff', fontWeight: 700, fontSize: 18, letterSpacing: '.02em' }}>Supplier System</span>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 14, borderBottom: '1px solid #eef1f5' }}>
@@ -58,7 +58,7 @@ export function Sidebar({ activeItem, onNavigate }: { activeItem: string; onNavi
         </span>
         <div style={{ lineHeight: 1.2 }}>
           <div style={{ fontSize: 11, color: '#8a97a6' }}>Welcome,</div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#3a4757' }}>NSP ADMIN</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#3a4757' }}>SUPPLIER SYSTEM ADMIN</div>
         </div>
       </div>
 

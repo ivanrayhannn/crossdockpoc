@@ -4,7 +4,7 @@
   "phase": "DR",
   "project_name": "Crossdock Optimization",
   "block_name": "Batch",
-  "function_name": "X11 Crossdock - Destination Master (H0125) Sync to NSP",
+  "function_name": "X11 Crossdock - Destination Master (H0125) Sync to Supplier System",
   "created_date": "14-Oct-26",
   "created_by": "FID Rayhan"
  },
@@ -19,8 +19,8 @@
  ],
  "general": {
   "objective": [
-   "To replicate TB_M_H0125_DESTINATION from DB Surrounding to the table with the same name in NSP.",
-   "The NSP table is fully replaced every run (delete - insert). In case any error occurs, the run is rolled back and NSP keeps the data of the last successful run."
+   "To replicate TB_M_H0125_DESTINATION from DB Surrounding to the table with the same name in Supplier System.",
+   "The Supplier System table is fully replaced every run (delete - insert). In case any error occurs, the run is rolled back and Supplier System keeps the data of the last successful run."
   ],
   "operation_flow": {
    "flow": {
@@ -63,7 +63,7 @@
   ],
   "outputs": [
    {
-    "name": "TB_M_H0125_DESTINATION (NSP)",
+    "name": "TB_M_H0125_DESTINATION (Supplier System)",
     "type": "DB",
     "description": "if successful: same rows as the source"
    },
@@ -112,7 +112,7 @@
      ],
      [
       "Source",
-      "G-TOPAS provides the data 1 time/week (21:30)."
+      "T-System provides the data 1 time/week (21:30)."
      ]
     ]
    }
@@ -142,7 +142,7 @@
     },
     {
      "id": "d",
-     "label": "TB_M_H0125_DESTINATION (NSP)",
+     "label": "TB_M_H0125_DESTINATION (Supplier System)",
      "type": "db",
      "lane": "output"
     },
@@ -184,7 +184,7 @@
   },
   "steps": [
    "The scheduler starts the batch.",
-   "Delete all rows of TB_M_H0125_DESTINATION (NSP) and insert all rows of TB_M_H0125_DESTINATION (DB Surrounding) (same columns and values).",
+   "Delete all rows of TB_M_H0125_DESTINATION (Supplier System) and insert all rows of TB_M_H0125_DESTINATION (DB Surrounding) (same columns and values).",
    "No error: commit. Error: roll back step 2 (one transaction). Record the result in the Log. Exit."
   ]
  },
@@ -192,10 +192,10 @@
   "blocks": [
    {
     "source": {
-     "table": "TB_M_H0125_DESTINATION (NSP)"
+     "table": "TB_M_H0125_DESTINATION (Supplier System)"
     },
     "destination": {
-     "table": "TB_M_H0125_DESTINATION (NSP)",
+     "table": "TB_M_H0125_DESTINATION (Supplier System)",
      "operation": "Delete",
      "description": "All rows (full replace)"
     },
@@ -363,7 +363,7 @@
      "table": "TB_M_H0125_DESTINATION (DB Surrounding)"
     },
     "destination": {
-     "table": "TB_M_H0125_DESTINATION (NSP)",
+     "table": "TB_M_H0125_DESTINATION (Supplier System)",
      "operation": "Insert",
      "description": "Every source row"
     },
@@ -609,7 +609,7 @@
    "level": 0,
    "items": [
     "Full replace (delete - insert); all columns are copied as they are, no conversion.",
-    "Delete and insert run in one transaction (all-or-nothing). When the run fails, NSP keeps the data of the last successful run.",
+    "Delete and insert run in one transaction (all-or-nothing). When the run fails, Supplier System keeps the data of the last successful run.",
     "Schedule is set in the system master (TBC). Table structure: see Appendix."
    ]
   }
@@ -639,7 +639,7 @@
   },
   {
    "event": "Copy table",
-   "cause": "Read from DB Surrounding or insert into NSP fails",
+   "cause": "Read from DB Surrounding or insert into Supplier System fails",
    "type": "Error",
    "msg_id": "LOG3",
    "message": "Cannot replicate TB_M_H0125_DESTINATION: <ERROR_DETAIL>.",
@@ -667,7 +667,7 @@
    "name": "TB_M_H0125_DESTINATION",
    "kind": "master",
    "proposed": false,
-   "description": "Destination master (I/F H01-25, DVJO820) replicated from DB Surrounding. Structure from the G-TOPAS I/F layout; physical names follow the existing table. Key (PK) = unique key of the I/F layout.",
+   "description": "Destination master (I/F H01-25, DVJO820) replicated from DB Surrounding. Structure from the T-System I/F layout; physical names follow the existing table. Key (PK) = unique key of the I/F layout.",
    "columns": [
     [
      "DESTINATION_CD",
@@ -919,28 +919,28 @@
      "TIMESTAMP",
      "",
      "Y",
-     "Created date and time (NSP)"
+     "Created date and time (Supplier System)"
     ],
     [
      "CREATE_BY",
      "VARCHAR(TBD)",
      "",
      "Y",
-     "Created by (NSP)"
+     "Created by (Supplier System)"
     ],
     [
      "UPDATE_DT",
      "TIMESTAMP",
      "",
      "Y",
-     "Updated date and time (NSP)"
+     "Updated date and time (Supplier System)"
     ],
     [
      "UPDATE_BY",
      "VARCHAR(TBD)",
      "",
      "Y",
-     "Updated by (NSP)"
+     "Updated by (Supplier System)"
     ]
    ]
   }

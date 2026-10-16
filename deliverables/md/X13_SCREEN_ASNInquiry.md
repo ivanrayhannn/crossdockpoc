@@ -8,7 +8,7 @@ Sumber: UISS-Screen `X13_UISS_Screen_ASNInquiry.xlsx` (0.1 Initial Draft, update
 - Kolom: ASN No (link), Delivery Date, Rit Cycle, Route, Part / Customer Order Date, Cases, Qty, Status (Created), Created (user + waktu).
 - Klik ASN No → **Detail**: ringkasan (Delivery Date, Rit Cycle · Route, unit, cases · qty, created) dan daftar case (Case No, Part Number, Customer Order Date, Destination, Customer Order No (qty), PO No, Qty) – read only.
 - **Download Case Label** di detail (format **sesuai existing**). Layar hanya menampilkan data.
-- **Tidak ada Cancel ASN** di layar ini: cancel tidak dilakukan di NSP. Cancel datang dari source H0253 dengan **order status `2`** untuk order yang sudah **HOLD_FLAG = Y**; NSP hanya hold (lihat md X10).
+- **Tidak ada Cancel ASN** di layar ini: cancel tidak dilakukan di Supplier System. Cancel datang dari source H0253 dengan **order status `2`** untuk order yang sudah **HOLD_FLAG = Y**; Supplier System hanya hold (lihat md X10).
 
 ## Tabel
 - **TB_R_DAILY_ORDER_MANIFEST** (existing) – ASN (header), diisi batch X14 saat Submit ASN di X8.
@@ -22,4 +22,4 @@ Sumber: UISS-Screen `X13_UISS_Screen_ASNInquiry.xlsx` (0.1 Initial Draft, update
 
 ## Keputusan (konfirmasi 16-Oct)
 - Tabel ASN = TB_R_DAILY_ORDER_MANIFEST / TB_R_DAILY_ORDER_PART (existing).
-- Cancel ASN tidak dibuat di NSP (dari source, status 2).
+- Cancel ASN tidak dibuat di Supplier System (dari source, status 2).

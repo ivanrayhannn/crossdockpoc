@@ -56,7 +56,7 @@ export function MenuSettingsPage() {
         })}
       </div>
       <div style={{ fontSize: 11.5, color: 'var(--color-neutral-600)' }}>
-        Prototype: the setting is kept in this browser. In NSP it would be saved per role in the system master (TBD).
+        Prototype: the setting is kept in this browser. In Supplier System it would be saved per role in the system master (TBD).
       </div>
     </div>
   );

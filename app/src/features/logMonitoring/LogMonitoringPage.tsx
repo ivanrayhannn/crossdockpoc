@@ -13,7 +13,7 @@ export function LogMonitoringPage() {
       <div>
         <h1 style={{ fontSize: 22, margin: 0 }}>Log Monitoring</h1>
         <div style={{ fontSize: 12.5, color: 'var(--color-neutral-700)', marginTop: 3 }}>
-          Prototype of the existing NSP log: one record per batch run with its messages. The ASN submit batch writes here with its Submit ID.
+          Prototype of the existing Supplier System log: one record per batch run with its messages. The ASN submit batch writes here with its Submit ID.
         </div>
       </div>
       <div style={{ ...card, overflow: 'hidden' }}>

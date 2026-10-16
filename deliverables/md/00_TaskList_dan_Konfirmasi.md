@@ -27,7 +27,7 @@ Status per **16-Oct-2026**. Sumber data: `deliverables/exec/project_items.py` (s
 - UISS 15 fungsi (X1-X15) versi 0.1 + file .md per fungsi
 - Prototype Part List, Mapping per Destination, ASN Crossdock Creation, ASN Inquiry (GitHub Pages)
 - Rumus kalkulasi DAD (X6) dan mapping destinasi (X7) termasuk aturan pembulatan, dikonfirmasi 14-Oct-26
-- Struktur tabel H0202 / H0253 / H0125 dari I/F layout G-TOPAS, termasuk SERIAL_NO
+- Struktur tabel H0202 / H0253 / H0125 dari I/F layout T-System, termasuk SERIAL_NO
 - Alur ASN baru sesuai ASN_Flow_Normal.xlsx (unit Part + Customer Order Date, 1 case per destinasi, FIFO)
 - Header delivery plan level case; detail destinasi & pcs hanya untuk tim D/S
 - ASN flow versi 15-Oct: Search (X12 on-demand pre-mapping), Hold Flag per destinasi oleh D/S, Create ASN (mapping), status Ready / Not Ready / Created
@@ -38,14 +38,14 @@ Status per **16-Oct-2026**. Sumber data: `deliverables/exec/project_items.py` (s
 
 | No | Task | Function | Kategori | PIC | Tergantung | Status | Prioritas |
 |---|---|---|---|---|---|---|---|
-| 1 | Review struktur tabel baru TB_R_INSTRUCTION dan TB_R_PRA_DAILY_ORDER_MAPPED (nama / kolom usulan) | X8, X12, X14 | Data | Tim NSP / IT (DBA) | - | Not started | High |
-| 2 | Mapping kolom fisik ke TB_R_DAILY_ORDER_MANIFEST / PART, route master dan last sequence existing | X8, X13, X14 | Data | Tim NSP / IT | - | Not started | High |
+| 1 | Review struktur tabel baru TB_R_INSTRUCTION dan TB_R_PRA_DAILY_ORDER_MAPPED (nama / kolom usulan) | X8, X12, X14 | Data | Tim Supplier System / IT (DBA) | - | Not started | High |
+| 2 | Mapping kolom fisik ke TB_R_DAILY_ORDER_MANIFEST / PART, route master dan last sequence existing | X8, X13, X14 | Data | Tim Supplier System / IT | - | Not started | High |
 | 3 | Isi jadwal & retry di Schedule sheet UISS X5, X9-X11 | X5, X9-X11 | Dokumen | FID Rayhan | Konfirmasi no. 1-3 | Waiting confirmation | Medium |
 | 4 | Buat UISS-Batch RPA Sync X16 (jika disetujui) | X3 | Dokumen | FID Rayhan | Konfirmasi no. 7-8 | Not started | Medium |
 | 5 | Lengkapi panjang VARCHAR dan nama field di Appendix semua UISS | X1-X15 | Dokumen | FID Rayhan | Konfirmasi no. 11 | Waiting confirmation | Low |
 | 6 | Review UISS X1-X15 versi 0.1 oleh user / reviewer | X1-X15 | Review | User | - | Not started | High |
 | 7 | Tambah kolom SERIAL_NO di tabel / query H0253 sumber | X10 | Data | Tim DB Surrounding | Konfirmasi no. 6 | Not started | High |
-| 8 | Tambah kolom HOLD_FLAG / PO_MAPPED_FLAG di H0253 NSP, dipertahankan saat sync X10 (sudah diputuskan) | X10 | Data | Tim NSP / IT | - | Not started | High |
+| 8 | Tambah kolom HOLD_FLAG / PO_MAPPED_FLAG di H0253 Supplier System, dipertahankan saat sync X10 (sudah diputuskan) | X10 | Data | Tim Supplier System / IT | - | Not started | High |
 | 9 | Prototype: Download Case Label sesuai format existing | X8 / X13 | Prototype | FID Rayhan | Contoh label existing | Not started | Medium |
 | 10 | Susun testing strategy & test scenario (unit, integration, UAT) X1-X15 | X1-X15 | Testing | FID Rayhan | UISS final | Not started | High |
 | 11 | Definisikan proses lanjutan setelah ASN (penerimaan di crossdock, pengiriman ke destinasi) | Next scope | Analisis | FID Rayhan / User | Arahan user | Not started | Medium |
@@ -55,7 +55,7 @@ Status per **16-Oct-2026**. Sumber data: `deliverables/exec/project_items.py` (s
 
 | No | Function | Topik | Pertanyaan | Usulan BSA | Dampak jika belum diputuskan |
 |---|---|---|---|---|---|
-| 1 | X9-X11 | Jadwal & retry | Jadwal scheduler NSP untuk X9, X10, X11 dan perlu auto retry seperti X6 / X7? | Setelah data G-TOPAS tersedia; auto retry 3x. | Schedule sheet di UISS masih TBC. |
+| 1 | X9-X11 | Jadwal & retry | Jadwal scheduler Supplier System untuk X9, X10, X11 dan perlu auto retry seperti X6 / X7? | Setelah data T-System tersedia; auto retry 3x. | Schedule sheet di UISS masih TBC. |
 | 2 | X5 | Jadwal X5 | Tanggal / jam scheduler bulanan X5. | Tanggal 1 jam 01:00, sebelum X6. | Schedule sheet X5 / X6. |
 | 3 | X5 / X6 | X5 gagal | Kalau X5 gagal, apakah X6 dibatalkan? | Ya, X6 tidak jalan. | Aturan dependensi batch. |
 | 4 | X5 | Kolom DAD | Kolom DAD di Actual Demand Summary dipakai atau tidak? | Tidak dipakai (hanya MAD). | Mapping kolom X5. |
@@ -66,7 +66,7 @@ Status per **16-Oct-2026**. Sumber data: `deliverables/exec/project_items.py` (s
 | 9 | X3 | Status Waiting | Apakah status Waiting (Sync) perlu batas waktu, lalu kembali ke Failed? | Ya, 30 menit. | Status sync bisa menggantung. |
 | 10 | X1-X4 | History | Konfirmasi kolom dan retensi TB_H_PART_CANDIDATE (usulan 24 bulan). | Pakai usulan. | Appendix tabel history. |
 | 11 | X1-X4 | Panjang kolom | Panjang VARCHAR kolom (PART_NO dll.) dan nama field Part Name di TB_M_PART_MASTER. | Ikuti TB_M_PART_MASTER. | Masih VARCHAR(TBD) di Appendix. |
-| 12 | X2 / X4 | Template & log | Lokasi file template dan result report; retensi Log upload. | Shared folder NSP; retensi 12 bulan. | Operation description upload. |
+| 12 | X2 / X4 | Template & log | Lokasi file template dan result report; retensi Log upload. | Shared folder Supplier System; retensi 12 bulan. | Operation description upload. |
 | 13 | X1 | Akun read only | Definisi akun read-only ([View]) untuk Part List. | Role Viewer: hanya Search / Export. | Screen mode View. |
 | 14 | X15 | Menu Settings | Pengaturan show / hide menu berlaku per role atau global, dan siapa yang boleh membuka layar ini? | Per role; hanya admin. | Struktur TB_M_MENU_VISIBILITY. |
 | 15 | X1 | Effective Start Date | Kalimat "Effective Start Date" yang menggantung di Op Desc 5.4 a.4 (UISS X1): aturan apa yang dimaksud? | Default besok, minimum hari ini, wajib diisi. | Op Desc X1 belum lengkap. |

@@ -70,7 +70,7 @@ spec = {
   "steps": [
    "The user clicks [Search] on ASN Crossdock Creation (X8) with Delivery Date and Rit. The previous content of the temporary table of the session is cleared.",
    {"text": f"Get the customer order lines from {H0253}:",
-    "children": ["ORDER_STATUS = '7' (Cross Dock), HOLD_FLAG = 'N', PO_MAPPED_FLAG = 'N'; latest data; earliest order date first per part number (FIFO, G-TOPAS key). Status '2' (cancel from the source) is not taken.",
+    "children": ["ORDER_STATUS = '7' (Cross Dock), HOLD_FLAG = 'N', PO_MAPPED_FLAG = 'N'; latest data; earliest order date first per part number (FIFO, T-System key). Status '2' (cancel from the source) is not taken.",
                  "Get: Customer Code, Customer Order No, Order Date, Destination Code, Detailed Item No, Serial No, Part Number, Order Status Qty."]},
    {"text": f"Get the PO parts from {PRA_M} + {PRA_P}:",
     "children": ["CROSSDOCK_FLAG = 'X'; latest data; open PO qty = PO_ORDER_QTY - MAPPED_QTY of " + PRA_MAP + " (0 when no row) > 0; ordered by Order Date ascending (FIFO).",

@@ -4,7 +4,7 @@
   "phase": "DR",
   "project_name": "Crossdock Optimization",
   "block_name": "Batch",
-  "function_name": "X5 Crossdock - Actual Demand Summary Sync to NSP",
+  "function_name": "X5 Crossdock - Actual Demand Summary Sync to Supplier System",
   "created_date": "14-Oct-26",
   "created_by": "FID Rayhan"
  },
@@ -19,8 +19,8 @@
  ],
  "general": {
   "objective": [
-   "To replicate TB_R_ACTUAL_DEMAND_SUMMARY from DB Surrounding to the table with the same name in NSP, so the DAD Volume Calculation and the Mapping Destination Calculation read the actual demand inside NSP.",
-   "The NSP table is fully replaced every run (delete - insert). In case any error occurs, the run is rolled back and NSP keeps the data of the last successful run."
+   "To replicate TB_R_ACTUAL_DEMAND_SUMMARY from DB Surrounding to the table with the same name in Supplier System, so the DAD Volume Calculation and the Mapping Destination Calculation read the actual demand inside Supplier System.",
+   "The Supplier System table is fully replaced every run (delete - insert). In case any error occurs, the run is rolled back and Supplier System keeps the data of the last successful run."
   ],
   "operation_flow": {
    "flow": {
@@ -38,7 +38,7 @@
      },
      {
       "id": "c",
-      "label": "Delete NSP table + insert all rows",
+      "label": "Delete Supplier System table + insert all rows",
       "type": "process"
      },
      {
@@ -92,7 +92,7 @@
   ],
   "outputs": [
    {
-    "name": "TB_R_ACTUAL_DEMAND_SUMMARY (NSP)",
+    "name": "TB_R_ACTUAL_DEMAND_SUMMARY (Supplier System)",
     "type": "DB",
     "description": "if successful: same rows as the source (delete - insert)"
    },
@@ -171,7 +171,7 @@
     },
     {
      "id": "p3",
-     "label": "Delete all rows of NSP table",
+     "label": "Delete all rows of Supplier System table",
      "type": "process",
      "step": 3
     },
@@ -183,7 +183,7 @@
     },
     {
      "id": "dst",
-     "label": "TB_R_ACTUAL_DEMAND_SUMMARY (NSP)",
+     "label": "TB_R_ACTUAL_DEMAND_SUMMARY (Supplier System)",
      "type": "db",
      "lane": "output"
     },
@@ -270,13 +270,13 @@
   "steps": [
    "The scheduler starts the batch (monthly, set in the system master).",
    "Read all rows of TB_R_ACTUAL_DEMAND_SUMMARY (DB Surrounding).",
-   "Delete all rows of TB_R_ACTUAL_DEMAND_SUMMARY (NSP).",
+   "Delete all rows of TB_R_ACTUAL_DEMAND_SUMMARY (Supplier System).",
    "Insert every source row with the same column values (see Data Map).",
    "Check whether any error occurred during steps 2 to 4.",
    {
     "text": "No error: commit. Error: roll back steps 3 and 4.",
     "children": [
-     "Delete and insert run in one transaction, so a failed run never leaves the NSP table empty or half filled."
+     "Delete and insert run in one transaction, so a failed run never leaves the Supplier System table empty or half filled."
     ]
    },
    "Record the result (SUCCESS / FAILED, row count, error message) in the Log. Exit."
@@ -286,10 +286,10 @@
   "blocks": [
    {
     "source": {
-     "table": "TB_R_ACTUAL_DEMAND_SUMMARY (NSP)"
+     "table": "TB_R_ACTUAL_DEMAND_SUMMARY (Supplier System)"
     },
     "destination": {
-     "table": "TB_R_ACTUAL_DEMAND_SUMMARY (NSP)",
+     "table": "TB_R_ACTUAL_DEMAND_SUMMARY (Supplier System)",
      "operation": "Delete",
      "description": "All rows (full replace)"
     },
@@ -381,7 +381,7 @@
      "table": "TB_R_ACTUAL_DEMAND_SUMMARY (DB Surrounding)"
     },
     "destination": {
-     "table": "TB_R_ACTUAL_DEMAND_SUMMARY (NSP)",
+     "table": "TB_R_ACTUAL_DEMAND_SUMMARY (Supplier System)",
      "operation": "Insert",
      "description": "Every source row"
     },
@@ -529,16 +529,16 @@
   {
    "type": "text",
    "level": 0,
-   "text": "This batch copies the actual demand summary from DB Surrounding into NSP once a month. Range of months and schedule are set in the system master (not explained in this document)."
+   "text": "This batch copies the actual demand summary from DB Surrounding into Supplier System once a month. Range of months and schedule are set in the system master (not explained in this document)."
   },
   {
    "type": "bullets",
    "marker": "-",
    "level": 0,
    "items": [
-    "Full replace: all rows of the NSP table are deleted and all source rows are inserted (delete - insert). No row is compared or merged.",
+    "Full replace: all rows of the Supplier System table are deleted and all source rows are inserted (delete - insert). No row is compared or merged.",
     "All columns are copied with the same names and values; no conversion is done.",
-    "Delete and insert run in one transaction (all-or-nothing). When the run fails, NSP keeps the data of the last successful run.",
+    "Delete and insert run in one transaction (all-or-nothing). When the run fails, Supplier System keeps the data of the last successful run.",
     "The batch must finish before the DAD Volume Calculation starts."
    ]
   },
@@ -623,10 +623,10 @@
   },
   {
    "event": "Insert",
-   "cause": "Insert into the NSP table fails",
+   "cause": "Insert into the Supplier System table fails",
    "type": "Error",
    "msg_id": "LOG4",
-   "message": "Cannot insert TB_R_ACTUAL_DEMAND_SUMMARY into NSP: <ERROR_DETAIL>.",
+   "message": "Cannot insert TB_R_ACTUAL_DEMAND_SUMMARY into Supplier System: <ERROR_DETAIL>.",
    "action": {
     "system": "Roll back. STATUS = FAILED.",
     "user": "User contact PIC"
@@ -654,10 +654,10 @@
  ],
  "sample_sheet": {
   "title": "Sample Input",
-  "heading": "Sample data - Actual Demand Summary Sync to NSP",
+  "heading": "Sample data - Actual Demand Summary Sync to Supplier System",
   "intro": [
    "Rows taken from the reference file 20261013_tb_r_actual_demand_summary_since_january-2026.xlsx (part 52119BZV60).",
-   "The batch copies every row of the source table; the NSP table is emptied first (delete - insert)."
+   "The batch copies every row of the source table; the Supplier System table is emptied first (delete - insert)."
   ],
   "sections": [
    {
@@ -753,17 +753,17 @@
      [
       "N1",
       "Monthly run, source has 349,225 rows",
-      "NSP table emptied, 349,225 rows inserted. Log STATUS = SUCCESS."
+      "Supplier System table emptied, 349,225 rows inserted. Log STATUS = SUCCESS."
      ],
      [
       "N2",
       "A row was deleted in the source since the last run",
-      "The row no longer exists in NSP (full replace)."
+      "The row no longer exists in Supplier System (full replace)."
      ],
      [
       "E1",
       "DB Surrounding cannot be reached",
-      "Rolled back: NSP keeps the data of the last successful run. Log STATUS = FAILED."
+      "Rolled back: Supplier System keeps the data of the last successful run. Log STATUS = FAILED."
      ],
      [
       "E2",
@@ -779,7 +779,7 @@
    "name": "TB_R_ACTUAL_DEMAND_SUMMARY",
    "kind": "transaction",
    "proposed": false,
-   "description": "Actual demand summary replicated from DB Surrounding to NSP (same columns). Key (PK) proposed from the data; types follow the source table.",
+   "description": "Actual demand summary replicated from DB Surrounding to Supplier System (same columns). Key (PK) proposed from the data; types follow the source table.",
    "columns": [
     [
      "GROUPING_BUYER_CD",

@@ -1,14 +1,14 @@
-"""Spec for UISS_Batch_ActualDemandSummarySync.xlsx (UISS-Batch, Crossdock - Actual Demand Summary Sync to NSP)."""
+"""Spec for UISS_Batch_ActualDemandSummarySync.xlsx (UISS-Batch, Crossdock - Actual Demand Summary Sync to Supplier System)."""
 import json, sys
 from calc_common import ADS, ADS_COLS, ADS_TABLE, LOG, SYSM_NOTE, header, revisions
 
 SRC = ADS + ' (DB Surrounding)'
-DST = ADS + ' (NSP)'
+DST = ADS + ' (Supplier System)'
 
 SAMPLE = {
- "title": "Sample Input", "heading": "Sample data - Actual Demand Summary Sync to NSP",
+ "title": "Sample Input", "heading": "Sample data - Actual Demand Summary Sync to Supplier System",
  "intro": ["Rows taken from the reference file 20261013_tb_r_actual_demand_summary_since_january-2026.xlsx (part 52119BZV60).",
-           "The batch copies every row of the source table; the NSP table is emptied first (delete - insert)."],
+           "The batch copies every row of the source table; the Supplier System table is emptied first (delete - insert)."],
  "sections": [
   {"title": "A. Source rows in DB Surrounding (excerpt)",
    "columns": ["GROUPING_BUYER_CD", "GROUPING_PD_CD", "ORDER_TYPE_GROUP", "DEMAND_MONTH_YEAR", "PART_NO", "MAD", "DAD"],
@@ -20,23 +20,23 @@ SAMPLE = {
             ["98111", "10", "S", "202604", "52119BZV60", 2, "-"],
             ["9722D", "10", "S", "202604", "52119BZV60", 1, "-"]]},
   {"title": "B. Scenarios", "columns": ["No", "Scenario", "Expected result"], "widths": [6, 50, 60],
-   "rows": [["N1", "Monthly run, source has 349,225 rows", "NSP table emptied, 349,225 rows inserted. Log STATUS = SUCCESS."],
-            ["N2", "A row was deleted in the source since the last run", "The row no longer exists in NSP (full replace)."],
-            ["E1", "DB Surrounding cannot be reached", "Rolled back: NSP keeps the data of the last successful run. Log STATUS = FAILED."],
+   "rows": [["N1", "Monthly run, source has 349,225 rows", "Supplier System table emptied, 349,225 rows inserted. Log STATUS = SUCCESS."],
+            ["N2", "A row was deleted in the source since the last run", "The row no longer exists in Supplier System (full replace)."],
+            ["E1", "DB Surrounding cannot be reached", "Rolled back: Supplier System keeps the data of the last successful run. Log STATUS = FAILED."],
             ["E2", "Insert fails in the middle of the run", "Rolled back (delete and insert in one transaction). Log STATUS = FAILED."]]}]}
 
 spec = {
  "doc_type": "batch",
- "header": header("X5", "Actual Demand Summary Sync to NSP"),
+ "header": header("X5", "Actual Demand Summary Sync to Supplier System"),
  "revisions": revisions(),
  "general": {
   "objective": [
-   f"To replicate {ADS} from DB Surrounding to the table with the same name in NSP, so the DAD Volume Calculation and the Mapping Destination Calculation read the actual demand inside NSP.",
-   "The NSP table is fully replaced every run (delete - insert). In case any error occurs, the run is rolled back and NSP keeps the data of the last successful run."],
+   f"To replicate {ADS} from DB Surrounding to the table with the same name in Supplier System, so the DAD Volume Calculation and the Mapping Destination Calculation read the actual demand inside Supplier System.",
+   "The Supplier System table is fully replaced every run (delete - insert). In case any error occurs, the run is rolled back and Supplier System keeps the data of the last successful run."],
   "operation_flow": {"flow": {"direction": "TB", "nodes": [
      {"id": "a", "label": "Scheduler (monthly)", "type": "event"},
      {"id": "b", "label": "Read source table", "type": "process"},
-     {"id": "c", "label": "Delete NSP table + insert all rows", "type": "process"},
+     {"id": "c", "label": "Delete Supplier System table + insert all rows", "type": "process"},
      {"id": "d", "label": "Success?", "type": "decision"},
      {"id": "e", "label": "Commit, Log SUCCESS", "type": "process"},
      {"id": "f", "label": "Roll back, Log FAILED", "type": "process"}],
@@ -57,7 +57,7 @@ spec = {
      {"id": "p1", "label": "Start (scheduler)", "type": "process", "step": 1},
      {"id": "src", "label": SRC, "type": "db", "lane": "input"},
      {"id": "p2", "label": "Read all source rows", "type": "process", "step": 2},
-     {"id": "p3", "label": "Delete all rows of NSP table", "type": "process", "step": 3},
+     {"id": "p3", "label": "Delete all rows of Supplier System table", "type": "process", "step": 3},
      {"id": "p4", "label": "Insert all rows", "type": "process", "step": 4},
      {"id": "dst", "label": DST, "type": "db", "lane": "output"},
      {"id": "d", "label": "Any error?", "type": "decision", "step": 5},
@@ -75,7 +75,7 @@ spec = {
    "Insert every source row with the same column values (see Data Map).",
    "Check whether any error occurred during steps 2 to 4.",
    {"text": "No error: commit. Error: roll back steps 3 and 4.",
-    "children": ["Delete and insert run in one transaction, so a failed run never leaves the NSP table empty or half filled."]},
+    "children": ["Delete and insert run in one transaction, so a failed run never leaves the Supplier System table empty or half filled."]},
    "Record the result (SUCCESS / FAILED, row count, error message) in the Log. Exit."]
  },
  "data_map": {"blocks": [
@@ -89,11 +89,11 @@ spec = {
                 {"dest_field": "START_DT", "description": "Start date and time"}, {"dest_field": "END_DT", "description": "End date and time"}]}]},
  "func_desc_layout": "two",
  "func_desc": [
-  {"type": "text", "level": 0, "text": f"This batch copies the actual demand summary from DB Surrounding into NSP once a month. {SYSM_NOTE}"},
+  {"type": "text", "level": 0, "text": f"This batch copies the actual demand summary from DB Surrounding into Supplier System once a month. {SYSM_NOTE}"},
   {"type": "bullets", "marker": "-", "level": 0, "items": [
-    "Full replace: all rows of the NSP table are deleted and all source rows are inserted (delete - insert). No row is compared or merged.",
+    "Full replace: all rows of the Supplier System table are deleted and all source rows are inserted (delete - insert). No row is compared or merged.",
     "All columns are copied with the same names and values; no conversion is done.",
-    "Delete and insert run in one transaction (all-or-nothing). When the run fails, NSP keeps the data of the last successful run.",
+    "Delete and insert run in one transaction (all-or-nothing). When the run fails, Supplier System keeps the data of the last successful run.",
     "The batch must finish before the DAD Volume Calculation starts."]},
   {"type": "column_break"},
   {"type": "heading", "text": "Columns used by Crossdock"},
@@ -107,7 +107,7 @@ spec = {
   {"event": "Batch start", "cause": "Batch is called", "type": "Info", "msg_id": "LOG1", "message": "Actual demand summary sync started.", "action": {"system": "Write the log.", "user": "-"}},
   {"event": "Batch end", "cause": "Batch finishes", "type": "Info", "msg_id": "LOG2", "message": "Actual demand summary sync ended. Status <STATUS>, rows <ROW_COUNT>.", "action": {"system": "Write the log.", "user": "-"}},
   {"event": "Read source", "cause": "DB Surrounding cannot be reached or read", "type": "Error", "msg_id": "LOG3", "message": "Cannot read TB_R_ACTUAL_DEMAND_SUMMARY from DB Surrounding: <ERROR_DETAIL>.", "action": {"system": "Roll back. STATUS = FAILED.", "user": "User contact PIC"}},
-  {"event": "Insert", "cause": "Insert into the NSP table fails", "type": "Error", "msg_id": "LOG4", "message": "Cannot insert TB_R_ACTUAL_DEMAND_SUMMARY into NSP: <ERROR_DETAIL>.", "action": {"system": "Roll back. STATUS = FAILED.", "user": "User contact PIC"}},
+  {"event": "Insert", "cause": "Insert into the Supplier System table fails", "type": "Error", "msg_id": "LOG4", "message": "Cannot insert TB_R_ACTUAL_DEMAND_SUMMARY into Supplier System: <ERROR_DETAIL>.", "action": {"system": "Roll back. STATUS = FAILED.", "user": "User contact PIC"}},
   {"event": "Unexpected error", "cause": "Any other system error", "type": "Critical", "msg_id": "LOG5", "message": "Unexpected error: <ERROR_DETAIL>.", "action": {"system": "Roll back. STATUS = FAILED.", "user": "User contact PIC"}}],
  "appendix_layout": "full",
  "appendix": [{"type": "text", "level": 0, "text": "Sample rows and scenarios: see sheet Sample Input."}],

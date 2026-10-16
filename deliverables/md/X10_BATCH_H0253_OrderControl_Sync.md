@@ -1,15 +1,15 @@
-# Batch – Crossdock – Order Control Pre (H0253) Sync to NSP (X10)
+# Batch – Crossdock – Order Control Pre (H0253) Sync to Supplier System (X10)
 
-Replikasi tabel **TB_R_H0253_ORDER_CONTROL_PRE** dari **DB Surrounding** ke **DB NSP**.
-Sumber: UISS-Batch `X10_UISS_Batch_H0253OrderControlSync.xlsx` (0.1 Initial Draft, update 15-Oct-26). Struktur dari I/F layout G-TOPAS **H02-53 / DVJO950 (Order Control Data File, Pre-order Picking Info)**.
+Replikasi tabel **TB_R_H0253_ORDER_CONTROL_PRE** dari **DB Surrounding** ke **DB Supplier System**.
+Sumber: UISS-Batch `X10_UISS_Batch_H0253OrderControlSync.xlsx` (0.1 Initial Draft, update 15-Oct-26). Struktur dari I/F layout T-System **H02-53 / DVJO950 (Order Control Data File, Pre-order Picking Info)**.
 
 ## Poin utama
-- Nama tabel di NSP sama dengan sumber.
-- Cara simpan: **delete – insert** (isi tabel NSP diganti semua setiap jalan), semua kolom disalin apa adanya.
-- Kolom tambahan NSP **HOLD_FLAG** dan **PO_MAPPED_FLAG**: default `'N'` saat baris pertama kali masuk. Nilainya **dipertahankan** per unique key setiap kali sync (disimpan sebelum delete, dipasang lagi setelah insert).
-- **Cancel order** tidak dilakukan di NSP: source mengirim order yang di-cancel dengan **ORDER_STATUS `2`** (order crossdock = `7`). NSP hanya **hold**, jadi cancel berlaku untuk line yang sudah **HOLD_FLAG = Y**. Line status `2` tidak diambil oleh X12.
-- **All-or-nothing**: gagal → roll back, NSP tetap berisi data run sukses terakhir.
-- G-TOPAS mengirim data **1x/hari (27:30)**; jadwal NSP di system master (**TBC**), setelah data tersedia. Hasil run dicatat di **Log**.
+- Nama tabel di Supplier System sama dengan sumber.
+- Cara simpan: **delete – insert** (isi tabel Supplier System diganti semua setiap jalan), semua kolom disalin apa adanya.
+- Kolom tambahan Supplier System **HOLD_FLAG** dan **PO_MAPPED_FLAG**: default `'N'` saat baris pertama kali masuk. Nilainya **dipertahankan** per unique key setiap kali sync (disimpan sebelum delete, dipasang lagi setelah insert).
+- **Cancel order** tidak dilakukan di Supplier System: source mengirim order yang di-cancel dengan **ORDER_STATUS `2`** (order crossdock = `7`). Supplier System hanya **hold**, jadi cancel berlaku untuk line yang sudah **HOLD_FLAG = Y**. Line status `2` tidak diambil oleh X12.
+- **All-or-nothing**: gagal → roll back, Supplier System tetap berisi data run sukses terakhir.
+- T-System mengirim data **1x/hari (27:30)**; jadwal Supplier System di system master (**TBC**), setelah data tersedia. Hasil run dicatat di **Log**.
 - PK = unique key di I/F layout.
 
 ## Struktur tabel (48 kolom)
@@ -59,17 +59,17 @@ Sumber: UISS-Batch `X10_UISS_Batch_H0253OrderControlSync.xlsx` (0.1 Initial Draf
 | 42 | UPDATE_JOB_ID | VARCHAR(8) |  | Y | No.42 Update Job ID |
 | 43 | UPDATE_OPERATION_ID | VARCHAR(13) |  | Y | No.43 Update Operator ID |
 | 44 | INTF_UPDATE_DT | TIMESTAMP |  | Y | No.44 Update Date & Time |
-| 45 | HOLD_FLAG | VARCHAR(1) |  | N | Kolom NSP: hold oleh tim D/S di ASN Crossdock Creation (Y/N); default N, dipertahankan saat sync |
-| 46 | PO_MAPPED_FLAG | VARCHAR(1) |  | N | Kolom NSP: line sudah di-mapping ke PO oleh [Create ASN] (Y/N); default N, dipertahankan saat sync |
-| 47 | CREATE_DT | TIMESTAMP |  | Y | Created date and time (NSP) |
-| 48 | CREATE_BY | VARCHAR(TBD) |  | Y | Created by (NSP) |
-| 49 | UPDATE_DT | TIMESTAMP |  | Y | Updated date and time (NSP) |
-| 50 | UPDATE_BY | VARCHAR(TBD) |  | Y | Updated by (NSP) |
+| 45 | HOLD_FLAG | VARCHAR(1) |  | N | Kolom Supplier System: hold oleh tim D/S di ASN Crossdock Creation (Y/N); default N, dipertahankan saat sync |
+| 46 | PO_MAPPED_FLAG | VARCHAR(1) |  | N | Kolom Supplier System: line sudah di-mapping ke PO oleh [Create ASN] (Y/N); default N, dipertahankan saat sync |
+| 47 | CREATE_DT | TIMESTAMP |  | Y | Created date and time (Supplier System) |
+| 48 | CREATE_BY | VARCHAR(TBD) |  | Y | Created by (Supplier System) |
+| 49 | UPDATE_DT | TIMESTAMP |  | Y | Updated date and time (Supplier System) |
+| 50 | UPDATE_BY | VARCHAR(TBD) |  | Y | Updated by (Supplier System) |
 
 ## Catatan
-- **SERIAL_NO** (Serial No., Card No.) **dicantumkan** di tabel NSP: bagian dari unique key I/F (no. 7) untuk membedakan pecahan record dari baris order yang sama. Kolom ini tidak ada di export tabel saat ini; di contoh data, 118 kelompok baris punya 6 kolom kunci yang sama (mis. ID1H4571 item 0004 muncul 2x), jadi tanpa SERIAL_NO kunci tidak unik.
+- **SERIAL_NO** (Serial No., Card No.) **dicantumkan** di tabel Supplier System: bagian dari unique key I/F (no. 7) untuk membedakan pecahan record dari baris order yang sama. Kolom ini tidak ada di export tabel saat ini; di contoh data, 118 kelompok baris punya 6 kolom kunci yang sama (mis. ID1H4571 item 0004 muncul 2x), jadi tanpa SERIAL_NO kunci tidak unik.
 - Nama kolom no. 43 di tabel: UPDATE_OPERATION_ID (di H0202: UPDATE_OPERATOR_ID).
 
 ## Open points
-- Jadwal scheduler NSP; perlu auto retry seperti X6 / X7?
+- Jadwal scheduler Supplier System; perlu auto retry seperti X6 / X7?
 - **Diputuskan (16-Oct):** HOLD_FLAG / PO_MAPPED_FLAG dipertahankan lewat unique key saat delete – insert.

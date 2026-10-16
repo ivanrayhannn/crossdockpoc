@@ -74,7 +74,7 @@
   },
   "inputs": [
    {
-    "name": "TB_R_ACTUAL_DEMAND_SUMMARY (NSP)",
+    "name": "TB_R_ACTUAL_DEMAND_SUMMARY (Supplier System)",
     "type": "DB",
     "description": "MAD per part, buyer code, PD code, order type and month"
    },
@@ -1261,7 +1261,7 @@
    "name": "TB_R_ACTUAL_DEMAND_SUMMARY",
    "kind": "transaction",
    "proposed": false,
-   "description": "Actual demand summary replicated from DB Surrounding to NSP (same columns). Key (PK) proposed from the data; types follow the source table.",
+   "description": "Actual demand summary replicated from DB Surrounding to Supplier System (same columns). Key (PK) proposed from the data; types follow the source table.",
    "columns": [
     [
      "GROUPING_BUYER_CD",
@@ -1409,7 +1409,7 @@
    "name": "TB_M_H0125_DESTINATION",
    "kind": "master",
    "proposed": false,
-   "description": "Destination Master (existing NSP table, read only). Only the listed columns are relevant; full structure: X11 Destination Master (H0125) Sync.",
+   "description": "Destination Master (existing Supplier System table, read only). Only the listed columns are relevant; full structure: X11 Destination Master (H0125) Sync.",
    "columns": [
     [
      "DESTINATION_CD",

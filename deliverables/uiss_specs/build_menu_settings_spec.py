@@ -69,7 +69,7 @@ spec = {
     "Menu Settings can never be hidden."]},
   {"type": "heading", "text": "5.2 Notes"},
   {"type": "bullets", "marker": "-", "level": 2, "items": [
-    "Prototype: the setting is kept in the browser. In NSP it is saved in TB_M_MENU_VISIBILITY (proposed); per role or global is TBD.",
+    "Prototype: the setting is kept in the browser. In Supplier System it is saved in TB_M_MENU_VISIBILITY (proposed); per role or global is TBD.",
     "Access to this screen: admin only (TBD)."]}],
  "display_messages": [],
  "logging_messages": [],
