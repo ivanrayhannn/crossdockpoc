@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 import { asnByUnitOf, submitAsnBatch, useAsns } from './asnStore';
 import {
-  asnNoFor, BUSINESS_DATES, buildCases, buildUnits, DESTS, niceDate, PART_NAME, PCS_PER_CASE, poQtyOf,
-  ritCyclesFor, SUPPLIER_CODE, SUPPLIER_NAME, SUPPLIER_PLANT, type AsnCase, type InstrLine, type Unit, type UnitStatus,
+  asnNoFor, BUSINESS_DATES, buildCases, buildUnits, DESTS, niceDate, PCS_PER_CASE, poQtyOf,
+  LOGIN_SUPPLIER, ritCyclesFor, SUPPLIERS, type AsnCase, type InstrLine, type Unit, type UnitStatus,
 } from './data';
 import { Chip, Modal } from './ui';
 import { card, th, td } from './styles';
@@ -78,6 +78,7 @@ export function AsnCrossdockCreationPage() {
   const sel = selByView[viewAs];
   const setSel = (next: Record<string, number>) => setSelByView((all) => ({ ...all, [viewAs]: next }));
   const [holdConflict, setHoldConflict] = useState(false);
+  const [supplierConflict, setSupplierConflict] = useState(false);
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const [openDest, setOpenDest] = useState<Record<string, boolean>>({});
   const [openCase, setOpenCase] = useState<Record<number, boolean>>({});
@@ -90,14 +91,16 @@ export function AsnCrossdockCreationPage() {
   const rit = rits.find((r) => r.no === ritNo) ?? rits[0];
   const units = useMemo(() => buildUnits(today, asnByUnitOf(asns), hold), [today, asns, hold]);
   // Created units and units without any ready case are not listed; a fully held unit only for the D/S team
-  const visible = units.filter((u) => u.status !== 'created' && (u.readyCases > 0 || (isDs && u.status === 'hold')));
+  // The supplier sees only its own Supplier Code + Plant; the D/S team (super admin) sees every supplier.
+  const visible = units.filter((u) => (isDs || u.supplier === LOGIN_SUPPLIER) && u.status !== 'created' && (u.readyCases > 0 || (isDs && u.status === 'hold')));
   const rows = visible.filter((u) => (!partFilter || u.partNo === partFilter) && (stFilter === 'all' || u.status === stFilter));
   const selected = units.filter((u) => sel[u.key] !== undefined && u.status === 'ready');
   const ticked = units.filter((u) => sel[u.key] !== undefined);
   const cases = useMemo(() => buildCases(selected), [selected]);
   const selQty = selected.reduce((a, u) => a + u.qty, 0);
   const asnDate = loaded?.deliveryDate ?? deliveryDate;
-  const nextAsnNo = asnNoFor(asnDate, asns.filter((a) => a.deliveryDate === asnDate).length + 1);
+  const asnSupplier = selected[0]?.supplier ?? LOGIN_SUPPLIER;
+  const nextAsnNo = asnNoFor(asnSupplier, asnDate, asns.filter((a) => a.deliveryDate === asnDate && a.supplier === asnSupplier).length + 1);
 
   const changeToday = (d: string) => {
     setToday(d);
@@ -133,6 +136,10 @@ export function AsnCrossdockCreationPage() {
       setHoldConflict(true);
       return;
     }
+    if (new Set(ticked.map((u) => u.supplier)).size > 1) {
+      setSupplierConflict(true);
+      return;
+    }
     setOpenCase({});
     setPage('cases');
   };
@@ -140,7 +147,7 @@ export function AsnCrossdockCreationPage() {
   const submit = () => {
     if (!loaded) return;
     const submitId = submitAsnBatch({
-      asnNo: nextAsnNo, deliveryDate: loaded.deliveryDate, rit: { no: loaded.ritNo, route: loaded.route }, unitKeys: selected.map((u) => u.key), cases,
+      asnNo: nextAsnNo, supplier: asnSupplier, deliveryDate: loaded.deliveryDate, rit: { no: loaded.ritNo, route: loaded.route }, unitKeys: selected.map((u) => u.key), cases,
       createdBy: 'D. Anggraini', createdAt: `${niceDate(today)} ${new Date().toTimeString().slice(0, 5)}`,
     }, today);
     setNotice(submitId);
@@ -164,7 +171,7 @@ export function AsnCrossdockCreationPage() {
         </div>
         <div style={{ ...card, padding: 16, display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 16, fontSize: 12.5 }}>
           <div><div className="ax-lbl">ASN No</div><div style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{nextAsnNo}</div><div className="ax-muted">auto · assigned on submit</div></div>
-          <div><div className="ax-lbl">Supplier · Plant</div><div style={{ fontWeight: 600 }}>{SUPPLIER_CODE} · {SUPPLIER_PLANT}</div><div className="ax-muted">{SUPPLIER_NAME}</div></div>
+          <div><div className="ax-lbl">Supplier · Plant</div><div style={{ fontWeight: 600 }}>{SUPPLIERS[asnSupplier].code} · {SUPPLIERS[asnSupplier].plant}</div><div className="ax-muted">{SUPPLIERS[asnSupplier].name}</div></div>
           <div><div className="ax-lbl">Delivery Date · Rit · Route</div><div style={{ fontWeight: 600 }}>{niceDate(loaded.deliveryDate)} · {loaded.ritNo} · {loaded.route}</div></div>
           <div><div className="ax-lbl">Delivery Qty</div><div style={{ fontWeight: 600 }}>{selQty} pcs</div></div>
           <div><div className="ax-lbl">Cases</div><div style={{ fontWeight: 600 }}>{cases.length} cases</div></div>
@@ -295,7 +302,7 @@ export function AsnCrossdockCreationPage() {
             <label>Part Number</label>
             <select className="input" value={partFilter} disabled={!loaded} onChange={(e) => setPartFilter(e.target.value)}>
               <option value="">All</option>
-              {Object.keys(PART_NAME).map((p) => <option key={p} value={p}>{p}</option>)}
+              {[...new Set(visible.map((u) => u.partNo))].sort().map((p) => <option key={p} value={p}>{p}</option>)}
             </select>
           </div>
           <div className="field" style={{ width: 150 }}>
@@ -318,6 +325,7 @@ export function AsnCrossdockCreationPage() {
               <tr>
                 <th style={{ ...th, width: 34 }} />
                 <th style={th}>Customer Order Date</th>
+                {isDs && <th style={th}>Supplier · Plant</th>}
                 <th style={th}>Part Number</th>
                 <th style={{ ...th, textAlign: 'right' }}>Case Qty</th>
                 <th style={{ ...th, textAlign: 'right' }}>PO Readiness (case)</th>
@@ -333,6 +341,7 @@ export function AsnCrossdockCreationPage() {
                   <tr key={u.key} style={{ background: u.status === 'notReady' ? 'var(--color-warn-bg, #fff8e6)' : undefined }}>
                     <td style={td}><input type="checkbox" checked={sel[u.key] !== undefined} disabled={!enabled} title={tip} onChange={(e) => { const next = { ...sel }; if (e.target.checked) next[u.key] = u.heldLines.length; else delete next[u.key]; setSel(next); }} /></td>
                     <td style={{ ...td, fontWeight: 600 }}>{niceDate(u.orderDt)}</td>
+                    {isDs && <td style={td}>{SUPPLIERS[u.supplier].code} · {SUPPLIERS[u.supplier].plant}</td>}
                     <td style={{ ...td, fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{u.partNo}</td>
                     <td style={{ ...td, textAlign: 'right', fontWeight: 600 }}>{u.caseCount}</td>
                     <td style={{ ...td, textAlign: 'right', color: u.readyCases < u.caseCount ? 'var(--color-danger)' : undefined }}>{u.readyCases}</td>
@@ -341,7 +350,7 @@ export function AsnCrossdockCreationPage() {
                   </tr>,
                   isDs && open[u.key] && (
                     <tr key={`${u.key}-d`}>
-                      <td colSpan={7} style={{ padding: '8px 16px 12px 50px', background: 'var(--color-surface)', borderBottom: '1px solid var(--color-divider)' }}>
+                      <td colSpan={isDs ? 8 : 7} style={{ padding: '8px 16px 12px 50px', background: 'var(--color-surface)', borderBottom: '1px solid var(--color-divider)' }}>
                         <div className="ax-lbl" style={{ marginBottom: 4 }}>Destination · {u.qty} pcs</div>
                         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
                           <thead><tr><th style={{ ...th, background: 'transparent', width: 30 }} />{['Destination', 'Case', 'Qty (pcs)', 'Pcs/Case', 'Hold Flag'].map((h) => <th key={h} style={{ ...th, background: 'transparent' }}>{h}</th>)}</tr></thead>
@@ -403,6 +412,11 @@ export function AsnCrossdockCreationPage() {
         </div>
       </div>
 
+      {supplierConflict && (
+        <Modal title="Supplier" onClose={() => setSupplierConflict(false)} actions={<button className="btn btn-primary" onClick={() => setSupplierConflict(false)}>OK</button>}>
+          One ASN is for one Supplier Code and Supplier Plant. Please select units of one supplier.
+        </Modal>
+      )}
       {holdConflict && (
         <Modal title="Hold" onClose={() => setHoldConflict(false)} actions={<button className="btn btn-primary" onClick={() => setHoldConflict(false)}>OK</button>}>
           Some order has been already hold, please select other records. The delivery plan has been refreshed.

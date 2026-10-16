@@ -7,6 +7,7 @@ Sumber: UISS-Batch `X10_UISS_Batch_H0253OrderControlSync.xlsx` (0.1 Initial Draf
 - Nama tabel di NSP sama dengan sumber.
 - Cara simpan: **delete – insert** (isi tabel NSP diganti semua setiap jalan), semua kolom disalin apa adanya.
 - Kolom tambahan NSP **HOLD_FLAG** dan **PO_MAPPED_FLAG**: default `'N'` saat baris pertama kali masuk. Nilainya **dipertahankan** per unique key setiap kali sync (disimpan sebelum delete, dipasang lagi setelah insert).
+- **Cancel order** tidak dilakukan di NSP: source mengirim order yang di-cancel dengan **ORDER_STATUS `2`** (order crossdock = `7`). NSP hanya **hold**, jadi cancel berlaku untuk line yang sudah **HOLD_FLAG = Y**. Line status `2` tidak diambil oleh X12.
 - **All-or-nothing**: gagal → roll back, NSP tetap berisi data run sukses terakhir.
 - G-TOPAS mengirim data **1x/hari (27:30)**; jadwal NSP di system master (**TBC**), setelah data tersedia. Hasil run dicatat di **Log**.
 - PK = unique key di I/F layout.
@@ -71,4 +72,4 @@ Sumber: UISS-Batch `X10_UISS_Batch_H0253OrderControlSync.xlsx` (0.1 Initial Draf
 
 ## Open points
 - Jadwal scheduler NSP; perlu auto retry seperti X6 / X7?
-- Usulan: HOLD_FLAG / PO_MAPPED_FLAG dipertahankan lewat unique key saat delete – insert (perlu konfirmasi tim IT).
+- **Diputuskan (16-Oct):** HOLD_FLAG / PO_MAPPED_FLAG dipertahankan lewat unique key saat delete – insert.

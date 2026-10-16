@@ -1,11 +1,22 @@
-/* ASN Crossdock — mock data of the Get Order pre-mapping (#TB_R_INSTRUCTION: customer order line ↔ supplier PO, FIFO by order date) and
+/* ASN Crossdock — mock data of the Search pre-mapping (#TEMP_INSTRUCTION: customer order line ↔ supplier PO, FIFO by order date) and
    the rules of the ASN flow: the unit is Part Number + Customer Order Date, one case per
    Part + Customer Order Date + destination, and an ASN may hold several such units. */
 
 export const PCS_PER_CASE = 6;
-export const SUPPLIER_CODE = '50221';
-export const SUPPLIER_PLANT = '1';
-export const SUPPLIER_NAME = 'PT Dummy Supplier Indonesia';
+export interface Supplier {
+  code: string;
+  plant: string;
+  name: string;
+}
+
+/** Supplier Code + Supplier Plant; one ASN is always for one of them (existing rule). */
+export const SUPPLIERS: Record<string, Supplier> = {
+  '50221-1': { code: '50221', plant: '1', name: 'PT Dummy Supplier Indonesia' },
+  '50330-2': { code: '50330', plant: '2', name: 'PT Contoh Komponen' },
+};
+
+/** Supplier of the login user in the supplier view (the D/S team sees every supplier). */
+export const LOGIN_SUPPLIER = '50221-1';
 
 export interface Dest {
   code: string;
@@ -20,7 +31,7 @@ export const DESTS: Record<string, Dest> = {
   '9722D10': { code: '9722D10', short: 'TH', name: 'Thailand' },
 };
 
-/** One row of #TB_R_INSTRUCTION: a customer order line (H0253, order status 7) paired with a supplier PO. */
+/** One row of #TEMP_INSTRUCTION: a customer order line (H0253, order status 7) paired with a supplier PO. */
 export interface InstrLine {
   id: string;
   custOrderNo: string;
@@ -36,13 +47,19 @@ export interface InstrLine {
   poDate: string | null;
   manifestNo: string | null;
   manifestItemNo: string | null;
+  /** Supplier Code + Plant key of SUPPLIERS. */
+  supplier: string;
 }
 
 export const PART_NAME: Record<string, string> = {
   'PART-A': 'Dummy Part A',
   'PART-B': 'Dummy Part B',
   'PART-C': 'Dummy Part C',
+  'PART-D': 'Dummy Part D',
 };
+
+/** Supplier of each part (PO supplier of the Pra Daily Order). */
+const PART_SUPPLIER: Record<string, string> = { 'PART-A': '50221-1', 'PART-B': '50221-1', 'PART-C': '50221-1', 'PART-D': '50330-2' };
 
 type Raw = [order: string, dest: string, qty: number, po: string | null, poDate: string | null];
 
@@ -63,6 +80,7 @@ function lines(orderDt: string, partNo: string, raw: Raw[]): InstrLine[] {
     poDate,
     manifestNo: po ? `M${po.replace('PO', '')}0${i % 3}` : null,
     manifestItemNo: po ? String((i % 3) + 1).padStart(3, '0') : null,
+    supplier: PART_SUPPLIER[partNo],
   }));
 }
 
@@ -89,6 +107,8 @@ export const INSTRUCTIONS: InstrLine[] = [
   ...lines('2026-10-14', 'PART-A', [['CO-14001', VN, 3, 'PO2', '2026-10-15'], ['CO-14002', TH, 6, 'PO2', '2026-10-15'], ['CO-14003', PH, 3, 'PO2', '2026-10-15']]),
   ...lines('2026-10-14', 'PART-B', [['CO-14001', VN, 6, 'PO2', '2026-10-15'], ['CO-14002', TH, 4, 'PO3', '2026-10-16']]),
   ...lines('2026-10-14', 'PART-C', [['CO-14004', TH, 2, null, null], ['CO-14005', TH, 3, null, null]]),
+  // Second supplier (50330 plant 2): visible to the D/S team only; cannot share an ASN with supplier 50221
+  ...lines('2026-10-13', 'PART-D', [['CO-13007', VN, 6, 'PO5', '2026-10-14'], ['CO-13008', TH, 4, 'PO5', '2026-10-14'], ['CO-13009', TH, 2, 'PO5', '2026-10-14']]),
 ];
 
 export const BUSINESS_DATES = ['2026-10-14', '2026-10-15', '2026-10-16'];
@@ -116,6 +136,8 @@ export interface Unit {
   /** Part Number + Customer Order Date. */
   key: string;
   partNo: string;
+  /** Supplier Code + Plant key of SUPPLIERS. */
+  supplier: string;
   orderDt: string;
   /** Order lines taken by Get Order (Hold Flag = N). */
   lines: InstrLine[];
@@ -163,6 +185,7 @@ export function buildUnits(today: string, asnByUnit: Record<string, string>, hol
       return {
         key,
         partNo: all[0].partNo,
+        supplier: all[0].supplier,
         orderDt: all[0].orderDt,
         lines: ls,
         heldLines: all.filter((l) => hold[l.id]),
@@ -208,8 +231,8 @@ export function caseNoOf(asnNo: string, seq: number): string {
   return `${asnNo.replace('ASN-', 'C-')}-${String(seq).padStart(2, '0')}`;
 }
 
-export function asnNoFor(deliveryDate: string, seq: number): string {
-  return `ASN-${SUPPLIER_CODE}-${deliveryDate.slice(2).replace(/-/g, '')}-${String(seq).padStart(3, '0')}`;
+export function asnNoFor(supplier: string, deliveryDate: string, seq: number): string {
+  return `ASN-${SUPPLIERS[supplier].code}-${deliveryDate.slice(2).replace(/-/g, '')}-${String(seq).padStart(3, '0')}`;
 }
 
 export interface RitCycle {
@@ -228,6 +251,8 @@ export function ritCyclesFor(deliveryDate: string): RitCycle[] {
 
 export interface SubmittedAsn {
   asnNo: string;
+  /** Supplier Code + Plant key of SUPPLIERS (one ASN = one supplier + plant). */
+  supplier: string;
   deliveryDate: string;
   rit: RitCycle;
   unitKeys: string[];

@@ -24,7 +24,8 @@ T, COLS, KEY = c["table"], c["cols"], sys.argv[2]
 # NSP-only columns of H0253 (set in ASN Crossdock Creation); they survive the full replace
 KEEP = {"HOLD_FLAG", "PO_MAPPED_FLAG"} if KEY == "H0253" else set()
 KEEP_TXT = ("HOLD_FLAG and PO_MAPPED_FLAG are NSP-only columns (set in ASN Crossdock Creation): before the delete their values are kept per unique key "
-            "and put back on the inserted rows; a new key gets 'N'.") if KEEP else ""
+            "and put back on the inserted rows; a new key gets 'N'. Cancel is not done in NSP: the source sends the cancelled order with ORDER_STATUS '2' "
+            "(crossdock orders have '7'); NSP only holds, so a cancel applies to lines already on hold (HOLD_FLAG = 'Y'). Lines with status '2' are not taken by X12.") if KEEP else ""
 
 SRC, DST = T + " (DB Surrounding)", T + " (NSP)"
 

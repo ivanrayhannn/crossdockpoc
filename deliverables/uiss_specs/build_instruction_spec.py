@@ -1,7 +1,7 @@
 """Spec for X12_UISS_Batch_GetOrderPOPreMapping.xlsx (UISS-Batch format): the on-demand function behind [Search]
-of ASN Crossdock Creation (X8). Customer orders are pre-mapped to supplier POs (FIFO) into the temporary #TB_R_INSTRUCTION."""
+of ASN Crossdock Creation (X8). Customer orders are pre-mapped to supplier POs (FIFO) into the temporary #TEMP_INSTRUCTION."""
 import json, sys
-from asn_common import H0253, INSTR, INSTR_COLS, INSTR_TABLE, PRA_M, PRA_P, header, revisions
+from asn_common import H0253, INSTR, INSTR_COLS, INSTR_TABLE, PRA_M, PRA_MAP, PRA_MAP_TABLE, PRA_P, header, revisions
 
 SAMPLE = {
  "title": "Sample Input", "heading": "Sample pre-mapping - Get Order (FIFO by Customer Order Date)",
@@ -38,12 +38,13 @@ spec = {
      {"id": "b", "label": "Get customer orders (H0253)", "type": "process"},
      {"id": "c", "label": "Get PO parts (Pra Daily Order)", "type": "process"},
      {"id": "d", "label": "Pre-map FIFO per part number", "type": "process"},
-     {"id": "e", "label": "Fill #TB_R_INSTRUCTION, set status", "type": "process"}],
+     {"id": "e", "label": "Fill #TEMP_INSTRUCTION, set status", "type": "process"}],
     "edges": [{"from": "a", "to": "b"}, {"from": "b", "to": "c"}, {"from": "c", "to": "d"}, {"from": "d", "to": "e"}]}},
   "inputs": [
    {"name": "Delivery Date, Rit, Route", "type": "Screen", "description": "From the Delivery section of X8 (carried to the ASN)"},
    {"name": H0253, "type": "DB", "description": "ORDER_STATUS = '7', HOLD_FLAG = 'N', PO_MAPPED_FLAG = 'N', latest data (replicated by X10)"},
-   {"name": PRA_M + " / " + PRA_P, "type": "DB", "description": "CROSSDOCK_FLAG = 'X', latest data, PO qty not yet mapped to a customer order, by Order Date ascending"}],
+   {"name": PRA_M + " / " + PRA_P, "type": "DB", "description": "CROSSDOCK_FLAG = 'X', latest data, by Order Date ascending"},
+   {"name": PRA_MAP, "type": "DB", "description": "New table: MAPPED_QTY per PO part; open PO qty = PO_ORDER_QTY - MAPPED_QTY"}],
   "outputs": [
    {"name": INSTR, "type": "Temp", "description": "One row per line x PO; one row with PO_NO NULL for the qty still without a PO"},
    {"name": "ASN Crossdock Creation (X8)", "type": "Screen", "description": "Delivery plan: Customer Order Date, Part Number, Case Qty, PO Readiness (case), ASN Status"}],
@@ -69,10 +70,10 @@ spec = {
   "steps": [
    "The user clicks [Search] on ASN Crossdock Creation (X8) with Delivery Date and Rit. The previous content of the temporary table of the session is cleared.",
    {"text": f"Get the customer order lines from {H0253}:",
-    "children": ["ORDER_STATUS = '7' (Cross Dock), HOLD_FLAG = 'N', PO_MAPPED_FLAG = 'N'; latest data; earliest order date first per part number (FIFO, G-TOPAS key).",
+    "children": ["ORDER_STATUS = '7' (Cross Dock), HOLD_FLAG = 'N', PO_MAPPED_FLAG = 'N'; latest data; earliest order date first per part number (FIFO, G-TOPAS key). Status '2' (cancel from the source) is not taken.",
                  "Get: Customer Code, Customer Order No, Order Date, Destination Code, Detailed Item No, Serial No, Part Number, Order Status Qty."]},
    {"text": f"Get the PO parts from {PRA_M} + {PRA_P}:",
-    "children": ["CROSSDOCK_FLAG = 'X'; latest data; PO qty not yet mapped to a customer order; ordered by Order Date ascending (FIFO).",
+    "children": ["CROSSDOCK_FLAG = 'X'; latest data; open PO qty = PO_ORDER_QTY - MAPPED_QTY of " + PRA_MAP + " (0 when no row) > 0; ordered by Order Date ascending (FIFO).",
                  "Get: PO Number, Manifest Number, Supplier Code / Plant, Sub Supplier Code / Plant, Order Type, Dock Code, PO Order Qty, Order Date, ETD Ori, Manifest Item No, Part Number."]},
    {"text": "Pre-map per part number, FIFO (see 4.1), and insert the result in " + INSTR + ".",
     "children": ["Each PO qty is given to the oldest open lines first; a line may be split over several POs; the open qty of a line is one row with PO_NO NULL."]},
@@ -115,13 +116,14 @@ spec = {
     "Case Qty = number of destinations of the unit. PO Readiness (case) = cases whose whole qty is pre-mapped to a PO.",
     "CROSSDOCK_STATUS '6' Ready: every line of the unit is pre-mapped. '7' Not Ready: at least one line of the unit has no PO yet.",
     "Shown on X8 as ASN Status Ready / Not Ready. Units with PO Readiness 0 are not listed on X8; units already in a submitted ASN (ASN status '1' Created) are not taken (PO_MAPPED_FLAG = 'Y').",
-    "TBD: physical structure of TB_R_PRA_DAILY_ORDER_MANIFEST / PART and the column for the mapped qty."]}],
+    "The mapped qty is kept in the new table " + PRA_MAP + " (no new column in the Pra Daily Order); it is updated by [Create ASN] on X8, not by this function.",
+    "Nothing is saved by this function: " + INSTR + " is the pre-mapping only; the real mapping is inserted into TB_R_INSTRUCTION by [Create ASN]."]}],
  "logging_messages": [
   {"event": "Get Order", "cause": "Read or insert fails", "type": "Error", "msg_id": "LOG1", "message": "Get Order failed for Delivery Date <DELIVERY_DT> <RIT>: <ERROR_DETAIL>.", "action": {"system": "Clear the temporary table.", "user": "Retry; contact PIC if it persists."}},
   {"event": "Unexpected error", "cause": "Any other system error", "type": "Critical", "msg_id": "LOG2", "message": "Unexpected error: <ERROR_DETAIL>.", "action": {"system": "Clear the temporary table.", "user": "User contact PIC"}}],
  "appendix_layout": "full",
  "appendix": [{"type": "text", "level": 0, "text": "Sample FIFO pre-mapping: see sheet Sample Input."}],
  "sample_sheet": SAMPLE,
- "tables": [INSTR_TABLE]
+ "tables": [INSTR_TABLE, PRA_MAP_TABLE]
 }
 json.dump(spec, open(sys.argv[1], 'w'), indent=1)

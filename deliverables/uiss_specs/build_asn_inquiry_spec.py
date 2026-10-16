@@ -23,7 +23,7 @@ spec = {
    {"name": "Reset", "function": "Clear criteria and reset the screen to its initial value."},
    {"name": "ASN No (link)", "function": "Open the detail of the ASN."},
    {"name": "Back", "function": "Return from the detail to the ASN list."},
-   {"name": "Download Case Label", "function": "Download the labels of all cases of the ASN. TBD: label format."}],
+   {"name": "Download Case Label", "function": "Download the labels of all cases of the ASN. Label format follows the existing case label."}],
   "screen_modes": [
    {"mode": "List Mode", "sections": [
      {"section": "Search Criteria", "description": "Criteria blank; all ASNs listed", "buttons": modes(["Search", "Reset"])},
@@ -58,7 +58,7 @@ spec = {
   {"group": "<Detail Mode>"},
   btn("Back", "Returns to the ASN list."),
   out("ASN summary", ASNH, "-", "Char", "-", "Label", "Left", "-", "Delivery Date, Rit Cycle · Route, units, cases · qty, created."),
-  btn("Download Case Label", "Downloads the labels of all cases (TBD format)."),
+  btn("Download Case Label", "Downloads the labels of all cases (existing label format)."),
   out("Case No", ASND, "CASE_NO", "Char", "TBD", "Grid", "Left", "-", "Case number of the ASN."),
   out("Part Number / Customer Order Date / Destination", ASND, "PART_NO / ORDER_DT / DESTINATION_CD", "Char", "-", "Grid", "Left", "-", "Key of the case."),
   out("Customer Order No (qty) / PO No / Qty", ASND, "CUSTOMER_ORDER_NO / PO_NO / QTY", "Char", "-", "Grid", "Left", "-", "Order lines packed in the case; total of all cases.")],
@@ -66,14 +66,14 @@ spec = {
  "operation": [
   {"type": "heading", "text": "5.1 List Mode"},
   {"type": "bullets", "marker": "a.", "level": 2, "items": [
-    "On first display all ASNs of TB_R_ASN_CROSSDOCK_H are listed, newest first.",
+    "On first display all crossdock ASNs of the existing table TB_R_DAILY_ORDER_MANIFEST are listed, newest first. Supplier: its own Supplier Code + Plant; D/S team: all suppliers.",
     "[Search] applies ASN No (contains), Delivery Date range and Part Number (ASNs whose cases contain the part). [Reset] clears them. No row: message no. 1.",
     "Clicking an ASN No opens Detail Mode."]},
   {"type": "heading", "text": "5.2 Detail Mode"},
   {"type": "bullets", "marker": "a.", "level": 2, "items": [
-    "Shows the ASN summary and its cases from TB_R_ASN_CROSSDOCK_D (rows with the ASN_NO), grouped by CASE_NO. All items are read only.",
-    "[Download Case Label]: TBD (format, file name, content). [Back] returns to the list in the current search state.",
-    "The screen does not change data (display only)."]}],
+    "Shows the ASN summary and its cases from the existing table TB_R_DAILY_ORDER_PART (rows with the ASN No), grouped by CASE_NO. All items are read only.",
+    "[Download Case Label]: follows the existing case label of NSP. [Back] returns to the list in the current search state.",
+    "The screen does not change data (display only). There is no Cancel ASN: an order is cancelled in the source (H0253 order status '2') for lines already on hold (HOLD_FLAG = 'Y'), not in NSP (refer X10)."]}],
  "display_messages": [
   {"group": "Search Operation"},
   {"event": "Click [Search] button", "cause": "No ASN matches", "type": "Info", "msg_id": "MSG1", "message": "No ASN matches this search.", "action": "Change the criteria."}],
