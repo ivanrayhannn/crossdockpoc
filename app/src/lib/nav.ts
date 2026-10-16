@@ -3,7 +3,7 @@ import { useSyncExternalStore } from 'react';
 /** Sidebar groups and their items (shared by the Sidebar and the Menu Settings admin panel). */
 export const NAV_GROUPS: [string, string[]][] = [
   ['Ordering', ['Service Part Order']],
-  ['ASN', ['Case Label Printing', 'ASN Creation', 'Delivery Note Creation', 'Case Consolidation Simulation', 'ASN Inquiry']],
+  ['ASN', ['Case Label Printing', 'ASN Creation', 'Delivery Note Creation', 'Case Consolidation Simulation', 'ASN Inquiry', 'Cancel Order Simulation']],
   ['Transfer Posting', ['Stock Inquiry']],
   ['Timeline', ['Timeline']],
   ['Master', ['Sub Supplier Maintenance', 'Part Master Maintenance', 'Crossdock Master Setting']],

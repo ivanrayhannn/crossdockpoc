@@ -8,6 +8,7 @@ import { CrossdockMasterSettingPage } from './features/crossdock/CrossdockMaster
 import { BatchProcessPage } from './features/batchProcess/BatchProcessPage';
 import { CandidatePartFlowPage } from './features/candidatePartFlow/CandidatePartFlowPage';
 import { AsnBackendProcessPage } from './features/asnBackend/AsnBackendProcessPage';
+import { CancelOrderSimulationPage } from './features/cancelSim/CancelOrderSimulationPage';
 import { LogMonitoringPage } from './features/logMonitoring/LogMonitoringPage';
 import { MenuSettingsPage } from './features/menuSettings/MenuSettingsPage';
 import { hashForRoute, routeFromHash } from './routes';
@@ -71,6 +72,14 @@ function App() {
     return (
       <AppShell activeItem="ASN Backend Process" onNavigate={navigate} breadcrumb={<Breadcrumb group="Common" label="ASN Backend Process" />}>
         <AsnBackendProcessPage />
+      </AppShell>
+    );
+  }
+
+  if (route === 'cancel-simulation') {
+    return (
+      <AppShell activeItem="Cancel Order Simulation" onNavigate={navigate} breadcrumb={<Breadcrumb group="ASN" label="Cancel Order Simulation" />}>
+        <CancelOrderSimulationPage />
       </AppShell>
     );
   }
