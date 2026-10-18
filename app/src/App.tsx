@@ -9,6 +9,7 @@ import { BatchProcessPage } from './features/batchProcess/BatchProcessPage';
 import { CandidatePartFlowPage } from './features/candidatePartFlow/CandidatePartFlowPage';
 import { AsnBackendProcessPage } from './features/asnBackend/AsnBackendProcessPage';
 import { CancelOrderSimulationPage } from './features/cancelSim/CancelOrderSimulationPage';
+import { ConfirmationPage } from './features/confirmation/ConfirmationPage';
 import { LogMonitoringPage } from './features/logMonitoring/LogMonitoringPage';
 import { MenuSettingsPage } from './features/menuSettings/MenuSettingsPage';
 import { hashForRoute, routeFromHash } from './routes';
@@ -80,6 +81,14 @@ function App() {
     return (
       <AppShell activeItem="Cancel Order Simulation" onNavigate={navigate} breadcrumb={<Breadcrumb group="ASN" label="Cancel Order Simulation" />}>
         <CancelOrderSimulationPage />
+      </AppShell>
+    );
+  }
+
+  if (route === 'confirmation') {
+    return (
+      <AppShell activeItem="Confirmation Points" onNavigate={navigate} breadcrumb={<Breadcrumb group="Common" label="Confirmation Points" />}>
+        <ConfirmationPage />
       </AppShell>
     );
   }

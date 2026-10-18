@@ -8,7 +8,7 @@ export const NAV_GROUPS: [string, string[]][] = [
   ['Timeline', ['Timeline']],
   ['Master', ['Sub Supplier Maintenance', 'Part Master Maintenance', 'Crossdock Master Setting']],
   ['Forecast', ['Forecast Inquiry']],
-  ['Common', ['Log Monitoring', 'System Master Maintenance', 'Batch Process Simulation', 'Candidate Part Batch Flow', 'ASN Backend Process', 'Menu Settings']],
+  ['Common', ['Log Monitoring', 'System Master Maintenance', 'Batch Process Simulation', 'Candidate Part Batch Flow', 'ASN Backend Process', 'Confirmation Points', 'Menu Settings']],
   ['Inventory Taking', ['Intak Period Maintenance', 'Yellow Line and CY Stock']],
 ];
 
