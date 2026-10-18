@@ -3,9 +3,19 @@
 Sumber: UISS `XD07_UISS_Batch_IFCrossDockMasterToAPPOLE.xlsx` (0.1 Initial Draft, 18-Oct-26). Nama sistem di UISS: G-TOPAS / NSP.
 
 ## Tujuan
-- Mengirim cross dock master part **Active** yang menunggu sync ke **AP POLE** sebagai **file interface lewat SFTP** (keputusan 18-Oct; contoh topology menyusul dari user).
+- Mengirim cross dock master part **Active** yang menunggu sync ke **AP POLE** sebagai **file interface lewat SFTP** (keputusan 18-Oct, Option #3).
 - Sumber: **Part List** (TB_M_PART_CANDIDATE) dan **Part Mapping per Destination** (TB_M_PART_CANDIDATE_DEST, periode berjalan).
 - Dulu satu RPA mengirim ke GTOPAS dan AP POLE sekaligus (X3 Sync). Sekarang dipisah: XD07 ke AP POLE, XD06 ke GTOPAS (data sama).
+
+## Topology (Option #3 – SFTP)
+```
+NSP: Cross Dock Part Master (XD01) -> XD07 Send IF (generate file)
+  -> SFTP TMMIN (outbound) -> SFTP TMA (inbound)
+  -> Receive IF (TMA) -> insert / update AP POLE: Crossdock Kanban Part Master dan Crossdock Export Part Master
+```
+- **Modification point:** TMMIN (NSP) membuat fungsi generate dan send IF xDock Part Master; TMA membuat fungsi receive IF dan insert ke tabel master AP POLE.
+- Option #3 dari file *NSP Cross Dock Interfacing Data* (keputusan 18-Oct).
+- Status kirim di NSP = '1' kalau file berhasil ditaruh di SFTP TMMIN; hasil insert di sisi TMA (file hasil / acknowledge) **TBC**.
 
 ## Proses bisnis
 1. Tim D/S mengubah cross dock master di **XD01** (Part List: Pcs/Case, Max Case/Day, Effective Start Date; Mapping: Case/Day per destinasi hasil XD05 proses 2 atau edit / upload XD03). Setiap perubahan → part jadi **No Sync**.
@@ -51,6 +61,7 @@ Nama field di sisi AP POLE: **TBC** (menunggu layout target).
 Hanya untuk menyimpan **status kirim** per part × target (PART_NO + TARGET_SYSTEM, PERIOD, IF_STATUS, IF_DT, IF_FILE_NAME, IF_MESSAGE). Output sebenarnya adalah **file ke AP POLE**.
 
 ## Open points
-- Topology SFTP (server, folder, user), format / nama file, file hasil dari target.
+- Detail SFTP (server, folder, user, siapa yang meneruskan SFTP TMMIN → SFTP TMA), format / nama file, file hasil dari TMA.
+- Field mana masuk ke tabel AP POLE yang mana (Crossdock Kanban Part Master dan Crossdock Export Part Master).
 - Nama dan panjang field di AP POLE.
 - Part yang jadi **Inactive** (XD05) saat ini tidak dikirim → perlu kirim CROSSDOCK_FLAG 'N' supaya target berhenti crossdock?

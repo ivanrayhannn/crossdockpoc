@@ -2,9 +2,26 @@
 
 Sumber: UISS `XD08_UISS_Batch_OrderControlInfoToNSP_ASN.xlsx` (0.1 Initial Draft, 18-Oct-26). Nama sistem di UISS: G-TOPAS / NSP.
 
-- Replicate **TB_R_H0253_ORDER_CONTROL_PRE** (DB Surrounding) baris **ORDER_STATUS = '7'** (crossdock) ke tabel yang sama di NSP (delete – insert, all-or-nothing).
-- Kolom NSP **HOLD_FLAG / PO_MAPPED_FLAG** dipertahankan per unique key (default 'N' untuk key baru).
-- Line yang di-cancel (status 2) diambil oleh **XD12** dan diproses **XD11** sebelum XD08 jalan. Urutan job (TBC): **XD12 → XD11 → XD08**.
-- Dibaca oleh XD09 dan XD10. Struktur tabel: `deliverables/md/X10_BATCH_H0253_OrderControl_Sync.md`.
+## Desain (keputusan 18-Oct)
+- Tabel source di DB Surrounding **insert / update**. NSP memakai **satu tabel replicate** `TB_R_H0253_ORDER_CONTROL_PRE` yang di-**upsert** per unique key (termasuk SERIAL_NO). Tidak ada delete, jadi kolom NSP (HOLD_FLAG, PO_MAPPED_FLAG, CANCEL_STATUS) aman.
+- Hanya baris yang berubah sejak run terakhir: **INTF_UPDATE_DT > watermark** (watermark = INTF_UPDATE_DT terakhir dari run sukses, disimpan di Log).
 
-> **Open discussion (18-Oct):** tabel source di DB Surrounding bersifat insert / update (status line bisa berubah 7 → 6 diterima, atau 7 → 2 cancel). Desain tabel replicate di NSP masih didiskusikan: dua tabel full replace (draft ini) atau satu tabel insert / update. Lihat README.
+## Alur
+1. Jalan terakhir di job chain **XD12 → XD11 → XD08**.
+2. Ambil baris source dengan INTF_UPDATE_DT > watermark:
+   - **status 7**: semua (line baru, qty berubah, serial hasil split);
+   - **status 6**: hanya key yang sudah ada di NSP (diterima, tidak ada aksi lanjut);
+   - status 2 diambil XD12.
+3. Upsert: key baru → insert (HOLD_FLAG / PO_MAPPED_FLAG = N, CANCEL_STATUS = '-'); key lama → update kolom source, kolom NSP tidak diubah.
+4. Sukses → commit, simpan watermark baru. Gagal → rollback, watermark tetap (diambil lagi run berikutnya).
+
+## Skenario
+| Skenario | H0253 14-Oct → 15-Oct (skenario_h0253.xlsx) | NSP |
+|---|---|---|
+| 1 Normal | Status 7 qty 8 → baris yang sama status 6 qty 8 | XD08 update baris (diterima); tidak diambil XD09 lagi |
+| 2 Partial cancel | Status 7 qty 8 → serial A status 7 qty 6 + serial B (baru) status 2 qty 2 | XD12 update A, insert B (CANCEL_STATUS 'P'); XD11: CANCEL 2, VALID 6 → CANCELLED |
+| 3 Full cancel | Status 7 qty 8 → baris yang sama status 2 qty 8 | XD12 update baris ('P'); XD11: CANCEL 8, VALID 0 → CANCELLED |
+| 4 Abnormality | 8 pcs sudah di ASN, lalu cancel (SOP tidak dijalankan) | XD11: QTY_IN_ASN > VALID_QTY → CONFLICT, ASN tetap |
+
+- Baris status 6 / 2 tetap disimpan untuk tracking (retensi opsional).
+- Dibaca XD09 (status 7, belum mapping, tidak hold), XD10 dan XD11.

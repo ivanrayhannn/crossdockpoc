@@ -1,100 +1,179 @@
-"""XD08 Order Control Information to NSP Batch (ASN): replicated H0253 rows with ORDER_STATUS '7' (crossdock).
-XD12 Order Control Information to NSP Batch (Cancel): replicated H0253 rows with ORDER_STATUS '2' (cancel).
-Both read TB_R_H0253_ORDER_CONTROL_PRE of DB Surrounding (replicated from G-TOPAS) and write separate NSP tables."""
+"""XD08 Order Control Information to NSP Batch (ASN) and XD12 Order Control Information to NSP Batch (Cancel).
+Decision 18-Oct (scenario file skenario_h0253.xlsx): the source TB_R_H0253_ORDER_CONTROL_PRE of DB Surrounding is
+insert / update; a crossdock line starts with ORDER_STATUS 7 and can change to 6 (received / allocated) or 2 (reject /
+cancel). A partial cancel splits the line into a new SERIAL_NO. NSP keeps ONE replicate table, updated by insert / update
+(upsert) per unique key with the rows changed since the last run (INTF_UPDATE_DT):
+  XD08: status 7 rows (insert new / update) and status 6 updates of known rows.
+  XD12: status 2 rows of crossdock lines (insert split serial / update) + the other changed rows of the same line;
+        CANCEL_STATUS = 'P' for XD11."""
 from v2lib import batch_header, write
 from h_tables import H0253_COLS  # noqa: E402  (path set by v2lib)
 
-SRC_T = 'TB_R_H0253_ORDER_CONTROL_PRE'
+SRC_T = CTL = 'TB_R_H0253_ORDER_CONTROL_PRE'
 SRC = SRC_T + ' (DB Surrounding)'
-CAN = 'TB_R_H0253_ORDER_CANCEL_PRE'
+DST = CTL + ' (NSP)'
 LOG = 'Log'
-NOTE = "Structure from the G-TOPAS I/F layout; physical names follow the existing table. Key (PK) = unique key of the I/F layout."
-KEEP = {"HOLD_FLAG", "PO_MAPPED_FLAG"}
-CHAIN = "Job chain (TBC): XD12 -> XD11 -> XD08, after G-TOPAS has provided the data (1 time/day, 27:30)."
+NOTE = ("Structure from the G-TOPAS I/F layout; physical names follow the existing table. Key (PK) = unique key of the I/F layout. "
+        "NSP keeps the rows with status 7, 6 and 2 (insert / update); rows with status 6 / 2 are kept for tracking only (retention optional, TBC).")
+CHAIN = "Job chain: XD12 -> XD11 -> XD08, after G-TOPAS has provided the data (1 time/day, 27:30)."
+LINE_KEY = "CUSTOMER_CD + CUSTOMER_ORDER_NO + ORDER_DT + ORDER_TIME + DESTINATION_CD + DETAILED_ITEM_NO"
+NSP_COLS = {"HOLD_FLAG", "PO_MAPPED_FLAG", "CANCEL_STATUS", "CREATE_DT", "CREATE_BY", "UPDATE_DT", "UPDATE_BY"}
+
+# NSP table = H0253 columns + CANCEL_STATUS after PO_MAPPED_FLAG
+CTL_COLS = []
+for c in H0253_COLS:
+    c = list(c)
+    if c[0] == 'HOLD_FLAG':
+        c[4] = "NSP column: hold by the D/S team in ASN Cross Dock Creation (XD10) ('Y' / 'N'); 'N' on insert, never changed by XD08 / XD12"
+    if c[0] == 'PO_MAPPED_FLAG':
+        c[4] = "NSP column: line mapped to a PO by [Create ASN] ('Y' / 'N'); 'N' on insert, never changed by XD08 / XD12"
+    CTL_COLS.append(c)
+    if c[0] == 'PO_MAPPED_FLAG':
+        CTL_COLS.append(["CANCEL_STATUS", "VARCHAR(1)", "", "N",
+                         "NSP column: '-' no cancel / 'P' cancel to be processed by XD11 (set by XD12) / 'D' processed by XD11"])
+CTL_TABLE = {"name": CTL, "kind": "transaction", "proposed": False,
+             "description": "Order control data, pre-order picking info (I/F H02-53, DVJO950) replicated from DB Surrounding by XD08 / XD12. " + NOTE
+                            + " CANCEL_STATUS is a new NSP column (proposed).",
+             "columns": CTL_COLS}
+
+WATERMARK = "Last INTF_UPDATE_DT taken by the previous successful run of this batch (kept in the Log); first run: all rows"
 
 
-def h_spec(fid, status, dst_t, cols, keep, purpose, extra_obj, step2_extra, desc, proposed):
-    dst = dst_t + ' (NSP)'
-    spec = {
+def upsert_block(fid, rule_desc, cancel_desc):
+    maps = []
+    for c in CTL_COLS:
+        n = c[0]
+        if n in ('HOLD_FLAG', 'PO_MAPPED_FLAG'):
+            maps.append({"dest_field": n, "description": "'N' on insert; not changed on update"})
+        elif n == 'CANCEL_STATUS':
+            maps.append({"dest_field": n, "description": cancel_desc})
+        elif n in ('CREATE_DT', 'CREATE_BY'):
+            maps.append({"dest_field": n, "description": "Batch system date-time / batch user ID on insert; not changed on update"})
+        elif n in ('UPDATE_DT', 'UPDATE_BY'):
+            maps.append({"dest_field": n, "description": "Batch system date-time / batch user ID"})
+        else:
+            maps.append({"source_field": n, "dest_field": n, "description": "Same value as the source (insert and update)"})
+    return {"source": {"table": SRC, "keys": [{"field": "INTF_UPDATE_DT", "value": "> watermark"}, {"field": "ORDER_STATUS", "value": rule_desc}]},
+            "destination": {"table": DST, "operation": "Insert / Update", "description": "Upsert per unique key (insert when the key is new, else update)",
+                            "keys": [{"field": "Unique key (incl. SERIAL_NO)", "value": "Key of the source row"}]},
+            "mappings": maps}
+
+
+def log_block(fid):
+    return {"source": "Result of this run", "destination": {"table": LOG, "operation": "Insert", "description": "One record per run"},
+            "mappings": [{"dest_field": "BATCH_ID", "description": f"'{fid}_H0253'"}, {"dest_field": "STATUS", "description": "SUCCESS / FAILED"},
+                         {"dest_field": "ROW_COUNT", "description": "Rows inserted / updated (0 when FAILED)"},
+                         {"dest_field": "WATERMARK", "description": "Max INTF_UPDATE_DT taken in this run (next watermark; only when SUCCESS)"},
+                         {"dest_field": "MESSAGE", "description": "Error message when FAILED"},
+                         {"dest_field": "START_DT / END_DT", "description": "Start and end date-time"}]}
+
+
+def flow(fid, select_label):
+    return {"flow": {"direction": "TB", "nodes": [
+        {"id": "p1", "label": "Start (job chain)", "type": "process", "step": 1},
+        {"id": "s", "label": SRC, "type": "db", "lane": "input"},
+        {"id": "p2", "label": select_label, "type": "process", "step": 2},
+        {"id": "p3", "label": "Insert new keys / update existing keys", "type": "process", "step": 3},
+        {"id": "d", "label": DST, "type": "db", "lane": "output"},
+        {"id": "p4", "label": "Commit or roll back, Log (watermark)", "type": "process", "step": 4},
+        {"id": "log", "label": LOG, "type": "db", "lane": "output"}],
+        "edges": [{"from": "p1", "to": "p2"}, {"from": "s", "to": "p2"}, {"from": "p2", "to": "p3"}, {"from": "p3", "to": "d"},
+                  {"from": "p3", "to": "p4"}, {"from": "p4", "to": "log"}]}}
+
+
+def spec_of(fid, objective, select_label, steps, blocks, desc, logs, extra_rows):
+    return {
         "doc_type": "batch",
         "general": {
-            "objective": [f"To replicate the rows of {SRC_T} (DB Surrounding) with ORDER_STATUS = '{status}' ({purpose}) into {dst_t} in NSP.",
-                          "The NSP table is fully replaced every run (delete - insert). In case any error occurs, the run is rolled back and NSP keeps the data of the last successful run."]
-                         + extra_obj,
+            "objective": objective,
             "operation_flow": {"flow": {"direction": "TB", "nodes": [
                 {"id": "a", "label": "Scheduler (job chain)", "type": "event"},
-                {"id": "b", "label": f"Delete + insert {dst_t} (ORDER_STATUS = '{status}')", "type": "process"},
-                {"id": "c", "label": "Commit / roll back, Log", "type": "process"}],
+                {"id": "b", "label": select_label, "type": "process"},
+                {"id": "c", "label": "Upsert into NSP, Log", "type": "process"}],
                 "edges": [{"from": "a", "to": "b"}, {"from": "b", "to": "c"}]}},
-            "inputs": [{"name": SRC, "type": "DB", "description": f"Order control data, pre-order picking info (I/F H02-53, DVJO950); rows with ORDER_STATUS = '{status}'"}],
-            "outputs": [{"name": dst, "type": "DB", "description": f"if successful: the source rows with ORDER_STATUS = '{status}'"},
-                        {"name": LOG, "type": "DB", "description": "One record per run with status SUCCESS / FAILED"}],
+            "inputs": [{"name": SRC, "type": "DB", "description": "Order control data, pre-order picking info (I/F H02-53, DVJO950); insert / update table"},
+                       {"name": DST, "type": "DB", "description": "Existing NSP rows (key check, NSP columns)"},
+                       {"name": LOG, "type": "DB", "description": "Watermark of the last successful run"}],
+            "outputs": [{"name": DST, "type": "DB", "description": "if successful: rows inserted / updated"},
+                        {"name": LOG, "type": "DB", "description": "One record per run with status and watermark"}],
             "extra_tables": [
                 {"title": "Parameters", "columns": [{"title": "Name", "width": 14}, {"title": "Description", "width": 34}],
-                 "rows": [["Order status", f"'{status}' ({purpose}); fixed in this batch"]]},
+                 "rows": [["Watermark", WATERMARK]] + extra_rows},
                 {"title": "Execution Schedule", "columns": [{"title": "Item", "width": 12}, {"title": "Description", "width": 36}],
                  "rows": [["Trigger", "Scheduler set in the system master (schedule TBC)."], ["Order", CHAIN]]}]},
-        "func_flow": {
-            "flow": {"direction": "TB", "nodes": [
-                {"id": "p1", "label": "Start (scheduler)", "type": "process", "step": 1},
-                {"id": "s", "label": SRC, "type": "db", "lane": "input"},
-                {"id": "p2", "label": f"Delete all rows, insert source rows with ORDER_STATUS = '{status}'", "type": "process", "step": 2},
-                {"id": "d", "label": dst, "type": "db", "lane": "output"},
-                {"id": "p3", "label": "Commit or roll back, record Log", "type": "process", "step": 3},
-                {"id": "log", "label": LOG, "type": "db", "lane": "output"}],
-             "edges": [{"from": "p1", "to": "p2"}, {"from": "s", "to": "p2"}, {"from": "p2", "to": "d"}, {"from": "p2", "to": "p3"}, {"from": "p3", "to": "log"}]},
-            "steps": ["The scheduler starts the batch (job chain XD12 -> XD11 -> XD08).",
-                      f"Delete all rows of {dst} and insert the rows of {SRC} with ORDER_STATUS = '{status}' (same columns and values). " + step2_extra,
-                      "No error: commit. Error: roll back step 2 (one transaction). Record the result in the Log. Exit."]},
-        "data_map": {"blocks": [
-            {"source": {"table": dst}, "destination": {"table": dst, "operation": "Delete", "description": "All rows (full replace)"},
-             "mappings": [{"dest_field": x[0], "description": "Row is deleted"} for x in cols]},
-            {"source": {"table": SRC, "keys": [{"field": "ORDER_STATUS", "value": f"'{status}'"}]},
-             "destination": {"table": dst, "operation": "Insert", "description": f"Every source row with ORDER_STATUS = '{status}'"},
-             "mappings": [{"dest_field": x[0], "description": "Value of the deleted NSP row with the same unique key; 'N' for a new key"} if x[0] in keep
-                          else {"dest_field": x[0], "description": "Batch system date-time / batch user ID"} if x[0] in ('CREATE_DT', 'CREATE_BY', 'UPDATE_DT', 'UPDATE_BY') and dst_t == CAN
-                          else {"source_field": x[0], "dest_field": x[0], "description": "Same value as the source"} for x in cols]},
-            {"source": "Result of this run", "destination": {"table": LOG, "operation": "Insert", "description": "One record per run"},
-             "mappings": [{"dest_field": "BATCH_ID", "description": f"'{fid}_H0253_{status}'"}, {"dest_field": "STATUS", "description": "SUCCESS / FAILED"},
-                          {"dest_field": "ROW_COUNT", "description": "Rows inserted (0 when FAILED)"}, {"dest_field": "MESSAGE", "description": "Error message when FAILED"},
-                          {"dest_field": "START_DT", "description": "Start date and time"}, {"dest_field": "END_DT", "description": "End date and time"}]}]},
+        "func_flow": dict(flow(fid, select_label), steps=steps),
+        "data_map": {"blocks": blocks + [log_block(fid)]},
         "func_desc_layout": "full",
-        "func_desc": [{"type": "bullets", "marker": "-", "level": 0, "items": desc}],
-        "logging_messages": [
-            {"event": "Batch start", "cause": "Batch is called", "type": "Info", "msg_id": "LOG1", "message": f"H0253 status {status} sync started.", "action": {"system": "Write the log.", "user": "-"}},
-            {"event": "Batch end", "cause": "Batch finishes", "type": "Info", "msg_id": "LOG2", "message": f"H0253 status {status} sync ended. Status <STATUS>, rows <ROW_COUNT>.", "action": {"system": "Write the log.", "user": "-"}},
-            {"event": "Copy table", "cause": "Read from DB Surrounding or insert into NSP fails", "type": "Error", "msg_id": "LOG3", "message": f"Cannot replicate H0253 status {status} into {dst_t}: <ERROR_DETAIL>.", "action": {"system": "Roll back. STATUS = FAILED.", "user": "User contact PIC"}},
-            {"event": "Unexpected error", "cause": "Any other system error", "type": "Critical", "msg_id": "LOG4", "message": "Unexpected error: <ERROR_DETAIL>.", "action": {"system": "Roll back. STATUS = FAILED.", "user": "User contact PIC"}}],
+        "func_desc": desc,
+        "logging_messages": logs,
         "appendix_layout": "full",
         "appendix": [],
-        "tables": [{"name": dst_t, "kind": "transaction", "proposed": proposed,
-                    "description": f"Rows of H0253 with ORDER_STATUS = '{status}' replicated from DB Surrounding. " + NOTE + ("" if not proposed else " Table name proposed."),
-                    "columns": cols}]
+        "tables": [CTL_TABLE],
     }
-    return write(batch_header(fid) | spec, fid)
+
+
+def logs(fid, what):
+    return [
+        {"event": "Batch start", "cause": "Batch is called", "type": "Info", "msg_id": "LOG1", "message": f"H0253 {what} sync started. Watermark <WATERMARK>.", "action": {"system": "Write the log.", "user": "-"}},
+        {"event": "Batch end", "cause": "Batch finishes", "type": "Info", "msg_id": "LOG2", "message": f"H0253 {what} sync ended. Status <STATUS>, inserted <INS>, updated <UPD>.", "action": {"system": "Write the log; save the new watermark when SUCCESS.", "user": "-"}},
+        {"event": "Upsert", "cause": "Read from DB Surrounding or insert / update in NSP fails", "type": "Error", "msg_id": "LOG3", "message": f"Cannot replicate H0253 {what} rows: <ERROR_DETAIL>.", "action": {"system": "Roll back; watermark not changed (rows taken again next run). STATUS = FAILED.", "user": "User contact PIC"}},
+        {"event": "Unexpected error", "cause": "Any other system error", "type": "Critical", "msg_id": "LOG4", "message": "Unexpected error: <ERROR_DETAIL>.", "action": {"system": "Roll back. STATUS = FAILED.", "user": "User contact PIC"}}]
 
 
 def build():
-    keep_txt = ("HOLD_FLAG and PO_MAPPED_FLAG are NSP-only columns (set in ASN Cross Dock Creation XD10): before the delete their values are kept "
-                "per unique key and put back on the inserted rows; a new key gets 'N'.")
-    f08 = h_spec('XD08', '7', SRC_T, H0253_COLS, KEEP, 'cross dock orders, used for the ASN',
-                 ["Only crossdock orders (status 7) are taken. Cancelled lines (status 2) are taken by XD12 and processed by XD11 before this batch runs."],
-                 keep_txt,
-                 ["Rows with ORDER_STATUS = '7' only; all columns are copied as they are, no conversion. " + keep_txt,
-                  "A line cancelled in G-TOPAS leaves status 7 (fully or partly); XD11 runs before this batch so that HOLD_FLAG and the status 7 qty before the cancel are still available.",
-                  "Delete and insert run in one transaction (all-or-nothing). When the run fails, NSP keeps the data of the last successful run.",
-                  "Read by XD09 (Mapping Customer Order and PO) and XD10 (ASN Cross Dock Creation). Table structure: see Appendix."],
-                 False)
-    can_cols = [c if c[0] not in ('CREATE_DT', 'CREATE_BY', 'UPDATE_DT', 'UPDATE_BY') else c for c in H0253_COLS if c[0] not in KEEP]
-    f12 = h_spec('XD12', '2', CAN, can_cols, set(), 'cancelled orders',
-                 ["The table is read by XD11 Cancel Crossdock Customer Order Batch, which processes the cancel of crossdock lines in NSP."],
-                 "No NSP-only column: the cancel result is kept by XD11 in its own table.",
-                 ["Rows with ORDER_STATUS = '2' only; all source columns are copied as they are, no conversion. Lines of every order type are copied; XD11 takes only the crossdock lines (TBC: filter crossdock lines already in this batch).",
-                  f"Separate table from {SRC_T} (NSP), because XD08 fully replaces that table with status 7 rows only.",
-                  "Delete and insert run in one transaction (all-or-nothing). When the run fails, NSP keeps the data of the last successful run and XD11 is not started.",
-                  "Table structure: same columns as H0253 without HOLD_FLAG / PO_MAPPED_FLAG (see Appendix)."],
-                 True)
-    return [f08, f12]
+    xd08 = spec_of(
+        'XD08',
+        [f"To keep {CTL} in NSP up to date with the crossdock customer order lines of G-TOPAS (replicated in DB Surrounding): rows with ORDER_STATUS = '7' "
+         "are inserted (new key) or updated (existing key); rows that changed to '6' (received) are updated.",
+         "Only the rows changed since the last successful run are taken (INTF_UPDATE_DT > watermark). Nothing is deleted, so the NSP columns "
+         "HOLD_FLAG / PO_MAPPED_FLAG / CANCEL_STATUS keep their values.",
+         "Rows with status '2' (cancel) are taken by XD12 and processed by XD11 before this batch runs."],
+        "Rows changed since watermark: status 7 (all) and 6 (known keys)",
+        ["The scheduler starts the batch after XD11 (job chain XD12 -> XD11 -> XD08). Write LOG1.",
+         {"text": f"Read the rows of {SRC} with INTF_UPDATE_DT > watermark:", "children": [
+             "ORDER_STATUS = '7': all rows (new crossdock lines, changed qty, split serials).",
+             f"ORDER_STATUS = '6': only rows whose unique key already exists in {DST} (received / allocated; no further action in NSP).",
+             "Other statuses are not taken; status '2' is taken by XD12."]},
+         {"text": f"Upsert into {DST} per unique key (incl. SERIAL_NO):", "children": [
+             "New key: insert all source columns; HOLD_FLAG = 'N', PO_MAPPED_FLAG = 'N', CANCEL_STATUS = '-'.",
+             "Existing key: update all source columns; HOLD_FLAG, PO_MAPPED_FLAG and CANCEL_STATUS are not changed."]},
+         "No error: commit, save the new watermark (max INTF_UPDATE_DT taken) in the Log, LOG2. Error: roll back, watermark not changed, LOG3. Exit."],
+        [upsert_block('XD08', "'7' (all) / '6' (existing keys only)", "'-' on insert; not changed on update")],
+        [{"type": "bullets", "marker": "-", "level": 0, "items": [
+            "The source table is insert / update: a crossdock line starts with status 7 and can change to 6 (received / allocated) or 2 (reject / cancel). "
+            "A partial cancel or receipt splits the line into a new SERIAL_NO (scenario file skenario_h0253.xlsx).",
+            "Scenario 1 (normal): 14-Oct status 7, qty 8 -> 15-Oct the same row status 6, qty 8: XD08 updates the row; the line is no longer taken by XD09 (status 7 only).",
+            "Only changed rows are read (INTF_UPDATE_DT > watermark); insert and update run in one transaction; the watermark is saved only when the run succeeds.",
+            "Rows with status 6 / 2 stay in the table for tracking (retention optional, TBC).",
+            "Read by XD09 (status 7 rows not mapped, not on hold), XD10 and XD11. Table structure: see Appendix."]}],
+        logs('XD08', 'status 7 / 6'), [["Statuses", "'7' all rows; '6' existing keys only"]])
+    xd12 = spec_of(
+        'XD12',
+        [f"To bring the cancels of crossdock customer order lines from G-TOPAS into {CTL} in NSP: rows with ORDER_STATUS = '2' of lines that exist in NSP "
+         "are inserted (new split SERIAL_NO of a partial cancel) or updated (full cancel of the row), and marked CANCEL_STATUS = 'P' for XD11.",
+         "In the same run the other changed rows of the same line are upserted too (e.g. the status 7 serial whose qty was reduced by the partial cancel), "
+         "so XD11 sees the complete line. Only rows changed since the last successful run are taken (INTF_UPDATE_DT > watermark)."],
+        "Status 2 rows of crossdock lines + other changed rows of the same lines",
+        ["The scheduler starts the batch (first of the job chain XD12 -> XD11 -> XD08). Write LOG1.",
+         {"text": f"Read the rows of {SRC} with INTF_UPDATE_DT > watermark and ORDER_STATUS = '2' whose line ({LINE_KEY}) exists in {DST}.", "children": [
+             "Lines not in NSP (not crossdock) are ignored.",
+             "Add the other rows of the same lines with INTF_UPDATE_DT > watermark (any status), so the whole line is current."]},
+         {"text": f"Upsert into {DST} per unique key (incl. SERIAL_NO):", "children": [
+             "Status 2 row, new key (partial cancel = new split serial): insert; HOLD_FLAG = 'N', PO_MAPPED_FLAG = 'N', CANCEL_STATUS = 'P'.",
+             "Status 2 row, existing key (full cancel of the row): update the source columns; CANCEL_STATUS = 'P'; HOLD_FLAG / PO_MAPPED_FLAG not changed.",
+             "Other rows of the line: update the source columns (e.g. status 7 qty 8 -> 6); NSP columns not changed."]},
+         "No error: commit, save the new watermark in the Log, LOG2 (rows, lines). Error: roll back, watermark not changed, LOG3; XD11 is not started. Exit."],
+        [upsert_block('XD12', "'2' of lines existing in NSP + other changed rows of these lines",
+                      "'P' for status 2 rows (insert and update); other rows: '-' on insert, not changed on update")],
+        [{"type": "bullets", "marker": "-", "level": 0, "items": [
+            "Scenario 2 (partial cancel): 14-Oct one row status 7 qty 8 -> 15-Oct the row is split: serial A status 7 qty 6 (update) and serial B status 2 qty 2 (insert, CANCEL_STATUS 'P').",
+            "Scenario 3 (full cancel): 14-Oct status 7 qty 8 -> 15-Oct the same row status 2 qty 8 (update, CANCEL_STATUS 'P').",
+            "One table with XD08: no separate cancel table and no delete, so the NSP columns of a line are never lost.",
+            "A cancel of qty already in a submitted ASN is normally blocked in G-TOPAS by the existing ASN feedback and by the SOP of the D/S team; "
+            "if it still happens (abnormality), XD11 reports it as CONFLICT.",
+            "Rows with status 2 stay in the table for tracking (retention optional, TBC). Table structure: see Appendix."]}],
+        logs('XD12', 'status 2 (cancel)'), [["Statuses", "'2' of crossdock lines; other changed rows of the same lines"]])
+    return [write(batch_header('XD08') | xd08, 'XD08'), write(batch_header('XD12') | xd12, 'XD12')]
 
 
 if __name__ == '__main__':

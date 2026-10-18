@@ -23,6 +23,12 @@ FIELDS = [
     ("CASE_DAY", f"{D}.CASE_DAY", "NUMBER(TBD)", "Y", "Cases per day allocated to the destination (minimum 1; sum per part = MAX_CASE_DAY)"),
     ("SEND_DT", "Generated", "DATETIME", "Y", "Date-time the file is created"),
 ]
+TARGET = {
+    'GTOPAS': {"side": "G-TOPAS side (owner TBC)", "tables": "cross dock master of G-TOPAS (tables TBC)",
+               "note": "Option #3 of 'NSP Cross Dock Interfacing Data' is drawn for AP POLE; the same SFTP pattern is assumed for G-TOPAS (TBC)."},
+    'APPOLE': {"side": "TMA", "tables": "Crossdock Kanban Part Master and Crossdock Export Part Master (AP POLE)",
+               "note": "Option #3 of 'NSP Cross Dock Interfacing Data' (decided 18-Oct)."},
+}
 PURPOSE = {
     'GTOPAS': "GTOPAS (customer order side): which part and destination orders are handled by crossdock (order status 7) and how many cases per day per destination (assumption, TBC)",
     'APPOLE': "AP POLE (supplier PO side): which parts are ordered from the supplier as crossdock POs (crossdock flag of the Pra Daily Order), with pieces per case and the daily volume (assumption, TBC)",
@@ -40,6 +46,7 @@ def if_spec(fid, code, name, other_fid, other_name):
     t, d, h = tables()
     other_code = 'APPOLE' if code == 'GTOPAS' else 'GTOPAS'
     fname = f"XD_CDMASTER_{code}_<YYYYMMDDHHMMSS>.csv"
+    tg = TARGET[code]
     out_file = f"Interface file to {name} (SFTP)"
     spec = {
         "doc_type": "batch",
@@ -49,6 +56,9 @@ def if_spec(fid, code, name, other_fid, other_name):
                 f"Pcs/Case, Max Case/Day and Effective Start Date from the Part List ({T}) and all destinations with Case/Day of the ongoing period "
                 f"from the Part Mapping per Destination ({D}).",
                 f"Business purpose: {PURPOSE[code]}.",
+                f"Topology (Option #3, SFTP): NSP Send IF -> TMMIN SFTP server -> {tg['side']} SFTP server -> receive IF on the {tg['side']} -> insert / update "
+                f"{tg['tables']}. NSP develops the generate and send of the IF xDock Part Master; the receive and insert into {name} are developed by the {tg['side']}. "
+                + tg['note'],
                 f"A part is sent as one complete set; {name} replaces the data of the part, so a change such as Philippines up and Thailand down, "
                 "or a removed destination, arrives as one consistent update.",
                 f"The send status per part is kept in {IFR} (dummy table); together with {other_fid} ({other_name}) it gives the overall Sync Status "
@@ -57,15 +67,18 @@ def if_spec(fid, code, name, other_fid, other_name):
                 {"id": "a", "label": "[Sync] on XD01 (Mapping per Destination tab)", "type": "event"},
                 {"id": "b", "label": f"Read Waiting parts for {code}", "type": "process"},
                 {"id": "c", "label": "Create interface file", "type": "process"},
-                {"id": "e", "label": f"SFTP put to {name}", "type": "process"},
+                {"id": "e", "label": "SFTP put to TMMIN SFTP server", "type": "process"},
+                {"id": "t", "label": f"{tg['side']} SFTP -> receive IF -> {name} master", "type": "process"},
                 {"id": "f", "label": "Send status, overall Sync Status, history, Log", "type": "process"}],
-                "edges": [{"from": "a", "to": "b"}, {"from": "b", "to": "c"}, {"from": "c", "to": "e"}, {"from": "e", "to": "f"}]}},
+                "edges": [{"from": "a", "to": "b"}, {"from": "b", "to": "c"}, {"from": "c", "to": "e"}, {"from": "e", "to": "t", "label": "SFTP"},
+                          {"from": "e", "to": "f"}]}},
             "inputs": [
                 {"name": IFR, "type": "DB", "description": f"Rows TARGET_SYSTEM = '{code}' with IF_STATUS = '3' (Waiting), set by [Sync] on XD01"},
                 {"name": T, "type": "DB", "description": "Part List: PART_NO, PART_STATUS, PCS_CASE, MAX_CASE_DAY, EFFECTIVE_START_DATE"},
                 {"name": D, "type": "DB", "description": "Part Mapping per Destination: PERIOD, DEST_CODE, CASE_DAY of the ongoing period"}],
             "outputs": [
-                {"name": out_file, "type": "File", "description": f"{fname}: one record per part x destination (see Interface Data)"},
+                {"name": out_file, "type": "File", "description": f"{fname}: one record per part x destination (see Interface Data), put on the TMMIN SFTP server"},
+                {"name": f"{name}: {tg['tables']}", "type": "System", "description": f"Inserted / updated by the receive IF of the {tg['side']} (not in NSP scope)"},
                 {"name": IFR, "type": "DB", "description": f"Dummy table: send status of '{code}' per part (1 / 2), file name, message"},
                 {"name": T, "type": "DB", "description": "Overall SYNC_STATUS, SYNC_DT, SYNC_MESSAGE of the part"},
                 {"name": H, "type": "DB", "description": "History record per part (event SYNC, source IF)"},
@@ -73,7 +86,8 @@ def if_spec(fid, code, name, other_fid, other_name):
             "extra_tables": [
                 {"title": "Parameters", "columns": [{"title": "Name", "width": 14}, {"title": "Description", "width": 34}],
                  "rows": [["Target system", f"'{code}' ({name})"],
-                          ["SFTP server / user / folder", f"{name} SFTP connection and inbound folder (TBC, from the topology)"],
+                          ["TMMIN SFTP server", "Server, user and outbound folder where NSP puts the file (TBC)"],
+                          [f"{tg['side']} SFTP server", f"Inbound folder of the {tg['side']}; transfer TMMIN SFTP -> {tg['side']} SFTP (TBC who runs it)"],
                           ["Local folders", "Outbound folder (file created) and backup folder (file after transfer) (TBC)"],
                           ["Transfer retry", "Number of retries when the SFTP transfer fails (TBC, e.g. 3)"],
                           ["User", "IF batch user ID (TBC)"]]},
@@ -83,13 +97,13 @@ def if_spec(fid, code, name, other_fid, other_name):
                           ["Record unit", "One record per part x destination of the ongoing period; part fields are repeated on each record"],
                           ["Part without destination", "One record with DEST_CODE and CASE_DAY blank (TBC)"],
                           ["Trailer", "Record count for completeness check (TBC)"],
-                          ["Transfer", f"SFTP put to the inbound folder of {name}; topology and result / acknowledge file TBC"]]},
+                          ["Transfer", f"SFTP put to the TMMIN SFTP server, forwarded to the {tg['side']} SFTP server (Option #3); result / acknowledge file TBC"]]},
                 {"title": "Interface Data", "columns": [{"title": "Field", "width": 10}, {"title": "Source", "width": 13}, {"title": "Format", "width": 7},
                                                         {"title": "M", "width": 2}, {"title": "Business rule", "width": 16}],
                  "rows": [list(f) for f in FIELDS]},
                 {"title": "Execution Schedule", "columns": [{"title": "Item", "width": 12}, {"title": "Description", "width": 36}],
                  "rows": [["Trigger", f"On demand: [Sync] on XD01 (Mapping per Destination tab) starts {fid} and {other_fid}. No scheduler (TBC)."],
-                          ["Method", f"Interface file by SFTP to {name}. Topology: to be provided by the user."],
+                          ["Method", f"Option #3: interface file by SFTP (TMMIN SFTP -> {tg['side']} SFTP); receive IF and insert into {name} by the {tg['side']}."],
                           ["Order", f"Independent of {other_fid}; both run after [Sync]."]]}]
         },
         "func_flow": {
@@ -99,7 +113,7 @@ def if_spec(fid, code, name, other_fid, other_name):
                 {"id": "p2", "label": f"Select Waiting parts for {code}", "type": "process", "step": 2},
                 {"id": "m", "label": f"{T} / {D}", "type": "db", "lane": "input"},
                 {"id": "p3", "label": "Create interface file", "type": "process", "step": 3},
-                {"id": "p4", "label": f"SFTP put to {name}, verify", "type": "process", "step": 4},
+                {"id": "p4", "label": "SFTP put to TMMIN SFTP server, verify", "type": "process", "step": 4},
                 {"id": "x", "label": out_file, "type": "file", "lane": "output"},
                 {"id": "d", "label": "Transfer OK?", "type": "decision", "step": 5},
                 {"id": "p6", "label": "Send status per part, overall Sync Status, history", "type": "process", "step": 6},
@@ -116,11 +130,11 @@ def if_spec(fid, code, name, other_fid, other_name):
                     f"Per part: PART_NO, CROSSDOCK_FLAG 'Y', PCS_CASE, MAX_CASE_DAY, EFFECTIVE_START_DATE from {T}.",
                     f"Per destination of the ongoing period: PERIOD, DEST_CODE, CASE_DAY from {D} (one record each).",
                     "Same SEND_ID and SEND_DT on every record; trailer with the record count (TBC). Error: LOG3, all parts Failed (step 6)."]},
-                {"text": f"Put the file by SFTP to the inbound folder of {name} and verify the transfer (file size / record count).", "children": [
+                {"text": f"Put the file by SFTP on the TMMIN SFTP server (outbound folder) and verify the transfer (file size / record count). The file is forwarded to the {tg['side']} SFTP server, where the receive IF of the {tg['side']} inserts / updates {tg['tables']}.", "children": [
                     "Transfer error: retry (parameter); still failing: LOG4.",
                     "Transfer OK: move the local file to the backup folder."]},
                 {"text": f"Set the send status of every part of the file in {IFR}:", "children": [
-                    "Transfer OK: IF_STATUS = '1', IF_DT = now, IF_FILE_NAME = file name, IF_MESSAGE blank.",
+                    "Transfer OK (file on the TMMIN SFTP server): IF_STATUS = '1', IF_DT = now, IF_FILE_NAME = file name, IF_MESSAGE blank.",
                     "File or transfer error: IF_STATUS = '2', IF_DT = now, IF_MESSAGE = error (LOG3 / LOG4).",
                     f"TBC: if {name} returns a result / acknowledge file, the status per part is taken from it instead of the transfer result."]},
                 {"text": f"Update the overall Sync Status of each part in {T} and record the history:", "children": [
@@ -167,7 +181,8 @@ def if_spec(fid, code, name, other_fid, other_name):
                 "Case/Day per destination of the ongoing period, created by XD05 process 2 and adjusted by screen or upload XD03).",
                 "Every change sets the part to No Sync. The D/S team clicks [Sync] when the changes are complete; only Active parts are sent, Candidate and Inactive parts are not.",
                 f"{fid} sends to {name}; {other_fid} sends the same data to {other_name}. Purpose for {name}: {PURPOSE[code]}.",
-                f"{name} replaces the cross dock master of every part in the file with the content of the file (all destinations of the part)."]},
+                f"{name} replaces the cross dock master of every part in the file with the content of the file (all destinations of the part).",
+                f"Topology (Option #3): NSP Send IF -> TMMIN SFTP -> {tg['side']} SFTP -> receive IF ({tg['side']}) -> {tg['tables']}. " + tg['note']]},
             {"type": "heading", "text": "4.2 Field Rules"},
             {"type": "bullets", "marker": "-", "level": 0, "items": [
                 "Fields, source and business rule: see Interface Data (General Description). The field names on the side of the target are TBC (target layout).",
@@ -181,7 +196,8 @@ def if_spec(fid, code, name, other_fid, other_name):
                 "A part changed on XD01 or by upload while it is being sent gets SYNC_STATUS = No Sync, so the newer data is sent by the next [Sync]."]},
             {"type": "heading", "text": "4.4 Open Points"},
             {"type": "bullets", "marker": "-", "level": 0, "items": [
-                "SFTP topology (server, folders, user), file format / naming and whether the target returns a result file.",
+                f"SFTP details (servers, folders, users, who forwards TMMIN SFTP -> {tg['side']} SFTP), file format / naming and whether the {tg['side']} returns a result file.",
+                f"Which fields go to which {name} table ({tg['tables']}).",
                 "Field names and lengths required by the target; part without destination.",
                 "Parts that became Inactive (XD05) are not sent today: should the target receive CROSSDOCK_FLAG 'N' to stop crossdock?"]}],
         "logging_messages": [

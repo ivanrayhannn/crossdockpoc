@@ -19,9 +19,9 @@
  "doc_type": "batch",
  "general": {
   "objective": [
-   "To replicate the rows of TB_R_H0253_ORDER_CONTROL_PRE (DB Surrounding) with ORDER_STATUS = '7' (cross dock orders, used for the ASN) into TB_R_H0253_ORDER_CONTROL_PRE in NSP.",
-   "The NSP table is fully replaced every run (delete - insert). In case any error occurs, the run is rolled back and NSP keeps the data of the last successful run.",
-   "Only crossdock orders (status 7) are taken. Cancelled lines (status 2) are taken by XD12 and processed by XD11 before this batch runs."
+   "To keep TB_R_H0253_ORDER_CONTROL_PRE in NSP up to date with the crossdock customer order lines of G-TOPAS (replicated in DB Surrounding): rows with ORDER_STATUS = '7' are inserted (new key) or updated (existing key); rows that changed to '6' (received) are updated.",
+   "Only the rows changed since the last successful run are taken (INTF_UPDATE_DT > watermark). Nothing is deleted, so the NSP columns HOLD_FLAG / PO_MAPPED_FLAG / CANCEL_STATUS keep their values.",
+   "Rows with status '2' (cancel) are taken by XD12 and processed by XD11 before this batch runs."
   ],
   "operation_flow": {
    "flow": {
@@ -34,12 +34,12 @@
      },
      {
       "id": "b",
-      "label": "Delete + insert TB_R_H0253_ORDER_CONTROL_PRE (ORDER_STATUS = '7')",
+      "label": "Rows changed since watermark: status 7 (all) and 6 (known keys)",
       "type": "process"
      },
      {
       "id": "c",
-      "label": "Commit / roll back, Log",
+      "label": "Upsert into NSP, Log",
       "type": "process"
      }
     ],
@@ -59,19 +59,29 @@
    {
     "name": "TB_R_H0253_ORDER_CONTROL_PRE (DB Surrounding)",
     "type": "DB",
-    "description": "Order control data, pre-order picking info (I/F H02-53, DVJO950); rows with ORDER_STATUS = '7'"
+    "description": "Order control data, pre-order picking info (I/F H02-53, DVJO950); insert / update table"
+   },
+   {
+    "name": "TB_R_H0253_ORDER_CONTROL_PRE (NSP)",
+    "type": "DB",
+    "description": "Existing NSP rows (key check, NSP columns)"
+   },
+   {
+    "name": "Log",
+    "type": "DB",
+    "description": "Watermark of the last successful run"
    }
   ],
   "outputs": [
    {
     "name": "TB_R_H0253_ORDER_CONTROL_PRE (NSP)",
     "type": "DB",
-    "description": "if successful: the source rows with ORDER_STATUS = '7'"
+    "description": "if successful: rows inserted / updated"
    },
    {
     "name": "Log",
     "type": "DB",
-    "description": "One record per run with status SUCCESS / FAILED"
+    "description": "One record per run with status and watermark"
    }
   ],
   "extra_tables": [
@@ -89,8 +99,12 @@
     ],
     "rows": [
      [
-      "Order status",
-      "'7' (cross dock orders, used for the ASN); fixed in this batch"
+      "Watermark",
+      "Last INTF_UPDATE_DT taken by the previous successful run of this batch (kept in the Log); first run: all rows"
+     ],
+     [
+      "Statuses",
+      "'7' all rows; '6' existing keys only"
      ]
     ]
    },
@@ -113,7 +127,7 @@
      ],
      [
       "Order",
-      "Job chain (TBC): XD12 -> XD11 -> XD08, after G-TOPAS has provided the data (1 time/day, 27:30)."
+      "Job chain: XD12 -> XD11 -> XD08, after G-TOPAS has provided the data (1 time/day, 27:30)."
      ]
     ]
    }
@@ -125,7 +139,7 @@
    "nodes": [
     {
      "id": "p1",
-     "label": "Start (scheduler)",
+     "label": "Start (job chain)",
      "type": "process",
      "step": 1
     },
@@ -137,9 +151,15 @@
     },
     {
      "id": "p2",
-     "label": "Delete all rows, insert source rows with ORDER_STATUS = '7'",
+     "label": "Rows changed since watermark: status 7 (all) and 6 (known keys)",
      "type": "process",
      "step": 2
+    },
+    {
+     "id": "p3",
+     "label": "Insert new keys / update existing keys",
+     "type": "process",
+     "step": 3
     },
     {
      "id": "d",
@@ -148,10 +168,10 @@
      "lane": "output"
     },
     {
-     "id": "p3",
-     "label": "Commit or roll back, record Log",
+     "id": "p4",
+     "label": "Commit or roll back, Log (watermark)",
      "type": "process",
-     "step": 3
+     "step": 4
     },
     {
      "id": "log",
@@ -171,501 +191,317 @@
     },
     {
      "from": "p2",
-     "to": "d"
-    },
-    {
-     "from": "p2",
      "to": "p3"
     },
     {
      "from": "p3",
+     "to": "d"
+    },
+    {
+     "from": "p3",
+     "to": "p4"
+    },
+    {
+     "from": "p4",
      "to": "log"
     }
    ]
   },
   "steps": [
-   "The scheduler starts the batch (job chain XD12 -> XD11 -> XD08).",
-   "Delete all rows of TB_R_H0253_ORDER_CONTROL_PRE (NSP) and insert the rows of TB_R_H0253_ORDER_CONTROL_PRE (DB Surrounding) with ORDER_STATUS = '7' (same columns and values). HOLD_FLAG and PO_MAPPED_FLAG are NSP-only columns (set in ASN Cross Dock Creation XD10): before the delete their values are kept per unique key and put back on the inserted rows; a new key gets 'N'.",
-   "No error: commit. Error: roll back step 2 (one transaction). Record the result in the Log. Exit."
+   "The scheduler starts the batch after XD11 (job chain XD12 -> XD11 -> XD08). Write LOG1.",
+   {
+    "text": "Read the rows of TB_R_H0253_ORDER_CONTROL_PRE (DB Surrounding) with INTF_UPDATE_DT > watermark:",
+    "children": [
+     "ORDER_STATUS = '7': all rows (new crossdock lines, changed qty, split serials).",
+     "ORDER_STATUS = '6': only rows whose unique key already exists in TB_R_H0253_ORDER_CONTROL_PRE (NSP) (received / allocated; no further action in NSP).",
+     "Other statuses are not taken; status '2' is taken by XD12."
+    ]
+   },
+   {
+    "text": "Upsert into TB_R_H0253_ORDER_CONTROL_PRE (NSP) per unique key (incl. SERIAL_NO):",
+    "children": [
+     "New key: insert all source columns; HOLD_FLAG = 'N', PO_MAPPED_FLAG = 'N', CANCEL_STATUS = '-'.",
+     "Existing key: update all source columns; HOLD_FLAG, PO_MAPPED_FLAG and CANCEL_STATUS are not changed."
+    ]
+   },
+   "No error: commit, save the new watermark (max INTF_UPDATE_DT taken) in the Log, LOG2. Error: roll back, watermark not changed, LOG3. Exit."
   ]
  },
  "data_map": {
   "blocks": [
    {
     "source": {
-     "table": "TB_R_H0253_ORDER_CONTROL_PRE (NSP)"
-    },
-    "destination": {
-     "table": "TB_R_H0253_ORDER_CONTROL_PRE (NSP)",
-     "operation": "Delete",
-     "description": "All rows (full replace)"
-    },
-    "mappings": [
-     {
-      "dest_field": "CUSTOMER_CD",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "CUSTOMER_ORDER_NO",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "ORDER_DT",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "ORDER_TIME",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "DESTINATION_CD",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "DETAILED_ITEM_NO",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "SERIAL_NO",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "TOPAS_ORDER_TYPE",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "DEMAND_HISTORY_UPDATE_DT",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "SHIPPING_MAKER_CD",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "SHIPPING_PART_NO",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "ORIGINAL_SHIPPING_QTY",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "ORDER_STATUS_QTY",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "ORDER_STATUS",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "BO_INSTRUCTION_CD",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "BO_RELEASE_DT",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "ORDER_GROUP",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "DIRECT_DELIVERY_CD",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "DIRECT_DELIVERY_FLAG",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "CURRENCY_CD",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "LANDED_COST",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "NET_PRICE",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "SALES_PRICE",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "EXPORT_SALES_PRICE",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "SPECIAL_PRICE_CD",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "ORDER_DISCOUNT_CD",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "ITEM_DISCOUNT_RATE",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "FIRST_ALLOCATION_DT",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "BO_HISTORY_CD",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "ORDER_ERROR_CD",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "RA_CD",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "PENDING_ORDER_CD",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "ORDER_PORTION_CD",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "ORDER_STATUS_DT",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "SHIPPING_PROCESS_CTRL_CD",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "PROCUREMENT_PROCESS_CTRL_CD",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "DANGEROUS_GOODS_CLASS",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "CREATE_DEMAND_FLAG",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "SPECIAL_CUSTOMER_FLAG",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "POSS_TRANSMISSION_JUDG_FLAG",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "REGISTRANT_ID",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "UPDATE_JOB_ID",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "UPDATE_OPERATION_ID",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "INTF_UPDATE_DT",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "HOLD_FLAG",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "PO_MAPPED_FLAG",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "CREATE_DT",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "CREATE_BY",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "UPDATE_DT",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "UPDATE_BY",
-      "description": "Row is deleted"
-     }
-    ]
-   },
-   {
-    "source": {
      "table": "TB_R_H0253_ORDER_CONTROL_PRE (DB Surrounding)",
      "keys": [
       {
+       "field": "INTF_UPDATE_DT",
+       "value": "> watermark"
+      },
+      {
        "field": "ORDER_STATUS",
-       "value": "'7'"
+       "value": "'7' (all) / '6' (existing keys only)"
       }
      ]
     },
     "destination": {
      "table": "TB_R_H0253_ORDER_CONTROL_PRE (NSP)",
-     "operation": "Insert",
-     "description": "Every source row with ORDER_STATUS = '7'"
+     "operation": "Insert / Update",
+     "description": "Upsert per unique key (insert when the key is new, else update)",
+     "keys": [
+      {
+       "field": "Unique key (incl. SERIAL_NO)",
+       "value": "Key of the source row"
+      }
+     ]
     },
     "mappings": [
      {
       "source_field": "CUSTOMER_CD",
       "dest_field": "CUSTOMER_CD",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "CUSTOMER_ORDER_NO",
       "dest_field": "CUSTOMER_ORDER_NO",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "ORDER_DT",
       "dest_field": "ORDER_DT",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "ORDER_TIME",
       "dest_field": "ORDER_TIME",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "DESTINATION_CD",
       "dest_field": "DESTINATION_CD",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "DETAILED_ITEM_NO",
       "dest_field": "DETAILED_ITEM_NO",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "SERIAL_NO",
       "dest_field": "SERIAL_NO",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "TOPAS_ORDER_TYPE",
       "dest_field": "TOPAS_ORDER_TYPE",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "DEMAND_HISTORY_UPDATE_DT",
       "dest_field": "DEMAND_HISTORY_UPDATE_DT",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "SHIPPING_MAKER_CD",
       "dest_field": "SHIPPING_MAKER_CD",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "SHIPPING_PART_NO",
       "dest_field": "SHIPPING_PART_NO",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "ORIGINAL_SHIPPING_QTY",
       "dest_field": "ORIGINAL_SHIPPING_QTY",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "ORDER_STATUS_QTY",
       "dest_field": "ORDER_STATUS_QTY",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "ORDER_STATUS",
       "dest_field": "ORDER_STATUS",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "BO_INSTRUCTION_CD",
       "dest_field": "BO_INSTRUCTION_CD",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "BO_RELEASE_DT",
       "dest_field": "BO_RELEASE_DT",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "ORDER_GROUP",
       "dest_field": "ORDER_GROUP",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "DIRECT_DELIVERY_CD",
       "dest_field": "DIRECT_DELIVERY_CD",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "DIRECT_DELIVERY_FLAG",
       "dest_field": "DIRECT_DELIVERY_FLAG",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "CURRENCY_CD",
       "dest_field": "CURRENCY_CD",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "LANDED_COST",
       "dest_field": "LANDED_COST",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "NET_PRICE",
       "dest_field": "NET_PRICE",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "SALES_PRICE",
       "dest_field": "SALES_PRICE",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "EXPORT_SALES_PRICE",
       "dest_field": "EXPORT_SALES_PRICE",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "SPECIAL_PRICE_CD",
       "dest_field": "SPECIAL_PRICE_CD",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "ORDER_DISCOUNT_CD",
       "dest_field": "ORDER_DISCOUNT_CD",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "ITEM_DISCOUNT_RATE",
       "dest_field": "ITEM_DISCOUNT_RATE",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "FIRST_ALLOCATION_DT",
       "dest_field": "FIRST_ALLOCATION_DT",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "BO_HISTORY_CD",
       "dest_field": "BO_HISTORY_CD",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "ORDER_ERROR_CD",
       "dest_field": "ORDER_ERROR_CD",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "RA_CD",
       "dest_field": "RA_CD",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "PENDING_ORDER_CD",
       "dest_field": "PENDING_ORDER_CD",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "ORDER_PORTION_CD",
       "dest_field": "ORDER_PORTION_CD",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "ORDER_STATUS_DT",
       "dest_field": "ORDER_STATUS_DT",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "SHIPPING_PROCESS_CTRL_CD",
       "dest_field": "SHIPPING_PROCESS_CTRL_CD",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "PROCUREMENT_PROCESS_CTRL_CD",
       "dest_field": "PROCUREMENT_PROCESS_CTRL_CD",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "DANGEROUS_GOODS_CLASS",
       "dest_field": "DANGEROUS_GOODS_CLASS",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "CREATE_DEMAND_FLAG",
       "dest_field": "CREATE_DEMAND_FLAG",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "SPECIAL_CUSTOMER_FLAG",
       "dest_field": "SPECIAL_CUSTOMER_FLAG",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "POSS_TRANSMISSION_JUDG_FLAG",
       "dest_field": "POSS_TRANSMISSION_JUDG_FLAG",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "REGISTRANT_ID",
       "dest_field": "REGISTRANT_ID",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "UPDATE_JOB_ID",
       "dest_field": "UPDATE_JOB_ID",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "UPDATE_OPERATION_ID",
       "dest_field": "UPDATE_OPERATION_ID",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "source_field": "INTF_UPDATE_DT",
       "dest_field": "INTF_UPDATE_DT",
-      "description": "Same value as the source"
+      "description": "Same value as the source (insert and update)"
      },
      {
       "dest_field": "HOLD_FLAG",
-      "description": "Value of the deleted NSP row with the same unique key; 'N' for a new key"
+      "description": "'N' on insert; not changed on update"
      },
      {
       "dest_field": "PO_MAPPED_FLAG",
-      "description": "Value of the deleted NSP row with the same unique key; 'N' for a new key"
+      "description": "'N' on insert; not changed on update"
      },
      {
-      "source_field": "CREATE_DT",
+      "dest_field": "CANCEL_STATUS",
+      "description": "'-' on insert; not changed on update"
+     },
+     {
       "dest_field": "CREATE_DT",
-      "description": "Same value as the source"
+      "description": "Batch system date-time / batch user ID on insert; not changed on update"
      },
      {
-      "source_field": "CREATE_BY",
       "dest_field": "CREATE_BY",
-      "description": "Same value as the source"
+      "description": "Batch system date-time / batch user ID on insert; not changed on update"
      },
      {
-      "source_field": "UPDATE_DT",
       "dest_field": "UPDATE_DT",
-      "description": "Same value as the source"
+      "description": "Batch system date-time / batch user ID"
      },
      {
-      "source_field": "UPDATE_BY",
       "dest_field": "UPDATE_BY",
-      "description": "Same value as the source"
+      "description": "Batch system date-time / batch user ID"
      }
     ]
    },
@@ -679,7 +515,7 @@
     "mappings": [
      {
       "dest_field": "BATCH_ID",
-      "description": "'XD08_H0253_7'"
+      "description": "'XD08_H0253'"
      },
      {
       "dest_field": "STATUS",
@@ -687,19 +523,19 @@
      },
      {
       "dest_field": "ROW_COUNT",
-      "description": "Rows inserted (0 when FAILED)"
+      "description": "Rows inserted / updated (0 when FAILED)"
+     },
+     {
+      "dest_field": "WATERMARK",
+      "description": "Max INTF_UPDATE_DT taken in this run (next watermark; only when SUCCESS)"
      },
      {
       "dest_field": "MESSAGE",
       "description": "Error message when FAILED"
      },
      {
-      "dest_field": "START_DT",
-      "description": "Start date and time"
-     },
-     {
-      "dest_field": "END_DT",
-      "description": "End date and time"
+      "dest_field": "START_DT / END_DT",
+      "description": "Start and end date-time"
      }
     ]
    }
@@ -712,10 +548,11 @@
    "marker": "-",
    "level": 0,
    "items": [
-    "Rows with ORDER_STATUS = '7' only; all columns are copied as they are, no conversion. HOLD_FLAG and PO_MAPPED_FLAG are NSP-only columns (set in ASN Cross Dock Creation XD10): before the delete their values are kept per unique key and put back on the inserted rows; a new key gets 'N'.",
-    "A line cancelled in G-TOPAS leaves status 7 (fully or partly); XD11 runs before this batch so that HOLD_FLAG and the status 7 qty before the cancel are still available.",
-    "Delete and insert run in one transaction (all-or-nothing). When the run fails, NSP keeps the data of the last successful run.",
-    "Read by XD09 (Mapping Customer Order and PO) and XD10 (ASN Cross Dock Creation). Table structure: see Appendix."
+    "The source table is insert / update: a crossdock line starts with status 7 and can change to 6 (received / allocated) or 2 (reject / cancel). A partial cancel or receipt splits the line into a new SERIAL_NO (scenario file skenario_h0253.xlsx).",
+    "Scenario 1 (normal): 14-Oct status 7, qty 8 -> 15-Oct the same row status 6, qty 8: XD08 updates the row; the line is no longer taken by XD09 (status 7 only).",
+    "Only changed rows are read (INTF_UPDATE_DT > watermark); insert and update run in one transaction; the watermark is saved only when the run succeeds.",
+    "Rows with status 6 / 2 stay in the table for tracking (retention optional, TBC).",
+    "Read by XD09 (status 7 rows not mapped, not on hold), XD10 and XD11. Table structure: see Appendix."
    ]
   }
  ],
@@ -725,7 +562,7 @@
    "cause": "Batch is called",
    "type": "Info",
    "msg_id": "LOG1",
-   "message": "H0253 status 7 sync started.",
+   "message": "H0253 status 7 / 6 sync started. Watermark <WATERMARK>.",
    "action": {
     "system": "Write the log.",
     "user": "-"
@@ -736,20 +573,20 @@
    "cause": "Batch finishes",
    "type": "Info",
    "msg_id": "LOG2",
-   "message": "H0253 status 7 sync ended. Status <STATUS>, rows <ROW_COUNT>.",
+   "message": "H0253 status 7 / 6 sync ended. Status <STATUS>, inserted <INS>, updated <UPD>.",
    "action": {
-    "system": "Write the log.",
+    "system": "Write the log; save the new watermark when SUCCESS.",
     "user": "-"
    }
   },
   {
-   "event": "Copy table",
-   "cause": "Read from DB Surrounding or insert into NSP fails",
+   "event": "Upsert",
+   "cause": "Read from DB Surrounding or insert / update in NSP fails",
    "type": "Error",
    "msg_id": "LOG3",
-   "message": "Cannot replicate H0253 status 7 into TB_R_H0253_ORDER_CONTROL_PRE: <ERROR_DETAIL>.",
+   "message": "Cannot replicate H0253 status 7 / 6 rows: <ERROR_DETAIL>.",
    "action": {
-    "system": "Roll back. STATUS = FAILED.",
+    "system": "Roll back; watermark not changed (rows taken again next run). STATUS = FAILED.",
     "user": "User contact PIC"
    }
   },
@@ -772,7 +609,7 @@
    "name": "TB_R_H0253_ORDER_CONTROL_PRE",
    "kind": "transaction",
    "proposed": false,
-   "description": "Rows of H0253 with ORDER_STATUS = '7' replicated from DB Surrounding. Structure from the G-TOPAS I/F layout; physical names follow the existing table. Key (PK) = unique key of the I/F layout.",
+   "description": "Order control data, pre-order picking info (I/F H02-53, DVJO950) replicated from DB Surrounding by XD08 / XD12. Structure from the G-TOPAS I/F layout; physical names follow the existing table. Key (PK) = unique key of the I/F layout. NSP keeps the rows with status 7, 6 and 2 (insert / update); rows with status 6 / 2 are kept for tracking only (retention optional, TBC). CANCEL_STATUS is a new NSP column (proposed).",
    "columns": [
     [
      "CUSTOMER_CD",
@@ -1087,14 +924,21 @@
      "VARCHAR(1)",
      "",
      "N",
-     "NSP column: hold by the D/S team in ASN Crossdock Creation ('Y' / 'N'); default 'N' on insert, kept on re-sync"
+     "NSP column: hold by the D/S team in ASN Cross Dock Creation (XD10) ('Y' / 'N'); 'N' on insert, never changed by XD08 / XD12"
     ],
     [
      "PO_MAPPED_FLAG",
      "VARCHAR(1)",
      "",
      "N",
-     "NSP column: line mapped to a PO by [Create ASN] ('Y' / 'N'); default 'N' on insert, kept on re-sync"
+     "NSP column: line mapped to a PO by [Create ASN] ('Y' / 'N'); 'N' on insert, never changed by XD08 / XD12"
+    ],
+    [
+     "CANCEL_STATUS",
+     "VARCHAR(1)",
+     "",
+     "N",
+     "NSP column: '-' no cancel / 'P' cancel to be processed by XD11 (set by XD12) / 'D' processed by XD11"
     ],
     [
      "CREATE_DT",

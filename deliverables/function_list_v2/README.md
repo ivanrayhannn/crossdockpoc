@@ -38,19 +38,23 @@ Tidak ada di function list baru (tidak dibawa ke v2): **X9** H0202 Demand Histor
 |---|---|---|
 | 1 | XD05 | **Disetujui**: X6 + X7 digabung. Satu run = proses 1 lalu proses 2; [Run calculation (Part List)] = proses 1 + 2, [Run calculation (Mapping)] = proses 2 saja |
 | 2 | XD10 | **Disetujui**: X14 (Submit ASN) masuk ke XD10 (section 5.7) |
-| 3 | XD06 / XD07 | Kirim lewat **file SFTP** (contoh topology menyusul dari user). **TB_R_CROSSDOCK_IF_RESULT = tabel dummy** untuk status kirim; output sebenarnya file ke GTOPAS (XD06) dan AP POLE (XD07). Field dan proses bisnis sudah didetailkan (Interface Data di UISS dan md). Sync Status gabungan **disetujui** |
-| 4 | XD12 / tabel H0253 | **Open discussion** (lihat bawah) |
+| 3 | XD06 / XD07 | Kirim lewat **file SFTP – Option #3** (NSP Send IF → SFTP TMMIN → SFTP TMA → receive IF → AP POLE Crossdock Kanban Part Master / Crossdock Export Part Master). **TB_R_CROSSDOCK_IF_RESULT = tabel dummy** untuk status kirim; output sebenarnya file ke GTOPAS (XD06) dan AP POLE (XD07). Field dan proses bisnis sudah didetailkan (Interface Data di UISS dan md). Sync Status gabungan **disetujui** |
+| 4 | XD08 / XD12 / tabel H0253 | **Satu tabel replicate upsert** (delta INTF_UPDATE_DT, partial cancel = serial baru, status 6 / 2 disimpan untuk tracking); kolom baru CANCEL_STATUS; tabel cancel terpisah dihapus |
 | 5 | Urutan job | **Disetujui**: XD12 → XD11 → XD08 |
-| 6 | XD11 | Cancel bisa **dengan atau tanpa Hold Flag Y** (kategori NO_HOLD dihapus). Qty yang sudah ASN harusnya tidak bisa di-cancel → detail **didiskusikan** |
+| 6 | XD11 | Cancel bisa **dengan atau tanpa Hold Flag Y**. Perhitungan **per line (semua serial)**. Qty yang sudah ASN dicegah oleh feedback ASN existing ke G-TOPAS + SOP; kalau tetap terjadi → **CONFLICT** (abnormality, lihat simulasi skenario 4) |
 | 7 | ID | Prefix **XD** (XD01–XD15) |
 
-## Open discussion: tabel replicate H0253
-- Fakta: tabel source di DB Surrounding **insert / update**. Line customer order mulai di status **7** (crossdock, di-assign ke PO supplier), lalu bisa berubah ke **6** (sudah diterima, tidak ada kaitan dengan proses berikutnya) atau **2** (reject / cancel customer order). Tabel replicate di NSP boleh didesain ulang.
-- Draft saat ini: XD08 full replace status 7 ke TB_R_H0253_ORDER_CONTROL_PRE (HOLD_FLAG / PO_MAPPED_FLAG dipertahankan per key) + XD12 full replace status 2 ke TB_R_H0253_ORDER_CANCEL_PRE.
-- Usulan alternatif: **satu tabel replicate insert / update** (upsert per unique key), lihat diskusi di chat 18-Oct.
+## Skenario H0253 (skenario_h0253.xlsx)
+| Skenario | H0253 14-Oct → 15-Oct | NSP |
+|---|---|---|
+| 1 Normal | Status 7 qty 8 → status 6 qty 8 | XD08 update (diterima) |
+| 2 Partial cancel | Status 7 qty 8 → serial A status 7 qty 6 + serial B status 2 qty 2 | XD12 → XD11 CANCELLED (VALID 6) |
+| 3 Full cancel | Status 7 qty 8 → status 2 qty 8 | XD12 → XD11 CANCELLED (VALID 0) |
+| 4 Abnormality | Sudah di ASN, lalu cancel (SOP tidak dijalankan) | XD11 CONFLICT |
+
+Simulasi: menu prototype **ASN → Cancel Order Simulation**.
 
 ## Asumsi lain yang masih perlu dikonfirmasi
-- XD12 menyalin semua status 2 (semua order type); XD11 mengambil line crossdock saja.
 - XD11: opsi "blok PO qty sampai conflict ditutup" belum dimasukkan.
 - Part yang jadi Inactive (XD05) tidak dikirim ke GTOPAS / AP POLE.
 

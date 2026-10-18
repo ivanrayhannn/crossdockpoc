@@ -3,9 +3,19 @@
 Sumber: UISS `XD06_UISS_Batch_IFCrossDockMasterToGTOPAS.xlsx` (0.1 Initial Draft, 18-Oct-26). Nama sistem di UISS: G-TOPAS / NSP.
 
 ## Tujuan
-- Mengirim cross dock master part **Active** yang menunggu sync ke **GTOPAS** sebagai **file interface lewat SFTP** (keputusan 18-Oct; contoh topology menyusul dari user).
+- Mengirim cross dock master part **Active** yang menunggu sync ke **GTOPAS** sebagai **file interface lewat SFTP** (keputusan 18-Oct, Option #3).
 - Sumber: **Part List** (TB_M_PART_CANDIDATE) dan **Part Mapping per Destination** (TB_M_PART_CANDIDATE_DEST, periode berjalan).
 - Dulu satu RPA mengirim ke GTOPAS dan AP POLE sekaligus (X3 Sync). Sekarang dipisah: XD06 ke GTOPAS, XD07 ke AP POLE (data sama).
+
+## Topology (Option #3 – SFTP)
+```
+NSP: Cross Dock Part Master (XD01) -> XD06 Send IF (generate file)
+  -> SFTP TMMIN (outbound) -> SFTP G-TOPAS side (owner TBC) (inbound)
+  -> Receive IF (G-TOPAS side (owner TBC)) -> insert / update GTOPAS: cross dock master G-TOPAS (tabel TBC)
+```
+- **Modification point:** TMMIN (NSP) membuat fungsi generate dan send IF xDock Part Master; G-TOPAS side (owner TBC) membuat fungsi receive IF dan insert ke tabel master GTOPAS.
+- Option #3 digambar untuk AP POLE; pola SFTP yang sama diasumsikan untuk G-TOPAS (TBC).
+- Status kirim di NSP = '1' kalau file berhasil ditaruh di SFTP TMMIN; hasil insert di sisi G-TOPAS side (owner TBC) (file hasil / acknowledge) **TBC**.
 
 ## Proses bisnis
 1. Tim D/S mengubah cross dock master di **XD01** (Part List: Pcs/Case, Max Case/Day, Effective Start Date; Mapping: Case/Day per destinasi hasil XD05 proses 2 atau edit / upload XD03). Setiap perubahan → part jadi **No Sync**.
@@ -51,6 +61,7 @@ Nama field di sisi GTOPAS: **TBC** (menunggu layout target).
 Hanya untuk menyimpan **status kirim** per part × target (PART_NO + TARGET_SYSTEM, PERIOD, IF_STATUS, IF_DT, IF_FILE_NAME, IF_MESSAGE). Output sebenarnya adalah **file ke GTOPAS**.
 
 ## Open points
-- Topology SFTP (server, folder, user), format / nama file, file hasil dari target.
+- Detail SFTP (server, folder, user, siapa yang meneruskan SFTP TMMIN → SFTP G-TOPAS side (owner TBC)), format / nama file, file hasil dari G-TOPAS side (owner TBC).
+- Field mana masuk ke tabel GTOPAS yang mana (cross dock master G-TOPAS (tabel TBC)).
 - Nama dan panjang field di GTOPAS.
 - Part yang jadi **Inactive** (XD05) saat ini tidak dikirim → perlu kirim CROSSDOCK_FLAG 'N' supaya target berhenti crossdock?
