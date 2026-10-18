@@ -1,157 +1,173 @@
 import { useState } from 'react';
 import { card, th, td } from '../asnCrossdock/styles';
 
-/* Simulation of a customer order cancelled in T-System (H0253 order status 2) after part of it is already in a submitted ASN.
- * Part PART-X, 6 pcs/case. All data is illustrative. */
+/* Simulation of the H0253 scenarios (skenario_h0253.xlsx): normal (7 -> 6), partial cancel (split serial), full cancel,
+ * and the abnormality "cancel of qty already in an ASN" detected by XD11 as CONFLICT.
+ * Supplier System keeps one replicate table (upsert by INTF_UPDATE_DT); job chain XD12 -> XD11 -> XD08. */
 
 type Lane = 'sup' | 'ds' | 'gt' | 'sys';
 type Level = 'ok' | 'warn' | 'err';
+type Status = '7' | '6' | '2';
 
-interface Order { co: string; dt: string; dest: string; qty: number; st7: number; st2: number; hold: string; inAsn: number; po: string; bad?: boolean }
-interface Po { po: string; dt: string; qty: number; mapped: number }
-interface Instr { co: string; dest: string; qty: number; po: string; asn: string }
-interface Recv { cs: string; label: string; qty: number; alloc: string; bad?: boolean; good?: boolean }
-interface Step { lane: Lane; title: string; text: string; orders: Order[]; pos: Po[]; instr: Instr[]; recv: Recv[]; flags: [Level, string][] }
+interface SrcRow { serial: string; status: Status; qty: number; upd: string; changed?: boolean }
+interface RepRow { serial: string; status: Status; qty: number; hold: 'Y' | 'N'; mapped: 'Y' | 'N'; cancel: '-' | 'P' | 'D'; changed?: boolean }
+interface Instr { serial: string; qty: number; po: string; asn: string; deleted?: boolean }
+interface Fig { cancel: number; valid: number; inAsn: number; open: number; released: number; poMapped: number; result: '' | 'CANCELLED' | 'CONFLICT' }
+interface Recv { what: string; qty: number; alloc: string; bad?: boolean; good?: boolean }
+interface Step { lane: Lane; date: string; title: string; text: string; src: SrcRow[]; rep: RepRow[]; instr: Instr[]; fig?: Fig; recv?: Recv[]; flags: [Level, string][] }
 
 const LANE: Record<Lane, { label: string; bg: string }> = {
   sup: { label: 'Supplier', bg: '#fff2cc' },
   ds: { label: 'D/S team', bg: '#fce4d6' },
   gt: { label: 'T-System (source H0253)', bg: '#e2efda' },
-  sys: { label: 'Supplier System backend', bg: '#d9e1f2' },
+  sys: { label: 'Supplier System batch', bg: '#d9e1f2' },
 };
 
-const A0: Order = { co: 'CO-A', dt: '13-Oct', dest: 'VN · Vietnam', qty: 24, st7: 24, st2: 0, hold: 'N', inAsn: 0, po: 'PO-1 (24)' };
-const B0: Order = { co: 'CO-B', dt: '14-Oct', dest: 'TH · Thailand', qty: 12, st7: 12, st2: 0, hold: 'N', inAsn: 0, po: 'PO-2 (12)' };
-const C0: Order = { co: 'CO-C', dt: '14-Oct', dest: 'PH · Philippines', qty: 6, st7: 6, st2: 0, hold: 'N', inAsn: 0, po: 'PO-2 (6)' };
-const D0: Order = { co: 'CO-D', dt: '15-Oct', dest: 'VN · Vietnam', qty: 6, st7: 6, st2: 0, hold: 'N', inAsn: 0, po: '— (no PO yet)' };
-const P1: Po = { po: 'PO-1', dt: '14-Oct', qty: 24, mapped: 24 };
-const P2: Po = { po: 'PO-2', dt: '15-Oct', qty: 18, mapped: 18 };
+const A = '0000001';
+const B = '0000002 (new)';
 
-const I_A6: Instr = { co: 'CO-A', dest: 'VN', qty: 6, po: 'PO-1', asn: 'ASN-001 · Case 1' };
-const I_A18: Instr = { co: 'CO-A', dest: 'VN', qty: 18, po: 'PO-1', asn: '— (next rit)' };
-const I_B: Instr = { co: 'CO-B', dest: 'TH', qty: 12, po: 'PO-2', asn: '—' };
-const I_C: Instr = { co: 'CO-C', dest: 'PH', qty: 6, po: 'PO-2', asn: '—' };
-
-const S1: Step = {
-  lane: 'sys', title: 'Start: orders mapped to PO',
-  text: 'PART-X, 6 pcs/case. CO-A (24 pcs, Vietnam) is mapped to PO-1 (24 pcs). CO-B and CO-C are mapped to PO-2. CO-D has no PO yet.',
-  orders: [A0, B0, C0, D0], pos: [P1, P2], instr: [I_A6, I_A18, I_B, I_C], recv: [], flags: [['ok', 'All orders mapped FIFO. No issue.']],
+// 14-Oct: the line arrives with status 7 and is inserted by XD08
+const SRC14: SrcRow[] = [{ serial: A, status: '7', qty: 8, upd: '14-Oct 03:30' }];
+const REP14: RepRow[] = [{ serial: A, status: '7', qty: 8, hold: 'N', mapped: 'N', cancel: '-', changed: true }];
+const START: Step = {
+  lane: 'sys', date: '14-Oct', title: 'XD08 inserts the new line (status 7)',
+  text: 'T-System has the crossdock line ID1H4571 / 52119BZV60, 8 pcs, status 7. XD08 takes the rows changed since the last run (INTF_UPDATE_DT > watermark) and inserts the new key; HOLD_FLAG / PO_MAPPED_FLAG = N, CANCEL_STATUS = -.',
+  src: SRC14, rep: REP14, instr: [], flags: [['ok', 'Upsert per unique key (incl. SERIAL_NO). Nothing is deleted, so the Supplier System columns are never lost.']],
 };
-const A_ASN: Order = { ...A0, inAsn: 6 };
-const S2: Step = {
-  lane: 'sup', title: 'ASN submitted for 6 pcs of CO-A',
-  text: 'The supplier submits ASN-001 with Case 1 (6 pcs, label Vietnam / CO-A). The other 18 pcs of CO-A are still mapped and wait for the next rit. Case 1 is packed and shipped.',
-  orders: [A_ASN, B0, C0, D0], pos: [P1, P2], instr: [I_A6, I_A18, I_B, I_C], recv: [{ cs: 'Case 1', label: 'VN · CO-A', qty: 6, alloc: 'In transit' }],
-  flags: [['ok', 'ASN-001 Created (TB_R_DAILY_ORDER_MANIFEST / PART). ASN cannot be cancelled in Supplier System.']],
-};
+const REP14_M: RepRow[] = [{ serial: A, status: '7', qty: 8, hold: 'N', mapped: 'Y', cancel: '-' }];
 
 const SCENARIOS: { key: string; name: string; tag: Level; summary: string; steps: Step[] }[] = [
   {
-    key: 'a', name: 'A · Cancel 24 without control (current risk)', tag: 'err',
-    summary: 'T-System cancels the whole 24 pcs although 6 pcs are already in an ASN. The shipped case has no order any more.',
-    steps: [S1, S2,
+    key: '1', name: '1 · Normal (7 → 6)', tag: 'ok',
+    summary: 'Skenario #1: the line is shipped with an ASN and received; T-System updates the same row from status 7 to 6.',
+    steps: [START,
       {
-        lane: 'gt', title: 'T-System cancels CO-A 24 pcs (status 2)',
-        text: 'The cancel is done in the source system. CO-A is not on hold in Supplier System and nobody checked the qty already in the ASN.',
-        orders: [{ ...A_ASN, st7: 0, st2: 24, bad: true }, B0, C0, D0], pos: [P1, P2], instr: [I_A6, I_A18, I_B, I_C],
-        recv: [{ cs: 'Case 1', label: 'VN · CO-A', qty: 6, alloc: 'In transit' }],
-        flags: [['err', 'Cancel qty 24 > qty not yet in ASN 18. 6 pcs are already shipped for this order.']],
+        lane: 'sup', date: '14-Oct', title: 'Search, Create ASN and Submit',
+        text: 'XD09 pre-maps the 8 pcs to PO-1; Create ASN maps them (TB_R_INSTRUCTION) and Submit creates ASN-001. The existing ASN feedback informs T-System.',
+        src: SRC14, rep: REP14_M, instr: [{ serial: A, qty: 8, po: 'PO-1', asn: 'ASN-001' }],
+        flags: [['ok', 'Line in ASN-001: T-System blocks a cancel of this line (existing ASN feedback).']],
       },
       {
-        lane: 'sys', title: 'X10 sync: Supplier System takes status 2',
-        text: 'Supplier System releases the 18 pcs still mapped (rows deleted from TB_R_INSTRUCTION, MAPPED_QTY of PO-1 back to 6). The next Search pre-maps the free 18 pcs of PO-1 FIFO: CO-D (Vietnam) 6 pcs.',
-        orders: [{ ...A_ASN, st7: 0, st2: 24, bad: true }, B0, C0, { ...D0, po: 'PO-1 (6)' }], pos: [{ ...P1, mapped: 12 }, P2], instr: [I_A6, I_B, I_C, { co: 'CO-D', dest: 'VN', qty: 6, po: 'PO-1', asn: '—' }],
-        recv: [{ cs: 'Case 1', label: 'VN · CO-A', qty: 6, alloc: 'In transit' }],
-        flags: [['warn', 'ASN-001 (6 pcs) stays, but its order is cancelled. No alert in Supplier System.']],
+        lane: 'gt', date: '15-Oct', title: 'Received in T-System: same row status 6',
+        text: 'The 8 pcs arrive and are allocated to the order. T-System updates the same row: status 6, qty 8, new INTF_UPDATE_DT.',
+        src: [{ serial: A, status: '6', qty: 8, upd: '15-Oct 03:30', changed: true }], rep: REP14_M, instr: [{ serial: A, qty: 8, po: 'PO-1', asn: 'ASN-001' }],
+        flags: [['ok', 'Normal flow; no cancel.']],
       },
       {
-        lane: 'gt', title: 'Case 1 received in T-System',
-        text: 'The 6 pcs arrive. CO-A is fully cancelled, so T-System does not auto allocate them: they become stock without an order.',
-        orders: [{ ...A_ASN, st7: 0, st2: 24, bad: true }, B0, C0, { ...D0, po: 'PO-1 (6)' }], pos: [{ ...P1, mapped: 12 }, P2], instr: [I_A6, I_B, I_C, { co: 'CO-D', dest: 'VN', qty: 6, po: 'PO-1', asn: '—' }],
-        recv: [{ cs: 'Case 1', label: 'VN · CO-A', qty: 6, alloc: 'Not allocated (no order)', bad: true }],
-        flags: [['err', 'Orphan stock: 6 pcs with label Vietnam / CO-A and no order.']],
-      },
-      {
-        lane: 'ds', title: 'Manual allocation to the next order (CO-B, Thailand)',
-        text: 'The 6 pcs are allocated to the next open order of PART-X by FIFO: CO-B (Thailand). But CO-B is also mapped to PO-2 (12 pcs) in Supplier System, so it will get 12 more pcs from the supplier.',
-        orders: [{ ...A_ASN, st7: 0, st2: 24, bad: true }, { ...B0, st7: 6, po: 'PO-2 (12)', bad: true }, C0, { ...D0, po: 'PO-1 (6)' }], pos: [{ ...P1, mapped: 12 }, P2], instr: [I_A6, I_B, I_C, { co: 'CO-D', dest: 'VN', qty: 6, po: 'PO-1', asn: '—' }],
-        recv: [{ cs: 'Case 1', label: 'VN · CO-A', qty: 6, alloc: 'CO-B · Thailand', bad: true }],
-        flags: [
-          ['err', 'Label mismatch: case labelled Vietnam goes to a Thailand order (re-label / re-pack needed).'],
-          ['err', 'Over-supply: CO-B needs 12, gets 6 (Case 1) + 12 (PO-2) = 18 if the ASN of CO-B is made before the next X10 sync.'],
-          ['warn', 'The orders below CO-B shift: their allocation no longer follows the cases that were packed for them.'],
-        ],
+        lane: 'sys', date: '15-Oct', title: 'Job chain XD12 → XD11 → XD08',
+        text: 'XD12: no status 2 row. XD11: nothing to do. XD08 updates row 0000001 to status 6 (Supplier System columns kept). The line is no longer taken by XD09 (status 7 only).',
+        src: [{ serial: A, status: '6', qty: 8, upd: '15-Oct 03:30' }], rep: [{ serial: A, status: '6', qty: 8, hold: 'N', mapped: 'Y', cancel: '-', changed: true }],
+        instr: [{ serial: A, qty: 8, po: 'PO-1', asn: 'ASN-001' }],
+        flags: [['ok', 'Status 6 is kept for tracking only.']],
       },
     ],
   },
   {
-    key: 'b', name: 'B · Cancel only the qty not yet in ASN (proposal: prevention)', tag: 'ok',
-    summary: 'Rule: cancel qty ≤ order qty − qty in ASN. D/S checks Supplier System, holds the remaining 18 pcs, and T-System cancels 18 pcs only.',
-    steps: [S1, S2,
+    key: '2', name: '2 · Partial cancel (split serial)', tag: 'ok',
+    summary: 'Skenario #2: 2 of 8 pcs are cancelled before any ASN; T-System splits the line into a new serial (2 pcs status 2) and keeps 6 pcs status 7.',
+    steps: [START,
       {
-        lane: 'ds', title: 'D/S checks Supplier System before the cancel and holds the rest',
-        text: 'Supplier System shows per customer order: qty in ASN 6, can be cancelled 18. D/S holds the 18 pcs that are not in an ASN (HOLD_FLAG = Y). Their rows are deleted from TB_R_INSTRUCTION and PO-1 has 18 pcs free again.',
-        orders: [{ ...A_ASN, hold: 'Y (18)', po: 'PO-1 (6)' }, B0, C0, D0], pos: [{ ...P1, mapped: 6 }, P2], instr: [I_A6, I_B, I_C],
-        recv: [{ cs: 'Case 1', label: 'VN · CO-A', qty: 6, alloc: 'In transit' }],
-        flags: [['ok', 'Max cancel qty for CO-A = 24 − 6 = 18.']],
+        lane: 'sup', date: '14-Oct', title: 'Search only (pre-mapping, no Create ASN yet)',
+        text: 'XD09 pre-maps the 8 pcs to PO-1 in the temporary table. Nothing is saved yet (TB_R_INSTRUCTION empty).',
+        src: SRC14, rep: REP14, instr: [], flags: [['ok', 'Pre-mapping only.']],
       },
       {
-        lane: 'gt', title: 'T-System partial cancel: 18 pcs (status 2)',
-        text: 'Only the held 18 pcs are cancelled. CO-A keeps 6 pcs in status 7, exactly the qty in ASN-001.',
-        orders: [{ ...A_ASN, st7: 6, st2: 18, hold: 'Y (18)', po: 'PO-1 (6)' }, B0, C0, D0], pos: [{ ...P1, mapped: 6 }, P2], instr: [I_A6, I_B, I_C],
-        recv: [{ cs: 'Case 1', label: 'VN · CO-A', qty: 6, alloc: 'In transit' }],
-        flags: [['ok', 'Cancel qty 18 = qty on hold. Consistent.']],
+        lane: 'gt', date: '15-Oct', title: 'T-System partial cancel: serial split',
+        text: 'Row 0000001 becomes status 7 qty 6 and a new serial row is created with status 2 qty 2 (ORIGINAL_SHIPPING_QTY 8 on both). Cancel without hold flag is allowed.',
+        src: [{ serial: A, status: '7', qty: 6, upd: '15-Oct 03:30', changed: true }, { serial: B, status: '2', qty: 2, upd: '15-Oct 03:30', changed: true }],
+        rep: REP14, instr: [], flags: [['ok', 'Hold flag N: a cancel is allowed with or without hold.']],
       },
       {
-        lane: 'sys', title: 'X10 sync and next Search',
-        text: 'Supplier System takes the status 2 qty; no conflict. The free 18 pcs of PO-1 are pre-mapped FIFO to the next order: CO-D (Vietnam) 6 pcs; 12 pcs of PO-1 stay open.',
-        orders: [{ ...A_ASN, st7: 6, st2: 18, hold: 'Y (18)', po: 'PO-1 (6)' }, B0, C0, { ...D0, po: 'PO-1 (6)' }], pos: [{ ...P1, mapped: 12 }, P2], instr: [I_A6, I_B, I_C, { co: 'CO-D', dest: 'VN', qty: 6, po: 'PO-1', asn: '—' }],
-        recv: [{ cs: 'Case 1', label: 'VN · CO-A', qty: 6, alloc: 'In transit' }],
-        flags: [['ok', 'No cancel conflict.']],
+        lane: 'sys', date: '15-Oct', title: 'XD12 upserts the line (status 2 + other changed rows)',
+        text: 'The line exists in Supplier System, so XD12 inserts the new serial (status 2, CANCEL_STATUS P) and also updates serial 0000001 (qty 8 → 6), so XD11 sees the complete line.',
+        src: [{ serial: A, status: '7', qty: 6, upd: '15-Oct 03:30' }, { serial: B, status: '2', qty: 2, upd: '15-Oct 03:30' }],
+        rep: [{ serial: A, status: '7', qty: 6, hold: 'N', mapped: 'N', cancel: '-', changed: true }, { serial: B, status: '2', qty: 2, hold: 'N', mapped: 'N', cancel: 'P', changed: true }],
+        instr: [], flags: [['ok', 'CANCEL_STATUS P = to be processed by XD11.']],
       },
       {
-        lane: 'gt', title: 'Case 1 received in T-System',
-        text: 'CO-A still has 6 pcs open, so T-System auto allocates Case 1 to CO-A. Label and destination match.',
-        orders: [{ ...A_ASN, st7: 6, st2: 18, hold: 'Y (18)', po: 'PO-1 (6)' }, B0, C0, { ...D0, po: 'PO-1 (6)' }], pos: [{ ...P1, mapped: 12 }, P2], instr: [I_A6, I_B, I_C, { co: 'CO-D', dest: 'VN', qty: 6, po: 'PO-1', asn: '—' }],
-        recv: [{ cs: 'Case 1', label: 'VN · CO-A', qty: 6, alloc: 'CO-A · Vietnam (auto)', good: true }],
-        flags: [['ok', 'Case 1 goes to its own order. Orders below are not affected.']],
+        lane: 'sys', date: '15-Oct', title: 'XD11: CANCELLED',
+        text: 'Line figures: CANCEL 2, VALID (status 7 + 6) 6, in ASN 0, open mapping 0 → CANCELLED. Serial 0000002 → CANCEL_STATUS D. XD08 runs next; the next Search of XD09 pre-maps 6 pcs.',
+        src: [{ serial: A, status: '7', qty: 6, upd: '15-Oct 03:30' }, { serial: B, status: '2', qty: 2, upd: '15-Oct 03:30' }],
+        rep: [{ serial: A, status: '7', qty: 6, hold: 'N', mapped: 'N', cancel: '-' }, { serial: B, status: '2', qty: 2, hold: 'N', mapped: 'N', cancel: 'D', changed: true }],
+        instr: [], fig: { cancel: 2, valid: 6, inAsn: 0, open: 0, released: 0, poMapped: 0, result: 'CANCELLED' },
+        flags: [['ok', 'Only 6 pcs remain for the ASN.']],
       },
     ],
   },
   {
-    key: 'c', name: 'C · Cancel 24 still happens (proposal: detection in X10)', tag: 'warn',
-    summary: 'Safety net when the rule is not followed: X10 detects the cancel conflict, releases the unshipped mapping and alerts D/S to handle the shipped case.',
-    steps: [S1, S2,
+    key: '3', name: '3 · Full cancel (open mapping released)', tag: 'ok',
+    summary: 'Skenario #3: the whole 8 pcs are cancelled; the same row changes to status 2. The supplier had already pressed Create ASN but not Submit.',
+    steps: [START,
       {
-        lane: 'gt', title: 'T-System cancels CO-A 24 pcs (status 2)',
-        text: 'The rule of scenario B is not followed: the whole order is cancelled.',
-        orders: [{ ...A_ASN, st7: 0, st2: 24, bad: true }, B0, C0, D0], pos: [P1, P2], instr: [I_A6, I_A18, I_B, I_C],
-        recv: [{ cs: 'Case 1', label: 'VN · CO-A', qty: 6, alloc: 'In transit' }],
-        flags: [['err', 'Cancel qty 24 > qty not yet in ASN 18.']],
+        lane: 'sup', date: '14-Oct', title: 'Create ASN done, not submitted',
+        text: 'Create ASN mapped the 8 pcs to PO-1 (TB_R_INSTRUCTION without ASN No; PO-1 MAPPED_QTY 8). The Case List is left open without Submit.',
+        src: SRC14, rep: REP14_M, instr: [{ serial: A, qty: 8, po: 'PO-1', asn: '— (not submitted)' }],
+        flags: [['warn', 'Open mapping: not yet in an ASN.']],
       },
       {
-        lane: 'sys', title: 'X10 sync detects "cancel conflict"',
-        text: 'X10 compares the status 2 qty with the rows of TB_R_INSTRUCTION that already have an ASN_NO. 6 pcs are in ASN-001 → cancel conflict: log + exception list for D/S. The 18 pcs not yet in ASN are released; the ASN is not changed.',
-        orders: [{ ...A_ASN, st7: 0, st2: 24, hold: 'Conflict', bad: true }, B0, C0, D0], pos: [{ ...P1, po: 'PO-1 (blocked)', mapped: 6 }, P2], instr: [I_A6, I_B, I_C],
-        recv: [{ cs: 'Case 1', label: 'VN · CO-A', qty: 6, alloc: 'In transit · flagged' }],
-        flags: [
-          ['warn', 'Log: "Cancel conflict CO-A PART-X: 24 pcs cancelled, 6 pcs already in ASN-001 Case 1."'],
-          ['ok', 'Free PO qty (18) is not given to other orders until D/S decides on Case 1 (avoids over-supply).'],
-        ],
+        lane: 'gt', date: '15-Oct', title: 'T-System full cancel: same row status 2',
+        text: 'Row 0000001 changes to status 2, qty 8.',
+        src: [{ serial: A, status: '2', qty: 8, upd: '15-Oct 03:30', changed: true }], rep: REP14_M, instr: [{ serial: A, qty: 8, po: 'PO-1', asn: '— (not submitted)' }],
+        flags: [['ok', 'Not in an ASN: the cancel is allowed.']],
       },
       {
-        lane: 'ds', title: 'D/S handles Case 1 at receiving',
-        text: '(a) An open order with the same destination exists: CO-D (Vietnam, 6 pcs). D/S allocates Case 1 to CO-D in T-System; the label destination stays valid. (b) If none exists: Case 1 goes to normal warehouse stock.',
-        orders: [{ ...A_ASN, st7: 0, st2: 24, hold: 'Conflict' }, B0, C0, { ...D0, st7: 0, po: 'Filled by Case 1' }], pos: [{ ...P1, po: 'PO-1 (blocked)', mapped: 6 }, P2], instr: [I_A6, I_B, I_C],
-        recv: [{ cs: 'Case 1', label: 'VN · CO-A', qty: 6, alloc: 'CO-D · Vietnam (manual)', good: true }],
-        flags: [['ok', 'Same destination: no re-label of destination. CO-D status 7 qty becomes 0 at the next X10 sync, so Supplier System does not map it again.'], ['warn', 'Customer Order No on the label differs (CO-A → CO-D): confirm whether re-label is needed.']],
+        lane: 'sys', date: '15-Oct', title: 'XD12 updates the row (CANCEL_STATUS P)',
+        text: 'XD12 updates row 0000001 to status 2 and sets CANCEL_STATUS P. HOLD_FLAG / PO_MAPPED_FLAG are not changed.',
+        src: [{ serial: A, status: '2', qty: 8, upd: '15-Oct 03:30' }], rep: [{ serial: A, status: '2', qty: 8, hold: 'N', mapped: 'Y', cancel: 'P', changed: true }],
+        instr: [{ serial: A, qty: 8, po: 'PO-1', asn: '— (not submitted)' }], flags: [['ok', 'Line ready for XD11.']],
       },
       {
-        lane: 'sys', title: 'Conflict closed, PO qty free again',
-        text: 'After D/S closes the conflict, the 18 free pcs of PO-1 can be pre-mapped again FIFO to the next orders.',
-        orders: [{ ...A_ASN, st7: 0, st2: 24, hold: 'Closed' }, B0, C0, { ...D0, st7: 0, po: 'Filled by Case 1' }], pos: [{ ...P1, mapped: 6 }, P2], instr: [I_A6, I_B, I_C],
-        recv: [{ cs: 'Case 1', label: 'VN · CO-A', qty: 6, alloc: 'CO-D · Vietnam (manual)', good: true }],
-        flags: [['ok', 'No over-supply; orders below CO-D keep their FIFO mapping.']],
+        lane: 'sys', date: '15-Oct', title: 'XD11: release the open mapping, CANCELLED',
+        text: 'Line figures: CANCEL 8, VALID 0, in ASN 0, open 8. The open mapping row is deleted, PO-1 MAPPED_QTY 8 → 0, PO_MAPPED_FLAG → N, CANCEL_STATUS → D. PO-1 is free for the next orders (XD09 FIFO).',
+        src: [{ serial: A, status: '2', qty: 8, upd: '15-Oct 03:30' }], rep: [{ serial: A, status: '2', qty: 8, hold: 'N', mapped: 'N', cancel: 'D', changed: true }],
+        instr: [{ serial: A, qty: 8, po: 'PO-1', asn: '— (not submitted)', deleted: true }],
+        fig: { cancel: 8, valid: 0, inAsn: 0, open: 8, released: 8, poMapped: 0, result: 'CANCELLED' },
+        flags: [['ok', 'Released 8 pcs.'], ['warn', 'The Case List still open can no longer be submitted (submit fails, the supplier creates the ASN again).']],
+      },
+    ],
+  },
+  {
+    key: '4', name: '4 · Abnormality: cancel after ASN (CONFLICT)', tag: 'err',
+    summary: 'Not allowed: the line is already in a submitted ASN. Normally blocked by the existing ASN feedback and the SOP; if it still happens, XD11 detects a CONFLICT.',
+    steps: [START,
+      {
+        lane: 'sup', date: '14-Oct', title: 'Create ASN and Submit: ASN-001 (8 pcs)',
+        text: 'The 8 pcs are in ASN-001 and shipped. The existing ASN feedback informs T-System.',
+        src: SRC14, rep: REP14_M, instr: [{ serial: A, qty: 8, po: 'PO-1', asn: 'ASN-001' }],
+        flags: [['ok', 'Line in ASN: a cancel should be blocked.']],
+      },
+      {
+        lane: 'gt', date: '15-Oct', title: 'T-System partial cancel 2 pcs anyway',
+        text: 'Abnormality: the SOP was not followed (and the block did not apply). T-System splits the line: 0000001 status 7 qty 6, new serial status 2 qty 2.',
+        src: [{ serial: A, status: '7', qty: 6, upd: '15-Oct 03:30', changed: true }, { serial: B, status: '2', qty: 2, upd: '15-Oct 03:30', changed: true }],
+        rep: REP14_M, instr: [{ serial: A, qty: 8, po: 'PO-1', asn: 'ASN-001' }],
+        flags: [['err', 'Cancel of qty already in a submitted ASN.']],
+      },
+      {
+        lane: 'sys', date: '15-Oct', title: 'XD12 upserts the line',
+        text: 'XD12 updates serial 0000001 (qty 6) and inserts the new serial with status 2, CANCEL_STATUS P.',
+        src: [{ serial: A, status: '7', qty: 6, upd: '15-Oct 03:30' }, { serial: B, status: '2', qty: 2, upd: '15-Oct 03:30' }],
+        rep: [{ serial: A, status: '7', qty: 6, hold: 'N', mapped: 'Y', cancel: '-', changed: true }, { serial: B, status: '2', qty: 2, hold: 'N', mapped: 'N', cancel: 'P', changed: true }],
+        instr: [{ serial: A, qty: 8, po: 'PO-1', asn: 'ASN-001' }], flags: [['ok', 'Line ready for XD11.']],
+      },
+      {
+        lane: 'sys', date: '15-Oct', title: 'XD11: CONFLICT (2 pcs)',
+        text: 'Line figures: CANCEL 2, VALID 6, in ASN 8, open 0 → in ASN > valid → CONFLICT 2 pcs. ASN-001 is not changed (an ASN cannot be cancelled). Result CONFLICT in TB_R_CROSSDOCK_CANCEL_RESULT and LOG4 for the D/S team.',
+        src: [{ serial: A, status: '7', qty: 6, upd: '15-Oct 03:30' }, { serial: B, status: '2', qty: 2, upd: '15-Oct 03:30' }],
+        rep: [{ serial: A, status: '7', qty: 6, hold: 'N', mapped: 'Y', cancel: '-' }, { serial: B, status: '2', qty: 2, hold: 'N', mapped: 'N', cancel: 'D', changed: true }],
+        instr: [{ serial: A, qty: 8, po: 'PO-1', asn: 'ASN-001' }],
+        fig: { cancel: 2, valid: 6, inAsn: 8, open: 0, released: 0, poMapped: 8, result: 'CONFLICT' },
+        flags: [['err', 'Log: "Cancel conflict ID1H4571 52119BZV60: 2 pcs of ASN-001 have no order after the cancel."']],
+      },
+      {
+        lane: 'ds', date: '16-Oct', title: 'Receiving: 2 pcs without order',
+        text: 'ASN-001 arrives with 8 pcs. 6 pcs are allocated to the order (row 0000001 → status 6, taken by XD08). The D/S team handles the other 2 pcs: allocate them to an open order with the same destination 9722D88, otherwise move them to warehouse stock.',
+        src: [{ serial: A, status: '6', qty: 6, upd: '16-Oct 03:30', changed: true }, { serial: B, status: '2', qty: 2, upd: '15-Oct 03:30' }],
+        rep: [{ serial: A, status: '6', qty: 6, hold: 'N', mapped: 'Y', cancel: '-', changed: true }, { serial: B, status: '2', qty: 2, hold: 'N', mapped: 'N', cancel: 'D' }],
+        instr: [{ serial: A, qty: 8, po: 'PO-1', asn: 'ASN-001' }],
+        recv: [{ what: 'ASN-001 · 6 pcs', qty: 6, alloc: 'ID1H4571 (status 6)', good: true },
+               { what: 'ASN-001 · 2 pcs', qty: 2, alloc: 'No order → D/S: same destination order or warehouse stock', bad: true }],
+        flags: [['warn', 'Manual handling by the D/S team (abnormality).'], ['ok', 'Prevention: existing ASN feedback to T-System + SOP of the D/S team.']],
       },
     ],
   },
@@ -162,11 +178,12 @@ const LEVEL: Record<Level, { bg: string; fg: string; icon: string }> = {
   warn: { bg: '#fff2cc', fg: '#7a5a00', icon: '!' },
   err: { bg: '#f8d7da', fg: '#842029', icon: '✕' },
 };
-
+const CHG = '#fff7d6';
 const BAD = '#fbe3e4';
 const GOOD = '#e6f4ea';
+const STATUS: Record<Status, string> = { '7': '7 Cross Dock', '6': '6 Received', '2': '2 Cancel' };
 
-function Table({ title, cols, rows }: { title: string; cols: string[]; rows: { cells: (string | number)[]; bg?: string }[] }) {
+function Table({ title, cols, rows, empty = '—' }: { title: string; cols: string[]; rows: { cells: (string | number)[]; bg?: string; strike?: boolean }[]; empty?: string }) {
   return (
     <div style={{ ...card, overflow: 'hidden' }}>
       <div style={{ padding: '9px 12px', fontSize: 12.5, fontWeight: 600 }}>{title}</div>
@@ -175,8 +192,8 @@ function Table({ title, cols, rows }: { title: string; cols: string[]; rows: { c
           <thead><tr>{cols.map((c) => <th key={c} style={th}>{c}</th>)}</tr></thead>
           <tbody>
             {rows.length ? rows.map((r, i) => (
-              <tr key={i} style={{ background: r.bg }}>{r.cells.map((c, j) => <td key={j} style={td}>{c}</td>)}</tr>
-            )) : <tr><td style={{ ...td, color: 'var(--color-neutral-700)' }} colSpan={cols.length}>—</td></tr>}
+              <tr key={i} style={{ background: r.bg, textDecoration: r.strike ? 'line-through' : undefined }}>{r.cells.map((c, j) => <td key={j} style={td}>{c}</td>)}</tr>
+            )) : <tr><td style={{ ...td, color: 'var(--color-neutral-700)' }} colSpan={cols.length}>{empty}</td></tr>}
           </tbody>
         </table>
       </div>
@@ -184,7 +201,7 @@ function Table({ title, cols, rows }: { title: string; cols: string[]; rows: { c
   );
 }
 
-/** Step-by-step simulation: customer order cancelled in T-System after part of it is in a submitted ASN. */
+/** Step-by-step simulation of the H0253 scenarios and the cancel handling of XD12 / XD11 / XD08. */
 export function CancelOrderSimulationPage() {
   const [sc, setSc] = useState(0);
   const [st, setSt] = useState(0);
@@ -197,8 +214,16 @@ export function CancelOrderSimulationPage() {
       <div>
         <h1 style={{ fontSize: 22, margin: 0 }}>Cancel Order Simulation</h1>
         <div style={{ fontSize: 12.5, color: 'var(--color-neutral-700)', marginTop: 3 }}>
-          Customer order CO-A (24 pcs) is cancelled in T-System (H0253 order status 2) after 6 pcs are already in a submitted ASN. Supplier System cannot cancel an ASN. Compare the current risk with the proposed prevention and detection. Data is illustrative (PART-X, 6 pcs/case).
+          H0253 scenarios (skenario_h0253.xlsx): the source table in T-System is insert / update; Supplier System keeps one replicate table updated by upsert
+          (rows with INTF_UPDATE_DT after the last run). Job chain XD12 (status 2) → XD11 (cancel) → XD08 (status 7 / 6). A partial cancel splits the line into a new SERIAL_NO.
         </div>
+      </div>
+
+      <div style={{ ...card, padding: '10px 14px', fontSize: 12, display: 'flex', flexWrap: 'wrap', gap: '6px 22px' }}>
+        {[['Customer', '9722D10'], ['Customer Order No', 'ID1H4571'], ['Order Date / Time', '31-Aug-2026 · 201241'], ['Destination', '9722D88'],
+          ['Detailed Item No', '0004'], ['Part Number', '52119BZV60'], ['Original Shipping Qty', '8 pcs']].map(([k, v]) => (
+          <span key={k}><span style={{ color: 'var(--color-neutral-700)' }}>{k}: </span><b>{v}</b></span>
+        ))}
       </div>
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -228,7 +253,10 @@ export function CancelOrderSimulationPage() {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 3fr) minmax(0, 2fr)', gap: 14 }}>
         <div style={{ ...card, padding: '12px 16px' }}>
-          <div style={{ display: 'inline-block', fontSize: 11, padding: '2px 8px', borderRadius: 4, background: LANE[step.lane].bg, marginBottom: 6 }}>{LANE[step.lane].label}</div>
+          <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+            <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, background: LANE[step.lane].bg }}>{LANE[step.lane].label}</span>
+            <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, background: 'var(--color-surface)' }}>{step.date}</span>
+          </div>
           <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>Step {st + 1} · {step.title}</div>
           <div style={{ fontSize: 12.5, lineHeight: 1.6 }}>{step.text}</div>
         </div>
@@ -242,30 +270,38 @@ export function CancelOrderSimulationPage() {
         </div>
       </div>
 
-      <Table title="Customer orders – TB_R_H0253_ORDER_CONTROL_PRE (PART-X, FIFO)"
-        cols={['Customer Order', 'Order Date', 'Destination', 'Order Qty', 'Status 7 Qty', 'Status 2 Qty (cancel)', 'Hold Flag', 'Qty in ASN', 'Mapped PO']}
-        rows={step.orders.map((o) => ({ cells: [o.co, o.dt, o.dest, o.qty, o.st7, o.st2, o.hold, o.inAsn, o.po], bg: o.bad ? BAD : undefined }))} />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: 14 }}>
+        <Table title="T-System H0253 (DB Surrounding, insert / update)"
+          cols={['SERIAL_NO', 'ORDER_STATUS', 'ORDER_STATUS_QTY', 'INTF_UPDATE_DT']}
+          rows={step.src.map((r) => ({ cells: [r.serial, STATUS[r.status], r.qty, r.upd], bg: r.changed ? CHG : undefined }))} />
+        <Table title="Supplier System: TB_R_H0253_ORDER_CONTROL_PRE (upsert)"
+          cols={['SERIAL_NO', 'ORDER_STATUS', 'QTY', 'HOLD_FLAG', 'PO_MAPPED_FLAG', 'CANCEL_STATUS']}
+          rows={step.rep.map((r) => ({ cells: [r.serial, STATUS[r.status], r.qty, r.hold, r.mapped, r.cancel], bg: r.changed ? CHG : undefined }))} />
+      </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 14 }}>
-        <Table title="PO – Pra Daily Order + TB_R_PRA_DAILY_ORDER_MAPPED"
-          cols={['PO', 'PO Date', 'PO Qty', 'Mapped Qty', 'Open Qty']}
-          rows={step.pos.map((p) => ({ cells: [p.po, p.dt, p.qty, p.mapped, p.qty - p.mapped] }))} />
-        <Table title="TB_R_INSTRUCTION (mapping)"
-          cols={['Customer Order', 'Dest', 'Qty', 'PO', 'ASN / Case']}
-          rows={step.instr.map((r) => ({ cells: [r.co, r.dest, r.qty, r.po, r.asn] }))} />
-        <Table title="Shipment / receiving in T-System"
-          cols={['Case', 'Label', 'Qty', 'Allocated to']}
-          rows={step.recv.map((r) => ({ cells: [r.cs, r.label, r.qty, r.alloc], bg: r.bad ? BAD : r.good ? GOOD : undefined }))} />
+        <Table title="TB_R_INSTRUCTION (mapping)" cols={['SERIAL_NO', 'QTY', 'PO', 'ASN No']} empty="No mapping"
+          rows={step.instr.map((r) => ({ cells: [r.serial, r.qty, r.po, r.asn], strike: r.deleted, bg: r.deleted ? BAD : undefined }))} />
+        <Table title="XD11 line figures (all serials)" cols={['Item', 'Value']} empty="XD11 not run in this step"
+          rows={step.fig ? [
+            { cells: ['CANCEL_QTY (status 2, P)', step.fig.cancel] },
+            { cells: ['VALID_QTY (status 7 + 6)', step.fig.valid] },
+            { cells: ['QTY_IN_ASN', step.fig.inAsn] },
+            { cells: ['Open mapping / released', `${step.fig.open} / ${step.fig.released}`] },
+            { cells: ['PO-1 MAPPED_QTY after XD11', step.fig.poMapped] },
+            { cells: ['Result', step.fig.result], bg: step.fig.result === 'CONFLICT' ? BAD : GOOD }] : []} />
+        <Table title="Receiving in T-System" cols={['Goods', 'Qty', 'Allocated to']} empty="—"
+          rows={(step.recv ?? []).map((r) => ({ cells: [r.what, r.qty, r.alloc], bg: r.bad ? BAD : r.good ? GOOD : undefined }))} />
       </div>
 
       <div style={{ ...card, padding: '12px 16px', fontSize: 12.5, lineHeight: 1.6 }}>
-        <b>Proposal to confirm</b>
+        <b>Rules (decided 18-Oct)</b>
         <ol style={{ margin: '4px 0 0', paddingLeft: 18 }}>
-          <li>Rule (SOP): cancel qty ≤ order qty − qty already in ASN; D/S holds the rest in Supplier System before the cancel in T-System (scenario B).</li>
-          <li>Supplier System shows "qty in ASN / can be cancelled" per customer order for D/S.</li>
-          <li>X10 detects a cancel conflict (status 2 qty &gt; qty not in ASN): log + exception list, release the unshipped mapping, keep the ASN, hold the free PO qty until D/S closes the conflict (scenario C).</li>
-          <li>Shipped case without order: allocate manually to an open order with the same destination, otherwise move to warehouse stock.</li>
-          <li>Open: can T-System cancel partially? Does the case label carry the Customer Order No?</li>
+          <li>One replicate table, upsert per unique key with the rows changed since the last run (INTF_UPDATE_DT); rows with status 6 / 2 are kept for tracking.</li>
+          <li>A partial cancel splits the line into a new SERIAL_NO; XD11 calculates per line (all serials).</li>
+          <li>A line can be cancelled with or without hold flag Y.</li>
+          <li>Qty already in an ASN cannot be cancelled: existing ASN feedback to T-System + SOP of the D/S team. If it still happens (abnormality), XD11 reports a CONFLICT; the ASN is not changed.</li>
+          <li>Yellow rows = changed in this step.</li>
         </ol>
       </div>
     </div>

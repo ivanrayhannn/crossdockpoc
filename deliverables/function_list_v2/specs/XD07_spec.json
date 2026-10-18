@@ -21,6 +21,7 @@
   "objective": [
    "To send the cross dock master of every Active part waiting for synchronisation to AP POLE as an interface file by SFTP: Pcs/Case, Max Case/Day and Effective Start Date from the Part List (TB_M_PART_CANDIDATE) and all destinations with Case/Day of the ongoing period from the Part Mapping per Destination (TB_M_PART_CANDIDATE_DEST).",
    "Business purpose: AP POLE (supplier PO side): which parts are ordered from the supplier as crossdock POs (crossdock flag of the Pra Daily Order), with pieces per case and the daily volume (assumption, TBC).",
+   "Topology (Option #3, SFTP): NSP Send IF -> TMMIN SFTP server -> TMA SFTP server -> receive IF on the TMA -> insert / update Crossdock Kanban Part Master and Crossdock Export Part Master (AP POLE). NSP develops the generate and send of the IF xDock Part Master; the receive and insert into AP POLE are developed by the TMA. Option #3 of 'NSP Cross Dock Interfacing Data' (decided 18-Oct).",
    "A part is sent as one complete set; AP POLE replaces the data of the part, so a change such as Philippines up and Thailand down, or a removed destination, arrives as one consistent update.",
    "The send status per part is kept in TB_R_CROSSDOCK_IF_RESULT (dummy table); together with XD06 (GTOPAS) it gives the overall Sync Status shown on the Cross Dock Part Master screen (XD01)."
   ],
@@ -45,7 +46,12 @@
      },
      {
       "id": "e",
-      "label": "SFTP put to AP POLE",
+      "label": "SFTP put to TMMIN SFTP server",
+      "type": "process"
+     },
+     {
+      "id": "t",
+      "label": "TMA SFTP -> receive IF -> AP POLE master",
       "type": "process"
      },
      {
@@ -66,6 +72,11 @@
      {
       "from": "c",
       "to": "e"
+     },
+     {
+      "from": "e",
+      "to": "t",
+      "label": "SFTP"
      },
      {
       "from": "e",
@@ -95,7 +106,12 @@
    {
     "name": "Interface file to AP POLE (SFTP)",
     "type": "File",
-    "description": "XD_CDMASTER_APPOLE_<YYYYMMDDHHMMSS>.csv: one record per part x destination (see Interface Data)"
+    "description": "XD_CDMASTER_APPOLE_<YYYYMMDDHHMMSS>.csv: one record per part x destination (see Interface Data), put on the TMMIN SFTP server"
+   },
+   {
+    "name": "AP POLE: Crossdock Kanban Part Master and Crossdock Export Part Master (AP POLE)",
+    "type": "System",
+    "description": "Inserted / updated by the receive IF of the TMA (not in NSP scope)"
    },
    {
     "name": "TB_R_CROSSDOCK_IF_RESULT",
@@ -137,8 +153,12 @@
       "'APPOLE' (AP POLE)"
      ],
      [
-      "SFTP server / user / folder",
-      "AP POLE SFTP connection and inbound folder (TBC, from the topology)"
+      "TMMIN SFTP server",
+      "Server, user and outbound folder where NSP puts the file (TBC)"
+     ],
+     [
+      "TMA SFTP server",
+      "Inbound folder of the TMA; transfer TMMIN SFTP -> TMA SFTP (TBC who runs it)"
      ],
      [
       "Local folders",
@@ -189,7 +209,7 @@
      ],
      [
       "Transfer",
-      "SFTP put to the inbound folder of AP POLE; topology and result / acknowledge file TBC"
+      "SFTP put to the TMMIN SFTP server, forwarded to the TMA SFTP server (Option #3); result / acknowledge file TBC"
      ]
     ]
    },
@@ -309,7 +329,7 @@
      ],
      [
       "Method",
-      "Interface file by SFTP to AP POLE. Topology: to be provided by the user."
+      "Option #3: interface file by SFTP (TMMIN SFTP -> TMA SFTP); receive IF and insert into AP POLE by the TMA."
      ],
      [
       "Order",
@@ -355,7 +375,7 @@
     },
     {
      "id": "p4",
-     "label": "SFTP put to AP POLE, verify",
+     "label": "SFTP put to TMMIN SFTP server, verify",
      "type": "process",
      "step": 4
     },
@@ -456,7 +476,7 @@
     ]
    },
    {
-    "text": "Put the file by SFTP to the inbound folder of AP POLE and verify the transfer (file size / record count).",
+    "text": "Put the file by SFTP on the TMMIN SFTP server (outbound folder) and verify the transfer (file size / record count). The file is forwarded to the TMA SFTP server, where the receive IF of the TMA inserts / updates Crossdock Kanban Part Master and Crossdock Export Part Master (AP POLE).",
     "children": [
      "Transfer error: retry (parameter); still failing: LOG4.",
      "Transfer OK: move the local file to the backup folder."
@@ -465,7 +485,7 @@
    {
     "text": "Set the send status of every part of the file in TB_R_CROSSDOCK_IF_RESULT:",
     "children": [
-     "Transfer OK: IF_STATUS = '1', IF_DT = now, IF_FILE_NAME = file name, IF_MESSAGE blank.",
+     "Transfer OK (file on the TMMIN SFTP server): IF_STATUS = '1', IF_DT = now, IF_FILE_NAME = file name, IF_MESSAGE blank.",
      "File or transfer error: IF_STATUS = '2', IF_DT = now, IF_MESSAGE = error (LOG3 / LOG4).",
      "TBC: if AP POLE returns a result / acknowledge file, the status per part is taken from it instead of the transfer result."
     ]
@@ -812,7 +832,8 @@
     "The D/S team maintains the cross dock master on XD01 (Part List: Pcs/Case, Max Case/Day, Effective Start Date; Mapping per Destination: Case/Day per destination of the ongoing period, created by XD05 process 2 and adjusted by screen or upload XD03).",
     "Every change sets the part to No Sync. The D/S team clicks [Sync] when the changes are complete; only Active parts are sent, Candidate and Inactive parts are not.",
     "XD07 sends to AP POLE; XD06 sends the same data to GTOPAS. Purpose for AP POLE: AP POLE (supplier PO side): which parts are ordered from the supplier as crossdock POs (crossdock flag of the Pra Daily Order), with pieces per case and the daily volume (assumption, TBC).",
-    "AP POLE replaces the cross dock master of every part in the file with the content of the file (all destinations of the part)."
+    "AP POLE replaces the cross dock master of every part in the file with the content of the file (all destinations of the part).",
+    "Topology (Option #3): NSP Send IF -> TMMIN SFTP -> TMA SFTP -> receive IF (TMA) -> Crossdock Kanban Part Master and Crossdock Export Part Master (AP POLE). Option #3 of 'NSP Cross Dock Interfacing Data' (decided 18-Oct)."
    ]
   },
   {
@@ -852,7 +873,8 @@
    "marker": "-",
    "level": 0,
    "items": [
-    "SFTP topology (server, folders, user), file format / naming and whether the target returns a result file.",
+    "SFTP details (servers, folders, users, who forwards TMMIN SFTP -> TMA SFTP), file format / naming and whether the TMA returns a result file.",
+    "Which fields go to which AP POLE table (Crossdock Kanban Part Master and Crossdock Export Part Master (AP POLE)).",
     "Field names and lengths required by the target; part without destination.",
     "Parts that became Inactive (XD05) are not sent today: should the target receive CROSSDOCK_FLAG 'N' to stop crossdock?"
    ]
