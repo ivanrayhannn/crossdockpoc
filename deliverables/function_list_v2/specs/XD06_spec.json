@@ -1,0 +1,1297 @@
+{
+ "header": {
+  "phase": "DR",
+  "project_name": "Crossdock Optimization",
+  "block_name": "Batch",
+  "function_name": "XD06 IF Cross Dock Master to GTOPAS",
+  "created_date": "18-Oct-26",
+  "created_by": "FID Rayhan"
+ },
+ "revisions": [
+  {
+   "revision": "0.1",
+   "author": "FID Rayhan",
+   "date": "18-Oct-26",
+   "reviewed_by": "",
+   "description": "Initial Draft"
+  }
+ ],
+ "doc_type": "batch",
+ "general": {
+  "objective": [
+   "To send the cross dock master of every Active part waiting for synchronisation to GTOPAS as an interface file by SFTP: Pcs/Case, Max Case/Day and Effective Start Date from the Part List (TB_M_PART_CANDIDATE) and all destinations with Case/Day of the ongoing period from the Part Mapping per Destination (TB_M_PART_CANDIDATE_DEST).",
+   "Business purpose: GTOPAS (customer order side): which part and destination orders are handled by crossdock (order status 7) and how many cases per day per destination (assumption, TBC).",
+   "A part is sent as one complete set; GTOPAS replaces the data of the part, so a change such as Philippines up and Thailand down, or a removed destination, arrives as one consistent update.",
+   "The send status per part is kept in TB_R_CROSSDOCK_IF_RESULT (dummy table); together with XD07 (AP POLE) it gives the overall Sync Status shown on the Cross Dock Part Master screen (XD01)."
+  ],
+  "operation_flow": {
+   "flow": {
+    "direction": "TB",
+    "nodes": [
+     {
+      "id": "a",
+      "label": "[Sync] on XD01 (Mapping per Destination tab)",
+      "type": "event"
+     },
+     {
+      "id": "b",
+      "label": "Read Waiting parts for GTOPAS",
+      "type": "process"
+     },
+     {
+      "id": "c",
+      "label": "Create interface file",
+      "type": "process"
+     },
+     {
+      "id": "e",
+      "label": "SFTP put to GTOPAS",
+      "type": "process"
+     },
+     {
+      "id": "f",
+      "label": "Send status, overall Sync Status, history, Log",
+      "type": "process"
+     }
+    ],
+    "edges": [
+     {
+      "from": "a",
+      "to": "b"
+     },
+     {
+      "from": "b",
+      "to": "c"
+     },
+     {
+      "from": "c",
+      "to": "e"
+     },
+     {
+      "from": "e",
+      "to": "f"
+     }
+    ]
+   }
+  },
+  "inputs": [
+   {
+    "name": "TB_R_CROSSDOCK_IF_RESULT",
+    "type": "DB",
+    "description": "Rows TARGET_SYSTEM = 'GTOPAS' with IF_STATUS = '3' (Waiting), set by [Sync] on XD01"
+   },
+   {
+    "name": "TB_M_PART_CANDIDATE",
+    "type": "DB",
+    "description": "Part List: PART_NO, PART_STATUS, PCS_CASE, MAX_CASE_DAY, EFFECTIVE_START_DATE"
+   },
+   {
+    "name": "TB_M_PART_CANDIDATE_DEST",
+    "type": "DB",
+    "description": "Part Mapping per Destination: PERIOD, DEST_CODE, CASE_DAY of the ongoing period"
+   }
+  ],
+  "outputs": [
+   {
+    "name": "Interface file to GTOPAS (SFTP)",
+    "type": "File",
+    "description": "XD_CDMASTER_GTOPAS_<YYYYMMDDHHMMSS>.csv: one record per part x destination (see Interface Data)"
+   },
+   {
+    "name": "TB_R_CROSSDOCK_IF_RESULT",
+    "type": "DB",
+    "description": "Dummy table: send status of 'GTOPAS' per part (1 / 2), file name, message"
+   },
+   {
+    "name": "TB_M_PART_CANDIDATE",
+    "type": "DB",
+    "description": "Overall SYNC_STATUS, SYNC_DT, SYNC_MESSAGE of the part"
+   },
+   {
+    "name": "TB_H_PART_CANDIDATE",
+    "type": "DB",
+    "description": "History record per part (event SYNC, source IF)"
+   },
+   {
+    "name": "Log",
+    "type": "DB",
+    "description": "Start, file, transfer and end messages"
+   }
+  ],
+  "extra_tables": [
+   {
+    "title": "Parameters",
+    "columns": [
+     {
+      "title": "Name",
+      "width": 14
+     },
+     {
+      "title": "Description",
+      "width": 34
+     }
+    ],
+    "rows": [
+     [
+      "Target system",
+      "'GTOPAS' (GTOPAS)"
+     ],
+     [
+      "SFTP server / user / folder",
+      "GTOPAS SFTP connection and inbound folder (TBC, from the topology)"
+     ],
+     [
+      "Local folders",
+      "Outbound folder (file created) and backup folder (file after transfer) (TBC)"
+     ],
+     [
+      "Transfer retry",
+      "Number of retries when the SFTP transfer fails (TBC, e.g. 3)"
+     ],
+     [
+      "User",
+      "IF batch user ID (TBC)"
+     ]
+    ]
+   },
+   {
+    "title": "Interface File",
+    "columns": [
+     {
+      "title": "Item",
+      "width": 14
+     },
+     {
+      "title": "Description",
+      "width": 34
+     }
+    ],
+    "rows": [
+     [
+      "File name",
+      "XD_CDMASTER_GTOPAS_<YYYYMMDDHHMMSS>.csv (TBC)"
+     ],
+     [
+      "Format",
+      "CSV, comma separated, UTF-8, first row = field names (TBC: fixed length if required by the target)"
+     ],
+     [
+      "Record unit",
+      "One record per part x destination of the ongoing period; part fields are repeated on each record"
+     ],
+     [
+      "Part without destination",
+      "One record with DEST_CODE and CASE_DAY blank (TBC)"
+     ],
+     [
+      "Trailer",
+      "Record count for completeness check (TBC)"
+     ],
+     [
+      "Transfer",
+      "SFTP put to the inbound folder of GTOPAS; topology and result / acknowledge file TBC"
+     ]
+    ]
+   },
+   {
+    "title": "Interface Data",
+    "columns": [
+     {
+      "title": "Field",
+      "width": 10
+     },
+     {
+      "title": "Source",
+      "width": 13
+     },
+     {
+      "title": "Format",
+      "width": 7
+     },
+     {
+      "title": "M",
+      "width": 2
+     },
+     {
+      "title": "Business rule",
+      "width": 16
+     }
+    ],
+    "rows": [
+     [
+      "SEND_ID",
+      "Generated",
+      "CHAR(14)",
+      "Y",
+      "Run of the send (YYYYMMDDHHMMSS); all records of one file have the same SEND_ID and are processed as one set"
+     ],
+     [
+      "PART_NO",
+      "TB_M_PART_CANDIDATE.PART_NO",
+      "VARCHAR(TBD)",
+      "Y",
+      "Cross dock part. Only parts with PART_STATUS = Active and Sync Status Waiting are sent"
+     ],
+     [
+      "CROSSDOCK_FLAG",
+      "TB_M_PART_CANDIDATE.PART_STATUS",
+      "CHAR(1)",
+      "Y",
+      "'Y' = the part is handled by crossdock (Active). TBC: send 'N' when a part became Inactive, so the target stops crossdock for it"
+     ],
+     [
+      "PCS_CASE",
+      "TB_M_PART_CANDIDATE.PCS_CASE",
+      "NUMBER(TBD)",
+      "Y",
+      "Pieces per crossdock case; used to convert pieces to cases"
+     ],
+     [
+      "MAX_CASE_DAY",
+      "TB_M_PART_CANDIDATE.MAX_CASE_DAY",
+      "NUMBER(TBD)",
+      "Y",
+      "Maximum cases per day of the part through crossdock (= total Case/Day of its destinations)"
+     ],
+     [
+      "EFFECTIVE_START_DATE",
+      "TB_M_PART_CANDIDATE.EFFECTIVE_START_DATE",
+      "DATE (YYYYMMDD)",
+      "Y",
+      "Date from which the cross dock setting of the part applies"
+     ],
+     [
+      "PERIOD",
+      "TB_M_PART_CANDIDATE_DEST.PERIOD",
+      "CHAR(6)",
+      "Y",
+      "Calculation period of the mapping (ongoing period, YYYYMM)"
+     ],
+     [
+      "DEST_CODE",
+      "TB_M_PART_CANDIDATE_DEST.DEST_CODE",
+      "CHAR(7)",
+      "Y",
+      "Destination code (buyer code + PD code, TB_M_H0125_DESTINATION); one record per destination"
+     ],
+     [
+      "CASE_DAY",
+      "TB_M_PART_CANDIDATE_DEST.CASE_DAY",
+      "NUMBER(TBD)",
+      "Y",
+      "Cases per day allocated to the destination (minimum 1; sum per part = MAX_CASE_DAY)"
+     ],
+     [
+      "SEND_DT",
+      "Generated",
+      "DATETIME",
+      "Y",
+      "Date-time the file is created"
+     ]
+    ]
+   },
+   {
+    "title": "Execution Schedule",
+    "columns": [
+     {
+      "title": "Item",
+      "width": 12
+     },
+     {
+      "title": "Description",
+      "width": 36
+     }
+    ],
+    "rows": [
+     [
+      "Trigger",
+      "On demand: [Sync] on XD01 (Mapping per Destination tab) starts XD06 and XD07. No scheduler (TBC)."
+     ],
+     [
+      "Method",
+      "Interface file by SFTP to GTOPAS. Topology: to be provided by the user."
+     ],
+     [
+      "Order",
+      "Independent of XD07; both run after [Sync]."
+     ]
+    ]
+   }
+  ]
+ },
+ "func_flow": {
+  "flow": {
+   "direction": "TB",
+   "nodes": [
+    {
+     "id": "p1",
+     "label": "Start ([Sync] on XD01)",
+     "type": "process",
+     "step": 1
+    },
+    {
+     "id": "r",
+     "label": "TB_R_CROSSDOCK_IF_RESULT",
+     "type": "db",
+     "lane": "input"
+    },
+    {
+     "id": "p2",
+     "label": "Select Waiting parts for GTOPAS",
+     "type": "process",
+     "step": 2
+    },
+    {
+     "id": "m",
+     "label": "TB_M_PART_CANDIDATE / TB_M_PART_CANDIDATE_DEST",
+     "type": "db",
+     "lane": "input"
+    },
+    {
+     "id": "p3",
+     "label": "Create interface file",
+     "type": "process",
+     "step": 3
+    },
+    {
+     "id": "p4",
+     "label": "SFTP put to GTOPAS, verify",
+     "type": "process",
+     "step": 4
+    },
+    {
+     "id": "x",
+     "label": "Interface file to GTOPAS (SFTP)",
+     "type": "file",
+     "lane": "output"
+    },
+    {
+     "id": "d",
+     "label": "Transfer OK?",
+     "type": "decision",
+     "step": 5
+    },
+    {
+     "id": "p6",
+     "label": "Send status per part, overall Sync Status, history",
+     "type": "process",
+     "step": 6
+    },
+    {
+     "id": "o",
+     "label": "TB_R_CROSSDOCK_IF_RESULT / TB_M_PART_CANDIDATE / TB_H_PART_CANDIDATE",
+     "type": "db",
+     "lane": "output"
+    },
+    {
+     "id": "p7",
+     "label": "Log end, exit",
+     "type": "process",
+     "step": 7
+    },
+    {
+     "id": "log",
+     "label": "Log",
+     "type": "db",
+     "lane": "output"
+    }
+   ],
+   "edges": [
+    {
+     "from": "p1",
+     "to": "p2"
+    },
+    {
+     "from": "r",
+     "to": "p2"
+    },
+    {
+     "from": "p2",
+     "to": "p3"
+    },
+    {
+     "from": "m",
+     "to": "p3"
+    },
+    {
+     "from": "p3",
+     "to": "p4"
+    },
+    {
+     "from": "p4",
+     "to": "x"
+    },
+    {
+     "from": "p4",
+     "to": "d"
+    },
+    {
+     "from": "d",
+     "to": "p6",
+     "label": "Yes / No"
+    },
+    {
+     "from": "p6",
+     "to": "o"
+    },
+    {
+     "from": "p6",
+     "to": "p7"
+    },
+    {
+     "from": "p7",
+     "to": "log"
+    }
+   ]
+  },
+  "steps": [
+   "[Sync] on XD01 sets the parts to Waiting (SYNC_STATUS = '3' in TB_M_PART_CANDIDATE, IF_STATUS = '3' for 'GTOPAS' and 'APPOLE' in TB_R_CROSSDOCK_IF_RESULT) and starts XD06. Write LOG1.",
+   "Select the parts with TARGET_SYSTEM = 'GTOPAS' and IF_STATUS = '3' in TB_R_CROSSDOCK_IF_RESULT whose PART_STATUS is still 'Active'. Keep CHANGED_DT of each part. No part: write LOG2 and exit.",
+   {
+    "text": "Create the interface file XD_CDMASTER_GTOPAS_<YYYYMMDDHHMMSS>.csv in the outbound folder (see Interface File / Interface Data):",
+    "children": [
+     "Per part: PART_NO, CROSSDOCK_FLAG 'Y', PCS_CASE, MAX_CASE_DAY, EFFECTIVE_START_DATE from TB_M_PART_CANDIDATE.",
+     "Per destination of the ongoing period: PERIOD, DEST_CODE, CASE_DAY from TB_M_PART_CANDIDATE_DEST (one record each).",
+     "Same SEND_ID and SEND_DT on every record; trailer with the record count (TBC). Error: LOG3, all parts Failed (step 6)."
+    ]
+   },
+   {
+    "text": "Put the file by SFTP to the inbound folder of GTOPAS and verify the transfer (file size / record count).",
+    "children": [
+     "Transfer error: retry (parameter); still failing: LOG4.",
+     "Transfer OK: move the local file to the backup folder."
+    ]
+   },
+   {
+    "text": "Set the send status of every part of the file in TB_R_CROSSDOCK_IF_RESULT:",
+    "children": [
+     "Transfer OK: IF_STATUS = '1', IF_DT = now, IF_FILE_NAME = file name, IF_MESSAGE blank.",
+     "File or transfer error: IF_STATUS = '2', IF_DT = now, IF_MESSAGE = error (LOG3 / LOG4).",
+     "TBC: if GTOPAS returns a result / acknowledge file, the status per part is taken from it instead of the transfer result."
+    ]
+   },
+   {
+    "text": "Update the overall Sync Status of each part in TB_M_PART_CANDIDATE and record the history:",
+    "children": [
+     "CHANGED_DT differs from step 2 (part changed while sending): SYNC_STATUS = '0' (No Sync).",
+     "Else, status of 'GTOPAS' and of 'APPOLE' in TB_R_CROSSDOCK_IF_RESULT: one still '3' -> SYNC_STATUS stays '3'; both '1' -> '1' (Success); one '2' -> '2' (Failed, SYNC_MESSAGE = target + reason).",
+     "SYNC_DT = now when SYNC_STATUS becomes 1 or 2.",
+     "Insert TB_H_PART_CANDIDATE: event SYNC, source IF, FIELD_NAME SYNC_STATUS, REMARK = 'GTOPAS: ' + result / message."
+    ]
+   },
+   "Write LOG2 with the file name and the number of parts / records sent. Exit."
+  ]
+ },
+ "data_map": {
+  "blocks": [
+   {
+    "source": {
+     "table": "TB_M_PART_CANDIDATE + TB_M_PART_CANDIDATE_DEST",
+     "keys": [
+      {
+       "field": "PART_NO",
+       "value": "Waiting part"
+      },
+      {
+       "field": "PERIOD",
+       "value": "Ongoing period"
+      }
+     ]
+    },
+    "destination": {
+     "table": "Interface file to GTOPAS (SFTP)",
+     "operation": "Insert",
+     "description": "One record per part x destination"
+    },
+    "mappings": [
+     {
+      "source_field": "-",
+      "dest_field": "SEND_ID",
+      "description": "Run of the send (YYYYMMDDHHMMSS); all records of one file have the same SEND_ID and are processed as one set"
+     },
+     {
+      "source_field": "PART_NO",
+      "dest_field": "PART_NO",
+      "description": "Same value"
+     },
+     {
+      "source_field": "PART_STATUS",
+      "dest_field": "CROSSDOCK_FLAG",
+      "description": "'Y' (Active)"
+     },
+     {
+      "source_field": "PCS_CASE",
+      "dest_field": "PCS_CASE",
+      "description": "Same value"
+     },
+     {
+      "source_field": "MAX_CASE_DAY",
+      "dest_field": "MAX_CASE_DAY",
+      "description": "Same value"
+     },
+     {
+      "source_field": "EFFECTIVE_START_DATE",
+      "dest_field": "EFFECTIVE_START_DATE",
+      "description": "Same value"
+     },
+     {
+      "source_field": "PERIOD",
+      "dest_field": "PERIOD",
+      "description": "Same value"
+     },
+     {
+      "source_field": "DEST_CODE",
+      "dest_field": "DEST_CODE",
+      "description": "Same value"
+     },
+     {
+      "source_field": "CASE_DAY",
+      "dest_field": "CASE_DAY",
+      "description": "Same value"
+     },
+     {
+      "source_field": "-",
+      "dest_field": "SEND_DT",
+      "description": "Date-time the file is created"
+     }
+    ]
+   },
+   {
+    "source": "Result of the file / transfer",
+    "destination": {
+     "table": "TB_R_CROSSDOCK_IF_RESULT",
+     "operation": "Update",
+     "description": "Dummy table: rows of the parts of the file for 'GTOPAS'",
+     "keys": [
+      {
+       "field": "PART_NO + TARGET_SYSTEM",
+       "value": "Part of the file + 'GTOPAS'"
+      }
+     ]
+    },
+    "mappings": [
+     {
+      "dest_field": "IF_STATUS",
+      "description": "'1' transfer OK / '2' file or transfer error"
+     },
+     {
+      "dest_field": "IF_DT",
+      "description": "Date-time of the result"
+     },
+     {
+      "dest_field": "IF_FILE_NAME",
+      "description": "Name of the interface file"
+     },
+     {
+      "dest_field": "IF_MESSAGE",
+      "description": "Error when '2'; blank when '1'"
+     },
+     {
+      "dest_field": "CHANGED_BY",
+      "description": "IF batch user ID"
+     },
+     {
+      "dest_field": "CHANGED_DT",
+      "description": "Server system date-time"
+     },
+     {
+      "dest_field": "PART_NO",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "TARGET_SYSTEM",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "PERIOD",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "CREATED_BY",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "CREATED_DT",
+      "description": "Not changed"
+     }
+    ]
+   },
+   {
+    "source": {
+     "table": "TB_R_CROSSDOCK_IF_RESULT",
+     "keys": [
+      {
+       "field": "PART_NO",
+       "value": "Part of the file (both target rows)"
+      }
+     ]
+    },
+    "destination": {
+     "table": "TB_M_PART_CANDIDATE",
+     "operation": "Update",
+     "description": "Overall Sync Status of the part",
+     "keys": [
+      {
+       "field": "PART_NO",
+       "value": "Part of the file"
+      }
+     ]
+    },
+    "mappings": [
+     {
+      "dest_field": "SYNC_STATUS",
+      "description": "'0' when CHANGED_DT changed; else '3' while a target is Waiting, '1' when both '1', '2' when a target is '2'"
+     },
+     {
+      "dest_field": "SYNC_DT",
+      "description": "Date-time when SYNC_STATUS becomes 1 or 2; else not changed"
+     },
+     {
+      "dest_field": "SYNC_MESSAGE",
+      "description": "Target + reason when Failed; blank when Success"
+     },
+     {
+      "dest_field": "PART_NO",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "PART_NAME",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "MIN_MAD",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "PCS_CASE",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "MAX_CASE_DAY",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "TOTAL_PCS_DAY",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "EFFECTIVE_START_DATE",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "PART_STATUS",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "LAST_SOURCE",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "LAST_UPLOAD_ID",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "CREATED_BY",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "CREATED_DT",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "CHANGED_BY",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "CHANGED_DT",
+      "description": "Not changed"
+     }
+    ]
+   },
+   {
+    "source": "Result of the part",
+    "destination": {
+     "table": "TB_H_PART_CANDIDATE",
+     "operation": "Insert",
+     "description": "One record per part of the file"
+    },
+    "mappings": [
+     {
+      "dest_field": "HIST_ID",
+      "description": "Auto (identity)"
+     },
+     {
+      "dest_field": "PART_NO",
+      "description": "Part sent"
+     },
+     {
+      "dest_field": "PERIOD",
+      "description": "Ongoing calculation period"
+     },
+     {
+      "dest_field": "EVENT_TYPE",
+      "description": "'SYNC'"
+     },
+     {
+      "dest_field": "SOURCE",
+      "description": "'IF'"
+     },
+     {
+      "dest_field": "UPLOAD_ID",
+      "description": "NULL"
+     },
+     {
+      "dest_field": "DEST_CODE",
+      "description": "NULL"
+     },
+     {
+      "dest_field": "FIELD_NAME",
+      "description": "'SYNC_STATUS'"
+     },
+     {
+      "dest_field": "OLD_VALUE",
+      "description": "'Waiting'"
+     },
+     {
+      "dest_field": "NEW_VALUE",
+      "description": "New overall status (Waiting / Success / Failed / No Sync)"
+     },
+     {
+      "dest_field": "REMARK",
+      "description": "'GTOPAS: ' + 'sent <file name>' or IF_MESSAGE"
+     },
+     {
+      "dest_field": "CREATED_BY",
+      "description": "IF batch user ID"
+     },
+     {
+      "dest_field": "CREATED_DT",
+      "description": "Server system date-time"
+     }
+    ]
+   },
+   {
+    "source": "Result of this run",
+    "destination": {
+     "table": "Log",
+     "operation": "Insert",
+     "description": "Messages of the run"
+    },
+    "mappings": [
+     {
+      "dest_field": "BATCH_ID",
+      "description": "'XD06_IF_GTOPAS'"
+     },
+     {
+      "dest_field": "STATUS",
+      "description": "SUCCESS / ERROR"
+     },
+     {
+      "dest_field": "MESSAGE",
+      "description": "LOG1 - LOG5"
+     },
+     {
+      "dest_field": "START_DT / END_DT",
+      "description": "Start and end date-time"
+     }
+    ]
+   }
+  ]
+ },
+ "func_desc_layout": "full",
+ "func_desc": [
+  {
+   "type": "heading",
+   "text": "4.1 Business Process"
+  },
+  {
+   "type": "bullets",
+   "marker": "-",
+   "level": 0,
+   "items": [
+    "The D/S team maintains the cross dock master on XD01 (Part List: Pcs/Case, Max Case/Day, Effective Start Date; Mapping per Destination: Case/Day per destination of the ongoing period, created by XD05 process 2 and adjusted by screen or upload XD03).",
+    "Every change sets the part to No Sync. The D/S team clicks [Sync] when the changes are complete; only Active parts are sent, Candidate and Inactive parts are not.",
+    "XD06 sends to GTOPAS; XD07 sends the same data to AP POLE. Purpose for GTOPAS: GTOPAS (customer order side): which part and destination orders are handled by crossdock (order status 7) and how many cases per day per destination (assumption, TBC).",
+    "GTOPAS replaces the cross dock master of every part in the file with the content of the file (all destinations of the part)."
+   ]
+  },
+  {
+   "type": "heading",
+   "text": "4.2 Field Rules"
+  },
+  {
+   "type": "bullets",
+   "marker": "-",
+   "level": 0,
+   "items": [
+    "Fields, source and business rule: see Interface Data (General Description). The field names on the side of the target are TBC (target layout).",
+    "Sum of CASE_DAY of the records of a part = MAX_CASE_DAY (guaranteed by XD05 and the save checks of XD01 / XD03).",
+    "PERIOD is always the ongoing period; past periods are never sent."
+   ]
+  },
+  {
+   "type": "heading",
+   "text": "4.3 Status and Dummy Table"
+  },
+  {
+   "type": "bullets",
+   "marker": "-",
+   "level": 0,
+   "items": [
+    "TB_R_CROSSDOCK_IF_RESULT is a dummy table that keeps the send status per part and target; the real output of XD06 is the interface file sent to GTOPAS.",
+    "Overall SYNC_STATUS: Waiting while a target is Waiting, Success when both targets are sent, Failed when one target failed (the next [Sync] sends the part again to both targets; replace is repeatable).",
+    "A part changed on XD01 or by upload while it is being sent gets SYNC_STATUS = No Sync, so the newer data is sent by the next [Sync]."
+   ]
+  },
+  {
+   "type": "heading",
+   "text": "4.4 Open Points"
+  },
+  {
+   "type": "bullets",
+   "marker": "-",
+   "level": 0,
+   "items": [
+    "SFTP topology (server, folders, user), file format / naming and whether the target returns a result file.",
+    "Field names and lengths required by the target; part without destination.",
+    "Parts that became Inactive (XD05) are not sent today: should the target receive CROSSDOCK_FLAG 'N' to stop crossdock?"
+   ]
+  }
+ ],
+ "logging_messages": [
+  {
+   "event": "Batch start",
+   "cause": "[Sync] on XD01",
+   "type": "Info",
+   "msg_id": "LOG1",
+   "message": "IF cross dock master to GTOPAS started. <n> part(s).",
+   "action": {
+    "system": "Write the log.",
+    "user": "-"
+   }
+  },
+  {
+   "event": "Batch end",
+   "cause": "Batch finishes",
+   "type": "Info",
+   "msg_id": "LOG2",
+   "message": "IF cross dock master to GTOPAS ended. File <FILE_NAME>, parts <n>, records <r>, status <STATUS>.",
+   "action": {
+    "system": "Write the log.",
+    "user": "-"
+   }
+  },
+  {
+   "event": "Create file",
+   "cause": "Interface file cannot be created",
+   "type": "Error",
+   "msg_id": "LOG3",
+   "message": "Cannot create the interface file to GTOPAS: <ERROR_DETAIL>.",
+   "action": {
+    "system": "All parts of the run IF_STATUS = 2. Stop.",
+    "user": "Click [Sync] again; contact PIC if it persists."
+   }
+  },
+  {
+   "event": "SFTP transfer",
+   "cause": "GTOPAS SFTP not available / transfer fails after retry",
+   "type": "Error",
+   "msg_id": "LOG4",
+   "message": "SFTP transfer of <FILE_NAME> to GTOPAS failed: <ERROR_DETAIL>.",
+   "action": {
+    "system": "All parts of the file IF_STATUS = 2. Keep the file in the outbound folder.",
+    "user": "Click [Sync] again later; contact PIC if it persists."
+   }
+  },
+  {
+   "event": "Unexpected error",
+   "cause": "Any other system error",
+   "type": "Critical",
+   "msg_id": "LOG5",
+   "message": "Unexpected error: <ERROR_DETAIL>.",
+   "action": {
+    "system": "Stop. STATUS = ERROR.",
+    "user": "User contact PIC"
+   }
+  }
+ ],
+ "appendix_layout": "full",
+ "appendix": [],
+ "tables": [
+  {
+   "name": "TB_R_CROSSDOCK_IF_RESULT",
+   "kind": "transaction",
+   "proposed": true,
+   "description": "Dummy table (proposed): send status of the cross dock master per part and target system (XD06 GTOPAS, XD07 AP POLE). The real output is the interface file sent by SFTP to the target. The overall Sync Status of the part stays in TB_M_PART_CANDIDATE.",
+   "columns": [
+    [
+     "PART_NO",
+     "VARCHAR(TBD)",
+     "Y",
+     "N",
+     "Part number (TB_M_PART_CANDIDATE)"
+    ],
+    [
+     "TARGET_SYSTEM",
+     "VARCHAR(10)",
+     "Y",
+     "N",
+     "'GTOPAS' (XD06) / 'APPOLE' (XD07)"
+    ],
+    [
+     "PERIOD",
+     "CHAR(6)",
+     "",
+     "N",
+     "Calculation period of the mapping sent (YYYYMM)"
+    ],
+    [
+     "IF_STATUS",
+     "VARCHAR(1)",
+     "",
+     "N",
+     "'3' Waiting / '1' Success / '2' Failed"
+    ],
+    [
+     "IF_DT",
+     "DATETIME",
+     "",
+     "Y",
+     "Date-time of the result of the target system"
+    ],
+    [
+     "IF_FILE_NAME",
+     "VARCHAR(100)",
+     "",
+     "Y",
+     "Name of the interface file sent by SFTP"
+    ],
+    [
+     "IF_MESSAGE",
+     "VARCHAR(500)",
+     "",
+     "Y",
+     "Reason when Failed; blank when Success"
+    ],
+    [
+     "CREATED_BY",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "User who created the record"
+    ],
+    [
+     "CREATED_DT",
+     "DATETIME",
+     "",
+     "N",
+     "Created date and time"
+    ],
+    [
+     "CHANGED_BY",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "User who last changed the record"
+    ],
+    [
+     "CHANGED_DT",
+     "DATETIME",
+     "",
+     "N",
+     "Last changed date and time"
+    ]
+   ]
+  },
+  {
+   "name": "TB_M_PART_CANDIDATE",
+   "kind": "transaction",
+   "proposed": false,
+   "description": "Candidate part setting, one record per part (Part List data, no calculation period). Target of a successful upload.",
+   "columns": [
+    [
+     "PART_NO",
+     "VARCHAR(TBD)",
+     "Y",
+     "N",
+     "Part number; length follows TB_M_PART_MASTER"
+    ],
+    [
+     "PART_NAME",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "Retrieved from TB_M_PART_MASTER by PART_NO"
+    ],
+    [
+     "MIN_MAD",
+     "INT",
+     "",
+     "N",
+     "Minimum MAD (mandatory); reference compared with the MAD result of the calculation"
+    ],
+    [
+     "PCS_CASE",
+     "INT",
+     "",
+     "N",
+     "Pieces per case (> 0)"
+    ],
+    [
+     "MAX_CASE_DAY",
+     "INT",
+     "",
+     "N",
+     "Total Case/Day of the part (> 0)"
+    ],
+    [
+     "TOTAL_PCS_DAY",
+     "INT",
+     "",
+     "N",
+     "PCS_CASE x MAX_CASE_DAY"
+    ],
+    [
+     "EFFECTIVE_START_DATE",
+     "DATE",
+     "",
+     "Y",
+     "Effective start date; required while the part is Candidate"
+    ],
+    [
+     "PART_STATUS",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "Candidate / Active / Inactive"
+    ],
+    [
+     "SYNC_STATUS",
+     "CHAR(1)",
+     "",
+     "N",
+     "0 = No Sync, 3 = Waiting, 1 = Success, 2 = Failed"
+    ],
+    [
+     "SYNC_DT",
+     "DATETIME",
+     "",
+     "Y",
+     "Date-time of the last IF function result"
+    ],
+    [
+     "SYNC_MESSAGE",
+     "VARCHAR(TBD)",
+     "",
+     "Y",
+     "Reason of the last Failed sync"
+    ],
+    [
+     "LAST_SOURCE",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "CALC / SCREEN / UPLOAD"
+    ],
+    [
+     "LAST_UPLOAD_ID",
+     "VARCHAR(TBD)",
+     "",
+     "Y",
+     "Upload that last changed the record"
+    ],
+    [
+     "CREATED_BY",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "User who created the record"
+    ],
+    [
+     "CREATED_DT",
+     "DATETIME",
+     "",
+     "N",
+     "Created date and time"
+    ],
+    [
+     "CHANGED_BY",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "User who last changed the record"
+    ],
+    [
+     "CHANGED_DT",
+     "DATETIME",
+     "",
+     "N",
+     "Last changed date and time"
+    ]
+   ]
+  },
+  {
+   "name": "TB_M_PART_CANDIDATE_DEST",
+   "kind": "transaction",
+   "proposed": false,
+   "description": "Destination mapping, one record per part, calculation period and destination (Mapping per Destination data). Target of a successful upload.",
+   "columns": [
+    [
+     "PART_NO",
+     "VARCHAR(TBD)",
+     "Y",
+     "N",
+     "Part number; FK to TB_M_PART_CANDIDATE"
+    ],
+    [
+     "PERIOD",
+     "CHAR(6)",
+     "Y",
+     "N",
+     "Calculation period, YYYYMM e.g. 202609; displayed as Sep 2026"
+    ],
+    [
+     "DEST_CODE",
+     "CHAR(7)",
+     "Y",
+     "N",
+     "Destination code (buyer code + PD code, 7 digits); exists in TB_M_H0125_DESTINATION (Destination Master)"
+    ],
+    [
+     "CASE_DAY",
+     "INT",
+     "",
+     "N",
+     "Allocated Case/Day of the destination (> 0)"
+    ],
+    [
+     "CREATED_BY",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "User who created the record"
+    ],
+    [
+     "CREATED_DT",
+     "DATETIME",
+     "",
+     "N",
+     "Created date and time"
+    ],
+    [
+     "CHANGED_BY",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "User who last changed the record"
+    ],
+    [
+     "CHANGED_DT",
+     "DATETIME",
+     "",
+     "N",
+     "Last changed date and time"
+    ]
+   ]
+  },
+  {
+   "name": "TB_H_PART_CANDIDATE",
+   "kind": "history",
+   "proposed": true,
+   "description": "History of every change of a crossdock part (Add / Edit by screen or upload, mapping changes, Sync results, status changes and mappings made by the calculation batches). Read by the History setting modal of Part List (index PART_NO, CREATED_DT). Proposed retention: 24 months online by CREATED_DT; a monthly housekeeping job deletes older records (period configurable in system master). To be confirmed.",
+   "columns": [
+    [
+     "HIST_ID",
+     "BIGINT",
+     "Y",
+     "N",
+     "Running number (identity)"
+    ],
+    [
+     "PART_NO",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "Part number; length follows TB_M_PART_MASTER"
+    ],
+    [
+     "PERIOD",
+     "CHAR(6)",
+     "",
+     "Y",
+     "Calculation period YYYYMM for MAPPING / SYNC / CALC; NULL for ADD / EDIT (Part List has no period)"
+    ],
+    [
+     "EVENT_TYPE",
+     "VARCHAR(10)",
+     "",
+     "N",
+     "ADD / EDIT / MAPPING / SYNC / CALC"
+    ],
+    [
+     "SOURCE",
+     "VARCHAR(10)",
+     "",
+     "N",
+     "SCREEN / UPLOAD / IF / BATCH"
+    ],
+    [
+     "UPLOAD_ID",
+     "VARCHAR(TBD)",
+     "",
+     "Y",
+     "Upload of the change (Log); NULL when not from an upload"
+    ],
+    [
+     "DEST_CODE",
+     "CHAR(7)",
+     "",
+     "Y",
+     "Destination code (7 digits) for MAPPING; NULL for other events"
+    ],
+    [
+     "FIELD_NAME",
+     "VARCHAR(30)",
+     "",
+     "N",
+     "Changed field: PCS_CASE, MAX_CASE_DAY, MIN_MAD, PART_STATUS, EFFECTIVE_START_DATE, CASE_DAY, SYNC_STATUS"
+    ],
+    [
+     "OLD_VALUE",
+     "VARCHAR(255)",
+     "",
+     "Y",
+     "Value before the change; NULL for ADD or an added destination"
+    ],
+    [
+     "NEW_VALUE",
+     "VARCHAR(255)",
+     "",
+     "Y",
+     "Value after the change; NULL for a removed destination"
+    ],
+    [
+     "REMARK",
+     "VARCHAR(500)",
+     "",
+     "Y",
+     "Free text, e.g. SYNC_MESSAGE of a Failed sync"
+    ],
+    [
+     "CREATED_BY",
+     "VARCHAR(20)",
+     "",
+     "N",
+     "User who made the change (IF batch user ID for SYNC, batch user ID for BATCH)"
+    ],
+    [
+     "CREATED_DT",
+     "DATETIME",
+     "",
+     "N",
+     "Date and time of the change"
+    ]
+   ]
+  }
+ ]
+}

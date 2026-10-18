@@ -1,4 +1,4 @@
-"""Helpers for the UISS of the new function list (F01-F15). The specs of the first version (X1-X15) in
+"""Helpers for the UISS of the new function list (XD01-XD15). The specs of the first version (X1-X15) in
 deliverables/uiss_specs are read only; every F spec is derived from them or written here."""
 import copy, json, os, re, sys
 
@@ -11,45 +11,45 @@ NC = 'Not changed'
 
 # New function list: id -> (title, block, output file)
 FUNCS = {
-    'F01': ('Cross Dock Part Master Screen', 'Screen', 'F01_UISS_Screen_CrossDockPartMaster.xlsx'),
-    'F02': ('Cross Dock Part Master Upload Batch', 'Batch', 'F02_UISS_Batch_CrossDockPartMasterUpload.xlsx'),
-    'F03': ('Part and Destination Mapping Upload Batch', 'Batch', 'F03_UISS_Batch_PartDestinationMappingUpload.xlsx'),
-    'F04': ('Actual Demand Summary Synch to NSP', 'Batch', 'F04_UISS_Batch_ActualDemandSummarySync.xlsx'),
-    'F05': ('DAD Volume Calculation Batch', 'Batch', 'F05_UISS_Batch_DADVolumeCalculation.xlsx'),
-    'F06': ('IF Cross Dock Master to GTOPAS', 'Batch', 'F06_UISS_Batch_IFCrossDockMasterToGTOPAS.xlsx'),
-    'F07': ('IF Cross Dock Master to AP POLE', 'Batch', 'F07_UISS_Batch_IFCrossDockMasterToAPPOLE.xlsx'),
-    'F08': ('Order Control Information to NSP Batch (ASN)', 'Batch', 'F08_UISS_Batch_OrderControlInfoToNSP_ASN.xlsx'),
-    'F09': ('Mapping Customer Order and PO Batch', 'Batch', 'F09_UISS_Batch_MappingCustomerOrderPO.xlsx'),
-    'F10': ('ASN Cross Dock Creation Screen', 'Screen', 'F10_UISS_Screen_ASNCrossDockCreation.xlsx'),
-    'F11': ('Cancel Crossdock Customer Order Batch', 'Batch', 'F11_UISS_Batch_CancelCrossdockCustomerOrder.xlsx'),
-    'F12': ('Order Control Information to NSP Batch (Cancel)', 'Batch', 'F12_UISS_Batch_OrderControlInfoToNSP_Cancel.xlsx'),
-    'F13': ('Destination Master Synch into NSP', 'Batch', 'F13_UISS_Batch_DestinationMasterSync.xlsx'),
-    'F15': ('ASN Crossdock Inquiry Screen (Buffer)', 'Screen', 'F15_UISS_Screen_ASNCrossdockInquiry.xlsx'),
+    'XD01': ('Cross Dock Part Master Screen', 'Screen', 'XD01_UISS_Screen_CrossDockPartMaster.xlsx'),
+    'XD02': ('Cross Dock Part Master Upload Batch', 'Batch', 'XD02_UISS_Batch_CrossDockPartMasterUpload.xlsx'),
+    'XD03': ('Part and Destination Mapping Upload Batch', 'Batch', 'XD03_UISS_Batch_PartDestinationMappingUpload.xlsx'),
+    'XD04': ('Actual Demand Summary Synch to NSP', 'Batch', 'XD04_UISS_Batch_ActualDemandSummarySync.xlsx'),
+    'XD05': ('DAD Volume Calculation Batch', 'Batch', 'XD05_UISS_Batch_DADVolumeCalculation.xlsx'),
+    'XD06': ('IF Cross Dock Master to GTOPAS', 'Batch', 'XD06_UISS_Batch_IFCrossDockMasterToGTOPAS.xlsx'),
+    'XD07': ('IF Cross Dock Master to AP POLE', 'Batch', 'XD07_UISS_Batch_IFCrossDockMasterToAPPOLE.xlsx'),
+    'XD08': ('Order Control Information to NSP Batch (ASN)', 'Batch', 'XD08_UISS_Batch_OrderControlInfoToNSP_ASN.xlsx'),
+    'XD09': ('Mapping Customer Order and PO Batch', 'Batch', 'XD09_UISS_Batch_MappingCustomerOrderPO.xlsx'),
+    'XD10': ('ASN Cross Dock Creation Screen', 'Screen', 'XD10_UISS_Screen_ASNCrossDockCreation.xlsx'),
+    'XD11': ('Cancel Crossdock Customer Order Batch', 'Batch', 'XD11_UISS_Batch_CancelCrossdockCustomerOrder.xlsx'),
+    'XD12': ('Order Control Information to NSP Batch (Cancel)', 'Batch', 'XD12_UISS_Batch_OrderControlInfoToNSP_Cancel.xlsx'),
+    'XD13': ('Destination Master Synch into NSP', 'Batch', 'XD13_UISS_Batch_DestinationMasterSync.xlsx'),
+    'XD15': ('ASN Crossdock Inquiry Screen (Buffer)', 'Screen', 'XD15_UISS_Screen_ASNCrossdockInquiry.xlsx'),
 }
 
-# First-version function id -> new id (X3 screen -> F01; its RPA part is now F06 / F07)
-XMAP = {'X1': 'F01', 'X2': 'F02', 'X3': 'F01', 'X4': 'F03', 'X5': 'F04', 'X6': 'F05', 'X7': 'F05', 'X8': 'F10',
-        'X10': 'F08', 'X11': 'F13', 'X12': 'F09', 'X13': 'F15', 'X14': 'F10'}
+# First-version function id -> new id (X3 screen -> XD01; its RPA part is now XD06 / XD07)
+XMAP = {'X1': 'XD01', 'X2': 'XD02', 'X3': 'XD01', 'X4': 'XD03', 'X5': 'XD04', 'X6': 'XD05', 'X7': 'XD05', 'X8': 'XD10',
+        'X10': 'XD08', 'X11': 'XD13', 'X12': 'XD09', 'X13': 'XD15', 'X14': 'XD10'}
 
 # Text replacements applied to every derived spec (order matters)
 COMMON = [
-    ('UISS-Batch "Crossdock Master Setting - Part List Upload"', 'UISS-Batch "F02 Cross Dock Part Master Upload Batch"'),
-    ('UISS-Batch "Crossdock Master Setting - Mapping per Destination Upload"', 'UISS-Batch "F03 Part and Destination Mapping Upload Batch"'),
-    ('UISS-Batch Part List Upload', 'UISS-Batch F02 Cross Dock Part Master Upload'),
-    ('UISS-Batch Mapping per Destination Upload', 'UISS-Batch F03 Part and Destination Mapping Upload'),
+    ('UISS-Batch "Crossdock Master Setting - Part List Upload"', 'UISS-Batch "XD02 Cross Dock Part Master Upload Batch"'),
+    ('UISS-Batch "Crossdock Master Setting - Mapping per Destination Upload"', 'UISS-Batch "XD03 Part and Destination Mapping Upload Batch"'),
+    ('UISS-Batch Part List Upload', 'UISS-Batch XD02 Cross Dock Part Master Upload'),
+    ('UISS-Batch Mapping per Destination Upload', 'UISS-Batch XD03 Part and Destination Mapping Upload'),
     ('Crossdock Master Setting - Part List screen', 'Cross Dock Part Master screen (Part List tab)'),
     ('Crossdock Master Setting - Mapping per Destination screen', 'Cross Dock Part Master screen (Mapping per Destination tab)'),
-    ('UISS-Batch Mapping Destination Calculation', 'UISS-Batch F05 DAD Volume Calculation (process 2)'),
-    ('UISS-Batch DAD Volume Calculation', 'UISS-Batch F05 DAD Volume Calculation (process 1)'),
+    ('UISS-Batch Mapping Destination Calculation', 'UISS-Batch XD05 DAD Volume Calculation (process 2)'),
+    ('UISS-Batch DAD Volume Calculation', 'UISS-Batch XD05 DAD Volume Calculation (process 1)'),
     ('RPA user ID', 'IF batch user ID'),
     ('source RPA', 'source IF'),
     ("'RPA'", "'IF'"),
     ('SCREEN / UPLOAD / RPA / BATCH', 'SCREEN / UPLOAD / IF / BATCH'),
-    ('The RPA function', 'The IF functions F06 / F07'),
-    ('the RPA function', 'the IF functions F06 / F07'),
-    ('by the RPA', 'by the IF functions (F06 / F07)'),
-    ('The RPA', 'The IF functions (F06 / F07)'),
-    ('the RPA', 'the IF functions (F06 / F07)'),
+    ('The RPA function', 'The IF functions XD06 / XD07'),
+    ('the RPA function', 'the IF functions XD06 / XD07'),
+    ('by the RPA', 'by the IF functions (XD06 / XD07)'),
+    ('The RPA', 'The IF functions (XD06 / XD07)'),
+    ('the RPA', 'the IF functions (XD06 / XD07)'),
     ('RPA', 'IF function'),
     ('the global system', 'GTOPAS and AP POLE'),
     ('global system', 'GTOPAS and AP POLE'),
