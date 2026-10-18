@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
 import type { RouteKey } from '../../routes';
+import { needsPin, PIN_HASH, usePinMenus } from '../../lib/pin';
+import { PinGate } from '../PinGate';
 import { Footer } from './Footer';
 import { Sidebar } from './Sidebar';
 import { TopHeader } from './TopHeader';
@@ -12,13 +14,17 @@ interface AppShellProps {
 }
 
 export function AppShell({ activeItem, onNavigate, breadcrumb, children }: AppShellProps) {
+  const pinMenus = usePinMenus();
+  const gated = needsPin(activeItem, pinMenus);
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#eef1f5' }}>
       <Sidebar activeItem={activeItem} onNavigate={onNavigate} />
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
         <TopHeader />
         {breadcrumb}
-        <main style={{ flex: 1, background: '#eef1f5', paddingBottom: 8 }}>{children}</main>
+        <main style={{ flex: 1, background: '#eef1f5', paddingBottom: 8 }}>
+          {gated ? <PinGate key={activeItem} id={activeItem} title={activeItem} hash={PIN_HASH}>{children}</PinGate> : children}
+        </main>
         <Footer />
       </div>
     </div>

@@ -1,13 +1,14 @@
 import { NAV_GROUPS, useHiddenMenus } from '../../lib/nav';
+import { needsPin, usePinMenus } from '../../lib/pin';
 import { ROUTE_BY_NAV_ITEM } from '../../routes';
 import type { RouteKey } from '../../routes';
 
 /** Nav items that are new in this build, flagged with a "New" badge until they're familiar. */
-const PIN_ITEMS = new Set(['Confirmation Points']);
 const NEW_ITEMS = new Set(['Crossdock Master Setting', 'Case Consolidation Simulation', 'ASN Creation', 'ASN Inquiry', 'Batch Process Simulation', 'Candidate Part Batch Flow', 'ASN Backend Process', 'Menu Settings', 'Cancel Order Simulation', 'Confirmation Points']);
 
 export function Sidebar({ activeItem, onNavigate }: { activeItem: string; onNavigate: (route: RouteKey) => void }) {
   const hidden = useHiddenMenus();
+  const pinMenus = usePinMenus();
   return (
     <aside
       style={{
@@ -110,7 +111,7 @@ export function Sidebar({ activeItem, onNavigate }: { activeItem: string; onNavi
                       }}
                     >
                       <span style={{ width: 5, height: 5, borderRadius: 999, background: active ? '#fff' : '#c1c9d2', flexShrink: 0 }} />
-                      <span style={{ flex: 1, minWidth: 0 }}>{item}{PIN_ITEMS.has(item) && <span title="PIN required" style={{ marginLeft: 4 }}>🔒</span>}</span>
+                      <span style={{ flex: 1, minWidth: 0 }}>{item}{needsPin(item, pinMenus) && <span title="PIN required" style={{ marginLeft: 4 }}>🔒</span>}</span>
                       {NEW_ITEMS.has(item) && (
                         <span
                           style={{
