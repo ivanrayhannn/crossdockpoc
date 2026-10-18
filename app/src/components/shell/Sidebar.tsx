@@ -3,7 +3,7 @@ import { ROUTE_BY_NAV_ITEM } from '../../routes';
 import type { RouteKey } from '../../routes';
 
 /** Nav items that are new in this build, flagged with a "New" badge until they're familiar. */
-const NEW_ITEMS = new Set(['Crossdock Master Setting', 'Case Consolidation Simulation', 'ASN Creation', 'ASN Inquiry', 'Batch Process Simulation', 'Candidate Part Batch Flow', 'ASN Backend Process', 'Menu Settings', 'Cancel Order Simulation']);
+const NEW_ITEMS = new Set(['Crossdock Master Setting', 'Case Consolidation Simulation', 'ASN Creation', 'ASN Inquiry', 'Batch Process Simulation', 'Candidate Part Batch Flow', 'ASN Backend Process', 'Menu Settings', 'Cancel Order Simulation', 'Confirmation Points']);
 
 export function Sidebar({ activeItem, onNavigate }: { activeItem: string; onNavigate: (route: RouteKey) => void }) {
   const hidden = useHiddenMenus();
