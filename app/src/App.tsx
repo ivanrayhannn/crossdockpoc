@@ -10,10 +10,7 @@ import { CandidatePartFlowPage } from './features/candidatePartFlow/CandidatePar
 import { AsnBackendProcessPage } from './features/asnBackend/AsnBackendProcessPage';
 import { CancelOrderSimulationPage } from './features/cancelSim/CancelOrderSimulationPage';
 import { ConfirmationPage } from './features/confirmation/ConfirmationPage';
-import { PinGate } from './components/PinGate';
 
-/** SHA-256 of the PIN of Confirmation Points (default 1810). */
-const CONFIRMATION_PIN_HASH = '1a09807a0e6928a66d91025ed5fccd713c9edb101e72a1bbcb8a01cd9a53cb51';
 import { LogMonitoringPage } from './features/logMonitoring/LogMonitoringPage';
 import { MenuSettingsPage } from './features/menuSettings/MenuSettingsPage';
 import { hashForRoute, routeFromHash } from './routes';
@@ -92,9 +89,7 @@ function App() {
   if (route === 'confirmation') {
     return (
       <AppShell activeItem="Confirmation Points" onNavigate={navigate} breadcrumb={<Breadcrumb group="Common" label="Confirmation Points" />}>
-        <PinGate id="confirmation" title="Confirmation Points" hash={CONFIRMATION_PIN_HASH}>
-          <ConfirmationPage />
-        </PinGate>
+        <ConfirmationPage />
       </AppShell>
     );
   }
