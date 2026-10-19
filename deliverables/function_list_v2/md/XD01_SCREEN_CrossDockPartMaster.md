@@ -29,3 +29,7 @@ Sumber: UISS `XD01_UISS_Screen_CrossDockPartMaster.xlsx` (0.1 Initial Draft, 18-
 ## Open points
 - Topology SFTP dan nama field di GTOPAS / AP POLE (detail field sumber ada di md XD06 / XD07).
 - Open points versi pertama X1 / X3 tetap berlaku (akun read only, Effective Start Date, dll.).
+
+## Keputusan 19-Oct
+- [Sync] juga mengirim part yang jadi **Inactive** (CROSSDOCK_FLAG 'N').
+- Viewer = hanya Search / Export. Effective Start Date: default besok, minimal hari ini, wajib. Panjang kolom sesuai existing; retensi history 24 bulan.

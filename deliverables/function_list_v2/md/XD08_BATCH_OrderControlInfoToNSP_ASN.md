@@ -25,3 +25,7 @@ Sumber: UISS `XD08_UISS_Batch_OrderControlInfoToNSP_ASN.xlsx` (0.1 Initial Draft
 
 - Baris status 6 / 2 tetap disimpan untuk tracking (retensi opsional).
 - Dibaca XD09 (status 7, belum mapping, tidak hold), XD10 dan XD11.
+
+## Keputusan 19-Oct
+- Jadwal: setelah data G-TOPAS tersedia (27:30), retry 3x; job chain XD12 → XD11 → XD08.
+- SERIAL_NO ditambahkan ke tabel source oleh tim DB Surrounding.

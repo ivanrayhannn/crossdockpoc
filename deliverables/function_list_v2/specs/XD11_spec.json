@@ -248,11 +248,15 @@
     "rows": [
      [
       "Trigger",
-      "Scheduler set in the system master (schedule TBC)."
+      "Scheduler, daily after G-TOPAS has provided the data (27:30); auto retry 3 times."
      ],
      [
       "Order",
-      "Job chain: XD12 -> XD11 -> XD08, after G-TOPAS has provided the data (1 time/day, 27:30). XD11 runs only when XD12 succeeded."
+      "Job chain: XD12 -> XD11 -> XD08."
+     ],
+     [
+      "Condition",
+      "Runs only when XD12 succeeded."
      ]
     ]
    }
@@ -1025,9 +1029,9 @@
     "NSP never cancels a customer order and has no Cancel ASN. A line can be cancelled with or without hold; HOLD_FLAG is only recorded.",
     "The calculation is per line (all SERIAL_NO), because G-TOPAS splits a partially cancelled line into a new serial.",
     "Prevention of a cancel of qty in an ASN: existing ASN feedback to G-TOPAS + SOP of the D/S team. XD11 only detects the abnormality (CONFLICT).",
-    "CONFLICT: the D/S team handles the shipped case at receiving in G-TOPAS: allocate it to an open order with the same destination, otherwise move it to warehouse stock (prototype menu Cancel Order Simulation).",
-    "TB_R_CROSSDOCK_CANCEL_RESULT is the exception list for the D/S team (RESULT = CONFLICT); a screen for it is not in this scope (TBC). The messages are also in the Log (Log Monitoring).",
-    "Option not in this draft (TBC): keep the released PO qty of a CONFLICT blocked until the D/S team closes the conflict."
+    "CONFLICT: the D/S team handles the shipped case at receiving in G-TOPAS: allocate it to an open order (same or another destination), otherwise move it to warehouse stock (prototype menu Cancel Order Simulation).",
+    "The exception list of the D/S team is the Log (Log Monitoring, LOG4); TB_R_CROSSDOCK_CANCEL_RESULT keeps the result per row. No separate screen (decided 19-Oct).",
+    "The released PO qty of a CONFLICT is not blocked (decided 19-Oct); it is taken by the next orders in XD09."
    ]
   }
  ],
@@ -1303,7 +1307,7 @@
      "VARCHAR(7)",
      "Y",
      "N",
-     "No.7 Serial No., Card No. Part of the key; distinguishes split records of the same order line (taken from the I/F layout, not in the current table export)."
+     "No.7 Serial No., Card No. Part of the key; distinguishes split records of the same order line. Added to the source table by the DB Surrounding team (decided 19-Oct)."
     ],
     [
      "TOPAS_ORDER_TYPE",

@@ -20,7 +20,8 @@
  "general": {
   "objective": [
    "To replicate TB_R_ACTUAL_DEMAND_SUMMARY from DB Surrounding to the table with the same name in NSP, so the XD05 DAD Volume Calculation (process 1 and 2) read the actual demand inside NSP.",
-   "The NSP table is fully replaced every run (delete - insert). In case any error occurs, the run is rolled back and NSP keeps the data of the last successful run."
+   "The NSP table is fully replaced every run (delete - insert). In case any error occurs, the run is rolled back and NSP keeps the data of the last successful run.",
+   "All columns are replicated as they are, including DAD (not used by the calculation) (decided 19-Oct)."
   ],
   "operation_flow": {
    "flow": {
@@ -137,11 +138,11 @@
     "rows": [
      [
       "Trigger",
-      "Scheduler set in the system master: monthly (date and time TBC)."
+      "Monthly scheduler (set in the system master; not detailed in this document)."
      ],
      [
       "Order",
-      "Must finish before the DAD Volume Calculation runs."
+      "Runs before XD05. A failure of XD04 does not stop XD05 (decided 19-Oct)."
      ]
     ]
    }

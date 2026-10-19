@@ -65,3 +65,7 @@ Hanya untuk menyimpan **status kirim** per part × target (PART_NO + TARGET_SYST
 - Field mana masuk ke tabel GTOPAS yang mana (cross dock master G-TOPAS (tabel TBC)).
 - Nama dan panjang field di GTOPAS.
 - Part yang jadi **Inactive** (XD05) saat ini tidak dikirim → perlu kirim CROSSDOCK_FLAG 'N' supaya target berhenti crossdock?
+
+## Keputusan 19-Oct
+- G-TOPAS **tidak pakai SFTP**; interface existing (tidak didetailkan).
+- Part yang jadi Inactive dikirim dengan CROSSDOCK_FLAG 'N' (tanpa destinasi) supaya G-TOPAS mengubah statusnya jadi inactive.

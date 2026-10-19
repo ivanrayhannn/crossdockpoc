@@ -101,7 +101,7 @@
    },
    {
     "name": "Download Case Label",
-    "function": "Download the labels of all cases of the ASN. Label format follows the existing case label."
+    "function": "Download the labels of all cases of the ASN. Label format follows the existing case label: 1 case label = 1 case of 1 destination, may list several customer order numbers."
    },
    {
     "name": "Cancel",
@@ -803,7 +803,7 @@
    "required": "N",
    "format": "ZZ9",
    "validation": "-",
-   "description": "Number of cases of the unit: the qty of each destination is summed into one case."
+   "description": "Number of cases of the unit: per destination, qty / pcs/case (e.g. 24 pcs, 6 pcs/case = 4 cases)."
   },
   {
    "name": "PO Readiness (case)",
@@ -866,7 +866,7 @@
    "required": "N",
    "format": "{code} · {name}",
    "validation": "-",
-   "description": "One row per destination (= one case); name from TB_M_H0125_DESTINATION."
+   "description": "One row per destination with its number of cases (qty / pcs/case); name from TB_M_H0125_DESTINATION."
   },
   {
    "name": "Case",
@@ -2125,7 +2125,7 @@
    "marker": "a.",
    "level": 2,
    "items": [
-    "Unit = Part Number + Customer Order Date. Case = one per destination; the qty of a destination is summed into one case (it never exceeds pcs/case, it may be split over several lines, e.g. 4 + 2).",
+    "Unit = Part Number + Customer Order Date. Case = destination x pcs/case: the qty of a destination is packed in cases of pcs/case (e.g. Vietnam 24 pcs, 6 pcs/case = 4 cases). G-TOPAS releases in multiples of pcs/case (a remainder stays pending and is not in H0253), so every case is full. A case can hold several customer order lines of the same destination (e.g. 4 + 2).",
     "Case Qty = number of destinations. PO Readiness (case) = cases whose whole qty is pre-mapped to a PO.",
     "Ready ('6'): every line of the unit is pre-mapped to a PO. Not Ready ('7'): at least one line of the unit has no PO yet (check box disabled, message no. 2). With POs of different PO Dates the unit becomes Ready when the last PO is available (condition 3).",
     "Created: the unit is in a submitted ASN (ASN status '1'); it is no longer listed (shown in ASN Inquiry)."

@@ -13,8 +13,8 @@ COMMON_IF = [('RPA user ID', 'IF batch user ID'), ('SCREEN / UPLOAD / RPA / BATC
 # Interface data: one record per part x destination of the ongoing period (field, source, format, mandatory, business rule)
 FIELDS = [
     ("SEND_ID", "Generated", "CHAR(14)", "Y", "Run of the send (YYYYMMDDHHMMSS); all records of one file have the same SEND_ID and are processed as one set"),
-    ("PART_NO", f"{T}.PART_NO", "VARCHAR(TBD)", "Y", "Cross dock part. Only parts with PART_STATUS = Active and Sync Status Waiting are sent"),
-    ("CROSSDOCK_FLAG", f"{T}.PART_STATUS", "CHAR(1)", "Y", "'Y' = the part is handled by crossdock (Active). TBC: send 'N' when a part became Inactive, so the target stops crossdock for it"),
+    ("PART_NO", f"{T}.PART_NO", "VARCHAR(TBD)", "Y", "Cross dock part with Sync Status Waiting: Active parts, and parts that became Inactive since the last send"),
+    ("CROSSDOCK_FLAG", f"{T}.PART_STATUS", "CHAR(1)", "Y", "'Y' = Active (handled by crossdock) / 'N' = Inactive: the target changes the status of the part to inactive (decided 19-Oct)"),
     ("PCS_CASE", f"{T}.PCS_CASE", "NUMBER(TBD)", "Y", "Pieces per crossdock case; used to convert pieces to cases"),
     ("MAX_CASE_DAY", f"{T}.MAX_CASE_DAY", "NUMBER(TBD)", "Y", "Maximum cases per day of the part through crossdock (= total Case/Day of its destinations)"),
     ("EFFECTIVE_START_DATE", f"{T}.EFFECTIVE_START_DATE", "DATE (YYYYMMDD)", "Y", "Date from which the cross dock setting of the part applies"),
@@ -28,6 +28,11 @@ TARGET = {
                "note": "Option #3 of 'NSP Cross Dock Interfacing Data' is drawn for AP POLE; the same SFTP pattern is assumed for G-TOPAS (TBC)."},
     'APPOLE': {"side": "TMA", "tables": "Crossdock Kanban Part Master and Crossdock Export Part Master (AP POLE)",
                "note": "Option #3 of 'NSP Cross Dock Interfacing Data' (decided 18-Oct)."},
+}
+METHOD = {
+    'GTOPAS': "interface to G-TOPAS as existing (not SFTP); the method and the target tables are not detailed in this document.",
+    'APPOLE': ("interface file by SFTP, Option #3 of 'NSP Cross Dock Interfacing Data': NSP Send IF -> TMMIN SFTP -> TMA SFTP -> receive IF (TMA) "
+               "-> AP POLE master. SFTP details, file format and the AP POLE tables are not detailed in this document."),
 }
 PURPOSE = {
     'GTOPAS': "GTOPAS (customer order side): which part and destination orders are handled by crossdock (order status 7) and how many cases per day per destination (assumption, TBC)",
@@ -210,7 +215,66 @@ def if_spec(fid, code, name, other_fid, other_name):
         "appendix": [],
         "tables": [IFR_TABLE, t, d, h],
     }
-    return write(batch_header(fid) | spec, fid)
+    return write(batch_header(fid) | decide(spec, code, name), fid)
+
+
+DETAIL_ROWS = ('TMMIN SFTP server', 'G-TOPAS side (owner TBC) SFTP server', 'TMA SFTP server', 'Local folders', 'Transfer retry')
+
+
+def decide(spec, code, name):
+    """Decisions of 19-Oct: Inactive parts are sent (CROSSDOCK_FLAG 'N'); G-TOPAS does not use SFTP; SFTP details, file format
+    and the destination tables of the target are not detailed in this document."""
+    g = spec['general']
+    g['extra_tables'] = [t for t in g['extra_tables'] if t['title'] != 'Interface File']
+    for t in g['extra_tables']:
+        if t['title'] == 'Parameters':
+            t['rows'] = [r for r in t['rows'] if r[0] not in DETAIL_ROWS] + [["Interface method", METHOD[code]]]
+        if t['title'] == 'Execution Schedule':
+            t['rows'] = [r if r[0] != 'Method' else ["Method", METHOD[code]] for r in t['rows']]
+            t['rows'] = [[r[0], r[1].replace(' No scheduler (TBC).', ' No scheduler.')] for r in t['rows']]
+    g['objective'][0] = (f"To send the cross dock master of the parts waiting for synchronisation to {name}: Active parts with Pcs/Case, Max Case/Day, "
+                         f"Effective Start Date and all destinations with Case/Day of the ongoing period, and parts that became Inactive (CROSSDOCK_FLAG 'N', "
+                         f"so {name} changes their status to inactive). Source: Part List ({T}) and Part Mapping per Destination ({D}).")
+    g['objective'][2] = "Interface method: " + METHOD[code]
+    g['objective'] = [o for o in g['objective'] if '(assumption, TBC)' not in o]
+    if code == 'GTOPAS':
+        spec = replace_all(spec, [
+            ("Create interface file", "Create interface data"), ("SFTP put to TMMIN SFTP server, verify", "Send to G-TOPAS (existing method)"),
+            ("SFTP put to TMMIN SFTP server", "Send to G-TOPAS (existing method)"),
+            ("G-TOPAS side (owner TBC) SFTP -> receive IF -> GTOPAS master", "G-TOPAS master"),
+            ("Interface file to GTOPAS (SFTP)", "Interface data to GTOPAS"),
+            ("Transfer OK?", "Sent OK?"), ("Transfer OK (file on the TMMIN SFTP server)", "Sent OK"),
+            ("File or transfer error", "Create or send error"), ("Result of the file / transfer", "Result of the send"),
+            ("GTOPAS SFTP not available / transfer fails after retry", "G-TOPAS not available / send fails after retry"),
+            ("SFTP transfer of <FILE_NAME> to GTOPAS failed", "Send of <SEND_ID> to GTOPAS failed"), ("SFTP transfer", "Send"),
+            ("GTOPAS: cross dock master of G-TOPAS (tables TBC)", "GTOPAS: cross dock master of the part"),
+            ("Inserted / updated by the receive IF of the G-TOPAS side (owner TBC) (not in NSP scope)", "Updated in G-TOPAS (not in NSP scope)"),
+            (": one record per part x destination (see Interface Data), put on the TMMIN SFTP server", ": one record per part x destination (see Interface Data)")])
+        for st in spec['func_flow']['steps']:
+            if isinstance(st, dict) and st['text'].startswith('Put the file by SFTP'):
+                st['text'] = "Send the interface data to G-TOPAS by the existing interface method (not SFTP; not detailed in this document)."
+                st['children'] = ["Send error: retry; still failing: LOG4.", "Sent OK: continue."]
+            if isinstance(st, dict) and st['text'].startswith('Create the interface file'):
+                st['text'] = st['text'].replace('Create the interface file', 'Create the interface data').replace(' in the outbound folder', '')
+        for e in spec['func_flow']['flow']['edges'] + spec['general']['operation_flow']['flow']['edges']:
+            if e.get('label') == 'SFTP':
+                e['label'] = 'send'
+    spec = replace_all(spec, [
+        ("The field names on the side of the target are TBC (target layout).", "The field names on the side of the target follow the target layout."),
+        ("IF batch user ID (TBC)", "IF batch user ID"),
+        ("; trailer with the record count (TBC)", ""),
+        ("TBC: if GTOPAS returns a result / acknowledge file, the status per part is taken from it instead of the transfer result.", "The status is the result of the send."),
+        ("TBC: if AP POLE returns a result / acknowledge file, the status per part is taken from it instead of the transfer result.", "The status is the result of the SFTP transfer.")])
+    fd = spec['func_desc']
+    for i, d in enumerate(fd):
+        if d['type'] == 'bullets':
+            d['items'] = [x for x in d['items'] if not x.startswith('Topology (Option #3)') and '(assumption, TBC)' not in x]
+        if d['type'] == 'heading' and d['text'] == '4.4 Open Points':
+            fd[i + 1]['items'] = ["Field names on the side of the target follow the target layout (not detailed in this document)."]
+    fd.insert(2, {"type": "bullets", "marker": "-", "level": 0, "items": ["Interface method: " + METHOD[code],
+              "Parts that became Inactive (XD05 process 1) are No Sync and are sent with CROSSDOCK_FLAG 'N' and without destinations; "
+              f"{name} changes the status of the part to inactive."]})
+    return spec
 
 
 def build():

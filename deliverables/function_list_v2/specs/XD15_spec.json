@@ -61,7 +61,7 @@
    },
    {
     "name": "Download Case Label",
-    "function": "Download the labels of all cases of the ASN. Label format follows the existing case label."
+    "function": "Download the labels of all cases of the ASN. Label format follows the existing case label: 1 case label = 1 case of 1 destination, may list several customer order numbers."
    }
   ],
   "screen_modes": [

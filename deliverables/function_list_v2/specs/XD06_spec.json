@@ -19,9 +19,8 @@
  "doc_type": "batch",
  "general": {
   "objective": [
-   "To send the cross dock master of every Active part waiting for synchronisation to GTOPAS as an interface file by SFTP: Pcs/Case, Max Case/Day and Effective Start Date from the Part List (TB_M_PART_CANDIDATE) and all destinations with Case/Day of the ongoing period from the Part Mapping per Destination (TB_M_PART_CANDIDATE_DEST).",
-   "Business purpose: GTOPAS (customer order side): which part and destination orders are handled by crossdock (order status 7) and how many cases per day per destination (assumption, TBC).",
-   "Topology (Option #3, SFTP): NSP Send IF -> TMMIN SFTP server -> G-TOPAS side (owner TBC) SFTP server -> receive IF on the G-TOPAS side (owner TBC) -> insert / update cross dock master of G-TOPAS (tables TBC). NSP develops the generate and send of the IF xDock Part Master; the receive and insert into GTOPAS are developed by the G-TOPAS side (owner TBC). Option #3 of 'NSP Cross Dock Interfacing Data' is drawn for AP POLE; the same SFTP pattern is assumed for G-TOPAS (TBC).",
+   "To send the cross dock master of the parts waiting for synchronisation to GTOPAS: Active parts with Pcs/Case, Max Case/Day, Effective Start Date and all destinations with Case/Day of the ongoing period, and parts that became Inactive (CROSSDOCK_FLAG 'N', so GTOPAS changes their status to inactive). Source: Part List (TB_M_PART_CANDIDATE) and Part Mapping per Destination (TB_M_PART_CANDIDATE_DEST).",
+   "Interface method: interface to G-TOPAS as existing (not SFTP); the method and the target tables are not detailed in this document.",
    "A part is sent as one complete set; GTOPAS replaces the data of the part, so a change such as Philippines up and Thailand down, or a removed destination, arrives as one consistent update.",
    "The send status per part is kept in TB_R_CROSSDOCK_IF_RESULT (dummy table); together with XD07 (AP POLE) it gives the overall Sync Status shown on the Cross Dock Part Master screen (XD01)."
   ],
@@ -41,17 +40,17 @@
      },
      {
       "id": "c",
-      "label": "Create interface file",
+      "label": "Create interface data",
       "type": "process"
      },
      {
       "id": "e",
-      "label": "SFTP put to TMMIN SFTP server",
+      "label": "Send to G-TOPAS (existing method)",
       "type": "process"
      },
      {
       "id": "t",
-      "label": "G-TOPAS side (owner TBC) SFTP -> receive IF -> GTOPAS master",
+      "label": "G-TOPAS master",
       "type": "process"
      },
      {
@@ -76,7 +75,7 @@
      {
       "from": "e",
       "to": "t",
-      "label": "SFTP"
+      "label": "send"
      },
      {
       "from": "e",
@@ -104,14 +103,14 @@
   ],
   "outputs": [
    {
-    "name": "Interface file to GTOPAS (SFTP)",
+    "name": "Interface data to GTOPAS",
     "type": "File",
-    "description": "XD_CDMASTER_GTOPAS_<YYYYMMDDHHMMSS>.csv: one record per part x destination (see Interface Data), put on the TMMIN SFTP server"
+    "description": "XD_CDMASTER_GTOPAS_<YYYYMMDDHHMMSS>.csv: one record per part x destination (see Interface Data)"
    },
    {
-    "name": "GTOPAS: cross dock master of G-TOPAS (tables TBC)",
+    "name": "GTOPAS: cross dock master of the part",
     "type": "System",
-    "description": "Inserted / updated by the receive IF of the G-TOPAS side (owner TBC) (not in NSP scope)"
+    "description": "Updated in G-TOPAS (not in NSP scope)"
    },
    {
     "name": "TB_R_CROSSDOCK_IF_RESULT",
@@ -153,63 +152,12 @@
       "'GTOPAS' (GTOPAS)"
      ],
      [
-      "TMMIN SFTP server",
-      "Server, user and outbound folder where NSP puts the file (TBC)"
-     ],
-     [
-      "G-TOPAS side (owner TBC) SFTP server",
-      "Inbound folder of the G-TOPAS side (owner TBC); transfer TMMIN SFTP -> G-TOPAS side (owner TBC) SFTP (TBC who runs it)"
-     ],
-     [
-      "Local folders",
-      "Outbound folder (file created) and backup folder (file after transfer) (TBC)"
-     ],
-     [
-      "Transfer retry",
-      "Number of retries when the SFTP transfer fails (TBC, e.g. 3)"
-     ],
-     [
       "User",
-      "IF batch user ID (TBC)"
-     ]
-    ]
-   },
-   {
-    "title": "Interface File",
-    "columns": [
-     {
-      "title": "Item",
-      "width": 14
-     },
-     {
-      "title": "Description",
-      "width": 34
-     }
-    ],
-    "rows": [
-     [
-      "File name",
-      "XD_CDMASTER_GTOPAS_<YYYYMMDDHHMMSS>.csv (TBC)"
+      "IF batch user ID"
      ],
      [
-      "Format",
-      "CSV, comma separated, UTF-8, first row = field names (TBC: fixed length if required by the target)"
-     ],
-     [
-      "Record unit",
-      "One record per part x destination of the ongoing period; part fields are repeated on each record"
-     ],
-     [
-      "Part without destination",
-      "One record with DEST_CODE and CASE_DAY blank (TBC)"
-     ],
-     [
-      "Trailer",
-      "Record count for completeness check (TBC)"
-     ],
-     [
-      "Transfer",
-      "SFTP put to the TMMIN SFTP server, forwarded to the G-TOPAS side (owner TBC) SFTP server (Option #3); result / acknowledge file TBC"
+      "Interface method",
+      "interface to G-TOPAS as existing (not SFTP); the method and the target tables are not detailed in this document."
      ]
     ]
    },
@@ -250,14 +198,14 @@
       "TB_M_PART_CANDIDATE.PART_NO",
       "VARCHAR(TBD)",
       "Y",
-      "Cross dock part. Only parts with PART_STATUS = Active and Sync Status Waiting are sent"
+      "Cross dock part with Sync Status Waiting: Active parts, and parts that became Inactive since the last send"
      ],
      [
       "CROSSDOCK_FLAG",
       "TB_M_PART_CANDIDATE.PART_STATUS",
       "CHAR(1)",
       "Y",
-      "'Y' = the part is handled by crossdock (Active). TBC: send 'N' when a part became Inactive, so the target stops crossdock for it"
+      "'Y' = Active (handled by crossdock) / 'N' = Inactive: the target changes the status of the part to inactive (decided 19-Oct)"
      ],
      [
       "PCS_CASE",
@@ -325,11 +273,11 @@
     "rows": [
      [
       "Trigger",
-      "On demand: [Sync] on XD01 (Mapping per Destination tab) starts XD06 and XD07. No scheduler (TBC)."
+      "On demand: [Sync] on XD01 (Mapping per Destination tab) starts XD06 and XD07. No scheduler."
      ],
      [
       "Method",
-      "Option #3: interface file by SFTP (TMMIN SFTP -> G-TOPAS side (owner TBC) SFTP); receive IF and insert into GTOPAS by the G-TOPAS side (owner TBC)."
+      "interface to G-TOPAS as existing (not SFTP); the method and the target tables are not detailed in this document."
      ],
      [
       "Order",
@@ -369,25 +317,25 @@
     },
     {
      "id": "p3",
-     "label": "Create interface file",
+     "label": "Create interface data",
      "type": "process",
      "step": 3
     },
     {
      "id": "p4",
-     "label": "SFTP put to TMMIN SFTP server, verify",
+     "label": "Send to G-TOPAS (existing method)",
      "type": "process",
      "step": 4
     },
     {
      "id": "x",
-     "label": "Interface file to GTOPAS (SFTP)",
+     "label": "Interface data to GTOPAS",
      "type": "file",
      "lane": "output"
     },
     {
      "id": "d",
-     "label": "Transfer OK?",
+     "label": "Sent OK?",
      "type": "decision",
      "step": 5
     },
@@ -468,26 +416,26 @@
    "[Sync] on XD01 sets the parts to Waiting (SYNC_STATUS = '3' in TB_M_PART_CANDIDATE, IF_STATUS = '3' for 'GTOPAS' and 'APPOLE' in TB_R_CROSSDOCK_IF_RESULT) and starts XD06. Write LOG1.",
    "Select the parts with TARGET_SYSTEM = 'GTOPAS' and IF_STATUS = '3' in TB_R_CROSSDOCK_IF_RESULT whose PART_STATUS is still 'Active'. Keep CHANGED_DT of each part. No part: write LOG2 and exit.",
    {
-    "text": "Create the interface file XD_CDMASTER_GTOPAS_<YYYYMMDDHHMMSS>.csv in the outbound folder (see Interface File / Interface Data):",
+    "text": "Create the interface data XD_CDMASTER_GTOPAS_<YYYYMMDDHHMMSS>.csv (see Interface File / Interface Data):",
     "children": [
      "Per part: PART_NO, CROSSDOCK_FLAG 'Y', PCS_CASE, MAX_CASE_DAY, EFFECTIVE_START_DATE from TB_M_PART_CANDIDATE.",
      "Per destination of the ongoing period: PERIOD, DEST_CODE, CASE_DAY from TB_M_PART_CANDIDATE_DEST (one record each).",
-     "Same SEND_ID and SEND_DT on every record; trailer with the record count (TBC). Error: LOG3, all parts Failed (step 6)."
+     "Same SEND_ID and SEND_DT on every record. Error: LOG3, all parts Failed (step 6)."
     ]
    },
    {
-    "text": "Put the file by SFTP on the TMMIN SFTP server (outbound folder) and verify the transfer (file size / record count). The file is forwarded to the G-TOPAS side (owner TBC) SFTP server, where the receive IF of the G-TOPAS side (owner TBC) inserts / updates cross dock master of G-TOPAS (tables TBC).",
+    "text": "Send the interface data to G-TOPAS by the existing interface method (not SFTP; not detailed in this document).",
     "children": [
-     "Transfer error: retry (parameter); still failing: LOG4.",
-     "Transfer OK: move the local file to the backup folder."
+     "Send error: retry; still failing: LOG4.",
+     "Sent OK: continue."
     ]
    },
    {
     "text": "Set the send status of every part of the file in TB_R_CROSSDOCK_IF_RESULT:",
     "children": [
-     "Transfer OK (file on the TMMIN SFTP server): IF_STATUS = '1', IF_DT = now, IF_FILE_NAME = file name, IF_MESSAGE blank.",
-     "File or transfer error: IF_STATUS = '2', IF_DT = now, IF_MESSAGE = error (LOG3 / LOG4).",
-     "TBC: if GTOPAS returns a result / acknowledge file, the status per part is taken from it instead of the transfer result."
+     "Sent OK: IF_STATUS = '1', IF_DT = now, IF_FILE_NAME = file name, IF_MESSAGE blank.",
+     "Create or send error: IF_STATUS = '2', IF_DT = now, IF_MESSAGE = error (LOG3 / LOG4).",
+     "The status is the result of the send."
     ]
    },
    {
@@ -519,7 +467,7 @@
      ]
     },
     "destination": {
-     "table": "Interface file to GTOPAS (SFTP)",
+     "table": "Interface data to GTOPAS",
      "operation": "Insert",
      "description": "One record per part x destination"
     },
@@ -577,7 +525,7 @@
     ]
    },
    {
-    "source": "Result of the file / transfer",
+    "source": "Result of the send",
     "destination": {
      "table": "TB_R_CROSSDOCK_IF_RESULT",
      "operation": "Update",
@@ -831,9 +779,16 @@
    "items": [
     "The D/S team maintains the cross dock master on XD01 (Part List: Pcs/Case, Max Case/Day, Effective Start Date; Mapping per Destination: Case/Day per destination of the ongoing period, created by XD05 process 2 and adjusted by screen or upload XD03).",
     "Every change sets the part to No Sync. The D/S team clicks [Sync] when the changes are complete; only Active parts are sent, Candidate and Inactive parts are not.",
-    "XD06 sends to GTOPAS; XD07 sends the same data to AP POLE. Purpose for GTOPAS: GTOPAS (customer order side): which part and destination orders are handled by crossdock (order status 7) and how many cases per day per destination (assumption, TBC).",
-    "GTOPAS replaces the cross dock master of every part in the file with the content of the file (all destinations of the part).",
-    "Topology (Option #3): NSP Send IF -> TMMIN SFTP -> G-TOPAS side (owner TBC) SFTP -> receive IF (G-TOPAS side (owner TBC)) -> cross dock master of G-TOPAS (tables TBC). Option #3 of 'NSP Cross Dock Interfacing Data' is drawn for AP POLE; the same SFTP pattern is assumed for G-TOPAS (TBC)."
+    "GTOPAS replaces the cross dock master of every part in the file with the content of the file (all destinations of the part)."
+   ]
+  },
+  {
+   "type": "bullets",
+   "marker": "-",
+   "level": 0,
+   "items": [
+    "Interface method: interface to G-TOPAS as existing (not SFTP); the method and the target tables are not detailed in this document.",
+    "Parts that became Inactive (XD05 process 1) are No Sync and are sent with CROSSDOCK_FLAG 'N' and without destinations; GTOPAS changes the status of the part to inactive."
    ]
   },
   {
@@ -845,7 +800,7 @@
    "marker": "-",
    "level": 0,
    "items": [
-    "Fields, source and business rule: see Interface Data (General Description). The field names on the side of the target are TBC (target layout).",
+    "Fields, source and business rule: see Interface Data (General Description). The field names on the side of the target follow the target layout.",
     "Sum of CASE_DAY of the records of a part = MAX_CASE_DAY (guaranteed by XD05 and the save checks of XD01 / XD03).",
     "PERIOD is always the ongoing period; past periods are never sent."
    ]
@@ -873,10 +828,7 @@
    "marker": "-",
    "level": 0,
    "items": [
-    "SFTP details (servers, folders, users, who forwards TMMIN SFTP -> G-TOPAS side (owner TBC) SFTP), file format / naming and whether the G-TOPAS side (owner TBC) returns a result file.",
-    "Which fields go to which GTOPAS table (cross dock master of G-TOPAS (tables TBC)).",
-    "Field names and lengths required by the target; part without destination.",
-    "Parts that became Inactive (XD05) are not sent today: should the target receive CROSSDOCK_FLAG 'N' to stop crossdock?"
+    "Field names on the side of the target follow the target layout (not detailed in this document)."
    ]
   }
  ],
@@ -915,11 +867,11 @@
    }
   },
   {
-   "event": "SFTP transfer",
-   "cause": "GTOPAS SFTP not available / transfer fails after retry",
+   "event": "Send",
+   "cause": "G-TOPAS not available / send fails after retry",
    "type": "Error",
    "msg_id": "LOG4",
-   "message": "SFTP transfer of <FILE_NAME> to GTOPAS failed: <ERROR_DETAIL>.",
+   "message": "Send of <SEND_ID> to GTOPAS failed: <ERROR_DETAIL>.",
    "action": {
     "system": "All parts of the file IF_STATUS = 2. Keep the file in the outbound folder.",
     "user": "Click [Sync] again later; contact PIC if it persists."
@@ -944,7 +896,7 @@
    "name": "TB_R_CROSSDOCK_IF_RESULT",
    "kind": "transaction",
    "proposed": true,
-   "description": "Dummy table (proposed): send status of the cross dock master per part and target system (XD06 GTOPAS, XD07 AP POLE). The real output is the interface file sent by SFTP to the target. The overall Sync Status of the part stays in TB_M_PART_CANDIDATE.",
+   "description": "Dummy table (proposed): send status of the cross dock master per part and target system (XD06 GTOPAS, XD07 AP POLE). The real output is the interface data sent to the target (AP POLE: file by SFTP; G-TOPAS: existing interface). The overall Sync Status of the part stays in TB_M_PART_CANDIDATE.",
    "columns": [
     [
      "PART_NO",
@@ -986,7 +938,7 @@
      "VARCHAR(100)",
      "",
      "Y",
-     "Name of the interface file sent by SFTP"
+     "Name of the interface file (AP POLE) or send ID (G-TOPAS)"
     ],
     [
      "IF_MESSAGE",

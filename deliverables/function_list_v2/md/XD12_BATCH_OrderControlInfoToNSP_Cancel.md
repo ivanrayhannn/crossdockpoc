@@ -28,3 +28,7 @@ Sumber: UISS `XD12_UISS_Batch_OrderControlInfoToNSP_Cancel.xlsx` (0.1 Initial Dr
 - **Existing**: data ASN sudah dikirim balik ke G-TOPAS (feedback), sehingga G-TOPAS memblok cancel line itu.
 - **SOP** tim D/S sebelum cancel.
 - Kalau tetap terjadi (abnormality) → XD11 mencatat **CONFLICT** (simulasi: menu prototype *Cancel Order Simulation*, skenario 4).
+
+## Keputusan 19-Oct
+- Jadwal: setelah data G-TOPAS tersedia (27:30), retry 3x; job chain XD12 → XD11 → XD08.
+- SERIAL_NO ditambahkan ke tabel source oleh tim DB Surrounding.

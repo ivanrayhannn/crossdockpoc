@@ -162,7 +162,7 @@
     "rows": [
      [
       "Trigger",
-      "Scheduler set in the system master (monthly; date and time TBC). One run = process 1, then process 2."
+      "Monthly scheduler (set in the system master; not detailed in this document). One run = process 1, then process 2."
      ],
      [
       "Auto retry",
@@ -174,11 +174,11 @@
      ],
      [
       "Last success date",
-      "One date per process in the Log (all-or-nothing per process); process 1 shown on the Part List tab, process 2 on the Mapping per Destination tab."
+      "One date per process in the Log; process 1 shown on the Part List tab, process 2 on the Mapping per Destination tab."
      ],
      [
       "Order",
-      "Runs after XD04 Actual Demand Summary Synch has finished."
+      "Runs after XD04. If XD04 failed, XD05 still runs (with the actual demand data available in NSP) (decided 19-Oct)."
      ]
     ]
    }
@@ -1216,7 +1216,7 @@
    "items": [
     "One record per calculated part is inserted into TB_R_PART_DAD_RESULT (also when the status does not change).",
     "Only parts whose status changes are updated in TB_M_PART_CANDIDATE (PART_STATUS, LAST_SOURCE = CALC, CHANGED_BY / CHANGED_DT) and get a history record (event CALC, source BATCH).",
-    "SYNC_STATUS is not changed: only a change of Pcs/Case, Max Case/Day or the destination mapping requires a new Sync.",
+    "SYNC_STATUS: a part that changes from Active to Inactive gets SYNC_STATUS = 0 (No Sync), so the next [Sync] sends it to G-TOPAS and AP POLE with CROSSDOCK_FLAG 'N' (decided 19-Oct). Other status changes do not change SYNC_STATUS.",
     "All-or-nothing: any error rolls back the whole run."
    ]
   },
