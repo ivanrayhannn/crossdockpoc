@@ -4,7 +4,7 @@ Excel / draw.io: timeline di kolom (X), PIC di baris (Y), sesuai referensi BPF. 
 
 | File | Isi |
 |---|---|
-| `Crossdock_BPF_Level2.xlsx` | Format mengikuti referensi BPF (E-DCL): Cover, Revision; F1 / F2 / F3 dengan header dokumen (Phase, Project, Block, Function, Document, Title, Created / Updated, By, Page), title bar Level 2, **timeline di kolom, PIC di baris** (label 2 level diputar), grid dari border sel; proses = shape dengan sudut hitam + tag nomor step, **DB Storage** (tabel W / R) di lane NSP Database dengan data flow putus-putus, tag abnormality merah, legend; Step Detail; User Process (ilustrasi dengan screenshot); Abnormality (AB01–AB16) |
+| `Crossdock_BPF_Level2.xlsx` | Format mengikuti referensi BPF (E-DCL): Cover, Revision; F1 / F2 / F3 dengan header dokumen (Phase, Project, Block, Function, Document, Title, Created / Updated, By, Page), title bar Level 2, **timeline di kolom, PIC di baris** (label 2 level diputar), grid dari border sel; proses = shape dengan sudut hitam + tag nomor step, **DB Storage** (nama tabel NSP saja, tanpa Log / read / write) di lane NSP Database dengan data flow putus-putus, tag abnormality merah, legend; Step Detail; User Process (ilustrasi dengan screenshot); Abnormality (AB01–AB16) |
 | `Crossdock_BPF_Level2.drawio` | Diagram yang sama (format referensi), 1 page per flow, panah menempel ke kotak; buka di diagrams.net / draw.io (export ke Visio .vsdx, PNG, PDF) |
 | `bpf_data.py` | Satu sumber data (lane, timeline, step, tabel, abnormality) |
 | `build_bpf.py`, `build_bpf.sh`, `bpf_shots.mjs` | Generator: data prototype → screenshot diagram → Excel |

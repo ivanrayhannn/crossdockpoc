@@ -32,7 +32,14 @@ def box_lines(s):
 
 
 def db_lines(s):
-    return ['W: ' + t for t in s['write']] + ['R: ' + t for t in s['read'] if t not in s['write']]
+    """NSP tables touched by the step: table names only (no Log, no read / write detail, no DB Surrounding source tables)."""
+    out = []
+    for t in s['write'] + s['read']:
+        name = t.split(' (')[0].strip()
+        if name == 'Log' or 'DB Surrounding' in t or not (name.startswith('TB_') or name.startswith('#')) or name in out:
+            continue
+        out.append(name)
+    return out
 
 
 def geometry(flow):
@@ -52,7 +59,7 @@ def geometry(flow):
     for k in lanes:
         if k == 'DB':
             n = max([sum(_n(t, 38) for t in v) for v in db.values()] + [2])
-            lane_pt[k] = 22 + 9.5 * n
+            lane_pt[k] = 30 + 10 * n
         else:
             lane_pt[k] = max([8 + 11 * box_lines(s) for s in flow['steps'] if s['lane'] == k] + [34])
     heights = {1: 14, 2: 14, 3: 14, 4: 6, R_TITLE: 20, R_SYS: 15, R_TIME: 18}
@@ -301,7 +308,7 @@ def draw_flow(ws, flow, lanes_label, header):
     for a, b, pts in routes(flow, G):
         sh.path(f'flow {a["id"]}-{b["id"]}', pts, color='000000', lw=1)
     for s, pts, w, r in dataflows(flow, G):
-        sh.path(f'data {s["id"]}', pts, color='2E75B6', lw=1, dash='dash', tail=w, head=r)
+        sh.path(f'data {s["id"]}', pts, color='2E75B6', lw=1, dash='dash', tail=True, head=False)
     for s in flow['steps']:
         x, y, w, h = G['boxes'][s['id']]
         dash = 'dash' if s['fn'] in ('existing', 'manual') else None
@@ -312,7 +319,7 @@ def draw_flow(ws, flow, lanes_label, header):
     for sid, (x, y, w, h) in G['dbs'].items():
         lines = G['db'][sid]
         sh.shape(f'db {sid}', x, y, w, h, prst='can', fill='D9D9E8', line='595959', lw=0.75,
-                 paras=[([(t, 600, False, '7B3F00' if t.startswith('W') else '1F3864')], 'l') for t in lines], anchor='b', ins=3)
+                 paras=[([(t, 650, False, '1F3864')], 'ctr') for t in lines], anchor='b', ins=3)
 
     # legend (light cyan band), like the reference
     rl = G['legend_row']
@@ -326,7 +333,7 @@ def draw_flow(ws, flow, lanes_label, header):
     cell.font, cell.alignment = f9b, Alignment(horizontal='center', vertical='center', text_rotation=90)
     items = [('NSP System', 'proc', FILL['NB'], None), ('G-TOPAS / AP POLE', 'proc', FILL['GT'], None), ('User (manual / screen)', 'proc', 'FFFFFF', None),
              ('Existing / manual', 'proc', 'FFFFFF', 'dash'), ('DB Storage (table)', 'can', 'D9D9E8', None), ('Step No', 'no', None, None),
-             ('Abnormality', 'ab', None, None), ('Process flow', 'flow', None, None), ('Data flow (W / R)', 'data', None, None)]
+             ('Abnormality', 'ab', None, None), ('Process flow', 'flow', None, None), ('Data flow', 'data', None, None)]
     x0, y0 = G['col_x'][3] + 4, G['row_y'][rl] + 6
     span_w = (G['col_x'][lc] - x0) / len(items)
     for i, (text, kind, fill, dash) in enumerate(items):
@@ -399,8 +406,7 @@ def drawio(flows, lanes_label):
                          f'source="{flow["id"]}_{a["id"]}" target="{flow["id"]}_{b["id"]}"><mxGeometry relative="1" as="geometry">{geo}</mxGeometry></mxCell>')
         for s, pts, w, r in dataflows(flow, G):
             n[0] += 1
-            start = 'block' if r else 'none'
-            cells.append(f'<mxCell id="d{n[0]}" style="edgeStyle=orthogonalEdgeStyle;dashed=1;html=1;strokeColor=#2E75B6;endArrow={"block" if w else "none"};startArrow={start};" '
+            cells.append(f'<mxCell id="d{n[0]}" style="edgeStyle=orthogonalEdgeStyle;dashed=1;html=1;strokeColor=#2E75B6;endArrow=block;startArrow=none;" '
                          f'edge="1" parent="1" source="{flow["id"]}_{s["id"]}" target="{flow["id"]}_db_{s["id"]}"><mxGeometry relative="1" as="geometry"/></mxCell>')
         pages.append(f'<diagram id="{flow["id"]}" name="{escape(flow["id"] + " " + flow["title"])}"><mxGraphModel grid="1" gridSize="10" guides="1" connect="1" arrows="1" '
                      f'page="1" pageWidth="{int(W) + 40}" pageHeight="{int(G["row_y"][G["last_row"] + 1] + oy) + 40}"><root>{"".join(cells)}</root></mxGraphModel></diagram>')
