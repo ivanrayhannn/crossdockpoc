@@ -6,8 +6,7 @@
 Run from this folder; build_bpf.sh does all three."""
 import json, os, sys
 from bpf_data import ABNORMALITY, FLOWS, LANES, USER_PROCESS
-from bpf_grid import draw_flow
-from bpf_shapes import drawio
+from bpf_ref import draw_flow, drawio
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..', '..'))
@@ -102,20 +101,21 @@ def xlsx():
     ws.page_setup.fitToWidth, ws.page_setup.fitToHeight = 1, 0
     ws.sheet_properties.pageSetUpPr.fitToPage = True
 
-    for f in FLOWS:
+    ws = wb.create_sheet('Revision')
+    ws.sheet_view.showGridLines = False
+    ws['A1'] = 'Revision'
+    ws['A1'].font = f_title
+    table(ws, 3, ['Rev', 'Date', 'Description', 'By'], [8, 14, 80, 16], [['0.1', '19-Oct-2026', 'Initial Draft', 'FID Rayhan']])
+    ws.page_setup.orientation = 'landscape'
+    ws.page_setup.fitToWidth, ws.page_setup.fitToHeight = 1, 0
+    ws.sheet_properties.pageSetUpPr.fitToPage = True
+
+    for n, f in enumerate(FLOWS, 1):
         ws = wb.create_sheet(f['id'])
-        ws.sheet_view.showGridLines = False
-        ws['A1'] = f"{f['id']} {f['title']}"
-        ws['A1'].font = f_title
-        ws['A2'] = (f['desc'] + ' X = PIC (columns), Y = timeline (rows). Each coloured cell is a step (function, activity, R = table read, '
-                    'W = table written, ⚠ = abnormality, sheet Abnormality). Step detail: sheet Step Detail.')
-        ws['A2'].font = f_sub
-        ws.row_dimensions[1].height, ws.row_dimensions[2].height, ws.row_dimensions[3].height = 24, 15, 6
-        drawings[ws.title], _, last_col = draw_flow(ws, f, LANES)
-        ws.freeze_panes = 'B5'
-        ws.page_setup.orientation = 'landscape'
-        ws.page_setup.fitToWidth, ws.page_setup.fitToHeight = 1, 0
-        ws.sheet_properties.pageSetUpPr.fitToPage = True
+        header = dict(phase='FSD', project='Crossdock Optimization (NSP)', page=f'{n} / {len(FLOWS)}', block='Crossdock', function='Business Process Flow',
+                      created='19-Oct-26', updated='19-Oct-26', by='FID Rayhan', document='Business Process Flow', title=f'Level 2 – {f["id"]} {f["title"]}',
+                      level=f'Level 2 – {f["id"]} {f["title"]}', system='NSP Crossdock (XD01 – XD15)')
+        drawings[ws.title] = draw_flow(ws, f, LANES, header)
 
     ws = wb.create_sheet('Step Detail')
     ws.sheet_view.showGridLines = False

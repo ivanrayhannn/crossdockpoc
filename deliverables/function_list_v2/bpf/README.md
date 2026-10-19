@@ -1,15 +1,14 @@
 # Business Process Flow Level 2 (Crossdock)
 
-X = PIC (swimlane), Y = timeline. Tiap kotak berisi function (XD), aktivitas, tabel yang dibaca (R) / ditulis (W). Tag merah = kondisi abnormality.
+Excel / draw.io: timeline di kolom (X), PIC di baris (Y), sesuai referensi BPF. Prototype: PIC di kolom, timeline di baris. Tiap kotak berisi function (XD), aktivitas, tabel yang dibaca (R) / ditulis (W). Tag merah = kondisi abnormality.
 
 | File | Isi |
 |---|---|
-| `Crossdock_BPF_Level2.xlsx` | Cover; F1 Master Setup, F2 Daily Order to ASN, F3 Cancel (swimlane dari **kolom/baris + border**, step = sel berwarna, hanya panah yang shape); Step Detail; **User Process** (ilustrasi proses business user dengan screenshot layar); Abnormality (AB01–AB16) |
-| `Crossdock_BPF_Level2.drawio` | Diagram yang sama, 1 page per flow, panah menempel ke kotak; buka di diagrams.net / draw.io (bisa export ke Visio .vsdx, PNG, PDF) |
+| `Crossdock_BPF_Level2.xlsx` | Format mengikuti referensi BPF (E-DCL): Cover, Revision; F1 / F2 / F3 dengan header dokumen (Phase, Project, Block, Function, Document, Title, Created / Updated, By, Page), title bar Level 2, **timeline di kolom, PIC di baris** (label 2 level diputar), grid dari border sel; proses = shape dengan sudut hitam + tag nomor step, **DB Storage** (tabel W / R) di lane NSP Database dengan data flow putus-putus, tag abnormality merah, legend; Step Detail; User Process (ilustrasi dengan screenshot); Abnormality (AB01–AB16) |
+| `Crossdock_BPF_Level2.drawio` | Diagram yang sama (format referensi), 1 page per flow, panah menempel ke kotak; buka di diagrams.net / draw.io (export ke Visio .vsdx, PNG, PDF) |
 | `bpf_data.py` | Satu sumber data (lane, timeline, step, tabel, abnormality) |
 | `build_bpf.py`, `build_bpf.sh`, `bpf_shots.mjs` | Generator: data prototype → screenshot diagram → Excel |
-| `bpf_grid.py` | Sheet flow Excel berbasis sel (lane = kolom, timeline = baris, panah ter-anchor ke sel) |
-| `bpf_shapes.py` | Layout diagram (sama dengan halaman prototype) → draw.io |
+| `bpf_ref.py` | Sheet flow format referensi (grid sel + shape ter-anchor ke sel) dan draw.io |
 | `shots/` | Gambar preview diagram per flow dari prototype (nama dokumen G-TOPAS / NSP) |
 
 Prototype: menu **Common → Business Process Flow** (`#/bpf`); pilihan nama Prototype (T-System / Supplier System) atau Document (G-TOPAS / NSP).
