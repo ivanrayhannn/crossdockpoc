@@ -88,7 +88,8 @@ function lines(orderDt: string, partNo: string, raw: Raw[]): InstrLine[] {
  * - PART-A 13-Oct: condition 1, destinations in sequence (VN, VN, PH, TH, TH, TH).
  * - PART-B 13-Oct: condition 2, destinations not in sequence.
  * - PART-C 13-Oct: condition 3, assigned to POs of 14-Oct and 15-Oct: ready only from 15-Oct.
- * - 14-Oct units: PART-A ready from 15-Oct, PART-B waits for the PO of 16-Oct, PART-C has no PO yet.
+ * - 14-Oct units: PART-A ready from 15-Oct, PART-B (Vietnam 24 pcs = 4 cases) waits for the PO of 16-Oct, PART-C has no PO yet.
+ * - Every destination qty is a multiple of pcs/case (G-TOPAS releases multiples of pcs/case).
  * - PART-A 12-Oct: already in an ASN. */
 export const INSTRUCTIONS: InstrLine[] = [
   ...lines('2026-10-12', 'PART-A', [['CO-12001', VN, 6, 'PO0', '2026-10-13'], ['CO-12002', TH, 6, 'PO0', '2026-10-13']]),
@@ -104,9 +105,10 @@ export const INSTRUCTIONS: InstrLine[] = [
     ['CO-13001', VN, 4, 'PO1', '2026-10-14'], ['CO-13004', TH, 2, 'PO1', '2026-10-14'], ['CO-13003', PH, 6, 'PO1', '2026-10-14'],
     ['CO-13005', TH, 2, 'PO2', '2026-10-15'], ['CO-13002', VN, 2, 'PO2', '2026-10-15'], ['CO-13006', TH, 2, 'PO2', '2026-10-15'],
   ]),
-  ...lines('2026-10-14', 'PART-A', [['CO-14001', VN, 3, 'PO2', '2026-10-15'], ['CO-14002', TH, 6, 'PO2', '2026-10-15'], ['CO-14003', PH, 3, 'PO2', '2026-10-15']]),
-  ...lines('2026-10-14', 'PART-B', [['CO-14001', VN, 6, 'PO2', '2026-10-15'], ['CO-14002', TH, 4, 'PO3', '2026-10-16']]),
-  ...lines('2026-10-14', 'PART-C', [['CO-14004', TH, 2, null, null], ['CO-14005', TH, 3, null, null]]),
+  ...lines('2026-10-14', 'PART-A', [['CO-14001', VN, 6, 'PO2', '2026-10-15'], ['CO-14002', TH, 6, 'PO2', '2026-10-15'], ['CO-14003', PH, 6, 'PO2', '2026-10-15']]),
+  // Vietnam 24 pcs = 4 cases of 6 pcs: case 1-2 CO-14001, case 3 CO-14001 4 + CO-14006 2, case 4 CO-14006 2 (PO2) + CO-14007 4 (PO4); Thailand waits for PO3
+  ...lines('2026-10-14', 'PART-B', [['CO-14001', VN, 16, 'PO2', '2026-10-15'], ['CO-14006', VN, 4, 'PO2', '2026-10-15'], ['CO-14007', VN, 4, 'PO4', '2026-10-15'], ['CO-14002', TH, 6, 'PO3', '2026-10-16']]),
+  ...lines('2026-10-14', 'PART-C', [['CO-14004', TH, 2, null, null], ['CO-14005', TH, 4, null, null]]),
   // Second supplier (50330 plant 2): visible to the D/S team only; cannot share an ASN with supplier 50221
   ...lines('2026-10-13', 'PART-D', [['CO-13007', VN, 6, 'PO5', '2026-10-14'], ['CO-13008', TH, 4, 'PO5', '2026-10-14'], ['CO-13009', TH, 2, 'PO5', '2026-10-14']]),
 ];
@@ -148,7 +150,7 @@ export interface Unit {
   remainingQty: number;
   pos: string[];
   lastPoDate: string | null;
-  /** One case per destination. */
+  /** Cases of the unit: per destination, qty / pcs/case. */
   caseCount: number;
   /** Cases (destinations) that still hold qty without a released PO. */
   notAssignedCases: number;
@@ -178,8 +180,9 @@ export function buildUnits(today: string, asnByUnit: Record<string, string>, hol
       const qty = ls.reduce((a, l) => a + l.qty, 0);
       const assignedQty = ls.filter((l) => isAssigned(l, today)).reduce((a, l) => a + l.qty, 0);
       const poDates = ls.map((l) => l.poDate).filter((d): d is string => !!d).sort();
-      const caseCount = new Set(ls.map((l) => l.destCd)).size;
-      const notAssignedCases = new Set(ls.filter((l) => !isAssigned(l, today)).map((l) => l.destCd)).size;
+      const packed = byDestination(ls).flatMap(([, d]) => packCases(d));
+      const caseCount = packed.length;
+      const notAssignedCases = packed.filter((c) => c.some((l) => !isAssigned(l, today))).length;
       const asnNo = asnByUnit[key] ?? null;
       const ready = ls.length > 0 && qty === assignedQty;
       return {
@@ -214,14 +217,45 @@ export interface AsnCase {
   qty: number;
 }
 
-/** One case per Part + Customer Order Date + destination, numbered in order of first appearance. */
+/** Lines of a unit grouped by destination, in order of first appearance. */
+export function byDestination(ls: InstrLine[]): [string, InstrLine[]][] {
+  const m = new Map<string, InstrLine[]>();
+  for (const l of ls) m.set(l.destCd, [...(m.get(l.destCd) ?? []), l]);
+  return [...m.entries()];
+}
+
+/** Packs the lines of one destination into cases of PCS_PER_CASE pcs. A case can hold several customer order lines and POs;
+ * a line larger than the free space is split over the next case. Releases are multiples of pcs/case, so every case is full. */
+export function packCases(ls: InstrLine[]): InstrLine[][] {
+  const cases: InstrLine[][] = [];
+  let cur: InstrLine[] = [];
+  let free = PCS_PER_CASE;
+  for (const l of ls) {
+    let left = l.qty;
+    while (left > 0) {
+      const take = Math.min(left, free);
+      cur.push({ ...l, qty: take });
+      left -= take;
+      free -= take;
+      if (free === 0) {
+        cases.push(cur);
+        cur = [];
+        free = PCS_PER_CASE;
+      }
+    }
+  }
+  if (cur.length) cases.push(cur);
+  return cases;
+}
+
+/** Cases per Part + Customer Order Date + destination (qty / pcs/case), numbered in order of first appearance. */
 export function buildCases(units: Unit[]): AsnCase[] {
   const out: AsnCase[] = [];
   for (const u of units) {
-    const byDest = new Map<string, InstrLine[]>();
-    for (const l of u.lines) byDest.set(l.destCd, [...(byDest.get(l.destCd) ?? []), l]);
-    for (const [destCd, ls] of byDest) {
-      out.push({ seq: out.length + 1, partNo: u.partNo, orderDt: u.orderDt, destCd, lines: ls, qty: ls.reduce((a, l) => a + l.qty, 0) });
+    for (const [destCd, ls] of byDestination(u.lines)) {
+      for (const c of packCases(ls)) {
+        out.push({ seq: out.length + 1, partNo: u.partNo, orderDt: u.orderDt, destCd, lines: c, qty: c.reduce((a, l) => a + l.qty, 0) });
+      }
     }
   }
   return out;

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { asnByUnitOf, submitAsnBatch, useAsns } from './asnStore';
 import {
-  asnNoFor, BUSINESS_DATES, buildCases, buildUnits, DESTS, niceDate, PCS_PER_CASE, poQtyOf,
+  asnNoFor, BUSINESS_DATES, buildCases, buildUnits, DESTS, niceDate, packCases, PCS_PER_CASE, poQtyOf,
   LOGIN_SUPPLIER, ritCyclesFor, SUPPLIERS, type AsnCase, type InstrLine, type Unit, type UnitStatus,
 } from './data';
 import { Chip, Modal } from './ui';
@@ -32,7 +32,7 @@ interface DestRow {
   lines: InstrLine[];
 }
 
-/** Destination level of a unit (one case per destination); a held destination is listed but not counted. */
+/** Destination level of a unit (qty / pcs/case cases per destination); a held destination is listed but not counted. */
 function destRows(u: Unit): DestRow[] {
   const m = new Map<string, DestRow>();
   for (const l of [...u.lines, ...u.heldLines]) {
@@ -167,7 +167,7 @@ export function AsnCrossdockCreationPage() {
           <Chip tone="neutral">Draft</Chip>
         </div>
         <div style={{ ...card, padding: '12px 16px', fontSize: 12.5, background: 'var(--color-accent-100, #eef4fb)' }}>
-          The selected units are mapped to their POs. Each Part Number + Customer Order Date is included completely; one case per Part Number, Customer Order Date and destination (max {PCS_PER_CASE} pcs/case).
+          The selected units are mapped to their POs. Each Part Number + Customer Order Date is included completely. Per destination the qty is packed in cases of {PCS_PER_CASE} pcs (e.g. 24 pcs = 4 cases); a case can hold several customer orders and POs of the same destination.
         </div>
         <div style={{ ...card, padding: 16, display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 16, fontSize: 12.5 }}>
           <div><div className="ax-lbl">ASN No</div><div style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{nextAsnNo}</div><div className="ax-muted">auto · assigned on submit</div></div>
@@ -362,7 +362,7 @@ export function AsnCrossdockCreationPage() {
                                 <tr key={dk} style={{ color: held ? 'var(--color-neutral-600)' : undefined }}>
                                   <td style={td}><button className="btn btn-secondary" title="Customer orders" style={{ padding: '1px 7px', fontSize: 10.5 }} onClick={() => setOpenDest({ ...openDest, [dk]: !openDest[dk] })}>{openDest[dk] ? '▾' : '▸'}</button></td>
                                   <td style={td}>{DESTS[r.destCd].code} · {DESTS[r.destCd].name}</td>
-                                  <td style={td}>{held ? 0 : 1}</td>
+                                  <td style={td}>{held ? 0 : packCases(r.lines.filter((l) => !hold[l.id])).length}</td>
                                   <td style={td}>{held ? `${r.lines.reduce((a, l) => a + l.qty, 0)} (on hold)` : r.qty}</td>
                                   <td style={td}>{PCS_PER_CASE}</td>
                                   <td style={td}>

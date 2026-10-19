@@ -60,7 +60,7 @@ export function AsnBackendProcessPage() {
           ['1', 'Lock the H0253 lines of the ticked units (row lock in one transaction).', 'TB_R_H0253_ORDER_CONTROL_PRE'],
           ['2', 'Re-check each line: HOLD_FLAG must still be N and PO_MAPPED_FLAG N; the unit must still be Ready.', 'If not: roll back, the whole create fails, message "Some order has been already hold, please select other records", the delivery plan is refreshed automatically and all units are unticked'],
           ['3', 'Check that all ticked units are of one Supplier Code + Plant (one ASN = one supplier + plant). Set PO_MAPPED_FLAG = Y and add the mapped qty per PO part.', 'TB_R_H0253_ORDER_CONTROL_PRE, TB_R_PRA_DAILY_ORDER_MAPPED (new)'],
-          ['4', 'Insert the real mapping: one row per case x order line x PO (one case per Part Number + Customer Order Date + destination).', 'TB_R_INSTRUCTION'],
+          ['4', 'Insert the real mapping: one row per case x order line x PO (per Part Number + Customer Order Date + destination the qty is packed in cases of pcs/case, e.g. 24 pcs = 4 cases; a case may hold several customer orders and POs of the same destination).', 'TB_R_INSTRUCTION'],
           ['5', 'Commit and open the Case List. Back / Cancel deletes the rows from TB_R_INSTRUCTION and releases the flags and mapped qty.', 'Screen'],
         ]} />
       </Section>
