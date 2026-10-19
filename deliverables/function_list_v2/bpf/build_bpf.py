@@ -14,6 +14,7 @@ TS_OUT = os.path.join(ROOT, 'app', 'src', 'features', 'bpf', 'bpfData.ts')
 XLSX_OUT = os.path.join(HERE, 'Crossdock_BPF_Level2.xlsx')
 SHOTS = os.path.join(HERE, 'shots')
 DRAWIO_OUT = os.path.join(HERE, 'Crossdock_BPF_Level2.drawio')
+KEEP = ['F1', 'F2']  # flow sheets edited by hand in Excel (20-Oct): kept when the workbook is rebuilt
 SCREENS = os.path.join(ROOT, 'deliverables', 'uiss_screens')
 AB_KEYS = ['id', 'flow', 'step', 'fn', 'condition', 'detection', 'system', 'pic', 'action']
 
@@ -73,47 +74,26 @@ def xlsx():
             ws.row_dimensions[r].height = max(15, 12 * (int(longest) + 1 + max(str(v).count('\n') for v in row)))
         return r
 
-    wb = Workbook()
-    drawings = {}
-    ws = wb.active
-    ws.title = 'Cover'
-    ws.sheet_view.showGridLines = False
-    ws['A2'] = 'Crossdock Optimization – Business Process Flow Level 2'
-    ws['A2'].font = f_title
-    ws['A3'] = 'X axis = PIC (swimlane), Y axis = timeline. Detail down to table level, with the abnormality conditions. Function IDs follow function list v2 (XD01–XD15).'
-    ws['A3'].font = f_sub
-    r = table(ws, 5, ['Item', 'Value'], [22, 110], [
-        ['Document', 'Business Process Flow Level 2 (Crossdock)'], ['Project', 'Crossdock Optimization (NSP)'],
-        ['Author', 'FID Rayhan'], ['Revision', '0.1 Initial Draft (19-Oct-2026)'],
-        ['Source', 'UISS XD01–XD15 (deliverables/function_list_v2), decisions of 18-Oct and 19-Oct'],
-        ['Prototype', 'Menu Common → Business Process Flow (https://ivanrayhannn.github.io/crossdockpoc/#/bpf)']])
-    r = table(ws, r + 2, ['Sheet', 'Content'], [22, 110],
-              [[f['id'], f"{f['title']}: {f['desc']}"] for f in FLOWS] + [['Abnormality', 'All abnormality conditions (AB01–AB16): detection, system handling, PIC and action.']])
-    table(ws, r + 2, ['Lane (PIC)', 'Role in the flow'], [22, 110], [
-        [LANES['GT'], 'Source system of customer orders (H0253), destination master (H0125) and actual demand; receives the crossdock master.'],
-        [LANES['NB'], 'Scheduled and on-demand batches / screen back-end of NSP (XD04–XD13, Create / Submit ASN).'],
-        [LANES['PR'], 'Part List tab of XD01: candidate parts, Min MAD, Pcs/Case, Max Case/Day; [Run calculation (Part List)].'],
-        [LANES['DS'], 'Mapping per Destination tab of XD01, [Sync]; destination detail and Hold in XD10; Log Monitoring; CONFLICT handling.'],
-        [LANES['SP'], 'ASN Crossdock Creation (XD10) and ASN Inquiry (XD15).'],
-        [LANES['AP'], 'Receives the crossdock master file by SFTP (Option #3).']],
-        fills=[lane_fill[k] for k in ['GT', 'NB', 'PR', 'DS', 'SP', 'AP']])
-    ws.page_setup.orientation = 'landscape'
-    ws.page_setup.fitToWidth, ws.page_setup.fitToHeight = 1, 0
-    ws.sheet_properties.pageSetUpPr.fitToPage = True
-
-    ws = wb.create_sheet('Revision')
-    ws.sheet_view.showGridLines = False
-    ws['A1'] = 'Revision'
-    ws['A1'].font = f_title
-    table(ws, 3, ['Rev', 'Date', 'Description', 'By'], [8, 14, 80, 16], [['0.1', '19-Oct-2026', 'Initial Draft', 'FID Rayhan']])
-    ws.page_setup.orientation = 'landscape'
-    ws.page_setup.fitToWidth, ws.page_setup.fitToHeight = 1, 0
-    ws.sheet_properties.pageSetUpPr.fitToPage = True
+    # Sheets in KEEP were edited by hand in Excel: when the workbook exists they are kept as they are (cells and shapes);
+    # every other sheet is generated again from bpf_data.py.
+    kept = kept_drawings(XLSX_OUT, KEEP) if os.path.exists(XLSX_OUT) else {}
+    if kept:
+        from openpyxl import load_workbook
+        wb = load_workbook(XLSX_OUT)
+        for ws in list(wb.worksheets):
+            if ws.title not in kept:
+                wb.remove(ws)
+    else:
+        wb = Workbook()
+        wb.remove(wb.active)
+    drawings = dict(kept)
 
     for n, f in enumerate(FLOWS, 1):
+        if f['id'] in kept:
+            continue
         ws = wb.create_sheet(f['id'])
         header = dict(phase='FSD', project='Crossdock Optimization (NSP)', page=f'{n} / {len(FLOWS)}', block='Crossdock', function='Business Process Flow',
-                      created='19-Oct-26', updated='19-Oct-26', by='FID Rayhan', document='Business Process Flow', title=f'Level 2 – {f["id"]} {f["title"]}',
+                      created='19-Oct-26', updated='20-Oct-26', by='FID Rayhan', document='Business Process Flow', title=f'Level 2 – {f["id"]} {f["title"]}',
                       level=f'Level 2 – {f["id"]} {f["title"]}', system='NSP Crossdock (XD01 – XD15)')
         drawings[ws.title] = draw_flow(ws, f, LANES, header)
 
@@ -121,7 +101,7 @@ def xlsx():
     ws.sheet_view.showGridLines = False
     ws['A1'] = 'Step detail (all flows)'
     ws['A1'].font = f_title
-    ws['A2'] = 'One row per step of the diagrams F1–F3: timeline, PIC, function, activity, tables read / written, next step and abnormality.'
+    ws['A2'] = 'One row per step of the diagrams ' + ', '.join(f['id'] for f in FLOWS) + ': timeline, PIC, function, activity, tables read / written, next step and abnormality.'
     ws['A2'].font = f_sub
     rows, fills = [], []
     for f in FLOWS:
@@ -151,6 +131,9 @@ def xlsx():
     ws.page_setup.orientation = 'landscape'
     ws.page_setup.fitToWidth, ws.page_setup.fitToHeight = 1, 0
     ws.sheet_properties.pageSetUpPr.fitToPage = True
+    order = [f['id'] for f in FLOWS] + ['Step Detail', 'User Process', 'Abnormality']
+    wb._sheets.sort(key=lambda ws: order.index(ws.title))
+    wb.active = 0
     wb.save(XLSX_OUT)
     add_drawings(XLSX_OUT, [ws.title for ws in wb.worksheets], drawings)
     print('written', XLSX_OUT)
@@ -211,6 +194,30 @@ def user_process_sheet(wb, table, f_title, f_sub, lane_fill):
     ws.page_setup.orientation = 'landscape'
     ws.page_setup.fitToWidth, ws.page_setup.fitToHeight = 1, 0
     ws.sheet_properties.pageSetUpPr.fitToPage = True
+
+
+def kept_drawings(path, titles):
+    """DrawingML of the hand-edited sheets (title -> xml) taken from the existing workbook."""
+    import posixpath, re, zipfile
+    out = {}
+    with zipfile.ZipFile(path) as z:
+        wbx = z.read('xl/workbook.xml').decode()
+        rels = dict(re.findall(r'Id="([^"]+)"[^>]*Target="([^"]+)"', z.read('xl/_rels/workbook.xml.rels').decode()))
+        rels.update({k: v for v, k in re.findall(r'Target="([^"]+)"[^>]*Id="([^"]+)"', z.read('xl/_rels/workbook.xml.rels').decode())})
+        for name, rid in re.findall(r'<sheet\b[^>]*?name="([^"]+)"[^>]*?r:id="([^"]+)"', wbx):
+            if name not in titles:
+                continue
+            sheet = posixpath.normpath(posixpath.join('xl', rels[rid].lstrip('/').replace('xl/', '')))
+            srel = posixpath.join(posixpath.dirname(sheet), '_rels', posixpath.basename(sheet) + '.rels')
+            if srel not in z.namelist():
+                continue
+            target = re.search(r'Target="([^"]*drawing[^"]*)"', z.read(srel).decode())
+            if target:
+                dpath = posixpath.normpath(posixpath.join(posixpath.dirname(sheet), target.group(1)))
+                drel = posixpath.join(posixpath.dirname(dpath), '_rels', posixpath.basename(dpath) + '.rels')
+                assert drel not in z.namelist(), f'{name}: pictures in a kept drawing are not supported'
+                out[name] = z.read(dpath).decode()
+    return out
 
 
 def add_drawings(path, titles, drawings):
