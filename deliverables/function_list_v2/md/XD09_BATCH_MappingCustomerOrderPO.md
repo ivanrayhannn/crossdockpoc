@@ -7,4 +7,4 @@ Sumber: UISS `XD09_UISS_Batch_MappingCustomerOrderPO.xlsx` (0.1 Initial Draft, 1
 - Mapping sebenarnya tetap oleh [Create ASN] di XD10 (TB_R_INSTRUCTION).
 
 ## Keputusan 19-Oct
-- Jumlah case per destinasi = qty / pcs/case (selalu kelipatan pcs/case). PO Readiness dihitung per case.
+- Jumlah case per destinasi = qty / pcs/case (selalu kelipatan pcs/case). PO Readiness dihitung per case. 1 case boleh berisi beberapa Customer Order dan beberapa PO dari destinasi yang sama.

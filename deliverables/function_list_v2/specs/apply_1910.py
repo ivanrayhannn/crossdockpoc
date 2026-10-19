@@ -31,12 +31,15 @@ def sched(s, rows):
 
 
 CASE = ("Case = destination x pcs/case: the qty of a destination is packed in cases of pcs/case (e.g. Vietnam 24 pcs, 6 pcs/case = 4 cases). "
-        "G-TOPAS releases in multiples of pcs/case (a remainder stays pending and is not in H0253), so every case is full.")
+        "G-TOPAS releases in multiples of pcs/case (a remainder stays pending and is not in H0253), so every case is full. "
+        "A case can hold several customer orders and several POs of the same destination; a customer order line that does not fit "
+        "in the remaining space of a case continues in the next case (e.g. case 3 = CO-14001 4 + CO-14006 2 of PO2; "
+        "case 4 = CO-14006 2 of PO2 + CO-14007 4 of PO4).")
 
 EDITS = {
     'XD10': [
         ("Case = one per destination; the qty of a destination is summed into one case (it never exceeds pcs/case, it may be split over several lines, e.g. 4 + 2).",
-         CASE + " A case can hold several customer order lines of the same destination (e.g. 4 + 2)."),
+         CASE),
         ("Number of cases of the unit: the qty of each destination is summed into one case.",
          "Number of cases of the unit: per destination, qty / pcs/case (e.g. 24 pcs, 6 pcs/case = 4 cases)."),
         ("One row per destination (= one case); name from TB_M_H0125_DESTINATION.",
