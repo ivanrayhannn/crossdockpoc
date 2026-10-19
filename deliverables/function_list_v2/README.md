@@ -74,6 +74,9 @@ Simulasi: menu prototype **ASN → Cancel Order Simulation**.
 | C1 | XD04 | Kolom DAD tetap ikut di-replicate (tidak dipakai kalkulasi) |
 | C2–C8 | XD01–XD05 | N + S dijumlahkan; retensi history 24 bulan; panjang kolom sesuai existing; template / log upload tidak didetailkan; Viewer = Search / Export; Effective Start Date default besok, min hari ini, wajib; label prototype dibiarkan |
 
+## Business Process Flow Level 2
+Lihat `bpf/README.md`: Excel `bpf/Crossdock_BPF_Level2.xlsx` (X = PIC, Y = timeline, sampai level tabel, abnormality AB01–AB16) dan menu prototype Common → Business Process Flow.
+
 ## Build
 ```
 bash deliverables/function_list_v2/build_all_v2.sh
