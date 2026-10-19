@@ -4,10 +4,12 @@ X = PIC (swimlane), Y = timeline. Tiap kotak berisi function (XD), aktivitas, ta
 
 | File | Isi |
 |---|---|
-| `Crossdock_BPF_Level2.xlsx` | Cover, F1 Master Setup, F2 Daily Order to ASN, F3 Cancel (diagram + tabel step), Abnormality (AB01–AB16) |
+| `Crossdock_BPF_Level2.xlsx` | Cover, F1 Master Setup, F2 Daily Order to ASN, F3 Cancel (diagram **shape Excel editable** + tabel step), Abnormality (AB01–AB16) |
+| `Crossdock_BPF_Level2.drawio` | Diagram yang sama, 1 page per flow, panah menempel ke kotak; buka di diagrams.net / draw.io (bisa export ke Visio .vsdx, PNG, PDF) |
 | `bpf_data.py` | Satu sumber data (lane, timeline, step, tabel, abnormality) |
 | `build_bpf.py`, `build_bpf.sh`, `bpf_shots.mjs` | Generator: data prototype → screenshot diagram → Excel |
-| `shots/` | Gambar diagram per flow (nama dokumen G-TOPAS / NSP) |
+| `bpf_shapes.py` | Layout diagram (sama dengan halaman prototype) → shape Excel dan draw.io |
+| `shots/` | Gambar preview diagram per flow dari prototype (nama dokumen G-TOPAS / NSP) |
 
 Prototype: menu **Common → Business Process Flow** (`#/bpf`); pilihan nama Prototype (T-System / Supplier System) atau Document (G-TOPAS / NSP).
 
