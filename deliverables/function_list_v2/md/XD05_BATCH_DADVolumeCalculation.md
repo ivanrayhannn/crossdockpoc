@@ -16,3 +16,8 @@ Sumber: UISS `XD05_UISS_Batch_DADVolumeCalculation.xlsx` (0.1 Initial Draft, 18-
 - Satu run terjadwal = proses 1 lalu proses 2; proses 2 hanya jalan kalau proses 1 berhasil. All-or-nothing **per proses**.
 - Auto retry 3x per proses. Manual: [Run calculation (Part List)] di XD01 → proses 1 + 2; [Run calculation (Mapping)] → proses 2 saja.
 - Last success date per proses (tab Part List / tab Mapping di XD01). Jalan setelah XD04.
+
+## Keputusan 19-Oct
+- Part yang berubah **Active → Inactive** di-set **No Sync**, supaya [Sync] berikutnya mengirimnya ke G-TOPAS / AP POLE dengan CROSSDOCK_FLAG 'N'.
+- Jadwal bulanan tidak didetailkan. Kalau XD04 gagal, XD05 **tetap jalan**.
+- N + S dijumlahkan.

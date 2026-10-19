@@ -442,7 +442,7 @@
    "marker": "-",
    "level": 0,
    "items": [
-    "Unit = Part Number + Customer Order Date. Case = one per destination of the unit: the qty of the destination is summed into one case (it never exceeds pcs/case).",
+    "Unit = Part Number + Customer Order Date. Case = destination x pcs/case: the qty of a destination is packed in cases of pcs/case (e.g. Vietnam 24 pcs, 6 pcs/case = 4 cases). G-TOPAS releases in multiples of pcs/case (a remainder stays pending and is not in H0253), so every case is full.",
     "Case Qty = number of destinations of the unit. PO Readiness (case) = cases whose whole qty is pre-mapped to a PO.",
     "CROSSDOCK_STATUS '6' Ready: every line of the unit is pre-mapped. '7' Not Ready: at least one line of the unit has no PO yet.",
     "Shown on XD10 as ASN Status Ready / Not Ready. Units with PO Readiness 0 are not listed on XD10; units already in a submitted ASN (ASN status '1' Created) are not taken (PO_MAPPED_FLAG = 'Y').",

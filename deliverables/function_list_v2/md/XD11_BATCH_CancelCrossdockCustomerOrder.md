@@ -38,3 +38,8 @@ Sumber: UISS `XD11_UISS_Batch_CancelCrossdockCustomerOrder.xlsx` (0.1 Initial Dr
 ## Open points
 - Opsi blok PO qty sampai conflict ditutup (belum di draft).
 - Layar exception list (sementara lewat Log Monitoring).
+
+## Keputusan 19-Oct
+- Barang CONFLICT boleh dialokasikan ke order **destinasi lain** juga, atau stok gudang.
+- PO qty **tidak diblok**.
+- Exception list = **Log** (Log Monitoring); tidak ada layar khusus.

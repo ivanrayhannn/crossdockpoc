@@ -123,11 +123,11 @@
     "rows": [
      [
       "Trigger",
-      "Scheduler set in the system master (schedule TBC)."
+      "Scheduler, daily after G-TOPAS has provided the data (27:30); auto retry 3 times."
      ],
      [
       "Order",
-      "Job chain: XD12 -> XD11 -> XD08, after G-TOPAS has provided the data (1 time/day, 27:30)."
+      "Job chain: XD12 -> XD11 -> XD08."
      ]
     ]
    }
@@ -658,7 +658,7 @@
      "VARCHAR(7)",
      "Y",
      "N",
-     "No.7 Serial No., Card No. Part of the key; distinguishes split records of the same order line (taken from the I/F layout, not in the current table export)."
+     "No.7 Serial No., Card No. Part of the key; distinguishes split records of the same order line. Added to the source table by the DB Surrounding team (decided 19-Oct)."
     ],
     [
      "TOPAS_ORDER_TYPE",

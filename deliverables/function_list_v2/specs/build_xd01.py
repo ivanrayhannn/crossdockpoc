@@ -13,7 +13,7 @@ IFR_COLS = [
     ["PERIOD", "CHAR(6)", "", "N", "Calculation period of the mapping sent (YYYYMM)"],
     ["IF_STATUS", "VARCHAR(1)", "", "N", "'3' Waiting / '1' Success / '2' Failed"],
     ["IF_DT", "DATETIME", "", "Y", "Date-time of the result of the target system"],
-    ["IF_FILE_NAME", "VARCHAR(100)", "", "Y", "Name of the interface file sent by SFTP"],
+    ["IF_FILE_NAME", "VARCHAR(100)", "", "Y", "Name of the interface file (AP POLE) or send ID (G-TOPAS)"],
     ["IF_MESSAGE", "VARCHAR(500)", "", "Y", "Reason when Failed; blank when Success"],
     ["CREATED_BY", "VARCHAR(TBD)", "", "N", "User who created the record"],
     ["CREATED_DT", "DATETIME", "", "N", "Created date and time"],
@@ -21,7 +21,7 @@ IFR_COLS = [
     ["CHANGED_DT", "DATETIME", "", "N", "Last changed date and time"]]
 IFR_TABLE = {"name": IFR, "kind": "transaction", "proposed": True,
              "description": "Dummy table (proposed): send status of the cross dock master per part and target system (XD06 GTOPAS, XD07 AP POLE). "
-                            "The real output is the interface file sent by SFTP to the target. The overall Sync Status of the part stays in TB_M_PART_CANDIDATE.",
+                            "The real output is the interface data sent to the target (AP POLE: file by SFTP; G-TOPAS: existing interface). The overall Sync Status of the part stays in TB_M_PART_CANDIDATE.",
              "columns": IFR_COLS}
 
 SYNC_ROWS_PL = [

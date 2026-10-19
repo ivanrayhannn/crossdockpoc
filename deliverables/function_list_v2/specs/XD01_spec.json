@@ -138,7 +138,7 @@
    },
    {
     "name": "Sync",
-    "function": "Start XD06 (GTOPAS) and XD07 (AP POLE) for every Active part of the ongoing period with Sync Status No Sync or Failed, whatever the filter shows; the parts become Waiting. The label shows the number of parts, e.g. Sync (9)."
+    "function": "Start XD06 (GTOPAS) and XD07 (AP POLE) for every Active part of the ongoing period, and every part that became Inactive, with Sync Status No Sync or Failed, whatever the filter shows; the parts become Waiting. The label shows the number of parts, e.g. Sync (9)."
    },
    {
     "name": "Upload Excel (Mapping)",
@@ -920,7 +920,7 @@
    "1) Prev is disabled on the first page and Next on the last page.",
    "2) A user logged in with a read-only account sees [View] instead of [Edit] and cannot use Add Part / Upload Excel / Save. TBD: which accounts are read-only is not defined yet.",
    "3) Run calculation is shown as D (disabled) by default; it is enabled only when the scheduled DAD Volume Calculation has failed 3 times (auto retry).",
-   "4) Sync is enabled only when at least one Active part of the ongoing period is No Sync or Failed (not limited to the listed rows).",
+   "4) Sync is enabled only when at least one Active part of the ongoing period, or a part that became Inactive, is No Sync or Failed (not limited to the listed rows).",
    "5) Split evenly is shown only in edit mode when the part has more than one destination row.",
    "7) Prev is disabled on the first page and Next on the last page.",
    "8) Run calculation is enabled only when the scheduled XD05 DAD Volume Calculation (process 2) has failed 3 times (auto retry); otherwise disabled with message no. 30 as tooltip.",
@@ -2515,7 +2515,7 @@
    "required": "",
    "format": "",
    "validation": "",
-   "description": "n = Active parts of the ongoing period with Sync Status No Sync or Failed, whatever the filter. Disabled when n = 0. Refer Operation Description 5.16."
+   "description": "n = Active parts of the ongoing period and parts that became Inactive, with Sync Status No Sync or Failed, whatever the filter. Disabled when n = 0. Refer Operation Description 5.16."
   },
   {
    "name": "Upload Excel (Mapping)",
@@ -3931,7 +3931,7 @@
     "The result list header shows 'Last DAD calculation' (last successful run) and, when the scheduled run and its 3 retries have failed, the badge 'Scheduled run failed 3x'.",
     "[Run calculation] is enabled only in that failed state; otherwise it is disabled with message no. 17 as tooltip.",
     "User clicks [Run calculation]: start the batch. When it completes, update 'Last DAD calculation', hide the badge, refresh the list and display message no. 16. When it fails, the batch logs the error (all-or-nothing) and the button stays enabled.",
-    "A status change made by the batch does not change the Sync Status. The user may still change the status afterwards by screen or upload."
+    "A change from Active to Inactive made by the batch sets the part to No Sync (it is sent as inactive by the next [Sync]); other status changes made by the batch do not change the Sync Status. The user may still change the status afterwards by screen or upload."
    ]
   },
   {
@@ -4137,7 +4137,7 @@
    "marker": "1.",
    "level": 3,
    "items": [
-    "Select every Active part of the ongoing period with Sync Status No Sync or Failed, whatever the search criteria show (n of the button). Candidate and Inactive parts are never synchronised.",
+    "Select every Active part of the ongoing period, and every part that became Inactive (set to No Sync by XD05), with Sync Status No Sync or Failed, whatever the search criteria show (n of the button). Inactive parts are sent with CROSSDOCK_FLAG 'N' so G-TOPAS and AP POLE change their status to inactive. Candidate parts are never synchronised.",
     "Set SYNC_STATUS = 3 (Waiting) for these parts in TB_M_PART_CANDIDATE, set one row per part and target system (GTOPAS, AP POLE) to IF_STATUS = 3 (Waiting) in TB_R_CROSSDOCK_IF_RESULT, and start XD06 and XD07. Display message no. 27.",
     "With the default filter No Sync the parts leave the list; select Sync Status = Waiting or All to follow them."
    ]
@@ -4744,7 +4744,7 @@
    "name": "TB_R_CROSSDOCK_IF_RESULT",
    "kind": "transaction",
    "proposed": true,
-   "description": "Dummy table (proposed): send status of the cross dock master per part and target system (XD06 GTOPAS, XD07 AP POLE). The real output is the interface file sent by SFTP to the target. The overall Sync Status of the part stays in TB_M_PART_CANDIDATE.",
+   "description": "Dummy table (proposed): send status of the cross dock master per part and target system (XD06 GTOPAS, XD07 AP POLE). The real output is the interface data sent to the target (AP POLE: file by SFTP; G-TOPAS: existing interface). The overall Sync Status of the part stays in TB_M_PART_CANDIDATE.",
    "columns": [
     [
      "PART_NO",
@@ -4786,7 +4786,7 @@
      "VARCHAR(100)",
      "",
      "Y",
-     "Name of the interface file sent by SFTP"
+     "Name of the interface file (AP POLE) or send ID (G-TOPAS)"
     ],
     [
      "IF_MESSAGE",

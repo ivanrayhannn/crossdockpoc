@@ -65,3 +65,7 @@ Hanya untuk menyimpan **status kirim** per part × target (PART_NO + TARGET_SYST
 - Field mana masuk ke tabel AP POLE yang mana (Crossdock Kanban Part Master dan Crossdock Export Part Master).
 - Nama dan panjang field di AP POLE.
 - Part yang jadi **Inactive** (XD05) saat ini tidak dikirim → perlu kirim CROSSDOCK_FLAG 'N' supaya target berhenti crossdock?
+
+## Keputusan 19-Oct
+- SFTP Option #3; detail SFTP, format file dan tabel AP POLE **tidak didetailkan**.
+- Part yang jadi Inactive dikirim dengan CROSSDOCK_FLAG 'N' (tanpa destinasi) supaya AP POLE mengubah statusnya jadi inactive.

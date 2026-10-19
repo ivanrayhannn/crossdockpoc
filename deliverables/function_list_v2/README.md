@@ -28,10 +28,10 @@ Nama sistem di UISS tetap **G-TOPAS** dan **NSP** (rename T-System / Supplier Sy
 | XD11 | Cancel Crossdock Customer Order Batch | Batch | – | **Baru** (usulan dari diskusi cancel 16-Oct) |
 | XD12 | Order Control Information to NSP Batch (Cancel) | Batch | – (pola X10) | **Baru**: H0253 **ORDER_STATUS = 2** ke tabel cancel |
 | XD13 | Destination Master Synch into NSP | Batch | X11 H0125 Sync | Ganti ID / nama |
-| XD14 | DAD Volume Calculation Result Screen (Buffer) | Screen | – | **Belum dibuat** (buffer, perlu penjelasan isi layar) |
+| XD14 | DAD Volume Calculation Result Screen (Buffer) | Screen | – | **Tidak dipakai** (keputusan 19-Oct) |
 | XD15 | ASN Crossdock Inquiry Screen (Buffer) | Screen | X13 | Ganti ID / nama |
 
-Tidak ada di function list baru (tidak dibawa ke v2): **X9** H0202 Demand History Sync, **X15** Menu Settings (admin panel prototype).
+Tidak dipakai (dikonfirmasi 19-Oct): **X9** H0202 Demand History Sync, **X15** Menu Settings (hanya admin panel prototype), **XD14**.
 
 ## Keputusan (konfirmasi 18-Oct)
 | No | Topik | Keputusan |
@@ -54,9 +54,25 @@ Tidak ada di function list baru (tidak dibawa ke v2): **X9** H0202 Demand Histor
 
 Simulasi: menu prototype **ASN → Cancel Order Simulation**.
 
-## Asumsi lain yang masih perlu dikonfirmasi
-- XD11: opsi "blok PO qty sampai conflict ditutup" belum dimasukkan.
-- Part yang jadi Inactive (XD05) tidak dikirim ke GTOPAS / AP POLE.
+## Keputusan (Confirmation Points, 19-Oct)
+| No | Function | Keputusan |
+|---|---|---|
+| A1 | ASN Cross Dock Creation Screen (XD10), Mapping Customer Order and PO Batch (XD09) | Case per destinasi dipecah sesuai pcs/case (Vietnam 24 pcs, 6 pcs/case = 4 case). G-TOPAS selalu rilis kelipatan pcs/case (sisa tetap pending, tidak muncul di H0253), jadi case selalu penuh |
+| A2 | ASN Cross Dock Creation Screen (XD10) | Tetap utuh per unit (Part Number + Customer Order Date): kalau 1 line belum dapat PO, unit belum bisa di-ASN |
+| A3 | ASN Cross Dock Creation Screen (XD10), ASN Crossdock Inquiry Screen (XD15) | 1 case label = 1 case 1 destinasi, bisa berisi beberapa Customer Order No; format sesuai label existing |
+| A4 | Cancel Crossdock Customer Order Batch (XD11) | Barang CONFLICT boleh dialokasikan ke order destinasi lain juga, atau stok gudang |
+| A5 | Cancel Crossdock Customer Order Batch (XD11) | PO qty tidak diblok |
+| A6 | Cancel Crossdock Customer Order Batch (XD11) | Exception list = Log (Log Monitoring), tanpa layar khusus |
+| A7 | DAD Volume Calculation Batch (XD05), IF Cross Dock Master to GTOPAS / AP POLE (XD06 / XD07) | Part yang jadi Inactive dikirim (CROSSDOCK_FLAG 'N') supaya statusnya jadi inactive di G-TOPAS dan AP POLE; XD05 set part itu No Sync |
+| A8 | IF Cross Dock Master to GTOPAS (XD06) | G-TOPAS **tidak** pakai SFTP (interface existing, tidak didetailkan) |
+| A9–A11 | IF Cross Dock Master to GTOPAS / AP POLE (XD06 / XD07) | Tabel tujuan, detail SFTP dan format file **tidak didetailkan** |
+| B1 | XD08, XD11, XD12, XD13 | Jadwal setelah data G-TOPAS tersedia (27:30), retry 3x |
+| B2 | XD04, XD05 | Jadwal bulanan tidak didetailkan |
+| B3 | XD04, XD05 | Kalau XD04 gagal, XD05 tetap jalan |
+| B4 | XD08, XD12 | SERIAL_NO ditambahkan tim DB Surrounding |
+| B5, B6 | – | H0202 Sync, Menu Settings (dokumen) dan XD14 tidak dipakai |
+| C1 | XD04 | Kolom DAD tetap ikut di-replicate (tidak dipakai kalkulasi) |
+| C2–C8 | XD01–XD05 | N + S dijumlahkan; retensi history 24 bulan; panjang kolom sesuai existing; template / log upload tidak didetailkan; Viewer = Search / Export; Effective Start Date default besok, min hari ini, wajib; label prototype dibiarkan |
 
 ## Build
 ```
