@@ -1,21 +1,18 @@
 import { useState, type ReactNode } from 'react';
 import { card } from '../features/asnCrossdock/styles';
+import { sha256 } from '../lib/pin';
 
 /* Light PIN gate for a menu of the prototype. Only the SHA-256 of the PIN is in the code; the unlock lasts for the
  * browser session. This is a client-side gate of a static site, not real access control. */
 
 const SESSION_PREFIX = 'pin.unlocked.';
 
-async function sha256(text: string): Promise<string> {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
-  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, '0')).join('');
-}
 
 function isUnlocked(id: string): boolean {
   try { return window.sessionStorage.getItem(SESSION_PREFIX + id) === '1'; } catch { return false; }
 }
 
-export function PinGate({ id, title, hash, children }: { id: string; title: string; hash: string; children: ReactNode }) {
+export function PinGate({ id, title, hash, children }: { id: string; title: string; hash: () => string; children: ReactNode }) {
   const [ok, setOk] = useState(() => isUnlocked(id));
   const [pin, setPin] = useState('');
   const [error, setError] = useState(false);
@@ -25,7 +22,7 @@ export function PinGate({ id, title, hash, children }: { id: string; title: stri
 
   const submit = async () => {
     setBusy(true);
-    const match = (await sha256(pin.trim())) === hash;
+    const match = (await sha256(pin.trim())) === hash();
     setBusy(false);
     if (match) {
       try { window.sessionStorage.setItem(SESSION_PREFIX + id, '1'); } catch { /* session only in memory */ }

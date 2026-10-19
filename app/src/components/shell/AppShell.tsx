@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import type { RouteKey } from '../../routes';
-import { needsPin, PIN_HASH, usePinMenus } from '../../lib/pin';
+import { getPinHash, needsPin, usePinMenus } from '../../lib/pin';
 import { PinGate } from '../PinGate';
 import { Footer } from './Footer';
 import { Sidebar } from './Sidebar';
@@ -23,7 +23,7 @@ export function AppShell({ activeItem, onNavigate, breadcrumb, children }: AppSh
         <TopHeader />
         {breadcrumb}
         <main style={{ flex: 1, background: '#eef1f5', paddingBottom: 8 }}>
-          {gated ? <PinGate key={activeItem} id={activeItem} title={activeItem} hash={PIN_HASH}>{children}</PinGate> : children}
+          {gated ? <PinGate key={activeItem} id={activeItem} title={activeItem} hash={getPinHash}>{children}</PinGate> : children}
         </main>
         <Footer />
       </div>
