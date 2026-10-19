@@ -6,12 +6,15 @@
 Run from this folder; build_bpf.sh does all three."""
 import json, os, sys
 from bpf_data import ABNORMALITY, FLOWS, LANES
+from bpf_shapes import drawio, excel_drawing
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..', '..'))
 TS_OUT = os.path.join(ROOT, 'app', 'src', 'features', 'bpf', 'bpfData.ts')
 XLSX_OUT = os.path.join(HERE, 'Crossdock_BPF_Level2.xlsx')
 SHOTS = os.path.join(HERE, 'shots')
+DRAWIO_OUT = os.path.join(HERE, 'Crossdock_BPF_Level2.drawio')
+DIAGRAM_Y = 32 + 20 + 20 + 4  # rows 1-3 (24 pt + 15 pt + 15 pt) and a small margin
 AB_KEYS = ['id', 'flow', 'step', 'fn', 'condition', 'detection', 'system', 'pic', 'action']
 
 
@@ -43,7 +46,6 @@ def ts():
 
 def xlsx():
     from openpyxl import Workbook
-    from openpyxl.drawing.image import Image
     from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
     thin = Side(style='thin', color='FF808080')
     box = Border(left=thin, right=thin, top=thin, bottom=thin)
@@ -72,6 +74,7 @@ def xlsx():
         return r
 
     wb = Workbook()
+    drawings = {}
     ws = wb.active
     ws.title = 'Cover'
     ws.sheet_view.showGridLines = False
@@ -100,19 +103,16 @@ def xlsx():
         ws.sheet_view.showGridLines = False
         ws['A1'] = f"{f['id']} {f['title']}"
         ws['A1'].font = f_title
-        ws['A2'] = f['desc'] + ' X = PIC, Y = timeline. Red tags = abnormality (sheet Abnormality).'
+        ws['A2'] = f['desc'] + ' X = PIC, Y = timeline. Red tags = abnormality (sheet Abnormality). All shapes are editable (also in Crossdock_BPF_Level2.drawio).'
         ws['A2'].font = f_sub
-        png = os.path.join(SHOTS, f"{f['id']}.png")
-        top = 4
-        if os.path.exists(png):
-            img = Image(png)
-            scale = 1100 / img.width
-            img.width, img.height = int(img.width * scale), int(img.height * scale)
-            ws.add_image(img, 'A4')
-            n = int(img.height / 20) + 2
-            for i in range(4, 4 + n):
-                ws.row_dimensions[i].height = 15  # 15 pt = 20 px, so the step table starts below the picture
-            top += n
+        # rows 1-3 and the rows under the diagram get a fixed height (15 pt = 20 px), so the shapes sit at a known place
+        ws.row_dimensions[1].height, ws.row_dimensions[2].height, ws.row_dimensions[3].height = 24, 15, 15
+        dxml, dh = excel_drawing(f, LANES, DIAGRAM_Y)
+        n = int(dh / 20) + 3
+        for i in range(4, 4 + n):
+            ws.row_dimensions[i].height = 15
+        top = 4 + n
+        drawings[ws.title] = dxml
         band = {b[0]: b[1] for b in f['bands']}
         order = {b[0]: i for i, b in enumerate(f['bands'])}
         steps = sorted(f['steps'], key=lambda s: (order[s['band']], s['slot'], f['lanes'].index(s['lane'])))
@@ -138,7 +138,41 @@ def xlsx():
     ws.page_setup.fitToWidth, ws.page_setup.fitToHeight = 1, 0
     ws.sheet_properties.pageSetUpPr.fitToPage = True
     wb.save(XLSX_OUT)
+    add_drawings(XLSX_OUT, [ws.title for ws in wb.worksheets], drawings)
     print('written', XLSX_OUT)
+    with open(DRAWIO_OUT, 'w', encoding='utf-8') as fh:
+        fh.write(drawio(FLOWS, LANES))
+    print('written', DRAWIO_OUT)
+
+
+def add_drawings(path, titles, drawings):
+    """openpyxl cannot write shapes: add one DrawingML part per flow sheet to the saved workbook."""
+    import re, shutil, tempfile, zipfile
+    tmp = tempfile.mktemp(suffix='.xlsx')
+    shutil.copy(path, tmp)
+    with zipfile.ZipFile(tmp) as zin, zipfile.ZipFile(path, 'w', zipfile.ZIP_DEFLATED) as zout:
+        files = {i.filename: zin.read(i.filename) for i in zin.infolist()}
+        ct = files['[Content_Types].xml'].decode()
+        for k, title in enumerate(titles, 1):
+            if title not in drawings:
+                continue
+            sheet, rels = f'xl/worksheets/sheet{k}.xml', f'xl/worksheets/_rels/sheet{k}.xml.rels'
+            assert sheet in files and rels not in files, sheet
+            dn = f'xl/drawings/drawing{k}.xml'
+            files[dn] = drawings[title].encode()
+            files[rels] = ('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+                           f'<Relationship Id="rIdBpf1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing{k}.xml"/>'
+                           '</Relationships>').encode()
+            x = files[sheet].decode()
+            if 'xmlns:r=' not in x[:x.index('>', x.index('<worksheet'))]:
+                x = x.replace('<worksheet ', '<worksheet xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" ', 1)
+            x = re.sub(r'(<tableParts|<extLst|</worksheet>)', '<drawing r:id="rIdBpf1"/>\\1', x, count=1)
+            files[sheet] = x.encode()
+            ct = ct.replace('</Types>', f'<Override PartName="/{dn}" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/></Types>')
+        files['[Content_Types].xml'] = ct.encode()
+        for name, data in files.items():
+            zout.writestr(name, data)
+    os.remove(tmp)
 
 
 if __name__ == '__main__':
