@@ -5,8 +5,9 @@
   python3 build_bpf.py xlsx   -> Crossdock_BPF_Level2.xlsx (diagram + step table per flow, abnormality list)
 Run from this folder; build_bpf.sh does all three."""
 import json, os, sys
-from bpf_data import ABNORMALITY, FLOWS, LANES
-from bpf_shapes import drawio, excel_drawing
+from bpf_data import ABNORMALITY, FLOWS, LANES, USER_PROCESS
+from bpf_grid import draw_flow
+from bpf_shapes import drawio
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..', '..'))
@@ -14,7 +15,7 @@ TS_OUT = os.path.join(ROOT, 'app', 'src', 'features', 'bpf', 'bpfData.ts')
 XLSX_OUT = os.path.join(HERE, 'Crossdock_BPF_Level2.xlsx')
 SHOTS = os.path.join(HERE, 'shots')
 DRAWIO_OUT = os.path.join(HERE, 'Crossdock_BPF_Level2.drawio')
-DIAGRAM_Y = 32 + 20 + 20 + 4  # rows 1-3 (24 pt + 15 pt + 15 pt) and a small margin
+SCREENS = os.path.join(ROOT, 'deliverables', 'uiss_screens')
 AB_KEYS = ['id', 'flow', 'step', 'fn', 'condition', 'detection', 'system', 'pic', 'action']
 
 
@@ -97,34 +98,47 @@ def xlsx():
         [LANES['SP'], 'ASN Crossdock Creation (XD10) and ASN Inquiry (XD15).'],
         [LANES['AP'], 'Receives the crossdock master file by SFTP (Option #3).']],
         fills=[lane_fill[k] for k in ['GT', 'NB', 'PR', 'DS', 'SP', 'AP']])
+    ws.page_setup.orientation = 'landscape'
+    ws.page_setup.fitToWidth, ws.page_setup.fitToHeight = 1, 0
+    ws.sheet_properties.pageSetUpPr.fitToPage = True
 
     for f in FLOWS:
         ws = wb.create_sheet(f['id'])
         ws.sheet_view.showGridLines = False
         ws['A1'] = f"{f['id']} {f['title']}"
         ws['A1'].font = f_title
-        ws['A2'] = f['desc'] + ' X = PIC, Y = timeline. Red tags = abnormality (sheet Abnormality). All shapes are editable (also in Crossdock_BPF_Level2.drawio).'
+        ws['A2'] = (f['desc'] + ' X = PIC (columns), Y = timeline (rows). Each coloured cell is a step (function, activity, R = table read, '
+                    'W = table written, ⚠ = abnormality, sheet Abnormality). Step detail: sheet Step Detail.')
         ws['A2'].font = f_sub
-        # rows 1-3 and the rows under the diagram get a fixed height (15 pt = 20 px), so the shapes sit at a known place
-        ws.row_dimensions[1].height, ws.row_dimensions[2].height, ws.row_dimensions[3].height = 24, 15, 15
-        dxml, dh = excel_drawing(f, LANES, DIAGRAM_Y)
-        n = int(dh / 20) + 3
-        for i in range(4, 4 + n):
-            ws.row_dimensions[i].height = 15
-        top = 4 + n
-        drawings[ws.title] = dxml
-        band = {b[0]: b[1] for b in f['bands']}
-        order = {b[0]: i for i, b in enumerate(f['bands'])}
-        steps = sorted(f['steps'], key=lambda s: (order[s['band']], s['slot'], f['lanes'].index(s['lane'])))
-        ws.cell(top, 1, 'Step detail').font = f_bold
-        table(ws, top + 1, ['Step', 'Timeline', 'PIC', 'Function', 'Activity', 'Read (table)', 'Write (table)', 'Next', 'Abnormality'],
-              [7, 22, 18, 12, 40, 36, 40, 10, 12],
-              [[s['id'], band[s['band']], LANES[s['lane']], s['fn'] or '-', s['title'], '\n'.join(s['read']) or '-', '\n'.join(s['write']) or '-',
-                ', '.join(s['next']) or 'End', ', '.join(s['ab']) or '-'] for s in steps],
-              fills=[lane_fill[s['lane']] for s in steps])
+        ws.row_dimensions[1].height, ws.row_dimensions[2].height, ws.row_dimensions[3].height = 24, 15, 6
+        drawings[ws.title], _, last_col = draw_flow(ws, f, LANES)
+        ws.freeze_panes = 'B5'
         ws.page_setup.orientation = 'landscape'
         ws.page_setup.fitToWidth, ws.page_setup.fitToHeight = 1, 0
         ws.sheet_properties.pageSetUpPr.fitToPage = True
+
+    ws = wb.create_sheet('Step Detail')
+    ws.sheet_view.showGridLines = False
+    ws['A1'] = 'Step detail (all flows)'
+    ws['A1'].font = f_title
+    ws['A2'] = 'One row per step of the diagrams F1–F3: timeline, PIC, function, activity, tables read / written, next step and abnormality.'
+    ws['A2'].font = f_sub
+    rows, fills = [], []
+    for f in FLOWS:
+        band = {b[0]: b[1] for b in f['bands']}
+        order = {b[0]: i for i, b in enumerate(f['bands'])}
+        for s in sorted(f['steps'], key=lambda s: (order[s['band']], s['slot'], f['lanes'].index(s['lane']))):
+            rows.append([s['id'], f['id'], band[s['band']], LANES[s['lane']], s['fn'] or '-', s['title'], '\n'.join(s['read']) or '-',
+                         '\n'.join(s['write']) or '-', ', '.join(s['next']) or 'End', ', '.join(s['ab']) or '-'])
+            fills.append(lane_fill[s['lane']])
+    table(ws, 4, ['Step', 'Flow', 'Timeline', 'PIC', 'Function', 'Activity', 'Read (table)', 'Write (table)', 'Next', 'Abnormality'],
+          [7, 6, 22, 18, 12, 40, 36, 40, 10, 12], rows, fills=fills)
+    ws.freeze_panes = 'A5'
+    ws.page_setup.orientation = 'landscape'
+    ws.page_setup.fitToWidth, ws.page_setup.fitToHeight = 1, 0
+    ws.sheet_properties.pageSetUpPr.fitToPage = True
+
+    user_process_sheet(wb, table, f_title, f_sub, lane_fill)
 
     ws = wb.create_sheet('Abnormality')
     ws.sheet_view.showGridLines = False
@@ -145,6 +159,60 @@ def xlsx():
     print('written', DRAWIO_OUT)
 
 
+def user_process_sheet(wb, table, f_title, f_sub, lane_fill):
+    """Illustration of the business user process: who does what, on which screen (thumbnail of the prototype) and with which result."""
+    import tempfile
+    from openpyxl.drawing.image import Image
+    from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+    from PIL import Image as PImage
+    ws = wb.create_sheet('User Process')
+    ws.sheet_view.showGridLines = False
+    ws['A1'] = 'Business user process (illustration)'
+    ws['A1'].font = f_title
+    ws['A2'] = ('What the business users (Procurement, D/S Team, Supplier) do, in time order, on which screen, what the system keeps and what to do '
+                'when something goes wrong. Screens: prototype (names may show T-System / Supplier System).')
+    ws['A2'].font = f_sub
+    persona = {'PR': ('👤 Procurement', 'Registers candidate parts and checks the monthly status (XD01 Part List).'),
+               'DS': ('👤 D/S Team', 'Keeps the mapping per destination, sends it ([Sync]), holds destinations, handles CONFLICT.'),
+               'SP': ('👤 Supplier', 'Creates and submits the crossdock ASN, prints case labels (XD10, XD15).')}
+    thin = Side(style='thin', color='FF808080')
+    for i, (k, (name, role)) in enumerate(persona.items()):
+        c = 1 + i * 3
+        ws.merge_cells(start_row=4, start_column=c, end_row=4, end_column=c + 2)
+        cell = ws.cell(4, c, f'{name}\n{role}')
+        cell.font, cell.alignment = Font(name='Arial', size=9, bold=True), Alignment(wrap_text=True, vertical='center', horizontal='center')
+        for cc in range(c, c + 3):
+            ws.cell(4, cc).fill = PatternFill('solid', fgColor=lane_fill[k])
+            ws.cell(4, cc).border = Border(left=thin if cc == c else None, right=thin if cc == c + 2 else None, top=thin, bottom=thin)
+    ws.row_dimensions[4].height = 42
+    rows = [[u[0], u[1], persona[u[2]][0], u[3], u[4], '', u[6], u[7], u[8]] for u in USER_PROCESS]
+    table(ws, 6, ['No', 'Timeline', 'Persona', 'User action', 'Screen / menu', 'Illustration (screen)', 'System result (tables)', 'If it goes wrong', 'BPF step'],
+          [6, 18, 16, 34, 24, 50, 34, 34, 8], rows, fills=[lane_fill[u[2]] for u in USER_PROCESS])
+    tmp = tempfile.mkdtemp()
+    for i, u in enumerate(USER_PROCESS):
+        r = 7 + i
+        src = PImage.open(os.path.join(SCREENS, u[5])).convert('RGB')
+        w, h = src.size
+        x0 = 250 if w > 1300 else 0  # screens with the side menu: keep the content
+        crop = src.crop((x0, 40, w, min(h, 40 + int((w - x0) * 0.62))))
+        th = crop.resize((320, int(320 * crop.height / crop.width)))
+        path = os.path.join(tmp, f'{u[0]}.png')
+        th.save(path)
+        img = Image(path)
+        from openpyxl.drawing.spreadsheet_drawing import OneCellAnchor, AnchorMarker
+        from openpyxl.drawing.xdr import XDRPositiveSize2D
+        img.anchor = OneCellAnchor(_from=AnchorMarker(col=5, colOff=9525 * 15, row=r - 1, rowOff=9525 * 8),
+                                   ext=XDRPositiveSize2D(9525 * th.width, 9525 * th.height))
+        ws.add_image(img)
+        ws.row_dimensions[r].height = th.height * 0.75 + 18
+        for c in range(1, 10):
+            ws.cell(r, c).alignment = Alignment(wrap_text=True, vertical='center')
+    ws.freeze_panes = 'A7'
+    ws.page_setup.orientation = 'landscape'
+    ws.page_setup.fitToWidth, ws.page_setup.fitToHeight = 1, 0
+    ws.sheet_properties.pageSetUpPr.fitToPage = True
+
+
 def add_drawings(path, titles, drawings):
     """openpyxl cannot write shapes: add one DrawingML part per flow sheet to the saved workbook."""
     import re, shutil, tempfile, zipfile
@@ -158,10 +226,10 @@ def add_drawings(path, titles, drawings):
                 continue
             sheet, rels = f'xl/worksheets/sheet{k}.xml', f'xl/worksheets/_rels/sheet{k}.xml.rels'
             assert sheet in files and rels not in files, sheet
-            dn = f'xl/drawings/drawing{k}.xml'
+            dn = f'xl/drawings/bpfdrawing{k}.xml'
             files[dn] = drawings[title].encode()
             files[rels] = ('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
-                           f'<Relationship Id="rIdBpf1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing{k}.xml"/>'
+                           f'<Relationship Id="rIdBpf1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/bpfdrawing{k}.xml"/>'
                            '</Relationships>').encode()
             x = files[sheet].decode()
             if 'xmlns:r=' not in x[:x.index('>', x.index('<worksheet'))]:

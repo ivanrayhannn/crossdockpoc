@@ -161,3 +161,33 @@ ABNORMALITY = [
      'Release the open mapping; the ASN is not changed (no Cancel ASN); PO qty is not blocked.', 'D/S Team',
      'Check Log Monitoring; at receiving allocate the case to an open order (same or other destination) or move it to warehouse stock.'),
 ]
+
+# Business user process (illustration sheet): id, timeline, lane, user action, screen / menu, screenshot (deliverables/uiss_screens), system result, if it goes wrong, BPF step
+USER_PROCESS = [
+    ('U1', 'Any time (before the monthly run)', 'PR', 'Register a new candidate part: Part No, Min MAD, Pcs/Case, Max Case/Day.',
+     'XD01 Part List → [Add]', 'part_list/c_07_add_filled.png', 'TB_M_PART_CANDIDATE (status Candidate), TB_H_PART_CANDIDATE', 'Part No not found: message, correct the input.', 'M3'),
+    ('U2', 'Any time (before the monthly run)', 'PR', 'Or register many parts at once with the Excel template.',
+     'XD01 Part List → [Upload Excel] (XD02)', 'part_list/c_12_upload.png', 'Valid file saved; result report per upload', 'AB02: file rejected, correct sheet Re-upload and upload again.', 'M3'),
+    ('U3', 'Monthly, after the scheduler', 'PR', 'Check the status (Active / Inactive) calculated by XD05 and the last success date.',
+     'XD01 Part List', 'part_list/c_01_initial.png', 'TB_M_PART_CANDIDATE.STATUS (XD05 process 1)', 'AB04: run failed 3x, click [Run calculation (Part List)].', 'M8'),
+    ('U4', 'After the monthly run', 'DS', 'Review the case/day split per destination of each Active part.',
+     'XD01 Mapping per Destination', 'mapping/c_05_details_view.png', 'TB_M_PART_CANDIDATE_DEST (XD05 process 2)', 'AB04 / AB05: click [Run calculation (Mapping)] after the cause is fixed.', 'M9'),
+    ('U5', 'After the monthly run', 'DS', 'Adjust the split in edit mode, or upload the mapping Excel.',
+     'Mapping → [Edit] / [Upload Excel] (XD03)', 'mapping/c_07_edit_mode.png', 'TB_M_PART_CANDIDATE_DEST, SYNC_STATUS No Sync', 'Over allocation or missing destination: message; AB02 for the upload.', 'M9'),
+    ('U6', 'After the monthly run', 'DS', 'Click [Sync] to send the crossdock master to G-TOPAS and AP POLE.',
+     'Mapping → [Sync (n)]', 'mapping/c_12_before_sync.png', 'XD06 / XD07; SYNC_STATUS Synced / Failed', 'AB06: parts Failed, click [Sync] again later.', 'M10'),
+    ('U7', 'Day D · working hours', 'DS', 'Check the destination detail of the delivery plan; hold a destination when needed.',
+     'XD10 ASN Crossdock Creation (D/S view)', 'asn_crossdock/c_04_ds_hold.png', 'TB_R_H0253_ORDER_CONTROL_PRE.HOLD_FLAG', '-', 'D4'),
+    ('U8', 'Day D · working hours', 'SP', 'Choose Delivery Date and Rit, click [Search]: units Ready / Not Ready.',
+     'XD10 ASN Crossdock Creation', 'asn_crossdock/c_02_delivery_plan.png', 'XD09 pre-mapping (#TEMP_INSTRUCTION)', 'AB08: unit Not Ready, wait for the next PO.', 'D5'),
+    ('U9', 'Day D · working hours', 'SP', 'Tick Ready units of one supplier + plant and click [Create ASN].',
+     'XD10 → [Create ASN]', 'asn_crossdock/c_05_selected.png', 'TB_R_INSTRUCTION, PO_MAPPED_FLAG Y, MAPPED_QTY', 'AB09 hold message, AB10 no longer Ready, AB11 two suppliers: select again.', 'D7'),
+    ('U10', 'Day D · working hours', 'SP', 'Check the Case List (cases of pcs/case per destination) and click [Submit ASN].',
+     'XD10 Case List', 'asn_crossdock/c_06_case_list.png', 'Submit ID → ASN Created (TB_R_DAILY_ORDER_MANIFEST / PART)', 'AB12: order cancelled meanwhile, create again.', 'D9'),
+    ('U11', 'Day D · after submit', 'SP', 'Check the result of the submit (Submit ID).',
+     'Log Monitoring', 'asn_crossdock/c_13_log_monitoring.png', 'Log per Submit ID', 'AB13: submit error, create and submit again.', 'D13'),
+    ('U12', 'Day D · after submit', 'SP', 'Open the ASN and download the case labels (1 label = 1 case of 1 destination).',
+     'XD15 ASN Crossdock Inquiry', 'asn_crossdock/c_11_inquiry.png', 'TB_R_DAILY_ORDER_MANIFEST / PART', '-', 'D11'),
+    ('U13', 'Day D · after a cancel (XD11)', 'DS', 'Check CONFLICT lines and handle the shipped case (open order or warehouse stock).',
+     'Log Monitoring', 'asn_crossdock/c_13_log_monitoring.png', 'Log LOG4, TB_R_CROSSDOCK_CANCEL_RESULT', 'AB16: qty in an ASN was cancelled (SOP not followed).', 'C7'),
+]
