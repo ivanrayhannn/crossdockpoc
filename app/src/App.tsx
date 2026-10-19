@@ -9,6 +9,7 @@ import { BatchProcessPage } from './features/batchProcess/BatchProcessPage';
 import { CandidatePartFlowPage } from './features/candidatePartFlow/CandidatePartFlowPage';
 import { AsnBackendProcessPage } from './features/asnBackend/AsnBackendProcessPage';
 import { CancelOrderSimulationPage } from './features/cancelSim/CancelOrderSimulationPage';
+import { BusinessProcessFlowPage } from './features/bpf/BusinessProcessFlowPage';
 import { ConfirmationPage } from './features/confirmation/ConfirmationPage';
 
 import { LogMonitoringPage } from './features/logMonitoring/LogMonitoringPage';
@@ -82,6 +83,14 @@ function App() {
     return (
       <AppShell activeItem="Cancel Order Simulation" onNavigate={navigate} breadcrumb={<Breadcrumb group="ASN" label="Cancel Order Simulation" />}>
         <CancelOrderSimulationPage />
+      </AppShell>
+    );
+  }
+
+  if (route === 'bpf') {
+    return (
+      <AppShell activeItem="Business Process Flow" onNavigate={navigate} breadcrumb={<Breadcrumb group="Common" label="Business Process Flow" />}>
+        <BusinessProcessFlowPage />
       </AppShell>
     );
   }
