@@ -56,7 +56,7 @@ export const BPF: BpfData = {
      "band": "B1",
      "slot": 0,
      "fn": "",
-     "title": "Destination master available",
+     "title": "Destination master",
      "read": [],
      "write": [
       "TB_M_H0125_DESTINATION (DB Surrounding)"
@@ -115,7 +115,7 @@ export const BPF: BpfData = {
      "band": "B3",
      "slot": 0,
      "fn": "",
-     "title": "Actual demand summary available",
+     "title": "Actual demand summary",
      "read": [],
      "write": [
       "TB_R_ACTUAL_DEMAND_SUMMARY (DB Surrounding)"
@@ -131,7 +131,7 @@ export const BPF: BpfData = {
      "band": "B3",
      "slot": 0,
      "fn": "XD04",
-     "title": "Actual Demand Summary Sync: delete – insert (all columns, incl. DAD)",
+     "title": "Actual Demand Summary Sync: delete – insert",
      "read": [
       "TB_R_ACTUAL_DEMAND_SUMMARY (DB Surrounding)"
      ],
@@ -152,7 +152,7 @@ export const BPF: BpfData = {
      "band": "B3",
      "slot": 1,
      "fn": "XD05 P1",
-     "title": "Part status: avg MAD ≥ Min MAD → Active, else Inactive (Active → Inactive = No Sync)",
+     "title": "Part status: 1. avg MAD ≥ Min MAD → Active, 2. avg MAD < Min MAD → Inactive, 3. part with status Active → destination mapped. Checks: part retrieved from candidate? N → Log, part outside candidate not calculated; destination master? N → Log, stop, register the destination first",
      "read": [
       "TB_R_ACTUAL_DEMAND_SUMMARY",
       "TB_M_PART_CANDIDATE"
@@ -177,7 +177,7 @@ export const BPF: BpfData = {
      "band": "B3",
      "slot": 2,
      "fn": "XD05 P2",
-     "title": "Mapping: Max Case/Day split per destination by MAD share",
+     "title": "Mapping: Max Case/Day split per destination by MAD volume",
      "read": [
       "TB_R_ACTUAL_DEMAND_SUMMARY",
       "TB_M_PART_CANDIDATE",
@@ -201,8 +201,8 @@ export const BPF: BpfData = {
      "lane": "PR",
      "band": "B3",
      "slot": 3,
-     "fn": "XD01",
-     "title": "Check Part List result (status, last success date)",
+     "fn": "XD01 · XD02",
+     "title": "Check history of the candidate part",
      "read": [
       "TB_M_PART_CANDIDATE",
       "Log"
@@ -219,7 +219,7 @@ export const BPF: BpfData = {
      "band": "B4",
      "slot": 0,
      "fn": "XD01 · XD03",
-     "title": "Review / adjust mapping per destination (screen or Excel upload)",
+     "title": "Review / adjust mapping per destination (screen or Excel upload). Check destination master? N → Log, stop, register the destination first",
      "read": [
       "TB_M_PART_CANDIDATE_DEST",
       "TB_M_H0125_DESTINATION"
@@ -242,7 +242,7 @@ export const BPF: BpfData = {
      "band": "B4",
      "slot": 1,
      "fn": "XD01",
-     "title": "[Sync]: Active parts + parts that became Inactive, No Sync / Failed",
+     "title": "Sync parts with status No Sync & Failed",
      "read": [
       "TB_M_PART_CANDIDATE"
      ],
@@ -282,8 +282,8 @@ export const BPF: BpfData = {
      "lane": "GT",
      "band": "B5",
      "slot": 0,
-     "fn": "",
-     "title": "Receive crossdock master: part active / inactive for crossdock (existing IF)",
+     "fn": "RPA",
+     "title": "Modify part number and destination in Crossdock Master (Supply Menu)",
      "read": [
       "Interface data from NSP"
      ],
@@ -299,7 +299,7 @@ export const BPF: BpfData = {
      "band": "B5",
      "slot": 0,
      "fn": "",
-     "title": "TMMIN SFTP → TMA SFTP → receive IF",
+     "title": "TMMIN SFTP → TMA SFTP → receive IF by TMA AP POLE Crossdock Kanban Part Master",
      "read": [
       "Interface file (SFTP)"
      ],
@@ -314,7 +314,7 @@ export const BPF: BpfData = {
   {
    "id": "F2",
    "title": "Daily Order to ASN",
-   "desc": "Crossdock customer orders (H0253, status 7) and supplier PO are pre-mapped on [Search], mapped on [Create ASN] and submitted as an ASN.",
+   "desc": "Crossdock customer orders (H0253, status 7) and supplier PO are pre-mapped on [Search], mapped on [Create ASN] and submitted as an ASN. Hold and cancel: F4.",
    "lanes": [
     "GT",
     "NB",
@@ -366,10 +366,11 @@ export const BPF: BpfData = {
      "band": "B1",
      "slot": 0,
      "fn": "existing",
-     "title": "Supplier PO of the daily order (CROSSDOCK_FLAG X)",
+     "title": "Release PO Supplier (CROSSDOCK_FLAG X)",
      "read": [],
      "write": [
-      "TB_R_PRA_DAILY_ORDER_MANIFEST / PART"
+      "TB_R_PRA_DAILY_ORDER_MANIFEST",
+      "TB_R_PRA_DAILY_ORDER_PART"
      ],
      "ab": [],
      "next": [
@@ -394,26 +395,7 @@ export const BPF: BpfData = {
       "AB07"
      ],
      "next": [
-      "D4",
       "D5"
-     ]
-    },
-    {
-     "id": "D4",
-     "lane": "DS",
-     "band": "B3",
-     "slot": 0,
-     "fn": "XD10",
-     "title": "Monitor destination detail; Hold / Release a destination",
-     "read": [
-      "TB_R_H0253_ORDER_CONTROL_PRE"
-     ],
-     "write": [
-      "TB_R_H0253_ORDER_CONTROL_PRE (HOLD_FLAG)"
-     ],
-     "ab": [],
-     "next": [
-      "D6"
      ]
     },
     {
@@ -439,7 +421,8 @@ export const BPF: BpfData = {
      "title": "Pre-map order lines to PO (FIFO); Case Qty, PO Readiness, Ready / Not Ready",
      "read": [
       "TB_R_H0253_ORDER_CONTROL_PRE (status 7, HOLD N, PO_MAPPED N)",
-      "TB_R_PRA_DAILY_ORDER_MANIFEST / PART",
+      "TB_R_PRA_DAILY_ORDER_MANIFEST",
+      "TB_R_PRA_DAILY_ORDER_PART",
       "TB_R_PRA_DAILY_ORDER_MAPPED"
      ],
      "write": [
@@ -458,13 +441,12 @@ export const BPF: BpfData = {
      "band": "B3",
      "slot": 2,
      "fn": "XD10",
-     "title": "Tick Ready units (one supplier + plant), [Create ASN]",
+     "title": "Select Ready units, [Create ASN]",
      "read": [
       "#TEMP_INSTRUCTION"
      ],
      "write": [],
      "ab": [
-      "AB09",
       "AB10",
       "AB11"
      ],
@@ -585,9 +567,9 @@ export const BPF: BpfData = {
    ]
   },
   {
-   "id": "F3",
-   "title": "Cancel Crossdock Customer Order",
-   "desc": "An order is cancelled in G-TOPAS only; NSP takes the status 2 rows (XD12), releases the open mapping (XD11) and then takes status 7 / 6 (XD08).",
+   "id": "F4",
+   "title": "Hold & Cancel Crossdock Customer Order",
+   "desc": "Hold: the D/S team holds / releases a destination in XD10; held lines are not pre-mapped and a hold placed after the supplier ticked a unit stops [Create ASN]. Cancel: an order is cancelled in G-TOPAS only (with or without hold); NSP takes the status 2 rows (XD12), releases the open mapping (XD11) and then takes status 7 / 6 (XD08).",
    "lanes": [
     "GT",
     "NB",
@@ -596,8 +578,13 @@ export const BPF: BpfData = {
    ],
    "bands": [
     {
+     "id": "B0",
+     "label": "Day D · working hours (hold)",
+     "slots": 4
+    },
+    {
      "id": "B1",
-     "label": "Any time · G-TOPAS",
+     "label": "Any time · G-TOPAS (cancel)",
      "slots": 2
     },
     {
@@ -612,6 +599,73 @@ export const BPF: BpfData = {
     }
    ],
    "steps": [
+    {
+     "id": "H1",
+     "lane": "DS",
+     "band": "B0",
+     "slot": 0,
+     "fn": "XD10",
+     "title": "Monitor the destination detail of the delivery plan (View as D/S team)",
+     "read": [
+      "TB_R_H0253_ORDER_CONTROL_PRE"
+     ],
+     "write": [],
+     "ab": [],
+     "next": [
+      "H2"
+     ]
+    },
+    {
+     "id": "H2",
+     "lane": "DS",
+     "band": "B0",
+     "slot": 1,
+     "fn": "XD10",
+     "title": "Hold / Release a destination (all its order lines)",
+     "read": [],
+     "write": [
+      "TB_R_H0253_ORDER_CONTROL_PRE (HOLD_FLAG Y / N)"
+     ],
+     "ab": [],
+     "next": [
+      "H3"
+     ]
+    },
+    {
+     "id": "H3",
+     "lane": "NB",
+     "band": "B0",
+     "slot": 2,
+     "fn": "XD09",
+     "title": "[Search]: lines with HOLD_FLAG Y are not pre-mapped; the unit is computed without the held destination",
+     "read": [
+      "TB_R_H0253_ORDER_CONTROL_PRE (HOLD N)"
+     ],
+     "write": [
+      "#TEMP_INSTRUCTION"
+     ],
+     "ab": [],
+     "next": [
+      "H4"
+     ]
+    },
+    {
+     "id": "H4",
+     "lane": "SP",
+     "band": "B0",
+     "slot": 3,
+     "fn": "XD10",
+     "title": "[Create ASN] re-checks the hold: a line held after the tick → whole create fails, list refreshed",
+     "read": [
+      "#TEMP_INSTRUCTION",
+      "TB_R_H0253_ORDER_CONTROL_PRE"
+     ],
+     "write": [],
+     "ab": [
+      "AB09"
+     ],
+     "next": []
+    },
     {
      "id": "C1",
      "lane": "GT",
@@ -834,7 +888,7 @@ export const BPF: BpfData = {
   },
   {
    "id": "AB07",
-   "flow": "F2 / F3",
+   "flow": "F2 / F4",
    "step": "D3 / C5",
    "fn": "XD08",
    "condition": "DB Surrounding cannot be read or the upsert fails (after 3 retries)",
@@ -856,8 +910,8 @@ export const BPF: BpfData = {
   },
   {
    "id": "AB09",
-   "flow": "F2",
-   "step": "D7",
+   "flow": "F4",
+   "step": "H4",
    "fn": "XD10",
    "condition": "The D/S team holds a destination of a ticked unit before [Create ASN]",
    "detection": "MSG8",
@@ -889,7 +943,7 @@ export const BPF: BpfData = {
   },
   {
    "id": "AB12",
-   "flow": "F2 / F3",
+   "flow": "F2 / F4",
    "step": "D9 / C6",
    "fn": "XD10 / XD11",
    "condition": "A line is cancelled (XD11) while its Case List is open and not yet submitted",
@@ -911,7 +965,7 @@ export const BPF: BpfData = {
   },
   {
    "id": "AB14",
-   "flow": "F3",
+   "flow": "F4",
    "step": "C3",
    "fn": "XD12",
    "condition": "DB Surrounding cannot be read or the upsert fails (after 3 retries)",
@@ -922,7 +976,7 @@ export const BPF: BpfData = {
   },
   {
    "id": "AB15",
-   "flow": "F3",
+   "flow": "F4",
    "step": "C4",
    "fn": "XD11",
    "condition": "Delete / update / insert of a line fails, or any other system error",
@@ -933,7 +987,7 @@ export const BPF: BpfData = {
   },
   {
    "id": "AB16",
-   "flow": "F3",
+   "flow": "F4",
    "step": "C2 / C4 / C7",
    "fn": "XD11",
    "condition": "Qty already in an ASN is cancelled (SOP not followed): QTY_IN_ASN > VALID_QTY",
