@@ -1,8 +1,35 @@
 import { LOCKED_ITEMS, NAV_GROUPS, setHiddenMenus, useHiddenMenus } from '../../lib/nav';
-import { ALWAYS_PIN, setPinMenus, usePinMenus } from '../../lib/pin';
+import { useState } from 'react';
+import { ALWAYS_PIN, changePin, resetPin, setPinMenus, usePinMenus } from '../../lib/pin';
 import { ROUTE_BY_NAV_ITEM } from '../../routes';
 
 const card = { border: '1px solid var(--color-divider)', borderRadius: 8, background: 'var(--color-neutral-100)', boxShadow: 'var(--shadow-sm)' };
+
+function ChangePinCard() {
+  const [cur, setCur] = useState('');
+  const [next, setNext] = useState('');
+  const [again, setAgain] = useState('');
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const inp = { padding: '5px 8px', fontSize: 13, width: 110, letterSpacing: '.2em', border: '1px solid var(--color-neutral-400)', borderRadius: 4 };
+  const save = async () => {
+    if (next !== again) { setMsg({ ok: false, text: 'New PIN and confirmation are different.' }); return; }
+    const err = await changePin(cur, next);
+    setMsg(err ? { ok: false, text: err } : { ok: true, text: 'PIN changed. It is used for every menu with 🔒 PIN.' });
+    if (!err) { setCur(''); setNext(''); setAgain(''); }
+  };
+  return (
+    <div style={{ ...card, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', fontSize: 12.5 }}>
+      <b style={{ fontSize: 13.5 }}>🔒 Menu PIN</b>
+      <label>Current PIN <input type="password" inputMode="numeric" aria-label="Current PIN" value={cur} onChange={(e) => setCur(e.target.value)} style={inp} /></label>
+      <label>New PIN <input type="password" inputMode="numeric" aria-label="New PIN" value={next} onChange={(e) => setNext(e.target.value)} style={inp} /></label>
+      <label>Confirm <input type="password" inputMode="numeric" aria-label="Confirm new PIN" value={again} onChange={(e) => setAgain(e.target.value)} style={inp} /></label>
+      <button className="btn btn-primary" disabled={!cur || !next || !again} onClick={() => { void save(); }}>Change PIN</button>
+      <button className="btn btn-secondary" onClick={() => { resetPin(); setMsg({ ok: true, text: 'PIN reset to the default.' }); }}>Reset to default</button>
+      {msg && <span style={{ color: msg.ok ? '#1e7e34' : '#c0392b' }}>{msg.text}</span>}
+      <span style={{ flexBasis: '100%', fontSize: 11.5, color: 'var(--color-neutral-600)' }}>One PIN for Menu Settings and every menu with 🔒 PIN (4-8 digits). Kept in this browser (prototype).</span>
+    </div>
+  );
+}
 
 /** Admin panel: choose which sidebar menus are shown. Saved at once in this browser (prototype). */
 export function MenuSettingsPage() {
@@ -28,6 +55,7 @@ export function MenuSettingsPage() {
         <span style={{ fontSize: 12.5, alignSelf: 'center' }}><b>{shown}</b> of {all.length} menus shown · <b>{pins.length + ALWAYS_PIN.size}</b> with PIN</span>
         <button className="btn btn-secondary" disabled={!hidden.length} onClick={() => setHiddenMenus([])}>Show all</button>
       </div>
+      <ChangePinCard />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 14 }}>
         {NAV_GROUPS.map(([group, items]) => {
           const free = items.filter((i) => !LOCKED_ITEMS.has(i));
