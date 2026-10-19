@@ -1,5 +1,6 @@
 """XD10 ASN Cross Dock Creation Screen = ASN Crossdock Creation (X8) + its Submit ASN batch (X14) as section 5.7."""
 import re
+from sample_xd10 import SAMPLE
 from v2lib import derive, load, replace_all, set_header, write
 
 PRE_X8 = [
@@ -33,7 +34,9 @@ def build():
     a['operation'] += [
         {"type": "heading", "text": "5.7 Submit ASN Process (backend, follows the existing ASN)"},
         {"type": "bullets", "marker": "a.", "level": 2, "items": b['func_flow']['steps']},
-        {"type": "bullets", "marker": "-", "level": 2, "items": b['func_desc'][0]['items']}]
+        {"type": "bullets", "marker": "-", "level": 2, "items": b['func_desc'][0]['items']},
+        {"type": "heading", "text": "5.8 Sample Create ASN"},
+        {"type": "bullets", "marker": "-", "level": 2, "items": ["Dummy example of [Create ASN] (case packing, TB_R_INSTRUCTION rows, flags, Case List, scenarios): see sheet Sample Input."]}]
     for blk in b['data_map']['blocks']:
         blk['destination']['description'] = 'Submit ASN (5.7): ' + blk['destination'].get('description', '')
     a['data_map']['blocks'] += b['data_map']['blocks']
@@ -46,6 +49,7 @@ def build():
     a['tables'] += [t for t in b['tables'] if t['name'] not in names]
     leftover = re.findall(r'\bX\d+\b', str(a))
     assert not leftover, leftover
+    a['sample_sheet'] = SAMPLE  # after the check: dummy POs PO-X1 / PO-X2 look like old X ids
     return write(set_header(a, 'XD10'), 'XD10')
 
 

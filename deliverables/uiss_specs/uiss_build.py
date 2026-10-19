@@ -2,7 +2,7 @@
 
 - spec key "sample_sheet": an extra sheet (e.g. "Sample Input") with one value per column, added after the
   template sheets: {"title": "...", "intro": ["..."], "sections": [{"title": "...", "columns": ["..."],
-  "widths": [..], "rows": [[...], ...]}]}
+  "widths": [..], "rows": [[...], ...], "spans": [..] (optional: sheet columns taken by each column, merged)}]}
 - the template's broken defined names and external links are removed afterwards (clean_uiss_xlsx.py).
 
 Usage: uiss_build.py SPEC.json -o OUT.xlsx
@@ -34,32 +34,51 @@ def add_sample_sheet(wb, cfg):
     for line in cfg.get('intro', []):
         ws.cell(r, 1, line).font = F_BODY
         r += 1
-    widths = {}
+    widths, merged = {}, []
     for sec in cfg['sections']:
         r += 1
         ws.cell(r, 1, sec['title']).font = F_BOLD
         r += 1
-        for c, title in enumerate(sec['columns'], 1):
-            cell = ws.cell(r, c, title)
-            cell.font, cell.fill, cell.border = F_BOLD, HEAD, BOX
-            cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
-        for c, w in enumerate(sec.get('widths', []), 1):
-            widths[c] = max(widths.get(c, 0), w)
+        spans = sec.get('spans') or [1] * len(sec['columns'])
+        starts = [1 + sum(spans[:i]) for i in range(len(spans))]
+
+        def put(r, i, v, font, fill=None, align=None):
+            c0, c1 = starts[i], starts[i] + spans[i] - 1
+            for c in range(c0, c1 + 1):
+                ws.cell(r, c).border = BOX
+                if fill:
+                    ws.cell(r, c).fill = fill
+            cell = ws.cell(r, c0, v)
+            cell.font, cell.alignment = font, align
+            if c1 > c0:
+                ws.merge_cells(start_row=r, start_column=c0, end_row=r, end_column=c1)
+                if isinstance(v, str):
+                    merged.append((r, c0, c1, v))
+        for i, title in enumerate(sec['columns']):
+            put(r, i, title, F_BOLD, HEAD, Alignment(horizontal='center', vertical='center', wrap_text=True))
+        if not sec.get('spans'):
+            for c, w in enumerate(sec.get('widths', []), 1):
+                widths[c] = max(widths.get(c, 0), w)
         r += 1
         for row in sec['rows']:
             shade = isinstance(row, dict) and row.get('group')
             values = row['values'] if isinstance(row, dict) else row
-            for c in range(1, len(sec['columns']) + 1):
-                v = values[c - 1] if c - 1 < len(values) else None
-                cell = ws.cell(r, c, v if v != '' else None)
-                cell.font, cell.border = F_BODY, BOX
-                cell.alignment = Alignment(vertical='top', wrap_text=True,
-                                           horizontal='right' if isinstance(v, (int, float)) else 'left')
-                if shade:
-                    cell.fill = GROUP
+            for i in range(len(sec['columns'])):
+                v = values[i] if i < len(values) else None
+                put(r, i, v if v != '' else None, F_BODY, GROUP if shade else None,
+                    Alignment(vertical='top', wrap_text=True, horizontal='right' if isinstance(v, (int, float)) else 'left'))
             r += 1
     for c, w in widths.items():
         ws.column_dimensions[ws.cell(1, c).column_letter].width = w
+    # Excel does not fit the height of a merged cell: estimate the number of lines
+    heights = {}
+    for r, c0, c1, v in merged:
+        chars = sum(widths.get(c, 9) for c in range(c0, c1 + 1)) * 1.15
+        lines = sum(max(1, -(-len(p) // max(int(chars), 1))) for p in v.split('\n'))
+        heights[r] = max(heights.get(r, 1), lines)
+    for r, n in heights.items():
+        if n > 1:
+            ws.row_dimensions[r].height = 12.5 * n
     ws.page_setup.orientation = 'landscape'
     ws.page_setup.fitToWidth, ws.page_setup.fitToHeight = 1, 0
     ws.sheet_properties.pageSetUpPr.fitToPage = True
