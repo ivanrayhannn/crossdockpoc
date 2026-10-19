@@ -8,6 +8,6 @@ Sumber: UISS `XD10_UISS_Screen_ASNCrossDockCreation.xlsx` (0.1 Initial Draft, 18
 - Tabel: #TEMP_INSTRUCTION, TB_R_INSTRUCTION, TB_R_PRA_DAILY_ORDER_MAPPED, TB_R_DAILY_ORDER_MANIFEST, TB_R_DAILY_ORDER_PART.
 
 ## Keputusan 19-Oct
-- **Case:** per destinasi dipecah sesuai pcs/case (Vietnam 24 pcs, 6 pcs/case = 4 case). G-TOPAS rilis kelipatan pcs/case, jadi case selalu penuh.
+- **Case:** per destinasi dipecah sesuai pcs/case (Vietnam 24 pcs, 6 pcs/case = 4 case). G-TOPAS rilis kelipatan pcs/case, jadi case selalu penuh. 1 case boleh berisi beberapa Customer Order dan beberapa PO (Supplier) dari destinasi yang sama; line yang tidak muat lanjut ke case berikutnya.
 - **Unit tetap utuh** (Part Number + Customer Order Date): kalau 1 line belum dapat PO, unit belum bisa di-ASN.
 - **Case label:** 1 label = 1 case 1 destinasi, bisa berisi beberapa Customer Order No; format sesuai existing.
