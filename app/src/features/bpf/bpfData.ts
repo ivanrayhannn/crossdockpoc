@@ -36,7 +36,7 @@ export const BPF: BpfData = {
     {
      "id": "B3",
      "label": "Monthly · scheduler (date not detailed)",
-     "slots": 3
+     "slots": 4
     },
     {
      "id": "B4",
@@ -200,7 +200,7 @@ export const BPF: BpfData = {
      "id": "M8",
      "lane": "PR",
      "band": "B3",
-     "slot": 2,
+     "slot": 3,
      "fn": "XD01",
      "title": "Check Part List result (status, last success date)",
      "read": [
@@ -608,7 +608,7 @@ export const BPF: BpfData = {
     {
      "id": "B3",
      "label": "Day D · working hours",
-     "slots": 2
+     "slots": 3
     }
    ],
    "steps": [
@@ -735,7 +735,7 @@ export const BPF: BpfData = {
      "id": "C7",
      "lane": "DS",
      "band": "B3",
-     "slot": 0,
+     "slot": 1,
      "fn": "Log Monitoring",
      "title": "Check CONFLICT lines (LOG4)",
      "read": [
@@ -754,7 +754,7 @@ export const BPF: BpfData = {
      "id": "C8",
      "lane": "DS",
      "band": "B3",
-     "slot": 1,
+     "slot": 2,
      "fn": "manual",
      "title": "Handle the shipped case: allocate to an open order (same / other destination) or warehouse stock",
      "read": [],
