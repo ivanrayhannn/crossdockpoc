@@ -19,9 +19,10 @@
  ],
  "general": {
   "objective": [
-   "To get the crossdock customer orders (H0253, order status 7, Hold Flag N, not yet mapped) and pre-map them to the crossdock supplier PO parts (Pra Daily Order, crossdock flag X), FIFO by order date, into the temporary table #TEMP_INSTRUCTION.",
+   "To get the crossdock customer orders (H0253, order status 7, Hold Flag N, not yet mapped) and pre-map them to the crossdock supplier PO parts (Pra Daily Order: manifests with TB_R_PRA_DAILY_ORDER_MANIFEST.CROSS_DOCK_FLAG = 'X'; their part data from TB_R_PRA_DAILY_ORDER_PART (join MANIFEST_NO)), FIFO by order date, into the temporary table #TEMP_INSTRUCTION.",
    "To give ASN Crossdock Creation (XD10) the delivery plan per Part Number + Customer Order Date with Case Qty, PO Readiness (case) and ASN Status Ready / Not Ready.",
-   "It runs when the user clicks [Search] on XD10; there is no scheduler. The real mapping is done later by [Create ASN] on XD10."
+   "It runs when the user clicks [Search] on XD10; there is no scheduler. The real mapping is done later by [Create ASN] on XD10.",
+   "Crossdock PO (decided 20-Oct): the order is taken from the manifest with TB_R_PRA_DAILY_ORDER_MANIFEST.CROSS_DOCK_FLAG = 'X' and its part data from TB_R_PRA_DAILY_ORDER_PART (MANIFEST_NO). The PO line is identified by MANIFEST_NO + MANIFEST_ITEM (PO_ITEM can differ from MANIFEST_ITEM; one PO can have several manifests)."
   ],
   "operation_flow": {
    "flow": {
@@ -87,12 +88,12 @@
    {
     "name": "TB_R_PRA_DAILY_ORDER_MANIFEST / TB_R_PRA_DAILY_ORDER_PART",
     "type": "DB",
-    "description": "CROSSDOCK_FLAG = 'X', latest data, by Order Date ascending"
+    "description": "manifests with TB_R_PRA_DAILY_ORDER_MANIFEST.CROSS_DOCK_FLAG = 'X'; their part data from TB_R_PRA_DAILY_ORDER_PART (join MANIFEST_NO); latest data; by PO_DT ascending"
    },
    {
     "name": "TB_R_PRA_DAILY_ORDER_MAPPED",
     "type": "DB",
-    "description": "New table: MAPPED_QTY per PO part; open PO qty = PO_ORDER_QTY - MAPPED_QTY"
+    "description": "New table: MAPPED_QTY per PO part; open PO qty = ORDER_QTY - MAPPED_QTY"
    }
   ],
   "outputs": [
@@ -266,8 +267,8 @@
    {
     "text": "Get the PO parts from TB_R_PRA_DAILY_ORDER_MANIFEST + TB_R_PRA_DAILY_ORDER_PART:",
     "children": [
-     "CROSSDOCK_FLAG = 'X'; latest data; open PO qty = PO_ORDER_QTY - MAPPED_QTY of TB_R_PRA_DAILY_ORDER_MAPPED (0 when no row) > 0; ordered by Order Date ascending (FIFO).",
-     "Get: PO Number, Manifest Number, Supplier Code / Plant, Sub Supplier Code / Plant, Order Type, Dock Code, PO Order Qty, Order Date, ETD Ori, Manifest Item No, Part Number."
+     "manifests with TB_R_PRA_DAILY_ORDER_MANIFEST.CROSS_DOCK_FLAG = 'X'; their part data from TB_R_PRA_DAILY_ORDER_PART (join MANIFEST_NO); latest data; open PO qty = ORDER_QTY - MAPPED_QTY of TB_R_PRA_DAILY_ORDER_MAPPED (0 when no row) > 0; ordered by Order Date ascending (FIFO).",
+     "Get: PO Number, Manifest Number, Supplier Code / Plant, Sub Supplier Code / Plant, Order Type, Dock Code, PO Order Qty, Order Date, ETD Ori, Manifest Item, Part Number."
     ]
    },
    {
@@ -291,8 +292,12 @@
      "table": "TB_R_H0253_ORDER_CONTROL_PRE + TB_R_PRA_DAILY_ORDER_MANIFEST / TB_R_PRA_DAILY_ORDER_PART",
      "keys": [
       {
-       "field": "PART_NO",
-       "value": "Same part number"
+       "field": "H0253.SHIPPING_PART_NO",
+       "value": "= TB_R_PRA_DAILY_ORDER_PART.PART_NO"
+      },
+      {
+       "field": "TB_R_PRA_DAILY_ORDER_PART.MANIFEST_NO",
+       "value": "= TB_R_PRA_DAILY_ORDER_MANIFEST.MANIFEST_NO with TB_R_PRA_DAILY_ORDER_MANIFEST.CROSS_DOCK_FLAG = 'X'"
       }
      ]
     },
@@ -351,52 +356,52 @@
       "description": "Qty of the line still without a PO after this assignment"
      },
      {
-      "source_field": "PO Number",
+      "source_field": "TB_R_PRA_DAILY_ORDER_PART.PO_NO",
       "dest_field": "PO_NO",
       "description": "NULL for the open remainder"
      },
      {
-      "source_field": "Manifest Number",
+      "source_field": "TB_R_PRA_DAILY_ORDER_PART.MANIFEST_NO",
       "dest_field": "MANIFEST_NO"
      },
      {
-      "source_field": "Manifest Item No",
-      "dest_field": "MANIFEST_ITEM_NO"
+      "source_field": "TB_R_PRA_DAILY_ORDER_PART.MANIFEST_ITEM",
+      "dest_field": "MANIFEST_ITEM"
      },
      {
-      "source_field": "Order Date (PO)",
-      "dest_field": "PO_ORDER_DT"
+      "source_field": "TB_R_PRA_DAILY_ORDER_MANIFEST.PO_DT",
+      "dest_field": "PO_DT"
      },
      {
-      "source_field": "PO Order Qty",
-      "dest_field": "PO_ORDER_QTY"
+      "source_field": "TB_R_PRA_DAILY_ORDER_PART.ORDER_QTY",
+      "dest_field": "ORDER_QTY"
      },
      {
-      "source_field": "Supplier Code",
+      "source_field": "TB_R_PRA_DAILY_ORDER_MANIFEST.SUPPLIER_CD",
       "dest_field": "SUPPLIER_CD"
      },
      {
-      "source_field": "Supplier Plant",
+      "source_field": "TB_R_PRA_DAILY_ORDER_MANIFEST.SUPPLIER_PLANT",
       "dest_field": "SUPPLIER_PLANT"
      },
      {
-      "source_field": "Sub Supplier Code",
+      "source_field": "TB_R_PRA_DAILY_ORDER_MANIFEST.SUB_SUPP_CD",
       "dest_field": "SUB_SUPPLIER_CD"
      },
      {
-      "source_field": "Sub Supplier Plant",
+      "source_field": "TB_R_PRA_DAILY_ORDER_MANIFEST.SUB_SUPP_PLANT",
       "dest_field": "SUB_SUPPLIER_PLANT"
      },
      {
-      "source_field": "Order Type",
+      "source_field": "TB_R_PRA_DAILY_ORDER_MANIFEST.ORDER_TYPE",
       "dest_field": "ORDER_TYPE"
      },
      {
-      "source_field": "Dock Code",
+      "source_field": "TB_R_PRA_DAILY_ORDER_PART.DOCK_CD",
       "dest_field": "DOCK_CD"
      },
      {
-      "source_field": "ETD Ori",
+      "source_field": "ETD Ori (source column TBC)",
       "dest_field": "ETD_ORI"
      },
      {
@@ -487,7 +492,7 @@
   "title": "Sample Input",
   "heading": "Sample pre-mapping - Mapping Customer Order and PO (FIFO by Customer Order Date)",
   "intro": [
-   "Part PART-C, 6 pcs/case. Customer order lines of H0253 (order status 7, Hold Flag N, not mapped) and PO parts of the Pra Daily Order (crossdock flag X)."
+   "Part PART-C, 6 pcs/case. Customer order lines of H0253 (order status 7, Hold Flag N, not mapped) and PO parts of the Pra Daily Order (manifests with TB_R_PRA_DAILY_ORDER_MANIFEST.CROSS_DOCK_FLAG = 'X'; their part data from TB_R_PRA_DAILY_ORDER_PART (join MANIFEST_NO))."
   ],
   "sections": [
    {
@@ -792,21 +797,21 @@
      "Manifest number"
     ],
     [
-     "MANIFEST_ITEM_NO",
+     "MANIFEST_ITEM",
      "VARCHAR(TBD)",
      "",
      "Y",
      "Manifest item number (Pra Daily Order Part)"
     ],
     [
-     "PO_ORDER_DT",
+     "PO_DT",
      "DATE",
      "",
      "Y",
      "Order date of the PO (PO Date)"
     ],
     [
-     "PO_ORDER_QTY",
+     "ORDER_QTY",
      "NUMBER(TBD)",
      "",
      "Y",
@@ -891,7 +896,7 @@
      "Manifest number"
     ],
     [
-     "MANIFEST_ITEM_NO",
+     "MANIFEST_ITEM",
      "VARCHAR(TBD)",
      "Y",
      "N",
@@ -919,7 +924,7 @@
      "Supplier plant"
     ],
     [
-     "PO_ORDER_QTY",
+     "ORDER_QTY",
      "NUMBER(TBD)",
      "",
      "N",
@@ -930,7 +935,7 @@
      "NUMBER(TBD)",
      "",
      "N",
-     "Qty already mapped to customer orders by [Create ASN]; open qty = PO_ORDER_QTY - MAPPED_QTY"
+     "Qty already mapped to customer orders by [Create ASN]; open qty = ORDER_QTY - MAPPED_QTY"
     ],
     [
      "CREATED_BY",

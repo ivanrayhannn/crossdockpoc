@@ -366,7 +366,7 @@ export const BPF: BpfData = {
      "band": "B1",
      "slot": 0,
      "fn": "existing",
-     "title": "Release PO Supplier (CROSSDOCK_FLAG X)",
+     "title": "Release PO Supplier (manifest CROSS_DOCK_FLAG X, parts in Pra Daily Order Part)",
      "read": [],
      "write": [
       "TB_R_PRA_DAILY_ORDER_MANIFEST",
