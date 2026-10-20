@@ -20,3 +20,13 @@ Dari `NSP_INSERT_TB_R_PRA_DAILY_ORDER_MANIFEST.sql` (54 kolom, 391 baris) dan `N
 | `MANIFEST_NO` unik; 1 `PO_NO` bisa beberapa manifest; `PO_ITEM` bisa beda dengan `MANIFEST_ITEM` | Key PO line untuk mapping = `MANIFEST_NO + MANIFEST_ITEM` |
 | Rute / rit: `DELIVERY_DT`, `SUB_ROUTE_CD`, `SUB_ROUTE_SEQ`, `SUB_ROUTE_DT` | Kandidat sumber Delivery Date / Rit di XD10 (TBC) |
 | `SUPPLIER_CD` 4 karakter, `SUPPLIER_PLANT` bisa `X` | Data dummy `50221` di prototype / simulasi tetap dipakai (tidak sesuai panjang asli) |
+
+## Struktur tabel existing dari GTOPAS_SPS_DB_Structure_20240423 (20-Oct)
+`gtopas_structure.json` (hanya struktur): TR-03 / TR-04 Pra Daily Order (tipe data dipakai untuk kolom export SQL), TR-01 / TR-02 Daily Order Manifest / Part (submit ASN), MST-03 `TB_M_PART_MASTER` (hanya `PART_NAME`), TR-06 `TB_R_CASE_LABEL_LAST_SEQ` (last sequence ASN No dan case label per supplier + plant).
+
+| Catatan | |
+|---|---|
+| `TB_R_DAILY_ORDER_MANIFEST` PK `SUB_MANIFEST_NO + MANIFEST_NO`, kolom `ASN_NO` | Satu ASN crossdock = beberapa baris manifest dengan `ASN_NO` sama |
+| `TB_R_DAILY_ORDER_PART` PK `SUB_MANIFEST_NO + MANIFEST_NO + MANIFEST_ITEM + CASE_NO` | Satu baris per manifest item x case |
+| `ASN_NO` VARCHAR(15), `CASE_NO` VARCHAR(9) | Format dummy `ASN-50221-261016-001` (20 karakter) di prototype / simulasi lebih panjang dari kolom asli: format asli mengikuti numbering existing |
+| Dokumen DB vs export SQL Pra Manifest | Dokumen: `PO_DATE`, `ORDER_RELEASE_DT`, `RE_EXPORT_CD`; export: `PO_DT`, `MANIFEST_LAST_SEQ`, `CANCEL_*`, `SEND_*_MDI` (ERD memakai kolom export) |

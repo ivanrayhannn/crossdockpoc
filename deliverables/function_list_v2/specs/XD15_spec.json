@@ -506,63 +506,175 @@
    "name": "TB_R_DAILY_ORDER_MANIFEST",
    "kind": "transaction",
    "proposed": false,
-   "description": "Existing ASN header table of NSP; the crossdock ASN is saved here after submit. Only the fields used are listed; physical names follow the existing table.",
+   "description": "Existing ASN manifest (GTOPAS SPS DB structure TR-01). Submit ASN: one row per Pra Daily Order manifest of the cases, all with the same ASN_NO. Only the columns used are listed.",
    "columns": [
     [
-     "MANIFEST_NO / ASN_NO",
-     "existing",
+     "DEPOT_CD",
+     "VARCHAR(20)",
+     "",
      "Y",
-     "N",
-     "ASN number (auto generated as today, existing numbering)"
+     "Depot Code"
     ],
     [
      "SUPPLIER_CD",
-     "existing",
+     "VARCHAR(4)",
      "",
      "N",
-     "Supplier code"
+     "Supplier Code"
     ],
     [
      "SUPPLIER_PLANT",
-     "existing",
+     "VARCHAR(1)",
      "",
      "N",
-     "Supplier plant"
+     "Supplier Plant Code"
     ],
     [
-     "DELIVERY_DT",
-     "existing",
+     "SUB_SUPP_CD",
+     "VARCHAR(4)",
      "",
-     "N",
-     "Delivery Date"
+     "Y",
+     "Sub Supplier Code"
     ],
     [
-     "RIT / ROUTE",
-     "existing",
+     "SUB_SUPP_PLANT",
+     "VARCHAR(1)",
      "",
-     "N",
-     "Rit and route (route master, existing)"
+     "Y",
+     "Sub Supplier Plant Code"
     ],
     [
-     "TOTAL_CASE / TOTAL_QTY",
-     "existing",
+     "SUPPLIER_NAME",
+     "VARCHAR(50)",
+     "",
+     "Y",
+     "Supplier Name"
+    ],
+    [
+     "PO_NO",
+     "VARCHAR(20)",
      "",
      "N",
-     "Number of cases / Delivery Qty"
+     "PO Number"
+    ],
+    [
+     "ASN_NO",
+     "VARCHAR(15)",
+     "",
+     "N",
+     "ASN Number"
+    ],
+    [
+     "PO_DATE",
+     "DATETIME",
+     "",
+     "N",
+     "PO Date"
+    ],
+    [
+     "ASN_DATE",
+     "DATETIME",
+     "",
+     "N",
+     "ASN Date"
+    ],
+    [
+     "SUB_MANIFEST_NO",
+     "VARCHAR(20)",
+     "Y",
+     "N",
+     "Sub Manifest Number"
+    ],
+    [
+     "MANIFEST_NO",
+     "VARCHAR(16)",
+     "Y",
+     "N",
+     "Manifest Number"
+    ],
+    [
+     "ORDER_TYPE",
+     "VARCHAR(1)",
+     "",
+     "Y",
+     "Order Type"
+    ],
+    [
+     "CROSS_DOCK_FLAG",
+     "VARCHAR(3)",
+     "",
+     "Y",
+     "Cross Dock Flag"
+    ],
+    [
+     "DOCK_CD",
+     "VARCHAR(2)",
+     "",
+     "Y",
+     "Dock Code"
+    ],
+    [
+     "TOTAL_ITEM",
+     "NUMERIC",
+     "",
+     "N",
+     "Total Item"
+    ],
+    [
+     "TOTAL_QTY",
+     "NUMERIC",
+     "",
+     "N",
+     "Total Quantity"
+    ],
+    [
+     "DELIVERY_DT_ORI",
+     "DATETIME",
+     "",
+     "Y",
+     "Delivery Date Original"
+    ],
+    [
+     "SUB_ROUTE_CD",
+     "VARCHAR(10)",
+     "",
+     "N",
+     "Sub Route Code"
+    ],
+    [
+     "SUB_ROUTE_SEQ",
+     "VARCHAR(2)",
+     "",
+     "N",
+     "Sub Route Seq"
+    ],
+    [
+     "SUB_ROUTE_DT",
+     "DATETIME",
+     "",
+     "Y",
+     "Sub Route Date"
     ],
     [
      "STATUS",
-     "existing",
+     "VARCHAR(3)",
      "",
      "N",
-     "Created"
+     "Status"
     ],
     [
-     "CREATED_BY / CREATED_DT",
-     "existing",
+     "CREATED_BY",
+     "VARCHAR(20)",
      "",
      "N",
-     "User and date-time of submit"
+     "Created By"
+    ],
+    [
+     "CREATED_DT",
+     "DATETIME",
+     "",
+     "N",
+     "Created Date"
     ]
    ]
   },
@@ -570,56 +682,140 @@
    "name": "TB_R_DAILY_ORDER_PART",
    "kind": "transaction",
    "proposed": false,
-   "description": "Existing ASN part / case table of NSP. Only the fields used are listed; physical names follow the existing table.",
+   "description": "Existing ASN part (TR-02). Submit ASN: one row per manifest item and case (a case can hold several manifest items). Only the columns used are listed.",
    "columns": [
     [
-     "MANIFEST_NO / ASN_NO",
-     "existing",
+     "PO_NO",
+     "VARCHAR(20)",
+     "",
+     "N",
+     "PO Number"
+    ],
+    [
+     "PO_ITEM",
+     "VARCHAR(4)",
+     "",
+     "N",
+     "PO Item"
+    ],
+    [
+     "SUB_MANIFEST_NO",
+     "VARCHAR(20)",
      "Y",
      "N",
-     "ASN number"
+     "Sub Manifest Number"
+    ],
+    [
+     "MANIFEST_NO",
+     "VARCHAR(16)",
+     "Y",
+     "N",
+     "Manifest Number"
+    ],
+    [
+     "MANIFEST_ITEM",
+     "NUMERIC",
+     "Y",
+     "N",
+     "Manifest Item"
     ],
     [
      "CASE_NO",
-     "existing",
+     "VARCHAR(9)",
      "Y",
      "N",
-     "Case number, auto generated with the existing last sequence"
+     "Case Number"
+    ],
+    [
+     "ASN_NO",
+     "VARCHAR(15)",
+     "",
+     "N",
+     "ASN Number"
+    ],
+    [
+     "ASN_DATE",
+     "DATETIME",
+     "",
+     "N",
+     "ASN Date"
     ],
     [
      "PART_NO",
-     "existing",
+     "VARCHAR(20)",
      "",
      "N",
-     "Part number of the case"
+     "Part Number"
     ],
     [
-     "DESTINATION_CD",
-     "existing",
+     "PART_NAME",
+     "VARCHAR(50)",
      "",
      "N",
-     "Destination of the case"
+     "Part Name"
     ],
     [
-     "QTY",
-     "existing",
+     "PO_QTY",
+     "NUMERIC",
      "",
      "N",
-     "Qty of the case"
+     "PO Quantity"
     ],
     [
-     "PO_NO / MANIFEST_ITEM_NO",
-     "existing",
+     "DELIVERY_QTY",
+     "NUMERIC",
      "",
      "N",
-     "PO reference of the Pra Daily Order"
+     "Delivery Quantity"
     ],
     [
-     "CREATED_BY / CREATED_DT",
-     "existing",
+     "QTY_PER_CONTAINER",
+     "NUMERIC",
      "",
      "N",
-     "User and date-time of submit"
+     "Quantity Per Container"
+    ],
+    [
+     "DELIVERY_DT_ORI",
+     "DATETIME",
+     "",
+     "Y",
+     "Delivery Date Original"
+    ],
+    [
+     "KANBAN_NO",
+     "VARCHAR(4)",
+     "",
+     "Y",
+     "Kanban Number"
+    ],
+    [
+     "PART_BARCODE",
+     "VARCHAR(25)",
+     "",
+     "Y",
+     "Part Barcode"
+    ],
+    [
+     "STATUS",
+     "VARCHAR(3)",
+     "",
+     "N",
+     "Status"
+    ],
+    [
+     "CREATED_BY",
+     "VARCHAR(20)",
+     "",
+     "N",
+     "Created By"
+    ],
+    [
+     "CREATED_DT",
+     "DATETIME",
+     "",
+     "N",
+     "Created Date"
     ]
    ]
   }

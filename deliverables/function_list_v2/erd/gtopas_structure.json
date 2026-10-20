@@ -1,0 +1,1571 @@
+{
+ "TB_R_PRA_DAILY_ORDER_MANIFEST": {
+  "sheet": "TR-03",
+  "description": "Invoice Detail Table",
+  "columns": [
+   [
+    "DEPOT_CD",
+    "VARCHAR(2)",
+    "",
+    "Y",
+    "DEPOT CD"
+   ],
+   [
+    "SUPPLIER_CD",
+    "VARCHAR(4)",
+    "",
+    "N",
+    "SUPPLIER CD"
+   ],
+   [
+    "SUPPLIER_PLANT",
+    "VARCHAR(1)",
+    "",
+    "N",
+    "SUPPLIER PLANT"
+   ],
+   [
+    "SUB_SUPP_CD",
+    "VARCHAR(4)",
+    "",
+    "Y",
+    "SUB SUPP CD"
+   ],
+   [
+    "SUB_SUPP_PLANT",
+    "VARCHAR(1)",
+    "",
+    "Y",
+    "SUB SUPP PLANT"
+   ],
+   [
+    "SUPPLIER_NAME",
+    "VARCHAR(50)",
+    "",
+    "Y",
+    "SUPPLIER NAME"
+   ],
+   [
+    "PO_NO",
+    "VARCHAR(20)",
+    "",
+    "N",
+    "PO NO"
+   ],
+   [
+    "PO_DATE",
+    "DATETIME(1)",
+    "",
+    "Y",
+    "PO DATE"
+   ],
+   [
+    "MANIFEST_NO",
+    "VARCHAR(20)",
+    "Y",
+    "N",
+    "MANIFEST NO"
+   ],
+   [
+    "MAKER_CODE",
+    "VARCHAR(20)",
+    "",
+    "Y",
+    "MAKER CODE"
+   ],
+   [
+    "PO_TRANSPORT_CD",
+    "VARCHAR(20)",
+    "",
+    "Y",
+    "PO TRANSPORT CD"
+   ],
+   [
+    "ORDER_TYPE",
+    "VARCHAR(2)",
+    "",
+    "Y",
+    "ORDER TYPE"
+   ],
+   [
+    "CROSS_DOCK_FLAG",
+    "VARCHAR(10)",
+    "",
+    "Y",
+    "CROSS DOCK FLAG"
+   ],
+   [
+    "COMPANY_CD",
+    "VARCHAR(10)",
+    "",
+    "N",
+    "COMPANY CD"
+   ],
+   [
+    "RCV_PLANT_CD",
+    "VARCHAR(10)",
+    "",
+    "Y",
+    "RCV PLANT CD"
+   ],
+   [
+    "DOCK_CD",
+    "VARCHAR(4)",
+    "",
+    "Y",
+    "DOCK CD"
+   ],
+   [
+    "TOTAL_ITEM",
+    "NUMERIC",
+    "",
+    "N",
+    "TOTAL ITEM"
+   ],
+   [
+    "TOTAL_QTY",
+    "NUMERIC",
+    "",
+    "N",
+    "TOTAL QTY"
+   ],
+   [
+    "TOTAL_QTY_DELIVERY",
+    "NUMERIC",
+    "",
+    "Y",
+    "TOTAL QTY DELIVERY"
+   ],
+   [
+    "RECEIVED_QTY",
+    "NUMERIC",
+    "",
+    "Y",
+    "RECEIVED QTY"
+   ],
+   [
+    "TOTAL_QTY_REMAIN",
+    "NUMERIC",
+    "",
+    "Y",
+    "TOTAL QTY REMAIN"
+   ],
+   [
+    "DELIVERY_DT",
+    "DATETIME",
+    "",
+    "N",
+    "DELIVERY DT"
+   ],
+   [
+    "DELIVERY_DT_ACTUAL",
+    "DATETIME",
+    "",
+    "Y",
+    "DELIVERY DT ACTUAL"
+   ],
+   [
+    "SHIPPING_DOCK",
+    "VARCHAR(5)",
+    "",
+    "Y",
+    "SHIPPING DOCK"
+   ],
+   [
+    "SHIPPING_DT",
+    "DATETIME",
+    "",
+    "Y",
+    "SHIPPING DT"
+   ],
+   [
+    "SUB_ROUTE_CD",
+    "VARCHAR(10)",
+    "",
+    "Y",
+    "SUB ROUTE CD"
+   ],
+   [
+    "SUB_ROUTE_SEQ",
+    "VARCHAR(10)",
+    "",
+    "Y",
+    "SUB ROUTE SEQ"
+   ],
+   [
+    "SUB_ROUTE_DT",
+    "DATETIME",
+    "",
+    "Y",
+    "SUB ROUTE DT"
+   ],
+   [
+    "FST_X_DOC_CD",
+    "VARCHAR(5)",
+    "",
+    "Y",
+    "FST X DOC CD"
+   ],
+   [
+    "FST_X_PLANT_CD",
+    "VARCHAR(5)",
+    "",
+    "Y",
+    "FST X PLANT CD"
+   ],
+   [
+    "FST_X_SHIPPING_DOCK_CD",
+    "VARCHAR(5)",
+    "",
+    "Y",
+    "FST X SHIPPING DOCK CD"
+   ],
+   [
+    "FST_X_DOCK_ARRIVAL_DT",
+    "DATETIME",
+    "",
+    "Y",
+    "FST X DOCK ARRIVAL DT"
+   ],
+   [
+    "FST_X_DOCK_DEPART_DT",
+    "DATETIME",
+    "",
+    "Y",
+    "FST X DOCK DEPART DT"
+   ],
+   [
+    "FST_X_DOCK_ROUTE_GRP_CD",
+    "VARCHAR(15)",
+    "",
+    "Y",
+    "FST X DOCK ROUTE GRP CD"
+   ],
+   [
+    "FST_X_DOCK_SEQ_NO",
+    "VARCHAR(10)",
+    "",
+    "Y",
+    "FST X DOCK SEQ NO"
+   ],
+   [
+    "FST_X_ROUTE_DT",
+    "DATETIME",
+    "",
+    "Y",
+    "FST X ROUTE DT"
+   ],
+   [
+    "FTP_FLAG",
+    "VARCHAR(4)",
+    "",
+    "Y",
+    "FTP FLAG"
+   ],
+   [
+    "STATUS",
+    "VARCHAR(1)",
+    "",
+    "Y",
+    "STATUS"
+   ],
+   [
+    "REMARK",
+    "VARCHAR(100)",
+    "",
+    "Y",
+    "REMARK"
+   ],
+   [
+    "ORDER_RELEASE_DT",
+    "DATETIME",
+    "",
+    "Y",
+    "ORDER RELEASE DT"
+   ],
+   [
+    "RE_EXPORT_CD",
+    "VARCHAR(2)",
+    "",
+    "Y",
+    "RE EXPORT CD"
+   ],
+   [
+    "DOWNLOAD_FLAG",
+    "VARCHAR(2)",
+    "",
+    "Y",
+    "DOWNLOAD FLAG"
+   ],
+   [
+    "DOWNLOADED_BY",
+    "VARCHAR(20)",
+    "",
+    "Y",
+    "DOWNLOADED BY"
+   ],
+   [
+    "DOWNLOADED_DT",
+    "DATETIME",
+    "",
+    "Y",
+    "DOWNLOADED DT"
+   ],
+   [
+    "SEND_PO_ADM_FLAG",
+    "VARCHAR(2)",
+    "",
+    "Y",
+    "SEND PO ADM FLAG"
+   ],
+   [
+    "SEND_PO_ADM_DATE",
+    "DATETIME",
+    "",
+    "Y",
+    "SEND PO ADM DATE"
+   ],
+   [
+    "CREATED_BY",
+    "VARCHAR(20)",
+    "",
+    "N",
+    "CREATED BY"
+   ],
+   [
+    "CREATED_DT",
+    "DATETIME",
+    "",
+    "N",
+    "CREATED DT"
+   ],
+   [
+    "CHANGED_BY",
+    "VARCHAR(20)",
+    "",
+    "Y",
+    "CHANGED BY"
+   ],
+   [
+    "CHANGED_DT",
+    "DATETIME",
+    "",
+    "Y",
+    "CHANGED DT"
+   ],
+   [
+    "RECEIVED_DT",
+    "DATETIME",
+    "",
+    "Y",
+    "RECEIVED_DT"
+   ]
+  ]
+ },
+ "TB_R_PRA_DAILY_ORDER_PART": {
+  "sheet": "TR-04",
+  "description": "Invoice Document Table",
+  "columns": [
+   [
+    "PO_NO",
+    "VARCHAR(20)",
+    "",
+    "N",
+    "PO NO"
+   ],
+   [
+    "PO_ITEM",
+    "NUMERIC",
+    "",
+    "N",
+    "PO ITEM"
+   ],
+   [
+    "MANIFEST_NO",
+    "VARCHAR(20)",
+    "Y",
+    "N",
+    "MANIFEST NO"
+   ],
+   [
+    "MANIFEST_ITEM",
+    "NUMERIC",
+    "Y",
+    "N",
+    "MANIFEST ITEM"
+   ],
+   [
+    "ORI_PART_NO",
+    "VARCHAR(15)",
+    "",
+    "Y",
+    "ORI PART NO"
+   ],
+   [
+    "PART_NO",
+    "VARCHAR(15)",
+    "",
+    "Y",
+    "PART NO"
+   ],
+   [
+    "PART_NAME",
+    "VARCHAR(50)",
+    "",
+    "Y",
+    "PART NAME"
+   ],
+   [
+    "QTY_PER_CONTAINER",
+    "NUMERIC",
+    "",
+    "Y",
+    "QTY PER CONTAINER"
+   ],
+   [
+    "ORDER_QTY",
+    "NUMERIC",
+    "",
+    "Y",
+    "ORDER QTY"
+   ],
+   [
+    "ORDER_PLAN_QTY_LOT",
+    "NUMERIC",
+    "",
+    "Y",
+    "ORDER PLAN QTY LOT"
+   ],
+   [
+    "DELIVERY_QTY",
+    "NUMERIC",
+    "",
+    "Y",
+    "DELIVERY QTY"
+   ],
+   [
+    "RECEIVED_QTY",
+    "NUMERIC",
+    "",
+    "Y",
+    "RECEIVED QTY"
+   ],
+   [
+    "REMAIN_QTY",
+    "NUMERIC",
+    "",
+    "Y",
+    "REMAIN QTY"
+   ],
+   [
+    "DELIVERY_DT",
+    "DATETIME",
+    "",
+    "Y",
+    "DELIVERY DT"
+   ],
+   [
+    "RECEIVED_DT",
+    "DATETIME",
+    "",
+    "Y",
+    "RECEIVED DT"
+   ],
+   [
+    "KANBAN_NO",
+    "VARCHAR(5)",
+    "",
+    "Y",
+    "KANBAN NO"
+   ],
+   [
+    "PART_BARCODE",
+    "VARCHAR(15)",
+    "",
+    "Y",
+    "PART BARCODE"
+   ],
+   [
+    "RECEIVE_PLANT_NAME",
+    "VARCHAR(4)",
+    "",
+    "Y",
+    "RECEIVE PLANT NAME"
+   ],
+   [
+    "SUPPLIER_INFO1",
+    "VARCHAR(20)",
+    "",
+    "Y",
+    "SUPPLIER INFO1"
+   ],
+   [
+    "SUPPLIER_INFO2",
+    "VARCHAR(20)",
+    "",
+    "Y",
+    "SUPPLIER INFO2"
+   ],
+   [
+    "SUPPLIER_INFO3",
+    "VARCHAR(20)",
+    "",
+    "Y",
+    "SUPPLIER INFO3"
+   ],
+   [
+    "IMPORTIR_INFO",
+    "VARCHAR(20)",
+    "",
+    "Y",
+    "IMPORTIR INFO"
+   ],
+   [
+    "IMPORTIR_INFO2",
+    "VARCHAR(20)",
+    "",
+    "Y",
+    "IMPORTIR INFO2"
+   ],
+   [
+    "IMPORTIR_INFO3",
+    "VARCHAR(20)",
+    "",
+    "Y",
+    "IMPORTIR INFO3"
+   ],
+   [
+    "IMPORTIR_INFO4",
+    "VARCHAR(20)",
+    "",
+    "Y",
+    "IMPORTIR INFO4"
+   ],
+   [
+    "MOD_DST_CD",
+    "VARCHAR(5)",
+    "",
+    "Y",
+    "MOD DST CD"
+   ],
+   [
+    "PLN_PCK_DT",
+    "DATETIME",
+    "",
+    "Y",
+    "PLN PCK DT"
+   ],
+   [
+    "PART_ADDRESS",
+    "VARCHAR(15)",
+    "",
+    "Y",
+    "PART ADDRESS"
+   ],
+   [
+    "STATUS",
+    "VARCHAR(2)",
+    "",
+    "Y",
+    "STATUS"
+   ],
+   [
+    "CREATED_BY",
+    "VARCHAR(20)",
+    "",
+    "Y",
+    "CREATED BY"
+   ],
+   [
+    "CREATED_DT",
+    "DATETIME",
+    "",
+    "Y",
+    "CREATED DT"
+   ],
+   [
+    "CHANGED_BY",
+    "VARCHAR(20)",
+    "",
+    "Y",
+    "CHANGED BY"
+   ],
+   [
+    "CHANGED_DT",
+    "DATETIME",
+    "",
+    "Y",
+    "CHANGED DT"
+   ],
+   [
+    "DOCK CODE",
+    "VARCHAR(4)",
+    "",
+    "Y",
+    "DOCK_CD"
+   ]
+  ]
+ },
+ "TB_R_DAILY_ORDER_MANIFEST": {
+  "sheet": "TR-01",
+  "description": "GR IR Transaction Table",
+  "columns": [
+   [
+    "DEPOT_CD",
+    "VARCHAR(20)",
+    "",
+    "Y",
+    "Depot Code"
+   ],
+   [
+    "SUPPLIER_CD",
+    "VARCHAR(4)",
+    "",
+    "N",
+    "Supplier Code"
+   ],
+   [
+    "SUPPLIER_PLANT",
+    "VARCHAR(1)",
+    "",
+    "N",
+    "Supplier Plant Code"
+   ],
+   [
+    "SUB_SUPP_CD",
+    "VARCHAR(4)",
+    "",
+    "Y",
+    "Sub Supplier Code"
+   ],
+   [
+    "SUB_SUPP_PLANT",
+    "VARCHAR(1)",
+    "",
+    "Y",
+    "Sub Supplier Plant Code"
+   ],
+   [
+    "SUPPLIER_NAME",
+    "VARCHAR(50)",
+    "",
+    "Y",
+    "Supplier Name"
+   ],
+   [
+    "PO_NO",
+    "VARCHAR(20)",
+    "",
+    "N",
+    "PO Number"
+   ],
+   [
+    "ASN_NO",
+    "VARCHAR(15)",
+    "",
+    "N",
+    "ASN Number"
+   ],
+   [
+    "INVOICE_NO",
+    "VARCHAR(15)",
+    "",
+    "N",
+    "Invoice Number"
+   ],
+   [
+    "PO_DATE",
+    "DATETIME",
+    "",
+    "N",
+    "PO Date"
+   ],
+   [
+    "ASN_DATE",
+    "DATETIME",
+    "",
+    "N",
+    "ASN Date"
+   ],
+   [
+    "SUB_MANIFEST_NO",
+    "VARCHAR(20)",
+    "Y",
+    "N",
+    "Sub Manifest Number"
+   ],
+   [
+    "MANIFEST_NO",
+    "VARCHAR(16)",
+    "Y",
+    "N",
+    "Manifest Number"
+   ],
+   [
+    "MAKER_CODE",
+    "VARCHAR(20)",
+    "",
+    "Y",
+    "Maker Code"
+   ],
+   [
+    "PO_TRANSPORT_CD",
+    "VARCHAR(20)",
+    "",
+    "Y",
+    "PO Transport Code"
+   ],
+   [
+    "ORDER_TYPE",
+    "VARCHAR(1)",
+    "",
+    "Y",
+    "Order Type"
+   ],
+   [
+    "CROSS_DOCK_FLAG",
+    "VARCHAR(3)",
+    "",
+    "Y",
+    "Cross Dock Flag"
+   ],
+   [
+    "COMPANY_CD",
+    "VARCHAR(4)",
+    "",
+    "Y",
+    "Company Code"
+   ],
+   [
+    "RCV_PLANT_CD",
+    "VARCHAR(1)",
+    "",
+    "Y",
+    "Receive Plant Code"
+   ],
+   [
+    "DOCK_CD",
+    "VARCHAR(2)",
+    "",
+    "Y",
+    "Dock Code"
+   ],
+   [
+    "TOTAL_ITEM",
+    "NUMERIC",
+    "",
+    "N",
+    "Total Item"
+   ],
+   [
+    "TOTAL_QTY",
+    "NUMERIC",
+    "",
+    "N",
+    "Total Quantity"
+   ],
+   [
+    "DELIVERY_DT_ORI",
+    "DATETIME",
+    "",
+    "Y",
+    "Delivery Date Original"
+   ],
+   [
+    "DELIVERY_DT_ADJUST",
+    "DATETIME",
+    "",
+    "Y",
+    "Delivery Date Adjust"
+   ],
+   [
+    "DELIVERY_DT_ACTUAL",
+    "DATETIME",
+    "",
+    "Y",
+    "Delivery Date Actual"
+   ],
+   [
+    "SHIPPING_DOCK",
+    "VARCHAR(3)",
+    "",
+    "Y",
+    "Shipping Dock"
+   ],
+   [
+    "SHIPPING_DT",
+    "DATETIME",
+    "",
+    "Y",
+    "Shipping Date"
+   ],
+   [
+    "SUPP_REFF_1",
+    "VARCHAR(25)",
+    "",
+    "Y",
+    "Supplier Reff 1"
+   ],
+   [
+    "SUPP_REFF_2",
+    "VARCHAR(25)",
+    "",
+    "Y",
+    "Supplier Reff 2"
+   ],
+   [
+    "SUB_ROUTE_CD",
+    "VARCHAR(10)",
+    "",
+    "N",
+    "Sub Route Code"
+   ],
+   [
+    "SUB_ROUTE_SEQ",
+    "VARCHAR(2)",
+    "",
+    "N",
+    "Sub Route Seq"
+   ],
+   [
+    "SUB_ROUTE_DT",
+    "DATETIME",
+    "",
+    "Y",
+    "Sub Route Date"
+   ],
+   [
+    "FST_X_DOC_CD",
+    "VARCHAR(15)",
+    "",
+    "Y",
+    "Fst X Doc Code"
+   ],
+   [
+    "FST_X_PLANT_CD",
+    "DATETIME",
+    "",
+    "Y",
+    "Fst X Plant Date"
+   ],
+   [
+    "FST_X_SHIPPING_DOCK_CD",
+    "VARCHAR(10)",
+    "",
+    "Y",
+    "Fst X Shipping Dock Code"
+   ],
+   [
+    "FST_X_DOCK_ARRIVAL_DT",
+    "DATETIME",
+    "",
+    "Y",
+    "Fst X Dock Arrival Date"
+   ],
+   [
+    "FST_X_DOCK_DEPART_DT",
+    "DATETIME",
+    "",
+    "Y",
+    "Fst X Dock Depart Date"
+   ],
+   [
+    "FST_X_DOCK_ROUTE_GRP_CD",
+    "VARCHAR(10)",
+    "",
+    "Y",
+    "Fst X Dock Route Grp Code"
+   ],
+   [
+    "FST_X_DOCK_SEQ_NO",
+    "VARCHAR(2)",
+    "",
+    "Y",
+    "Fst X Dock Seq Number"
+   ],
+   [
+    "FST_X_ROUTE_DT",
+    "DATETIME",
+    "",
+    "Y",
+    "Fst X Route Date"
+   ],
+   [
+    "FTP_FLAG",
+    "VARCHAR(3)",
+    "",
+    "Y",
+    "FTP Flag"
+   ],
+   [
+    "STATUS",
+    "VARCHAR(3)",
+    "",
+    "N",
+    "Status"
+   ],
+   [
+    "REMARK",
+    "VARCHAR(20)",
+    "",
+    "Y",
+    "Remark"
+   ],
+   [
+    "SEND_ASN_FLAG",
+    "VARCHAR(3)",
+    "",
+    "Y",
+    "Send ASN Flag"
+   ],
+   [
+    "SEND_ASN_DATE",
+    "DATETIME",
+    "",
+    "Y",
+    "Send ASN Date"
+   ],
+   [
+    "SEND_GR_ADM_FLAG",
+    "VARCHAR(3)",
+    "",
+    "Y",
+    "Send GR Adm Flag"
+   ],
+   [
+    "SEND_GR_ADM_DATE",
+    "DATETIME",
+    "",
+    "Y",
+    "Send GR Adm Date"
+   ],
+   [
+    "MANIFEST_LAST_SEQ",
+    "VARCHAR(2)",
+    "",
+    "Y",
+    "Manifest Last Sequence"
+   ],
+   [
+    "CREATED_BY",
+    "VARCHAR(20)",
+    "",
+    "N",
+    "Created By"
+   ],
+   [
+    "CREATED_DT",
+    "DATETIME",
+    "",
+    "N",
+    "Created Date"
+   ],
+   [
+    "CHANGED_BY",
+    "VARCHAR(20)",
+    "",
+    "Y",
+    "Changed By"
+   ],
+   [
+    "CHANGED_DT",
+    "DATETIME",
+    "",
+    "Y",
+    "Changed Date"
+   ],
+   [
+    "CASE_DELIVERED",
+    "NUMERIC",
+    "",
+    "Y",
+    "Case Delivered"
+   ],
+   [
+    "ITEM_DELIVERED",
+    "NUMERIC",
+    "",
+    "Y",
+    "Item Delivered"
+   ],
+   [
+    "QTY_DELIVERED",
+    "NUMERIC",
+    "",
+    "Y",
+    "Qty Delivered"
+   ],
+   [
+    "CASE_RECEIVED",
+    "NUMERIC",
+    "",
+    "Y",
+    "Case Received"
+   ],
+   [
+    "ITEM_RECEIVED",
+    "NUMERIC",
+    "",
+    "Y",
+    "Item Received"
+   ],
+   [
+    "QTY_RECEIVED",
+    "NUMERIC",
+    "",
+    "Y",
+    "Qty Received"
+   ],
+   [
+    "COMPLETE_DATE",
+    "DATETIME",
+    "",
+    "Y",
+    "Complete Date"
+   ]
+  ]
+ },
+ "TB_R_DAILY_ORDER_PART": {
+  "sheet": "TR-02",
+  "description": "Invoice Header Table",
+  "columns": [
+   [
+    "PO_NO",
+    "VARCHAR(20)",
+    "",
+    "N",
+    "PO Number"
+   ],
+   [
+    "PO_ITEM",
+    "VARCHAR(4)",
+    "",
+    "N",
+    "PO Item"
+   ],
+   [
+    "SUB_MANIFEST_NO",
+    "VARCHAR(20)",
+    "Y",
+    "N",
+    "Sub Manifest Number"
+   ],
+   [
+    "SUB_MANIFEST_ITEM",
+    "NUMERIC",
+    "",
+    "N",
+    "Sub Manifest Item"
+   ],
+   [
+    "MANIFEST_NO",
+    "VARCHAR(16)",
+    "Y",
+    "N",
+    "Manifest Number"
+   ],
+   [
+    "MANIFEST_ITEM",
+    "NUMERIC",
+    "Y",
+    "N",
+    "Manifest Item"
+   ],
+   [
+    "CASE_NO",
+    "VARCHAR(9)",
+    "Y",
+    "N",
+    "Case Number"
+   ],
+   [
+    "ASN_NO",
+    "VARCHAR(15)",
+    "",
+    "N",
+    "ASN Number"
+   ],
+   [
+    "ASN_DATE",
+    "DATETIME",
+    "",
+    "N",
+    "ASN Date"
+   ],
+   [
+    "PART_NO",
+    "VARCHAR(20)",
+    "",
+    "N",
+    "Part Number"
+   ],
+   [
+    "PART_NAME",
+    "VARCHAR(50)",
+    "",
+    "N",
+    "Part Name"
+   ],
+   [
+    "PO_QTY",
+    "NUMERIC",
+    "",
+    "N",
+    "PO Quantity"
+   ],
+   [
+    "DELIVERY_QTY",
+    "NUMERIC",
+    "",
+    "N",
+    "Delivery Quantity"
+   ],
+   [
+    "DELIVERY_QTY_ACTUAL",
+    "NUMERIC",
+    "",
+    "Y",
+    "Delivery Quantity Actual"
+   ],
+   [
+    "QTY_PER_CONTAINER",
+    "NUMERIC",
+    "",
+    "N",
+    "Quantity Per Container"
+   ],
+   [
+    "ORDER_PLAN_QTY_LOT",
+    "NUMERIC",
+    "",
+    "N",
+    "Order Plan Quantity Lot"
+   ],
+   [
+    "DELIVERY_DT_ORI",
+    "DATETIME",
+    "",
+    "Y",
+    "Delivery Date Original"
+   ],
+   [
+    "DELIVERY_DT_ADJUST",
+    "DATETIME",
+    "",
+    "Y",
+    "Delivery Date Adjust"
+   ],
+   [
+    "DELIVERY_DT_ACTUAL",
+    "DATETIME",
+    "",
+    "Y",
+    "Delivery Date Actual"
+   ],
+   [
+    "KANBAN_NO",
+    "VARCHAR(4)",
+    "",
+    "Y",
+    "Kanban Number"
+   ],
+   [
+    "PART_BARCODE",
+    "VARCHAR(25)",
+    "",
+    "Y",
+    "Part Barcode"
+   ],
+   [
+    "RECEIVE_PLANT_NAME",
+    "VARCHAR(25)",
+    "",
+    "Y",
+    "Receive Plant Name"
+   ],
+   [
+    "SUPPLIER_INFO1",
+    "VARCHAR(15)",
+    "",
+    "Y",
+    "Supplier Info 1"
+   ],
+   [
+    "SUPPLIER_INFO2",
+    "VARCHAR(15)",
+    "",
+    "N",
+    "Supplier Info 2"
+   ],
+   [
+    "SUPPLIER_INFO3",
+    "VARCHAR(15)",
+    "",
+    "Y",
+    "Supplier Info 3"
+   ],
+   [
+    "IMPORTIR_INFO",
+    "VARCHAR(10)",
+    "",
+    "Y",
+    "Importir Info"
+   ],
+   [
+    "IMPORTIR_INFO2",
+    "VARCHAR(10)",
+    "",
+    "Y",
+    "Importir Info 2"
+   ],
+   [
+    "IMPORTIR_INFO3",
+    "VARCHAR(10)",
+    "",
+    "Y",
+    "Importir Info 3"
+   ],
+   [
+    "IMPORTIR_INFO4",
+    "VARCHAR(10)",
+    "",
+    "Y",
+    "Importir Info 4"
+   ],
+   [
+    "MOD_DST_CD",
+    "VARCHAR(4)",
+    "",
+    "N",
+    "Mod Dst Code"
+   ],
+   [
+    "PLN_PCK_DT",
+    "DATETIME",
+    "",
+    "Y",
+    "Pln Pck Code"
+   ],
+   [
+    "PART_ADDRESS",
+    "VARCHAR(15)",
+    "",
+    "Y",
+    "Part Address"
+   ],
+   [
+    "STATUS",
+    "VARCHAR(3)",
+    "",
+    "N",
+    "Status"
+   ],
+   [
+    "CREATED_BY",
+    "VARCHAR(20)",
+    "",
+    "N",
+    "Created By"
+   ],
+   [
+    "CREATED_DT",
+    "DATETIME",
+    "",
+    "N",
+    "Created Date"
+   ],
+   [
+    "CHANGED_BY",
+    "VARCHAR(20)",
+    "",
+    "Y",
+    "Changed By"
+   ],
+   [
+    "CHANGED_DT",
+    "DATETIME",
+    "",
+    "Y",
+    "Changed Date"
+   ]
+  ]
+ },
+ "TB_M_PART_MASTER": {
+  "sheet": "MST-03",
+  "description": "Supplier Master Table",
+  "columns": [
+   [
+    "PART_NO",
+    "VARCHAR(15)",
+    "Y",
+    "N",
+    "Part No"
+   ],
+   [
+    "PART_NAME",
+    "VARCHAR(100)",
+    "",
+    "N",
+    "Part Name"
+   ],
+   [
+    "COO",
+    "VARCHAR(25)",
+    "",
+    "N",
+    "COO"
+   ],
+   [
+    "SUPPLIER_CD",
+    "VARCHAR(4)",
+    "Y",
+    "N",
+    "Supplier Code"
+   ],
+   [
+    "SUPPLIER_PLANT_CD",
+    "VARCHAR(1)",
+    "Y",
+    "N",
+    "Supplier Plabt Code"
+   ],
+   [
+    "SUB_SUPPLIER_CD",
+    "VARCHAR(4)",
+    "",
+    "N",
+    "Sub Supplier Code"
+   ],
+   [
+    "SUB_SUPPLIER_PLANT_CD",
+    "VARCHAR(1)",
+    "",
+    "Y",
+    "Sub Supplier Plant Code"
+   ],
+   [
+    "PCK_TYPE",
+    "VARCHAR(18)",
+    "",
+    "Y",
+    "Pck Type"
+   ],
+   [
+    "KANBAN_QTY",
+    "NUMERIC",
+    "",
+    "Y",
+    "Kanban Quantity"
+   ],
+   [
+    "KANBAN_NO",
+    "VARCHAR(5)",
+    "",
+    "Y",
+    "Kanban No"
+   ],
+   [
+    "DOCK_CD",
+    "VARCHAR(2)",
+    "Y",
+    "N",
+    "Dock Code"
+   ],
+   [
+    "DG_FLAG",
+    "VARCHAR(1)",
+    "",
+    "Y",
+    "DG Flag"
+   ],
+   [
+    "SYNC_DATE",
+    "DATETIME",
+    "",
+    "Y",
+    "Sync Date"
+   ],
+   [
+    "VALID_FROM",
+    "DATETIME",
+    "Y",
+    "N",
+    "Valid From"
+   ],
+   [
+    "VALID_TO",
+    "DATETIME",
+    "",
+    "Y",
+    "Valid To"
+   ],
+   [
+    "LOCATION_GROUP_CD",
+    "VARCHAR(2)",
+    "",
+    "Y",
+    "Location Group Code"
+   ],
+   [
+    "PALLETIZE_CD",
+    "VARCHAR(2)",
+    "",
+    "Y",
+    "Palletize Code"
+   ],
+   [
+    "CREATED_DT",
+    "DATETIME",
+    "",
+    "Y",
+    "Created Date"
+   ],
+   [
+    "CREATED_BY",
+    "VARCHAR(20)",
+    "",
+    "Y",
+    "Created By"
+   ],
+   [
+    "CHANGED_DT",
+    "DATETIME",
+    "",
+    "Y",
+    "Changed Date"
+   ],
+   [
+    "CHANGED_BY",
+    "VARCHAR(20)",
+    "",
+    "Y",
+    "Changed BY"
+   ],
+   [
+    "MAINTAIN_STS",
+    "VARCHAR(2)",
+    "",
+    "Y",
+    "Maintain Status"
+   ],
+   [
+    "SEND_TO_IFAST_DT",
+    "DATETIME",
+    "",
+    "Y",
+    "Send To IFAST Date"
+   ],
+   [
+    "SEND_TO_IFAST_FLAG",
+    "VARCHAR(2)",
+    "",
+    "Y",
+    "Send To IFAST Flag"
+   ],
+   [
+    "SEND_TO_SPEX_DT",
+    "DATETIME",
+    "",
+    "Y",
+    "Send To SPEX Date"
+   ],
+   [
+    "SEND_TO_SPEX_FLAG",
+    "VARCHAR(2)",
+    "",
+    "Y",
+    "Send To SPEX Flag"
+   ],
+   [
+    "SEND_TO_IPPCS_DT",
+    "DATETIME",
+    "",
+    "Y",
+    "Send To IPPCS Date"
+   ],
+   [
+    "SEND_TO_IPPCS_FLAG",
+    "VARCHAR(2)",
+    "",
+    "Y",
+    "Send To IPPCS Flag"
+   ],
+   [
+    "RE_EXPORT_CD",
+    "VARCHAR(2)",
+    "",
+    "Y",
+    "Re Export Code"
+   ],
+   [
+    "CAR_FAMILY_CD",
+    "VARCHAR(4)",
+    "",
+    "Y",
+    "Car Family Code"
+   ]
+  ]
+ },
+ "TB_R_CASE_LABEL_LAST_SEQ": {
+  "sheet": "TR-06",
+  "description": "Invoice Log Table",
+  "columns": [
+   [
+    "SUPPLIER_CD",
+    "VARCHAR(5)",
+    "Y",
+    "N",
+    "Supplier Code"
+   ],
+   [
+    "SUPPLIER_PLANT_CD",
+    "VARCHAR(1)",
+    "Y",
+    "N",
+    "Supplier Plant Code"
+   ],
+   [
+    "CASE_LABEL_LAST_SEQ",
+    "VARCHAR(3)",
+    "",
+    "Y",
+    "Case Label Last Seq No"
+   ],
+   [
+    "ASN_LAST_SEQ",
+    "VARCHAR(3)",
+    "",
+    "Y",
+    "ASN Last Seq No"
+   ],
+   [
+    "CREATED_BY",
+    "VARCHAR(20)",
+    "",
+    "N",
+    "Created By"
+   ],
+   [
+    "CREATED_DT",
+    "DATETIME",
+    "",
+    "N",
+    "Created Date"
+   ],
+   [
+    "CHANGED_BY",
+    "VARCHAR(20)",
+    "",
+    "Y",
+    "Changed By"
+   ],
+   [
+    "CHANGED_DT",
+    "DATETIME",
+    "",
+    "Y",
+    "Changed Date"
+   ]
+  ]
+ }
+}

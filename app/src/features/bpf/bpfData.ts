@@ -502,11 +502,14 @@ export const BPF: BpfData = {
      "title": "Submit process (Submit ID): ASN No / Case No by existing sequence, ASN Created",
      "read": [
       "TB_R_INSTRUCTION",
-      "Existing last sequence table"
+      "TB_R_PRA_DAILY_ORDER_MANIFEST",
+      "TB_R_PRA_DAILY_ORDER_PART",
+      "TB_M_PART_MASTER (PART_NAME)"
      ],
      "write": [
       "TB_R_DAILY_ORDER_MANIFEST",
       "TB_R_DAILY_ORDER_PART",
+      "TB_R_CASE_LABEL_LAST_SEQ",
       "TB_R_INSTRUCTION (ASN_NO, CASE_NO)",
       "Log"
      ],

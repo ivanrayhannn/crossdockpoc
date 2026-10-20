@@ -14,3 +14,8 @@ Sumber: UISS `XD10_UISS_Screen_ASNCrossDockCreation.xlsx` (0.1 Initial Draft, 18
 
 ## Sample Create ASN (sheet Sample Input)
 Contoh dummy PART-X / PART-Y (6 pcs/case, delivery 16-Oct Rit 1): input pre-mapping XD09 → case packing (Vietnam 18 pcs = 3 case, Thailand 1, Philippines 1; Case 2 = CO-14101 + CO-14102, Case 3 = CO-14102 + CO-14103) → 7 baris TB_R_INSTRUCTION, PO_MAPPED_FLAG Y, MAPPED_QTY → Case List → skenario N1–N3, E1–E4.
+
+## Keputusan 20-Oct (struktur tabel existing, GTOPAS SPS DB Structure)
+- Submit ASN menulis `TB_R_DAILY_ORDER_MANIFEST` (1 baris per manifest Pra Daily Order dari case, semua dengan `ASN_NO` yang sama) dan `TB_R_DAILY_ORDER_PART` (1 baris per manifest item x case).
+- No ASN dan no case (case label) di-generate otomatis; last sequence-nya disimpan di `TB_R_CASE_LABEL_LAST_SEQ` (`ASN_LAST_SEQ`, `CASE_LABEL_LAST_SEQ` per supplier + plant).
+- `PART_NAME` diambil dari `TB_M_PART_MASTER`.
