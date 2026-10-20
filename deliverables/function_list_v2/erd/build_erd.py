@@ -10,7 +10,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..', 'bpf'))
 from bpf_ref import Shapes  # noqa: E402
 from build_bpf import add_drawings  # noqa: E402
-from erd_data import KIND, PRA_NOTES, RENAME, LAYOUT, RELATIONS, SCENARIO, SHOW, SIM, TABLE_KIND  # noqa: E402
+from erd_data import KIND, LAYOUT, PRA_NOTES, RELATIONS, RENAME, SHOW, TABLE_KIND
+from sim_data import COLS, SCENARIOS, VALUE_FILL  # noqa: E402
 
 OUT = os.path.join(HERE, 'Crossdock_ERD.xlsx')
 SPECS = os.path.join(HERE, '..', 'specs')
@@ -75,12 +76,7 @@ def fk_columns(tables):
 
 
 def shown(name, tables):
-    cols = tables[name][1]
-    if name in SHOW:
-        keep = [c for c in cols if norm(c[0]) in SHOW[name]]
-    else:
-        keep = [c for c in cols if c[0] not in AUDIT]
-    return keep, len(cols) - len(keep)
+    return list(tables[name][1]), 0         # every column is shown (no collapse)
 
 
 def table(ws, r, cols, widths, rows, head='1F3864'):
@@ -105,8 +101,8 @@ def erd_sheet(wb, tables, fk):
     ws.sheet_view.showGridLines = False
     ws['B1'] = 'Crossdock – Concept ERD (function list v2, XD01 – XD15)'
     ws['B1'].font = F(14, True, '1F3864')
-    ws['B2'] = ('Entities = tables used by the Crossdock functions (columns from the UISS; audit columns and unused G-TOPAS columns are hidden, see sheet '
-                'Column Definition). Lines = relationships (sheet Relationship); 1 / N at the line ends. Dashed line = logical relationship (no FK).')
+    ws['B2'] = ('Entities = tables used by the Crossdock functions with all their columns (new tables from the UISS, existing tables from the DB structure / data export). '
+                'Lines = relationships (sheet Relationship); 1 / N at the line ends. Dashed line = logical relationship (no FK).')
     ws['B2'].font = F(9, False, '595959')
     # legend (row 3)
     for i, (kind, (label, fill, font)) in enumerate(KIND.items()):
@@ -234,6 +230,88 @@ def erd_sheet(wb, tables, fk):
     return sh.xml()
 
 
+STATE = {'new': ('NEW', 'C6EFCE'), 'upd': ('UPD', 'FFF2CC'), 'del': ('DEL', 'FFC7CE'), 'ref': ('READ', 'FFFFFF'), 'temp': ('TEMP', 'EDEDED')}
+CHG = 'F8CBAD'
+
+
+def sim_sheets(wb, tables):
+    ws = wb.create_sheet('Simulation Index')
+    ws.sheet_view.showGridLines = False
+    ws['A1'] = 'Simulation scenarios'
+    ws['A1'].font = F(14, True, '1F3864')
+    ws['A2'] = 'One sheet per scenario. Dummy data: supplier 50221 plant 1, pcs/case 6, destinations Vietnam 9715310 / Thailand 9722D10 / Philippines 9811110.'
+    ws['A2'].font = F(9, False, '595959')
+    table(ws, 4, ['Sheet', 'Scenario', 'BPF / abnormality', 'Functions', 'Tables', 'Story'], [9, 34, 16, 34, 50, 90],
+          [[sc['id'], sc['title'], sc['flow'], sc['functions'], ', '.join(dict.fromkeys(n for _, n, _ in sc['steps'])), ' '.join(sc['story'])] for sc in SCENARIOS])
+    for sc in SCENARIOS:
+        ws = wb.create_sheet(sc['id'])
+        ws.sheet_view.showGridLines = False
+        ncol = 2 + max(len(COLS[n]) for _, n, _ in sc['steps'])
+        ws.column_dimensions['A'].width = 7
+        for c in range(2, ncol + 1):
+            ws.column_dimensions[get_column_letter(c)].width = 15
+        ws.column_dimensions[get_column_letter(ncol)].width = 36
+        ws['A1'] = f"{sc['id']} {sc['title']}"
+        ws['A1'].font = F(14, True, '1F3864')
+        ws['A2'] = f"{sc['flow']} · Functions: {sc['functions']}"
+        ws['A2'].font = F(9, True, '595959')
+        r = 3
+        for line in sc['story']:
+            ws.cell(r, 1, '• ' + line).font = F(9)
+            r += 1
+        # legend
+        r += 1
+        ws.cell(r, 1, 'Legend').font = F(9, True)
+        legend = [(v[0] + ' row', v[1]) for v in STATE.values()] + [('Changed cell', CHG), ('PK column', 'FFD966'), ('Status OK', 'C6EFCE'),
+                                                                     ('Status attention', 'F4B084'), ('Status NG / cancel', 'FF7C80')]
+        for i, (text, fill) in enumerate(legend):
+            cell = ws.cell(r, 2 + i, text)
+            cell.fill, cell.border, cell.font = FILL(fill), BOX, F(8, True)
+            cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+        ws.row_dimensions[r].height = 24
+        for title, name, rows in sc['steps']:
+            r += 2
+            if title:
+                for c in range(1, ncol + 1):
+                    ws.cell(r, c).fill = FILL('DDEBF7')
+                ws.cell(r, 1, title).font = F(10, True, '1F3864')
+                r += 1
+            ws.cell(r, 1, name).font = F(9, True, '000000')
+            ws.cell(r, 4, KIND[TABLE_KIND[name]][0]).font = F(8, False, '808080')
+            r += 1
+            cols = COLS[name]
+            pk = {norm(c[0]) for c in tables[name][1] if c[2] == 'Y'}
+            for c, text in enumerate(['State'] + cols + ['Note'], 1):
+                cell = ws.cell(r, c, text)
+                is_pk = text in pk
+                cell.fill = FILL('FFD966' if is_pk else KIND[TABLE_KIND[name]][1])
+                cell.font = F(8, True, '000000' if is_pk else 'FFFFFF')
+                cell.border, cell.alignment = BOX, Alignment(horizontal='center', vertical='center', wrap_text=True)
+            ws.row_dimensions[r].height = 26
+            for row in rows:
+                r += 1
+                state, values = row[0], row[1]
+                chg = row[2] if len(row) > 2 else []
+                note = row[3] if len(row) > 3 else ''
+                label, fill = STATE[state]
+                cells = [label] + list(values) + [note]
+                for c, v in enumerate(cells, 1):
+                    cell = ws.cell(r, c, v)
+                    cell.border = BOX
+                    cell.alignment = Alignment(vertical='center', wrap_text=True, horizontal='right' if isinstance(v, (int, float)) else 'left')
+                    col = cols[c - 2] if 1 < c < len(cells) else None
+                    f = fill
+                    if col and (col, str(v)) in VALUE_FILL:
+                        f = VALUE_FILL[(col, str(v))]
+                    if col in chg:
+                        f = CHG
+                    cell.fill = FILL(f)
+                    cell.font = F(8, col in chg or c == 1, '9C0006' if state == 'del' else '000000')
+                    if state == 'del':
+                        cell.font = Font(name='Arial', size=8, strike=True, color='FF9C0006')
+        ws.freeze_panes = 'A3'
+
+
 def build():
     tables, used = load_tables()
     fk = fk_columns(tables)
@@ -246,9 +324,12 @@ def build():
     ws.sheet_view.showGridLines = False
     ws['A1'] = 'Table list'
     ws['A1'].font = F(14, True, '1F3864')
-    sim_rows = {s[0]: len(s[3]) for s in SIM}
-    table(ws, 3, ['No', 'Table', 'Kind', 'Description', 'Used by (function)', 'Rows in Simulation Data'], [5, 32, 26, 80, 26, 12],
-          [[i + 1, n, KIND[TABLE_KIND[n]][0], tables[n][0], ', '.join(sorted(set(used[n]))) or '-', sim_rows.get(n, 0)] for i, n in enumerate(names)])
+    sim_rows = {}
+    for sc in SCENARIOS:
+        for _, n, rows in sc['steps']:
+            sim_rows.setdefault(n, []).append(sc['id'])
+    table(ws, 3, ['No', 'Table', 'Kind', 'Description', 'Used by (function)', 'Simulation sheets'], [5, 32, 26, 80, 26, 22],
+          [[i + 1, n, KIND[TABLE_KIND[n]][0], tables[n][0], ', '.join(sorted(set(used[n]))) or '-', ', '.join(sorted(set(sim_rows.get(n, [])))) or '-'] for i, n in enumerate(names)])
     ws.freeze_panes = 'A4'
 
     ws = wb.create_sheet('Relationship')
@@ -271,23 +352,7 @@ def build():
     ws.freeze_panes = 'A4'
     ws.auto_filter.ref = f'A3:H{3 + len(rows)}'
 
-    ws = wb.create_sheet('Simulation Data')
-    ws.sheet_view.showGridLines = False
-    ws['A1'] = 'Simulation data (one consistent scenario across the tables)'
-    ws['A1'].font = F(14, True, '1F3864')
-    r = 2
-    for line in SCENARIO:
-        ws.cell(r, 1, '• ' + line).font = F(9)
-        r += 1
-    for c in range(1, 20):
-        ws.column_dimensions[get_column_letter(c)].width = 17
-    for i, (name, source, cols, data) in enumerate(SIM, 1):
-        r += 2
-        ws.cell(r, 1, f'{i}. {name}').font = F(10, True, '1F3864')
-        ws.cell(r, 4, f'Written by: {source}').font = F(8, False, '595959')
-        head = KIND[TABLE_KIND[name]][1]
-        r = table(ws, r + 1, cols, [17] * len(cols), data, head=head)
-    ws.freeze_panes = 'A2'
+    sim_sheets(wb, tables)
 
     for w in wb.worksheets[1:]:
         w.page_setup.orientation = 'landscape'
