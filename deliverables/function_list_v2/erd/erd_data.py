@@ -13,12 +13,12 @@ KIND = {
 # group (column of the diagram) -> tables top to bottom
 LAYOUT = [
     ['TB_M_H0125_DESTINATION', 'TB_R_ACTUAL_DEMAND_SUMMARY'],
-    ['TB_M_PART_CANDIDATE_DEST', 'TB_R_PART_DAD_RESULT'],
+    ['TB_M_PART_MASTER', 'TB_M_PART_CANDIDATE_DEST', 'TB_R_PART_DAD_RESULT'],
     ['TB_M_PART_CANDIDATE', 'TB_H_PART_CANDIDATE', 'TB_R_CROSSDOCK_IF_RESULT'],
     ['TB_R_H0253_ORDER_CONTROL_PRE', 'TB_R_CROSSDOCK_CANCEL_RESULT'],
     ['TB_R_INSTRUCTION', '#TEMP_INSTRUCTION'],
     ['TB_R_PRA_DAILY_ORDER_MANIFEST', 'TB_R_PRA_DAILY_ORDER_PART', 'TB_R_PRA_DAILY_ORDER_MAPPED'],
-    ['TB_R_DAILY_ORDER_MANIFEST', 'TB_R_DAILY_ORDER_PART'],
+    ['TB_R_DAILY_ORDER_MANIFEST', 'TB_R_DAILY_ORDER_PART', 'TB_R_CASE_LABEL_LAST_SEQ'],
 ]
 
 TABLE_KIND = {
@@ -27,7 +27,7 @@ TABLE_KIND = {
     'TB_R_CROSSDOCK_IF_RESULT': 'new', 'TB_R_CROSSDOCK_CANCEL_RESULT': 'new', 'TB_R_INSTRUCTION': 'new', 'TB_R_PRA_DAILY_ORDER_MAPPED': 'new',
     '#TEMP_INSTRUCTION': 'temp',
     'TB_R_PRA_DAILY_ORDER_MANIFEST': 'existing', 'TB_R_PRA_DAILY_ORDER_PART': 'existing', 'TB_R_DAILY_ORDER_MANIFEST': 'existing',
-    'TB_R_DAILY_ORDER_PART': 'existing',
+    'TB_R_DAILY_ORDER_PART': 'existing', 'TB_M_PART_MASTER': 'existing', 'TB_R_CASE_LABEL_LAST_SEQ': 'existing',
 }
 
 # Pra Daily Order tables (existing NSP): structure from NSP_INSERT_TB_R_PRA_DAILY_ORDER_MANIFEST / _PART.sql (20-Oct), saved in
@@ -55,6 +55,12 @@ RENAME = {'MANIFEST_ITEM_NO': 'MANIFEST_ITEM', 'PO_ORDER_QTY': 'ORDER_QTY', 'PO_
 
 # columns shown in the diagram for the big tables (others: all columns without audit columns)
 SHOW = {
+    'TB_R_DAILY_ORDER_MANIFEST': ['SUB_MANIFEST_NO', 'MANIFEST_NO', 'ASN_NO', 'ASN_DATE', 'SUPPLIER_CD', 'SUPPLIER_PLANT', 'PO_NO', 'CROSS_DOCK_FLAG',
+                                  'DOCK_CD', 'TOTAL_ITEM', 'TOTAL_QTY', 'DELIVERY_DT_ORI', 'SUB_ROUTE_CD', 'SUB_ROUTE_SEQ', 'STATUS'],
+    'TB_R_DAILY_ORDER_PART': ['SUB_MANIFEST_NO', 'MANIFEST_NO', 'MANIFEST_ITEM', 'CASE_NO', 'PO_NO', 'PO_ITEM', 'ASN_NO', 'PART_NO', 'PART_NAME', 'PO_QTY',
+                              'DELIVERY_QTY'],
+    'TB_M_PART_MASTER': ['PART_NO', 'SUPPLIER_CD', 'SUPPLIER_PLANT_CD', 'DOCK_CD', 'VALID_FROM', 'PART_NAME', 'VALID_TO'],
+    'TB_R_CASE_LABEL_LAST_SEQ': ['SUPPLIER_CD', 'SUPPLIER_PLANT_CD', 'CASE_LABEL_LAST_SEQ', 'ASN_LAST_SEQ'],
     'TB_R_PRA_DAILY_ORDER_MANIFEST': ['MANIFEST_NO', 'PO_NO', 'SUPPLIER_CD', 'SUPPLIER_PLANT', 'PO_DT', 'ORDER_TYPE', 'CROSS_DOCK_FLAG', 'DOCK_CD',
                                       'TOTAL_QTY', 'DELIVERY_DT', 'SUB_ROUTE_CD', 'SUB_ROUTE_SEQ', 'STATUS'],
     'TB_R_PRA_DAILY_ORDER_PART': ['MANIFEST_NO', 'MANIFEST_ITEM', 'PO_NO', 'PO_ITEM', 'PART_NO', 'QTY_PER_CONTAINER', 'ORDER_QTY', 'DELIVERY_QTY',
@@ -89,8 +95,13 @@ RELATIONS = [
     ('TB_R_PRA_DAILY_ORDER_PART', 'MANIFEST_NO + MANIFEST_ITEM', 'TB_R_PRA_DAILY_ORDER_MAPPED', 'MANIFEST_NO + MANIFEST_ITEM', '1 : 0..1', 'Mapped qty of a crossdock PO line'),
     ('TB_R_PRA_DAILY_ORDER_PART', 'MANIFEST_NO + MANIFEST_ITEM', 'TB_R_INSTRUCTION', 'MANIFEST_NO + MANIFEST_ITEM', '1 : N', 'PO line of a mapping row'),
     ('TB_R_PRA_DAILY_ORDER_PART', 'MANIFEST_NO + MANIFEST_ITEM', '#TEMP_INSTRUCTION', 'MANIFEST_NO + MANIFEST_ITEM', '1 : N', 'PO line of a pre-mapping row'),
-    ('TB_R_DAILY_ORDER_MANIFEST', 'MANIFEST_NO (= ASN_NO)', 'TB_R_DAILY_ORDER_PART', 'MANIFEST_NO (= ASN_NO)', '1 : N', 'Cases of an ASN (existing)'),
-    ('TB_R_DAILY_ORDER_PART', 'MANIFEST_NO (= ASN_NO) + CASE_NO', 'TB_R_INSTRUCTION', 'ASN_NO + CASE_NO', '1 : N', 'Order lines and POs packed in a case (filled on submit)'),
+    ('TB_R_DAILY_ORDER_MANIFEST', 'SUB_MANIFEST_NO + MANIFEST_NO', 'TB_R_DAILY_ORDER_PART', 'SUB_MANIFEST_NO + MANIFEST_NO', '1 : N', 'Items x cases of an ASN manifest (existing)'),
+    ('TB_R_DAILY_ORDER_PART', 'MANIFEST_NO + MANIFEST_ITEM + CASE_NO', 'TB_R_INSTRUCTION', 'MANIFEST_NO + MANIFEST_ITEM + CASE_NO', '1 : N',
+     'Customer order lines of a manifest item in a case (CASE_NO / ASN_NO filled on submit)'),
+    ('TB_R_PRA_DAILY_ORDER_MANIFEST', 'MANIFEST_NO', 'TB_R_DAILY_ORDER_MANIFEST', 'MANIFEST_NO', '1 : N', 'ASN manifest created from the Pra manifest on submit'),
+    ('TB_M_PART_MASTER', 'PART_NO', 'TB_M_PART_CANDIDATE', 'PART_NO', '1 : 0..1', 'Part name and existence check (logical)'),
+    ('TB_R_CASE_LABEL_LAST_SEQ', 'SUPPLIER_CD + SUPPLIER_PLANT_CD', 'TB_R_DAILY_ORDER_MANIFEST', 'SUPPLIER_CD + SUPPLIER_PLANT', '1 : N',
+     'Last sequence of the ASN number and the case numbers per supplier + plant (logical)'),
 ]
 
 # ------------------------------------------------------------------ simulation data
@@ -186,14 +197,26 @@ SIM = [
      ['PO_NO', 'MANIFEST_NO', 'MANIFEST_ITEM', 'PART_NO', 'SUPPLIER_CD', 'SUPPLIER_PLANT', 'ORDER_QTY', 'MAPPED_QTY'],
      [['T0409001', '3126035901', '001', 'PART-X', '50221', '1', 12, 12], ['T0409002', '3126035902', '001', 'PART-X', '50221', '1', 12, 12],
       ['T0409003', '3126035903', '001', 'PART-Y', '50221', '1', 6, 6]]),
-    ('TB_R_DAILY_ORDER_MANIFEST', 'Submit (XD10 5.7): ASN header, existing table',
-     ['ASN_NO', 'SUPPLIER_CD', 'SUPPLIER_PLANT', 'DELIVERY_DT', 'RIT / ROUTE', 'TOTAL_CASE / TOTAL_QTY', 'STATUS'],
-     [['ASN-50221-261016-001', '50221', '1', '2026-10-16', '1 / SD01', '5 / 30', 'Created']]),
-    ('TB_R_DAILY_ORDER_PART', 'Submit (XD10 5.7): one row per case, existing table',
-     ['ASN_NO', 'CASE_NO', 'PART_NO', 'DESTINATION_CD', 'QTY', 'PO_NO / MANIFEST_ITEM_NO'],
-     [['ASN-50221-261016-001', 'C-0001', 'PART-X', VN, 6, 'T0409001 / 0001'], ['ASN-50221-261016-001', 'C-0002', 'PART-X', VN, 6, 'T0409001 / 0001'],
-      ['ASN-50221-261016-001', 'C-0003', 'PART-X', VN, 6, 'T0409002 / 0001'], ['ASN-50221-261016-001', 'C-0004', 'PART-X', TH, 6, 'T0409002 / 0001'],
-      ['ASN-50221-261016-001', 'C-0005', 'PART-Y', PH, 6, 'T0409003 / 0001']]),
+    ('TB_R_DAILY_ORDER_MANIFEST', 'Submit (XD10 5.7): one row per Pra manifest of the cases, same ASN_NO (SUB_MANIFEST_NO dummy, numbering as existing)',
+     ['SUB_MANIFEST_NO', 'MANIFEST_NO', 'ASN_NO', 'ASN_DATE', 'SUPPLIER_CD', 'SUPPLIER_PLANT', 'PO_NO', 'CROSS_DOCK_FLAG', 'DOCK_CD', 'TOTAL_ITEM', 'TOTAL_QTY',
+      'DELIVERY_DT_ORI', 'SUB_ROUTE_CD', 'SUB_ROUTE_SEQ', 'STATUS'],
+     [['3126035901A1', '3126035901', 'ASN-50221-261016-001', '2026-10-16 09:30', '50221', '1', 'T0409001', 'X', 'S1', 1, 12, '2026-10-16', 'SD01', '1', 'Created'],
+      ['3126035902A1', '3126035902', 'ASN-50221-261016-001', '2026-10-16 09:30', '50221', '1', 'T0409002', 'X', 'S1', 1, 12, '2026-10-16', 'SD01', '1', 'Created'],
+      ['3126035903A1', '3126035903', 'ASN-50221-261016-001', '2026-10-16 09:30', '50221', '1', 'T0409003', 'X', 'S1', 1, 6, '2026-10-16', 'SD01', '1', 'Created']]),
+    ('TB_R_DAILY_ORDER_PART', 'Submit (XD10 5.7): one row per manifest item and case',
+     ['SUB_MANIFEST_NO', 'MANIFEST_NO', 'MANIFEST_ITEM', 'CASE_NO', 'PO_NO', 'PO_ITEM', 'ASN_NO', 'PART_NO', 'PART_NAME', 'PO_QTY', 'DELIVERY_QTY'],
+     [['3126035901A1', '3126035901', '0001', 'C-0001', 'T0409001', '0001', 'ASN-50221-261016-001', 'PART-X', 'DUMMY PART X', 12, 6],
+      ['3126035901A1', '3126035901', '0001', 'C-0002', 'T0409001', '0001', 'ASN-50221-261016-001', 'PART-X', 'DUMMY PART X', 12, 6],
+      ['3126035902A1', '3126035902', '0001', 'C-0003', 'T0409002', '0001', 'ASN-50221-261016-001', 'PART-X', 'DUMMY PART X', 12, 6],
+      ['3126035902A1', '3126035902', '0001', 'C-0004', 'T0409002', '0001', 'ASN-50221-261016-001', 'PART-X', 'DUMMY PART X', 12, 6],
+      ['3126035903A1', '3126035903', '0001', 'C-0005', 'T0409003', '0001', 'ASN-50221-261016-001', 'PART-Y', 'DUMMY PART Y', 6, 6]]),
+    ('TB_R_CASE_LABEL_LAST_SEQ', 'Submit (XD10 5.7): new last sequence of supplier 50221 plant 1 (5 case labels and 1 ASN number generated)',
+     ['SUPPLIER_CD', 'SUPPLIER_PLANT_CD', 'CASE_LABEL_LAST_SEQ', 'ASN_LAST_SEQ', 'CHANGED_DT'],
+     [['50221', '1', '005', '001', '2026-10-16 09:30']]),
+    ('TB_M_PART_MASTER', 'Existing part master (only PART_NAME is used)',
+     ['PART_NO', 'SUPPLIER_CD', 'SUPPLIER_PLANT_CD', 'DOCK_CD', 'VALID_FROM', 'PART_NAME'],
+     [['PART-X', '50221', '1', 'S1', '2026-01-01', 'DUMMY PART X'], ['PART-Y', '50221', '1', 'S1', '2026-01-01', 'DUMMY PART Y'],
+      ['PART-Z', '50221', '1', 'S1', '2026-01-01', 'DUMMY PART Z']]),
     ('TB_R_CROSSDOCK_CANCEL_RESULT', 'XD11 on 16-Oct 27:30: one row per cancelled row (status 2) with the figures of its line',
      ['CUSTOMER_ORDER_NO', 'ORDER_DT', 'DESTINATION_CD', 'SERIAL_NO', 'PART_NO', 'CANCEL_QTY', 'VALID_QTY', 'QTY_IN_ASN', 'RELEASED_QTY', 'CONFLICT_QTY',
       'HOLD_FLAG', 'RESULT', 'ASN_NO', 'MESSAGE'],

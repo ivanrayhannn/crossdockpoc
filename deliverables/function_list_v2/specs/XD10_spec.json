@@ -23,7 +23,8 @@
    "To display the delivery plan per Part Number + Customer Order Date at case level (Case Qty, PO Readiness, ASN Status Ready / Not Ready). Units already Created or without any ready case are not listed.",
    "To let the D/S team (super admin) see the units of all suppliers, the destination detail and hold / release a destination of a unit.",
    "To select one or more Ready units of one Supplier Code + Supplier Plant, map them to their POs (TB_R_INSTRUCTION), review the cases, download the case labels and submit the ASN.",
-   "Submit ASN runs in the background with a Submit ID and follows the existing ASN submit of NSP (refer 5.7)."
+   "Submit ASN runs in the background with a Submit ID and follows the existing ASN submit of NSP (refer 5.7).",
+   "Submit ASN (decided 20-Oct, existing structure GTOPAS SPS DB): one TB_R_DAILY_ORDER_MANIFEST row per Pra Daily Order manifest of the cases (same ASN_NO) and one TB_R_DAILY_ORDER_PART row per manifest item and case; the ASN number and the case numbers (case label) are auto generated and their last sequence is saved in TB_R_CASE_LABEL_LAST_SEQ; PART_NAME from TB_M_PART_MASTER."
   ],
   "display_order": [
    {
@@ -1869,82 +1870,217 @@
     ]
    },
    {
-    "source": "TB_R_INSTRUCTION",
+    "source": {
+     "table": "TB_R_INSTRUCTION + TB_R_PRA_DAILY_ORDER_MANIFEST",
+     "keys": [
+      {
+       "field": "MANIFEST_NO",
+       "value": "Manifests of the cases of the submit"
+      }
+     ]
+    },
     "destination": {
      "table": "TB_R_DAILY_ORDER_MANIFEST",
      "operation": "Insert",
-     "description": "Submit ASN (5.7): One ASN per Submit ID (existing table; physical columns as existing)"
+     "description": "Submit ASN (5.7): one row per manifest of the cases; all rows of the submit share one ASN_NO"
     },
     "mappings": [
      {
-      "dest_field": "MANIFEST_NO / ASN_NO",
-      "description": "Existing ASN numbering"
+      "dest_field": "SUB_MANIFEST_NO",
+      "description": "Sub manifest number as existing (sequence MANIFEST_LAST_SEQ of the Pra manifest)"
      },
      {
-      "source_field": "SUPPLIER_CD",
-      "dest_field": "SUPPLIER_CD"
+      "dest_field": "MANIFEST_NO",
+      "source_field": "TB_R_INSTRUCTION.MANIFEST_NO",
+      "description": "One row per manifest of the cases"
      },
      {
-      "source_field": "SUPPLIER_PLANT",
-      "dest_field": "SUPPLIER_PLANT"
+      "dest_field": "ASN_NO",
+      "description": "Auto generated as existing; last sequence ASN_LAST_SEQ in TB_R_CASE_LABEL_LAST_SEQ (same ASN_NO for all manifests of the submit)"
      },
      {
-      "source_field": "DELIVERY_DT",
-      "dest_field": "DELIVERY_DT"
+      "dest_field": "ASN_DATE",
+      "description": "Submit date-time"
      },
      {
-      "source_field": "RIT_CYCLE / ROUTE",
-      "dest_field": "RIT / ROUTE"
+      "dest_field": "DEPOT_CD",
+      "source_field": "TB_R_PRA_DAILY_ORDER_MANIFEST.DEPOT_CD"
      },
      {
-      "dest_field": "TOTAL_CASE / TOTAL_QTY",
-      "description": "Number of CASE_SEQ / sum of QTY"
+      "dest_field": "SUPPLIER_CD",
+      "source_field": "TB_R_PRA_DAILY_ORDER_MANIFEST.SUPPLIER_CD"
+     },
+     {
+      "dest_field": "SUPPLIER_PLANT",
+      "source_field": "TB_R_PRA_DAILY_ORDER_MANIFEST.SUPPLIER_PLANT"
+     },
+     {
+      "dest_field": "SUB_SUPP_CD",
+      "source_field": "TB_R_PRA_DAILY_ORDER_MANIFEST.SUB_SUPP_CD"
+     },
+     {
+      "dest_field": "SUB_SUPP_PLANT",
+      "source_field": "TB_R_PRA_DAILY_ORDER_MANIFEST.SUB_SUPP_PLANT"
+     },
+     {
+      "dest_field": "SUPPLIER_NAME",
+      "source_field": "TB_R_PRA_DAILY_ORDER_MANIFEST.SUPPLIER_NAME"
+     },
+     {
+      "dest_field": "PO_NO",
+      "source_field": "TB_R_PRA_DAILY_ORDER_MANIFEST.PO_NO"
+     },
+     {
+      "dest_field": "PO_DATE",
+      "source_field": "TB_R_PRA_DAILY_ORDER_MANIFEST.PO_DT"
+     },
+     {
+      "dest_field": "ORDER_TYPE",
+      "source_field": "TB_R_PRA_DAILY_ORDER_MANIFEST.ORDER_TYPE"
+     },
+     {
+      "dest_field": "CROSS_DOCK_FLAG",
+      "source_field": "TB_R_PRA_DAILY_ORDER_MANIFEST.CROSS_DOCK_FLAG",
+      "description": "'X'"
+     },
+     {
+      "dest_field": "DOCK_CD",
+      "source_field": "TB_R_PRA_DAILY_ORDER_MANIFEST.DOCK_CD"
+     },
+     {
+      "dest_field": "TOTAL_ITEM",
+      "description": "Number of manifest items of the manifest in this ASN"
+     },
+     {
+      "dest_field": "TOTAL_QTY",
+      "description": "Sum of QTY of the manifest in this ASN"
+     },
+     {
+      "dest_field": "DELIVERY_DT_ORI",
+      "source_field": "TB_R_INSTRUCTION.DELIVERY_DT",
+      "description": "Delivery Date of the Search"
+     },
+     {
+      "dest_field": "SUB_ROUTE_CD",
+      "source_field": "TB_R_INSTRUCTION.ROUTE",
+      "description": "Route of the Search"
+     },
+     {
+      "dest_field": "SUB_ROUTE_SEQ",
+      "source_field": "TB_R_INSTRUCTION.RIT_CYCLE",
+      "description": "Rit of the Search"
+     },
+     {
+      "dest_field": "SUB_ROUTE_DT",
+      "source_field": "TB_R_PRA_DAILY_ORDER_MANIFEST.SUB_ROUTE_DT"
      },
      {
       "dest_field": "STATUS",
-      "description": "Created"
+      "description": "ASN status Created (code as existing)"
      },
      {
-      "dest_field": "CREATED_BY / CREATED_DT",
-      "description": "User ID, server system date-time"
+      "dest_field": "CREATED_BY",
+      "description": "User ID"
+     },
+     {
+      "dest_field": "CREATED_DT",
+      "description": "Server system date-time"
      }
     ]
    },
    {
-    "source": "TB_R_INSTRUCTION",
+    "source": {
+     "table": "TB_R_INSTRUCTION + TB_R_PRA_DAILY_ORDER_PART + TB_M_PART_MASTER",
+     "keys": [
+      {
+       "field": "MANIFEST_NO + MANIFEST_ITEM + CASE_SEQ",
+       "value": "One row per manifest item and case"
+      }
+     ]
+    },
     "destination": {
      "table": "TB_R_DAILY_ORDER_PART",
      "operation": "Insert",
-     "description": "Submit ASN (5.7): One row per case (existing table; physical columns as existing)"
+     "description": "Submit ASN (5.7): one row per manifest item and case"
     },
     "mappings": [
      {
-      "dest_field": "MANIFEST_NO / ASN_NO",
-      "description": "ASN No of the manifest"
+      "dest_field": "SUB_MANIFEST_NO",
+      "description": "Of the TB_R_DAILY_ORDER_MANIFEST row of the manifest"
+     },
+     {
+      "dest_field": "MANIFEST_NO",
+      "source_field": "TB_R_INSTRUCTION.MANIFEST_NO"
+     },
+     {
+      "dest_field": "MANIFEST_ITEM",
+      "source_field": "TB_R_INSTRUCTION.MANIFEST_ITEM"
      },
      {
       "dest_field": "CASE_NO",
-      "description": "Auto generated per CASE_SEQ by checking the last sequence (existing table, existing format)"
+      "description": "Auto generated per CASE_SEQ (case label); last sequence CASE_LABEL_LAST_SEQ in TB_R_CASE_LABEL_LAST_SEQ"
      },
      {
-      "source_field": "PART_NO",
-      "dest_field": "PART_NO"
+      "dest_field": "PO_NO",
+      "source_field": "TB_R_PRA_DAILY_ORDER_PART.PO_NO"
      },
      {
-      "source_field": "DESTINATION_CD",
-      "dest_field": "DESTINATION_CD"
+      "dest_field": "PO_ITEM",
+      "source_field": "TB_R_PRA_DAILY_ORDER_PART.PO_ITEM"
      },
      {
-      "dest_field": "QTY",
-      "description": "Sum of QTY of the case"
+      "dest_field": "ASN_NO",
+      "description": "ASN_NO of the submit"
      },
      {
-      "source_field": "PO_NO / MANIFEST_ITEM_NO",
-      "dest_field": "PO_NO / MANIFEST_ITEM_NO"
+      "dest_field": "ASN_DATE",
+      "description": "Submit date-time"
      },
      {
-      "dest_field": "CREATED_BY / CREATED_DT",
-      "description": "User ID, server system date-time"
+      "dest_field": "PART_NO",
+      "source_field": "TB_R_PRA_DAILY_ORDER_PART.PART_NO"
+     },
+     {
+      "dest_field": "PART_NAME",
+      "source_field": "TB_M_PART_MASTER.PART_NAME",
+      "description": "By PART_NO"
+     },
+     {
+      "dest_field": "PO_QTY",
+      "source_field": "TB_R_PRA_DAILY_ORDER_PART.ORDER_QTY"
+     },
+     {
+      "dest_field": "DELIVERY_QTY",
+      "description": "Sum of TB_R_INSTRUCTION.QTY of the manifest item in the case"
+     },
+     {
+      "dest_field": "QTY_PER_CONTAINER",
+      "source_field": "TB_R_PRA_DAILY_ORDER_PART.QTY_PER_CONTAINER"
+     },
+     {
+      "dest_field": "DELIVERY_DT_ORI",
+      "source_field": "TB_R_INSTRUCTION.DELIVERY_DT"
+     },
+     {
+      "dest_field": "KANBAN_NO",
+      "source_field": "TB_R_PRA_DAILY_ORDER_PART.KANBAN_NO"
+     },
+     {
+      "dest_field": "PART_BARCODE",
+      "source_field": "TB_R_PRA_DAILY_ORDER_PART.PART_BARCODE",
+      "description": "As existing"
+     },
+     {
+      "dest_field": "STATUS",
+      "description": "As existing"
+     },
+     {
+      "dest_field": "CREATED_BY",
+      "description": "User ID"
+     },
+     {
+      "dest_field": "CREATED_DT",
+      "description": "Server system date-time"
      }
     ]
    },
@@ -2097,6 +2233,38 @@
       "description": "User ID, server system date-time"
      }
     ]
+   },
+   {
+    "source": "Last sequence of the submit",
+    "destination": {
+     "table": "TB_R_CASE_LABEL_LAST_SEQ",
+     "operation": "Update",
+     "description": "Submit ASN (5.7): new last sequence of the supplier + plant",
+     "keys": [
+      {
+       "field": "SUPPLIER_CD + SUPPLIER_PLANT_CD",
+       "value": "Supplier of the ASN"
+      }
+     ]
+    },
+    "mappings": [
+     {
+      "dest_field": "ASN_LAST_SEQ",
+      "description": "Last sequence used for the ASN number"
+     },
+     {
+      "dest_field": "CASE_LABEL_LAST_SEQ",
+      "description": "Last sequence used for the case numbers"
+     },
+     {
+      "dest_field": "CHANGED_BY",
+      "description": "User ID"
+     },
+     {
+      "dest_field": "CHANGED_DT",
+      "description": "Server system date-time"
+     }
+    ]
    }
   ]
  },
@@ -2185,7 +2353,7 @@
    "level": 2,
    "items": [
     "#TEMP_INSTRUCTION is temporary (pre-mapping of [Search]). TB_R_INSTRUCTION holds the mapping from [Create ASN] until submit or Back / Cancel. TB_R_PRA_DAILY_ORDER_MAPPED is a new table for the mapped qty. Submitted ASNs are in TB_R_DAILY_ORDER_MANIFEST / PART and shown in ASN Inquiry (XD15).",
-    "Case number: the format follows the existing NSP case number; the last sequence is kept in the existing last sequence table (note only, not detailed here).",
+    "Case number: the format follows the existing NSP case number; the last sequence is kept in the TB_R_CASE_LABEL_LAST_SEQ (note only, not detailed here).",
     "Cancel of an order is not done in NSP: it comes from the source (H0253 order status '2'); NSP only holds (HOLD_FLAG). Refer XD11 / XD12.",
     "The prototype has a 'Business date' switch (PO release) and a 'View as' switch (Supplier / D/S team); they are not part of the real screen."
    ]
@@ -2200,7 +2368,7 @@
    "level": 2,
    "items": [
     "The screen generates the Submit ID, writes the start message to the log (LOG2) and starts the submit process. The screen returns to the delivery plan and shows the Submit ID.",
-    "Read the rows of the Submit ID from TB_R_INSTRUCTION (one Supplier Code + Plant). Take the ASN No from the existing numbering and auto generate one Case No per case by checking the last sequence (existing last sequence table; format as existing).",
+    "Read the rows of the Submit ID from TB_R_INSTRUCTION (one Supplier Code + Plant). Take the ASN No from the existing numbering and auto generate one Case No per case by checking the last sequence (TB_R_CASE_LABEL_LAST_SEQ; format as existing).",
     "Insert TB_R_DAILY_ORDER_MANIFEST (status Created) and TB_R_DAILY_ORDER_PART (existing tables, refer Data Edit Mapping); write ASN_NO / CASE_NO back to TB_R_INSTRUCTION.",
     "No error: commit, write the result (LOG3) and end (LOG4) messages. Error: roll back, release the mapping (delete the rows from TB_R_INSTRUCTION, PO_MAPPED_FLAG back to 'N', MAPPED_QTY of TB_R_PRA_DAILY_ORDER_MAPPED reduced again), write the error (LOG5). Exit."
    ]
@@ -2213,7 +2381,7 @@
     "Submit ASN runs as a batch so the screen does not wait; the user sees the Submit ID and checks the result in Log Monitoring. No success popup is shown on the screen.",
     "The log follows the existing NSP log (same table and columns); the Submit ID is the key to find the run.",
     "All-or-nothing: on error nothing is saved and the mapping made by [Create ASN] is released (rows deleted from TB_R_INSTRUCTION), so the units can be selected again.",
-    "The ASN is saved in the existing tables TB_R_DAILY_ORDER_MANIFEST / TB_R_DAILY_ORDER_PART; the case number is auto generated by checking the last sequence kept in the existing last sequence table (format as existing, not detailed here).",
+    "The ASN is saved in the existing tables TB_R_DAILY_ORDER_MANIFEST / TB_R_DAILY_ORDER_PART; the case number is auto generated by checking the last sequence kept in the TB_R_CASE_LABEL_LAST_SEQ (format as existing, not detailed here).",
     "The submit process (Submit ID, batch call, log) follows the existing ASN submit of NSP."
    ]
   },
@@ -2830,63 +2998,175 @@
    "name": "TB_R_DAILY_ORDER_MANIFEST",
    "kind": "transaction",
    "proposed": false,
-   "description": "Existing ASN header table of NSP; the crossdock ASN is saved here after submit. Only the fields used are listed; physical names follow the existing table.",
+   "description": "Existing ASN manifest (GTOPAS SPS DB structure TR-01). Submit ASN: one row per Pra Daily Order manifest of the cases, all with the same ASN_NO. Only the columns used are listed.",
    "columns": [
     [
-     "MANIFEST_NO / ASN_NO",
-     "existing",
+     "DEPOT_CD",
+     "VARCHAR(20)",
+     "",
      "Y",
-     "N",
-     "ASN number (auto generated as today, existing numbering)"
+     "Depot Code"
     ],
     [
      "SUPPLIER_CD",
-     "existing",
+     "VARCHAR(4)",
      "",
      "N",
-     "Supplier code"
+     "Supplier Code"
     ],
     [
      "SUPPLIER_PLANT",
-     "existing",
+     "VARCHAR(1)",
      "",
      "N",
-     "Supplier plant"
+     "Supplier Plant Code"
     ],
     [
-     "DELIVERY_DT",
-     "existing",
+     "SUB_SUPP_CD",
+     "VARCHAR(4)",
      "",
-     "N",
-     "Delivery Date"
+     "Y",
+     "Sub Supplier Code"
     ],
     [
-     "RIT / ROUTE",
-     "existing",
+     "SUB_SUPP_PLANT",
+     "VARCHAR(1)",
      "",
-     "N",
-     "Rit and route (route master, existing)"
+     "Y",
+     "Sub Supplier Plant Code"
     ],
     [
-     "TOTAL_CASE / TOTAL_QTY",
-     "existing",
+     "SUPPLIER_NAME",
+     "VARCHAR(50)",
+     "",
+     "Y",
+     "Supplier Name"
+    ],
+    [
+     "PO_NO",
+     "VARCHAR(20)",
      "",
      "N",
-     "Number of cases / Delivery Qty"
+     "PO Number"
+    ],
+    [
+     "ASN_NO",
+     "VARCHAR(15)",
+     "",
+     "N",
+     "ASN Number"
+    ],
+    [
+     "PO_DATE",
+     "DATETIME",
+     "",
+     "N",
+     "PO Date"
+    ],
+    [
+     "ASN_DATE",
+     "DATETIME",
+     "",
+     "N",
+     "ASN Date"
+    ],
+    [
+     "SUB_MANIFEST_NO",
+     "VARCHAR(20)",
+     "Y",
+     "N",
+     "Sub Manifest Number"
+    ],
+    [
+     "MANIFEST_NO",
+     "VARCHAR(16)",
+     "Y",
+     "N",
+     "Manifest Number"
+    ],
+    [
+     "ORDER_TYPE",
+     "VARCHAR(1)",
+     "",
+     "Y",
+     "Order Type"
+    ],
+    [
+     "CROSS_DOCK_FLAG",
+     "VARCHAR(3)",
+     "",
+     "Y",
+     "Cross Dock Flag"
+    ],
+    [
+     "DOCK_CD",
+     "VARCHAR(2)",
+     "",
+     "Y",
+     "Dock Code"
+    ],
+    [
+     "TOTAL_ITEM",
+     "NUMERIC",
+     "",
+     "N",
+     "Total Item"
+    ],
+    [
+     "TOTAL_QTY",
+     "NUMERIC",
+     "",
+     "N",
+     "Total Quantity"
+    ],
+    [
+     "DELIVERY_DT_ORI",
+     "DATETIME",
+     "",
+     "Y",
+     "Delivery Date Original"
+    ],
+    [
+     "SUB_ROUTE_CD",
+     "VARCHAR(10)",
+     "",
+     "N",
+     "Sub Route Code"
+    ],
+    [
+     "SUB_ROUTE_SEQ",
+     "VARCHAR(2)",
+     "",
+     "N",
+     "Sub Route Seq"
+    ],
+    [
+     "SUB_ROUTE_DT",
+     "DATETIME",
+     "",
+     "Y",
+     "Sub Route Date"
     ],
     [
      "STATUS",
-     "existing",
+     "VARCHAR(3)",
      "",
      "N",
-     "Created"
+     "Status"
     ],
     [
-     "CREATED_BY / CREATED_DT",
-     "existing",
+     "CREATED_BY",
+     "VARCHAR(20)",
      "",
      "N",
-     "User and date-time of submit"
+     "Created By"
+    ],
+    [
+     "CREATED_DT",
+     "DATETIME",
+     "",
+     "N",
+     "Created Date"
     ]
    ]
   },
@@ -2894,56 +3174,247 @@
    "name": "TB_R_DAILY_ORDER_PART",
    "kind": "transaction",
    "proposed": false,
-   "description": "Existing ASN part / case table of NSP. Only the fields used are listed; physical names follow the existing table.",
+   "description": "Existing ASN part (TR-02). Submit ASN: one row per manifest item and case (a case can hold several manifest items). Only the columns used are listed.",
    "columns": [
     [
-     "MANIFEST_NO / ASN_NO",
-     "existing",
+     "PO_NO",
+     "VARCHAR(20)",
+     "",
+     "N",
+     "PO Number"
+    ],
+    [
+     "PO_ITEM",
+     "VARCHAR(4)",
+     "",
+     "N",
+     "PO Item"
+    ],
+    [
+     "SUB_MANIFEST_NO",
+     "VARCHAR(20)",
      "Y",
      "N",
-     "ASN number"
+     "Sub Manifest Number"
+    ],
+    [
+     "MANIFEST_NO",
+     "VARCHAR(16)",
+     "Y",
+     "N",
+     "Manifest Number"
+    ],
+    [
+     "MANIFEST_ITEM",
+     "NUMERIC",
+     "Y",
+     "N",
+     "Manifest Item"
     ],
     [
      "CASE_NO",
-     "existing",
+     "VARCHAR(9)",
      "Y",
      "N",
-     "Case number, auto generated with the existing last sequence"
+     "Case Number"
+    ],
+    [
+     "ASN_NO",
+     "VARCHAR(15)",
+     "",
+     "N",
+     "ASN Number"
+    ],
+    [
+     "ASN_DATE",
+     "DATETIME",
+     "",
+     "N",
+     "ASN Date"
     ],
     [
      "PART_NO",
-     "existing",
+     "VARCHAR(20)",
      "",
      "N",
-     "Part number of the case"
+     "Part Number"
     ],
     [
-     "DESTINATION_CD",
-     "existing",
+     "PART_NAME",
+     "VARCHAR(50)",
      "",
      "N",
-     "Destination of the case"
+     "Part Name"
     ],
     [
-     "QTY",
-     "existing",
+     "PO_QTY",
+     "NUMERIC",
      "",
      "N",
-     "Qty of the case"
+     "PO Quantity"
     ],
     [
-     "PO_NO / MANIFEST_ITEM_NO",
-     "existing",
+     "DELIVERY_QTY",
+     "NUMERIC",
      "",
      "N",
-     "PO reference of the Pra Daily Order"
+     "Delivery Quantity"
     ],
     [
-     "CREATED_BY / CREATED_DT",
-     "existing",
+     "QTY_PER_CONTAINER",
+     "NUMERIC",
      "",
      "N",
-     "User and date-time of submit"
+     "Quantity Per Container"
+    ],
+    [
+     "DELIVERY_DT_ORI",
+     "DATETIME",
+     "",
+     "Y",
+     "Delivery Date Original"
+    ],
+    [
+     "KANBAN_NO",
+     "VARCHAR(4)",
+     "",
+     "Y",
+     "Kanban Number"
+    ],
+    [
+     "PART_BARCODE",
+     "VARCHAR(25)",
+     "",
+     "Y",
+     "Part Barcode"
+    ],
+    [
+     "STATUS",
+     "VARCHAR(3)",
+     "",
+     "N",
+     "Status"
+    ],
+    [
+     "CREATED_BY",
+     "VARCHAR(20)",
+     "",
+     "N",
+     "Created By"
+    ],
+    [
+     "CREATED_DT",
+     "DATETIME",
+     "",
+     "N",
+     "Created Date"
+    ]
+   ]
+  },
+  {
+   "name": "TB_R_CASE_LABEL_LAST_SEQ",
+   "kind": "transaction",
+   "proposed": false,
+   "description": "Existing last sequence per supplier + plant (TR-06): the case number (case label) and the ASN number are auto generated from it and the new last sequence is saved here.",
+   "columns": [
+    [
+     "SUPPLIER_CD",
+     "VARCHAR(5)",
+     "Y",
+     "N",
+     "Supplier Code"
+    ],
+    [
+     "SUPPLIER_PLANT_CD",
+     "VARCHAR(1)",
+     "Y",
+     "N",
+     "Supplier Plant Code"
+    ],
+    [
+     "CASE_LABEL_LAST_SEQ",
+     "VARCHAR(3)",
+     "",
+     "Y",
+     "Case Label Last Seq No"
+    ],
+    [
+     "ASN_LAST_SEQ",
+     "VARCHAR(3)",
+     "",
+     "Y",
+     "ASN Last Seq No"
+    ],
+    [
+     "CHANGED_BY",
+     "VARCHAR(20)",
+     "",
+     "Y",
+     "Changed By"
+    ],
+    [
+     "CHANGED_DT",
+     "DATETIME",
+     "",
+     "Y",
+     "Changed Date"
+    ]
+   ]
+  },
+  {
+   "name": "TB_M_PART_MASTER",
+   "kind": "master",
+   "proposed": false,
+   "description": "Existing part master (MST-03); only PART_NAME is used (by PART_NO).",
+   "columns": [
+    [
+     "PART_NO",
+     "VARCHAR(15)",
+     "Y",
+     "N",
+     "Part No"
+    ],
+    [
+     "PART_NAME",
+     "VARCHAR(100)",
+     "",
+     "N",
+     "Part Name"
+    ],
+    [
+     "SUPPLIER_CD",
+     "VARCHAR(4)",
+     "Y",
+     "N",
+     "Supplier Code"
+    ],
+    [
+     "SUPPLIER_PLANT_CD",
+     "VARCHAR(1)",
+     "Y",
+     "N",
+     "Supplier Plabt Code"
+    ],
+    [
+     "DOCK_CD",
+     "VARCHAR(2)",
+     "Y",
+     "N",
+     "Dock Code"
+    ],
+    [
+     "VALID_FROM",
+     "DATETIME",
+     "Y",
+     "N",
+     "Valid From"
+    ],
+    [
+     "VALID_TO",
+     "DATETIME",
+     "",
+     "Y",
+     "Valid To"
     ]
    ]
   }
