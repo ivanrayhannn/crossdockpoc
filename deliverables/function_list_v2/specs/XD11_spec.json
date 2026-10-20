@@ -498,11 +498,11 @@
       "description": "Row is deleted"
      },
      {
-      "dest_field": "MANIFEST_ITEM_NO",
+      "dest_field": "MANIFEST_ITEM",
       "description": "Row is deleted"
      },
      {
-      "dest_field": "PO_ORDER_QTY",
+      "dest_field": "ORDER_QTY",
       "description": "Row is deleted"
      },
      {
@@ -548,7 +548,7 @@
      "table": "TB_R_INSTRUCTION",
      "keys": [
       {
-       "field": "PO_NO + MANIFEST_NO + MANIFEST_ITEM_NO",
+       "field": "PO_NO + MANIFEST_NO + MANIFEST_ITEM",
        "value": "PO part of the deleted rows"
       }
      ]
@@ -559,7 +559,7 @@
      "description": "PO parts of the deleted rows",
      "keys": [
       {
-       "field": "PO_NO + MANIFEST_NO + MANIFEST_ITEM_NO",
+       "field": "PO_NO + MANIFEST_NO + MANIFEST_ITEM",
        "value": "PO part"
       }
      ]
@@ -586,7 +586,7 @@
       "description": "Not changed"
      },
      {
-      "dest_field": "MANIFEST_ITEM_NO",
+      "dest_field": "MANIFEST_ITEM",
       "description": "Not changed"
      },
      {
@@ -602,7 +602,7 @@
       "description": "Not changed"
      },
      {
-      "dest_field": "PO_ORDER_QTY",
+      "dest_field": "ORDER_QTY",
       "description": "Not changed"
      },
      {
@@ -1731,14 +1731,14 @@
      "Manifest number of the Pra Daily Order"
     ],
     [
-     "MANIFEST_ITEM_NO",
+     "MANIFEST_ITEM",
      "VARCHAR(TBD)",
      "",
      "N",
      "Manifest item number"
     ],
     [
-     "PO_ORDER_QTY",
+     "ORDER_QTY",
      "NUMBER(TBD)",
      "",
      "N",
@@ -1830,7 +1830,7 @@
      "Manifest number"
     ],
     [
-     "MANIFEST_ITEM_NO",
+     "MANIFEST_ITEM",
      "VARCHAR(TBD)",
      "Y",
      "N",
@@ -1858,7 +1858,7 @@
      "Supplier plant"
     ],
     [
-     "PO_ORDER_QTY",
+     "ORDER_QTY",
      "NUMBER(TBD)",
      "",
      "N",
@@ -1869,7 +1869,7 @@
      "NUMBER(TBD)",
      "",
      "N",
-     "Qty already mapped to customer orders by [Create ASN]; open qty = PO_ORDER_QTY - MAPPED_QTY"
+     "Qty already mapped to customer orders by [Create ASN]; open qty = ORDER_QTY - MAPPED_QTY"
     ],
     [
      "CREATED_BY",

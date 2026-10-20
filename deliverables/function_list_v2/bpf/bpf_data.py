@@ -63,7 +63,7 @@ FLOWS = [
         'steps': [
             dict(id='D1', lane='GT', band='B1', slot=0, fn='', title='Release crossdock customer orders (ORDER_STATUS 7, multiples of pcs/case)',
                  read=[], write=['TB_R_H0253_ORDER_CONTROL_PRE (DB Surrounding)'], ab=[], next=['D3']),
-            dict(id='D2', lane='NB', band='B1', slot=0, fn='existing', title='Release PO Supplier (CROSSDOCK_FLAG X)',
+            dict(id='D2', lane='NB', band='B1', slot=0, fn='existing', title='Release PO Supplier (manifest CROSS_DOCK_FLAG X, parts in Pra Daily Order Part)',
                  read=[], write=['TB_R_PRA_DAILY_ORDER_MANIFEST', 'TB_R_PRA_DAILY_ORDER_PART'], ab=[], next=['D3']),
             dict(id='D3', lane='NB', band='B2', slot=0, fn='XD08', title='Upsert status 7 rows + status 6 of existing keys (delta INTF_UPDATE_DT)',
                  read=['TB_R_H0253_ORDER_CONTROL_PRE (DB Surrounding)'], write=['TB_R_H0253_ORDER_CONTROL_PRE (NSP)', 'Log'], ab=['AB07'], next=['D5']),
