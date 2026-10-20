@@ -10,7 +10,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..', 'bpf'))
 from bpf_ref import Shapes  # noqa: E402
 from build_bpf import add_drawings  # noqa: E402
-from erd_data import EXTRA_TABLES, KIND, LAYOUT, RELATIONS, SCENARIO, SHOW, SIM, TABLE_KIND  # noqa: E402
+from erd_data import KIND, PRA_NOTES, RENAME, LAYOUT, RELATIONS, SCENARIO, SHOW, SIM, TABLE_KIND  # noqa: E402
 
 OUT = os.path.join(HERE, 'Crossdock_ERD.xlsx')
 SPECS = os.path.join(HERE, '..', 'specs')
@@ -32,9 +32,18 @@ def load_tables():
         fid = os.path.basename(f)[:4]
         for t in json.load(open(f, encoding='utf-8'))['tables']:
             used.setdefault(t['name'], []).append(fid)
-            tables.setdefault(t['name'], (t['description'], [tuple(c[:5]) for c in t['columns']]))
-    for name, (desc, cols) in EXTRA_TABLES.items():
-        tables[name] = (desc, cols)
+            cols = []
+            for c in t['columns']:
+                c = list(c[:5])
+                if TABLE_KIND.get(t['name']) in ('new', 'temp') and c[0] in RENAME:
+                    c[4] = f'{c[4]} (renamed from {c[0]} of the UISS to the name of the existing Pra Daily Order column)'
+                    c[0] = RENAME[c[0]]
+                cols.append(tuple(c))
+            tables.setdefault(t['name'], (t['description'], cols))
+    pra = json.load(open(os.path.join(HERE, 'pra_structure.json'), encoding='utf-8'))
+    for name, (desc, notes) in PRA_NOTES.items():
+        cols = [(c[0], c[1], c[2], c[3], '; '.join(x for x in (notes.get(c[0], ''), c[4]) if x)) for c in pra[name]['columns']]
+        tables[name] = (desc + ' Types inferred from the sample data (confirm with the DDL).', cols)
         used[name] = EXTRA_USED.get(name, [])
     return tables, used
 
