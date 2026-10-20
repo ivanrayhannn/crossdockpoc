@@ -4,11 +4,11 @@
 
 | Sheet | Isi |
 |---|---|
-| ERD | 16 entitas sebagai blok sel (warna header: tabel baru Crossdock, replika DB Surrounding / G-TOPAS, existing NSP, temporary), PK / FK, garis relasi (shape) dengan kardinalitas 1 / N; garis putus-putus = relasi logis (tanpa FK) |
-| Table List | Tabel, jenis, deskripsi, function yang memakai, jumlah baris simulasi |
-| Relationship | 18 relasi: parent / child key, kardinalitas, arti |
-| Column Definition | Semua kolom (tipe, PK, FK, Null, deskripsi) dari UISS, dengan filter |
-| Simulation Data | Satu skenario konsisten antar tabel: PART-X / PART-Y / PART-Z, kalkulasi Oct-2026, mapping destinasi, sync, order H0253, pre-mapping, ASN-50221-261016-001 (5 case / 30 pcs), cancel CANCELLED dan CONFLICT |
+| ERD | 18 entitas sebagai blok sel dengan **semua kolom** (tanpa collapse), PK / FK, garis relasi (shape) dengan kardinalitas 1 / N; garis putus-putus = relasi logis |
+| Table List / Relationship / Column Definition | Daftar tabel (function, sheet simulasi), 21 relasi, semua kolom dengan filter |
+| Simulation Index + SIM-1 … SIM-6 | Satu sheet per skenario: SIM-1 master setup & kalkulasi bulanan, SIM-2 order → ASN normal, SIM-3 unit Not Ready (PO kurang) lalu Ready, SIM-4 hold destinasi, SIM-5 partial cancel sebelum submit (CANCELLED), SIM-6 cancel setelah ASN (CONFLICT). Highlight: baris NEW (hijau) / UPD (kuning, sel yang berubah oranye) / DEL (merah, coret) / READ (putih) / TEMP (abu); header kolom PK kuning; nilai status berwarna (Active, Ready, CONFLICT, HOLD_FLAG Y, …) |
+
+`Crossdock_DB_Structure.xlsx` (`build_dbstructure.py`): format dokumen DB Structure (GTOPAS SPS): Revision, Table List (ID, logical / physical name, Row Size, PK Row Size, Logging) dan satu sheet per tabel (MST / HIS / TR / TMP = tabel baru Crossdock, REP = replika DB Surrounding, EXT = tabel existing sebagai referensi) dengan No / Field Name / Logical Name / Type / Len / Prec / PK / N-N / Default / Description. Data simulasi: `sim_data.py`.
 
 ## Struktur Pra Daily Order (20-Oct)
 Dari `NSP_INSERT_TB_R_PRA_DAILY_ORDER_MANIFEST.sql` (54 kolom, 391 baris) dan `NSP_INSERT_TB_R_PRA_DAILY_ORDER_PART.sql` (38 kolom, 2353 baris). Hanya strukturnya yang disimpan (`pra_structure.json`: kolom, tipe hasil inferensi dari data, PK usulan); data aslinya tidak disimpan di repo.
