@@ -77,6 +77,9 @@ Simulasi: menu prototype **ASN → Cancel Order Simulation**.
 ## Business Process Flow Level 2
 Lihat `bpf/README.md`: Excel `bpf/Crossdock_BPF_Level2.xlsx` (X = PIC, Y = timeline, sampai level tabel, abnormality AB01–AB16) dan menu prototype Common → Business Process Flow.
 
+## Concept ERD
+Lihat `erd/README.md`: `erd/Crossdock_ERD.xlsx` (ERD, Table List, Relationship, Column Definition, Simulation Data).
+
 ## Build
 ```
 bash deliverables/function_list_v2/build_all_v2.sh
