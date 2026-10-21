@@ -16,7 +16,7 @@ FUNCS = {
     'XD03': ('Part and Destination Mapping Upload Batch', 'Batch', 'XD03_UISS_Batch_PartDestinationMappingUpload.xlsx'),
     'XD04': ('Actual Demand Summary Synch to NSP', 'Batch', 'XD04_UISS_Batch_ActualDemandSummarySync.xlsx'),
     'XD05': ('DAD Volume Calculation Batch', 'Batch', 'XD05_UISS_Batch_DADVolumeCalculation.xlsx'),
-    'XD06': ('IF Cross Dock Master to GTOPAS', 'Batch', 'XD06_UISS_Batch_IFCrossDockMasterToGTOPAS.xlsx'),
+    'XD06': ('IF Cross Dock Master to G-System', 'Batch', 'XD06_UISS_Batch_IFCrossDockMasterToGSystem.xlsx'),
     'XD07': ('IF Cross Dock Master to AP POLE', 'Batch', 'XD07_UISS_Batch_IFCrossDockMasterToAPPOLE.xlsx'),
     'XD08': ('Order Control Information to NSP Batch (ASN)', 'Batch', 'XD08_UISS_Batch_OrderControlInfoToNSP_ASN.xlsx'),
     'XD09': ('Mapping Customer Order and PO Batch', 'Batch', 'XD09_UISS_Batch_MappingCustomerOrderPO.xlsx'),
@@ -51,8 +51,8 @@ COMMON = [
     ('The RPA', 'The IF functions (XD06 / XD07)'),
     ('the RPA', 'the IF functions (XD06 / XD07)'),
     ('RPA', 'IF function'),
-    ('the global system', 'GTOPAS and AP POLE'),
-    ('global system', 'GTOPAS and AP POLE'),
+    ('the global system', 'G-System and AP POLE'),
+    ('global system', 'G-System and AP POLE'),
 ]
 
 

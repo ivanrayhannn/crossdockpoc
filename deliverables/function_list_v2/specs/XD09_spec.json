@@ -260,7 +260,7 @@
    {
     "text": "Get the customer order lines from TB_R_H0253_ORDER_CONTROL_PRE:",
     "children": [
-     "ORDER_STATUS = '7' (Cross Dock), HOLD_FLAG = 'N', PO_MAPPED_FLAG = 'N'; latest data; earliest order date first per part number (FIFO, G-TOPAS key). Status '2' (cancel from the source) is not taken.",
+     "ORDER_STATUS = '7' (Cross Dock), HOLD_FLAG = 'N', PO_MAPPED_FLAG = 'N'; latest data; earliest order date first per part number (FIFO, G-System key). Status '2' (cancel from the source) is not taken.",
      "Get: Customer Code, Customer Order No, Order Date, Destination Code, Detailed Item No, Serial No, Part Number, Order Status Qty."
     ]
    },
@@ -447,7 +447,7 @@
    "marker": "-",
    "level": 0,
    "items": [
-    "Unit = Part Number + Customer Order Date. Case = destination x pcs/case: the qty of a destination is packed in cases of pcs/case (e.g. Vietnam 24 pcs, 6 pcs/case = 4 cases). G-TOPAS releases in multiples of pcs/case (a remainder stays pending and is not in H0253), so every case is full. A case can hold several customer orders and several POs of the same destination; a customer order line that does not fit in the remaining space of a case continues in the next case (e.g. case 3 = CO-14001 4 + CO-14006 2 of PO2; case 4 = CO-14006 2 of PO2 + CO-14007 4 of PO4).",
+    "Unit = Part Number + Customer Order Date. Case = destination x pcs/case: the qty of a destination is packed in cases of pcs/case (e.g. Vietnam 24 pcs, 6 pcs/case = 4 cases). G-System releases in multiples of pcs/case (a remainder stays pending and is not in H0253), so every case is full. A case can hold several customer orders and several POs of the same destination; a customer order line that does not fit in the remaining space of a case continues in the next case (e.g. case 3 = CO-14001 4 + CO-14006 2 of PO2; case 4 = CO-14006 2 of PO2 + CO-14007 4 of PO4).",
     "Case Qty = number of destinations of the unit. PO Readiness (case) = cases whose whole qty is pre-mapped to a PO.",
     "CROSSDOCK_STATUS '6' Ready: every line of the unit is pre-mapped. '7' Not Ready: at least one line of the unit has no PO yet.",
     "Shown on XD10 as ASN Status Ready / Not Ready. Units with PO Readiness 0 are not listed on XD10; units already in a submitted ASN (ASN status '1' Created) are not taken (PO_MAPPED_FLAG = 'Y').",

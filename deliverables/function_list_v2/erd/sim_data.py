@@ -91,17 +91,17 @@ SCENARIOS = [
                 ('new', [1002, 'PART-Y', '202610', 'CALC', 'BATCH', None, 'PART_STATUS', 'Candidate', 'Active', 'XD05']),
                 ('new', [1003, 'PART-Z', '202610', 'CALC', 'BATCH', None, 'PART_STATUS', 'Active', 'Inactive', 'XD05']),
                 ('new', [1004, 'PART-X', '202610', 'MAPPING', 'BATCH', VN, 'CASE_DAY', '5', '6', 'XD05'])]),
-            ('6. D/S [Sync] → XD06 (G-TOPAS) / XD07 (AP POLE)', 'TB_R_CROSSDOCK_IF_RESULT', [
-                ('new', ['PART-Y', 'GTOPAS', '202610', '1', 'SEND-20261002-01', 'OK']), ('new', ['PART-Y', 'APPOLE', '202610', '1', 'XDOCK_MASTER_20261002.csv', 'OK']),
-                ('new', ['PART-Z', 'GTOPAS', '202610', '1', 'SEND-20261002-01', 'OK (CROSSDOCK_FLAG N)']),
+            ('6. D/S [Sync] → XD06 (G-System) / XD07 (AP POLE)', 'TB_R_CROSSDOCK_IF_RESULT', [
+                ('new', ['PART-Y', 'G-System', '202610', '1', 'SEND-20261002-01', 'OK']), ('new', ['PART-Y', 'APPOLE', '202610', '1', 'XDOCK_MASTER_20261002.csv', 'OK']),
+                ('new', ['PART-Z', 'G-System', '202610', '1', 'SEND-20261002-01', 'OK (CROSSDOCK_FLAG N)']),
                 ('new', ['PART-Z', 'APPOLE', '202610', '1', 'XDOCK_MASTER_20261002.csv', 'OK (CROSSDOCK_FLAG N)'])]),
             ('', 'TB_M_PART_CANDIDATE', [
                 ('upd', ['PART-Y', 'DUMMY PART Y', 100, 6, 2, 12, 'Active', '1', 'CALC'], ['SYNC_STATUS'], 'No Sync → Success'),
-                ('upd', ['PART-Z', 'DUMMY PART Z', 50, 6, 4, 24, 'Inactive', '1', 'CALC'], ['SYNC_STATUS'], 'No Sync → Success (inactive in G-TOPAS / AP POLE)')]),
+                ('upd', ['PART-Z', 'DUMMY PART Z', 50, 6, 4, 24, 'Inactive', '1', 'CALC'], ['SYNC_STATUS'], 'No Sync → Success (inactive in G-System / AP POLE)')]),
         ]},
     {
         'id': 'SIM-2', 'title': 'Daily order to ASN (normal)', 'flow': 'BPF F2', 'functions': 'XD08, XD09, XD10 (Create ASN, Submit 5.7)',
-        'story': ['G-TOPAS releases crossdock orders 14-Oct (status 7); the supplier POs of 15-Oct are crossdock manifests (CROSS_DOCK_FLAG X).',
+        'story': ['G-System releases crossdock orders 14-Oct (status 7); the supplier POs of 15-Oct are crossdock manifests (CROSS_DOCK_FLAG X).',
                   'Supplier searches delivery 16-Oct Rit 1: PART-X (VN 18 pcs = 3 cases, TH 6 = 1 case) and PART-Y (PH 6 = 1 case) are Ready; Create ASN and Submit.',
                   'Result: one ASN with 5 cases / 30 pcs, 3 ASN manifests (one per Pra manifest), 5 ASN part rows (manifest item x case).'],
         'steps': [
@@ -190,9 +190,9 @@ SCENARIOS = [
                 ('upd', h('CO-14104', TH, '0000001', 'PART-X', 6, hold='N'), ['HOLD_FLAG'], 'Released: taken again by the next [Search]')]),
         ]},
     {
-        'id': 'SIM-5', 'title': 'Partial cancel before submit (CANCELLED)', 'flow': 'BPF F4', 'functions': 'G-TOPAS, XD12, XD11, XD08',
+        'id': 'SIM-5', 'title': 'Partial cancel before submit (CANCELLED)', 'flow': 'BPF F4', 'functions': 'G-System, XD12, XD11, XD08',
         'story': ['CO-14110 (PART-Y, Philippines, 12 pcs) is in an open Case List (Create ASN done, not submitted).',
-                  'G-TOPAS cancels 6 pcs: the line is split into serial 0000001 (status 7, 6 pcs) and serial 0000002 (status 2, 6 pcs).',
+                  'G-System cancels 6 pcs: the line is split into serial 0000001 (status 7, 6 pcs) and serial 0000002 (status 2, 6 pcs).',
                   'XD12 marks the cancel (P); XD11: CANCEL 6, VALID 6, IN ASN 0, OPEN 12 → the open mapping is released → CANCELLED; XD08 updates serial 1.'],
         'steps': [
             ('1. Before: open mapping of CO-14110', 'TB_R_INSTRUCTION', [
@@ -214,15 +214,15 @@ SCENARIOS = [
                 ('upd', h('CO-14110', PH, '0000001', 'PART-Y', 6, mapped='N', od='2026-10-15'), ['ORDER_STATUS_QTY'], '12 → 6')]),
         ]},
     {
-        'id': 'SIM-6', 'title': 'Cancel after ASN (CONFLICT, abnormality AB16)', 'flow': 'BPF F4 / AB16', 'functions': 'G-TOPAS, XD12, XD11, Log Monitoring',
+        'id': 'SIM-6', 'title': 'Cancel after ASN (CONFLICT, abnormality AB16)', 'flow': 'BPF F4 / AB16', 'functions': 'G-System, XD12, XD11, Log Monitoring',
         'story': ['CO-14103 (PART-X, Vietnam, 4 pcs) is already in ASN-50221-261016-001, case C-0003.',
-                  'G-TOPAS cancels the line although it is in an ASN (SOP not followed): status 2.',
+                  'G-System cancels the line although it is in an ASN (SOP not followed): status 2.',
                   'XD11: CANCEL 4, VALID 0, IN ASN 4 → CONFLICT 4; the ASN is not changed (no Cancel ASN); D/S handles case C-0003 at receiving.'],
         'steps': [
             ('1. Before: the line is in the ASN', 'TB_R_INSTRUCTION', [
                 ('ref', [5, 3, 2, 'PART-X', VN, 'CO-14103', '0000001', 4, 'T0409002', '3126035902', '0001', ASN, 'C-0003'])]),
             ('2. XD12 27:30: status 2 (CANCEL_STATUS P)', 'TB_R_H0253_ORDER_CONTROL_PRE', [
-                ('upd', h('CO-14103', VN, '0000001', 'PART-X', 4, st='2', mapped='Y', cancel='P'), ['ORDER_STATUS', 'CANCEL_STATUS'], 'Cancelled in G-TOPAS')]),
+                ('upd', h('CO-14103', VN, '0000001', 'PART-X', 4, st='2', mapped='Y', cancel='P'), ['ORDER_STATUS', 'CANCEL_STATUS'], 'Cancelled in G-System')]),
             ('3. XD11: CONFLICT, ASN not changed', 'TB_R_INSTRUCTION', [
                 ('ref', [5, 3, 2, 'PART-X', VN, 'CO-14103', '0000001', 4, 'T0409002', '3126035902', '0001', ASN, 'C-0003'], [], 'Not changed (has ASN_NO)')]),
             ('', 'TB_R_PRA_DAILY_ORDER_MAPPED', [('ref', ['T0409002', '3126035902', '0001', 'PART-X', 12, 12], [], 'Not changed (PO qty not blocked)')]),

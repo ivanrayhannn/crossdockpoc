@@ -5,7 +5,7 @@ that the UISS only reference, so their key columns are listed here."""
 # kind -> (label, header fill, header font)
 KIND = {
     'new': ('New table (Crossdock)', '1F3864', 'FFFFFF'),
-    'replica': ('Replicated from DB Surrounding (G-TOPAS)', '5B4A8B', 'FFFFFF'),
+    'replica': ('Replicated from DB Surrounding (G-System)', '5B4A8B', 'FFFFFF'),
     'existing': ('Existing NSP table', '595959', 'FFFFFF'),
     'temp': ('Temporary (session)', 'A6A6A6', 'FFFFFF'),
 }
@@ -82,7 +82,7 @@ RELATIONS = [
     ('TB_M_PART_CANDIDATE', 'PART_NO', 'TB_M_PART_CANDIDATE_DEST', 'PART_NO', '1 : N', 'Mapping per period and destination'),
     ('TB_M_PART_CANDIDATE', 'PART_NO', 'TB_R_PART_DAD_RESULT', 'PART_NO', '1 : N', 'Monthly calculation result (XD05 process 1)'),
     ('TB_M_PART_CANDIDATE', 'PART_NO', 'TB_H_PART_CANDIDATE', 'PART_NO', '1 : N', 'History of every change'),
-    ('TB_M_PART_CANDIDATE', 'PART_NO', 'TB_R_CROSSDOCK_IF_RESULT', 'PART_NO', '1 : 0..2', 'Send status per target system (GTOPAS / APPOLE)'),
+    ('TB_M_PART_CANDIDATE', 'PART_NO', 'TB_R_CROSSDOCK_IF_RESULT', 'PART_NO', '1 : 0..2', 'Send status per target system (G-System / APPOLE)'),
     ('TB_M_PART_CANDIDATE', 'PART_NO', 'TB_R_ACTUAL_DEMAND_SUMMARY', 'PART_NO', '1 : N', 'Actual demand of the part (logical, no FK)'),
     ('TB_M_PART_CANDIDATE', 'PART_NO', 'TB_R_H0253_ORDER_CONTROL_PRE', 'SHIPPING_PART_NO', '1 : N', 'Crossdock customer order lines of an Active part (logical)'),
     ('TB_M_H0125_DESTINATION', 'DESTINATION_CD', 'TB_R_H0253_ORDER_CONTROL_PRE', 'DESTINATION_CD', '1 : N', 'Destination of the customer order'),

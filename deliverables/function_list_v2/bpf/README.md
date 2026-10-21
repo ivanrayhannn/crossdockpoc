@@ -9,15 +9,15 @@ Excel / draw.io: timeline di kolom (X), PIC di baris (Y), sesuai referensi BPF. 
 | `bpf_data.py` | Satu sumber data (lane, timeline, step, tabel, abnormality) |
 | `build_bpf.py`, `build_bpf.sh`, `bpf_shots.mjs` | Generator: data prototype → screenshot diagram → Excel |
 | `bpf_ref.py` | Sheet flow format referensi (grid sel + shape ter-anchor ke sel) dan draw.io |
-| `shots/` | Gambar preview diagram per flow dari prototype (nama dokumen G-TOPAS / NSP) |
+| `shots/` | Gambar preview diagram per flow dari prototype (nama dokumen G-System / NSP) |
 
-Prototype: menu **Common → Business Process Flow** (`#/bpf`); pilihan nama Prototype (T-System / Supplier System) atau Document (G-TOPAS / NSP).
+Prototype: menu **Common → Business Process Flow** (`#/bpf`); pilihan nama Prototype (T-System / Supplier System) atau Document (G-System / NSP).
 
 | Flow | Lane (PIC) | Timeline |
 |---|---|---|
-| F1 Master Setup | G-TOPAS / DB Surrounding, NSP Batch, Procurement, D/S Team, AP POLE | Weekly 21:30 (XD13) · kapan saja (XD01 / XD02) · bulanan (XD04 → XD05 P1 → P2) · setelah run bulanan (XD01 / XD03, [Sync] → XD06 / XD07) · setelah Sync (G-TOPAS, AP POLE) |
-| F2 Daily Order to ASN | G-TOPAS, NSP Batch, Supplier | D-1 (H0253 status 7, PO harian) · 27:30 (XD08) · hari D (Search / XD09, Create, Submit 5.7) · setelah submit (XD15, ASN feedback, Log) |
-| F4 Hold & Cancel | G-TOPAS, NSP Batch, D/S Team, Supplier | Hari D: Hold / Release destinasi (XD10), Search tanpa baris hold (XD09), Create ASN gagal kalau di-hold setelah dicentang · Kapan saja (SOP, cancel status 2) · 27:30 (XD12 → XD11 → XD08) · hari D (Search ulang, CONFLICT di Log, penanganan barang) |
+| F1 Master Setup | G-System / DB Surrounding, NSP Batch, Procurement, D/S Team, AP POLE | Weekly 21:30 (XD13) · kapan saja (XD01 / XD02) · bulanan (XD04 → XD05 P1 → P2) · setelah run bulanan (XD01 / XD03, [Sync] → XD06 / XD07) · setelah Sync (G-System, AP POLE) |
+| F2 Daily Order to ASN | G-System, NSP Batch, Supplier | D-1 (H0253 status 7, PO harian) · 27:30 (XD08) · hari D (Search / XD09, Create, Submit 5.7) · setelah submit (XD15, ASN feedback, Log) |
+| F4 Hold & Cancel | G-System, NSP Batch, D/S Team, Supplier | Hari D: Hold / Release destinasi (XD10), Search tanpa baris hold (XD09), Create ASN gagal kalau di-hold setelah dicentang · Kapan saja (SOP, cancel status 2) · 27:30 (XD12 → XD11 → XD08) · hari D (Search ulang, CONFLICT di Log, penanganan barang) |
 
 Open point (TBC): AB14 – apakah XD08 tetap jalan kalau XD12 gagal (job chain).
 

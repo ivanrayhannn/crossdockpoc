@@ -2,7 +2,7 @@
 - The crossdock order is the manifest with TB_R_PRA_DAILY_ORDER_MANIFEST.CROSS_DOCK_FLAG = 'X'; its part data is taken from
   TB_R_PRA_DAILY_ORDER_PART (join on MANIFEST_NO).
 - Columns of the new tables use the names of the existing tables: MANIFEST_ITEM, ORDER_QTY, PO_DT.
-- Existing tables from GTOPAS_SPS_DB_Structure_20240423.xlsx (erd/gtopas_structure.json): Submit ASN writes TB_R_DAILY_ORDER_MANIFEST
+- Existing tables from GSystem_SPS_DB_Structure_20240423.xlsx (erd/gsystem_structure.json): Submit ASN writes TB_R_DAILY_ORDER_MANIFEST
   (one row per manifest, same ASN_NO) and TB_R_DAILY_ORDER_PART (one row per manifest item and case); ASN_LAST_SEQ / CASE_LABEL_LAST_SEQ are
   kept in TB_R_CASE_LABEL_LAST_SEQ; part name from TB_M_PART_MASTER.
 Run after apply_1910.py (build_all_v2.sh). Every replacement must match, otherwise the build stops."""
@@ -49,7 +49,7 @@ SOURCE = {'PO Number': f'{PART}.PO_NO', 'Manifest Number': f'{PART}.MANIFEST_NO'
           'Order Type': f'{MAN}.ORDER_TYPE', 'Dock Code': f'{PART}.DOCK_CD', 'ETD Ori': 'ETD Ori (source column TBC)'}
 
 
-GT = json.load(open(os.path.join(HERE, '..', 'erd', 'gtopas_structure.json'), encoding='utf-8'))
+GT = json.load(open(os.path.join(HERE, '..', 'erd', 'gsystem_structure.json'), encoding='utf-8'))
 USED = {
     'TB_R_DAILY_ORDER_MANIFEST': ['SUB_MANIFEST_NO', 'MANIFEST_NO', 'ASN_NO', 'ASN_DATE', 'DEPOT_CD', 'SUPPLIER_CD', 'SUPPLIER_PLANT', 'SUB_SUPP_CD',
                                   'SUB_SUPP_PLANT', 'SUPPLIER_NAME', 'PO_NO', 'PO_DATE', 'ORDER_TYPE', 'CROSS_DOCK_FLAG', 'DOCK_CD', 'TOTAL_ITEM', 'TOTAL_QTY',
@@ -60,7 +60,7 @@ USED = {
     'TB_M_PART_MASTER': ['PART_NO', 'SUPPLIER_CD', 'SUPPLIER_PLANT_CD', 'DOCK_CD', 'VALID_FROM', 'PART_NAME', 'VALID_TO'],
 }
 TDESC = {
-    'TB_R_DAILY_ORDER_MANIFEST': 'Existing ASN manifest (GTOPAS SPS DB structure TR-01). Submit ASN: one row per Pra Daily Order manifest of the cases, all with the same ASN_NO. Only the columns used are listed.',
+    'TB_R_DAILY_ORDER_MANIFEST': 'Existing ASN manifest (G-System SPS DB structure TR-01). Submit ASN: one row per Pra Daily Order manifest of the cases, all with the same ASN_NO. Only the columns used are listed.',
     'TB_R_DAILY_ORDER_PART': 'Existing ASN part (TR-02). Submit ASN: one row per manifest item and case (a case can hold several manifest items). Only the columns used are listed.',
     'TB_R_CASE_LABEL_LAST_SEQ': 'Existing last sequence per supplier + plant (TR-06): the case number (case label) and the ASN number are auto generated from it and the new last sequence is saved here.',
     'TB_M_PART_MASTER': 'Existing part master (MST-03); only PART_NAME is used (by PART_NO).',
@@ -151,7 +151,7 @@ def main():
             if not any(x['destination'].get('table') == 'TB_R_CASE_LABEL_LAST_SEQ' for x in s['data_map']['blocks']):
                 s['data_map']['blocks'].append(b)
             s['general']['objective'].append(
-                'Submit ASN (decided 20-Oct, existing structure GTOPAS SPS DB): one TB_R_DAILY_ORDER_MANIFEST row per Pra Daily Order manifest of the cases '
+                'Submit ASN (decided 20-Oct, existing structure G-System SPS DB): one TB_R_DAILY_ORDER_MANIFEST row per Pra Daily Order manifest of the cases '
                 '(same ASN_NO) and one TB_R_DAILY_ORDER_PART row per manifest item and case; the ASN number and the case numbers (case label) are auto generated '
                 'and their last sequence is saved in TB_R_CASE_LABEL_LAST_SEQ; PART_NAME from TB_M_PART_MASTER.')
         save(fid, s)

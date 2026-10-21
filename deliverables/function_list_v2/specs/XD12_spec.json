@@ -19,7 +19,7 @@
  "doc_type": "batch",
  "general": {
   "objective": [
-   "To bring the cancels of crossdock customer order lines from G-TOPAS into TB_R_H0253_ORDER_CONTROL_PRE in NSP: rows with ORDER_STATUS = '2' of lines that exist in NSP are inserted (new split SERIAL_NO of a partial cancel) or updated (full cancel of the row), and marked CANCEL_STATUS = 'P' for XD11.",
+   "To bring the cancels of crossdock customer order lines from G-System into TB_R_H0253_ORDER_CONTROL_PRE in NSP: rows with ORDER_STATUS = '2' of lines that exist in NSP are inserted (new split SERIAL_NO of a partial cancel) or updated (full cancel of the row), and marked CANCEL_STATUS = 'P' for XD11.",
    "In the same run the other changed rows of the same line are upserted too (e.g. the status 7 serial whose qty was reduced by the partial cancel), so XD11 sees the complete line. Only rows changed since the last successful run are taken (INTF_UPDATE_DT > watermark)."
   ],
   "operation_flow": {
@@ -122,7 +122,7 @@
     "rows": [
      [
       "Trigger",
-      "Scheduler, daily after G-TOPAS has provided the data (27:30); auto retry 3 times."
+      "Scheduler, daily after G-System has provided the data (27:30); auto retry 3 times."
      ],
      [
       "Order",
@@ -550,7 +550,7 @@
     "Scenario 2 (partial cancel): 14-Oct one row status 7 qty 8 -> 15-Oct the row is split: serial A status 7 qty 6 (update) and serial B status 2 qty 2 (insert, CANCEL_STATUS 'P').",
     "Scenario 3 (full cancel): 14-Oct status 7 qty 8 -> 15-Oct the same row status 2 qty 8 (update, CANCEL_STATUS 'P').",
     "One table with XD08: no separate cancel table and no delete, so the NSP columns of a line are never lost.",
-    "A cancel of qty already in a submitted ASN is normally blocked in G-TOPAS by the existing ASN feedback and by the SOP of the D/S team; if it still happens (abnormality), XD11 reports it as CONFLICT.",
+    "A cancel of qty already in a submitted ASN is normally blocked in G-System by the existing ASN feedback and by the SOP of the D/S team; if it still happens (abnormality), XD11 reports it as CONFLICT.",
     "Rows with status 2 stay in the table for tracking (retention optional, TBC). Table structure: see Appendix."
    ]
   }
@@ -608,7 +608,7 @@
    "name": "TB_R_H0253_ORDER_CONTROL_PRE",
    "kind": "transaction",
    "proposed": false,
-   "description": "Order control data, pre-order picking info (I/F H02-53, DVJO950) replicated from DB Surrounding by XD08 / XD12. Structure from the G-TOPAS I/F layout; physical names follow the existing table. Key (PK) = unique key of the I/F layout. NSP keeps the rows with status 7, 6 and 2 (insert / update); rows with status 6 / 2 are kept for tracking only (retention optional, TBC). CANCEL_STATUS is a new NSP column (proposed).",
+   "description": "Order control data, pre-order picking info (I/F H02-53, DVJO950) replicated from DB Surrounding by XD08 / XD12. Structure from the G-System I/F layout; physical names follow the existing table. Key (PK) = unique key of the I/F layout. NSP keeps the rows with status 7, 6 and 2 (insert / update); rows with status 6 / 2 are kept for tracking only (retention optional, TBC). CANCEL_STATUS is a new NSP column (proposed).",
    "columns": [
     [
      "CUSTOMER_CD",

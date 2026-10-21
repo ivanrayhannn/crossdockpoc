@@ -3,7 +3,7 @@ import type { BpfData } from './types';
 
 export const BPF: BpfData = {
  "lanes": {
-  "GT": "G-TOPAS / DB Surrounding",
+  "GT": "G-System / DB Surrounding",
   "NB": "NSP Batch (System)",
   "PR": "Procurement",
   "DS": "D/S Team",
@@ -14,7 +14,7 @@ export const BPF: BpfData = {
   {
    "id": "F1",
    "title": "Master Setup (weekly / monthly)",
-   "desc": "Destination master, candidate parts, monthly DAD volume calculation, mapping per destination and sync to G-TOPAS / AP POLE.",
+   "desc": "Destination master, candidate parts, monthly DAD volume calculation, mapping per destination and sync to G-System / AP POLE.",
    "lanes": [
     "GT",
     "NB",
@@ -258,7 +258,7 @@ export const BPF: BpfData = {
      "band": "B4",
      "slot": 2,
      "fn": "XD06 · XD07",
-     "title": "Send crossdock master (CROSSDOCK_FLAG Y / N): G-TOPAS existing IF, AP POLE file by SFTP",
+     "title": "Send crossdock master (CROSSDOCK_FLAG Y / N): G-System existing IF, AP POLE file by SFTP",
      "read": [
       "TB_M_PART_CANDIDATE",
       "TB_M_PART_CANDIDATE_DEST"
@@ -288,7 +288,7 @@ export const BPF: BpfData = {
       "Interface data from NSP"
      ],
      "write": [
-      "G-TOPAS master (not detailed)"
+      "G-System master (not detailed)"
      ],
      "ab": [],
      "next": []
@@ -543,7 +543,7 @@ export const BPF: BpfData = {
      "band": "B4",
      "slot": 0,
      "fn": "existing",
-     "title": "ASN feedback: ASN qty known in G-TOPAS (basis of the cancel SOP)",
+     "title": "ASN feedback: ASN qty known in G-System (basis of the cancel SOP)",
      "read": [
       "Existing ASN feedback"
      ],
@@ -572,7 +572,7 @@ export const BPF: BpfData = {
   {
    "id": "F4",
    "title": "Hold & Cancel Crossdock Customer Order",
-   "desc": "Hold: the D/S team holds / releases a destination in XD10; held lines are not pre-mapped and a hold placed after the supplier ticked a unit stops [Create ASN]. Cancel: an order is cancelled in G-TOPAS only (with or without hold); NSP takes the status 2 rows (XD12), releases the open mapping (XD11) and then takes status 7 / 6 (XD08).",
+   "desc": "Hold: the D/S team holds / releases a destination in XD10; held lines are not pre-mapped and a hold placed after the supplier ticked a unit stops [Create ASN]. Cancel: an order is cancelled in G-System only (with or without hold); NSP takes the status 2 rows (XD12), releases the open mapping (XD11) and then takes status 7 / 6 (XD08).",
    "lanes": [
     "GT",
     "NB",
@@ -587,7 +587,7 @@ export const BPF: BpfData = {
     },
     {
      "id": "B1",
-     "label": "Any time · G-TOPAS (cancel)",
+     "label": "Any time · G-System (cancel)",
      "slots": 2
     },
     {
@@ -876,14 +876,14 @@ export const BPF: BpfData = {
    "detection": "Log FAILED (LOG11)",
    "system": "Roll back process 2.",
    "pic": "System admin / D/S Team",
-   "action": "Register the destination (via G-TOPAS → XD13), then run again."
+   "action": "Register the destination (via G-System → XD13), then run again."
   },
   {
    "id": "AB06",
    "flow": "F1",
    "step": "M11",
    "fn": "XD06 / XD07",
-   "condition": "Interface file cannot be created, or G-TOPAS / AP POLE SFTP not available after retry",
+   "condition": "Interface file cannot be created, or G-System / AP POLE SFTP not available after retry",
    "detection": "IF_STATUS 2, SYNC_STATUS Failed, Log",
    "system": "Keep the file in the outbound folder; parts stay Failed.",
    "pic": "D/S Team",

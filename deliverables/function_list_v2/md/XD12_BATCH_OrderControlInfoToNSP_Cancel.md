@@ -1,6 +1,6 @@
 # XD12 – Order Control Information to NSP Batch (Cancel)
 
-Sumber: UISS `XD12_UISS_Batch_OrderControlInfoToNSP_Cancel.xlsx` (0.1 Initial Draft, 18-Oct-26). Nama sistem di UISS: G-TOPAS / NSP.
+Sumber: UISS `XD12_UISS_Batch_OrderControlInfoToNSP_Cancel.xlsx` (0.1 Initial Draft, 18-Oct-26). Nama sistem di UISS: G-System / NSP.
 
 ## Desain (keputusan 18-Oct)
 - Tabel yang sama dengan XD08: `TB_R_H0253_ORDER_CONTROL_PRE` (upsert, delta INTF_UPDATE_DT). Tabel cancel terpisah **tidak dipakai lagi**.
@@ -25,10 +25,10 @@ Sumber: UISS `XD12_UISS_Batch_OrderControlInfoToNSP_Cancel.xlsx` (0.1 Initial Dr
 | 4 Abnormality | 8 pcs sudah di ASN, lalu cancel (SOP tidak dijalankan) | XD11: QTY_IN_ASN > VALID_QTY → CONFLICT, ASN tetap |
 
 ## Pencegahan cancel qty yang sudah ASN
-- **Existing**: data ASN sudah dikirim balik ke G-TOPAS (feedback), sehingga G-TOPAS memblok cancel line itu.
+- **Existing**: data ASN sudah dikirim balik ke G-System (feedback), sehingga G-System memblok cancel line itu.
 - **SOP** tim D/S sebelum cancel.
 - Kalau tetap terjadi (abnormality) → XD11 mencatat **CONFLICT** (simulasi: menu prototype *Cancel Order Simulation*, skenario 4).
 
 ## Keputusan 19-Oct
-- Jadwal: setelah data G-TOPAS tersedia (27:30), retry 3x; job chain XD12 → XD11 → XD08.
+- Jadwal: setelah data G-System tersedia (27:30), retry 3x; job chain XD12 → XD11 → XD08.
 - SERIAL_NO ditambahkan ke tabel source oleh tim DB Surrounding.

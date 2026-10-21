@@ -506,7 +506,7 @@
    "name": "TB_R_DAILY_ORDER_MANIFEST",
    "kind": "transaction",
    "proposed": false,
-   "description": "Existing ASN manifest (GTOPAS SPS DB structure TR-01). Submit ASN: one row per Pra Daily Order manifest of the cases, all with the same ASN_NO. Only the columns used are listed.",
+   "description": "Existing ASN manifest (G-System SPS DB structure TR-01). Submit ASN: one row per Pra Daily Order manifest of the cases, all with the same ASN_NO. Only the columns used are listed.",
    "columns": [
     [
      "DEPOT_CD",

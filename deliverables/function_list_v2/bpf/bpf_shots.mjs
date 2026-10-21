@@ -1,4 +1,4 @@
-// Diagram PNG per flow from the prototype page Business Process Flow, in document names (G-TOPAS / NSP).
+// Diagram PNG per flow from the prototype page Business Process Flow, in document names (G-System / NSP).
 // Usage: node bpf_shots.mjs http://localhost:5179/crossdockpoc/ ./shots
 import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
 const [url, dir] = process.argv.slice(2);

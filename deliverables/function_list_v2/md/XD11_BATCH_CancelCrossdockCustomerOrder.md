@@ -1,11 +1,11 @@
 # XD11 – Cancel Crossdock Customer Order Batch
 
-Sumber: UISS `XD11_UISS_Batch_CancelCrossdockCustomerOrder.xlsx` (0.1 Initial Draft, 18-Oct-26). Nama sistem di UISS: G-TOPAS / NSP.
+Sumber: UISS `XD11_UISS_Batch_CancelCrossdockCustomerOrder.xlsx` (0.1 Initial Draft, 18-Oct-26). Nama sistem di UISS: G-System / NSP.
 
 ## Tujuan
-- NSP **tidak pernah cancel order** dan tidak punya Cancel ASN. G-TOPAS cancel (status 2), XD12 membawanya ke NSP dengan CANCEL_STATUS 'P'; XD11 menerapkannya ke data crossdock NSP.
+- NSP **tidak pernah cancel order** dan tidak punya Cancel ASN. G-System cancel (status 2), XD12 membawanya ke NSP dengan CANCEL_STATUS 'P'; XD11 menerapkannya ke data crossdock NSP.
 - Cancel bisa **dengan atau tanpa Hold Flag Y** (HOLD_FLAG hanya dicatat).
-- Qty yang sudah ASN tidak boleh di-cancel: dicegah oleh **feedback ASN existing ke G-TOPAS** + **SOP**. Kalau tetap terjadi → **CONFLICT** (abnormality).
+- Qty yang sudah ASN tidak boleh di-cancel: dicegah oleh **feedback ASN existing ke G-System** + **SOP**. Kalau tetap terjadi → **CONFLICT** (abnormality).
 
 ## Perhitungan per line (semua SERIAL_NO, karena partial cancel memecah serial)
 | Angka | Cara hitung |
@@ -33,7 +33,7 @@ Sumber: UISS `XD11_UISS_Batch_CancelCrossdockCustomerOrder.xlsx` (0.1 Initial Dr
 | 4 Abnormality | 8 pcs sudah di ASN, lalu cancel (SOP tidak dijalankan) | XD11: QTY_IN_ASN > VALID_QTY → CONFLICT, ASN tetap |
 
 ## Penanganan CONFLICT (di luar sistem)
-- Case yang sudah dikirim diterima di G-TOPAS tanpa order: tim D/S alokasikan manual ke order terbuka dengan **destinasi sama**; kalau tidak ada, masuk stok gudang.
+- Case yang sudah dikirim diterima di G-System tanpa order: tim D/S alokasikan manual ke order terbuka dengan **destinasi sama**; kalau tidak ada, masuk stok gudang.
 
 ## Open points
 - Opsi blok PO qty sampai conflict ditutup (belum di draft).

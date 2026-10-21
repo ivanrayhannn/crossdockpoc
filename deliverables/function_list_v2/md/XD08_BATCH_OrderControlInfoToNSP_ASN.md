@@ -1,6 +1,6 @@
 # XD08 – Order Control Information to NSP Batch (ASN)
 
-Sumber: UISS `XD08_UISS_Batch_OrderControlInfoToNSP_ASN.xlsx` (0.1 Initial Draft, 18-Oct-26). Nama sistem di UISS: G-TOPAS / NSP.
+Sumber: UISS `XD08_UISS_Batch_OrderControlInfoToNSP_ASN.xlsx` (0.1 Initial Draft, 18-Oct-26). Nama sistem di UISS: G-System / NSP.
 
 ## Desain (keputusan 18-Oct)
 - Tabel source di DB Surrounding **insert / update**. NSP memakai **satu tabel replicate** `TB_R_H0253_ORDER_CONTROL_PRE` yang di-**upsert** per unique key (termasuk SERIAL_NO). Tidak ada delete, jadi kolom NSP (HOLD_FLAG, PO_MAPPED_FLAG, CANCEL_STATUS) aman.
@@ -27,5 +27,5 @@ Sumber: UISS `XD08_UISS_Batch_OrderControlInfoToNSP_ASN.xlsx` (0.1 Initial Draft
 - Dibaca XD09 (status 7, belum mapping, tidak hold), XD10 dan XD11.
 
 ## Keputusan 19-Oct
-- Jadwal: setelah data G-TOPAS tersedia (27:30), retry 3x; job chain XD12 → XD11 → XD08.
+- Jadwal: setelah data G-System tersedia (27:30), retry 3x; job chain XD12 → XD11 → XD08.
 - SERIAL_NO ditambahkan ke tabel source oleh tim DB Surrounding.

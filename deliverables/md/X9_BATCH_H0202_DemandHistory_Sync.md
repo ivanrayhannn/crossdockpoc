@@ -1,13 +1,13 @@
 # Batch – Crossdock – Demand History Summary (H0202) Sync to NSP (X9)
 
 Replikasi tabel **TB_R_H0202_DEMAND_HISTORY_SUM** dari **DB Surrounding** ke **DB NSP**.
-Sumber: UISS-Batch `X9_UISS_Batch_H0202DemandHistorySync.xlsx` (0.1 Initial Draft). Struktur dari I/F layout G-TOPAS **H02-02 / DVJO250 (Demand History Summary File)**.
+Sumber: UISS-Batch `X9_UISS_Batch_H0202DemandHistorySync.xlsx` (0.1 Initial Draft). Struktur dari I/F layout G-System **H02-02 / DVJO250 (Demand History Summary File)**.
 
 ## Poin utama
 - Nama tabel di NSP sama dengan sumber.
 - Cara simpan: **delete – insert** (isi tabel NSP diganti semua setiap jalan), semua kolom disalin apa adanya.
 - **All-or-nothing**: gagal → roll back, NSP tetap berisi data run sukses terakhir.
-- G-TOPAS mengirim data **1x/hari (26:00)**; jadwal NSP di system master (**TBC**), setelah data tersedia. Hasil run dicatat di **Log**.
+- G-System mengirim data **1x/hari (26:00)**; jadwal NSP di system master (**TBC**), setelah data tersedia. Hasil run dicatat di **Log**.
 - PK = unique key di I/F layout.
 
 ## Struktur tabel (40 kolom)
