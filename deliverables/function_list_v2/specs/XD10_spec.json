@@ -20,9 +20,9 @@
  "general": {
   "objective": [
    "To get the crossdock customer orders for a Delivery Date and Rit and pre-map them to supplier POs ([Search], XD09 Mapping Customer Order and PO Batch).",
-   "To display the delivery plan per Part Number + Customer Order Date at case level (Case Qty, PO Readiness, ASN Status Ready / Not Ready). Units already Created or without any ready case are not listed.",
+   "To display the delivery plan per Part Number + Customer Order Date with the supplier cases in receiving scan order (Case Qty, PO Readiness, ASN options, ASN Status Ready / Partially Ready / Not Ready). Units fully Created or without any pre-mapped case are not listed.",
    "To let the D/S team (super admin) see the units of all suppliers, the destination detail and hold / release a destination of a unit.",
-   "To select one or more Ready units of one Supplier Code + Supplier Plant, map them to their POs (TB_R_INSTRUCTION), review the cases, download the case labels and submit the ASN.",
+   "To select one or more units of one Supplier Code + Supplier Plant with their ASN option (first n Ready blocks), map them to their POs (TB_R_INSTRUCTION), review the cases, download the case labels and submit the ASN.",
    "Submit ASN runs in the background with a Submit ID and follows the existing ASN submit of NSP (refer 5.7).",
    "Submit ASN (decided 20-Oct, existing structure G-System SPS DB): one TB_R_DAILY_ORDER_MANIFEST row per Pra Daily Order manifest of the cases (same ASN_NO) and one TB_R_DAILY_ORDER_PART row per manifest item and case; the ASN number and the case numbers (case label) are auto generated and their last sequence is saved in TB_R_CASE_LABEL_LAST_SEQ; PART_NAME from TB_M_PART_MASTER."
   ],
@@ -90,7 +90,7 @@
    },
    {
     "name": "Create ASN",
-    "function": "Check that the selected units are of one supplier and not held, map them to their POs (insert TB_R_INSTRUCTION) and open the Case List sub screen."
+    "function": "Check that the selected units are of one supplier and not held, map the chosen blocks to their POs (insert TB_R_INSTRUCTION) and open the Case List sub screen."
    },
    {
     "name": "Back",
@@ -377,8 +377,8 @@
    }
   ],
   "screen_mode_remarks": [
-   "1) The check box of a unit is enabled only when its ASN Status is Ready (message no. 1 or 2 as tooltip otherwise).",
-   "2) Units of different Customer Order Dates and Part Numbers can be ticked together; each unit always goes into the ASN as a whole.",
+   "1) The check box of a unit is enabled only when its first block is Ready (message no. 1 or 2 as tooltip otherwise).",
+   "2) Units of different Customer Order Dates and Part Numbers can be ticked together. Per unit the user chooses the ASN option = the first n Ready blocks in scan order; a block is never split and a block is never skipped.",
    "3) The expand buttons and Hold / Release are shown to the D/S team only; the supplier sees the header (case level) only.",
    "4) Search is enabled when Delivery Date is filled and a Rit is available (message no. 5 otherwise).",
    "5) One ASN is for one Supplier Code + Supplier Plant: the D/S team may tick units of several suppliers, [Create ASN] then shows message no. 9."
@@ -462,7 +462,7 @@
      },
      {
       "id": "d",
-      "label": "ASN Status Ready? (all cases of the unit pre-mapped)",
+      "label": "First block Ready? (blocks in scan order)",
       "type": "decision"
      },
      {
@@ -472,7 +472,7 @@
      },
      {
       "id": "p",
-      "label": "Tick unit(s), Create ASN: map to PO, insert TB_R_INSTRUCTION",
+      "label": "Tick unit(s), choose ASN option, Create ASN: insert TB_R_INSTRUCTION",
       "type": "process"
      },
      {
@@ -743,7 +743,7 @@
    "initial": "<unchecked>",
    "required": "N",
    "format": "-",
-   "validation": "Enabled only for Ready units",
+   "validation": "Enabled when the first block of the unit is Ready",
    "description": "Several units can be ticked. Refer Screen Mode remark 1)."
   },
   {
@@ -804,7 +804,7 @@
    "required": "N",
    "format": "ZZ9",
    "validation": "-",
-   "description": "Number of cases of the unit: per destination, qty / pcs/case (e.g. 24 pcs, 6 pcs/case = 4 cases)."
+   "description": "Number of supplier cases of the unit: open qty / pcs/case, cut in scan order (e.g. 30 pcs, 6 pcs/case = 5 cases); a case can hold several destinations."
   },
   {
    "name": "PO Readiness (case)",
@@ -822,6 +822,21 @@
    "description": "Cases whose whole qty is pre-mapped to a PO; red when lower than Case Qty."
   },
   {
+   "name": "ASN Option",
+   "source": "#TEMP_INSTRUCTION",
+   "field": "GROUP_SEQ / CASE_SEQ",
+   "type": "Char",
+   "len": "-",
+   "io": "I",
+   "control": "Dropdown",
+   "justified": "Left",
+   "initial": "<last Ready block>",
+   "required": "Y",
+   "format": "{cases} cases ({pcs} pcs)",
+   "validation": "Only the valid cuts of Ready blocks",
+   "description": "Per ticked unit: the first n Ready blocks to send (e.g. 1 case (6 pcs) / 3 cases (18 pcs) / 4 cases (24 pcs)). Refer 5.2."
+  },
+  {
    "name": "ASN Status",
    "source": "#TEMP_INSTRUCTION",
    "field": "CROSSDOCK_STATUS",
@@ -834,7 +849,7 @@
    "required": "N",
    "format": "-",
    "validation": "-",
-   "description": "'6' Ready (green) / '7' Not Ready (amber, row highlighted) / On Hold (D/S only). Refer 5.2."
+   "description": "Ready (all blocks '6', green) / Partially Ready (first block '6', a later block '7', amber) / Not Ready (first block '7', row highlighted) / On Hold (D/S only). Refer 5.2."
   },
   {
    "name": "Detail (expand, D/S)",
@@ -1179,7 +1194,7 @@
    "required": "N",
    "format": "-",
    "validation": "-",
-   "description": "One case per Part Number + Customer Order Date + destination."
+   "description": "Supplier case of PCS_CASE pcs in scan order; a case can hold several destinations."
   },
   {
    "name": "Qty / Total",
@@ -1476,22 +1491,22 @@
     ]
    },
    {
-    "source": "#TEMP_INSTRUCTION (selected units)",
+    "source": "#TEMP_INSTRUCTION (chosen blocks)",
     "destination": {
      "table": "TB_R_H0253_ORDER_CONTROL_PRE",
      "operation": "Update",
-     "description": "[Create ASN]: every line of the selected units",
+     "description": "[Create ASN]: the lines of the chosen blocks",
      "keys": [
       {
        "field": "Unique key (customer order line incl. SERIAL_NO)",
-       "value": "Lines of the selected units"
+       "value": "Lines of the chosen blocks"
       }
      ]
     },
     "mappings": [
      {
       "dest_field": "PO_MAPPED_FLAG",
-      "description": "'Y' (mapped); back to 'N' on Back / Cancel"
+      "description": "'Y' when the whole line is in TB_R_INSTRUCTION after this creation; stays 'N' when part of the line is in a later block; back to 'N' on Back / Cancel"
      },
      {
       "dest_field": "HOLD_FLAG",
@@ -1692,11 +1707,11 @@
     ]
    },
    {
-    "source": "#TEMP_INSTRUCTION (selected units)",
+    "source": "#TEMP_INSTRUCTION (chosen blocks)",
     "destination": {
      "table": "TB_R_PRA_DAILY_ORDER_MAPPED",
      "operation": "Insert / Update",
-     "description": "[Create ASN]: one row per PO part used by the selected units (insert when none yet)",
+     "description": "[Create ASN]: one row per PO part used by the chosen blocks (insert when none yet)",
      "keys": [
       {
        "field": "PO_NO + MANIFEST_NO + MANIFEST_ITEM",
@@ -1707,7 +1722,7 @@
     "mappings": [
      {
       "dest_field": "MAPPED_QTY",
-      "description": "+ ASSIGNED_QTY of the selected units; - again on Back / Cancel"
+      "description": "+ ASSIGNED_QTY of the chosen blocks; - again on Back / Cancel"
      },
      {
       "source_field": "PO_NO",
@@ -1756,7 +1771,7 @@
     ]
    },
    {
-    "source": "#TEMP_INSTRUCTION (selected units)",
+    "source": "#TEMP_INSTRUCTION (chosen blocks)",
     "destination": {
      "table": "TB_R_INSTRUCTION",
      "operation": "Insert",
@@ -1765,11 +1780,11 @@
     "mappings": [
      {
       "dest_field": "CASE_SEQ",
-      "description": "Case sequence: selected unit, then first appearance of the destination"
+      "description": "Case sequence: selected unit, then CASE_SEQ of XD09 (scan order)"
      },
      {
       "dest_field": "LINE_SEQ",
-      "description": "Sequence within the case"
+      "description": "LINE_SEQ of XD09 (sequence within the case)"
      },
      {
       "source_field": "PART_NO",
@@ -2279,8 +2294,8 @@
    "level": 2,
    "items": [
     "On first display Delivery Date = today (business date), Rit = first rit of the date, Route displayed (disabled). The delivery plan is empty.",
-    "[Search] runs XD09 Mapping Customer Order and PO Batch (UISS XD09): customer orders of H0253 with order status 7, Hold Flag N, not mapped, earliest order date first per part number (FIFO), pre-mapped to the PO parts of the Pra Daily Order (FIFO PO date) in the temporary table #TEMP_INSTRUCTION (pre-mapping only; nothing is saved yet). Supplier: units of the login Supplier Code + Plant; D/S team: all suppliers.",
-    "The delivery plan shows one row per Part Number + Customer Order Date, sorted Ready, Not Ready, then Part Number ascending. Units with PO Readiness 0 and units already Created (in a submitted ASN) are not listed. Part Number and Status filters apply at once. No row: message no. 3.",
+    "[Search] runs XD09 Mapping Customer Order and PO Batch (UISS XD09): the open qty of the H0253 customer orders with order status 7 and Hold Flag N, in the receiving scan order of G-System per Part Number + Customer Order Date, pre-mapped to the PO parts of the Pra Daily Order (PO date order), cut into supplier cases and blocks in the temporary table #TEMP_INSTRUCTION (pre-mapping only; nothing is saved yet). Supplier: units of the login Supplier Code + Plant; D/S team: all suppliers.",
+    "The delivery plan shows one row per Part Number + Customer Order Date, sorted Ready, Partially Ready, Not Ready, then Part Number ascending. Units without any pre-mapped case and units fully Created are not listed. Part Number and Status filters apply at once. No row: message no. 3.",
     "Delivery Date and Rit do not filter the orders; they are carried to the ASN. Rit and Route come from the existing route master table."
    ]
   },
@@ -2293,10 +2308,11 @@
    "marker": "a.",
    "level": 2,
    "items": [
-    "Unit = Part Number + Customer Order Date. Case = destination x pcs/case: the qty of a destination is packed in cases of pcs/case (e.g. Vietnam 24 pcs, 6 pcs/case = 4 cases). G-System releases in multiples of pcs/case (a remainder stays pending and is not in H0253), so every case is full. A case can hold several customer orders and several POs of the same destination; a customer order line that does not fit in the remaining space of a case continues in the next case (e.g. case 3 = CO-14001 4 + CO-14006 2 of PO2; case 4 = CO-14006 2 of PO2 + CO-14007 4 of PO4).",
-    "Case Qty = number of destinations. PO Readiness (case) = cases whose whole qty is pre-mapped to a PO.",
-    "Ready ('6'): every line of the unit is pre-mapped to a PO. Not Ready ('7'): at least one line of the unit has no PO yet (check box disabled, message no. 2). With POs of different PO Dates the unit becomes Ready when the last PO is available (condition 3).",
-    "Created: the unit is in a submitted ASN (ASN status '1'); it is no longer listed (shown in ASN Inquiry)."
+    "Unit = Part Number + Customer Order Date. Scan order (decided 21-Oct): Customer Code, Customer Order No, Customer Order Date, Customer Order Time, Destination Code, Detailed Item No, Serial No; at receiving the pcs are scanned in this fixed order.",
+    "Supplier case = PCS_CASE pcs in scan order; a case can hold several customer orders, POs and destinations. Case Qty = number of supplier cases; PO Readiness (case) = cases whose whole qty is pre-mapped to a PO.",
+    "The warehouse packs 1 case = 1 destination, so an ASN may stop only after a case where every destination of the unit is a multiple of PCS_CASE (valid cut). The cases up to a valid cut are a block = one ASN option step (e.g. VN 10, TH 6, VN 14: blocks case 1 | cases 2-3 | case 4 | case 5).",
+    "A block is Ready ('6') when it and every earlier block have a PO; otherwise Not Ready ('7'): blocks are never skipped. Unit: Ready (all blocks), Partially Ready (the first k blocks), Not Ready (first block; check box disabled, message no. 2).",
+    "Created: blocks in a submitted ASN are no longer in the delivery plan (shown in ASN Inquiry); the open qty of the unit is cut again from case 1 in the same order at the next [Search]."
    ]
   },
   {
@@ -2315,17 +2331,17 @@
   },
   {
    "type": "heading",
-   "text": "5.4 Select Units and Create ASN"
+   "text": "5.4 Select Units, Choose ASN Option and Create ASN"
   },
   {
    "type": "bullets",
    "marker": "a.",
    "level": 2,
    "items": [
-    "The user ticks one or more Ready units, also of different Customer Order Dates and Part Numbers. A unit is never split. One ASN is for one Supplier Code + Supplier Plant (existing rule): ticked units of more than one supplier give message no. 9 and nothing is created.",
-    "[Create ASN] does the real mapping of the selected units in one transaction: PO_MAPPED_FLAG = 'Y' on their H0253 lines, MAPPED_QTY in the new table TB_R_PRA_DAILY_ORDER_MAPPED, and the mapping rows inserted into TB_R_INSTRUCTION (one case per Part Number + Customer Order Date + destination). Then the Case List opens.",
+    "The user ticks one or more units whose first block is Ready, also of different Customer Order Dates and Part Numbers, and chooses per unit the ASN option (first n Ready blocks; default all Ready blocks). A block is never split or skipped. One ASN is for one Supplier Code + Supplier Plant (existing rule): ticked units of more than one supplier give message no. 9 and nothing is created.",
+    "[Create ASN] does the real mapping of the chosen blocks in one transaction: the slices inserted into TB_R_INSTRUCTION (case and line sequence of XD09), MAPPED_QTY in the new table TB_R_PRA_DAILY_ORDER_MAPPED, and PO_MAPPED_FLAG = 'Y' on the H0253 lines that are now completely in TB_R_INSTRUCTION. Then the Case List opens.",
     "Before mapping, the ticked units are re-checked in the same transaction (row lock on the H0253 lines): if a line got HOLD_FLAG = 'Y' after the unit was ticked (e.g. the D/S team held a destination in another session), the creation fails for the whole selection (also the units that are not held): message no. 8 (Hold), the delivery plan is refreshed automatically and all ticked units are unticked. If a unit is no longer Ready for another reason (changed by another user), message no. 7.",
-    "[Back] / [Cancel] on the Case List cancel the creation: the rows are deleted from TB_R_INSTRUCTION, PO_MAPPED_FLAG back to 'N' and MAPPED_QTY reduced again, so the units can be selected again."
+    "[Back] / [Cancel] on the Case List cancel the creation: the rows are deleted from TB_R_INSTRUCTION, PO_MAPPED_FLAG back to 'N' and MAPPED_QTY reduced again, so the blocks can be selected again."
    ]
   },
   {
@@ -2415,7 +2431,7 @@
    "cause": "Unit is Not Ready",
    "type": "Info",
    "msg_id": "MSG2",
-   "message": "Not Ready: {k} of {n} cases of {Part No} / {Customer Order Date} are not assigned to a PO yet",
+   "message": "Not Ready: the first block of {Part No} / {Customer Order Date} is not assigned to a PO yet ({k} of {n} cases assigned)",
    "action": "Wait for the next PO."
   },
   {
@@ -2442,7 +2458,7 @@
   },
   {
    "event": "Click [Create ASN]",
-   "cause": "A selected unit is no longer Ready",
+   "cause": "A chosen block is no longer Ready",
    "type": "Error",
    "msg_id": "MSG7",
    "message": "{Part No} / {Customer Order Date} is no longer Ready. The delivery plan is refreshed.",
@@ -2533,7 +2549,7 @@
    "name": "#TEMP_INSTRUCTION",
    "kind": "temp",
    "proposed": true,
-   "description": "Temporary table of one Search run (session): customer order line (H0253, order status 7, Hold Flag N, not mapped) pre-mapped to a supplier PO (Pra Daily Order), FIFO by order date. One row per line x PO, plus one row with PO_NO NULL for the qty still without a PO. Columns proposed.",
+   "description": "Temporary table of one Search run (session): the open qty of the customer order lines (H0253, order status 7, Hold Flag N) in scan order, pre-mapped to the supplier POs (Pra Daily Order) and cut into supplier cases and blocks. One row per line x PO x supplier case; PO_NO NULL for the qty still without a PO. Columns proposed.",
    "columns": [
     [
      "INSTRUCTION_ID",
@@ -2543,46 +2559,60 @@
      "Running number within the session"
     ],
     [
+     "SORT_SEQ",
+     "NUMBER(6)",
+     "",
+     "N",
+     "Scan order of the line within the unit (refer 4.1)"
+    ],
+    [
      "CUSTOMER_CD",
      "VARCHAR(7)",
      "",
      "N",
-     "H0253.CUSTOMER_CD"
+     "H0253.CUSTOMER_CD (scan key 1)"
     ],
     [
      "CUSTOMER_ORDER_NO",
      "VARCHAR(8)",
      "",
      "N",
-     "H0253.CUSTOMER_ORDER_NO"
+     "H0253.CUSTOMER_ORDER_NO (scan key 2)"
     ],
     [
      "ORDER_DT",
      "DATE",
      "",
      "N",
-     "Customer Order Date (H0253.ORDER_DT)"
+     "Customer Order Date (H0253.ORDER_DT; unit and scan key 3)"
+    ],
+    [
+     "ORDER_TIME",
+     "VARCHAR(6)",
+     "",
+     "N",
+     "H0253.ORDER_TIME (scan key 4)"
     ],
     [
      "DESTINATION_CD",
      "VARCHAR(7)",
      "",
      "N",
-     "H0253.DESTINATION_CD (TB_M_H0125_DESTINATION)"
+     "H0253.DESTINATION_CD (scan key 5)"
     ],
     [
      "DETAILED_ITEM_NO",
      "VARCHAR(4)",
      "",
      "N",
-     "H0253.DETAILED_ITEM_NO"
+     "H0253.DETAILED_ITEM_NO (scan key 6)"
     ],
     [
      "SERIAL_NO",
      "VARCHAR(7)",
      "",
      "N",
-     "H0253.SERIAL_NO"
+     "H0253.SERIAL_NO (scan key 7)"
     ],
     [
      "PART_NO",
@@ -2606,18 +2636,18 @@
      "Order status qty of the customer order line (H0253.ORDER_STATUS_QTY)"
     ],
     [
+     "OPEN_ORDER_QTY",
+     "NUMBER(8)",
+     "",
+     "N",
+     "Qty of the line not yet in TB_R_INSTRUCTION (sent or in an open Case List)"
+    ],
+    [
      "ASSIGNED_QTY",
      "NUMBER(8)",
      "",
      "N",
-     "Qty of the line pre-mapped to this PO (0 for the not-assigned row)"
-    ],
-    [
-     "REMAINING_ORDER_QTY",
-     "NUMBER(8)",
-     "",
-     "N",
-     "Qty of the line still without a PO after this assignment"
+     "Qty of this slice (line x PO x supplier case)"
     ],
     [
      "PO_NO",
@@ -2704,11 +2734,53 @@
      "Original ETD"
     ],
     [
+     "PCS_CASE",
+     "NUMBER(4)",
+     "",
+     "N",
+     "Pcs per case of the part (TB_M_PART_CANDIDATE.PCS_CASE)"
+    ],
+    [
+     "CASE_SEQ",
+     "NUMBER(4)",
+     "",
+     "N",
+     "Supplier case of the slice within the unit (PCS_CASE pcs in scan order)"
+    ],
+    [
+     "LINE_SEQ",
+     "NUMBER(4)",
+     "",
+     "N",
+     "Sequence of the slice within the case"
+    ],
+    [
+     "CUM_DEST_QTY",
+     "NUMBER(8)",
+     "",
+     "N",
+     "Cumulative qty of the destination within the unit up to this slice"
+    ],
+    [
+     "CUT_FLAG",
+     "VARCHAR(1)",
+     "",
+     "N",
+     "'Y' on the last slice of a case after which the ASN may stop (every destination a multiple of PCS_CASE)"
+    ],
+    [
+     "GROUP_SEQ",
+     "NUMBER(4)",
+     "",
+     "N",
+     "Block (ASN option) of the slice: the cases up to and including a valid cut"
+    ],
+    [
      "CROSSDOCK_STATUS",
      "VARCHAR(1)",
      "",
      "N",
-     "Status of the unit (Part Number + Customer Order Date): '6' Ready / '7' Not Ready"
+     "Status of the block: '6' Ready (the block and every earlier block have a PO) / '7' Not Ready"
     ]
    ]
   },
@@ -2716,7 +2788,7 @@
    "name": "TB_R_INSTRUCTION",
    "kind": "transaction",
    "proposed": true,
-   "description": "Real mapping made by [Create ASN]: one row per case x customer order line x PO of the selected units. Rows are deleted by [Back] / [Cancel] on the Case List; [Submit ASN] (5.7) fills ASN_NO and CASE_NO. Columns proposed.",
+   "description": "Real mapping made by [Create ASN]: one row per supplier case x customer order line x PO of the chosen blocks (case and line sequence of XD09). Rows are deleted by [Back] / [Cancel] on the Case List; [Submit ASN] (5.7) fills ASN_NO and CASE_NO. Columns proposed.",
    "columns": [
     [
      "INSTRUCTION_ID",

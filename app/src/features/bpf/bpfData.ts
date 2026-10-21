@@ -418,9 +418,10 @@ export const BPF: BpfData = {
      "band": "B3",
      "slot": 1,
      "fn": "XD09",
-     "title": "Pre-map order lines to PO (FIFO); Case Qty, PO Readiness, Ready / Not Ready",
+     "title": "Pre-map in scan order; supplier cases, blocks (ASN options), Ready / Not Ready",
      "read": [
-      "TB_R_H0253_ORDER_CONTROL_PRE (status 7, HOLD N, PO_MAPPED N)",
+      "TB_R_H0253_ORDER_CONTROL_PRE (status 7, HOLD N, open qty)",
+      "TB_R_INSTRUCTION",
       "TB_R_PRA_DAILY_ORDER_MANIFEST",
       "TB_R_PRA_DAILY_ORDER_PART",
       "TB_R_PRA_DAILY_ORDER_MAPPED"
@@ -441,7 +442,7 @@ export const BPF: BpfData = {
      "band": "B3",
      "slot": 2,
      "fn": "XD10",
-     "title": "Select Ready units, [Create ASN]",
+     "title": "Tick units, choose ASN option (first n Ready blocks), [Create ASN]",
      "read": [
       "#TEMP_INSTRUCTION"
      ],
@@ -460,7 +461,7 @@ export const BPF: BpfData = {
      "band": "B3",
      "slot": 3,
      "fn": "XD10",
-     "title": "Lock + re-check; pack cases per destination by pcs/case; real mapping",
+     "title": "Lock + re-check; insert the chosen blocks (cases of XD09); real mapping",
      "read": [
       "#TEMP_INSTRUCTION",
       "TB_R_H0253_ORDER_CONTROL_PRE"
@@ -905,11 +906,11 @@ export const BPF: BpfData = {
    "flow": "F2",
    "step": "D6",
    "fn": "XD09",
-   "condition": "Unit Not Ready: a case of the unit has no PO yet",
-   "detection": "Check box disabled, tooltip MSG2",
-   "system": "Unit is not selectable (the unit stays whole, decided A2).",
+   "condition": "Block without PO: the block and every later block are Not Ready",
+   "detection": "Partially Ready (later block) / check box disabled + MSG2 (first block)",
+   "system": "Only the Ready blocks before it can be sent; blocks are never skipped (scan order, decided 21-Oct).",
    "pic": "Supplier",
-   "action": "Wait for the next PO; the unit becomes Ready on a later [Search]."
+   "action": "Send the Ready blocks or wait for the next PO; the block becomes Ready on a later [Search]."
   },
   {
    "id": "AB09",
@@ -927,7 +928,7 @@ export const BPF: BpfData = {
    "flow": "F2",
    "step": "D7",
    "fn": "XD10",
-   "condition": "A ticked unit is no longer Ready (PO or order changed)",
+   "condition": "A chosen block is no longer Ready (PO or order changed)",
    "detection": "MSG7",
    "system": "Nothing is inserted; delivery plan refreshed.",
    "pic": "Supplier",

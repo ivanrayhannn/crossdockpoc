@@ -2,7 +2,12 @@
 Each step shows the rows of a table with their state: ref (read, not changed), new (insert), upd (update; changed columns highlighted),
 del (delete), temp (temporary table). Dummy data: supplier 50221 plant 1, pcs/case 6."""
 
+import os, sys
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'specs'))
+from scan_pack import pack  # noqa: E402
+
 VN, TH, PH = '9715310', '9722D10', '9811110'
+CUST = {VN: '9715300', TH: '9722D00', PH: '9811100'}  # dummy customer code per destination (scan key 1)
 OD, T = '2026-10-14', '080000'
 ASN = 'ASN-50221-261016-001'
 
@@ -16,12 +21,12 @@ COLS = {
     'TB_M_PART_CANDIDATE_DEST': ['PART_NO', 'PERIOD', 'DEST_CODE', 'CASE_DAY'],
     'TB_H_PART_CANDIDATE': ['HIST_ID', 'PART_NO', 'PERIOD', 'EVENT_TYPE', 'SOURCE', 'DEST_CODE', 'FIELD_NAME', 'OLD_VALUE', 'NEW_VALUE', 'CREATED_BY'],
     'TB_R_CROSSDOCK_IF_RESULT': ['PART_NO', 'TARGET_SYSTEM', 'PERIOD', 'IF_STATUS', 'IF_FILE_NAME', 'IF_MESSAGE'],
-    'TB_R_H0253_ORDER_CONTROL_PRE': ['CUSTOMER_ORDER_NO', 'ORDER_DT', 'DESTINATION_CD', 'DETAILED_ITEM_NO', 'SERIAL_NO', 'SHIPPING_PART_NO', 'ORDER_STATUS_QTY',
+    'TB_R_H0253_ORDER_CONTROL_PRE': ['CUSTOMER_CD', 'CUSTOMER_ORDER_NO', 'ORDER_DT', 'DESTINATION_CD', 'DETAILED_ITEM_NO', 'SERIAL_NO', 'SHIPPING_PART_NO', 'ORDER_STATUS_QTY',
                                      'ORDER_STATUS', 'HOLD_FLAG', 'PO_MAPPED_FLAG', 'CANCEL_STATUS'],
     'TB_R_PRA_DAILY_ORDER_MANIFEST': ['MANIFEST_NO', 'PO_NO', 'SUPPLIER_CD', 'SUPPLIER_PLANT', 'PO_DT', 'CROSS_DOCK_FLAG', 'TOTAL_QTY', 'DELIVERY_DT', 'SUB_ROUTE_CD'],
     'TB_R_PRA_DAILY_ORDER_PART': ['MANIFEST_NO', 'MANIFEST_ITEM', 'PO_NO', 'PO_ITEM', 'PART_NO', 'ORDER_QTY'],
-    '#TEMP_INSTRUCTION': ['INSTRUCTION_ID', 'CUSTOMER_ORDER_NO', 'DESTINATION_CD', 'SERIAL_NO', 'PART_NO', 'CUST_ORDER_QTY', 'ASSIGNED_QTY', 'REMAINING_ORDER_QTY',
-                          'PO_NO', 'MANIFEST_NO', 'MANIFEST_ITEM', 'CROSSDOCK_STATUS'],
+    '#TEMP_INSTRUCTION': ['SORT_SEQ', 'CUSTOMER_CD', 'CUSTOMER_ORDER_NO', 'DESTINATION_CD', 'PART_NO', 'OPEN_ORDER_QTY', 'PO_NO', 'ASSIGNED_QTY',
+                          'CASE_SEQ', 'CUM_DEST_QTY', 'CUT_FLAG', 'GROUP_SEQ', 'CROSSDOCK_STATUS'],
     'TB_R_INSTRUCTION': ['INSTRUCTION_ID', 'CASE_SEQ', 'LINE_SEQ', 'PART_NO', 'DESTINATION_CD', 'CUSTOMER_ORDER_NO', 'SERIAL_NO', 'QTY', 'PO_NO', 'MANIFEST_NO',
                          'MANIFEST_ITEM', 'ASN_NO', 'CASE_NO'],
     'TB_R_PRA_DAILY_ORDER_MAPPED': ['PO_NO', 'MANIFEST_NO', 'MANIFEST_ITEM', 'PART_NO', 'ORDER_QTY', 'MAPPED_QTY'],
@@ -38,7 +43,7 @@ VALUE_FILL = {
     ('PART_STATUS', 'Active'): 'C6EFCE', ('PART_STATUS', 'Inactive'): 'D9D9D9', ('PART_STATUS', 'Candidate'): 'DDEBF7',
     ('NEW_STATUS', 'Active'): 'C6EFCE', ('NEW_STATUS', 'Inactive'): 'D9D9D9',
     ('SYNC_STATUS', '0'): 'FCE4D6', ('SYNC_STATUS', '1'): 'C6EFCE', ('SYNC_STATUS', '2'): 'FF7C80',
-    ('CROSSDOCK_STATUS', '6'): 'C6EFCE', ('CROSSDOCK_STATUS', '7'): 'FF7C80',
+    ('CUT_FLAG', 'Y'): 'BDD7EE', ('CROSSDOCK_STATUS', '6'): 'C6EFCE', ('CROSSDOCK_STATUS', '7'): 'FF7C80',
     ('ORDER_STATUS', '2'): 'FF7C80', ('ORDER_STATUS', '6'): 'DDEBF7', ('HOLD_FLAG', 'Y'): 'FF7C80',
     ('CANCEL_STATUS', 'P'): 'F4B084', ('CANCEL_STATUS', 'D'): 'C6EFCE',
     ('RESULT', 'CONFLICT'): 'FF7C80', ('RESULT', 'CANCELLED'): 'F4B084', ('CROSS_DOCK_FLAG', 'X'): 'FFE699',
@@ -51,8 +56,33 @@ PRA_PART = {'1': ['3126035901', '0001', 'T0409001', '0001', 'PART-X', 12], '2': 
             '3': ['3126035903', '0001', 'T0409003', '0001', 'PART-Y', 6]}
 
 
-def h(co, d, serial, part, qty, st='7', hold='N', mapped='N', cancel='-', od=OD, item='001'):
-    return [co, od, d, item, serial, part, qty, st, hold, mapped, cancel]
+def h(co, d, serial, part, qty, st='7', hold='N', mapped='N', cancel='-', od=OD, item='001', cust=None):
+    return [cust or CUST[d], co, od, d, item, serial, part, qty, st, hold, mapped, cancel]
+
+
+def line(co, d, part, qty, cust=None, serial='0000001'):
+    return dict(CUSTOMER_CD=cust or CUST[d], CUSTOMER_ORDER_NO=co, ORDER_DT=OD, ORDER_TIME=T, DESTINATION_CD=d, DETAILED_ITEM_NO='001',
+                SERIAL_NO=serial, PART_NO=part, QTY=qty)
+
+
+def tmp(units, pos, pcs=6, changed=None, notes=None):
+    """XD09 pre-mapping rows (scan_pack): units = list of line lists (one per Part + Customer Order Date), pos = [po, manifest, item, qty].
+    changed / notes: {(customer order no, case seq): [columns] / note}."""
+    pos = [list(p) for p in pos]
+    rows = []
+    for u in units:
+        for s in pack(u, pos, pcs):
+            k = (s['CUSTOMER_ORDER_NO'], s['CASE_SEQ'])
+            row = [s['SORT_SEQ'], s['CUSTOMER_CD'], s['CUSTOMER_ORDER_NO'], s['DESTINATION_CD'], s['PART_NO'], s['QTY'], s['PO_NO'], s['ASSIGNED_QTY'],
+                   s['CASE_SEQ'], s['CUM_DEST_QTY'], s['CUT_FLAG'], s['GROUP_SEQ'], s['CROSSDOCK_STATUS']]
+            rows.append(('temp', row, (changed or {}).get(k, []), (notes or {}).get(k, '')))
+    return rows
+
+
+PX = [line('CO-14101', VN, 'PART-X', 10), line('CO-14102', VN, 'PART-X', 4), line('CO-14103', VN, 'PART-X', 4), line('CO-14104', TH, 'PART-X', 6)]
+PY = [line('CO-14105', PH, 'PART-Y', 6)]
+SA = [line('V01', VN, 'PART-A', 10, 'CUST-A'), line('T01', TH, 'PART-A', 6, 'CUST-B'), line('V02', VN, 'PART-A', 14, 'CUST-C')]
+P1, P2, P3 = ['T0409001', '3126035901', '0001', 12], ['T0409002', '3126035902', '0001', 12], ['T0409003', '3126035903', '0001', 6]
 
 
 SCENARIOS = [
@@ -102,7 +132,7 @@ SCENARIOS = [
     {
         'id': 'SIM-2', 'title': 'Daily order to ASN (normal)', 'flow': 'BPF F2', 'functions': 'XD08, XD09, XD10 (Create ASN, Submit 5.7)',
         'story': ['G-System releases crossdock orders 14-Oct (status 7); the supplier POs of 15-Oct are crossdock manifests (CROSS_DOCK_FLAG X).',
-                  'Supplier searches delivery 16-Oct Rit 1: PART-X (VN 18 pcs = 3 cases, TH 6 = 1 case) and PART-Y (PH 6 = 1 case) are Ready; Create ASN and Submit.',
+                  'Supplier searches delivery 16-Oct Rit 1: PART-X (VN 18 + TH 6 = 4 cases in scan order, 4 blocks) and PART-Y (PH 6 = 1 case) are Ready; all blocks are chosen, Create ASN and Submit.',
                   'Result: one ASN with 5 cases / 30 pcs, 3 ASN manifests (one per Pra manifest), 5 ASN part rows (manifest item x case).'],
         'steps': [
             ('1. XD08 27:30: status 7 rows (insert)', 'TB_R_H0253_ORDER_CONTROL_PRE', [
@@ -111,13 +141,8 @@ SCENARIOS = [
                 ('new', h('CO-14105', PH, '0000001', 'PART-Y', 6))]),
             ('2. Existing daily order: crossdock manifests and their parts', 'TB_R_PRA_DAILY_ORDER_MANIFEST', [('ref', PRA_MAN[k]) for k in '123']),
             ('', 'TB_R_PRA_DAILY_ORDER_PART', [('ref', PRA_PART[k]) for k in '123']),
-            ('3. [Search] → XD09 pre-mapping FIFO (session)', '#TEMP_INSTRUCTION', [
-                ('temp', [1, 'CO-14101', VN, '0000001', 'PART-X', 10, 10, 0, 'T0409001', '3126035901', '0001', '6']),
-                ('temp', [2, 'CO-14102', VN, '0000001', 'PART-X', 4, 2, 2, 'T0409001', '3126035901', '0001', '6']),
-                ('temp', [3, 'CO-14102', VN, '0000001', 'PART-X', 4, 2, 0, 'T0409002', '3126035902', '0001', '6']),
-                ('temp', [4, 'CO-14103', VN, '0000001', 'PART-X', 4, 4, 0, 'T0409002', '3126035902', '0001', '6']),
-                ('temp', [5, 'CO-14104', TH, '0000001', 'PART-X', 6, 6, 0, 'T0409002', '3126035902', '0001', '6']),
-                ('temp', [6, 'CO-14105', PH, '0000001', 'PART-Y', 6, 6, 0, 'T0409003', '3126035903', '0001', '6'])]),
+            ('3. [Search] → XD09 pre-mapping in scan order: cases and blocks (session)', '#TEMP_INSTRUCTION',
+             tmp([PX], [P1, P2]) + tmp([PY], [P3])),
             ('4. [Create ASN]: real mapping, flags, mapped qty', 'TB_R_INSTRUCTION', [
                 ('new', [i + 1, c, l, p, d, co, '0000001', q, po, m, '0001', None, None]) for i, (c, l, p, d, co, q, po, m) in enumerate((
                     (1, 1, 'PART-X', VN, 'CO-14101', 6, 'T0409001', '3126035901'), (2, 1, 'PART-X', VN, 'CO-14101', 4, 'T0409001', '3126035901'),
@@ -148,42 +173,34 @@ SCENARIOS = [
                     (5, 1, 'PART-Y', PH, 'CO-14105', 6, 'T0409003', '3126035903')))]),
         ]},
     {
-        'id': 'SIM-3', 'title': 'Unit Not Ready (PO short), Ready the next day', 'flow': 'BPF F2 / AB08', 'functions': 'XD09, XD10',
+        'id': 'SIM-3', 'title': 'Unit Partially Ready (PO short), Ready the next day', 'flow': 'BPF F2 / AB08', 'functions': 'XD09, XD10',
         'story': ['PART-X 14-Oct needs 24 pcs (VN 18, TH 6) but only 18 pcs of crossdock PO are released on 15-Oct (T0409001 12 + T0409002 6).',
-                  'FIFO: CO-14104 (TH 6) gets no PO → 1 of 4 cases not assigned → the whole unit is Not Ready (the unit stays whole, decision A2).',
-                  'On 16-Oct a new crossdock manifest (T0410001, 6 pcs) is released → [Search] again → all lines assigned → Ready.'],
+                  'Scan order VN (CO-14101..14103) then TH (CO-14104): cases 1-3 (VN) have a PO, case 4 (TH) has none. Every case ends a valid cut, so '
+                  'blocks 1-3 are Ready and block 4 Not Ready: the unit is Partially Ready (ASN options 1 / 2 / 3 cases).',
+                  'In this simulation the supplier waits: on 16-Oct a new crossdock manifest (T0410001, 6 pcs) is released → [Search] again → block 4 Ready.'],
         'steps': [
             ('1. Crossdock PO of 15-Oct (only 18 pcs)', 'TB_R_PRA_DAILY_ORDER_PART', [
                 ('ref', PRA_PART['1']), ('ref', ['3126035902', '0001', 'T0409002', '0001', 'PART-X', 6])]),
-            ('2. [Search] 15-Oct → XD09: CO-14104 without PO, unit Not Ready', '#TEMP_INSTRUCTION', [
-                ('temp', [1, 'CO-14101', VN, '0000001', 'PART-X', 10, 10, 0, 'T0409001', '3126035901', '0001', '7']),
-                ('temp', [2, 'CO-14102', VN, '0000001', 'PART-X', 4, 2, 2, 'T0409001', '3126035901', '0001', '7']),
-                ('temp', [3, 'CO-14102', VN, '0000001', 'PART-X', 4, 2, 0, 'T0409002', '3126035902', '0001', '7']),
-                ('temp', [4, 'CO-14103', VN, '0000001', 'PART-X', 4, 4, 0, 'T0409002', '3126035902', '0001', '7']),
-                ('temp', [5, 'CO-14104', TH, '0000001', 'PART-X', 6, 0, 6, None, None, None, '7'], ['ASSIGNED_QTY', 'REMAINING_ORDER_QTY', 'PO_NO'],
-                 'No PO left: tooltip MSG2 "1 of 4 cases not assigned"')]),
+            ('2. [Search] 15-Oct → XD09: block 4 (TH) without PO', '#TEMP_INSTRUCTION',
+             tmp([PX], [P1, ['T0409002', '3126035902', '0001', 6]], notes={('CO-14104', 4): 'No PO left: block 4 Not Ready, blocks 1-3 Ready'})),
             ('3. New crossdock manifest released 16-Oct', 'TB_R_PRA_DAILY_ORDER_MANIFEST', [
                 ('new', ['3126036001', 'T0410001', '50221', '1', '2026-10-16', 'X', 6, '2026-10-17', 'SD01'])]),
             ('', 'TB_R_PRA_DAILY_ORDER_PART', [('new', ['3126036001', '0001', 'T0410001', '0001', 'PART-X', 6])]),
-            ('4. [Search] 16-Oct → XD09: all lines assigned, Ready', '#TEMP_INSTRUCTION', [
-                ('temp', [5, 'CO-14104', TH, '0000001', 'PART-X', 6, 6, 0, 'T0410001', '3126036001', '0001', '6'], ['ASSIGNED_QTY', 'PO_NO', 'CROSSDOCK_STATUS'],
-                 'Other rows of the unit also become 6 (Ready)')]),
+            ('4. [Search] 16-Oct → XD09: all blocks Ready', '#TEMP_INSTRUCTION',
+             tmp([PX], [P1, ['T0409002', '3126035902', '0001', 6], ['T0410001', '3126036001', '0001', 6]],
+                 changed={('CO-14104', 4): ['PO_NO', 'CROSSDOCK_STATUS']}, notes={('CO-14104', 4): 'PO T0410001: unit Ready'})),
         ]},
     {
         'id': 'SIM-4', 'title': 'Hold a destination (D/S team)', 'flow': 'BPF F4 / AB09', 'functions': 'XD10 (D/S view), XD09, XD10 Create ASN',
         'story': ['The D/S team holds Thailand of PART-X 14-Oct: HOLD_FLAG Y on CO-14104.',
-                  'XD09 does not take held lines: the unit is computed with Vietnam only (18 pcs = 3 cases) and is Ready.',
+                  'XD09 does not take held lines: the scan order and the blocks are computed with Vietnam only (18 pcs = 3 cases, 3 blocks) and the unit is Ready.',
                   'If the supplier had ticked the unit before the hold, [Create ASN] fails for the whole selection (MSG8): nothing is inserted.'],
         'steps': [
             ('1. D/S Hold Thailand (XD10)', 'TB_R_H0253_ORDER_CONTROL_PRE', [
                 ('ref', h('CO-14101', VN, '0000001', 'PART-X', 10)), ('ref', h('CO-14102', VN, '0000001', 'PART-X', 4)),
                 ('ref', h('CO-14103', VN, '0000001', 'PART-X', 4)),
                 ('upd', h('CO-14104', TH, '0000001', 'PART-X', 6, hold='Y'), ['HOLD_FLAG'], 'Hold by D/S')]),
-            ('2. [Search] → XD09 without the held line', '#TEMP_INSTRUCTION', [
-                ('temp', [1, 'CO-14101', VN, '0000001', 'PART-X', 10, 10, 0, 'T0409001', '3126035901', '0001', '6']),
-                ('temp', [2, 'CO-14102', VN, '0000001', 'PART-X', 4, 2, 2, 'T0409001', '3126035901', '0001', '6']),
-                ('temp', [3, 'CO-14102', VN, '0000001', 'PART-X', 4, 2, 0, 'T0409002', '3126035902', '0001', '6']),
-                ('temp', [4, 'CO-14103', VN, '0000001', 'PART-X', 4, 4, 0, 'T0409002', '3126035902', '0001', '6'])]),
+            ('2. [Search] → XD09 without the held line (VN only: 3 cases, 3 blocks)', '#TEMP_INSTRUCTION', tmp([PX[:3]], [P1, P2])),
             ('3. Hold placed after the supplier ticked the unit → [Create ASN] fails (MSG8)', 'TB_R_INSTRUCTION', [
                 ('ref', [None, None, None, None, None, None, None, None, None, None, None, None, None], [], 'No row inserted (roll back); delivery plan refreshed')]),
             ('4. D/S Release Thailand', 'TB_R_H0253_ORDER_CONTROL_PRE', [
@@ -229,5 +246,35 @@ SCENARIOS = [
             ('', 'TB_R_H0253_ORDER_CONTROL_PRE', [
                 ('upd', h('CO-14103', VN, '0000001', 'PART-X', 4, st='2', mapped='Y', cancel='D'), ['CANCEL_STATUS'], 'P → D')]),
             ('', 'TB_R_CROSSDOCK_CANCEL_RESULT', [('new', ['CO-14103', VN, '0000001', 'PART-X', 4, 0, 4, 0, 4, 'CONFLICT', ASN], [], 'Log LOG4 → Log Monitoring')]),
+        ]},
+    {
+        'id': 'SIM-7', 'title': 'Scan order, supplier cases and ASN options (two ASNs)', 'flow': 'BPF F2', 'functions': 'XD09, XD10 (ASN Option, Create ASN)',
+        'story': ['PART-A 14-Oct, 6 pcs/case: V01 VN 10, T01 TH 6, V02 VN 14 (dummy customer codes CUST-A / B / C give this scan order).',
+                  'p1 (24 pcs) is released 15-Oct, p2 (6 pcs) 16-Oct. Cuts are valid after cases 1, 3, 4 and 5 (VN / TH multiples of 6): blocks case 1 | 2-3 | 4 | 5.',
+                  '15-Oct: blocks 1-3 Ready, the supplier chooses option 4 cases (blocks 1-3, 24 pcs). 16-Oct: the open 6 pcs of V02 get p2 and go in a second ASN.'],
+        'steps': [
+            ('1. Customer order lines of the unit (XD08)', 'TB_R_H0253_ORDER_CONTROL_PRE', [
+                ('ref', h('V01', VN, '0000001', 'PART-A', 10, cust='CUST-A')), ('ref', h('T01', TH, '0000001', 'PART-A', 6, cust='CUST-B')),
+                ('ref', h('V02', VN, '0000001', 'PART-A', 14, cust='CUST-C'))]),
+            ('', 'TB_R_PRA_DAILY_ORDER_PART', [('ref', ['3126035911', '0001', 'T0409011', '0001', 'PART-A', 24], [], 'p1, released 15-Oct')]),
+            ('2. [Search] 15-Oct → XD09: 5 cases, 4 blocks; block 4 without PO', '#TEMP_INSTRUCTION',
+             tmp([SA], [['T0409011', '3126035911', '0001', 24]], notes={('V01', 2): 'Case 2 = VN 4 + TH 2: no cut (VN 10, TH 2)',
+                                                                        ('V02', 3): 'Cut: VN 12, TH 6', ('V02', 5): 'No PO yet: block 4 Not Ready'})),
+            ('3. Supplier chooses option 4 cases (blocks 1-3) → [Create ASN]', 'TB_R_INSTRUCTION', [
+                ('new', [i + 1, c, l, 'PART-A', d, co, '0000001', q, 'T0409011', '3126035911', '0001', None, None]) for i, (c, l, d, co, q) in enumerate((
+                    (1, 1, VN, 'V01', 6), (2, 1, VN, 'V01', 4), (2, 2, TH, 'T01', 2), (3, 1, TH, 'T01', 4), (3, 2, VN, 'V02', 2), (4, 1, VN, 'V02', 6)))]),
+            ('', 'TB_R_PRA_DAILY_ORDER_MAPPED', [('new', ['T0409011', '3126035911', '0001', 'PART-A', 24, 24])]),
+            ('', 'TB_R_H0253_ORDER_CONTROL_PRE', [
+                ('upd', h('V01', VN, '0000001', 'PART-A', 10, mapped='Y', cust='CUST-A'), ['PO_MAPPED_FLAG'], 'Whole line mapped (10)'),
+                ('upd', h('T01', TH, '0000001', 'PART-A', 6, mapped='Y', cust='CUST-B'), ['PO_MAPPED_FLAG'], 'Whole line mapped (6)'),
+                ('ref', h('V02', VN, '0000001', 'PART-A', 14, cust='CUST-C'), [], '8 of 14 mapped: stays N, open qty 6')]),
+            ('4. p2 released 16-Oct', 'TB_R_PRA_DAILY_ORDER_PART', [('new', ['3126036011', '0001', 'T0410011', '0001', 'PART-A', 6])]),
+            ('5. [Search] 16-Oct → XD09: open qty of V02 (6) cut again from case 1', '#TEMP_INSTRUCTION',
+             tmp([[dict(SA[2], QTY=6)]], [['T0410011', '3126036011', '0001', 6]], notes={('V02', 1): 'OPEN_ORDER_QTY = 14 - 8 in TB_R_INSTRUCTION'})),
+            ('6. [Create ASN] (second ASN)', 'TB_R_INSTRUCTION', [
+                ('new', [7, 1, 1, 'PART-A', VN, 'V02', '0000001', 6, 'T0410011', '3126036011', '0001', None, None])]),
+            ('', 'TB_R_PRA_DAILY_ORDER_MAPPED', [('new', ['T0410011', '3126036011', '0001', 'PART-A', 6, 6])]),
+            ('', 'TB_R_H0253_ORDER_CONTROL_PRE', [
+                ('upd', h('V02', VN, '0000001', 'PART-A', 14, mapped='Y', cust='CUST-C'), ['PO_MAPPED_FLAG'], 'Whole line mapped (8 + 6)')]),
         ]},
 ]

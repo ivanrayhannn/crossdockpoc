@@ -74,6 +74,11 @@ Simulasi: menu prototype **ASN → Cancel Order Simulation**.
 | C1 | XD04 | Kolom DAD tetap ikut di-replicate (tidak dipakai kalkulasi) |
 | C2–C8 | XD01–XD05 | N + S dijumlahkan; retensi history 24 bulan; panjang kolom sesuai existing; template / log upload tidak didetailkan; Viewer = Search / Export; Effective Start Date default besok, min hari ini, wajib; label prototype dibiarkan |
 
+## Keputusan 21-Oct (XD09 / XD10: urutan scan dan blok ASN)
+- Urutan baris H0253 = urutan alokasi G-System tanpa Allocation Priority Rank: Customer Code → Customer Order No → Customer Order Date → Order Time → Destination → Detailed Item No → Serial No; per Part No + Customer Order Date (Cara B).
+- Pcs dipotong jadi case supplier @ PCS_CASE (boleh campur destinasi). ASN hanya boleh berhenti di titik potong valid (qty kumulatif tiap destinasi kelipatan PCS_CASE, karena di gudang 1 case = 1 destinasi) → blok = opsi ASN. Blok harus berurutan (tidak boleh dilompati).
+- Logika di `specs/scan_pack.py` (dipakai sample XD09 dan simulasi ERD); perubahan spec di `specs/apply_2110.py`; simulasi baru SIM-7.
+
 ## Business Process Flow Level 2
 Lihat `bpf/README.md`: Excel `bpf/Crossdock_BPF_Level2.xlsx` (X = PIC, Y = timeline, sampai level tabel, abnormality AB01–AB16) dan menu prototype Common → Business Process Flow.
 
