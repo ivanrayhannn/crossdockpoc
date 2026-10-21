@@ -311,4 +311,24 @@ SCENARIOS = [
                  notes={('A-0101', 1): 'Open qty 8 - 6 = 2; case 1 = the same physical case as case 2 on 15-Oct', ('C-0103', 4): 'Unit 14-Oct: all 3 blocks Ready (options 2 / 3 / 4 cases)',
                         ('A-0201', 1): 'Unit 15-Oct after unit 14-Oct (way B): no PO left'})),
         ]},
+    {
+        'id': 'SIM-9', 'title': 'XD10 case check boxes: cases 1-2 not possible, 1-3 sent', 'flow': 'BPF F2', 'functions': 'XD09, XD10 (Select case, Create ASN)',
+        'story': ['Same unit as SIM-7 (PART-A 14-Oct: V01 VN 10, T01 TH 6, V02 VN 14; 6 pcs/case) but all 5 cases have a PO (p1 24 + p2 6).',
+                  'XD10 shows one check box per supplier case. The supplier wants cases 1 and 2 only: case 2 = VN 4 + TH 2 ends with VN 10 / TH 2 '
+                  '(CUT_FLAG N), so the warehouse could not close the VN and TH cases. XD10 ticks case 3 too (message no. 10): cases 1-3 = 18 pcs.',
+                  '[Create ASN] inserts the slices of cases 1-3; V01 and T01 are complete (PO_MAPPED_FLAG Y), V02 keeps 12 pcs open for a later ASN.'],
+        'steps': [
+            ('1. [Search] → XD09: all cases with PO; CUT_FLAG Y after cases 1, 3, 4, 5', '#TEMP_INSTRUCTION',
+             tmp([SA], [['T0409011', '3126035911', '0001', 24], ['T0410011', '3126036011', '0001', 6]],
+                 notes={('V01', 2): 'Case 2 = VN 4 + TH 2: CUT N (VN 10, TH 2) → cannot be the last case',
+                        ('V02', 3): 'Case 3: CUT Y (VN 12, TH 6) → ticked together with case 2'})),
+            ('2. Supplier ticks cases 1-2 → XD10 ticks case 3 too (MSG10) → [Create ASN] cases 1-3', 'TB_R_INSTRUCTION', [
+                ('new', [i + 1, c, l, 'PART-A', d, co, '0000001', q, 'T0409011', '3126035911', '0001', None, None]) for i, (c, l, d, co, q) in enumerate((
+                    (1, 1, VN, 'V01', 6), (2, 1, VN, 'V01', 4), (2, 2, TH, 'T01', 2), (3, 1, TH, 'T01', 4), (3, 2, VN, 'V02', 2)))]),
+            ('', 'TB_R_PRA_DAILY_ORDER_MAPPED', [('new', ['T0409011', '3126035911', '0001', 'PART-A', 24, 18], [], '18 of 24 used; 6 left for case 4')]),
+            ('', 'TB_R_H0253_ORDER_CONTROL_PRE', [
+                ('upd', h('V01', VN, '0000001', 'PART-A', 10, mapped='Y', cust='CUST-A'), ['PO_MAPPED_FLAG'], 'Whole line in cases 1-2'),
+                ('upd', h('T01', TH, '0000001', 'PART-A', 6, mapped='Y', cust='CUST-B'), ['PO_MAPPED_FLAG'], 'Whole line in cases 2-3'),
+                ('ref', h('V02', VN, '0000001', 'PART-A', 14, cust='CUST-C'), [], '2 of 14 sent: stays N, open qty 12 (cases 4-5 at the next Search)')]),
+        ]},
 ]
