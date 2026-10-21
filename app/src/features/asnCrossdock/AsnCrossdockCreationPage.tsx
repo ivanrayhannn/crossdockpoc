@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
-import { asnByUnitOf, submitAsnBatch, useAsns } from './asnStore';
+import { submitAsnBatch, useAsns } from './asnStore';
 import {
-  asnNoFor, BUSINESS_DATES, buildCases, buildUnits, DESTS, niceDate, packCases, PCS_PER_CASE, poQtyOf,
-  LOGIN_SUPPLIER, ritCyclesFor, SUPPLIERS, type AsnCase, type InstrLine, type Unit, type UnitStatus,
+  asnNoFor, BUSINESS_DATES, buildCases, buildUnits, contentOf, DESTS, endBefore, endFor, niceDate, PCS_PER_CASE, poQtyOf,
+  LOGIN_SUPPLIER, ritCyclesFor, sentQty, SUPPLIERS, type AsnCase, type InstrLine, type Unit, type UnitCase, type UnitStatus,
 } from './data';
 import { Chip, Modal } from './ui';
 import { card, th, td } from './styles';
@@ -18,12 +18,23 @@ interface Loaded {
   at: string;
 }
 
+/** Ticked cases of a unit: cases 1..end; held = held line count at the time of ticking. */
+interface Sel {
+  end: number;
+  held: number;
+}
+
 const nowTime = () => new Date().toTimeString().slice(0, 8);
 
-const STATUS_LABEL: Record<UnitStatus, string> = { ready: 'Ready', notReady: 'Not Ready', created: 'Created', hold: 'On Hold' };
+const STATUS_LABEL: Record<UnitStatus, string> = { ready: 'Ready', partial: 'Partially Ready', notReady: 'Not Ready', created: 'Created', hold: 'On Hold' };
 
 function StatusChip({ s }: { s: UnitStatus }) {
-  return <Chip tone={s === 'ready' ? 'ok' : s === 'notReady' ? 'warn' : 'neutral'}>{STATUS_LABEL[s]}</Chip>;
+  return <Chip tone={s === 'ready' ? 'ok' : s === 'partial' || s === 'notReady' ? 'warn' : 'neutral'}>{STATUS_LABEL[s]}</Chip>;
+}
+
+/** Check box that can show the partly ticked state. */
+function TriBox({ checked, partly, disabled, title, onChange }: { checked: boolean; partly: boolean; disabled: boolean; title: string; onChange: () => void }) {
+  return <input type="checkbox" checked={checked} disabled={disabled} title={title} ref={(el) => { if (el) el.indeterminate = partly; }} onChange={onChange} />;
 }
 
 interface DestRow {
@@ -32,7 +43,7 @@ interface DestRow {
   lines: InstrLine[];
 }
 
-/** Destination level of a unit (qty / pcs/case cases per destination); a held destination is listed but not counted. */
+/** Destination level of a unit (qty / pcs/case warehouse cases per destination); a held destination is listed but not counted. */
 function destRows(u: Unit): DestRow[] {
   const m = new Map<string, DestRow>();
   for (const l of [...u.lines, ...u.heldLines]) {
@@ -49,19 +60,24 @@ interface PoRow {
   manifestNo: string;
   manifestItemNo: string;
   poQty: number;
+  qty: number;
 }
 
-function poRowsOf(c: AsnCase): PoRow[] {
+function poRowsOf(ls: InstrLine[]): PoRow[] {
   const m = new Map<string, PoRow>();
-  for (const l of c.lines) {
+  for (const l of ls) {
     if (!l.poNo) continue;
-    const k = `${l.poNo}|${l.manifestNo}|${l.manifestItemNo}`;
-    if (!m.has(k)) m.set(k, { poNo: l.poNo, manifestNo: l.manifestNo ?? '—', manifestItemNo: l.manifestItemNo ?? '—', poQty: poQtyOf(l.poNo, c.partNo) });
+    const r = m.get(l.poNo) ?? { poNo: l.poNo, manifestNo: l.manifestNo ?? '—', manifestItemNo: l.manifestItemNo ?? '—', poQty: poQtyOf(l.poNo), qty: 0 };
+    r.qty += l.qty;
+    m.set(l.poNo, r);
   }
   return [...m.values()];
 }
 
-/** Screen ASN Crossdock Creation: Search (X12 Get Order pre-mapping), delivery plan, Create ASN and the Case List sub screen. */
+const destNames = (ds: string[]) => ds.map((d) => DESTS[d].short).join(', ');
+
+/** Screen ASN Crossdock Creation: Search (XD09 pre-mapping in scan order), delivery plan with a check box per supplier case,
+ * Create ASN and the Case List sub screen. */
 export function AsnCrossdockCreationPage() {
   const asns = useAsns();
   const [today, setToday] = useState('2026-10-15');
@@ -73,12 +89,13 @@ export function AsnCrossdockCreationPage() {
   const [partFilter, setPartFilter] = useState('');
   const [stFilter, setStFilter] = useState<StatusFilter>('all');
   const [hold, setHold] = useState<Record<string, boolean>>({});
-  // Each view is its own session (supplier / D/S team); a selection stores the held line count at the time of ticking.
-  const [selByView, setSelByView] = useState<Record<ViewAs, Record<string, number>>>({ sup: {}, ds: {} });
+  // Each view is its own session (supplier / D/S team).
+  const [selByView, setSelByView] = useState<Record<ViewAs, Record<string, Sel>>>({ sup: {}, ds: {} });
   const sel = selByView[viewAs];
-  const setSel = (next: Record<string, number>) => setSelByView((all) => ({ ...all, [viewAs]: next }));
+  const setSel = (next: Record<string, Sel>) => setSelByView((all) => ({ ...all, [viewAs]: next }));
   const [holdConflict, setHoldConflict] = useState(false);
   const [supplierConflict, setSupplierConflict] = useState(false);
+  const [cutNote, setCutNote] = useState<string | null>(null);
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const [openDest, setOpenDest] = useState<Record<string, boolean>>({});
   const [openCase, setOpenCase] = useState<Record<number, boolean>>({});
@@ -89,15 +106,16 @@ export function AsnCrossdockCreationPage() {
 
   const rits = ritCyclesFor(deliveryDate);
   const rit = rits.find((r) => r.no === ritNo) ?? rits[0];
-  const units = useMemo(() => buildUnits(today, asnByUnitOf(asns), hold), [today, asns, hold]);
-  // Created units and units without any ready case are not listed; a fully held unit only for the D/S team
+  const units = useMemo(() => { const s = sentQty(asns); return buildUnits(today, s.byLine, s.byPo, hold); }, [today, asns, hold]);
+  // Units fully in an ASN and units without any pre-mapped case are not listed; a fully held unit only for the D/S team.
   // The supplier sees only its own Supplier Code + Plant; the D/S team (super admin) sees every supplier.
-  const visible = units.filter((u) => (isDs || u.supplier === LOGIN_SUPPLIER) && u.status !== 'created' && (u.readyCases > 0 || (isDs && u.status === 'hold')));
+  const visible = units.filter((u) => (isDs || u.supplier === LOGIN_SUPPLIER) && u.status !== 'created'
+    && (u.cases.some((c) => c.lines.some((l) => l.poNo)) || (isDs && u.status === 'hold')));
   const rows = visible.filter((u) => (!partFilter || u.partNo === partFilter) && (stFilter === 'all' || u.status === stFilter));
-  const selected = units.filter((u) => sel[u.key] !== undefined && u.status === 'ready');
   const ticked = units.filter((u) => sel[u.key] !== undefined);
-  const cases = useMemo(() => buildCases(selected), [selected]);
-  const selQty = selected.reduce((a, u) => a + u.qty, 0);
+  const selected = ticked.filter((u) => u.validEnds.includes(sel[u.key].end));
+  const cases = useMemo(() => buildCases(selected.map((u) => ({ unit: u, end: sel[u.key].end }))), [selected, sel]);
+  const selQty = cases.reduce((a, c) => a + c.qty, 0);
   const asnDate = loaded?.deliveryDate ?? deliveryDate;
   const asnSupplier = selected[0]?.supplier ?? LOGIN_SUPPLIER;
   const nextAsnNo = asnNoFor(asnSupplier, asnDate, asns.filter((a) => a.deliveryDate === asnDate && a.supplier === asnSupplier).length + 1);
@@ -115,6 +133,7 @@ export function AsnCrossdockCreationPage() {
     setLoaded({ deliveryDate, ritNo: rit.no, route: rit.route, at: nowTime() });
     setSel({});
     setNotice(null);
+    setCutNote(null);
     setOpen({});
   };
 
@@ -125,9 +144,37 @@ export function AsnCrossdockCreationPage() {
     setHold(next);
   };
 
+  /** Case check box: the selection starts at case 1 and ends on a case with CUT_FLAG Y (MSG10 when the end moves on). */
+  const tickCase = (u: Unit, c: UnitCase, checked: boolean) => {
+    const next = { ...sel };
+    if (checked) {
+      const end = endFor(u, c.seq);
+      if (end === null) return;
+      if (end > c.seq) setCutNote(`Case ${c.seq} cannot be the last case: ${destNames(c.openDests)} would not complete a case. Cases ${c.seq}-${end} are selected together.`);
+      else setCutNote(null);
+      next[u.key] = { end, held: u.heldLines.length };
+    } else {
+      const end = endBefore(u, c.seq);
+      if (end === null) delete next[u.key];
+      else next[u.key] = { end, held: u.heldLines.length };
+      setCutNote(null);
+    }
+    setSel(next);
+  };
+
+  /** Unit check box: ticks all Ready cases (up to the last valid end) or unticks the unit. */
+  const tickUnit = (u: Unit) => {
+    const next = { ...sel };
+    const last = u.validEnds[u.validEnds.length - 1];
+    if (sel[u.key]?.end === last) delete next[u.key];
+    else next[u.key] = { end: last, held: u.heldLines.length };
+    setCutNote(null);
+    setSel(next);
+  };
+
   /** [Create ASN]: re-check the ticked units first; a hold made by the D/S team in the meantime makes the create fail. */
   const createAsn = () => {
-    const conflict = ticked.filter((u) => u.heldLines.length > (sel[u.key] ?? 0) || u.status !== 'ready');
+    const conflict = ticked.filter((u) => u.heldLines.length > sel[u.key].held || !u.validEnds.includes(sel[u.key].end));
     if (conflict.length) {
       // The whole create fails: every ticked unit is unticked and the delivery plan is refreshed automatically.
       setSel({});
@@ -151,6 +198,7 @@ export function AsnCrossdockCreationPage() {
       createdBy: 'D. Anggraini', createdAt: `${niceDate(today)} ${new Date().toTimeString().slice(0, 5)}`,
     }, today);
     setNotice(submitId);
+    setCutNote(null);
     setConfirm(false);
     setSel({});
     setPage('list');
@@ -167,7 +215,7 @@ export function AsnCrossdockCreationPage() {
           <Chip tone="neutral">Draft</Chip>
         </div>
         <div style={{ ...card, padding: '12px 16px', fontSize: 12.5, background: 'var(--color-accent-100, #eef4fb)' }}>
-          The selected units are mapped to their POs. Each Part Number + Customer Order Date is included completely. Per destination the qty is packed in cases of {PCS_PER_CASE} pcs (e.g. 24 pcs = 4 cases); a case can hold several customer orders and POs of the same destination.
+          The ticked cases are mapped to their POs. Supplier cases hold {PCS_PER_CASE} pcs in the receiving scan order (a case can hold several customer orders, POs and destinations); every unit ends on a case after which each destination completes its warehouse case.
         </div>
         <div style={{ ...card, padding: 16, display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 16, fontSize: 12.5 }}>
           <div><div className="ax-lbl">ASN No</div><div style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{nextAsnNo}</div><div className="ax-muted">auto · assigned on submit</div></div>
@@ -182,23 +230,25 @@ export function AsnCrossdockCreationPage() {
             <button className="btn btn-secondary" disabled={!cases.length} onClick={() => setLabelNote(true)}>Download Case Label</button>
           </div>
           <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: 12.5 }}>
-            <thead><tr><th style={{ ...th, width: 34 }} /><th style={th}>Case Number</th><th style={th}>Part Number</th><th style={{ ...th, textAlign: 'right' }}>Qty</th></tr></thead>
+            <thead><tr><th style={{ ...th, width: 34 }} /><th style={th}>Case Number</th><th style={th}>Part Number</th><th style={th}>Customer Order Date</th><th style={th}>Content (scan order)</th><th style={{ ...th, textAlign: 'right' }}>Qty</th></tr></thead>
             <tbody>
-              {cases.map((c) => [
+              {cases.map((c: AsnCase) => [
                 <tr key={c.seq}>
                   <td style={td}><button className="btn btn-secondary" title="PO detail" style={{ padding: '2px 8px', fontSize: 11 }} onClick={() => setOpenCase({ ...openCase, [c.seq]: !openCase[c.seq] })}>{openCase[c.seq] ? '▾' : '▸'}</button></td>
                   <td style={{ ...td, fontFamily: 'var(--font-mono)', fontWeight: 600 }}>Case {c.seq}</td>
                   <td style={{ ...td, fontFamily: 'var(--font-mono)' }}>{c.partNo}</td>
+                  <td style={td}>{niceDate(c.orderDt)}</td>
+                  <td style={td}>{contentOf(c.lines)}</td>
                   <td style={{ ...td, textAlign: 'right', fontWeight: 600 }}>{c.qty}</td>
                 </tr>,
                 openCase[c.seq] && (
                   <tr key={`${c.seq}-d`}>
-                    <td colSpan={4} style={{ padding: '6px 16px 10px 50px', background: 'var(--color-surface)', borderBottom: '1px solid var(--color-divider)' }}>
+                    <td colSpan={6} style={{ padding: '6px 16px 10px 50px', background: 'var(--color-surface)', borderBottom: '1px solid var(--color-divider)' }}>
                       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-                        <thead><tr>{['PO No', 'Manifest No', 'Manifest Item No', 'PO Qty'].map((h) => <th key={h} style={{ ...th, background: 'transparent' }}>{h}</th>)}</tr></thead>
+                        <thead><tr>{['PO No', 'Manifest No', 'Manifest Item No', 'PO Qty', 'Qty in this case'].map((h) => <th key={h} style={{ ...th, background: 'transparent' }}>{h}</th>)}</tr></thead>
                         <tbody>
-                          {poRowsOf(c).map((r) => (
-                            <tr key={`${r.poNo}-${r.manifestNo}-${r.manifestItemNo}`}><td style={td}>{r.poNo}</td><td style={td}>{r.manifestNo}</td><td style={td}>{r.manifestItemNo}</td><td style={td}>{r.poQty}</td></tr>
+                          {poRowsOf(c.lines).map((r) => (
+                            <tr key={r.poNo}><td style={td}>{r.poNo}</td><td style={td}>{r.manifestNo}</td><td style={td}>{r.manifestItemNo}</td><td style={td}>{r.poQty}</td><td style={td}>{r.qty}</td></tr>
                           ))}
                         </tbody>
                       </table>
@@ -206,7 +256,7 @@ export function AsnCrossdockCreationPage() {
                   </tr>
                 ),
               ])}
-              <tr><td colSpan={3} style={{ ...td, textAlign: 'right', fontWeight: 600 }}>Total</td><td style={{ ...td, textAlign: 'right', fontWeight: 700 }}>{selQty}</td></tr>
+              <tr><td colSpan={5} style={{ ...td, textAlign: 'right', fontWeight: 600 }}>Total</td><td style={{ ...td, textAlign: 'right', fontWeight: 700 }}>{selQty}</td></tr>
             </tbody>
           </table>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '11px 16px', borderTop: '1px solid var(--color-divider)' }}>
@@ -231,13 +281,14 @@ export function AsnCrossdockCreationPage() {
     );
   }
 
+  const colCount = isDs ? 9 : 8;
   return (
     <div style={{ padding: '18px 24px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
         <div style={{ marginRight: 'auto' }}>
           <h1 style={{ fontSize: 22, margin: 0 }}>ASN Crossdock Creation</h1>
           <div style={{ fontSize: 12.5, color: 'var(--color-neutral-700)', marginTop: 3 }}>
-            Choose the Delivery Date and Rit, then Search: customer orders are taken FIFO by order date and pre-mapped to supplier POs. A unit (Part Number + Customer Order Date) is Ready when all its cases are assigned to a PO.
+            Choose the Delivery Date and Rit, then Search: customer orders are read in the receiving scan order (Allocation Priority = Customer Order Date), pre-mapped to supplier POs and cut into cases of {PCS_PER_CASE} pcs. Tick the cases to send: the selection starts at case 1 and ends on a case marked "Can end here".
           </div>
         </div>
         <div className="field">
@@ -245,7 +296,7 @@ export function AsnCrossdockCreationPage() {
           <div style={{ display: 'flex' }}>
             {([['sup', 'Supplier'], ['ds', 'D/S team']] as const).map(([k, label], i) => (
               <button key={k} className={`btn ${viewAs === k ? 'btn-primary' : 'btn-secondary'}`} style={{ borderRadius: i ? '0 6px 6px 0' : '6px 0 0 6px', padding: '8px 14px', whiteSpace: 'nowrap' }}
-                onClick={() => { setViewAs(k); if (k === 'sup') { setOpen({}); setOpenDest({}); } }}>{label}</button>
+                onClick={() => { setViewAs(k); setCutNote(null); if (k === 'sup') { setOpen({}); setOpenDest({}); } }}>{label}</button>
             ))}
           </div>
         </div>
@@ -294,7 +345,7 @@ export function AsnCrossdockCreationPage() {
             <span style={{ fontSize: 12.5, fontWeight: 600 }}>Delivery plan</span>{' '}
             {loaded && (
               <span style={{ fontSize: 11.5, color: 'var(--color-neutral-600)' }}>
-                {niceDate(loaded.deliveryDate)} · {loaded.ritNo} · {loaded.route} — {rows.length} units · {rows.filter((u) => u.status === 'ready').length} ready · {rows.filter((u) => u.status === 'notReady').length} not ready · refreshed {loaded.at}
+                {niceDate(loaded.deliveryDate)} · {loaded.ritNo} · {loaded.route} — {rows.length} units · {rows.filter((u) => u.status === 'ready').length} ready · {rows.filter((u) => u.status === 'partial').length} partially ready · {rows.filter((u) => u.status === 'notReady').length} not ready · refreshed {loaded.at}
               </span>
             )}
           </div>
@@ -305,16 +356,23 @@ export function AsnCrossdockCreationPage() {
               {[...new Set(visible.map((u) => u.partNo))].sort().map((p) => <option key={p} value={p}>{p}</option>)}
             </select>
           </div>
-          <div className="field" style={{ width: 150 }}>
+          <div className="field" style={{ width: 160 }}>
             <label>Status</label>
             <select className="input" value={stFilter} disabled={!loaded} onChange={(e) => setStFilter(e.target.value as StatusFilter)}>
               <option value="all">All</option>
               <option value="ready">Ready</option>
+              <option value="partial">Partially Ready</option>
               <option value="notReady">Not Ready</option>
               {isDs && <option value="hold">On Hold</option>}
             </select>
           </div>
         </div>
+        {cutNote && (
+          <div role="status" style={{ padding: '9px 16px', fontSize: 12.5, display: 'flex', alignItems: 'center', gap: 10, background: 'var(--color-warn-bg, #fff8e6)', borderBottom: '1px solid var(--color-divider)' }}>
+            <span><b>MSG10</b> · {cutNote}</span>
+            <button className="btn btn-secondary" style={{ marginLeft: 'auto', padding: '2px 10px', fontSize: 11 }} onClick={() => setCutNote(null)}>OK</button>
+          </div>
+        )}
         {!loaded ? (
           <div style={{ padding: '40px 24px', textAlign: 'center', fontSize: 13, color: 'var(--color-neutral-700)' }}>Choose the Delivery Date and Rit, then click Search.</div>
         ) : rows.length === 0 ? (
@@ -329,31 +387,63 @@ export function AsnCrossdockCreationPage() {
                 <th style={th}>Part Number</th>
                 <th style={{ ...th, textAlign: 'right' }}>Case Qty</th>
                 <th style={{ ...th, textAlign: 'right' }}>PO Readiness (case)</th>
+                <th style={{ ...th, textAlign: 'right' }}>Selected</th>
                 <th style={th}>ASN Status</th>
                 <th style={{ ...th, width: 34 }} />
               </tr>
             </thead>
             <tbody>
               {rows.map((u) => {
-                const enabled = u.status === 'ready';
-                const tip = u.status === 'created' ? `Already in ${u.asnNo}` : u.status === 'notReady' ? `Not Ready: ${u.notAssignedCases} of ${u.caseCount} cases of ${u.partNo} / ${niceDate(u.orderDt)} are not assigned to a PO yet` : u.status === 'hold' ? 'All destinations are on hold' : 'Select to create an ASN';
+                const s = sel[u.key];
+                const last = u.validEnds[u.validEnds.length - 1];
+                const enabled = u.validEnds.length > 0;
+                const tip = u.status === 'notReady' ? `Not Ready: case 1 of ${u.partNo} / ${niceDate(u.orderDt)} is not assigned to a PO yet (${u.readyCases} of ${u.caseCount} cases assigned)`
+                  : u.status === 'hold' ? 'All destinations are on hold' : 'Tick all Ready cases of the unit';
                 return [
                   <tr key={u.key} style={{ background: u.status === 'notReady' ? 'var(--color-warn-bg, #fff8e6)' : undefined }}>
-                    <td style={td}><input type="checkbox" checked={sel[u.key] !== undefined} disabled={!enabled} title={tip} onChange={(e) => { const next = { ...sel }; if (e.target.checked) next[u.key] = u.heldLines.length; else delete next[u.key]; setSel(next); }} /></td>
+                    <td style={td}><TriBox checked={!!s && s.end === last} partly={!!s && s.end !== last} disabled={!enabled} title={tip} onChange={() => tickUnit(u)} /></td>
                     <td style={{ ...td, fontWeight: 600 }}>{niceDate(u.orderDt)}</td>
                     {isDs && <td style={td}>{SUPPLIERS[u.supplier].code} · {SUPPLIERS[u.supplier].plant}</td>}
                     <td style={{ ...td, fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{u.partNo}</td>
                     <td style={{ ...td, textAlign: 'right', fontWeight: 600 }}>{u.caseCount}</td>
                     <td style={{ ...td, textAlign: 'right', color: u.readyCases < u.caseCount ? 'var(--color-danger)' : undefined }}>{u.readyCases}</td>
-                    <td style={td} title={tip}><StatusChip s={u.status} />{u.heldLines.length > 0 && isDs && <div className="ax-muted">{new Set(u.heldLines.map((l) => l.destCd)).size} destination(s) on hold</div>}</td>
+                    <td style={{ ...td, textAlign: 'right' }}>{s ? `${s.end} case${s.end > 1 ? 's' : ''}` : '—'}</td>
+                    <td style={td} title={tip}><StatusChip s={u.status} />{u.sent && <div className="ax-muted">rest of an earlier ASN</div>}{u.heldLines.length > 0 && isDs && <div className="ax-muted">{new Set(u.heldLines.map((l) => l.destCd)).size} destination(s) on hold</div>}</td>
                     <td style={td}>{isDs && <button className="btn btn-secondary" title="Destination detail (D/S team)" style={{ padding: '2px 8px', fontSize: 11 }} onClick={() => setOpen({ ...open, [u.key]: !open[u.key] })}>{open[u.key] ? '▾' : '▸'}</button>}</td>
                   </tr>,
+                  u.cases.length > 0 && (
+                    <tr key={`${u.key}-c`}>
+                      <td colSpan={colCount} style={{ padding: '4px 16px 10px 50px', borderBottom: '1px solid var(--color-divider)' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                          <thead><tr><th style={{ ...th, background: 'transparent', width: 30 }} />{['Case', 'Qty', 'Content (scan order)', 'PO', 'Can end here', 'PO Status'].map((h) => <th key={h} style={{ ...th, background: 'transparent', height: 28 }}>{h}</th>)}</tr></thead>
+                          <tbody>
+                            {u.cases.map((c) => {
+                              const ctip = c.ready ? (c.cut ? `The ASN may end after case ${c.seq}` : `Case ${c.seq} cannot be the last case: ${destNames(c.openDests)} would not complete a case`)
+                                : `Not Ready: case ${c.seq} of ${u.partNo} / ${niceDate(u.orderDt)} (or an earlier case) is not assigned to a PO yet (${u.readyCases} of ${u.caseCount} cases assigned)`;
+                              const on = !!s && c.seq <= s.end;
+                              return (
+                                <tr key={c.seq} style={{ background: on ? 'var(--color-accent-100, #eef4fb)' : undefined, color: c.ready ? undefined : 'var(--color-neutral-600)' }}>
+                                  <td style={td}><input type="checkbox" checked={on} disabled={!c.ready || endFor(u, c.seq) === null} title={ctip} onChange={(e) => tickCase(u, c, e.target.checked)} /></td>
+                                  <td style={{ ...td, fontFamily: 'var(--font-mono)', fontWeight: 600 }}>Case {c.seq}</td>
+                                  <td style={td}>{c.qty}</td>
+                                  <td style={td}>{contentOf(c.lines)}</td>
+                                  <td style={td}>{poRowsOf(c.lines).map((r) => `${r.poNo} ${r.qty}`).join(', ') || '—'}{c.lines.some((l) => !l.poNo) && <span className="ax-muted"> · {c.lines.filter((l) => !l.poNo).reduce((a, l) => a + l.qty, 0)} pcs without PO</span>}</td>
+                                  <td style={td} title={ctip}><Chip tone={c.cut ? 'ok' : 'neutral'}>{c.cut ? 'Y' : 'N'}</Chip></td>
+                                  <td style={td} title={ctip}><Chip tone={c.ready ? 'ok' : 'warn'}>{c.ready ? 'Ready' : 'Not Ready'}</Chip></td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </td>
+                    </tr>
+                  ),
                   isDs && open[u.key] && (
                     <tr key={`${u.key}-d`}>
-                      <td colSpan={isDs ? 8 : 7} style={{ padding: '8px 16px 12px 50px', background: 'var(--color-surface)', borderBottom: '1px solid var(--color-divider)' }}>
+                      <td colSpan={colCount} style={{ padding: '8px 16px 12px 50px', background: 'var(--color-surface)', borderBottom: '1px solid var(--color-divider)' }}>
                         <div className="ax-lbl" style={{ marginBottom: 4 }}>Destination · {u.qty} pcs</div>
                         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-                          <thead><tr><th style={{ ...th, background: 'transparent', width: 30 }} />{['Destination', 'Case', 'Qty (pcs)', 'Pcs/Case', 'Hold Flag'].map((h) => <th key={h} style={{ ...th, background: 'transparent' }}>{h}</th>)}</tr></thead>
+                          <thead><tr><th style={{ ...th, background: 'transparent', width: 30 }} />{['Destination', 'Warehouse cases', 'Qty (pcs)', 'Pcs/Case', 'Hold Flag'].map((h) => <th key={h} style={{ ...th, background: 'transparent' }}>{h}</th>)}</tr></thead>
                           <tbody>
                             {destRows(u).map((r) => {
                               const held = r.lines.every((l) => hold[l.id]);
@@ -362,7 +452,7 @@ export function AsnCrossdockCreationPage() {
                                 <tr key={dk} style={{ color: held ? 'var(--color-neutral-600)' : undefined }}>
                                   <td style={td}><button className="btn btn-secondary" title="Customer orders" style={{ padding: '1px 7px', fontSize: 10.5 }} onClick={() => setOpenDest({ ...openDest, [dk]: !openDest[dk] })}>{openDest[dk] ? '▾' : '▸'}</button></td>
                                   <td style={td}>{DESTS[r.destCd].code} · {DESTS[r.destCd].name}</td>
-                                  <td style={td}>{held ? 0 : packCases(r.lines.filter((l) => !hold[l.id])).length}</td>
+                                  <td style={td}>{held ? 0 : Math.ceil(r.qty / PCS_PER_CASE)}</td>
                                   <td style={td}>{held ? `${r.lines.reduce((a, l) => a + l.qty, 0)} (on hold)` : r.qty}</td>
                                   <td style={td}>{PCS_PER_CASE}</td>
                                   <td style={td}>
@@ -376,14 +466,18 @@ export function AsnCrossdockCreationPage() {
                                     <td />
                                     <td colSpan={5} style={{ padding: '4px 0 10px' }}>
                                       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11.5, background: 'var(--color-neutral-100)' }}>
-                                        <thead><tr>{['Customer Order No', 'Detailed Item No', 'Qty (pcs)', 'PO No', 'PO Date'].map((h) => <th key={h} style={{ ...th, height: 28 }}>{h}</th>)}</tr></thead>
+                                        <thead><tr>{['Customer Code', 'Customer Order No', 'Detailed Item No', 'Open Qty', 'Cases', 'PO No'].map((h) => <th key={h} style={{ ...th, height: 28 }}>{h}</th>)}</tr></thead>
                                         <tbody>
-                                          {r.lines.map((l) => (
-                                            <tr key={l.id}>
-                                              <td style={td}>{l.custOrderNo}</td><td style={td}>{l.detailedItemNo}</td><td style={td}>{l.qty}</td>
-                                              <td style={td}>{l.poNo ?? '—'}</td><td style={td}>{niceDate(l.poDate)}</td>
-                                            </tr>
-                                          ))}
+                                          {r.lines.map((l) => {
+                                            const parts = u.cases.filter((c) => c.lines.some((x) => x.id === l.id));
+                                            const pos = [...new Set(parts.flatMap((c) => c.lines.filter((x) => x.id === l.id).map((x) => x.poNo ?? '—')))];
+                                            return (
+                                              <tr key={l.id}>
+                                                <td style={td}>{l.custCd}</td><td style={td}>{l.custOrderNo}</td><td style={td}>{l.detailedItemNo}</td><td style={td}>{l.qty}</td>
+                                                <td style={td}>{parts.map((c) => c.seq).join(', ') || '—'}</td><td style={td}>{pos.join(', ') || '—'}</td>
+                                              </tr>
+                                            );
+                                          })}
                                         </tbody>
                                       </table>
                                     </td>
@@ -403,10 +497,10 @@ export function AsnCrossdockCreationPage() {
         )}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 16px', borderTop: '1px solid var(--color-divider)', background: 'var(--color-surface)' }}>
           <span style={{ fontSize: 12.5 }}>
-            {selected.length ? <><b>{selected.length} units selected</b> · {cases.length} cases · {selected.map((u) => `${u.partNo} ${niceDate(u.orderDt).slice(0, 6)}`).join(', ')}</> : 'Tick one or more Ready units. Units from different Customer Order Dates can go into the same ASN.'}
+            {selected.length ? <><b>{selected.length} unit{selected.length > 1 ? 's' : ''} · {cases.length} cases · {selQty} pcs selected</b> · {selected.map((u) => `${u.partNo} ${niceDate(u.orderDt).slice(0, 6)} (case 1-${sel[u.key].end})`).join(', ')}</> : 'Tick the cases to send. Cases of different units and Customer Order Dates can go into the same ASN.'}
           </span>
           <span style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-            <button className="btn btn-secondary" disabled={!ticked.length} onClick={() => setSel({})}>Clear selection</button>
+            <button className="btn btn-secondary" disabled={!ticked.length} onClick={() => { setSel({}); setCutNote(null); }}>Clear selection</button>
             <button className="btn btn-primary" disabled={!ticked.length} onClick={createAsn}>Create ASN</button>
           </span>
         </div>

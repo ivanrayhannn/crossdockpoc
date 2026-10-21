@@ -24,7 +24,7 @@ export function Modal({ title, children, actions, onClose }: { title: string; ch
   );
 }
 
-/** Cases of an ASN: one case per Part Number + Customer Order Date + destination. */
+/** Cases of an ASN: supplier cases of pcs/case in scan order (a case can hold several destinations). */
 export function CaseTable({ cases, caseLabel }: { cases: AsnCase[]; caseLabel: (c: AsnCase) => string }) {
   const total = cases.reduce((a, c) => a + c.qty, 0);
   return (
@@ -41,7 +41,7 @@ export function CaseTable({ cases, caseLabel }: { cases: AsnCase[]; caseLabel: (
             <td style={{ ...td, fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{caseLabel(c)}</td>
             <td style={{ ...td, fontFamily: 'var(--font-mono)' }}>{c.partNo}</td>
             <td style={td}>{niceDate(c.orderDt)}</td>
-            <td style={td}>{DESTS[c.destCd].code} · {DESTS[c.destCd].name}</td>
+            <td style={td}>{[...new Set(c.lines.map((l) => DESTS[l.destCd].short))].join(' + ')}</td>
             <td style={td}>{c.lines.map((l) => `${l.custOrderNo} (${l.qty})`).join(', ')}</td>
             <td style={td}>{[...new Set(c.lines.map((l) => l.poNo))].join(', ')}</td>
             <td style={{ ...td, textAlign: 'right', fontWeight: 600 }}>{c.qty}</td>

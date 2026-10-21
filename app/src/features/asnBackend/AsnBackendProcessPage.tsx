@@ -48,19 +48,19 @@ export function AsnBackendProcessPage() {
 
       <Section no="1" title="Search – Get Order (X12, on demand)">
         <Steps rows={[
-          ['1', 'Read customer orders of H0253: ORDER_STATUS 7, HOLD_FLAG N, PO_MAPPED_FLAG N; FIFO by order date per part number.', 'TB_R_H0253_ORDER_CONTROL_PRE'],
-          ['2', 'Read PO parts of the Pra Daily Order: CROSSDOCK_FLAG X; open qty = PO qty minus the mapped qty; FIFO by PO date.', 'TB_R_PRA_DAILY_ORDER_MANIFEST / PART, TB_R_PRA_DAILY_ORDER_MAPPED (new)'],
-          ['3', 'Pre-map per part number (no permanent change); compute Case Qty, PO Readiness and status Ready (6) / Not Ready (7).', '#TEMP_INSTRUCTION (temporary)'],
-          ['4', 'Return the delivery plan; units with PO Readiness 0 and Created units are not listed.', 'Screen'],
+          ['1', 'Read the open qty of the H0253 customer orders (ORDER_STATUS 7, HOLD_FLAG N; open qty = order qty minus the qty in TB_R_INSTRUCTION) in the receiving scan order: Allocation Priority (= Customer Order Date), Customer Code, Customer Order No, Order Date, Order Time, Destination, Detailed Item No, Serial No.', 'TB_R_H0253_ORDER_CONTROL_PRE, TB_R_INSTRUCTION'],
+          ['2', 'Read PO parts of the Pra Daily Order: CROSS_DOCK_FLAG X; open qty = PO qty minus the mapped qty; by PO date.', 'TB_R_PRA_DAILY_ORDER_MANIFEST / PART, TB_R_PRA_DAILY_ORDER_MAPPED (new)'],
+          ['3', 'Per unit (Part Number + Customer Order Date, oldest first) give the PO qty in scan order and cut the pcs into supplier cases of pcs/case (a case can hold several destinations). Mark CUT_FLAG Y after a case where every destination is a multiple of pcs/case; a case is Ready (6) when it and every earlier case have a PO (no permanent change).', '#TEMP_INSTRUCTION (temporary)'],
+          ['4', 'Return the delivery plan with the case rows: the user ticks cases from case 1 up to a case with CUT_FLAG Y (MSG10 when the next cases are ticked together). Units without any pre-mapped case and units fully in an ASN are not listed.', 'Screen'],
         ]} />
       </Section>
 
       <Section no="2" title="Create ASN – real mapping with the hold check">
         <Steps rows={[
           ['1', 'Lock the H0253 lines of the ticked units (row lock in one transaction).', 'TB_R_H0253_ORDER_CONTROL_PRE'],
-          ['2', 'Re-check each line: HOLD_FLAG must still be N and PO_MAPPED_FLAG N; the unit must still be Ready.', 'If not: roll back, the whole create fails, message "Some order has been already hold, please select other records", the delivery plan is refreshed automatically and all units are unticked'],
-          ['3', 'Check that all ticked units are of one Supplier Code + Plant (one ASN = one supplier + plant). Set PO_MAPPED_FLAG = Y and add the mapped qty per PO part.', 'TB_R_H0253_ORDER_CONTROL_PRE, TB_R_PRA_DAILY_ORDER_MAPPED (new)'],
-          ['4', 'Insert the real mapping: one row per case x order line x PO (per Part Number + Customer Order Date + destination the qty is packed in cases of pcs/case, e.g. 24 pcs = 4 cases; a case may hold several customer orders and POs of the same destination).', 'TB_R_INSTRUCTION'],
+          ['2', 'Re-check each line: HOLD_FLAG must still be N; the ticked cases must still be Ready and end on CUT_FLAG Y.', 'If not: roll back, the whole create fails, message "Some order has been already hold, please select other records", the delivery plan is refreshed automatically and all units are unticked'],
+          ['3', 'Check that all ticked units are of one Supplier Code + Plant (one ASN = one supplier + plant). Add the mapped qty per PO part; PO_MAPPED_FLAG = Y on the lines that are now completely mapped.', 'TB_R_H0253_ORDER_CONTROL_PRE, TB_R_PRA_DAILY_ORDER_MAPPED (new)'],
+          ['4', 'Insert the real mapping of the ticked cases: one row per supplier case x order line x PO, case and line sequence of the Search (scan order). The rest of a line stays open for a later ASN.', 'TB_R_INSTRUCTION'],
           ['5', 'Commit and open the Case List. Back / Cancel deletes the rows from TB_R_INSTRUCTION and releases the flags and mapped qty.', 'Screen'],
         ]} />
       </Section>

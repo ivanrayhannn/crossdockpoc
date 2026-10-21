@@ -6,7 +6,7 @@ let asns: SubmittedAsn[] = seed();
 const listeners = new Set<() => void>();
 
 function seed(): SubmittedAsn[] {
-  const unit = buildUnits('2026-10-13', {}).find((u) => u.key === 'PART-A|2026-10-12');
+  const unit = buildUnits('2026-10-13', {}, {}).find((u) => u.key === 'PART-A|2026-10-12');
   if (!unit) return [];
   return [{
     asnNo: 'ASN-50221-261013-001',
@@ -14,7 +14,7 @@ function seed(): SubmittedAsn[] {
     deliveryDate: '2026-10-13',
     rit: { no: 'Rit 1', route: 'SD01' },
     unitKeys: [unit.key],
-    cases: buildCases([unit]),
+    cases: buildCases([{ unit, end: unit.caseCount }]),
     createdBy: 'D. Anggraini',
     createdAt: '13-Oct-2026 08:14',
   }];
@@ -32,12 +32,6 @@ function subscribe(l: () => void): () => void {
 
 export function useAsns(): SubmittedAsn[] {
   return useSyncExternalStore(subscribe, () => asns);
-}
-
-export function asnByUnitOf(list: SubmittedAsn[]): Record<string, string> {
-  const out: Record<string, string> = {};
-  list.forEach((a) => a.unitKeys.forEach((k) => (out[k] = a.asnNo)));
-  return out;
 }
 
 /* ---- Submit ASN batch and its log (prototype of the existing Supplier System log) ---- */
