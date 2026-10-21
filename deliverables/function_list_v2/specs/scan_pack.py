@@ -3,7 +3,8 @@ the pcs cut into supplier cases of PCS_CASE pcs, and the cases grouped into bloc
 A cut after a case is valid when the cumulative qty of every destination of the unit is a multiple of PCS_CASE, so that the
 warehouse can close its cases (1 case = 1 destination). A block is Ready ('6') when it and every earlier block of the unit have a PO."""
 
-SCAN_KEYS = ['CUSTOMER_CD', 'CUSTOMER_ORDER_NO', 'ORDER_DT', 'ORDER_TIME', 'DESTINATION_CD', 'DETAILED_ITEM_NO', 'SERIAL_NO']
+# Allocation Priority = Customer Order Date (ORDER_DT) first, then the G-System allocation keys
+SCAN_KEYS = ['ORDER_DT', 'CUSTOMER_CD', 'CUSTOMER_ORDER_NO', 'ORDER_DT', 'ORDER_TIME', 'DESTINATION_CD', 'DETAILED_ITEM_NO', 'SERIAL_NO']
 
 
 def pack(lines, pos, pcs):

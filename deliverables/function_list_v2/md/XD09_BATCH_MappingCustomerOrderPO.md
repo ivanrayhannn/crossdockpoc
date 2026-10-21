@@ -15,7 +15,7 @@ Sumber: UISS `XD09_UISS_Batch_MappingCustomerOrderPO.xlsx` (0.1 Initial Draft, 1
 - Nama kolom tabel baru disamakan: `MANIFEST_ITEM_NO` → `MANIFEST_ITEM`, `PO_ORDER_QTY` → `ORDER_QTY`, `PO_ORDER_DT` → `PO_DT` (juga di XD10 / XD11).
 
 ## Keputusan 21-Oct (urutan scan, case supplier, blok ASN)
-- Urutan baris H0253 = urutan alokasi G-System (Allocation Priority Rank diabaikan): **Customer Code → Customer Order No → Customer Order Date → Customer Order Time → Destination Code → Detailed Item No → Serial No**. Di receiving, scan mengalokasikan pcs dengan urutan ini dan urutannya **fixed**.
+- Urutan baris H0253 = urutan alokasi G-System dengan **Allocation Priority = Customer Order Date**: **Allocation Priority (Customer Order Date) → Customer Code → Customer Order No → Customer Order Date → Customer Order Time → Destination Code → Detailed Item No → Serial No**. Di receiving, scan mengalokasikan pcs dengan urutan ini dan urutannya **fixed**.
 - Diproses **per Part No + Customer Order Date** (Cara B): unit diproses dari tanggal paling lama, lalu di dalam unit pakai urutan scan.
 - PO diberikan berurutan (PO_DT), lalu pcs dipotong jadi **case supplier @ PCS_CASE** (`TB_M_PART_CANDIDATE.PCS_CASE`). Satu case supplier boleh berisi beberapa line dan destinasi.
 - Di gudang tetap **1 case = 1 destinasi**, jadi ASN hanya boleh berhenti setelah case di mana **qty kumulatif setiap destinasi kelipatan PCS_CASE** (CUT_FLAG Y). Case sampai titik potong valid = **blok** (GROUP_SEQ) = langkah opsi ASN.
@@ -24,3 +24,26 @@ Sumber: UISS `XD09_UISS_Batch_MappingCustomerOrderPO.xlsx` (0.1 Initial Draft, 1
 - `#TEMP_INSTRUCTION`: grain **line × PO × case supplier**; kolom baru SORT_SEQ, ORDER_TIME, OPEN_ORDER_QTY, PCS_CASE, CASE_SEQ, LINE_SEQ, CUM_DEST_QTY, CUT_FLAG, GROUP_SEQ; CROSSDOCK_STATUS per blok; REMAINING_ORDER_QTY dihapus.
 - Contoh (sheet Sample Input): V01 VN 10, T01 TH 6, V02 VN 14, 6 pcs/case, p1 24 (15-Oct), p2 6 (16-Oct) → blok: case 1 | case 2–3 | case 4 | case 5; opsi 15-Oct: 1 / 3 / 4 case, opsi 5 case mulai 16-Oct.
 - Urutan scan = **urutan PK** `TB_R_H0253_ORDER_CONTROL_PRE` (7 key yang sama, urutan sama), jadi replicate sudah menyimpan baris dalam urutan scan. XD09 tetap memfilter unit dan membaca dengan `ORDER BY SHIPPING_PART_NO, ORDER_DT, <kolom PK>` (urutan PK global untuk semua part / tanggal, dan baca tanpa ORDER BY tidak dijamin urut). SORT_SEQ = `ROW_NUMBER()` per unit dalam urutan ini (opsional, bisa diturunkan ulang).
+
+### Query urutan baris H0253 (Appendix UISS XD09)
+```sql
+WITH MAPPED AS (SELECT CUSTOMER_CD, CUSTOMER_ORDER_NO, ORDER_DT, DESTINATION_CD, DETAILED_ITEM_NO, SERIAL_NO, SUM(QTY) AS MAPPED_QTY
+                FROM TB_R_INSTRUCTION
+                GROUP BY CUSTOMER_CD, CUSTOMER_ORDER_NO, ORDER_DT, DESTINATION_CD, DETAILED_ITEM_NO, SERIAL_NO),
+OPEN_LINE AS (SELECT H.*, H.ORDER_DT AS ALLOCATION_PRIORITY,
+                     H.ORDER_STATUS_QTY - COALESCE(M.MAPPED_QTY, 0) AS OPEN_ORDER_QTY
+              FROM TB_R_H0253_ORDER_CONTROL_PRE H
+              LEFT JOIN MAPPED M ON M.CUSTOMER_CD = H.CUSTOMER_CD AND M.CUSTOMER_ORDER_NO = H.CUSTOMER_ORDER_NO
+                   AND M.ORDER_DT = H.ORDER_DT AND M.DESTINATION_CD = H.DESTINATION_CD
+                   AND M.DETAILED_ITEM_NO = H.DETAILED_ITEM_NO AND M.SERIAL_NO = H.SERIAL_NO
+              WHERE H.ORDER_STATUS = '7' AND H.HOLD_FLAG = 'N' AND H.PO_MAPPED_FLAG = 'N')
+SELECT ROW_NUMBER() OVER (PARTITION BY SHIPPING_PART_NO, ORDER_DT
+                          ORDER BY ALLOCATION_PRIORITY, CUSTOMER_CD, CUSTOMER_ORDER_NO, ORDER_DT, ORDER_TIME,
+                                   DESTINATION_CD, DETAILED_ITEM_NO, SERIAL_NO) AS SORT_SEQ,
+       SHIPPING_PART_NO, ALLOCATION_PRIORITY, CUSTOMER_CD, CUSTOMER_ORDER_NO, ORDER_DT, ORDER_TIME,
+       DESTINATION_CD, DETAILED_ITEM_NO, SERIAL_NO, ORDER_STATUS_QTY, OPEN_ORDER_QTY
+FROM OPEN_LINE
+WHERE OPEN_ORDER_QTY > 0
+ORDER BY SHIPPING_PART_NO, ALLOCATION_PRIORITY, CUSTOMER_CD, CUSTOMER_ORDER_NO, ORDER_DT, ORDER_TIME,
+         DESTINATION_CD, DETAILED_ITEM_NO, SERIAL_NO;
+```
