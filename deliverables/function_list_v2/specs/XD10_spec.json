@@ -2308,7 +2308,7 @@
    "marker": "a.",
    "level": 2,
    "items": [
-    "Unit = Part Number + Customer Order Date. Scan order (decided 21-Oct): Customer Code, Customer Order No, Customer Order Date, Customer Order Time, Destination Code, Detailed Item No, Serial No; at receiving the pcs are scanned in this fixed order.",
+    "Unit = Part Number + Customer Order Date. Scan order (decided 21-Oct): Allocation Priority (= Customer Order Date), Customer Code, Customer Order No, Customer Order Date, Customer Order Time, Destination Code, Detailed Item No, Serial No; at receiving the pcs are scanned in this fixed order.",
     "Supplier case = PCS_CASE pcs in scan order; a case can hold several customer orders, POs and destinations. Case Qty = number of supplier cases; PO Readiness (case) = cases whose whole qty is pre-mapped to a PO.",
     "The warehouse packs 1 case = 1 destination, so an ASN may stop only after a case where every destination of the unit is a multiple of PCS_CASE (valid cut). The cases up to a valid cut are a block = one ASN option step (e.g. VN 10, TH 6, VN 14: blocks case 1 | cases 2-3 | case 4 | case 5).",
     "A block is Ready ('6') when it and every earlier block have a PO; otherwise Not Ready ('7'): blocks are never skipped. Unit: Ready (all blocks), Partially Ready (the first k blocks), Not Ready (first block; check box disabled, message no. 2).",

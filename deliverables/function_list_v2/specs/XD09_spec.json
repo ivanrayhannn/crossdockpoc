@@ -156,7 +156,7 @@
     ],
     "rows": [
      "PART_NO + ORDER_DT (unit; units by ORDER_DT ascending)",
-     "Scan order: CUSTOMER_CD, CUSTOMER_ORDER_NO, ORDER_DT, ORDER_TIME, DESTINATION_CD, DETAILED_ITEM_NO, SERIAL_NO",
+     "Scan order: ORDER_DT (Allocation Priority), CUSTOMER_CD, CUSTOMER_ORDER_NO, ORDER_DT, ORDER_TIME, DESTINATION_CD, DETAILED_ITEM_NO, SERIAL_NO",
      "CASE_SEQ (PCS_CASE pcs in scan order)",
      "GROUP_SEQ (block up to a valid cut)"
     ]
@@ -285,7 +285,7 @@
    {
     "text": "Per unit (Part Number + Customer Order Date, oldest date first), pre-map in scan order (see 4.1 and 4.2) and insert the result in #TEMP_INSTRUCTION.",
     "children": [
-     "Lines in scan order: Customer Code, Customer Order No, Customer Order Date, Customer Order Time, Destination Code, Detailed Item No, Serial No (order of G-System allocation; Allocation Priority Rank ignored).",
+     "Lines in scan order: 1) Allocation Priority (= Customer Order Date), 2) Customer Code, 3) Customer Order No, 4) Customer Order Date, 5) Customer Order Time, 6) Destination Code, 7) Detailed Item No, 8) Serial No (order of G-System allocation).",
      "Each PO qty (PO_DT ascending) goes to the open qty in this order; a line may be split over several POs.",
      "The pcs are cut into supplier cases of PCS_CASE pcs in this order (a case can hold several lines and destinations); each slice line x PO x case is one row."
     ]
@@ -473,9 +473,9 @@
    "marker": "-",
    "level": 0,
    "items": [
-    "At receiving, the scan allocates the delivered pcs to the customer orders in a fixed order that cannot be changed. XD09 uses the same order (decided 21-Oct): Customer Code, Customer Order No, Customer Order Date, Customer Order Time, Destination Code, Detailed Item No, Serial No (order of G-System allocation; Allocation Priority Rank ignored).",
+    "At receiving, the scan allocates the delivered pcs to the customer orders in a fixed order that cannot be changed. XD09 uses the same order (decided 21-Oct): 1) Allocation Priority (= Customer Order Date), 2) Customer Code, 3) Customer Order No, 4) Customer Order Date, 5) Customer Order Time, 6) Destination Code, 7) Detailed Item No, 8) Serial No (order of G-System allocation).",
     "The order is applied per unit = Part Number + Customer Order Date (way B): the units of a part are processed by Customer Order Date ascending, so the POs go to the oldest date first.",
-    "The scan keys are the primary key of TB_R_H0253_ORDER_CONTROL_PRE (same columns, same order), so the replicate keeps the rows in scan order. The PK order is global (all parts, dates and statuses) and a read without ORDER BY has no guaranteed order: XD09 filters the unit and reads it with ORDER BY SHIPPING_PART_NO, ORDER_DT, then the PK columns. SORT_SEQ = ROW_NUMBER() in this order per unit (it can be derived again at any time).",
+    "The scan keys are the primary key of TB_R_H0253_ORDER_CONTROL_PRE (same columns, same order), so the replicate keeps the rows in scan order. The PK order is global (all parts, dates and statuses) and a read without ORDER BY has no guaranteed order: XD09 filters the unit and reads it with ORDER BY SHIPPING_PART_NO, Allocation Priority (ORDER_DT), then the PK columns (query: Appendix). SORT_SEQ = ROW_NUMBER() in this order per unit (it can be derived again at any time).",
     "Lines with HOLD_FLAG = 'Y' are not taken. Only the open qty of a line is taken (open qty = ORDER_STATUS_QTY - qty of the line already in TB_R_INSTRUCTION): a line can be sent over several ASNs; PO_MAPPED_FLAG becomes 'Y' only when the whole line is in TB_R_INSTRUCTION."
    ]
   },
@@ -542,7 +542,106 @@
   {
    "type": "text",
    "level": 0,
-   "text": "Sample FIFO pre-mapping: see sheet Sample Input."
+   "text": "Sample pre-mapping: see sheet Sample Input."
+  },
+  {
+   "type": "heading",
+   "text": "Query: H0253 lines in scan order (Allocation Priority = Customer Order Date)"
+  },
+  {
+   "type": "text",
+   "level": 0,
+   "text": "WITH MAPPED AS (SELECT CUSTOMER_CD, CUSTOMER_ORDER_NO, ORDER_DT, DESTINATION_CD, DETAILED_ITEM_NO, SERIAL_NO, SUM(QTY) AS MAPPED_QTY"
+  },
+  {
+   "type": "text",
+   "level": 0,
+   "text": "                FROM TB_R_INSTRUCTION"
+  },
+  {
+   "type": "text",
+   "level": 0,
+   "text": "                GROUP BY CUSTOMER_CD, CUSTOMER_ORDER_NO, ORDER_DT, DESTINATION_CD, DETAILED_ITEM_NO, SERIAL_NO),"
+  },
+  {
+   "type": "text",
+   "level": 0,
+   "text": "OPEN_LINE AS (SELECT H.*, H.ORDER_DT AS ALLOCATION_PRIORITY,"
+  },
+  {
+   "type": "text",
+   "level": 0,
+   "text": "                     H.ORDER_STATUS_QTY - COALESCE(M.MAPPED_QTY, 0) AS OPEN_ORDER_QTY"
+  },
+  {
+   "type": "text",
+   "level": 0,
+   "text": "              FROM TB_R_H0253_ORDER_CONTROL_PRE H"
+  },
+  {
+   "type": "text",
+   "level": 0,
+   "text": "              LEFT JOIN MAPPED M ON M.CUSTOMER_CD = H.CUSTOMER_CD AND M.CUSTOMER_ORDER_NO = H.CUSTOMER_ORDER_NO"
+  },
+  {
+   "type": "text",
+   "level": 0,
+   "text": "                   AND M.ORDER_DT = H.ORDER_DT AND M.DESTINATION_CD = H.DESTINATION_CD"
+  },
+  {
+   "type": "text",
+   "level": 0,
+   "text": "                   AND M.DETAILED_ITEM_NO = H.DETAILED_ITEM_NO AND M.SERIAL_NO = H.SERIAL_NO"
+  },
+  {
+   "type": "text",
+   "level": 0,
+   "text": "              WHERE H.ORDER_STATUS = '7' AND H.HOLD_FLAG = 'N' AND H.PO_MAPPED_FLAG = 'N')"
+  },
+  {
+   "type": "text",
+   "level": 0,
+   "text": "SELECT ROW_NUMBER() OVER (PARTITION BY SHIPPING_PART_NO, ORDER_DT"
+  },
+  {
+   "type": "text",
+   "level": 0,
+   "text": "                          ORDER BY ALLOCATION_PRIORITY, CUSTOMER_CD, CUSTOMER_ORDER_NO, ORDER_DT, ORDER_TIME,"
+  },
+  {
+   "type": "text",
+   "level": 0,
+   "text": "                                   DESTINATION_CD, DETAILED_ITEM_NO, SERIAL_NO) AS SORT_SEQ,"
+  },
+  {
+   "type": "text",
+   "level": 0,
+   "text": "       SHIPPING_PART_NO, ALLOCATION_PRIORITY, CUSTOMER_CD, CUSTOMER_ORDER_NO, ORDER_DT, ORDER_TIME,"
+  },
+  {
+   "type": "text",
+   "level": 0,
+   "text": "       DESTINATION_CD, DETAILED_ITEM_NO, SERIAL_NO, ORDER_STATUS_QTY, OPEN_ORDER_QTY"
+  },
+  {
+   "type": "text",
+   "level": 0,
+   "text": "FROM OPEN_LINE"
+  },
+  {
+   "type": "text",
+   "level": 0,
+   "text": "WHERE OPEN_ORDER_QTY > 0"
+  },
+  {
+   "type": "text",
+   "level": 0,
+   "text": "ORDER BY SHIPPING_PART_NO, ALLOCATION_PRIORITY, CUSTOMER_CD, CUSTOMER_ORDER_NO, ORDER_DT, ORDER_TIME,"
+  },
+  {
+   "type": "text",
+   "level": 0,
+   "text": "         DESTINATION_CD, DETAILED_ITEM_NO, SERIAL_NO"
   }
  ],
  "sample_sheet": {

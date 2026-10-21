@@ -1,5 +1,6 @@
 """Decisions of 21-Oct-26: XD09 pre-mapping in the receiving scan order of G-System and ASN options (blocks of supplier cases).
-- Scan order of the H0253 lines (Allocation Priority Rank ignored): Customer Code, Customer Order No, Customer Order Date, Customer Order Time,
+- Scan order of the H0253 lines = G-System allocation order with Allocation Priority = Customer Order Date: Allocation Priority, Customer Code,
+  Customer Order No, Customer Order Date, Customer Order Time,
   Destination Code, Detailed Item No, Serial No; per Part Number + Customer Order Date (unit), units by Customer Order Date ascending (way B).
 - The pcs are cut into supplier cases of PCS_CASE pcs in this order: a case can hold several lines and destinations. At receiving the scan
   allocates the pcs in this fixed order and the warehouse packs 1 case = 1 destination, so an ASN may only stop after a case where the
@@ -15,8 +16,26 @@ from scan_pack import pack  # noqa: E402
 
 H, I, PRA_M, PRA_P = 'TB_R_H0253_ORDER_CONTROL_PRE', 'TB_R_INSTRUCTION', 'TB_R_PRA_DAILY_ORDER_MANIFEST', 'TB_R_PRA_DAILY_ORDER_PART'
 FLAG_RULE = f"manifests with {PRA_M}.CROSS_DOCK_FLAG = 'X'; their part data from {PRA_P} (join MANIFEST_NO)"
-SCAN = ("Customer Code, Customer Order No, Customer Order Date, Customer Order Time, Destination Code, Detailed Item No, Serial No "
-        "(order of G-System allocation; Allocation Priority Rank ignored)")
+SCAN = ("1) Allocation Priority (= Customer Order Date), 2) Customer Code, 3) Customer Order No, 4) Customer Order Date, 5) Customer Order Time, 6) Destination Code, 7) Detailed Item No, 8) Serial No (order of G-System allocation)")
+QUERY = """WITH MAPPED AS (SELECT CUSTOMER_CD, CUSTOMER_ORDER_NO, ORDER_DT, DESTINATION_CD, DETAILED_ITEM_NO, SERIAL_NO, SUM(QTY) AS MAPPED_QTY
+                FROM TB_R_INSTRUCTION
+                GROUP BY CUSTOMER_CD, CUSTOMER_ORDER_NO, ORDER_DT, DESTINATION_CD, DETAILED_ITEM_NO, SERIAL_NO),
+OPEN_LINE AS (SELECT H.*, H.ORDER_DT AS ALLOCATION_PRIORITY,
+                     H.ORDER_STATUS_QTY - COALESCE(M.MAPPED_QTY, 0) AS OPEN_ORDER_QTY
+              FROM TB_R_H0253_ORDER_CONTROL_PRE H
+              LEFT JOIN MAPPED M ON M.CUSTOMER_CD = H.CUSTOMER_CD AND M.CUSTOMER_ORDER_NO = H.CUSTOMER_ORDER_NO
+                   AND M.ORDER_DT = H.ORDER_DT AND M.DESTINATION_CD = H.DESTINATION_CD
+                   AND M.DETAILED_ITEM_NO = H.DETAILED_ITEM_NO AND M.SERIAL_NO = H.SERIAL_NO
+              WHERE H.ORDER_STATUS = '7' AND H.HOLD_FLAG = 'N' AND H.PO_MAPPED_FLAG = 'N')
+SELECT ROW_NUMBER() OVER (PARTITION BY SHIPPING_PART_NO, ORDER_DT
+                          ORDER BY ALLOCATION_PRIORITY, CUSTOMER_CD, CUSTOMER_ORDER_NO, ORDER_DT, ORDER_TIME,
+                                   DESTINATION_CD, DETAILED_ITEM_NO, SERIAL_NO) AS SORT_SEQ,
+       SHIPPING_PART_NO, ALLOCATION_PRIORITY, CUSTOMER_CD, CUSTOMER_ORDER_NO, ORDER_DT, ORDER_TIME,
+       DESTINATION_CD, DETAILED_ITEM_NO, SERIAL_NO, ORDER_STATUS_QTY, OPEN_ORDER_QTY
+FROM OPEN_LINE
+WHERE OPEN_ORDER_QTY > 0
+ORDER BY SHIPPING_PART_NO, ALLOCATION_PRIORITY, CUSTOMER_CD, CUSTOMER_ORDER_NO, ORDER_DT, ORDER_TIME,
+         DESTINATION_CD, DETAILED_ITEM_NO, SERIAL_NO"""
 OPEN = f"open qty = ORDER_STATUS_QTY - qty of the line already in {I}"
 
 
@@ -136,7 +155,7 @@ def xd09():
     g['outputs'][1]['description'] = 'Delivery plan: Customer Order Date, Part Number, Case Qty, PO Readiness (case), ASN options, ASN Status'
     for t in g['extra_tables']:
         if t['title'] == 'Grouping Keys':
-            t['rows'] = ['PART_NO + ORDER_DT (unit; units by ORDER_DT ascending)', 'Scan order: CUSTOMER_CD, CUSTOMER_ORDER_NO, ORDER_DT, ORDER_TIME, '
+            t['rows'] = ['PART_NO + ORDER_DT (unit; units by ORDER_DT ascending)', 'Scan order: ORDER_DT (Allocation Priority), CUSTOMER_CD, CUSTOMER_ORDER_NO, ORDER_DT, ORDER_TIME, '
                          'DESTINATION_CD, DETAILED_ITEM_NO, SERIAL_NO', 'CASE_SEQ (PCS_CASE pcs in scan order)', 'GROUP_SEQ (block up to a valid cut)']
     ff = s['func_flow']
     ff['flow']['nodes'][5]['label'] = 'Pre-map in scan order, cut cases and blocks'
@@ -178,7 +197,7 @@ def xd09():
             "so the POs go to the oldest date first.",
             f"The scan keys are the primary key of {H} (same columns, same order), so the replicate keeps the rows in scan order. The PK order is "
             "global (all parts, dates and statuses) and a read without ORDER BY has no guaranteed order: XD09 filters the unit and reads it with "
-            "ORDER BY SHIPPING_PART_NO, ORDER_DT, then the PK columns. SORT_SEQ = ROW_NUMBER() in this order per unit (it can be derived again at any time).",
+            "ORDER BY SHIPPING_PART_NO, Allocation Priority (ORDER_DT), then the PK columns (query: Appendix). SORT_SEQ = ROW_NUMBER() in this order per unit (it can be derived again at any time).",
             f"Lines with HOLD_FLAG = 'Y' are not taken. Only the open qty of a line is taken ({OPEN}): a line can be sent over several ASNs; "
             "PO_MAPPED_FLAG becomes 'Y' only when the whole line is in TB_R_INSTRUCTION."]},
         {'type': 'heading', 'text': '4.2 PO and Supplier Cases'},
@@ -201,6 +220,9 @@ def xd09():
             "The mapped qty per PO is kept in TB_R_PRA_DAILY_ORDER_MAPPED; it is updated by [Create ASN] on XD10, not by this function. "
             "Nothing is saved by this function: #TEMP_INSTRUCTION is the pre-mapping only."]}]
     s['sample_sheet'] = SAMPLE
+    s['appendix'] = [{'type': 'text', 'level': 0, 'text': 'Sample pre-mapping: see sheet Sample Input.'},
+                     {'type': 'heading', 'text': 'Query: H0253 lines in scan order (Allocation Priority = Customer Order Date)'},
+                     *[{'type': 'text', 'level': 0, 'text': ln} for ln in QUERY.split('\n')]]
     for t in s['tables']:
         if t['name'] == '#TEMP_INSTRUCTION':
             t['description'], t['columns'] = TEMP_DESC, TEMP_COLS
@@ -256,7 +278,7 @@ def xd10():
                          "ascending. Units without any pre-mapped case and units fully Created are not listed. Part Number and Status filters apply at once. "
                          "No row: message no. 3.")
     op[3]['items'] = [
-        "Unit = Part Number + Customer Order Date. Scan order (decided 21-Oct): Customer Code, Customer Order No, Customer Order Date, Customer Order Time, "
+        "Unit = Part Number + Customer Order Date. Scan order (decided 21-Oct): Allocation Priority (= Customer Order Date), Customer Code, Customer Order No, Customer Order Date, Customer Order Time, "
         "Destination Code, Detailed Item No, Serial No; at receiving the pcs are scanned in this fixed order.",
         "Supplier case = PCS_CASE pcs in scan order; a case can hold several customer orders, POs and destinations. Case Qty = number of supplier cases; "
         "PO Readiness (case) = cases whose whole qty is pre-mapped to a PO.",
