@@ -158,6 +158,8 @@ export interface UnitCase {
   qty: number;
   /** CUT_FLAG: the ASN may stop after this case (every destination of the unit a multiple of pcs/case). */
   cut: boolean;
+  /** Case Group (GROUP_SEQ): the cases up to a CUT_FLAG Y; the cases of a group are always sent together. */
+  group: number;
   /** This case and every earlier case have a released PO. */
   ready: boolean;
   /** Destinations that would not close their warehouse case if the ASN stopped here. */
@@ -220,11 +222,14 @@ function cutCases(ls: InstrLine[], pos: { po: Po; open: number }[]): UnitCase[] 
   if (cur.length) slices.push(cur);
   const cum: Record<string, number> = {};
   let ready = true;
+  let group = 1;
   return slices.map((c, i) => {
     c.forEach((s) => (cum[s.destCd] = (cum[s.destCd] ?? 0) + s.qty));
     ready = ready && c.every((s) => !!s.poNo);
     const openDests = Object.keys(cum).filter((d) => cum[d] % PCS_PER_CASE !== 0);
-    return { seq: i + 1, lines: c, qty: c.reduce((a, s) => a + s.qty, 0), cut: openDests.length === 0, ready, openDests };
+    const out = { seq: i + 1, lines: c, qty: c.reduce((a, s) => a + s.qty, 0), cut: openDests.length === 0, group, ready, openDests };
+    if (out.cut) group += 1;
+    return out;
   });
 }
 
@@ -255,7 +260,12 @@ export function buildUnits(today: string, sentByLine: Record<string, number>, se
   return units.sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status] || a.partNo.localeCompare(b.partNo) || a.orderDt.localeCompare(b.orderDt));
 }
 
-/** The selection of a unit always ends on a valid end: ticking case n gives the first valid end >= n (null when none). */
+/** Cases of a Case Group of the unit. */
+export function groupCases(u: Unit, group: number): UnitCase[] {
+  return u.cases.filter((c) => c.group === group);
+}
+
+/** The selection of a unit always ends on the last case of a Case Group: ticking case n gives the first valid end >= n (null when none). */
 export function endFor(u: Unit, n: number): number | null {
   return u.validEnds.find((e) => e >= n) ?? null;
 }

@@ -22,7 +22,7 @@
    "To get the crossdock customer orders for a Delivery Date and Rit and pre-map them to supplier POs ([Search], XD09 Mapping Customer Order and PO Batch).",
    "To display the delivery plan per Part Number + Customer Order Date with the supplier cases in receiving scan order (Case Qty, PO Readiness, ASN options, ASN Status Ready / Partially Ready / Not Ready). Units fully Created or without any pre-mapped case are not listed.",
    "To let the D/S team (super admin) see the units of all suppliers, the destination detail and hold / release a destination of a unit.",
-   "To tick the supplier cases to send (check box per case, from case 1 up to a valid cut) of one Supplier Code + Supplier Plant, map them to their POs (TB_R_INSTRUCTION), review the cases, download the case labels and submit the ASN.",
+   "To tick the supplier cases to send (check box per case, from case 1, whole Case Groups) of one Supplier Code + Supplier Plant, map them to their POs (TB_R_INSTRUCTION), review the cases, download the case labels and submit the ASN.",
    "Submit ASN runs in the background with a Submit ID and follows the existing ASN submit of NSP (refer 5.7).",
    "Submit ASN (decided 20-Oct, existing structure G-System SPS DB): one TB_R_DAILY_ORDER_MANIFEST row per Pra Daily Order manifest of the cases (same ASN_NO) and one TB_R_DAILY_ORDER_PART row per manifest item and case; the ASN number and the case numbers (case label) are auto generated and their last sequence is saved in TB_R_CASE_LABEL_LAST_SEQ; PART_NAME from TB_M_PART_MASTER."
   ],
@@ -189,7 +189,7 @@
      },
      {
       "section": "Delivery plan",
-      "description": "Units of the login supplier (Supplier Code + Plant) only; unit rows with their supplier case rows (check box per case); Part Number / Status filters",
+      "description": "Units of the login supplier (Supplier Code + Plant) only; unit rows with their supplier case rows in Case Groups (check box per case, no destinations); Part Number / Status filters",
       "buttons": {
        "Search": "D",
        "Detail (expand, D/S)": "D",
@@ -378,8 +378,8 @@
   ],
   "screen_mode_remarks": [
    "1) Each unit row shows its supplier case rows in scan order (XD09). The check box of a case is enabled only when the case and every earlier case have a PO (Ready, message no. 2 as tooltip otherwise).",
-   "2) The ticked cases of a unit always start at case 1 and must end on a case with CUT_FLAG Y (every destination closes its warehouse case). Ticking case n also ticks the earlier cases and the later cases up to the next CUT_FLAG Y (message no. 10); unticking case n unticks it, the later cases and the earlier cases back to the previous CUT_FLAG Y. The unit check box ticks all Ready cases. Units of different Customer Order Dates and Part Numbers can be ticked together.",
-   "3) The supplier sees the unit rows and their case rows (with check box); the destination detail, customer orders and Hold / Release are shown to the D/S team only.",
+   "2) The cases are shown in Case Groups (GROUP_SEQ of XD09: the cases up to a CUT_FLAG Y); the cases of a group are always sent together (at receiving every destination then completes its warehouse case). The ticked cases of a unit start at case 1: ticking case n ticks the earlier groups and the whole group of case n (message no. 10 when more cases are ticked); unticking case n unticks its group and the later groups. The unit check box ticks all Ready groups. Units of different Customer Order Dates and Part Numbers can be ticked together.",
+   "3) The supplier sees the unit rows and their case rows (Case Group, Case, Qty, PO, PO Status, check box) without destinations; the Content of a case (destinations, customer orders), the destination detail and Hold / Release are shown to the D/S team only.",
    "4) Search is enabled when Delivery Date is filled and a Rit is available (message no. 5 otherwise).",
    "5) One ASN is for one Supplier Code + Supplier Plant: the D/S team may tick units of several suppliers, [Create ASN] then shows message no. 9."
   ]
@@ -472,7 +472,7 @@
      },
      {
       "id": "p",
-      "label": "Tick cases (from case 1 up to a CUT_FLAG Y), Create ASN: insert TB_R_INSTRUCTION",
+      "label": "Tick cases (from case 1, whole Case Groups), Create ASN: insert TB_R_INSTRUCTION",
       "type": "process"
      },
      {
@@ -567,7 +567,7 @@
    "image": "deliverables/uiss_screens/asn_crossdock/c_01_initial.png"
   },
   {
-   "caption": "2. Delivery plan after Search (supplier view): unit rows with their supplier case rows (check box, Can end here, PO Status)",
+   "caption": "2. Delivery plan after Search (supplier view): unit rows with their supplier case rows (Case Group, check box, PO, PO Status; no destinations)",
    "image": "deliverables/uiss_screens/asn_crossdock/c_02_delivery_plan.png"
   },
   {
@@ -744,7 +744,7 @@
    "required": "N",
    "format": "-",
    "validation": "Enabled when the first block of the unit is Ready",
-   "description": "Ticks / unticks all Ready cases of the unit (up to the last Ready CUT_FLAG Y; partly ticked when only some cases are ticked). Refer Screen Mode remark 2)."
+   "description": "Ticks / unticks all Ready Case Groups of the unit (partly ticked when only some cases are ticked). Refer Screen Mode remark 2)."
   },
   {
    "name": "Supplier · Plant (D/S)",
@@ -852,7 +852,7 @@
    "description": "Shown to the D/S team only. Opens the destination detail."
   },
   {
-   "group": "<Supplier Cases of a Unit (scan order)>"
+   "group": "<Supplier Cases of a Unit (scan order, Case Groups)>"
   },
   {
    "name": "Select case (check box)",
@@ -867,7 +867,22 @@
    "required": "N",
    "format": "-",
    "validation": "Enabled only when the case and every earlier case have a PO",
-   "description": "One check box per supplier case. The selection always starts at case 1 and ends on a case with CUT_FLAG Y: ticking case n also ticks the earlier cases and the later cases up to the next CUT_FLAG Y (message no. 10, e.g. tick case 2 -> cases 1-3); unticking case n unticks the later cases and goes back to the previous CUT_FLAG Y. Refer 5.4."
+   "description": "One check box per supplier case. The selection always starts at case 1 and takes whole Case Groups: ticking case n ticks the earlier groups and the whole group of case n (message no. 10, e.g. tick case 2 -> Group 2 = cases 2-3, so cases 1-3); unticking case n unticks its group and the later groups. Refer 5.4."
+  },
+  {
+   "name": "Case Group",
+   "source": "#TEMP_INSTRUCTION",
+   "field": "GROUP_SEQ",
+   "type": "Char",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Left",
+   "initial": "-",
+   "required": "N",
+   "format": "Group {n} (cases {from}-{to} · sent together)",
+   "validation": "-",
+   "description": "Cases that are always sent together (up to a CUT_FLAG Y of XD09); one merged cell per group with a coloured left border."
   },
   {
    "name": "Case",
@@ -900,7 +915,7 @@
    "description": "Pcs of the case (= PCS_CASE)."
   },
   {
-   "name": "Content",
+   "name": "Content (D/S team)",
    "source": "#TEMP_INSTRUCTION",
    "field": "DESTINATION_CD / CUSTOMER_ORDER_NO / ASSIGNED_QTY",
    "type": "Char",
@@ -912,12 +927,12 @@
    "required": "N",
    "format": "-",
    "validation": "-",
-   "description": "Slices of the case in scan order, e.g. VN 4 (V01) + TH 2 (T01)."
+   "description": "D/S team only (not shown to the supplier): slices of the case in scan order, e.g. VN 4 (V01) + TH 2 (T01)."
   },
   {
-   "name": "Can end here",
+   "name": "PO",
    "source": "#TEMP_INSTRUCTION",
-   "field": "CUT_FLAG",
+   "field": "PO_NO / ASSIGNED_QTY",
    "type": "Char",
    "len": "-",
    "io": "O",
@@ -925,9 +940,9 @@
    "justified": "Left",
    "initial": "-",
    "required": "N",
-   "format": "Y / N",
+   "format": "{PO No} {qty}",
    "validation": "-",
-   "description": "Y: the ASN may stop after this case (every destination a multiple of PCS_CASE). N: the next cases up to a Y are ticked together."
+   "description": "POs of the case; pcs without PO shown when not Ready."
   },
   {
    "name": "PO Status",
@@ -2409,14 +2424,14 @@
   },
   {
    "type": "heading",
-   "text": "5.4 Select Cases (CUT_FLAG) and Create ASN"
+   "text": "5.4 Select Cases (Case Groups) and Create ASN"
   },
   {
    "type": "bullets",
    "marker": "a.",
    "level": 2,
    "items": [
-    "The user ticks the supplier cases to send with the check box of each case row. The ticked cases of a unit start at case 1 and end on a case with CUT_FLAG Y, so that every destination closes its warehouse case at receiving: ticking a case with CUT_FLAG N also ticks the following cases up to the next CUT_FLAG Y (message no. 10). Example: case 2 = VN 4 + TH 2 (CUT N) -> cases 1-3 are ticked; cases 1-2 alone are not possible. Only Ready cases can be ticked. One ASN is for one Supplier Code + Supplier Plant (existing rule): ticked units of more than one supplier give message no. 9 and nothing is created.",
+    "The user ticks the supplier cases to send with the check box of each case row. The cases are shown in Case Groups (GROUP_SEQ of XD09); a group is always sent as a whole, so that at receiving every destination completes its warehouse case. The ticked cases of a unit start at case 1: ticking a case ticks the earlier groups and its whole group (message no. 10). Example: Group 2 = cases 2-3 (D/S view: case 2 = VN 4 + TH 2) -> ticking case 2 gives cases 1-3; cases 1-2 alone are not possible. Only Ready cases can be ticked. One ASN is for one Supplier Code + Supplier Plant (existing rule): ticked units of more than one supplier give message no. 9 and nothing is created.",
     "[Create ASN] does the real mapping of the chosen blocks in one transaction: the slices inserted into TB_R_INSTRUCTION (case and line sequence of XD09), MAPPED_QTY in the new table TB_R_PRA_DAILY_ORDER_MAPPED, and PO_MAPPED_FLAG = 'Y' on the H0253 lines that are now completely in TB_R_INSTRUCTION. Then the Case List opens.",
     "Before mapping, the ticked units are re-checked in the same transaction (row lock on the H0253 lines): if a line got HOLD_FLAG = 'Y' after the unit was ticked (e.g. the D/S team held a destination in another session), the creation fails for the whole selection (also the units that are not held): message no. 8 (Hold), the delivery plan is refreshed automatically and all ticked units are unticked. If a unit is no longer Ready for another reason (changed by another user), message no. 7.",
     "[Back] / [Cancel] on the Case List cancel the creation: the rows are deleted from TB_R_INSTRUCTION, PO_MAPPED_FLAG back to 'N' and MAPPED_QTY reduced again, so the blocks can be selected again."
@@ -2575,12 +2590,12 @@
    "action": "Click [OK]; untick the units of the other supplier."
   },
   {
-   "event": "Tick a case with CUT_FLAG N",
-   "cause": "The ASN cannot stop after this case (a destination would not close its case)",
+   "event": "Tick a case of a Case Group with more cases",
+   "cause": "The cases of a Case Group are sent together",
    "type": "Info",
    "msg_id": "MSG10",
-   "message": "Case {n} cannot be the last case: {dest} would not complete a case. Cases {n}-{m} are selected together.",
-   "action": "Keep the selection (cases up to {m}) or untick."
+   "message": "Case {n} is in Group {g} (cases {a}-{b}): the cases of a group are sent together. Cases 1-{b} of {Part No} / {Customer Order Date} are selected.",
+   "action": "Keep the selection or untick."
   }
  ],
  "logging_messages": [
@@ -2866,7 +2881,7 @@
      "NUMBER(4)",
      "",
      "N",
-     "Block (ASN option) of the slice: the cases up to and including a valid cut"
+     "Case Group (block) of the slice: the cases up to and including a valid cut; the cases of a group are sent together"
     ],
     [
      "CROSSDOCK_STATUS",
@@ -4122,68 +4137,68 @@
     ]
    },
    {
-    "title": "H. Case selection (decided 21-Oct): PART-A 14-Oct, all cases with PO (p1 24 + p2 6); one check box per supplier case",
+    "title": "H. Case selection (decided 21-Oct): PART-A 14-Oct, all cases with PO (p1 24 + p2 6); one check box per supplier case, cases grouped in Case Groups (GROUP_SEQ: the cases of a group are sent together); Content shown to the D/S team only",
     "columns": [
+     "Case Group",
      "Case",
      "Qty",
-     "Content (scan order)",
+     "Content (D/S team only)",
      "PO",
-     "Can end here (CUT_FLAG)",
      "PO Status"
     ],
     "widths": [
+     12,
      6,
      6,
      34,
      18,
-     20,
      10
     ],
     "rows": [
      [
+      "Group 1",
       1,
       6,
       "VN 6 (V01)",
       "p1 6",
-      "Y",
       "6"
      ],
      [
+      "Group 2",
       2,
       6,
       "VN 4 (V01) + TH 2 (T01)",
       "p1 6",
-      "N",
       "6"
      ],
      [
+      "Group 2",
       3,
       6,
       "TH 4 (T01) + VN 2 (V02)",
       "p1 6",
-      "Y",
       "6"
      ],
      [
+      "Group 3",
       4,
       6,
       "VN 6 (V02)",
       "p1 6",
-      "Y",
       "6"
      ],
      [
+      "Group 4",
       5,
       6,
       "VN 6 (V02)",
       "p2 6",
-      "Y",
       "6"
      ]
     ]
    },
    {
-    "title": "I. Check box scenarios (cumulative VN / TH after the last ticked case)",
+    "title": "I. Check box scenarios (Group 1 = case 1, Group 2 = cases 2-3, Group 3 = case 4, Group 4 = case 5)",
     "columns": [
      "No",
      "User action",
@@ -4201,43 +4216,43 @@
       "C1",
       "Tick case 1",
       "1",
-      "VN 6 / TH 0: valid end; ASN 6 pcs."
+      "Group 1; ASN 6 pcs."
      ],
      [
       "C2",
       "Tick case 2 (or cases 1 and 2)",
       "1-3",
-      "Case 2 ends with VN 10 / TH 2 (CUT N): cases 1-2 alone are not possible; case 3 is ticked too (message no. 10) -> VN 12 / TH 6; ASN 18 pcs."
+      "Case 2 is in Group 2 (cases 2-3): cases 1-2 alone are not possible; case 3 is ticked too (message no. 10); ASN 18 pcs. (Reason, D/S view: after case 2 VN 10 / TH 2 would not complete a warehouse case.)"
      ],
      [
       "C3",
       "Tick case 3",
       "1-3",
-      "Cases 1-2 are ticked too; ASN 18 pcs."
+      "Groups 1-2; ASN 18 pcs."
      ],
      [
       "C4",
       "Tick case 4",
       "1-4",
-      "VN 18 / TH 6: valid end; ASN 24 pcs."
+      "Groups 1-3; ASN 24 pcs."
      ],
      [
       "C5",
       "Tick case 5 (or the unit check box)",
       "1-5",
-      "All cases; ASN 30 pcs."
+      "All groups; ASN 30 pcs."
      ],
      [
       "C6",
       "From 1-4, untick case 3",
       "1",
-      "Cases 3-4 unticked; case 2 cannot be the last case, so it is unticked too (back to case 1)."
+      "Group 2 and the later groups are unticked (back to Group 1)."
      ],
      [
       "C7",
       "p2 not released yet (case 5 without PO)",
       "1 / 1-3 / 1-4",
-      "Case 5 disabled (tooltip message no. 2); the user can end on case 1, 3 or 4."
+      "Group 4 disabled (tooltip message no. 2); groups 1, 1-2 or 1-3 can be ticked."
      ]
     ]
    }
