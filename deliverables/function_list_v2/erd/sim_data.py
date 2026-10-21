@@ -287,19 +287,13 @@ SCENARIOS = [
                   '2) Customer Code, 3) Customer Order No, 4) Order Date, 5) Order Time, 6) Destination, 7) Detailed Item No, 8) Serial No. Keys 2-8 are the PK '
                   'of the H0253 replicate; XD09 reads with ORDER BY Part, Allocation Priority + the PK columns (query in XD09 Appendix). SORT_SEQ = row number per unit.',
                   'Unit 14-Oct: A-0101 item 001 VN 8 (seq 1), A-0101 item 002 VN 2 (seq 2), B-0102 TH 6 (seq 3), C-0103 VN 14 of a second VN customer '
-                  '9730000 (seq 4). Order Time 07:00 of C-0103 does not move it up: Customer Code and Order No come first. A-0201 (15-Oct) is in the middle of the '
-                  'PK order but after all 14-Oct lines in the scan order (Allocation Priority).',
+                  '9730000 (seq 4). Order Time 07:00 of C-0103 does not move it up: Customer Code and Order No come first. A-0201 (15-Oct) comes after all '
+                  '14-Oct lines (Allocation Priority) and is the next unit.',
                   '15-Oct: PO1 20 pcs → blocks 1-2 Ready, block 3 (case 4) only 2 of 6 pcs with PO → Not Ready. The supplier sends option 1 case only.',
                   '16-Oct: PO2 10 pcs. The open qty (24) is cut again from case 1 in the same SORT_SEQ: the cases are the same as before. Unit 15-Oct '
                   '(A-0201) comes after unit 14-Oct (way B), so it gets no PO yet.'],
         'steps': [
-            ('1. H0253 lines in PK order (PK = the 7 scan keys)', 'TB_R_H0253_ORDER_CONTROL_PRE', [
-                ('ref', h('A-0101', VN, '0000001', 'PART-B', 8, item='001'), [], 'Order time 08:00'),
-                ('ref', h('A-0101', VN, '0000001', 'PART-B', 2, item='002'), [], 'Order time 08:00'),
-                ('ref', h('A-0201', VN, '0000001', 'PART-B', 6, od='2026-10-15'), [], '15-Oct between the 14-Oct lines in PK order: moved down by the Allocation Priority (1b)'),
-                ('ref', h('B-0102', TH, '0000001', 'PART-B', 6), [], 'Order time 09:00'),
-                ('ref', h('C-0103', VN, '0000001', 'PART-B', 14, cust=VN2), [], 'Order time 07:00: still last (Customer Code first)')]),
-            ('1b. XD09 read order: ORDER BY Part, Allocation Priority (= Order Date), PK columns', 'TB_R_H0253_ORDER_CONTROL_PRE', [
+            ('1. H0253 lines in scan order: ORDER BY Part, Allocation Priority (= Order Date), PK columns', 'TB_R_H0253_ORDER_CONTROL_PRE', [
                 ('ref', h('A-0101', VN, '0000001', 'PART-B', 8, item='001'), [], 'Priority 14-Oct · SORT_SEQ 1'),
                 ('ref', h('A-0101', VN, '0000001', 'PART-B', 2, item='002'), [], 'Priority 14-Oct · SORT_SEQ 2'),
                 ('ref', h('B-0102', TH, '0000001', 'PART-B', 6), [], 'Priority 14-Oct · SORT_SEQ 3'),
