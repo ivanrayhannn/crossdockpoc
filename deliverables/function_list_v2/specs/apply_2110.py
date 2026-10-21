@@ -176,6 +176,9 @@ def xd09():
             f"(decided 21-Oct): {SCAN}.",
             "The order is applied per unit = Part Number + Customer Order Date (way B): the units of a part are processed by Customer Order Date ascending, "
             "so the POs go to the oldest date first.",
+            f"The scan keys are the primary key of {H} (same columns, same order), so the replicate keeps the rows in scan order. The PK order is "
+            "global (all parts, dates and statuses) and a read without ORDER BY has no guaranteed order: XD09 filters the unit and reads it with "
+            "ORDER BY SHIPPING_PART_NO, ORDER_DT, then the PK columns. SORT_SEQ = ROW_NUMBER() in this order per unit (it can be derived again at any time).",
             f"Lines with HOLD_FLAG = 'Y' are not taken. Only the open qty of a line is taken ({OPEN}): a line can be sent over several ASNs; "
             "PO_MAPPED_FLAG becomes 'Y' only when the whole line is in TB_R_INSTRUCTION."]},
         {'type': 'heading', 'text': '4.2 PO and Supplier Cases'},

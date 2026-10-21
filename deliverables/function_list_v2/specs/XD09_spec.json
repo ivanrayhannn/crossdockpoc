@@ -475,6 +475,7 @@
    "items": [
     "At receiving, the scan allocates the delivered pcs to the customer orders in a fixed order that cannot be changed. XD09 uses the same order (decided 21-Oct): Customer Code, Customer Order No, Customer Order Date, Customer Order Time, Destination Code, Detailed Item No, Serial No (order of G-System allocation; Allocation Priority Rank ignored).",
     "The order is applied per unit = Part Number + Customer Order Date (way B): the units of a part are processed by Customer Order Date ascending, so the POs go to the oldest date first.",
+    "The scan keys are the primary key of TB_R_H0253_ORDER_CONTROL_PRE (same columns, same order), so the replicate keeps the rows in scan order. The PK order is global (all parts, dates and statuses) and a read without ORDER BY has no guaranteed order: XD09 filters the unit and reads it with ORDER BY SHIPPING_PART_NO, ORDER_DT, then the PK columns. SORT_SEQ = ROW_NUMBER() in this order per unit (it can be derived again at any time).",
     "Lines with HOLD_FLAG = 'Y' are not taken. Only the open qty of a line is taken (open qty = ORDER_STATUS_QTY - qty of the line already in TB_R_INSTRUCTION): a line can be sent over several ASNs; PO_MAPPED_FLAG becomes 'Y' only when the whole line is in TB_R_INSTRUCTION."
    ]
   },

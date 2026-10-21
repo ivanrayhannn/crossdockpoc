@@ -283,20 +283,21 @@ SCENARIOS = [
         ]},
     {
         'id': 'SIM-8', 'title': 'SORT_SEQ: H0253 lines into scan order, partial send and re-cut', 'flow': 'BPF F2', 'functions': 'XD09, XD10 (ASN Option, Create ASN)',
-        'story': ['PART-B, 6 pcs/case. H0253 is stored in any order; XD09 numbers the lines of a unit by the scan keys (SORT_SEQ): Customer Code, '
-                  'Customer Order No, Order Date, Order Time, Destination, Detailed Item No, Serial No.',
+        'story': ['PART-B, 6 pcs/case. The PK of the H0253 replicate is the 7 scan keys (Customer Code, Customer Order No, Order Date, Order Time, '
+                  'Destination, Detailed Item No, Serial No), so the rows are kept in scan order; the order of the whole table is global (all parts and '
+                  'dates), so XD09 filters the unit and reads it with ORDER BY Part, Order Date + the PK columns. SORT_SEQ = row number in this order.',
                   'Unit 14-Oct: A-0101 item 001 VN 8 (seq 1), A-0101 item 002 VN 2 (seq 2), B-0102 TH 6 (seq 3), C-0103 VN 14 of a second VN customer '
                   '9730000 (seq 4). Order Time 07:00 of C-0103 does not move it up: Customer Code and Order No come first.',
                   '15-Oct: PO1 20 pcs → blocks 1-2 Ready, block 3 (case 4) only 2 of 6 pcs with PO → Not Ready. The supplier sends option 1 case only.',
                   '16-Oct: PO2 10 pcs. The open qty (24) is cut again from case 1 in the same SORT_SEQ: the cases are the same as before. Unit 15-Oct '
                   '(A-0201) comes after unit 14-Oct (way B), so it gets no PO yet.'],
         'steps': [
-            ('1. H0253 lines as stored (not sorted)', 'TB_R_H0253_ORDER_CONTROL_PRE', [
-                ('ref', h('C-0103', VN, '0000001', 'PART-B', 14, cust=VN2), [], 'Order time 07:00'),
-                ('ref', h('B-0102', TH, '0000001', 'PART-B', 6), [], 'Order time 09:00'),
-                ('ref', h('A-0101', VN, '0000001', 'PART-B', 2, item='002'), [], 'Order time 08:00'),
+            ('1. H0253 lines in PK order (PK = the 7 scan keys)', 'TB_R_H0253_ORDER_CONTROL_PRE', [
                 ('ref', h('A-0101', VN, '0000001', 'PART-B', 8, item='001'), [], 'Order time 08:00'),
-                ('ref', h('A-0201', VN, '0000001', 'PART-B', 6, od='2026-10-15'), [], 'Next unit (15-Oct)')]),
+                ('ref', h('A-0101', VN, '0000001', 'PART-B', 2, item='002'), [], 'Order time 08:00'),
+                ('ref', h('A-0201', VN, '0000001', 'PART-B', 6, od='2026-10-15'), [], 'Other unit (15-Oct) between the lines: XD09 splits per unit'),
+                ('ref', h('B-0102', TH, '0000001', 'PART-B', 6), [], 'Order time 09:00'),
+                ('ref', h('C-0103', VN, '0000001', 'PART-B', 14, cust=VN2), [], 'Order time 07:00: still last (Customer Code first)')]),
             ('2. [Search] 15-Oct (PO1 20 pcs) → XD09: SORT_SEQ, cases, blocks', '#TEMP_INSTRUCTION',
              tmp([SB], [['T0409021', '3126035921', '0001', 20]],
                  notes={('A-0101', 1): 'SORT_SEQ 1 = 9715300 / A-0101 / item 001', ('B-0102', 2): 'Case 2 = VN 2 + VN 2 + TH 2: no cut (VN 10, TH 2)',
