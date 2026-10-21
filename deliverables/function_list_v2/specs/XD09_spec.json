@@ -442,6 +442,10 @@
       "description": "Cumulative qty of the destination in the unit"
      },
      {
+      "dest_field": "SEQ_QTY",
+      "description": "MOD(CUM_DEST_QTY - 1, PCS_CASE) + 1: fill of the warehouse case of the destination (refer 4.3)"
+     },
+     {
       "dest_field": "CUT_FLAG",
       "description": "'Y' when, after this case, every destination is a multiple of PCS_CASE (refer 4.3)"
      },
@@ -505,7 +509,7 @@
    "marker": "-",
    "level": 0,
    "items": [
-    "In the warehouse the scanned pcs are packed 1 case = 1 destination (max PCS_CASE pcs). An ASN may therefore stop only after a case where the cumulative qty of every destination of the unit is a multiple of PCS_CASE (valid cut, CUT_FLAG 'Y'). Example: after case 2 VN 10 / TH 2 is not valid (VN short 2, TH short 4); after case 3 VN 12 / TH 6 is valid.",
+    "In the warehouse the scanned pcs are packed 1 case = 1 destination (max PCS_CASE pcs). An ASN may therefore stop only after a case where the cumulative qty of every destination of the unit is a multiple of PCS_CASE (valid cut, CUT_FLAG 'Y'). SEQ_QTY = fill of the warehouse case of the destination (1..PCS_CASE, starts again after PCS_CASE): the cut is valid when the last SEQ_QTY of every destination = PCS_CASE. Example: after case 2 VN 10 / TH 2 is not valid (VN short 2, TH short 4); after case 3 VN 12 / TH 6 is valid.",
     "Block = the cases after the previous valid cut up to the next valid cut (GROUP_SEQ). A block is never split.",
     "CROSSDOCK_STATUS of a block: '6' Ready when the block and every earlier block are fully pre-mapped to a PO; '7' Not Ready otherwise. A later block with PO stays '7' while an earlier block has no PO (blocks are never skipped).",
     "ASN options of the unit = the first 1..n Ready blocks. Unit status on XD10: Ready (all blocks '6'), Partially Ready (first block '6', a later block '7'), Not Ready (first block '7'). Units without any pre-mapped case are not listed.",
@@ -665,6 +669,7 @@
      "Assigned Qty",
      "Case",
      "Cum Dest Qty",
+     "Seq Qty",
      "Cut",
      "Block",
      "Status"
@@ -694,6 +699,7 @@
       6,
       1,
       6,
+      6,
       "Y",
       1,
       "6"
@@ -708,6 +714,7 @@
       4,
       2,
       10,
+      4,
       "N",
       2,
       "6"
@@ -719,6 +726,7 @@
       "TH",
       6,
       "p1",
+      2,
       2,
       2,
       2,
@@ -735,6 +743,7 @@
       "p1",
       4,
       3,
+      6,
       6,
       "N",
       2,
@@ -750,6 +759,7 @@
       2,
       3,
       12,
+      6,
       "Y",
       2,
       "6"
@@ -764,6 +774,7 @@
       6,
       4,
       18,
+      6,
       "Y",
       3,
       "6"
@@ -778,6 +789,7 @@
       6,
       5,
       24,
+      6,
       "Y",
       4,
       "7"
@@ -843,6 +855,7 @@
      "Assigned Qty",
      "Case",
      "Cum Dest Qty",
+     "Seq Qty",
      "Cut",
      "Block",
      "Status"
@@ -871,6 +884,7 @@
       "p2",
       6,
       1,
+      6,
       6,
       "Y",
       1,
@@ -1141,6 +1155,13 @@
      "",
      "N",
      "Cumulative qty of the destination within the unit up to this slice"
+    ],
+    [
+     "SEQ_QTY",
+     "NUMBER(4)",
+     "",
+     "N",
+     "Fill of the warehouse case (1 case = 1 destination) of the destination after this slice: 1..PCS_CASE, starts again after PCS_CASE"
     ],
     [
      "CUT_FLAG",

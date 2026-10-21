@@ -2762,6 +2762,13 @@
      "Cumulative qty of the destination within the unit up to this slice"
     ],
     [
+     "SEQ_QTY",
+     "NUMBER(4)",
+     "",
+     "N",
+     "Fill of the warehouse case (1 case = 1 destination) of the destination after this slice: 1..PCS_CASE, starts again after PCS_CASE"
+    ],
+    [
      "CUT_FLAG",
      "VARCHAR(1)",
      "",
