@@ -11,7 +11,7 @@ def pack(lines, pos, pcs):
     """lines: dicts with the SCAN_KEYS, PART_NO and QTY (open qty) of ONE unit (Part Number + Customer Order Date), any order.
     pos: list of [po_no, manifest_no, manifest_item, open_qty] in PO_DT order; open_qty is reduced in place (shared by later units).
     Returns one dict per slice (line x PO x case) with SORT_SEQ, ASSIGNED_QTY, PO_NO, MANIFEST_NO, MANIFEST_ITEM, CASE_SEQ, LINE_SEQ,
-    CUM_DEST_QTY, CUT_FLAG, GROUP_SEQ and CROSSDOCK_STATUS."""
+    CUM_DEST_QTY, SEQ_QTY, CUT_FLAG, GROUP_SEQ and CROSSDOCK_STATUS."""
     lines = sorted(lines, key=lambda l: [str(l.get(k) or '') for k in SCAN_KEYS])
     out, case, room, line_seq = [], 1, pcs, 0
     for seq, l in enumerate(lines, 1):
@@ -32,6 +32,7 @@ def pack(lines, pos, pcs):
     for i, s in enumerate(out):
         cum[s['DESTINATION_CD']] = cum.get(s['DESTINATION_CD'], 0) + s['ASSIGNED_QTY']
         s['CUM_DEST_QTY'] = cum[s['DESTINATION_CD']]
+        s['SEQ_QTY'] = (s['CUM_DEST_QTY'] - 1) % pcs + 1  # fill of the warehouse case of the destination (1..pcs)
         last_of_case = i == len(out) - 1 or out[i + 1]['CASE_SEQ'] != s['CASE_SEQ']
         s['CUT_FLAG'] = 'Y' if last_of_case and all(v % pcs == 0 for v in cum.values()) else 'N'
         s['GROUP_SEQ'] = group

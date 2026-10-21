@@ -82,6 +82,7 @@ TEMP_COLS = [
     col('CASE_SEQ', 'NUMBER(4)', 'Supplier case of the slice within the unit (PCS_CASE pcs in scan order)'),
     col('LINE_SEQ', 'NUMBER(4)', 'Sequence of the slice within the case'),
     col('CUM_DEST_QTY', 'NUMBER(8)', 'Cumulative qty of the destination within the unit up to this slice'),
+    col('SEQ_QTY', 'NUMBER(4)', 'Fill of the warehouse case (1 case = 1 destination) of the destination after this slice: 1..PCS_CASE, starts again after PCS_CASE'),
     col('CUT_FLAG', 'VARCHAR(1)', "'Y' on the last slice of a case after which the ASN may stop (every destination a multiple of PCS_CASE)"),
     col('GROUP_SEQ', 'NUMBER(4)', 'Block (ASN option) of the slice: the cases up to and including a valid cut'),
     col('CROSSDOCK_STATUS', 'VARCHAR(1)', "Status of the block: '6' Ready (the block and every earlier block have a PO) / '7' Not Ready"),
@@ -94,14 +95,14 @@ TEMP_DESC = ("Temporary table of one Search run (session): the open qty of the c
 CUST = {'V01': 'CUST-A', 'T01': 'CUST-B', 'V02': 'CUST-C'}
 LINES = [dict(CUSTOMER_CD=CUST[co], CUSTOMER_ORDER_NO=co, ORDER_DT='14-Oct-2026', ORDER_TIME='080000', DESTINATION_CD=d, DETAILED_ITEM_NO='0001',
               SERIAL_NO='0000001', PART_NO='PART-A', QTY=q) for co, d, q in (('V01', 'VN', 10), ('T01', 'TH', 6), ('V02', 'VN', 14))]
-SAMPLE_COLS = ['Sort Seq', 'Customer Code', 'Cust Order No', 'Dest', 'Order Qty', 'PO No', 'Assigned Qty', 'Case', 'Cum Dest Qty', 'Cut', 'Block',
+SAMPLE_COLS = ['Sort Seq', 'Customer Code', 'Cust Order No', 'Dest', 'Order Qty', 'PO No', 'Assigned Qty', 'Case', 'Cum Dest Qty', 'Seq Qty', 'Cut', 'Block',
                'Status']
 SAMPLE_W = [8, 12, 12, 7, 9, 8, 11, 7, 12, 6, 7, 8]
 
 
 def sample_rows(pos):
     return [[s['SORT_SEQ'], s['CUSTOMER_CD'], s['CUSTOMER_ORDER_NO'], s['DESTINATION_CD'], s['QTY'], s['PO_NO'] or '(none)', s['ASSIGNED_QTY'],
-             s['CASE_SEQ'], s['CUM_DEST_QTY'], s['CUT_FLAG'], s['GROUP_SEQ'], s['CROSSDOCK_STATUS']] for s in pack(LINES, pos, 6)]
+             s['CASE_SEQ'], s['CUM_DEST_QTY'], s['SEQ_QTY'], s['CUT_FLAG'], s['GROUP_SEQ'], s['CROSSDOCK_STATUS']] for s in pack(LINES, pos, 6)]
 
 
 SAMPLE = {
@@ -126,7 +127,7 @@ SAMPLE = {
          'columns': SAMPLE_COLS, 'widths': SAMPLE_W,
          'rows': [[r[0], r[1], r[2], r[3], 6, *r[5:]] for r in
                   [[s['SORT_SEQ'], s['CUSTOMER_CD'], s['CUSTOMER_ORDER_NO'], s['DESTINATION_CD'], s['QTY'], s['PO_NO'], s['ASSIGNED_QTY'], s['CASE_SEQ'],
-                    s['CUM_DEST_QTY'], s['CUT_FLAG'], s['GROUP_SEQ'], s['CROSSDOCK_STATUS']]
+                    s['CUM_DEST_QTY'], s['SEQ_QTY'], s['CUT_FLAG'], s['GROUP_SEQ'], s['CROSSDOCK_STATUS']]
                    for s in pack([dict(LINES[2], QTY=6)], [['p2', 'M-0002', '0001', 6]], 6)]]},
         {'title': 'D. Result on the screen', 'columns': ['No', 'Scenario', 'Expected result'], 'widths': [6, 50, 70],
          'rows': [['N1', 'A: blocks 1-3 Ready, block 4 Not Ready', 'PART-A 14-Oct: Case Qty 5, PO Readiness 4, ASN Status Partially Ready; ASN options 1 / 3 / 4 cases.'],
@@ -182,6 +183,7 @@ def xd09():
            'CASE_SEQ': {'dest_field': 'CASE_SEQ', 'description': 'Supplier case: running number every PCS_CASE pcs in scan order'},
            'LINE_SEQ': {'dest_field': 'LINE_SEQ', 'description': 'Sequence of the slice in the case'},
            'CUM_DEST_QTY': {'dest_field': 'CUM_DEST_QTY', 'description': 'Cumulative qty of the destination in the unit'},
+           'SEQ_QTY': {'dest_field': 'SEQ_QTY', 'description': 'MOD(CUM_DEST_QTY - 1, PCS_CASE) + 1: fill of the warehouse case of the destination (refer 4.3)'},
            'CUT_FLAG': {'dest_field': 'CUT_FLAG', 'description': "'Y' when, after this case, every destination is a multiple of PCS_CASE (refer 4.3)"},
            'GROUP_SEQ': {'dest_field': 'GROUP_SEQ', 'description': 'Block number: +1 after each valid cut'},
            'CROSSDOCK_STATUS': {'dest_field': 'CROSSDOCK_STATUS', 'description': "'6' Ready when the block and every earlier block have no PO_NO NULL; else '7' (refer 4.3)"}}
@@ -210,7 +212,7 @@ def xd09():
         {'type': 'heading', 'text': '4.3 Blocks (ASN Options) and Status'},
         {'type': 'bullets', 'marker': '-', 'level': 0, 'items': [
             "In the warehouse the scanned pcs are packed 1 case = 1 destination (max PCS_CASE pcs). An ASN may therefore stop only after a case where the "
-            "cumulative qty of every destination of the unit is a multiple of PCS_CASE (valid cut, CUT_FLAG 'Y'). Example: after case 2 VN 10 / TH 2 is "
+            "cumulative qty of every destination of the unit is a multiple of PCS_CASE (valid cut, CUT_FLAG 'Y'). SEQ_QTY = fill of the warehouse case of the destination (1..PCS_CASE, starts again after PCS_CASE): the cut is valid when the last SEQ_QTY of every destination = PCS_CASE. Example: after case 2 VN 10 / TH 2 is "
             "not valid (VN short 2, TH short 4); after case 3 VN 12 / TH 6 is valid.",
             "Block = the cases after the previous valid cut up to the next valid cut (GROUP_SEQ). A block is never split.",
             "CROSSDOCK_STATUS of a block: '6' Ready when the block and every earlier block are fully pre-mapped to a PO; '7' Not Ready otherwise. "

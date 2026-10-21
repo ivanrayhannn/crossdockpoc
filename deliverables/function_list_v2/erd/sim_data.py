@@ -26,7 +26,7 @@ COLS = {
     'TB_R_PRA_DAILY_ORDER_MANIFEST': ['MANIFEST_NO', 'PO_NO', 'SUPPLIER_CD', 'SUPPLIER_PLANT', 'PO_DT', 'CROSS_DOCK_FLAG', 'TOTAL_QTY', 'DELIVERY_DT', 'SUB_ROUTE_CD'],
     'TB_R_PRA_DAILY_ORDER_PART': ['MANIFEST_NO', 'MANIFEST_ITEM', 'PO_NO', 'PO_ITEM', 'PART_NO', 'ORDER_QTY'],
     '#TEMP_INSTRUCTION': ['SORT_SEQ', 'CUSTOMER_CD', 'CUSTOMER_ORDER_NO', 'DESTINATION_CD', 'PART_NO', 'OPEN_ORDER_QTY', 'PO_NO', 'ASSIGNED_QTY',
-                          'CASE_SEQ', 'CUM_DEST_QTY', 'CUT_FLAG', 'GROUP_SEQ', 'CROSSDOCK_STATUS'],
+                          'CASE_SEQ', 'CUM_DEST_QTY', 'SEQ_QTY', 'CUT_FLAG', 'GROUP_SEQ', 'CROSSDOCK_STATUS'],
     'TB_R_INSTRUCTION': ['INSTRUCTION_ID', 'CASE_SEQ', 'LINE_SEQ', 'PART_NO', 'DESTINATION_CD', 'CUSTOMER_ORDER_NO', 'SERIAL_NO', 'QTY', 'PO_NO', 'MANIFEST_NO',
                          'MANIFEST_ITEM', 'ASN_NO', 'CASE_NO'],
     'TB_R_PRA_DAILY_ORDER_MAPPED': ['PO_NO', 'MANIFEST_NO', 'MANIFEST_ITEM', 'PART_NO', 'ORDER_QTY', 'MAPPED_QTY'],
@@ -74,7 +74,7 @@ def tmp(units, pos, pcs=6, changed=None, notes=None):
         for s in pack(u, pos, pcs):
             k = (s['CUSTOMER_ORDER_NO'], s['CASE_SEQ'])
             row = [s['SORT_SEQ'], s['CUSTOMER_CD'], s['CUSTOMER_ORDER_NO'], s['DESTINATION_CD'], s['PART_NO'], s['QTY'], s['PO_NO'], s['ASSIGNED_QTY'],
-                   s['CASE_SEQ'], s['CUM_DEST_QTY'], s['CUT_FLAG'], s['GROUP_SEQ'], s['CROSSDOCK_STATUS']]
+                   s['CASE_SEQ'], s['CUM_DEST_QTY'], s['SEQ_QTY'], s['CUT_FLAG'], s['GROUP_SEQ'], s['CROSSDOCK_STATUS']]
             rows.append(('temp', row, (changed or {}).get(k, []), (notes or {}).pop(k, '')))  # note on the first slice only
     return rows
 
