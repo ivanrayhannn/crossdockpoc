@@ -19,8 +19,8 @@
  ],
  "general": {
   "objective": [
-   "To get the crossdock customer orders (H0253, order status 7, Hold Flag N, not yet mapped) and pre-map them to the crossdock supplier PO parts (Pra Daily Order: manifests with TB_R_PRA_DAILY_ORDER_MANIFEST.CROSS_DOCK_FLAG = 'X'; their part data from TB_R_PRA_DAILY_ORDER_PART (join MANIFEST_NO)), FIFO by order date, into the temporary table #TEMP_INSTRUCTION.",
-   "To give ASN Crossdock Creation (XD10) the delivery plan per Part Number + Customer Order Date with Case Qty, PO Readiness (case) and ASN Status Ready / Not Ready.",
+   "To get the open qty of the crossdock customer orders (H0253, order status 7, Hold Flag N) in the receiving scan order of G-System, pre-map them to the crossdock supplier PO parts (Pra Daily Order: manifests with TB_R_PRA_DAILY_ORDER_MANIFEST.CROSS_DOCK_FLAG = 'X'; their part data from TB_R_PRA_DAILY_ORDER_PART (join MANIFEST_NO)), cut them into supplier cases and blocks (ASN options) into the temporary table #TEMP_INSTRUCTION.",
+   "To give ASN Crossdock Creation (XD10) the delivery plan per Part Number + Customer Order Date with Case Qty, PO Readiness (case), the ASN options (blocks that can be sent) and the status Ready / Partially Ready / Not Ready.",
    "It runs when the user clicks [Search] on XD10; there is no scheduler. The real mapping is done later by [Create ASN] on XD10.",
    "Crossdock PO (decided 20-Oct): the order is taken from the manifest with TB_R_PRA_DAILY_ORDER_MANIFEST.CROSS_DOCK_FLAG = 'X' and its part data from TB_R_PRA_DAILY_ORDER_PART (MANIFEST_NO). The PO line is identified by MANIFEST_NO + MANIFEST_ITEM (PO_ITEM can differ from MANIFEST_ITEM; one PO can have several manifests)."
   ],
@@ -45,12 +45,12 @@
      },
      {
       "id": "d",
-      "label": "Pre-map FIFO per part number",
+      "label": "Pre-map in scan order, cut cases and blocks",
       "type": "process"
      },
      {
       "id": "e",
-      "label": "Fill #TEMP_INSTRUCTION, set status",
+      "label": "Fill #TEMP_INSTRUCTION, block status",
       "type": "process"
      }
     ],
@@ -83,7 +83,7 @@
    {
     "name": "TB_R_H0253_ORDER_CONTROL_PRE",
     "type": "DB",
-    "description": "ORDER_STATUS = '7', HOLD_FLAG = 'N', PO_MAPPED_FLAG = 'N', latest data (replicated by XD08)"
+    "description": "ORDER_STATUS = '7', HOLD_FLAG = 'N', PO_MAPPED_FLAG = 'N'; open qty = ORDER_STATUS_QTY - qty of the line already in TB_R_INSTRUCTION; latest data (replicated by XD08)"
    },
    {
     "name": "TB_R_PRA_DAILY_ORDER_MANIFEST / TB_R_PRA_DAILY_ORDER_PART",
@@ -94,18 +94,28 @@
     "name": "TB_R_PRA_DAILY_ORDER_MAPPED",
     "type": "DB",
     "description": "New table: MAPPED_QTY per PO part; open PO qty = ORDER_QTY - MAPPED_QTY"
+   },
+   {
+    "name": "TB_R_INSTRUCTION",
+    "type": "DB",
+    "description": "Qty of each line already mapped (open Case List or submitted ASN)"
+   },
+   {
+    "name": "TB_M_PART_CANDIDATE",
+    "type": "DB",
+    "description": "PCS_CASE of the part"
    }
   ],
   "outputs": [
    {
     "name": "#TEMP_INSTRUCTION",
     "type": "Temp",
-    "description": "One row per line x PO; one row with PO_NO NULL for the qty still without a PO"
+    "description": "One row per line x PO x supplier case; PO_NO NULL for the qty still without a PO"
    },
    {
     "name": "ASN Crossdock Creation (XD10)",
     "type": "Screen",
-    "description": "Delivery plan: Customer Order Date, Part Number, Case Qty, PO Readiness (case), ASN Status"
+    "description": "Delivery plan: Customer Order Date, Part Number, Case Qty, PO Readiness (case), ASN options, ASN Status"
    }
   ],
   "extra_tables": [
@@ -145,9 +155,10 @@
      }
     ],
     "rows": [
-     "PART_NO",
-     "ORDER_DT (unit)",
-     "DESTINATION_CD (case)"
+     "PART_NO + ORDER_DT (unit; units by ORDER_DT ascending)",
+     "Scan order: CUSTOMER_CD, CUSTOMER_ORDER_NO, ORDER_DT, ORDER_TIME, DESTINATION_CD, DETAILED_ITEM_NO, SERIAL_NO",
+     "CASE_SEQ (PCS_CASE pcs in scan order)",
+     "GROUP_SEQ (block up to a valid cut)"
     ]
    },
    {
@@ -207,7 +218,7 @@
     },
     {
      "id": "p4",
-     "label": "Pre-map FIFO per part number",
+     "label": "Pre-map in scan order, cut cases and blocks",
      "type": "process",
      "step": 4
     },
@@ -219,7 +230,7 @@
     },
     {
      "id": "p5",
-     "label": "Unit status and return to screen",
+     "label": "Block status and return to screen",
      "type": "process",
      "step": 5
     }
@@ -260,8 +271,8 @@
    {
     "text": "Get the customer order lines from TB_R_H0253_ORDER_CONTROL_PRE:",
     "children": [
-     "ORDER_STATUS = '7' (Cross Dock), HOLD_FLAG = 'N', PO_MAPPED_FLAG = 'N'; latest data; earliest order date first per part number (FIFO, G-System key). Status '2' (cancel from the source) is not taken.",
-     "Get: Customer Code, Customer Order No, Order Date, Destination Code, Detailed Item No, Serial No, Part Number, Order Status Qty."
+     "ORDER_STATUS = '7' (Cross Dock), HOLD_FLAG = 'N', PO_MAPPED_FLAG = 'N'; latest data; open qty = ORDER_STATUS_QTY - qty of the line already in TB_R_INSTRUCTION (> 0). Status '2' (cancel) is not taken.",
+     "Get: Customer Code, Customer Order No, Order Date, Order Time, Destination Code, Detailed Item No, Serial No, Part Number, Order Status Qty; Pcs/Case of the part from TB_M_PART_CANDIDATE."
     ]
    },
    {
@@ -272,13 +283,15 @@
     ]
    },
    {
-    "text": "Pre-map per part number, FIFO (see 4.1), and insert the result in #TEMP_INSTRUCTION.",
+    "text": "Per unit (Part Number + Customer Order Date, oldest date first), pre-map in scan order (see 4.1 and 4.2) and insert the result in #TEMP_INSTRUCTION.",
     "children": [
-     "Each PO qty is given to the oldest open lines first; a line may be split over several POs; the open qty of a line is one row with PO_NO NULL."
+     "Lines in scan order: Customer Code, Customer Order No, Customer Order Date, Customer Order Time, Destination Code, Detailed Item No, Serial No (order of G-System allocation; Allocation Priority Rank ignored).",
+     "Each PO qty (PO_DT ascending) goes to the open qty in this order; a line may be split over several POs.",
+     "The pcs are cut into supplier cases of PCS_CASE pcs in this order (a case can hold several lines and destinations); each slice line x PO x case is one row."
     ]
    },
    {
-    "text": "Set the status of each unit (Part Number + Customer Order Date) and return the delivery plan to XD10 (see 4.2).",
+    "text": "Mark the valid cuts, number the blocks, set the status of each block and return the delivery plan to XD10 (see 4.3).",
     "children": [
      "Error: clear the temporary table, show the error on the screen and record the Log (FAILED)."
     ]
@@ -289,7 +302,7 @@
   "blocks": [
    {
     "source": {
-     "table": "TB_R_H0253_ORDER_CONTROL_PRE + TB_R_PRA_DAILY_ORDER_MANIFEST / TB_R_PRA_DAILY_ORDER_PART",
+     "table": "TB_R_H0253_ORDER_CONTROL_PRE + TB_R_PRA_DAILY_ORDER_MANIFEST / TB_R_PRA_DAILY_ORDER_PART + TB_R_INSTRUCTION + TB_M_PART_CANDIDATE",
      "keys": [
       {
        "field": "H0253.SHIPPING_PART_NO",
@@ -304,12 +317,16 @@
     "destination": {
      "table": "#TEMP_INSTRUCTION",
      "operation": "Insert",
-     "description": "Line x PO pre-mapping (temporary)"
+     "description": "Line x PO x supplier case pre-mapping (temporary)"
     },
     "mappings": [
      {
       "dest_field": "INSTRUCTION_ID",
       "description": "Running number"
+     },
+     {
+      "dest_field": "SORT_SEQ",
+      "description": "Scan order of the line in the unit"
      },
      {
       "source_field": "H0253.CUSTOMER_CD",
@@ -322,6 +339,10 @@
      {
       "source_field": "H0253.ORDER_DT",
       "dest_field": "ORDER_DT"
+     },
+     {
+      "source_field": "H0253.ORDER_TIME",
+      "dest_field": "ORDER_TIME"
      },
      {
       "source_field": "H0253.DESTINATION_CD",
@@ -348,12 +369,12 @@
       "dest_field": "CUST_ORDER_QTY"
      },
      {
-      "dest_field": "ASSIGNED_QTY",
-      "description": "Qty of the line given to this PO (FIFO); 0 for the PO_NO NULL row"
+      "dest_field": "OPEN_ORDER_QTY",
+      "description": "H0253.ORDER_STATUS_QTY - SUM(TB_R_INSTRUCTION.QTY) of the line"
      },
      {
-      "dest_field": "REMAINING_ORDER_QTY",
-      "description": "Qty of the line still without a PO after this assignment"
+      "dest_field": "ASSIGNED_QTY",
+      "description": "Qty of the slice (line x PO x case)"
      },
      {
       "source_field": "TB_R_PRA_DAILY_ORDER_PART.PO_NO",
@@ -405,8 +426,32 @@
       "dest_field": "ETD_ORI"
      },
      {
+      "source_field": "TB_M_PART_CANDIDATE.PCS_CASE",
+      "dest_field": "PCS_CASE"
+     },
+     {
+      "dest_field": "CASE_SEQ",
+      "description": "Supplier case: running number every PCS_CASE pcs in scan order"
+     },
+     {
+      "dest_field": "LINE_SEQ",
+      "description": "Sequence of the slice in the case"
+     },
+     {
+      "dest_field": "CUM_DEST_QTY",
+      "description": "Cumulative qty of the destination in the unit"
+     },
+     {
+      "dest_field": "CUT_FLAG",
+      "description": "'Y' when, after this case, every destination is a multiple of PCS_CASE (refer 4.3)"
+     },
+     {
+      "dest_field": "GROUP_SEQ",
+      "description": "Block number: +1 after each valid cut"
+     },
+     {
       "dest_field": "CROSSDOCK_STATUS",
-      "description": "'6' Ready when no row of the unit has PO_NO NULL; else '7' Not Ready (refer 4.2)"
+      "description": "'6' Ready when the block and every earlier block have no PO_NO NULL; else '7' (refer 4.3)"
      }
     ]
    }
@@ -421,17 +466,29 @@
   },
   {
    "type": "heading",
-   "text": "4.1 FIFO Pre-mapping"
+   "text": "4.1 Scan Order"
   },
   {
    "type": "bullets",
    "marker": "-",
    "level": 0,
    "items": [
-    "Per part number (H0253.SHIPPING_PART_NO = Pra Daily Order Part Number).",
-    "Customer order lines by Customer Order Date (then Order Time, Customer Order No, Detailed Item No, Serial No); lines with HOLD_FLAG = 'Y' or PO_MAPPED_FLAG = 'Y' are not taken.",
-    "PO parts by Order Date ascending; each PO qty goes to the oldest open lines first.",
-    "A line may be split over several POs (one row per assignment); its open qty is one row with PO_NO NULL.",
+    "At receiving, the scan allocates the delivered pcs to the customer orders in a fixed order that cannot be changed. XD09 uses the same order (decided 21-Oct): Customer Code, Customer Order No, Customer Order Date, Customer Order Time, Destination Code, Detailed Item No, Serial No (order of G-System allocation; Allocation Priority Rank ignored).",
+    "The order is applied per unit = Part Number + Customer Order Date (way B): the units of a part are processed by Customer Order Date ascending, so the POs go to the oldest date first.",
+    "Lines with HOLD_FLAG = 'Y' are not taken. Only the open qty of a line is taken (open qty = ORDER_STATUS_QTY - qty of the line already in TB_R_INSTRUCTION): a line can be sent over several ASNs; PO_MAPPED_FLAG becomes 'Y' only when the whole line is in TB_R_INSTRUCTION."
+   ]
+  },
+  {
+   "type": "heading",
+   "text": "4.2 PO and Supplier Cases"
+  },
+  {
+   "type": "bullets",
+   "marker": "-",
+   "level": 0,
+   "items": [
+    "PO parts by PO_DT ascending; each PO qty goes to the open qty in scan order; a line may be split over several POs; qty without PO = PO_NO NULL.",
+    "The pcs of the unit are cut into supplier cases of PCS_CASE pcs in scan order (e.g. 6 pcs/case: case 1 = V01 6; case 2 = V01 4 + T01 2). A supplier case can hold several lines and destinations. G-System releases each destination in multiples of PCS_CASE, so every case is full.",
     "A PO remainder without open line stays open for later customer orders."
    ]
   },
@@ -440,19 +497,18 @@
   },
   {
    "type": "heading",
-   "text": "4.2 Unit and Status"
+   "text": "4.3 Blocks (ASN Options) and Status"
   },
   {
    "type": "bullets",
    "marker": "-",
    "level": 0,
    "items": [
-    "Unit = Part Number + Customer Order Date. Case = destination x pcs/case: the qty of a destination is packed in cases of pcs/case (e.g. Vietnam 24 pcs, 6 pcs/case = 4 cases). G-System releases in multiples of pcs/case (a remainder stays pending and is not in H0253), so every case is full. A case can hold several customer orders and several POs of the same destination; a customer order line that does not fit in the remaining space of a case continues in the next case (e.g. case 3 = CO-14001 4 + CO-14006 2 of PO2; case 4 = CO-14006 2 of PO2 + CO-14007 4 of PO4).",
-    "Case Qty = number of destinations of the unit. PO Readiness (case) = cases whose whole qty is pre-mapped to a PO.",
-    "CROSSDOCK_STATUS '6' Ready: every line of the unit is pre-mapped. '7' Not Ready: at least one line of the unit has no PO yet.",
-    "Shown on XD10 as ASN Status Ready / Not Ready. Units with PO Readiness 0 are not listed on XD10; units already in a submitted ASN (ASN status '1' Created) are not taken (PO_MAPPED_FLAG = 'Y').",
-    "The mapped qty is kept in the new table TB_R_PRA_DAILY_ORDER_MAPPED (no new column in the Pra Daily Order); it is updated by [Create ASN] on XD10, not by this function.",
-    "Nothing is saved by this function: #TEMP_INSTRUCTION is the pre-mapping only; the real mapping is inserted into TB_R_INSTRUCTION by [Create ASN]."
+    "In the warehouse the scanned pcs are packed 1 case = 1 destination (max PCS_CASE pcs). An ASN may therefore stop only after a case where the cumulative qty of every destination of the unit is a multiple of PCS_CASE (valid cut, CUT_FLAG 'Y'). Example: after case 2 VN 10 / TH 2 is not valid (VN short 2, TH short 4); after case 3 VN 12 / TH 6 is valid.",
+    "Block = the cases after the previous valid cut up to the next valid cut (GROUP_SEQ). A block is never split.",
+    "CROSSDOCK_STATUS of a block: '6' Ready when the block and every earlier block are fully pre-mapped to a PO; '7' Not Ready otherwise. A later block with PO stays '7' while an earlier block has no PO (blocks are never skipped).",
+    "ASN options of the unit = the first 1..n Ready blocks. Unit status on XD10: Ready (all blocks '6'), Partially Ready (first block '6', a later block '7'), Not Ready (first block '7'). Units without any pre-mapped case are not listed.",
+    "The mapped qty per PO is kept in TB_R_PRA_DAILY_ORDER_MAPPED; it is updated by [Create ASN] on XD10, not by this function. Nothing is saved by this function: #TEMP_INSTRUCTION is the pre-mapping only."
    ]
   }
  ],
@@ -490,167 +546,240 @@
  ],
  "sample_sheet": {
   "title": "Sample Input",
-  "heading": "Sample pre-mapping - Mapping Customer Order and PO (FIFO by Customer Order Date)",
+  "heading": "Sample pre-mapping - scan order, supplier cases and ASN options (blocks)",
   "intro": [
-   "Part PART-C, 6 pcs/case. Customer order lines of H0253 (order status 7, Hold Flag N, not mapped) and PO parts of the Pra Daily Order (manifests with TB_R_PRA_DAILY_ORDER_MANIFEST.CROSS_DOCK_FLAG = 'X'; their part data from TB_R_PRA_DAILY_ORDER_PART (join MANIFEST_NO))."
+   "Part PART-A, 6 pcs/case, Customer Order Date 14-Oct-2026 (one unit). H0253 lines (order status 7, Hold Flag N): V01 VN 10, T01 TH 6, V02 VN 14 (30 pcs). Dummy customer codes CUST-A / B / C give the scan order V01, T01, V02.",
+   "PO parts (manifests with TB_R_PRA_DAILY_ORDER_MANIFEST.CROSS_DOCK_FLAG = 'X'; their part data from TB_R_PRA_DAILY_ORDER_PART (join MANIFEST_NO)): p1 24 pcs (released 15-Oct), p2 6 pcs (released 16-Oct).",
+   "Cut check after each case: cumulative VN / TH = case 1: 6 / 0 valid; case 2: 10 / 2 not valid (VN short 2, TH short 4); case 3: 12 / 6 valid; case 4: 18 / 6 valid; case 5: 24 / 6 valid. Blocks: 1 = case 1; 2 = cases 2-3; 3 = case 4; 4 = case 5."
   ],
   "sections": [
    {
-    "title": "A. Mapping Customer Order and PO on 14-Oct: PO1 (PO Date 14-Oct, 12 pcs of PART-C) is the only released PO",
+    "title": "A. [Search] on 15-Oct: only p1 (24 pcs) is released",
     "columns": [
-     "Customer Order Date",
-     "Customer Order No",
-     "Destination",
+     "Sort Seq",
+     "Customer Code",
+     "Cust Order No",
+     "Dest",
      "Order Qty",
      "PO No",
      "Assigned Qty",
-     "Remaining Order Qty"
+     "Case",
+     "Cum Dest Qty",
+     "Cut",
+     "Block",
+     "Status"
     ],
     "widths": [
-     18,
-     17,
-     14,
-     10,
      8,
      12,
-     18
+     12,
+     7,
+     9,
+     8,
+     11,
+     7,
+     12,
+     6,
+     7,
+     8
     ],
     "rows": [
      [
-      "13-Oct-2026",
-      "CO-13001",
-      "9715310",
-      4,
-      "PO1",
-      4,
-      0
-     ],
-     [
-      "13-Oct-2026",
-      "CO-13004",
-      "9722D10",
-      2,
-      "PO1",
-      2,
-      0
-     ],
-     [
-      "13-Oct-2026",
-      "CO-13003",
-      "9811110",
+      1,
+      "CUST-A",
+      "V01",
+      "VN",
+      10,
+      "p1",
       6,
-      "PO1",
+      1,
       6,
-      0
+      "Y",
+      1,
+      "6"
      ],
      [
-      "13-Oct-2026",
-      "CO-13005",
-      "9722D10",
+      1,
+      "CUST-A",
+      "V01",
+      "VN",
+      10,
+      "p1",
+      4,
       2,
-      "(none)",
-      0,
-      2
+      10,
+      "N",
+      2,
+      "6"
      ],
      [
-      "13-Oct-2026",
-      "CO-13002",
-      "9715310",
       2,
-      "(none)",
-      0,
-      2
+      "CUST-B",
+      "T01",
+      "TH",
+      6,
+      "p1",
+      2,
+      2,
+      2,
+      "N",
+      2,
+      "6"
      ],
      [
-      "13-Oct-2026",
-      "CO-13006",
-      "9722D10",
       2,
+      "CUST-B",
+      "T01",
+      "TH",
+      6,
+      "p1",
+      4,
+      3,
+      6,
+      "N",
+      2,
+      "6"
+     ],
+     [
+      3,
+      "CUST-C",
+      "V02",
+      "VN",
+      14,
+      "p1",
+      2,
+      3,
+      12,
+      "Y",
+      2,
+      "6"
+     ],
+     [
+      3,
+      "CUST-C",
+      "V02",
+      "VN",
+      14,
+      "p1",
+      6,
+      4,
+      18,
+      "Y",
+      3,
+      "6"
+     ],
+     [
+      3,
+      "CUST-C",
+      "V02",
+      "VN",
+      14,
       "(none)",
-      0,
-      2
+      6,
+      5,
+      24,
+      "Y",
+      4,
+      "7"
      ]
     ]
    },
    {
-    "title": "B. Mapping Customer Order and PO on 15-Oct: PO2 (PO Date 15-Oct, 6 pcs of PART-C) covers the remaining lines",
+    "title": "B. ASN options on 15-Oct (the supplier chooses one; blocks are taken in order)",
     "columns": [
-     "Customer Order Date",
-     "Customer Order No",
-     "Destination",
-     "Order Qty",
-     "PO No",
-     "Assigned Qty",
-     "Remaining Order Qty"
+     "Option",
+     "Blocks",
+     "Cases",
+     "Pcs",
+     "Scan order at receiving"
     ],
     "widths": [
-     18,
-     17,
-     14,
+     8,
+     10,
      10,
      8,
-     12,
-     18
+     70
     ],
     "rows": [
      [
-      "13-Oct-2026",
-      "CO-13001",
-      "9715310",
-      4,
-      "PO1",
-      4,
-      0
-     ],
-     [
-      "13-Oct-2026",
-      "CO-13004",
-      "9722D10",
-      2,
-      "PO1",
-      2,
-      0
-     ],
-     [
-      "13-Oct-2026",
-      "CO-13003",
-      "9811110",
+      "1",
+      "1",
+      "1",
       6,
-      "PO1",
-      6,
-      0
+      "VN 6 (V01)"
      ],
      [
-      "13-Oct-2026",
-      "CO-13005",
-      "9722D10",
-      2,
-      "PO2",
-      2,
-      0
+      "2",
+      "1-2",
+      "1-3",
+      18,
+      "VN 6, VN 4, TH 2 | TH 4, VN 2: VN 12 and TH 6 close their cases"
      ],
      [
-      "13-Oct-2026",
-      "CO-13002",
-      "9715310",
-      2,
-      "PO2",
-      2,
-      0
+      "3",
+      "1-3",
+      "1-4",
+      24,
+      "Option 2 + VN 6 (V02); p1 used up"
      ],
      [
-      "13-Oct-2026",
-      "CO-13006",
-      "9722D10",
-      2,
-      "PO2",
-      2,
-      0
+      "4",
+      "1-4",
+      "1-5",
+      30,
+      "Not on 15-Oct: block 4 has no PO (status 7); possible from 16-Oct when p2 is released"
      ]
     ]
    },
    {
-    "title": "C. Result on the screen",
+    "title": "C. [Search] on 16-Oct after the supplier sent option 3 on 15-Oct: open qty V02 6, p2 released",
+    "columns": [
+     "Sort Seq",
+     "Customer Code",
+     "Cust Order No",
+     "Dest",
+     "Order Qty",
+     "PO No",
+     "Assigned Qty",
+     "Case",
+     "Cum Dest Qty",
+     "Cut",
+     "Block",
+     "Status"
+    ],
+    "widths": [
+     8,
+     12,
+     12,
+     7,
+     9,
+     8,
+     11,
+     7,
+     12,
+     6,
+     7,
+     8
+    ],
+    "rows": [
+     [
+      1,
+      "CUST-C",
+      "V02",
+      "VN",
+      6,
+      "p2",
+      6,
+      1,
+      6,
+      "Y",
+      1,
+      "6"
+     ]
+    ]
+   },
+   {
+    "title": "D. Result on the screen",
     "columns": [
      "No",
      "Scenario",
@@ -664,23 +793,28 @@
     "rows": [
      [
       "N1",
-      "Mapping Customer Order and PO A",
-      "PART-C 13-Oct: Case Qty 3, PO Readiness 1 (only PH complete), ASN Status Not Ready ('7')."
+      "A: blocks 1-3 Ready, block 4 Not Ready",
+      "PART-A 14-Oct: Case Qty 5, PO Readiness 4, ASN Status Partially Ready; ASN options 1 / 3 / 4 cases."
      ],
      [
       "N2",
-      "Mapping Customer Order and PO B",
-      "All lines pre-mapped: PO Readiness 3, ASN Status Ready ('6'); the unit can be selected for Create ASN."
+      "Supplier sends option 1 only",
+      "Next [Search]: open qty V01 4, T01 6, V02 14 is cut again from case 1 in the same order (same cases)."
      ],
      [
       "N3",
-      "A destination is on hold (Hold Flag Y on its lines)",
-      "Its lines are not taken; the unit is computed without it (it may become Ready)."
+      "Block 2 without PO, block 3 with PO",
+      "Block 3 is Not Ready too: blocks are never skipped (scan order is fixed)."
      ],
      [
       "N4",
-      "PO qty larger than the open order qty",
-      "The PO remainder stays open for later customer orders (FIFO)."
+      "C: all open qty pre-mapped",
+      "ASN Status Ready; one option (1 case)."
+     ],
+     [
+      "N5",
+      "A destination is on hold (Hold Flag Y)",
+      "Its lines are not taken; the scan order and the blocks are computed without them."
      ],
      [
       "E1",
@@ -696,7 +830,7 @@
    "name": "#TEMP_INSTRUCTION",
    "kind": "temp",
    "proposed": true,
-   "description": "Temporary table of one Search run (session): customer order line (H0253, order status 7, Hold Flag N, not mapped) pre-mapped to a supplier PO (Pra Daily Order), FIFO by order date. One row per line x PO, plus one row with PO_NO NULL for the qty still without a PO. Columns proposed.",
+   "description": "Temporary table of one Search run (session): the open qty of the customer order lines (H0253, order status 7, Hold Flag N) in scan order, pre-mapped to the supplier POs (Pra Daily Order) and cut into supplier cases and blocks. One row per line x PO x supplier case; PO_NO NULL for the qty still without a PO. Columns proposed.",
    "columns": [
     [
      "INSTRUCTION_ID",
@@ -706,46 +840,60 @@
      "Running number within the session"
     ],
     [
+     "SORT_SEQ",
+     "NUMBER(6)",
+     "",
+     "N",
+     "Scan order of the line within the unit (refer 4.1)"
+    ],
+    [
      "CUSTOMER_CD",
      "VARCHAR(7)",
      "",
      "N",
-     "H0253.CUSTOMER_CD"
+     "H0253.CUSTOMER_CD (scan key 1)"
     ],
     [
      "CUSTOMER_ORDER_NO",
      "VARCHAR(8)",
      "",
      "N",
-     "H0253.CUSTOMER_ORDER_NO"
+     "H0253.CUSTOMER_ORDER_NO (scan key 2)"
     ],
     [
      "ORDER_DT",
      "DATE",
      "",
      "N",
-     "Customer Order Date (H0253.ORDER_DT)"
+     "Customer Order Date (H0253.ORDER_DT; unit and scan key 3)"
+    ],
+    [
+     "ORDER_TIME",
+     "VARCHAR(6)",
+     "",
+     "N",
+     "H0253.ORDER_TIME (scan key 4)"
     ],
     [
      "DESTINATION_CD",
      "VARCHAR(7)",
      "",
      "N",
-     "H0253.DESTINATION_CD (TB_M_H0125_DESTINATION)"
+     "H0253.DESTINATION_CD (scan key 5)"
     ],
     [
      "DETAILED_ITEM_NO",
      "VARCHAR(4)",
      "",
      "N",
-     "H0253.DETAILED_ITEM_NO"
+     "H0253.DETAILED_ITEM_NO (scan key 6)"
     ],
     [
      "SERIAL_NO",
      "VARCHAR(7)",
      "",
      "N",
-     "H0253.SERIAL_NO"
+     "H0253.SERIAL_NO (scan key 7)"
     ],
     [
      "PART_NO",
@@ -769,18 +917,18 @@
      "Order status qty of the customer order line (H0253.ORDER_STATUS_QTY)"
     ],
     [
+     "OPEN_ORDER_QTY",
+     "NUMBER(8)",
+     "",
+     "N",
+     "Qty of the line not yet in TB_R_INSTRUCTION (sent or in an open Case List)"
+    ],
+    [
      "ASSIGNED_QTY",
      "NUMBER(8)",
      "",
      "N",
-     "Qty of the line pre-mapped to this PO (0 for the not-assigned row)"
-    ],
-    [
-     "REMAINING_ORDER_QTY",
-     "NUMBER(8)",
-     "",
-     "N",
-     "Qty of the line still without a PO after this assignment"
+     "Qty of this slice (line x PO x supplier case)"
     ],
     [
      "PO_NO",
@@ -867,11 +1015,53 @@
      "Original ETD"
     ],
     [
+     "PCS_CASE",
+     "NUMBER(4)",
+     "",
+     "N",
+     "Pcs per case of the part (TB_M_PART_CANDIDATE.PCS_CASE)"
+    ],
+    [
+     "CASE_SEQ",
+     "NUMBER(4)",
+     "",
+     "N",
+     "Supplier case of the slice within the unit (PCS_CASE pcs in scan order)"
+    ],
+    [
+     "LINE_SEQ",
+     "NUMBER(4)",
+     "",
+     "N",
+     "Sequence of the slice within the case"
+    ],
+    [
+     "CUM_DEST_QTY",
+     "NUMBER(8)",
+     "",
+     "N",
+     "Cumulative qty of the destination within the unit up to this slice"
+    ],
+    [
+     "CUT_FLAG",
+     "VARCHAR(1)",
+     "",
+     "N",
+     "'Y' on the last slice of a case after which the ASN may stop (every destination a multiple of PCS_CASE)"
+    ],
+    [
+     "GROUP_SEQ",
+     "NUMBER(4)",
+     "",
+     "N",
+     "Block (ASN option) of the slice: the cases up to and including a valid cut"
+    ],
+    [
      "CROSSDOCK_STATUS",
      "VARCHAR(1)",
      "",
      "N",
-     "Status of the unit (Part Number + Customer Order Date): '6' Ready / '7' Not Ready"
+     "Status of the block: '6' Ready (the block and every earlier block have a PO) / '7' Not Ready"
     ]
    ]
   },

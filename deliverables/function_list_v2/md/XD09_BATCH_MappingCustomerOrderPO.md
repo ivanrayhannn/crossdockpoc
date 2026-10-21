@@ -13,3 +13,13 @@ Sumber: UISS `XD09_UISS_Batch_MappingCustomerOrderPO.xlsx` (0.1 Initial Draft, 1
 - Order crossdock diambil dari **manifest** dengan `TB_R_PRA_DAILY_ORDER_MANIFEST.CROSS_DOCK_FLAG = 'X'`; data part-nya dari `TB_R_PRA_DAILY_ORDER_PART` (join `MANIFEST_NO`).
 - Baris PO = `MANIFEST_NO + MANIFEST_ITEM` (`PO_ITEM` bisa beda; 1 PO bisa beberapa manifest). Open qty = `ORDER_QTY - MAPPED_QTY`, urut `PO_DT`.
 - Nama kolom tabel baru disamakan: `MANIFEST_ITEM_NO` → `MANIFEST_ITEM`, `PO_ORDER_QTY` → `ORDER_QTY`, `PO_ORDER_DT` → `PO_DT` (juga di XD10 / XD11).
+
+## Keputusan 21-Oct (urutan scan, case supplier, blok ASN)
+- Urutan baris H0253 = urutan alokasi G-System (Allocation Priority Rank diabaikan): **Customer Code → Customer Order No → Customer Order Date → Customer Order Time → Destination Code → Detailed Item No → Serial No**. Di receiving, scan mengalokasikan pcs dengan urutan ini dan urutannya **fixed**.
+- Diproses **per Part No + Customer Order Date** (Cara B): unit diproses dari tanggal paling lama, lalu di dalam unit pakai urutan scan.
+- PO diberikan berurutan (PO_DT), lalu pcs dipotong jadi **case supplier @ PCS_CASE** (`TB_M_PART_CANDIDATE.PCS_CASE`). Satu case supplier boleh berisi beberapa line dan destinasi.
+- Di gudang tetap **1 case = 1 destinasi**, jadi ASN hanya boleh berhenti setelah case di mana **qty kumulatif setiap destinasi kelipatan PCS_CASE** (CUT_FLAG Y). Case sampai titik potong valid = **blok** (GROUP_SEQ) = langkah opsi ASN.
+- Blok **Ready ('6')** kalau blok itu dan semua blok sebelumnya punya PO. Blok **tidak boleh dilompati**: kalau blok 2 belum punya PO, blok 3 ikut Not Ready.
+- Line bisa terkirim di beberapa ASN: XD09 ambil **open qty** = ORDER_STATUS_QTY − qty line di TB_R_INSTRUCTION. PO_MAPPED_FLAG = 'Y' hanya kalau seluruh line sudah di TB_R_INSTRUCTION.
+- `#TEMP_INSTRUCTION`: grain **line × PO × case supplier**; kolom baru SORT_SEQ, ORDER_TIME, OPEN_ORDER_QTY, PCS_CASE, CASE_SEQ, LINE_SEQ, CUM_DEST_QTY, CUT_FLAG, GROUP_SEQ; CROSSDOCK_STATUS per blok; REMAINING_ORDER_QTY dihapus.
+- Contoh (sheet Sample Input): V01 VN 10, T01 TH 6, V02 VN 14, 6 pcs/case, p1 24 (15-Oct), p2 6 (16-Oct) → blok: case 1 | case 2–3 | case 4 | case 5; opsi 15-Oct: 1 / 3 / 4 case, opsi 5 case mulai 16-Oct.
