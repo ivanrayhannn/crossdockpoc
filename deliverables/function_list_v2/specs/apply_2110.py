@@ -375,6 +375,16 @@ def xd10():
             x['description'] = "'{n} units · {c} cases · {q} pcs selected · {units}'. Empty: hint that cases of different units / dates can go into one ASN."
         if x.get('name') == 'Clear selection':
             x['description'] = 'Unticks all cases.'
+    caps = {'c_02_delivery_plan': '2. Delivery plan after Search (supplier view): unit rows with their supplier case rows (check box, Can end here, PO Status)',
+            'c_03_ds_detail': '3. D/S team: destination detail (warehouse cases, Hold Flag) and customer orders of a destination (open qty, cases, PO)',
+            'c_04_ds_hold': '4. D/S team: Thailand on hold; the scan order and the cases are computed again without it',
+            'c_05_selected': '5. Case 2 of PART-A ticked: MSG10, cases 1-3 are selected together; unit PART-C ticked (different Customer Order Date)',
+            'c_05d_after_refresh': '5c. Delivery plan refreshed automatically, all cases unticked',
+            'c_10_list_after': '10. Delivery plan after submit: PART-C is no longer listed, the rest of PART-A (V02 12 pcs) is listed again'}
+    for sl in s['screen_layout']:
+        k = os.path.splitext(os.path.basename(sl.get('image', '')))[0]
+        if k in caps:
+            sl['caption'] = caps[k]
     msgs = s['display_messages']
     msgs.insert(msgs.index(next(m for m in msgs if m.get('msg_id') == 'MSG9')) + 1,
                 {"event": "Tick a case with CUT_FLAG N", "cause": "The ASN cannot stop after this case (a destination would not close its case)", "type": "Info",
