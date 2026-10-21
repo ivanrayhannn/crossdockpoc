@@ -23,6 +23,6 @@ Contoh dummy PART-X / PART-Y (6 pcs/case, delivery 16-Oct Rit 1): input pre-mapp
 ## Keputusan 21-Oct (opsi ASN per blok)
 - Delivery plan tetap 1 baris per Part No + Customer Order Date. Case Qty = jumlah **case supplier** (PCS_CASE pcs dalam urutan scan, boleh campur destinasi).
 - Status unit: **Ready** (semua blok '6'), **Partially Ready** (blok pertama '6', blok berikutnya '7'), **Not Ready** (blok pertama '7', check box disabled, MSG2).
-- Item baru **ASN Option** (dropdown per unit yang dicentang): pilih n blok Ready pertama, contoh "1 case (6 pcs) / 3 cases (18 pcs) / 4 cases (24 pcs)"; default semua blok Ready. Blok tidak dipecah dan tidak dilompati.
+- **Checkbox per blok** (bukan dropdown): di bawah setiap unit tampil baris blok (1 baris per CUT_FLAG Y XD09) dengan kolom Block, Cases, Qty, Content (mis. VN 4 + TH 2 | TH 4 + VN 2) dan Block Status. Checkbox hanya aktif untuk blok Ready. Centang blok n → blok 1..n-1 ikut tercentang; uncentang blok n → blok sesudahnya ikut lepas (blok tidak dipecah / dilompati). Checkbox unit = centang semua blok Ready. Supplier juga melihat baris blok.
 - [Create ASN] insert slice blok terpilih ke TB_R_INSTRUCTION (CASE_SEQ / LINE_SEQ dari XD09). PO_MAPPED_FLAG = 'Y' hanya untuk line yang sudah lengkap; sisa line ikut [Search] berikutnya dan dipotong ulang dari case 1 dengan urutan yang sama.
 - Aturan lama "1 case per Part + Customer Order Date + destinasi" dan "unit selalu utuh (A2) / Kondisi 3" diganti aturan blok. Gambar layar di UISS masih dari prototype lama (belum ada kolom ASN Option).
