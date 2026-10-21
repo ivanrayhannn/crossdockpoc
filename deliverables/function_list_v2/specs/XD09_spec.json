@@ -1175,7 +1175,7 @@
      "NUMBER(4)",
      "",
      "N",
-     "Block (ASN option) of the slice: the cases up to and including a valid cut"
+     "Case Group (block) of the slice: the cases up to and including a valid cut; the cases of a group are sent together"
     ],
     [
      "CROSSDOCK_STATUS",

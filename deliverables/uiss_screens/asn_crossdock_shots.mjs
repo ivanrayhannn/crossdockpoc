@@ -22,8 +22,8 @@ await pg.getByRole('button', { name: 'N · Hold' }).nth(1).click(); await shot('
 await pg.getByRole('button', { name: 'Y · Release' }).click();
 // supplier: tick case 2 of PART-A (MSG10, cases 1-3) and the unit PART-C 13-Oct
 await view('Supplier'); await search();
-await caseBox(/Case 2 cannot be the last/).check();
-await unitRow('PART-C', '13-Oct').locator('input[type=checkbox]').first().check(); await shot('c_05_selected');
+await unitRow('PART-C', '13-Oct').locator('input[type=checkbox]').first().check();
+await caseBox(/Group 2: cases 2-3/).check(); await shot('c_05_selected');
 // D/S team (other session) holds Thailand of the ticked unit PART-A
 await view('D/S team'); await search();
 await unitRow('PART-A', '14-Oct').getByTitle('Destination detail (D/S team)').click();
@@ -42,7 +42,7 @@ await pg.getByRole('button', { name: 'Create ASN' }).click(); await shot('c_05e_
 await pg.getByRole('button', { name: 'OK' }).click();
 // supplier: case list, PO detail, confirm, submit
 await view('Supplier'); await search();
-await caseBox(/Case 2 cannot be the last/).check();
+await caseBox(/Group 2: cases 2-3/).check();
 await unitRow('PART-C', '13-Oct').locator('input[type=checkbox]').first().check();
 await pg.getByRole('button', { name: 'Create ASN' }).click(); await shot('c_06_case_list');
 await pg.getByTitle('PO detail').nth(1).click(); await shot('c_07_case_expand');
