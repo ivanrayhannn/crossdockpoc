@@ -139,6 +139,37 @@ SAMPLE = {
     ]}
 
 
+# ---- XD10 case check boxes (decided 21-Oct): example of the user, all cases with PO (p1 24 + p2 6)
+_CASES = pack(LINES, [['p1', 'M-0001', '0001', 24], ['p2', 'M-0002', '0001', 6]], 6)
+
+
+def _case_rows():
+    rows = []
+    for c in sorted({s['CASE_SEQ'] for s in _CASES}):
+        sl = [s for s in _CASES if s['CASE_SEQ'] == c]
+        rows.append([c, sum(s['ASSIGNED_QTY'] for s in sl), ' + '.join(f"{s['DESTINATION_CD']} {s['ASSIGNED_QTY']} ({s['CUSTOMER_ORDER_NO']})" for s in sl),
+                     ', '.join(f"{po} {sum(s['ASSIGNED_QTY'] for s in sl if s['PO_NO'] == po)}" for po in dict.fromkeys(s['PO_NO'] for s in sl)),
+                     sl[-1]['CUT_FLAG'], sl[-1]['CROSSDOCK_STATUS']])
+    return rows
+
+
+XD10_CASE_SECTIONS = [
+    {'title': 'H. Case selection (decided 21-Oct): PART-A 14-Oct, all cases with PO (p1 24 + p2 6); one check box per supplier case',
+     'columns': ['Case', 'Qty', 'Content (scan order)', 'PO', 'Can end here (CUT_FLAG)', 'PO Status'], 'widths': [6, 6, 34, 18, 20, 10],
+     'rows': _case_rows()},
+    {'title': 'I. Check box scenarios (cumulative VN / TH after the last ticked case)', 'columns': ['No', 'User action', 'Ticked cases', 'Result'],
+     'widths': [6, 34, 14, 66],
+     'rows': [['C1', 'Tick case 1', '1', 'VN 6 / TH 0: valid end; ASN 6 pcs.'],
+              ['C2', 'Tick case 2 (or cases 1 and 2)', '1-3', 'Case 2 ends with VN 10 / TH 2 (CUT N): cases 1-2 alone are not possible; case 3 is ticked too '
+               '(message no. 10) -> VN 12 / TH 6; ASN 18 pcs.'],
+              ['C3', 'Tick case 3', '1-3', 'Cases 1-2 are ticked too; ASN 18 pcs.'],
+              ['C4', 'Tick case 4', '1-4', 'VN 18 / TH 6: valid end; ASN 24 pcs.'],
+              ['C5', 'Tick case 5 (or the unit check box)', '1-5', 'All cases; ASN 30 pcs.'],
+              ['C6', 'From 1-4, untick case 3', '1', 'Cases 3-4 unticked; case 2 cannot be the last case, so it is unticked too (back to case 1).'],
+              ['C7', 'p2 not released yet (case 5 without PO)', '1 / 1-3 / 1-4', 'Case 5 disabled (tooltip message no. 2); the user can end on case 1, 3 or 4.']]},
+]
+
+
 def xd09():
     s = load('XD09')
     g = s['general']
@@ -236,47 +267,50 @@ def xd10():
     g = s['general']
     g['objective'][1] = ("To display the delivery plan per Part Number + Customer Order Date with the supplier cases in receiving scan order (Case Qty, "
                          "PO Readiness, ASN options, ASN Status Ready / Partially Ready / Not Ready). Units fully Created or without any pre-mapped case are not listed.")
-    g['objective'][3] = ("To tick the blocks to send (check box per block, first n Ready blocks of a unit) of one Supplier Code + Supplier Plant, map them to their POs "
+    g['objective'][3] = ("To tick the supplier cases to send (check box per case, from case 1 up to a valid cut) of one Supplier Code + Supplier Plant, map them to their POs "
                          "(TB_R_INSTRUCTION), review the cases, download the case labels and submit the ASN.")
     g['buttons'][5]['function'] = ("Check that the selected units are of one supplier and not held, map the chosen blocks to their POs (insert TB_R_INSTRUCTION) "
                                    "and open the Case List sub screen.")
-    g['screen_mode_remarks'][0] = ('1) Each unit row shows its block rows (one row per CUT_FLAG Y of XD09). The check box of a block is enabled only when the '
-                                   'block is Ready (message no. 2 as tooltip otherwise); the unit check box is enabled when its first block is Ready.')
-    g['screen_mode_remarks'][1] = ("2) Blocks are ticked in scan order: ticking block n also ticks blocks 1..n-1 of the unit; unticking block n also unticks the "
-                                   "later blocks (a block is never split or skipped). The unit check box ticks / unticks all Ready blocks. Units of different "
-                                   "Customer Order Dates and Part Numbers can be ticked together.")
-    g['screen_mode_remarks'][2] = ("3) The supplier sees the unit rows and their block rows (with check box); the destination detail, customer orders and "
+    g['screen_mode_remarks'][0] = ('1) Each unit row shows its supplier case rows in scan order (XD09). The check box of a case is enabled only when the case '
+                                   'and every earlier case have a PO (Ready, message no. 2 as tooltip otherwise).')
+    g['screen_mode_remarks'][1] = ("2) The ticked cases of a unit always start at case 1 and must end on a case with CUT_FLAG Y (every destination closes its "
+                                   "warehouse case). Ticking case n also ticks the earlier cases and the later cases up to the next CUT_FLAG Y (message no. 10); "
+                                   "unticking case n unticks it, the later cases and the earlier cases back to the previous CUT_FLAG Y. The unit check box ticks "
+                                   "all Ready cases. Units of different Customer Order Dates and Part Numbers can be ticked together.")
+    g['screen_mode_remarks'][2] = ("3) The supplier sees the unit rows and their case rows (with check box); the destination detail, customer orders and "
                                    "Hold / Release are shown to the D/S team only.")
     for m in g['screen_modes']:
         for sec in m['sections']:
             if sec['description'].startswith('Units of the login supplier'):
-                sec['description'] = ('Units of the login supplier (Supplier Code + Plant) only; unit rows with their block rows (check box per block); '
+                sec['description'] = ('Units of the login supplier (Supplier Code + Plant) only; unit rows with their supplier case rows (check box per case); '
                                       'Part Number / Status filters')
     nodes = s['screen_flow'][1]['flow']['nodes']
     nodes[3]['label'] = 'First block Ready? (blocks in scan order)'
-    nodes[5]['label'] = 'Tick blocks (first n Ready blocks per unit), Create ASN: insert TB_R_INSTRUCTION'
+    nodes[5]['label'] = 'Tick cases (from case 1 up to a CUT_FLAG Y), Create ASN: insert TB_R_INSTRUCTION'
     it = s['items']
     it[9]['validation'] = 'Enabled when the first block of the unit is Ready'
     it[13]['description'] = ('Number of supplier cases of the unit: open qty / pcs/case, cut in scan order (e.g. 30 pcs, 6 pcs/case = 5 cases); '
                              'a case can hold several destinations.')
     it[15]['description'] = ("Ready (all blocks '6', green) / Partially Ready (first block '6', a later block '7', amber) / Not Ready (first block '7', "
                              "row highlighted) / On Hold (D/S only). Refer 5.2.")
-    it[9]['description'] = 'Ticks / unticks all Ready blocks of the unit (shown as partly ticked when only some blocks are ticked). Refer Screen Mode remark 2).'
+    it[9]['description'] = 'Ticks / unticks all Ready cases of the unit (up to the last Ready CUT_FLAG Y; partly ticked when only some cases are ticked). Refer Screen Mode remark 2).'
     def item(name, src, field, typ, io, control, fmt, val, desc, just='Left', init='-', req='N'):
         return {"name": name, "source": src, "field": field, "type": typ, "len": "-", "io": io, "control": control, "justified": just,
                 "initial": init, "required": req, "format": fmt, "validation": val, "description": desc}
     it[17:17] = [
-        {"group": "<Blocks of a Unit (ASN option)>"},
-        item('Select block (check box)', 'Key-in', '-', 'Char', 'I', 'CheckBox', '-', 'Enabled only for Ready blocks (CROSSDOCK_STATUS 6)',
-             'One check box per block (valid cut, CUT_FLAG Y of XD09). Ticking block n ticks blocks 1..n-1; unticking block n unticks the later blocks. '
-             'Not Ready block: disabled, tooltip message no. 2. Refer 5.4.', just='Center', init='<unchecked>'),
-        item('Block', '#TEMP_INSTRUCTION', 'GROUP_SEQ', 'Number', 'O', 'Label', 'Z9', '-', 'Block number in scan order.', just='Right'),
-        item('Cases', '#TEMP_INSTRUCTION', 'CASE_SEQ', 'Char', 'O', 'Label', 'Case {from}-{to}', '-', 'Supplier cases of the block, e.g. Case 2-3.'),
-        item('Qty (pcs)', '#TEMP_INSTRUCTION', 'ASSIGNED_QTY', 'Number', 'O', 'Label', 'ZZZ9', '-', 'Sum of the block; cumulative qty up to this block in brackets (e.g. 12 (18)).', just='Right'),
-        item('Content', '#TEMP_INSTRUCTION', 'DESTINATION_CD / ASSIGNED_QTY', 'Char', 'O', 'Label', '-', '-',
-             'Destinations of the block in scan order, e.g. VN 4 + TH 2 | TH 4 + VN 2.'),
-        item('Block Status', '#TEMP_INSTRUCTION', 'CROSSDOCK_STATUS', 'Char', 'O', 'Label', '-', '-',
-             "'6' Ready (green) / '7' Not Ready (amber): the block or an earlier block has no PO yet."),
+        {"group": "<Supplier Cases of a Unit (scan order)>"},
+        item('Select case (check box)', 'Key-in', '-', 'Char', 'I', 'CheckBox', '-', 'Enabled only when the case and every earlier case have a PO',
+             'One check box per supplier case. The selection always starts at case 1 and ends on a case with CUT_FLAG Y: ticking case n also ticks '
+             'the earlier cases and the later cases up to the next CUT_FLAG Y (message no. 10, e.g. tick case 2 -> cases 1-3); unticking case n '
+             'unticks the later cases and goes back to the previous CUT_FLAG Y. Refer 5.4.', just='Center', init='<unchecked>'),
+        item('Case', '#TEMP_INSTRUCTION', 'CASE_SEQ', 'Number', 'O', 'Label', 'Z9', '-', 'Supplier case number in scan order (PCS_CASE pcs).', just='Right'),
+        item('Qty (pcs)', '#TEMP_INSTRUCTION', 'ASSIGNED_QTY', 'Number', 'O', 'Label', 'ZZZ9', '-', 'Pcs of the case (= PCS_CASE).', just='Right'),
+        item('Content', '#TEMP_INSTRUCTION', 'DESTINATION_CD / CUSTOMER_ORDER_NO / ASSIGNED_QTY', 'Char', 'O', 'Label', '-', '-',
+             'Slices of the case in scan order, e.g. VN 4 (V01) + TH 2 (T01).'),
+        item('Can end here', '#TEMP_INSTRUCTION', 'CUT_FLAG', 'Char', 'O', 'Label', 'Y / N', '-',
+             "Y: the ASN may stop after this case (every destination a multiple of PCS_CASE). N: the next cases up to a Y are ticked together."),
+        item('PO Status', '#TEMP_INSTRUCTION', 'CROSSDOCK_STATUS', 'Char', 'O', 'Label', '-', '-',
+             "'6' Ready (green) / '7' Not Ready (amber): the case or an earlier case has no PO yet."),
     ]
     for x in it:
         if x.get('name') == 'Part Number' and x.get('source') == I:
@@ -313,11 +347,12 @@ def xd10():
         "blocks), Partially Ready (the first k blocks), Not Ready (first block; check box disabled, message no. 2).",
         "Created: blocks in a submitted ASN are no longer in the delivery plan (shown in ASN Inquiry); the open qty of the unit is cut again from case 1 "
         "in the same order at the next [Search]."]
-    op[6]['text'] = '5.4 Select Units, Choose ASN Option and Create ASN'
-    op[7]['items'][0] = ("The user ticks the blocks to send with the check box of each block row (one block per CUT_FLAG Y of XD09): ticking block n "
-                         "also ticks blocks 1..n-1 of the unit, unticking block n unticks the later blocks; only Ready blocks can be ticked. The unit check "
-                         "box ticks all Ready blocks. Units of different Customer Order Dates and Part Numbers can be ticked together. One ASN is "
-                         "for one Supplier Code + Supplier Plant (existing rule): ticked units of more than one supplier give message no. 9 and nothing is created.")
+    op[6]['text'] = '5.4 Select Cases (CUT_FLAG) and Create ASN'
+    op[7]['items'][0] = ("The user ticks the supplier cases to send with the check box of each case row. The ticked cases of a unit start at case 1 and "
+                         "end on a case with CUT_FLAG Y, so that every destination closes its warehouse case at receiving: ticking a case with CUT_FLAG N "
+                         "also ticks the following cases up to the next CUT_FLAG Y (message no. 10). Example: case 2 = VN 4 + TH 2 (CUT N) -> cases 1-3 are "
+                         "ticked; cases 1-2 alone are not possible. Only Ready cases can be ticked. One ASN is for one Supplier Code + Supplier Plant "
+                         "(existing rule): ticked units of more than one supplier give message no. 9 and nothing is created.")
     op[7]['items'][1] = ("[Create ASN] does the real mapping of the chosen blocks in one transaction: the slices inserted into TB_R_INSTRUCTION (case and "
                          "line sequence of XD09), MAPPED_QTY in the new table TB_R_PRA_DAILY_ORDER_MAPPED, and PO_MAPPED_FLAG = 'Y' on the H0253 lines "
                          "that are now completely in TB_R_INSTRUCTION. Then the Case List opens.")
@@ -325,7 +360,7 @@ def xd10():
                          "and MAPPED_QTY reduced again, so the blocks can be selected again.")
     for m in s['display_messages']:
         if m.get('msg_id') == 'MSG2':
-            m['message'] = 'Not Ready: the first block of {Part No} / {Customer Order Date} is not assigned to a PO yet ({k} of {n} cases assigned)'
+            m['message'] = 'Not Ready: case {n} of {Part No} / {Customer Order Date} (or an earlier case) is not assigned to a PO yet ({k} of {c} cases assigned)'
         if m.get('cause') == 'A selected unit is no longer Ready':
             m['cause'] = 'A chosen block is no longer Ready'
     for t in s['tables']:
@@ -337,9 +372,15 @@ def xd10():
                                 "ASN_NO and CASE_NO. Columns proposed.")
     for x in it:
         if x.get('name') == 'Selection summary':
-            x['description'] = "'{n} units · {b} blocks · {c} cases selected · {units}'. Empty: hint that blocks of different units / dates can go into one ASN."
+            x['description'] = "'{n} units · {c} cases · {q} pcs selected · {units}'. Empty: hint that cases of different units / dates can go into one ASN."
         if x.get('name') == 'Clear selection':
-            x['description'] = 'Unticks all blocks.'
+            x['description'] = 'Unticks all cases.'
+    msgs = s['display_messages']
+    msgs.insert(msgs.index(next(m for m in msgs if m.get('msg_id') == 'MSG9')) + 1,
+                {"event": "Tick a case with CUT_FLAG N", "cause": "The ASN cannot stop after this case (a destination would not close its case)", "type": "Info",
+                 "msg_id": "MSG10", "message": "Case {n} cannot be the last case: {dest} would not complete a case. Cases {n}-{m} are selected together.",
+                 "action": "Keep the selection (cases up to {m}) or untick."})
+    s['sample_sheet']['sections'] += XD10_CASE_SECTIONS
     save('XD10', s)
 
 
