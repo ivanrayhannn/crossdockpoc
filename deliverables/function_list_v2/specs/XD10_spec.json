@@ -24,7 +24,7 @@
    "To let the D/S team (super admin) see the units of all suppliers, the destination detail and hold / release a destination of a unit.",
    "To select one or more Ready units of one Supplier Code + Supplier Plant, map them to their POs (TB_R_INSTRUCTION), review the cases, download the case labels and submit the ASN.",
    "Submit ASN runs in the background with a Submit ID and follows the existing ASN submit of NSP (refer 5.7).",
-   "Submit ASN (decided 20-Oct, existing structure GTOPAS SPS DB): one TB_R_DAILY_ORDER_MANIFEST row per Pra Daily Order manifest of the cases (same ASN_NO) and one TB_R_DAILY_ORDER_PART row per manifest item and case; the ASN number and the case numbers (case label) are auto generated and their last sequence is saved in TB_R_CASE_LABEL_LAST_SEQ; PART_NAME from TB_M_PART_MASTER."
+   "Submit ASN (decided 20-Oct, existing structure G-System SPS DB): one TB_R_DAILY_ORDER_MANIFEST row per Pra Daily Order manifest of the cases (same ASN_NO) and one TB_R_DAILY_ORDER_PART row per manifest item and case; the ASN number and the case numbers (case label) are auto generated and their last sequence is saved in TB_R_CASE_LABEL_LAST_SEQ; PART_NAME from TB_M_PART_MASTER."
   ],
   "display_order": [
    {
@@ -2293,7 +2293,7 @@
    "marker": "a.",
    "level": 2,
    "items": [
-    "Unit = Part Number + Customer Order Date. Case = destination x pcs/case: the qty of a destination is packed in cases of pcs/case (e.g. Vietnam 24 pcs, 6 pcs/case = 4 cases). G-TOPAS releases in multiples of pcs/case (a remainder stays pending and is not in H0253), so every case is full. A case can hold several customer orders and several POs of the same destination; a customer order line that does not fit in the remaining space of a case continues in the next case (e.g. case 3 = CO-14001 4 + CO-14006 2 of PO2; case 4 = CO-14006 2 of PO2 + CO-14007 4 of PO4).",
+    "Unit = Part Number + Customer Order Date. Case = destination x pcs/case: the qty of a destination is packed in cases of pcs/case (e.g. Vietnam 24 pcs, 6 pcs/case = 4 cases). G-System releases in multiples of pcs/case (a remainder stays pending and is not in H0253), so every case is full. A case can hold several customer orders and several POs of the same destination; a customer order line that does not fit in the remaining space of a case continues in the next case (e.g. case 3 = CO-14001 4 + CO-14006 2 of PO2; case 4 = CO-14006 2 of PO2 + CO-14007 4 of PO4).",
     "Case Qty = number of destinations. PO Readiness (case) = cases whose whole qty is pre-mapped to a PO.",
     "Ready ('6'): every line of the unit is pre-mapped to a PO. Not Ready ('7'): at least one line of the unit has no PO yet (check box disabled, message no. 2). With POs of different PO Dates the unit becomes Ready when the last PO is available (condition 3).",
     "Created: the unit is in a submitted ASN (ASN status '1'); it is no longer listed (shown in ASN Inquiry)."
@@ -2998,7 +2998,7 @@
    "name": "TB_R_DAILY_ORDER_MANIFEST",
    "kind": "transaction",
    "proposed": false,
-   "description": "Existing ASN manifest (GTOPAS SPS DB structure TR-01). Submit ASN: one row per Pra Daily Order manifest of the cases, all with the same ASN_NO. Only the columns used are listed.",
+   "description": "Existing ASN manifest (G-System SPS DB structure TR-01). Submit ASN: one row per Pra Daily Order manifest of the cases, all with the same ASN_NO. Only the columns used are listed.",
    "columns": [
     [
      "DEPOT_CD",

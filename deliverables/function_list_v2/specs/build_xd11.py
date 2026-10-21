@@ -1,5 +1,5 @@
 """XD11 Cancel Crossdock Customer Order Batch (new UISS-Batch).
-NSP never cancels an order: G-TOPAS cancels it (H0253 order status 2). XD12 brings the status 2 rows into
+NSP never cancels an order: G-System cancels it (H0253 order status 2). XD12 brings the status 2 rows into
 TB_R_H0253_ORDER_CONTROL_PRE with CANCEL_STATUS 'P'. XD11 applies the cancel per line (all serials of the line,
 because a partial cancel splits the line into a new SERIAL_NO): it releases the open mapping and reports a
 CONFLICT when qty already in a submitted ASN is cancelled (abnormality: SOP not followed)."""
@@ -37,11 +37,11 @@ def build():
         "doc_type": "batch",
         "general": {
             "objective": [
-                "To apply in NSP the cancel of crossdock customer order lines done in G-TOPAS (status '2', brought in by XD12 with CANCEL_STATUS 'P'). "
+                "To apply in NSP the cancel of crossdock customer order lines done in G-System (status '2', brought in by XD12 with CANCEL_STATUS 'P'). "
                 "NSP does not cancel orders; a line can be cancelled with or without HOLD_FLAG = 'Y'.",
                 "Per line (all SERIAL_NO of the line, because a partial cancel splits the line): the open mapping of the line (mapped by [Create ASN], not submitted) "
                 "is released, so the remaining valid qty is pre-mapped again by XD09.",
-                "Qty already in a submitted ASN cannot be cancelled: G-TOPAS blocks it by the existing ASN feedback and the D/S team follows the SOP. "
+                "Qty already in a submitted ASN cannot be cancelled: G-System blocks it by the existing ASN feedback and the D/S team follows the SOP. "
                 "If it still happens (abnormality), the ASN is not changed and the line is reported as CONFLICT to the D/S team."],
             "operation_flow": {"flow": {"direction": "TB", "nodes": [
                 {"id": "a", "label": "Scheduler: after XD12, before XD08", "type": "event"},
@@ -157,9 +157,9 @@ def build():
             {"type": "heading", "text": "4.2 Rules"},
             {"type": "bullets", "marker": "-", "level": 0, "items": [
                 "NSP never cancels a customer order and has no Cancel ASN. A line can be cancelled with or without hold; HOLD_FLAG is only recorded.",
-                "The calculation is per line (all SERIAL_NO), because G-TOPAS splits a partially cancelled line into a new serial.",
-                "Prevention of a cancel of qty in an ASN: existing ASN feedback to G-TOPAS + SOP of the D/S team. XD11 only detects the abnormality (CONFLICT).",
-                "CONFLICT: the D/S team handles the shipped case at receiving in G-TOPAS: allocate it to an open order with the same destination, otherwise move it to warehouse stock (prototype menu Cancel Order Simulation).",
+                "The calculation is per line (all SERIAL_NO), because G-System splits a partially cancelled line into a new serial.",
+                "Prevention of a cancel of qty in an ASN: existing ASN feedback to G-System + SOP of the D/S team. XD11 only detects the abnormality (CONFLICT).",
+                "CONFLICT: the D/S team handles the shipped case at receiving in G-System: allocate it to an open order with the same destination, otherwise move it to warehouse stock (prototype menu Cancel Order Simulation).",
                 f"{RES} is the exception list for the D/S team (RESULT = CONFLICT); a screen for it is not in this scope (TBC). The messages are also in the Log (Log Monitoring).",
                 "Option not in this draft (TBC): keep the released PO qty of a CONFLICT blocked until the D/S team closes the conflict."]}],
         "logging_messages": [

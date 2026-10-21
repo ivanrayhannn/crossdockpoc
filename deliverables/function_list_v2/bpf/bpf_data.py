@@ -1,9 +1,9 @@
 """Business Process Flow level 2 of Crossdock (X = PIC lane, Y = timeline), down to table level, with the abnormality conditions.
 Single source: build_bpf.py writes the prototype data (app/src/features/bpf/bpfData.ts) and the Excel from it.
-Names follow the documents (G-TOPAS / NSP); the prototype shows them as T-System / Supplier System."""
+Names follow the documents (G-System / NSP); the prototype shows them as T-System / Supplier System."""
 
 LANES = {
-    'GT': 'G-TOPAS / DB Surrounding',
+    'GT': 'G-System / DB Surrounding',
     'NB': 'NSP Batch (System)',
     'PR': 'Procurement',
     'DS': 'D/S Team',
@@ -16,7 +16,7 @@ LANES = {
 FLOWS = [
     {
         'id': 'F1', 'title': 'Master Setup (weekly / monthly)',
-        'desc': 'Destination master, candidate parts, monthly DAD volume calculation, mapping per destination and sync to G-TOPAS / AP POLE.',
+        'desc': 'Destination master, candidate parts, monthly DAD volume calculation, mapping per destination and sync to G-System / AP POLE.',
         'lanes': ['GT', 'NB', 'PR', 'DS', 'AP'],
         'bands': [('B1', 'Weekly · 21:30', 1), ('B2', 'Any time (before the monthly run)', 1),
                   ('B3', 'Monthly · scheduler (date not detailed)', 4), ('B4', 'After the monthly run (working day)', 3),
@@ -45,11 +45,11 @@ FLOWS = [
                  write=['TB_M_PART_CANDIDATE_DEST', 'TB_M_PART_CANDIDATE (SYNC_STATUS No Sync)', 'TB_H_PART_CANDIDATE'], ab=['AB02'], next=['M10']),
             dict(id='M10', lane='DS', band='B4', slot=1, fn='XD01', title='Sync parts with status No Sync & Failed',
                  read=['TB_M_PART_CANDIDATE'], write=[], ab=[], next=['M11']),
-            dict(id='M11', lane='NB', band='B4', slot=2, fn='XD06 · XD07', title='Send crossdock master (CROSSDOCK_FLAG Y / N): G-TOPAS existing IF, AP POLE file by SFTP',
+            dict(id='M11', lane='NB', band='B4', slot=2, fn='XD06 · XD07', title='Send crossdock master (CROSSDOCK_FLAG Y / N): G-System existing IF, AP POLE file by SFTP',
                  read=['TB_M_PART_CANDIDATE', 'TB_M_PART_CANDIDATE_DEST'],
                  write=['TB_R_CROSSDOCK_IF_RESULT (dummy)', 'TB_M_PART_CANDIDATE (SYNC_STATUS)', 'TB_H_PART_CANDIDATE', 'Log'], ab=['AB06'], next=['M12', 'M13']),
             dict(id='M12', lane='GT', band='B5', slot=0, fn='RPA', title='Modify part number and destination in Crossdock Master (Supply Menu)',
-                 read=['Interface data from NSP'], write=['G-TOPAS master (not detailed)'], ab=[], next=[]),
+                 read=['Interface data from NSP'], write=['G-System master (not detailed)'], ab=[], next=[]),
             dict(id='M13', lane='AP', band='B5', slot=0, fn='', title='TMMIN SFTP → TMA SFTP → receive IF by TMA AP POLE Crossdock Kanban Part Master',
                  read=['Interface file (SFTP)'], write=['AP POLE Crossdock Kanban Part Master / Crossdock Export Part Master'], ab=[], next=[]),
         ],
@@ -84,7 +84,7 @@ FLOWS = [
                  write=['TB_R_DAILY_ORDER_MANIFEST', 'TB_R_DAILY_ORDER_PART', 'TB_R_CASE_LABEL_LAST_SEQ', 'TB_R_INSTRUCTION (ASN_NO, CASE_NO)', 'Log'], ab=['AB13'], next=['D11', 'D12', 'D13']),
             dict(id='D11', lane='SP', band='B4', slot=0, fn='XD15', title='ASN Inquiry; download case label (1 label = 1 case of 1 destination)',
                  read=['TB_R_DAILY_ORDER_MANIFEST', 'TB_R_DAILY_ORDER_PART'], write=[], ab=[], next=[]),
-            dict(id='D12', lane='GT', band='B4', slot=0, fn='existing', title='ASN feedback: ASN qty known in G-TOPAS (basis of the cancel SOP)',
+            dict(id='D12', lane='GT', band='B4', slot=0, fn='existing', title='ASN feedback: ASN qty known in G-System (basis of the cancel SOP)',
                  read=['Existing ASN feedback'], write=[], ab=[], next=[]),
             dict(id='D13', lane='SP', band='B4', slot=1, fn='Log Monitoring', title='Check the submit result per Submit ID',
                  read=['Log'], write=[], ab=['AB13'], next=[]),
@@ -92,9 +92,9 @@ FLOWS = [
     },
     {
         'id': 'F4', 'title': 'Hold & Cancel Crossdock Customer Order',
-        'desc': 'Hold: the D/S team holds / releases a destination in XD10; held lines are not pre-mapped and a hold placed after the supplier ticked a unit stops [Create ASN]. Cancel: an order is cancelled in G-TOPAS only (with or without hold); NSP takes the status 2 rows (XD12), releases the open mapping (XD11) and then takes status 7 / 6 (XD08).',
+        'desc': 'Hold: the D/S team holds / releases a destination in XD10; held lines are not pre-mapped and a hold placed after the supplier ticked a unit stops [Create ASN]. Cancel: an order is cancelled in G-System only (with or without hold); NSP takes the status 2 rows (XD12), releases the open mapping (XD11) and then takes status 7 / 6 (XD08).',
         'lanes': ['GT', 'NB', 'DS', 'SP'],
-        'bands': [('B0', 'Day D · working hours (hold)', 4), ('B1', 'Any time · G-TOPAS (cancel)', 2), ('B2', '27:30 · job chain XD12 → XD11 → XD08', 3), ('B3', 'Day D · working hours', 3)],
+        'bands': [('B0', 'Day D · working hours (hold)', 4), ('B1', 'Any time · G-System (cancel)', 2), ('B2', '27:30 · job chain XD12 → XD11 → XD08', 3), ('B3', 'Day D · working hours', 3)],
         'steps': [
             dict(id='H1', lane='DS', band='B0', slot=0, fn='XD10', title='Monitor the destination detail of the delivery plan (View as D/S team)',
                  read=['TB_R_H0253_ORDER_CONTROL_PRE'], write=[], ab=[], next=['H2']),
@@ -139,8 +139,8 @@ ABNORMALITY = [
      'Roll back the process; process 2 starts only after process 1 succeeded.', 'Procurement / D/S Team',
      'Check the cause; Procurement clicks [Run calculation (Part List)] (process 1 + 2), D/S clicks [Run calculation (Mapping)] (process 2).'),
     ('AB05', 'F1', 'M7', 'XD05 P2', 'Destination code not in TB_M_H0125_DESTINATION', 'Log FAILED (LOG11)',
-     'Roll back process 2.', 'System admin / D/S Team', 'Register the destination (via G-TOPAS → XD13), then run again.'),
-    ('AB06', 'F1', 'M11', 'XD06 / XD07', 'Interface file cannot be created, or G-TOPAS / AP POLE SFTP not available after retry', 'IF_STATUS 2, SYNC_STATUS Failed, Log',
+     'Roll back process 2.', 'System admin / D/S Team', 'Register the destination (via G-System → XD13), then run again.'),
+    ('AB06', 'F1', 'M11', 'XD06 / XD07', 'Interface file cannot be created, or G-System / AP POLE SFTP not available after retry', 'IF_STATUS 2, SYNC_STATUS Failed, Log',
      'Keep the file in the outbound folder; parts stay Failed.', 'D/S Team', 'Click [Sync] again later (Failed parts are counted in n); contact PIC if it persists.'),
     ('AB07', 'F2 / F4', 'D3 / C5', 'XD08', 'DB Surrounding cannot be read or the upsert fails (after 3 retries)', 'Log FAILED',
      'Roll back; watermark INTF_UPDATE_DT not changed, rows are taken again by the next run.', 'System admin',
@@ -180,7 +180,7 @@ USER_PROCESS = [
      'XD01 Mapping per Destination', 'mapping/c_05_details_view.png', 'TB_M_PART_CANDIDATE_DEST (XD05 process 2)', 'AB04 / AB05: click [Run calculation (Mapping)] after the cause is fixed.', 'M9'),
     ('U5', 'After the monthly run', 'DS', 'Adjust the split in edit mode, or upload the mapping Excel.',
      'Mapping → [Edit] / [Upload Excel] (XD03)', 'mapping/c_07_edit_mode.png', 'TB_M_PART_CANDIDATE_DEST, SYNC_STATUS No Sync', 'Over allocation or missing destination: message; AB02 for the upload.', 'M9'),
-    ('U6', 'After the monthly run', 'DS', 'Click [Sync] to send the crossdock master to G-TOPAS and AP POLE.',
+    ('U6', 'After the monthly run', 'DS', 'Click [Sync] to send the crossdock master to G-System and AP POLE.',
      'Mapping → [Sync (n)]', 'mapping/c_12_before_sync.png', 'XD06 / XD07; SYNC_STATUS Synced / Failed', 'AB06: parts Failed, click [Sync] again later.', 'M10'),
     ('U7', 'Day D · working hours', 'DS', 'Check the destination detail of the delivery plan; hold a destination when needed.',
      'XD10 ASN Crossdock Creation (D/S view)', 'asn_crossdock/c_04_ds_hold.png', 'TB_R_H0253_ORDER_CONTROL_PRE.HOLD_FLAG', '-', 'H2'),

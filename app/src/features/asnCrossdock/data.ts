@@ -89,7 +89,7 @@ function lines(orderDt: string, partNo: string, raw: Raw[]): InstrLine[] {
  * - PART-B 13-Oct: condition 2, destinations not in sequence.
  * - PART-C 13-Oct: condition 3, assigned to POs of 14-Oct and 15-Oct: ready only from 15-Oct.
  * - 14-Oct units: PART-A ready from 15-Oct, PART-B (Vietnam 24 pcs = 4 cases) waits for the PO of 16-Oct, PART-C has no PO yet.
- * - Every destination qty is a multiple of pcs/case (G-TOPAS releases multiples of pcs/case).
+ * - Every destination qty is a multiple of pcs/case (G-System releases multiples of pcs/case).
  * - PART-A 12-Oct: already in an ASN. */
 export const INSTRUCTIONS: InstrLine[] = [
   ...lines('2026-10-12', 'PART-A', [['CO-12001', VN, 6, 'PO0', '2026-10-13'], ['CO-12002', TH, 6, 'PO0', '2026-10-13']]),

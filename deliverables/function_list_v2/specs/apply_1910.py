@@ -3,7 +3,7 @@ Run after all builders (build_all_v2.sh). Every replacement must match once or m
 import json, os, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-SCHED_DAILY = "Scheduler, daily after G-TOPAS has provided the data (27:30); auto retry 3 times."
+SCHED_DAILY = "Scheduler, daily after G-System has provided the data (27:30); auto retry 3 times."
 
 
 def load(fid):
@@ -31,7 +31,7 @@ def sched(s, rows):
 
 
 CASE = ("Case = destination x pcs/case: the qty of a destination is packed in cases of pcs/case (e.g. Vietnam 24 pcs, 6 pcs/case = 4 cases). "
-        "G-TOPAS releases in multiples of pcs/case (a remainder stays pending and is not in H0253), so every case is full. "
+        "G-System releases in multiples of pcs/case (a remainder stays pending and is not in H0253), so every case is full. "
         "A case can hold several customer orders and several POs of the same destination; a customer order line that does not fit "
         "in the remaining space of a case continues in the next case (e.g. case 3 = CO-14001 4 + CO-14006 2 of PO2; "
         "case 4 = CO-14006 2 of PO2 + CO-14007 4 of PO4).")
@@ -64,7 +64,7 @@ EDITS = {
     ],
     'XD05': [
         ("SYNC_STATUS is not changed: only a change of Pcs/Case, Max Case/Day or the destination mapping requires a new Sync.",
-         "SYNC_STATUS: a part that changes from Active to Inactive gets SYNC_STATUS = 0 (No Sync), so the next [Sync] sends it to G-TOPAS and AP POLE with "
+         "SYNC_STATUS: a part that changes from Active to Inactive gets SYNC_STATUS = 0 (No Sync), so the next [Sync] sends it to G-System and AP POLE with "
          "CROSSDOCK_FLAG 'N' (decided 19-Oct). Other status changes do not change SYNC_STATUS."),
     ],
     'XD01': [
@@ -76,7 +76,7 @@ EDITS = {
          "n = Active parts of the ongoing period and parts that became Inactive, with Sync Status No Sync or Failed, whatever the filter."),
         ("Select every Active part of the ongoing period with Sync Status No Sync or Failed, whatever the search criteria show (n of the button). Candidate and Inactive parts are never synchronised.",
          "Select every Active part of the ongoing period, and every part that became Inactive (set to No Sync by XD05), with Sync Status No Sync or Failed, whatever the search criteria show (n of the button). "
-         "Inactive parts are sent with CROSSDOCK_FLAG 'N' so G-TOPAS and AP POLE change their status to inactive. Candidate parts are never synchronised."),
+         "Inactive parts are sent with CROSSDOCK_FLAG 'N' so G-System and AP POLE change their status to inactive. Candidate parts are never synchronised."),
         ("A status change made by the batch does not change the Sync Status.",
          "A change from Active to Inactive made by the batch sets the part to No Sync (it is sent as inactive by the next [Sync]); other status changes made by the batch do not change the Sync Status."),
     ],
@@ -107,7 +107,7 @@ def main():
         sched(s, [["Trigger", SCHED_DAILY], ["Order", "Job chain: XD12 -> XD11 -> XD08."]] + extra)
         save(fid, s)
     s = load('XD13')
-    sched(s, [["Trigger", "Scheduler after G-TOPAS has provided the data (1 time/week, 21:30); auto retry 3 times."]])
+    sched(s, [["Trigger", "Scheduler after G-System has provided the data (1 time/week, 21:30); auto retry 3 times."]])
     save('XD13', s)
 
     # SERIAL_NO is added to the source table by the DB Surrounding team (decided 19-Oct)

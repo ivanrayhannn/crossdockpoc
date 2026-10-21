@@ -11,7 +11,7 @@
    "Part List tab: This sub-menu is opened only for users logged in with a Procurement account; users with a D/S account open the Mapping per Destination sub-menu instead.",
    "Mapping per Destination tab: To split the Max Case/Day of each Active part over destinations (Thailand, Philippines, Vietnam) for the ongoing calculation period.",
    "Mapping per Destination tab: To display the destination mapping per part and calculation period, including past periods (read only).",
-   "Mapping per Destination tab: To start the interfaces of the cross dock master to GTOPAS (XD06) and AP POLE (XD07) for changed parts, and show the Sync Status of each part.",
+   "Mapping per Destination tab: To start the interfaces of the cross dock master to G-System (XD06) and AP POLE (XD07) for changed parts, and show the Sync Status of each part.",
    "Mapping per Destination tab: To export the mapping to Excel and upload the mapping of the ongoing period from Excel.",
    "Mapping per Destination tab: This sub-menu is opened only for users logged in with a D/S account; users with a Procurement account open the Part List sub-menu instead."
   ],
@@ -138,7 +138,7 @@
    },
    {
     "name": "Sync",
-    "function": "Start XD06 (GTOPAS) and XD07 (AP POLE) for every Active part of the ongoing period, and every part that became Inactive, with Sync Status No Sync or Failed, whatever the filter shows; the parts become Waiting. The label shows the number of parts, e.g. Sync (9)."
+    "function": "Start XD06 (G-System) and XD07 (AP POLE) for every Active part of the ongoing period, and every part that became Inactive, with Sync Status No Sync or Failed, whatever the filter shows; the parts become Waiting. The label shows the number of parts, e.g. Sync (9)."
    },
    {
     "name": "Upload Excel (Mapping)",
@@ -1185,7 +1185,7 @@
      },
      {
       "id": "tgt",
-      "label": "XD06 -> GTOPAS / XD07 -> AP POLE",
+      "label": "XD06 -> G-System / XD07 -> AP POLE",
       "type": "db"
      }
     ],
@@ -3548,7 +3548,7 @@
      "keys": [
       {
        "field": "PART_NO + TARGET_SYSTEM",
-       "value": "Each part to synchronise x 'GTOPAS' / 'APPOLE'"
+       "value": "Each part to synchronise x 'G-System' / 'APPOLE'"
       }
      ]
     },
@@ -3559,7 +3559,7 @@
      },
      {
       "dest_field": "TARGET_SYSTEM",
-      "description": "'GTOPAS' and 'APPOLE'"
+      "description": "'G-System' and 'APPOLE'"
      },
      {
       "dest_field": "PERIOD",
@@ -3979,12 +3979,12 @@
     [
      "Sync Status",
      "Waiting (3)",
-     "[Sync] clicked in the Mapping per Destination tab; waiting for XD06 (GTOPAS) and / or XD07 (AP POLE)."
+     "[Sync] clicked in the Mapping per Destination tab; waiting for XD06 (G-System) and / or XD07 (AP POLE)."
     ],
     [
      "Sync Status",
      "Success (1)",
-     "Both XD06 (GTOPAS) and XD07 (AP POLE) sent Pcs/Case, Max Case/Day and the destination mapping of the ongoing period."
+     "Both XD06 (G-System) and XD07 (AP POLE) sent Pcs/Case, Max Case/Day and the destination mapping of the ongoing period."
     ],
     [
      "Sync Status",
@@ -4137,8 +4137,8 @@
    "marker": "1.",
    "level": 3,
    "items": [
-    "Select every Active part of the ongoing period, and every part that became Inactive (set to No Sync by XD05), with Sync Status No Sync or Failed, whatever the search criteria show (n of the button). Inactive parts are sent with CROSSDOCK_FLAG 'N' so G-TOPAS and AP POLE change their status to inactive. Candidate parts are never synchronised.",
-    "Set SYNC_STATUS = 3 (Waiting) for these parts in TB_M_PART_CANDIDATE, set one row per part and target system (GTOPAS, AP POLE) to IF_STATUS = 3 (Waiting) in TB_R_CROSSDOCK_IF_RESULT, and start XD06 and XD07. Display message no. 27.",
+    "Select every Active part of the ongoing period, and every part that became Inactive (set to No Sync by XD05), with Sync Status No Sync or Failed, whatever the search criteria show (n of the button). Inactive parts are sent with CROSSDOCK_FLAG 'N' so G-System and AP POLE change their status to inactive. Candidate parts are never synchronised.",
+    "Set SYNC_STATUS = 3 (Waiting) for these parts in TB_M_PART_CANDIDATE, set one row per part and target system (G-System, AP POLE) to IF_STATUS = 3 (Waiting) in TB_R_CROSSDOCK_IF_RESULT, and start XD06 and XD07. Display message no. 27.",
     "With the default filter No Sync the parts leave the list; select Sync Status = Waiting or All to follow them."
    ]
   },
@@ -4153,7 +4153,7 @@
    "marker": "1.",
    "level": 3,
    "items": [
-    "XD06 IF Cross Dock Master to GTOPAS and XD07 IF Cross Dock Master to AP POLE each send, per Waiting part, Pcs/Case and Max Case/Day (TB_M_PART_CANDIDATE) and all destinations with Case/Day of the ongoing period (TB_M_PART_CANDIDATE_DEST) as one complete set.",
+    "XD06 IF Cross Dock Master to G-System and XD07 IF Cross Dock Master to AP POLE each send, per Waiting part, Pcs/Case and Max Case/Day (TB_M_PART_CANDIDATE) and all destinations with Case/Day of the ongoing period (TB_M_PART_CANDIDATE_DEST) as one complete set.",
     "Each function creates an interface file and sends it by SFTP to its target; the send status is written in the dummy table TB_R_CROSSDOCK_IF_RESULT (IF_STATUS 1 sent / 2 Failed, IF_DT, IF_FILE_NAME, IF_MESSAGE).",
     "Overall SYNC_STATUS of the part: stays 3 (Waiting) while one target is still Waiting; 1 (Success) when both targets are Success; 2 (Failed) when a target failed (SYNC_MESSAGE = target and reason); 0 (No Sync) when the part was changed after it was read.",
     "Every result is recorded in TB_H_PART_CANDIDATE (event SYNC, source IF, REMARK = target and message)."
@@ -4169,7 +4169,7 @@
    "type": "item",
    "marker": "d.",
    "level": 2,
-   "text": "Interface method: file by SFTP to GTOPAS (XD06) and AP POLE (XD07); fields and topology refer UISS-Batch XD06 / XD07 (topology TBC)."
+   "text": "Interface method: file by SFTP to G-System (XD06) and AP POLE (XD07); fields and topology refer UISS-Batch XD06 / XD07 (topology TBC)."
   },
   {
    "type": "heading",
@@ -4269,17 +4269,17 @@
     [
      "Sync Status",
      "Waiting (3)",
-     "[Sync] clicked; waiting for XD06 (GTOPAS) and / or XD07 (AP POLE)."
+     "[Sync] clicked; waiting for XD06 (G-System) and / or XD07 (AP POLE)."
     ],
     [
      "Sync Status",
      "Success (1)",
-     "The part was sent to GTOPAS and AP POLE."
+     "The part was sent to G-System and AP POLE."
     ],
     [
      "Sync Status",
      "Failed (2)",
-     "GTOPAS or AP POLE could not receive the part; target and reason in SYNC_MESSAGE; retried by the next [Sync]."
+     "G-System or AP POLE could not receive the part; target and reason in SYNC_MESSAGE; retried by the next [Sync]."
     ],
     [
      "Period",
@@ -4544,12 +4544,12 @@
    "cause": "Parts handed to XD06 / XD07",
    "type": "Info",
    "msg_id": "MSG27",
-   "message": "Sync requested for {n} part(s). They stay Waiting until GTOPAS and AP POLE have received them.",
+   "message": "Sync requested for {n} part(s). They stay Waiting until G-System and AP POLE have received them.",
    "action": "-"
   },
   {
    "event": "Hover a Failed Sync Status chip",
-   "cause": "GTOPAS or AP POLE could not receive the part",
+   "cause": "G-System or AP POLE could not receive the part",
    "type": "Info",
    "msg_id": "MSG28",
    "message": "Sync failed: {SYNC_MESSAGE}. The part is sent again with the next Sync.",
@@ -4614,7 +4614,7 @@
   },
   {
    "event": "XD06 / XD07",
-   "cause": "GTOPAS or AP POLE rejects a part",
+   "cause": "G-System or AP POLE rejects a part",
    "type": "Error",
    "msg_id": "LOG4",
    "message": "Logging is done by XD06 / XD07 (refer UISS-Batch XD06 / XD07); the chip shows the result.",
@@ -4744,7 +4744,7 @@
    "name": "TB_R_CROSSDOCK_IF_RESULT",
    "kind": "transaction",
    "proposed": true,
-   "description": "Dummy table (proposed): send status of the cross dock master per part and target system (XD06 GTOPAS, XD07 AP POLE). The real output is the interface data sent to the target (AP POLE: file by SFTP; G-TOPAS: existing interface). The overall Sync Status of the part stays in TB_M_PART_CANDIDATE.",
+   "description": "Dummy table (proposed): send status of the cross dock master per part and target system (XD06 G-System, XD07 AP POLE). The real output is the interface data sent to the target (AP POLE: file by SFTP; G-System: existing interface). The overall Sync Status of the part stays in TB_M_PART_CANDIDATE.",
    "columns": [
     [
      "PART_NO",
@@ -4758,7 +4758,7 @@
      "VARCHAR(10)",
      "Y",
      "N",
-     "'GTOPAS' (XD06) / 'APPOLE' (XD07)"
+     "'G-System' (XD06) / 'APPOLE' (XD07)"
     ],
     [
      "PERIOD",
@@ -4786,7 +4786,7 @@
      "VARCHAR(100)",
      "",
      "Y",
-     "Name of the interface file (AP POLE) or send ID (G-TOPAS)"
+     "Name of the interface file (AP POLE) or send ID (G-System)"
     ],
     [
      "IF_MESSAGE",

@@ -1,7 +1,7 @@
 # Batch – Crossdock – Order Control Pre (H0253) Sync to NSP (X10)
 
 Replikasi tabel **TB_R_H0253_ORDER_CONTROL_PRE** dari **DB Surrounding** ke **DB NSP**.
-Sumber: UISS-Batch `X10_UISS_Batch_H0253OrderControlSync.xlsx` (0.1 Initial Draft, update 15-Oct-26). Struktur dari I/F layout G-TOPAS **H02-53 / DVJO950 (Order Control Data File, Pre-order Picking Info)**.
+Sumber: UISS-Batch `X10_UISS_Batch_H0253OrderControlSync.xlsx` (0.1 Initial Draft, update 15-Oct-26). Struktur dari I/F layout G-System **H02-53 / DVJO950 (Order Control Data File, Pre-order Picking Info)**.
 
 ## Poin utama
 - Nama tabel di NSP sama dengan sumber.
@@ -9,7 +9,7 @@ Sumber: UISS-Batch `X10_UISS_Batch_H0253OrderControlSync.xlsx` (0.1 Initial Draf
 - Kolom tambahan NSP **HOLD_FLAG** dan **PO_MAPPED_FLAG**: default `'N'` saat baris pertama kali masuk. Nilainya **dipertahankan** per unique key setiap kali sync (disimpan sebelum delete, dipasang lagi setelah insert).
 - **Cancel order** tidak dilakukan di NSP: source mengirim order yang di-cancel dengan **ORDER_STATUS `2`** (order crossdock = `7`). NSP hanya **hold**, jadi cancel berlaku untuk line yang sudah **HOLD_FLAG = Y**. Line status `2` tidak diambil oleh X12.
 - **All-or-nothing**: gagal → roll back, NSP tetap berisi data run sukses terakhir.
-- G-TOPAS mengirim data **1x/hari (27:30)**; jadwal NSP di system master (**TBC**), setelah data tersedia. Hasil run dicatat di **Log**.
+- G-System mengirim data **1x/hari (27:30)**; jadwal NSP di system master (**TBC**), setelah data tersedia. Hasil run dicatat di **Log**.
 - PK = unique key di I/F layout.
 
 ## Struktur tabel (48 kolom)

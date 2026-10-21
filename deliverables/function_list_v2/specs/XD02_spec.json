@@ -681,7 +681,7 @@
     "If all rows are valid, the data is saved to TB_M_PART_CANDIDATE: flag A inserts a new part (status Candidate), flag E updates the changed values, including status Active <-> Inactive. Rows with no change are skipped.",
     "The status of a Candidate part is changed only in the Edit part data modal on the screen, not by upload.",
     "Every inserted or changed part gets a history record per changed field in TB_H_PART_CANDIDATE (event ADD / EDIT, source UPLOAD, UPLOAD_ID of this run; refer Appendix).",
-    "Every saved record gets Sync Status = No Sync. It is sent to GTOPAS and AP POLE by the IF functions (XD06 / XD07) when D/S clicks [Sync] in Mapping per Destination.",
+    "Every saved record gets Sync Status = No Sync. It is sent to G-System and AP POLE by the IF functions (XD06 / XD07) when D/S clicks [Sync] in Mapping per Destination.",
     "A result report (.xlsx) is created for both cases."
    ]
   },

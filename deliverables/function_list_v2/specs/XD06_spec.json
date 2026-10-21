@@ -3,7 +3,7 @@
   "phase": "DR",
   "project_name": "Crossdock Optimization",
   "block_name": "Batch",
-  "function_name": "XD06 IF Cross Dock Master to GTOPAS",
+  "function_name": "XD06 IF Cross Dock Master to G-System",
   "created_date": "18-Oct-26",
   "created_by": "FID Rayhan"
  },
@@ -19,9 +19,9 @@
  "doc_type": "batch",
  "general": {
   "objective": [
-   "To send the cross dock master of the parts waiting for synchronisation to GTOPAS: Active parts with Pcs/Case, Max Case/Day, Effective Start Date and all destinations with Case/Day of the ongoing period, and parts that became Inactive (CROSSDOCK_FLAG 'N', so GTOPAS changes their status to inactive). Source: Part List (TB_M_PART_CANDIDATE) and Part Mapping per Destination (TB_M_PART_CANDIDATE_DEST).",
-   "Interface method: interface to G-TOPAS as existing (not SFTP); the method and the target tables are not detailed in this document.",
-   "A part is sent as one complete set; GTOPAS replaces the data of the part, so a change such as Philippines up and Thailand down, or a removed destination, arrives as one consistent update.",
+   "To send the cross dock master of the parts waiting for synchronisation to G-System: Active parts with Pcs/Case, Max Case/Day, Effective Start Date and all destinations with Case/Day of the ongoing period, and parts that became Inactive (CROSSDOCK_FLAG 'N', so G-System changes their status to inactive). Source: Part List (TB_M_PART_CANDIDATE) and Part Mapping per Destination (TB_M_PART_CANDIDATE_DEST).",
+   "Interface method: interface to G-System as existing (not SFTP); the method and the target tables are not detailed in this document.",
+   "A part is sent as one complete set; G-System replaces the data of the part, so a change such as Philippines up and Thailand down, or a removed destination, arrives as one consistent update.",
    "The send status per part is kept in TB_R_CROSSDOCK_IF_RESULT (dummy table); together with XD07 (AP POLE) it gives the overall Sync Status shown on the Cross Dock Part Master screen (XD01)."
   ],
   "operation_flow": {
@@ -35,7 +35,7 @@
      },
      {
       "id": "b",
-      "label": "Read Waiting parts for GTOPAS",
+      "label": "Read Waiting parts for G-System",
       "type": "process"
      },
      {
@@ -45,12 +45,12 @@
      },
      {
       "id": "e",
-      "label": "Send to G-TOPAS (existing method)",
+      "label": "Send to G-System (existing method)",
       "type": "process"
      },
      {
       "id": "t",
-      "label": "G-TOPAS master",
+      "label": "G-System master",
       "type": "process"
      },
      {
@@ -88,7 +88,7 @@
    {
     "name": "TB_R_CROSSDOCK_IF_RESULT",
     "type": "DB",
-    "description": "Rows TARGET_SYSTEM = 'GTOPAS' with IF_STATUS = '3' (Waiting), set by [Sync] on XD01"
+    "description": "Rows TARGET_SYSTEM = 'G-System' with IF_STATUS = '3' (Waiting), set by [Sync] on XD01"
    },
    {
     "name": "TB_M_PART_CANDIDATE",
@@ -103,19 +103,19 @@
   ],
   "outputs": [
    {
-    "name": "Interface data to GTOPAS",
+    "name": "Interface data to G-System",
     "type": "File",
-    "description": "XD_CDMASTER_GTOPAS_<YYYYMMDDHHMMSS>.csv: one record per part x destination (see Interface Data)"
+    "description": "XD_CDMASTER_G-System_<YYYYMMDDHHMMSS>.csv: one record per part x destination (see Interface Data)"
    },
    {
-    "name": "GTOPAS: cross dock master of the part",
+    "name": "G-System: cross dock master of the part",
     "type": "System",
-    "description": "Updated in G-TOPAS (not in NSP scope)"
+    "description": "Updated in G-System (not in NSP scope)"
    },
    {
     "name": "TB_R_CROSSDOCK_IF_RESULT",
     "type": "DB",
-    "description": "Dummy table: send status of 'GTOPAS' per part (1 / 2), file name, message"
+    "description": "Dummy table: send status of 'G-System' per part (1 / 2), file name, message"
    },
    {
     "name": "TB_M_PART_CANDIDATE",
@@ -149,7 +149,7 @@
     "rows": [
      [
       "Target system",
-      "'GTOPAS' (GTOPAS)"
+      "'G-System' (G-System)"
      ],
      [
       "User",
@@ -157,7 +157,7 @@
      ],
      [
       "Interface method",
-      "interface to G-TOPAS as existing (not SFTP); the method and the target tables are not detailed in this document."
+      "interface to G-System as existing (not SFTP); the method and the target tables are not detailed in this document."
      ]
     ]
    },
@@ -277,7 +277,7 @@
      ],
      [
       "Method",
-      "interface to G-TOPAS as existing (not SFTP); the method and the target tables are not detailed in this document."
+      "interface to G-System as existing (not SFTP); the method and the target tables are not detailed in this document."
      ],
      [
       "Order",
@@ -305,7 +305,7 @@
     },
     {
      "id": "p2",
-     "label": "Select Waiting parts for GTOPAS",
+     "label": "Select Waiting parts for G-System",
      "type": "process",
      "step": 2
     },
@@ -323,13 +323,13 @@
     },
     {
      "id": "p4",
-     "label": "Send to G-TOPAS (existing method)",
+     "label": "Send to G-System (existing method)",
      "type": "process",
      "step": 4
     },
     {
      "id": "x",
-     "label": "Interface data to GTOPAS",
+     "label": "Interface data to G-System",
      "type": "file",
      "lane": "output"
     },
@@ -413,10 +413,10 @@
    ]
   },
   "steps": [
-   "[Sync] on XD01 sets the parts to Waiting (SYNC_STATUS = '3' in TB_M_PART_CANDIDATE, IF_STATUS = '3' for 'GTOPAS' and 'APPOLE' in TB_R_CROSSDOCK_IF_RESULT) and starts XD06. Write LOG1.",
-   "Select the parts with TARGET_SYSTEM = 'GTOPAS' and IF_STATUS = '3' in TB_R_CROSSDOCK_IF_RESULT whose PART_STATUS is still 'Active'. Keep CHANGED_DT of each part. No part: write LOG2 and exit.",
+   "[Sync] on XD01 sets the parts to Waiting (SYNC_STATUS = '3' in TB_M_PART_CANDIDATE, IF_STATUS = '3' for 'G-System' and 'APPOLE' in TB_R_CROSSDOCK_IF_RESULT) and starts XD06. Write LOG1.",
+   "Select the parts with TARGET_SYSTEM = 'G-System' and IF_STATUS = '3' in TB_R_CROSSDOCK_IF_RESULT whose PART_STATUS is still 'Active'. Keep CHANGED_DT of each part. No part: write LOG2 and exit.",
    {
-    "text": "Create the interface data XD_CDMASTER_GTOPAS_<YYYYMMDDHHMMSS>.csv (see Interface File / Interface Data):",
+    "text": "Create the interface data XD_CDMASTER_G-System_<YYYYMMDDHHMMSS>.csv (see Interface File / Interface Data):",
     "children": [
      "Per part: PART_NO, CROSSDOCK_FLAG 'Y', PCS_CASE, MAX_CASE_DAY, EFFECTIVE_START_DATE from TB_M_PART_CANDIDATE.",
      "Per destination of the ongoing period: PERIOD, DEST_CODE, CASE_DAY from TB_M_PART_CANDIDATE_DEST (one record each).",
@@ -424,7 +424,7 @@
     ]
    },
    {
-    "text": "Send the interface data to G-TOPAS by the existing interface method (not SFTP; not detailed in this document).",
+    "text": "Send the interface data to G-System by the existing interface method (not SFTP; not detailed in this document).",
     "children": [
      "Send error: retry; still failing: LOG4.",
      "Sent OK: continue."
@@ -442,9 +442,9 @@
     "text": "Update the overall Sync Status of each part in TB_M_PART_CANDIDATE and record the history:",
     "children": [
      "CHANGED_DT differs from step 2 (part changed while sending): SYNC_STATUS = '0' (No Sync).",
-     "Else, status of 'GTOPAS' and of 'APPOLE' in TB_R_CROSSDOCK_IF_RESULT: one still '3' -> SYNC_STATUS stays '3'; both '1' -> '1' (Success); one '2' -> '2' (Failed, SYNC_MESSAGE = target + reason).",
+     "Else, status of 'G-System' and of 'APPOLE' in TB_R_CROSSDOCK_IF_RESULT: one still '3' -> SYNC_STATUS stays '3'; both '1' -> '1' (Success); one '2' -> '2' (Failed, SYNC_MESSAGE = target + reason).",
      "SYNC_DT = now when SYNC_STATUS becomes 1 or 2.",
-     "Insert TB_H_PART_CANDIDATE: event SYNC, source IF, FIELD_NAME SYNC_STATUS, REMARK = 'GTOPAS: ' + result / message."
+     "Insert TB_H_PART_CANDIDATE: event SYNC, source IF, FIELD_NAME SYNC_STATUS, REMARK = 'G-System: ' + result / message."
     ]
    },
    "Write LOG2 with the file name and the number of parts / records sent. Exit."
@@ -467,7 +467,7 @@
      ]
     },
     "destination": {
-     "table": "Interface data to GTOPAS",
+     "table": "Interface data to G-System",
      "operation": "Insert",
      "description": "One record per part x destination"
     },
@@ -529,11 +529,11 @@
     "destination": {
      "table": "TB_R_CROSSDOCK_IF_RESULT",
      "operation": "Update",
-     "description": "Dummy table: rows of the parts of the file for 'GTOPAS'",
+     "description": "Dummy table: rows of the parts of the file for 'G-System'",
      "keys": [
       {
        "field": "PART_NO + TARGET_SYSTEM",
-       "value": "Part of the file + 'GTOPAS'"
+       "value": "Part of the file + 'G-System'"
       }
      ]
     },
@@ -726,7 +726,7 @@
      },
      {
       "dest_field": "REMARK",
-      "description": "'GTOPAS: ' + 'sent <file name>' or IF_MESSAGE"
+      "description": "'G-System: ' + 'sent <file name>' or IF_MESSAGE"
      },
      {
       "dest_field": "CREATED_BY",
@@ -748,7 +748,7 @@
     "mappings": [
      {
       "dest_field": "BATCH_ID",
-      "description": "'XD06_IF_GTOPAS'"
+      "description": "'XD06_IF_G-System'"
      },
      {
       "dest_field": "STATUS",
@@ -779,7 +779,7 @@
    "items": [
     "The D/S team maintains the cross dock master on XD01 (Part List: Pcs/Case, Max Case/Day, Effective Start Date; Mapping per Destination: Case/Day per destination of the ongoing period, created by XD05 process 2 and adjusted by screen or upload XD03).",
     "Every change sets the part to No Sync. The D/S team clicks [Sync] when the changes are complete; only Active parts are sent, Candidate and Inactive parts are not.",
-    "GTOPAS replaces the cross dock master of every part in the file with the content of the file (all destinations of the part)."
+    "G-System replaces the cross dock master of every part in the file with the content of the file (all destinations of the part)."
    ]
   },
   {
@@ -787,8 +787,8 @@
    "marker": "-",
    "level": 0,
    "items": [
-    "Interface method: interface to G-TOPAS as existing (not SFTP); the method and the target tables are not detailed in this document.",
-    "Parts that became Inactive (XD05 process 1) are No Sync and are sent with CROSSDOCK_FLAG 'N' and without destinations; GTOPAS changes the status of the part to inactive."
+    "Interface method: interface to G-System as existing (not SFTP); the method and the target tables are not detailed in this document.",
+    "Parts that became Inactive (XD05 process 1) are No Sync and are sent with CROSSDOCK_FLAG 'N' and without destinations; G-System changes the status of the part to inactive."
    ]
   },
   {
@@ -814,7 +814,7 @@
    "marker": "-",
    "level": 0,
    "items": [
-    "TB_R_CROSSDOCK_IF_RESULT is a dummy table that keeps the send status per part and target; the real output of XD06 is the interface file sent to GTOPAS.",
+    "TB_R_CROSSDOCK_IF_RESULT is a dummy table that keeps the send status per part and target; the real output of XD06 is the interface file sent to G-System.",
     "Overall SYNC_STATUS: Waiting while a target is Waiting, Success when both targets are sent, Failed when one target failed (the next [Sync] sends the part again to both targets; replace is repeatable).",
     "A part changed on XD01 or by upload while it is being sent gets SYNC_STATUS = No Sync, so the newer data is sent by the next [Sync]."
    ]
@@ -838,7 +838,7 @@
    "cause": "[Sync] on XD01",
    "type": "Info",
    "msg_id": "LOG1",
-   "message": "IF cross dock master to GTOPAS started. <n> part(s).",
+   "message": "IF cross dock master to G-System started. <n> part(s).",
    "action": {
     "system": "Write the log.",
     "user": "-"
@@ -849,7 +849,7 @@
    "cause": "Batch finishes",
    "type": "Info",
    "msg_id": "LOG2",
-   "message": "IF cross dock master to GTOPAS ended. File <FILE_NAME>, parts <n>, records <r>, status <STATUS>.",
+   "message": "IF cross dock master to G-System ended. File <FILE_NAME>, parts <n>, records <r>, status <STATUS>.",
    "action": {
     "system": "Write the log.",
     "user": "-"
@@ -860,7 +860,7 @@
    "cause": "Interface file cannot be created",
    "type": "Error",
    "msg_id": "LOG3",
-   "message": "Cannot create the interface file to GTOPAS: <ERROR_DETAIL>.",
+   "message": "Cannot create the interface file to G-System: <ERROR_DETAIL>.",
    "action": {
     "system": "All parts of the run IF_STATUS = 2. Stop.",
     "user": "Click [Sync] again; contact PIC if it persists."
@@ -868,10 +868,10 @@
   },
   {
    "event": "Send",
-   "cause": "G-TOPAS not available / send fails after retry",
+   "cause": "G-System not available / send fails after retry",
    "type": "Error",
    "msg_id": "LOG4",
-   "message": "Send of <SEND_ID> to GTOPAS failed: <ERROR_DETAIL>.",
+   "message": "Send of <SEND_ID> to G-System failed: <ERROR_DETAIL>.",
    "action": {
     "system": "All parts of the file IF_STATUS = 2. Keep the file in the outbound folder.",
     "user": "Click [Sync] again later; contact PIC if it persists."
@@ -896,7 +896,7 @@
    "name": "TB_R_CROSSDOCK_IF_RESULT",
    "kind": "transaction",
    "proposed": true,
-   "description": "Dummy table (proposed): send status of the cross dock master per part and target system (XD06 GTOPAS, XD07 AP POLE). The real output is the interface data sent to the target (AP POLE: file by SFTP; G-TOPAS: existing interface). The overall Sync Status of the part stays in TB_M_PART_CANDIDATE.",
+   "description": "Dummy table (proposed): send status of the cross dock master per part and target system (XD06 G-System, XD07 AP POLE). The real output is the interface data sent to the target (AP POLE: file by SFTP; G-System: existing interface). The overall Sync Status of the part stays in TB_M_PART_CANDIDATE.",
    "columns": [
     [
      "PART_NO",
@@ -910,7 +910,7 @@
      "VARCHAR(10)",
      "Y",
      "N",
-     "'GTOPAS' (XD06) / 'APPOLE' (XD07)"
+     "'G-System' (XD06) / 'APPOLE' (XD07)"
     ],
     [
      "PERIOD",
@@ -938,7 +938,7 @@
      "VARCHAR(100)",
      "",
      "Y",
-     "Name of the interface file (AP POLE) or send ID (G-TOPAS)"
+     "Name of the interface file (AP POLE) or send ID (G-System)"
     ],
     [
      "IF_MESSAGE",

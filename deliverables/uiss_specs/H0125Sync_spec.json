@@ -112,7 +112,7 @@
      ],
      [
       "Source",
-      "G-TOPAS provides the data 1 time/week (21:30)."
+      "G-System provides the data 1 time/week (21:30)."
      ]
     ]
    }
@@ -667,7 +667,7 @@
    "name": "TB_M_H0125_DESTINATION",
    "kind": "master",
    "proposed": false,
-   "description": "Destination master (I/F H01-25, DVJO820) replicated from DB Surrounding. Structure from the G-TOPAS I/F layout; physical names follow the existing table. Key (PK) = unique key of the I/F layout.",
+   "description": "Destination master (I/F H01-25, DVJO820) replicated from DB Surrounding. Structure from the G-System I/F layout; physical names follow the existing table. Key (PK) = unique key of the I/F layout.",
    "columns": [
     [
      "DESTINATION_CD",

@@ -1,4 +1,4 @@
-"""Build Crossdock_DB_Structure.xlsx in the layout of the DB Structure document (GTOPAS_SPS_DB_Structure): Revision, Table List and one
+"""Build Crossdock_DB_Structure.xlsx in the layout of the DB Structure document (GSystem_SPS_DB_Structure): Revision, Table List and one
 sheet per table (header block, Database Design / Name / Row Size / PK Row Size / Logging, Desc, field list). Columns come from the same
 sources as the ERD (build_erd.load_tables). Run: python3 build_dbstructure.py (from this folder)."""
 import os, re
@@ -149,7 +149,7 @@ def build():
         put(tl, r, 'BS', 'CV', f'{kind}: {desc}', font=F8)
     r = 8 + len(TABLES)
     tl.cell(r, 2, '* Row Size without the columns whose length is still TBD.  MST / HIS / TR / TMP = new Crossdock table · REP = replicated from DB Surrounding · '
-                  'EXT = existing NSP table (reference only, structure from GTOPAS_SPS_DB_Structure / data export)').font = Font(name='Arial', size=8, italic=True)
+                  'EXT = existing NSP table (reference only, structure from GSystem_SPS_DB_Structure / data export)').font = Font(name='Arial', size=8, italic=True)
 
     for n, (tid, name, lname, kind, desc) in enumerate(TABLES, 3):
         ws = wb.create_sheet(tid)

@@ -27,7 +27,7 @@ Status per **16-Oct-2026**. Sumber data: `deliverables/exec/project_items.py` (s
 - UISS 15 fungsi (X1-X15) versi 0.1 + file .md per fungsi
 - Prototype Part List, Mapping per Destination, ASN Crossdock Creation, ASN Inquiry (GitHub Pages)
 - Rumus kalkulasi DAD (X6) dan mapping destinasi (X7) termasuk aturan pembulatan, dikonfirmasi 14-Oct-26
-- Struktur tabel H0202 / H0253 / H0125 dari I/F layout G-TOPAS, termasuk SERIAL_NO
+- Struktur tabel H0202 / H0253 / H0125 dari I/F layout G-System, termasuk SERIAL_NO
 - Alur ASN baru sesuai ASN_Flow_Normal.xlsx (unit Part + Customer Order Date, 1 case per destinasi, FIFO)
 - Header delivery plan level case; detail destinasi & pcs hanya untuk tim D/S
 - ASN flow versi 15-Oct: Search (X12 on-demand pre-mapping), Hold Flag per destinasi oleh D/S, Create ASN (mapping), status Ready / Not Ready / Created
@@ -55,7 +55,7 @@ Status per **16-Oct-2026**. Sumber data: `deliverables/exec/project_items.py` (s
 
 | No | Function | Topik | Pertanyaan | Usulan BSA | Dampak jika belum diputuskan |
 |---|---|---|---|---|---|
-| 1 | X9-X11 | Jadwal & retry | Jadwal scheduler NSP untuk X9, X10, X11 dan perlu auto retry seperti X6 / X7? | Setelah data G-TOPAS tersedia; auto retry 3x. | Schedule sheet di UISS masih TBC. |
+| 1 | X9-X11 | Jadwal & retry | Jadwal scheduler NSP untuk X9, X10, X11 dan perlu auto retry seperti X6 / X7? | Setelah data G-System tersedia; auto retry 3x. | Schedule sheet di UISS masih TBC. |
 | 2 | X5 | Jadwal X5 | Tanggal / jam scheduler bulanan X5. | Tanggal 1 jam 01:00, sebelum X6. | Schedule sheet X5 / X6. |
 | 3 | X5 / X6 | X5 gagal | Kalau X5 gagal, apakah X6 dibatalkan? | Ya, X6 tidak jalan. | Aturan dependensi batch. |
 | 4 | X5 | Kolom DAD | Kolom DAD di Actual Demand Summary dipakai atau tidak? | Tidak dipakai (hanya MAD). | Mapping kolom X5. |

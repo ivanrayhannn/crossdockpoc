@@ -1,6 +1,6 @@
 # XD05 – DAD Volume Calculation Batch
 
-Sumber: UISS `XD05_UISS_Batch_DADVolumeCalculation.xlsx` (0.1 Initial Draft, 18-Oct-26). Nama sistem di UISS: G-TOPAS / NSP.
+Sumber: UISS `XD05_UISS_Batch_DADVolumeCalculation.xlsx` (0.1 Initial Draft, 18-Oct-26). Nama sistem di UISS: G-System / NSP.
 
 ## Ringkasan
 - **Gabungan** X6 (DAD Volume Calculation) dan X7 (Mapping Destination Calculation) dalam 1 batch dengan 2 proses berurutan:
@@ -18,6 +18,6 @@ Sumber: UISS `XD05_UISS_Batch_DADVolumeCalculation.xlsx` (0.1 Initial Draft, 18-
 - Last success date per proses (tab Part List / tab Mapping di XD01). Jalan setelah XD04.
 
 ## Keputusan 19-Oct
-- Part yang berubah **Active → Inactive** di-set **No Sync**, supaya [Sync] berikutnya mengirimnya ke G-TOPAS / AP POLE dengan CROSSDOCK_FLAG 'N'.
+- Part yang berubah **Active → Inactive** di-set **No Sync**, supaya [Sync] berikutnya mengirimnya ke G-System / AP POLE dengan CROSSDOCK_FLAG 'N'.
 - Jadwal bulanan tidak didetailkan. Kalau XD04 gagal, XD05 **tetap jalan**.
 - N + S dijumlahkan.

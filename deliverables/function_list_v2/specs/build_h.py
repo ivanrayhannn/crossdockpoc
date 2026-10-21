@@ -13,9 +13,9 @@ SRC_T = CTL = 'TB_R_H0253_ORDER_CONTROL_PRE'
 SRC = SRC_T + ' (DB Surrounding)'
 DST = CTL + ' (NSP)'
 LOG = 'Log'
-NOTE = ("Structure from the G-TOPAS I/F layout; physical names follow the existing table. Key (PK) = unique key of the I/F layout. "
+NOTE = ("Structure from the G-System I/F layout; physical names follow the existing table. Key (PK) = unique key of the I/F layout. "
         "NSP keeps the rows with status 7, 6 and 2 (insert / update); rows with status 6 / 2 are kept for tracking only (retention optional, TBC).")
-CHAIN = "Job chain: XD12 -> XD11 -> XD08, after G-TOPAS has provided the data (1 time/day, 27:30)."
+CHAIN = "Job chain: XD12 -> XD11 -> XD08, after G-System has provided the data (1 time/day, 27:30)."
 LINE_KEY = "CUSTOMER_CD + CUSTOMER_ORDER_NO + ORDER_DT + ORDER_TIME + DESTINATION_CD + DETAILED_ITEM_NO"
 NSP_COLS = {"HOLD_FLAG", "PO_MAPPED_FLAG", "CANCEL_STATUS", "CREATE_DT", "CREATE_BY", "UPDATE_DT", "UPDATE_BY"}
 
@@ -123,7 +123,7 @@ def logs(fid, what):
 def build():
     xd08 = spec_of(
         'XD08',
-        [f"To keep {CTL} in NSP up to date with the crossdock customer order lines of G-TOPAS (replicated in DB Surrounding): rows with ORDER_STATUS = '7' "
+        [f"To keep {CTL} in NSP up to date with the crossdock customer order lines of G-System (replicated in DB Surrounding): rows with ORDER_STATUS = '7' "
          "are inserted (new key) or updated (existing key); rows that changed to '6' (received) are updated.",
          "Only the rows changed since the last successful run are taken (INTF_UPDATE_DT > watermark). Nothing is deleted, so the NSP columns "
          "HOLD_FLAG / PO_MAPPED_FLAG / CANCEL_STATUS keep their values.",
@@ -149,7 +149,7 @@ def build():
         logs('XD08', 'status 7 / 6'), [["Statuses", "'7' all rows; '6' existing keys only"]])
     xd12 = spec_of(
         'XD12',
-        [f"To bring the cancels of crossdock customer order lines from G-TOPAS into {CTL} in NSP: rows with ORDER_STATUS = '2' of lines that exist in NSP "
+        [f"To bring the cancels of crossdock customer order lines from G-System into {CTL} in NSP: rows with ORDER_STATUS = '2' of lines that exist in NSP "
          "are inserted (new split SERIAL_NO of a partial cancel) or updated (full cancel of the row), and marked CANCEL_STATUS = 'P' for XD11.",
          "In the same run the other changed rows of the same line are upserted too (e.g. the status 7 serial whose qty was reduced by the partial cancel), "
          "so XD11 sees the complete line. Only rows changed since the last successful run are taken (INTF_UPDATE_DT > watermark)."],
@@ -169,7 +169,7 @@ def build():
             "Scenario 2 (partial cancel): 14-Oct one row status 7 qty 8 -> 15-Oct the row is split: serial A status 7 qty 6 (update) and serial B status 2 qty 2 (insert, CANCEL_STATUS 'P').",
             "Scenario 3 (full cancel): 14-Oct status 7 qty 8 -> 15-Oct the same row status 2 qty 8 (update, CANCEL_STATUS 'P').",
             "One table with XD08: no separate cancel table and no delete, so the NSP columns of a line are never lost.",
-            "A cancel of qty already in a submitted ASN is normally blocked in G-TOPAS by the existing ASN feedback and by the SOP of the D/S team; "
+            "A cancel of qty already in a submitted ASN is normally blocked in G-System by the existing ASN feedback and by the SOP of the D/S team; "
             "if it still happens (abnormality), XD11 reports it as CONFLICT.",
             "Rows with status 2 stay in the table for tracking (retention optional, TBC). Table structure: see Appendix."]}],
         logs('XD12', 'status 2 (cancel)'), [["Statuses", "'2' of crossdock lines; other changed rows of the same lines"]])
