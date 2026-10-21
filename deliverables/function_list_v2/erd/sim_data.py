@@ -60,8 +60,8 @@ def h(co, d, serial, part, qty, st='7', hold='N', mapped='N', cancel='-', od=OD,
     return [cust or CUST[d], co, od, d, item, serial, part, qty, st, hold, mapped, cancel]
 
 
-def line(co, d, part, qty, cust=None, serial='0000001'):
-    return dict(CUSTOMER_CD=cust or CUST[d], CUSTOMER_ORDER_NO=co, ORDER_DT=OD, ORDER_TIME=T, DESTINATION_CD=d, DETAILED_ITEM_NO='001',
+def line(co, d, part, qty, cust=None, serial='0000001', item='001', od=OD, time=T):
+    return dict(CUSTOMER_CD=cust or CUST[d], CUSTOMER_ORDER_NO=co, ORDER_DT=od, ORDER_TIME=time, DESTINATION_CD=d, DETAILED_ITEM_NO=item,
                 SERIAL_NO=serial, PART_NO=part, QTY=qty)
 
 
@@ -75,12 +75,16 @@ def tmp(units, pos, pcs=6, changed=None, notes=None):
             k = (s['CUSTOMER_ORDER_NO'], s['CASE_SEQ'])
             row = [s['SORT_SEQ'], s['CUSTOMER_CD'], s['CUSTOMER_ORDER_NO'], s['DESTINATION_CD'], s['PART_NO'], s['QTY'], s['PO_NO'], s['ASSIGNED_QTY'],
                    s['CASE_SEQ'], s['CUM_DEST_QTY'], s['CUT_FLAG'], s['GROUP_SEQ'], s['CROSSDOCK_STATUS']]
-            rows.append(('temp', row, (changed or {}).get(k, []), (notes or {}).get(k, '')))
+            rows.append(('temp', row, (changed or {}).get(k, []), (notes or {}).pop(k, '')))  # note on the first slice only
     return rows
 
 
 PX = [line('CO-14101', VN, 'PART-X', 10), line('CO-14102', VN, 'PART-X', 4), line('CO-14103', VN, 'PART-X', 4), line('CO-14104', TH, 'PART-X', 6)]
 PY = [line('CO-14105', PH, 'PART-Y', 6)]
+VN2 = '9730000'  # second dummy customer of Vietnam (customer code > TH)
+SB = [line('A-0101', VN, 'PART-B', 8, item='001', time='080000'), line('A-0101', VN, 'PART-B', 2, item='002', time='080000'),
+      line('B-0102', TH, 'PART-B', 6, time='090000'), line('C-0103', VN, 'PART-B', 14, cust=VN2, time='070000')]
+SB2 = [line('A-0201', VN, 'PART-B', 6, od='2026-10-15')]
 SA = [line('V01', VN, 'PART-A', 10, 'CUST-A'), line('T01', TH, 'PART-A', 6, 'CUST-B'), line('V02', VN, 'PART-A', 14, 'CUST-C')]
 P1, P2, P3 = ['T0409001', '3126035901', '0001', 12], ['T0409002', '3126035902', '0001', 12], ['T0409003', '3126035903', '0001', 6]
 
@@ -276,5 +280,33 @@ SCENARIOS = [
             ('', 'TB_R_PRA_DAILY_ORDER_MAPPED', [('new', ['T0410011', '3126036011', '0001', 'PART-A', 6, 6])]),
             ('', 'TB_R_H0253_ORDER_CONTROL_PRE', [
                 ('upd', h('V02', VN, '0000001', 'PART-A', 14, mapped='Y', cust='CUST-C'), ['PO_MAPPED_FLAG'], 'Whole line mapped (8 + 6)')]),
+        ]},
+    {
+        'id': 'SIM-8', 'title': 'SORT_SEQ: H0253 lines into scan order, partial send and re-cut', 'flow': 'BPF F2', 'functions': 'XD09, XD10 (ASN Option, Create ASN)',
+        'story': ['PART-B, 6 pcs/case. H0253 is stored in any order; XD09 numbers the lines of a unit by the scan keys (SORT_SEQ): Customer Code, '
+                  'Customer Order No, Order Date, Order Time, Destination, Detailed Item No, Serial No.',
+                  'Unit 14-Oct: A-0101 item 001 VN 8 (seq 1), A-0101 item 002 VN 2 (seq 2), B-0102 TH 6 (seq 3), C-0103 VN 14 of a second VN customer '
+                  '9730000 (seq 4). Order Time 07:00 of C-0103 does not move it up: Customer Code and Order No come first.',
+                  '15-Oct: PO1 20 pcs → blocks 1-2 Ready, block 3 (case 4) only 2 of 6 pcs with PO → Not Ready. The supplier sends option 1 case only.',
+                  '16-Oct: PO2 10 pcs. The open qty (24) is cut again from case 1 in the same SORT_SEQ: the cases are the same as before. Unit 15-Oct '
+                  '(A-0201) comes after unit 14-Oct (way B), so it gets no PO yet.'],
+        'steps': [
+            ('1. H0253 lines as stored (not sorted)', 'TB_R_H0253_ORDER_CONTROL_PRE', [
+                ('ref', h('C-0103', VN, '0000001', 'PART-B', 14, cust=VN2), [], 'Order time 07:00'),
+                ('ref', h('B-0102', TH, '0000001', 'PART-B', 6), [], 'Order time 09:00'),
+                ('ref', h('A-0101', VN, '0000001', 'PART-B', 2, item='002'), [], 'Order time 08:00'),
+                ('ref', h('A-0101', VN, '0000001', 'PART-B', 8, item='001'), [], 'Order time 08:00'),
+                ('ref', h('A-0201', VN, '0000001', 'PART-B', 6, od='2026-10-15'), [], 'Next unit (15-Oct)')]),
+            ('2. [Search] 15-Oct (PO1 20 pcs) → XD09: SORT_SEQ, cases, blocks', '#TEMP_INSTRUCTION',
+             tmp([SB], [['T0409021', '3126035921', '0001', 20]],
+                 notes={('A-0101', 1): 'SORT_SEQ 1 = 9715300 / A-0101 / item 001', ('B-0102', 2): 'Case 2 = VN 2 + VN 2 + TH 2: no cut (VN 10, TH 2)',
+                        ('C-0103', 3): 'Cut: VN 12, TH 6', ('C-0103', 4): 'Case 4: only 2 of 6 pcs with PO1 → block 3 Not Ready, block 4 too'})),
+            ('3. Supplier chooses option 1 case → [Create ASN]', 'TB_R_INSTRUCTION', [
+                ('new', [1, 1, 1, 'PART-B', VN, 'A-0101', '0000001', 6, 'T0409021', '3126035921', '0001', None, None], [], 'Item 001: 6 of 8, open 2')]),
+            ('', 'TB_R_PRA_DAILY_ORDER_MAPPED', [('new', ['T0409021', '3126035921', '0001', 'PART-B', 20, 6])]),
+            ('4. [Search] 16-Oct (PO1 open 14 + PO2 10) → open qty cut again from case 1', '#TEMP_INSTRUCTION',
+             tmp([[dict(SB[0], QTY=2)] + SB[1:], SB2], [['T0409021', '3126035921', '0001', 14], ['T0410021', '3126036021', '0001', 10]],
+                 notes={('A-0101', 1): 'Open qty 8 - 6 = 2; case 1 = the same physical case as case 2 on 15-Oct', ('C-0103', 4): 'Unit 14-Oct: all 3 blocks Ready (options 2 / 3 / 4 cases)',
+                        ('A-0201', 1): 'Unit 15-Oct after unit 14-Oct (way B): no PO left'})),
         ]},
 ]
