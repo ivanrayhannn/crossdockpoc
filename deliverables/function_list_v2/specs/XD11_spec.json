@@ -19,7 +19,7 @@
  "doc_type": "batch",
  "general": {
   "objective": [
-   "To apply in NSP the cancel of crossdock customer order lines done in G-System (status '2', brought in by XD12 with CANCEL_STATUS 'P'). NSP does not cancel orders; a line can be cancelled with or without HOLD_FLAG = 'Y'.",
+   "To apply in NSP the cancel of crossdock customer order lines done in G-System (status '2', brought in by XD12 with UPD_STATUS 'P'). NSP does not cancel orders; a line can be cancelled with or without HOLD_FLAG = 'Y'.",
    "Per line (all SERIAL_NO of the line, because a partial cancel splits the line): the open mapping of the line (mapped by [Create ASN], not submitted) is released, so the remaining valid qty is pre-mapped again by XD09.",
    "Qty already in a submitted ASN cannot be cancelled: G-System blocks it by the existing ASN feedback and the D/S team follows the SOP. If it still happens (abnormality), the ASN is not changed and the line is reported as CONFLICT to the D/S team."
   ],
@@ -34,7 +34,7 @@
      },
      {
       "id": "b",
-      "label": "Lines with CANCEL_STATUS 'P'",
+      "label": "Lines with UPD_STATUS 'P'",
       "type": "process"
      },
      {
@@ -59,7 +59,7 @@
      },
      {
       "id": "g",
-      "label": "CANCEL_STATUS 'D', result, Log",
+      "label": "UPD_STATUS 'D', result, Log",
       "type": "process"
      }
     ],
@@ -101,7 +101,7 @@
    {
     "name": "TB_R_H0253_ORDER_CONTROL_PRE",
     "type": "DB",
-    "description": "Status 2 rows with CANCEL_STATUS 'P' (XD12) and all other rows of the same lines (status 7 / 6)"
+    "description": "Status 2 rows with UPD_STATUS 'P' (XD12) and all other rows of the same lines (status 7 / 6)"
    },
    {
     "name": "TB_R_INSTRUCTION",
@@ -128,7 +128,7 @@
    {
     "name": "TB_R_H0253_ORDER_CONTROL_PRE",
     "type": "DB",
-    "description": "CANCEL_STATUS 'D' on the processed rows; PO_MAPPED_FLAG 'N' on rows of the line without mapping left"
+    "description": "UPD_STATUS 'D' on the processed rows; PO_MAPPED_FLAG 'N' on rows of the line without mapping left"
    },
    {
     "name": "TB_R_CROSSDOCK_CANCEL_RESULT",
@@ -184,7 +184,7 @@
      ],
      [
       "CANCEL_QTY",
-      "Sum of ORDER_STATUS_QTY of the status 2 rows with CANCEL_STATUS 'P'"
+      "Sum of ORDER_STATUS_QTY of the status 2 rows with UPD_STATUS 'P'"
      ],
      [
       "VALID_QTY",
@@ -280,7 +280,7 @@
     },
     {
      "id": "p2",
-     "label": "Lines with CANCEL_STATUS 'P'",
+     "label": "Lines with UPD_STATUS 'P'",
      "type": "process",
      "step": 2
     },
@@ -316,7 +316,7 @@
     },
     {
      "id": "p6",
-     "label": "CANCEL_STATUS 'D', result, Log per line",
+     "label": "UPD_STATUS 'D', result, Log per line",
      "type": "process",
      "step": 6
     },
@@ -388,7 +388,7 @@
   },
   "steps": [
    "The scheduler starts the batch after XD12 has finished successfully (job chain XD12 -> XD11 -> XD08). Write LOG1.",
-   "Select the lines (CUSTOMER_CD + CUSTOMER_ORDER_NO + ORDER_DT + ORDER_TIME + DESTINATION_CD + DETAILED_ITEM_NO) that have rows with ORDER_STATUS = '2' and CANCEL_STATUS = 'P' in TB_R_H0253_ORDER_CONTROL_PRE. Read all rows of these lines (every SERIAL_NO).",
+   "Select the lines (CUSTOMER_CD + CUSTOMER_ORDER_NO + ORDER_DT + ORDER_TIME + DESTINATION_CD + DETAILED_ITEM_NO) that have rows with ORDER_STATUS = '2' and UPD_STATUS = 'P' in TB_R_H0253_ORDER_CONTROL_PRE. Read all rows of these lines (every SERIAL_NO).",
    {
     "text": "For each line, compute the line figures (see Line Figures):",
     "children": [
@@ -411,7 +411,7 @@
      "CONFLICT: QTY_IN_ASN > VALID_QTY; CONFLICT_QTY pcs were shipped (or will be) without order. Write LOG4."
     ]
    },
-   "Set CANCEL_STATUS = 'D' on the processed status 2 rows and insert one record per row in TB_R_CROSSDOCK_CANCEL_RESULT (with the line figures). Commit per line: an error stops only this line (LOG5); its rows stay 'P' and are processed by the next run.",
+   "Set UPD_STATUS = 'D' on the processed status 2 rows and insert one record per row in TB_R_CROSSDOCK_CANCEL_RESULT (with the line figures). Commit per line: an error stops only this line (LOG5); its rows stay 'P' and are processed by the next run.",
    "More lines: back to step 3. Else write LOG2 (counts per result). Exit."
   ]
  },
@@ -638,7 +638,7 @@
     },
     "mappings": [
      {
-      "dest_field": "CANCEL_STATUS",
+      "dest_field": "UPD_STATUS",
       "description": "'D' for the processed status 2 rows; not changed for other rows"
      },
      {
@@ -848,7 +848,7 @@
      "table": "TB_R_H0253_ORDER_CONTROL_PRE",
      "keys": [
       {
-       "field": "ORDER_STATUS / CANCEL_STATUS",
+       "field": "ORDER_STATUS / UPD_STATUS",
        "value": "'2' / 'P'"
       }
      ]
@@ -1258,7 +1258,7 @@
    "name": "TB_R_H0253_ORDER_CONTROL_PRE",
    "kind": "transaction",
    "proposed": false,
-   "description": "Order control data, pre-order picking info (I/F H02-53, DVJO950) replicated from DB Surrounding by XD08 / XD12. Structure from the G-System I/F layout; physical names follow the existing table. Key (PK) = unique key of the I/F layout. NSP keeps the rows with status 7, 6 and 2 (insert / update); rows with status 6 / 2 are kept for tracking only (retention optional, TBC). CANCEL_STATUS is a new NSP column (proposed).",
+   "description": "Order control data, pre-order picking info (I/F H02-53, DVJO950) replicated from DB Surrounding by XD08 / XD12. Structure from the G-System I/F layout; physical names follow the existing table. Key (PK) = unique key of the I/F layout. NSP keeps the rows with status 7, 6 and 2 (insert / update); rows with status 6 / 2 are kept for tracking only (retention optional, TBC). UPD_STATUS is a new NSP column (proposed).",
    "columns": [
     [
      "CUSTOMER_CD",
@@ -1583,7 +1583,7 @@
      "NSP column: line mapped to a PO by [Create ASN] ('Y' / 'N'); 'N' on insert, never changed by XD08 / XD12"
     ],
     [
-     "CANCEL_STATUS",
+     "UPD_STATUS",
      "VARCHAR(1)",
      "",
      "N",

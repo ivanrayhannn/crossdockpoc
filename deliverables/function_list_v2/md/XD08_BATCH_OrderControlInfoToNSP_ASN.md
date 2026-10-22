@@ -3,7 +3,7 @@
 Sumber: UISS `XD08_UISS_Batch_OrderControlInfoToNSP_ASN.xlsx` (0.1 Initial Draft, 18-Oct-26). Nama sistem di UISS: G-System / NSP.
 
 ## Desain (keputusan 18-Oct)
-- Tabel source di DB Surrounding **insert / update**. NSP memakai **satu tabel replicate** `TB_R_H0253_ORDER_CONTROL_PRE` yang di-**upsert** per unique key (termasuk SERIAL_NO). Tidak ada delete, jadi kolom NSP (HOLD_FLAG, PO_MAPPED_FLAG, CANCEL_STATUS) aman.
+- Tabel source di DB Surrounding **insert / update**. NSP memakai **satu tabel replicate** `TB_R_H0253_ORDER_CONTROL_PRE` yang di-**upsert** per unique key (termasuk SERIAL_NO). Tidak ada delete, jadi kolom NSP (HOLD_FLAG, PO_MAPPED_FLAG, UPD_STATUS) aman.
 - Hanya baris yang berubah sejak run terakhir: **INTF_UPDATE_DT > watermark** (watermark = INTF_UPDATE_DT terakhir dari run sukses, disimpan di Log).
 
 ## Alur
@@ -12,14 +12,14 @@ Sumber: UISS `XD08_UISS_Batch_OrderControlInfoToNSP_ASN.xlsx` (0.1 Initial Draft
    - **status 7**: semua (line baru, qty berubah, serial hasil split);
    - **status 6**: hanya key yang sudah ada di NSP (diterima, tidak ada aksi lanjut);
    - status 2 diambil XD12.
-3. Upsert: key baru → insert (HOLD_FLAG / PO_MAPPED_FLAG = N, CANCEL_STATUS = '-'); key lama → update kolom source, kolom NSP tidak diubah.
+3. Upsert: key baru → insert (HOLD_FLAG / PO_MAPPED_FLAG = N, UPD_STATUS = '-'); key lama → update kolom source, kolom NSP tidak diubah.
 4. Sukses → commit, simpan watermark baru. Gagal → rollback, watermark tetap (diambil lagi run berikutnya).
 
 ## Skenario
 | Skenario | H0253 14-Oct → 15-Oct (skenario_h0253.xlsx) | NSP |
 |---|---|---|
 | 1 Normal | Status 7 qty 8 → baris yang sama status 6 qty 8 | XD08 update baris (diterima); tidak diambil XD09 lagi |
-| 2 Partial cancel | Status 7 qty 8 → serial A status 7 qty 6 + serial B (baru) status 2 qty 2 | XD12 update A, insert B (CANCEL_STATUS 'P'); XD11: CANCEL 2, VALID 6 → CANCELLED |
+| 2 Partial cancel | Status 7 qty 8 → serial A status 7 qty 6 + serial B (baru) status 2 qty 2 | XD12 update A, insert B (UPD_STATUS 'P'); XD11: CANCEL 2, VALID 6 → CANCELLED |
 | 3 Full cancel | Status 7 qty 8 → baris yang sama status 2 qty 8 | XD12 update baris ('P'); XD11: CANCEL 8, VALID 0 → CANCELLED |
 | 4 Abnormality | 8 pcs sudah di ASN, lalu cancel (SOP tidak dijalankan) | XD11: QTY_IN_ASN > VALID_QTY → CONFLICT, ASN tetap |
 

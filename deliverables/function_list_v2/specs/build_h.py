@@ -5,7 +5,7 @@ cancel). A partial cancel splits the line into a new SERIAL_NO. NSP keeps ONE re
 (upsert) per unique key with the rows changed since the last run (INTF_UPDATE_DT):
   XD08: status 7 rows (insert new / update) and status 6 updates of known rows.
   XD12: status 2 rows of crossdock lines (insert split serial / update) + the other changed rows of the same line;
-        CANCEL_STATUS = 'P' for XD11."""
+        UPD_STATUS = 'P' for XD11."""
 from v2lib import batch_header, write
 from h_tables import H0253_COLS  # noqa: E402  (path set by v2lib)
 
@@ -17,9 +17,9 @@ NOTE = ("Structure from the G-System I/F layout; physical names follow the exist
         "NSP keeps the rows with status 7, 6 and 2 (insert / update); rows with status 6 / 2 are kept for tracking only (retention optional, TBC).")
 CHAIN = "Job chain: XD12 -> XD11 -> XD08, after G-System has provided the data (1 time/day, 27:30)."
 LINE_KEY = "CUSTOMER_CD + CUSTOMER_ORDER_NO + ORDER_DT + ORDER_TIME + DESTINATION_CD + DETAILED_ITEM_NO"
-NSP_COLS = {"HOLD_FLAG", "PO_MAPPED_FLAG", "CANCEL_STATUS", "CREATE_DT", "CREATE_BY", "UPDATE_DT", "UPDATE_BY"}
+NSP_COLS = {"HOLD_FLAG", "PO_MAPPED_FLAG", "UPD_STATUS", "CREATE_DT", "CREATE_BY", "UPDATE_DT", "UPDATE_BY"}
 
-# NSP table = H0253 columns + CANCEL_STATUS after PO_MAPPED_FLAG
+# NSP table = H0253 columns + UPD_STATUS after PO_MAPPED_FLAG
 CTL_COLS = []
 for c in H0253_COLS:
     c = list(c)
@@ -29,11 +29,11 @@ for c in H0253_COLS:
         c[4] = "NSP column: line mapped to a PO by [Create ASN] ('Y' / 'N'); 'N' on insert, never changed by XD08 / XD12"
     CTL_COLS.append(c)
     if c[0] == 'PO_MAPPED_FLAG':
-        CTL_COLS.append(["CANCEL_STATUS", "VARCHAR(1)", "", "N",
+        CTL_COLS.append(["UPD_STATUS", "VARCHAR(1)", "", "N",
                          "NSP column: '-' no cancel / 'P' cancel to be processed by XD11 (set by XD12) / 'D' processed by XD11"])
 CTL_TABLE = {"name": CTL, "kind": "transaction", "proposed": False,
              "description": "Order control data, pre-order picking info (I/F H02-53, DVJO950) replicated from DB Surrounding by XD08 / XD12. " + NOTE
-                            + " CANCEL_STATUS is a new NSP column (proposed).",
+                            + " UPD_STATUS is a new NSP column (proposed).",
              "columns": CTL_COLS}
 
 WATERMARK = "Last INTF_UPDATE_DT taken by the previous successful run of this batch (kept in the Log); first run: all rows"
@@ -45,7 +45,7 @@ def upsert_block(fid, rule_desc, cancel_desc):
         n = c[0]
         if n in ('HOLD_FLAG', 'PO_MAPPED_FLAG'):
             maps.append({"dest_field": n, "description": "'N' on insert; not changed on update"})
-        elif n == 'CANCEL_STATUS':
+        elif n == 'UPD_STATUS':
             maps.append({"dest_field": n, "description": cancel_desc})
         elif n in ('CREATE_DT', 'CREATE_BY'):
             maps.append({"dest_field": n, "description": "Batch system date-time / batch user ID on insert; not changed on update"})
@@ -126,7 +126,7 @@ def build():
         [f"To keep {CTL} in NSP up to date with the crossdock customer order lines of G-System (replicated in DB Surrounding): rows with ORDER_STATUS = '7' "
          "are inserted (new key) or updated (existing key); rows that changed to '6' (received) are updated.",
          "Only the rows changed since the last successful run are taken (INTF_UPDATE_DT > watermark). Nothing is deleted, so the NSP columns "
-         "HOLD_FLAG / PO_MAPPED_FLAG / CANCEL_STATUS keep their values.",
+         "HOLD_FLAG / PO_MAPPED_FLAG / UPD_STATUS keep their values.",
          "Rows with status '2' (cancel) are taken by XD12 and processed by XD11 before this batch runs."],
         "Rows changed since watermark: status 7 (all) and 6 (known keys)",
         ["The scheduler starts the batch after XD11 (job chain XD12 -> XD11 -> XD08). Write LOG1.",
@@ -135,8 +135,8 @@ def build():
              f"ORDER_STATUS = '6': only rows whose unique key already exists in {DST} (received / allocated; no further action in NSP).",
              "Other statuses are not taken; status '2' is taken by XD12."]},
          {"text": f"Upsert into {DST} per unique key (incl. SERIAL_NO):", "children": [
-             "New key: insert all source columns; HOLD_FLAG = 'N', PO_MAPPED_FLAG = 'N', CANCEL_STATUS = '-'.",
-             "Existing key: update all source columns; HOLD_FLAG, PO_MAPPED_FLAG and CANCEL_STATUS are not changed."]},
+             "New key: insert all source columns; HOLD_FLAG = 'N', PO_MAPPED_FLAG = 'N', UPD_STATUS = '-'.",
+             "Existing key: update all source columns; HOLD_FLAG, PO_MAPPED_FLAG and UPD_STATUS are not changed."]},
          "No error: commit, save the new watermark (max INTF_UPDATE_DT taken) in the Log, LOG2. Error: roll back, watermark not changed, LOG3. Exit."],
         [upsert_block('XD08', "'7' (all) / '6' (existing keys only)", "'-' on insert; not changed on update")],
         [{"type": "bullets", "marker": "-", "level": 0, "items": [
@@ -150,7 +150,7 @@ def build():
     xd12 = spec_of(
         'XD12',
         [f"To bring the cancels of crossdock customer order lines from G-System into {CTL} in NSP: rows with ORDER_STATUS = '2' of lines that exist in NSP "
-         "are inserted (new split SERIAL_NO of a partial cancel) or updated (full cancel of the row), and marked CANCEL_STATUS = 'P' for XD11.",
+         "are inserted (new split SERIAL_NO of a partial cancel) or updated (full cancel of the row), and marked UPD_STATUS = 'P' for XD11.",
          "In the same run the other changed rows of the same line are upserted too (e.g. the status 7 serial whose qty was reduced by the partial cancel), "
          "so XD11 sees the complete line. Only rows changed since the last successful run are taken (INTF_UPDATE_DT > watermark)."],
         "Status 2 rows of crossdock lines + other changed rows of the same lines",
@@ -159,15 +159,15 @@ def build():
              "Lines not in NSP (not crossdock) are ignored.",
              "Add the other rows of the same lines with INTF_UPDATE_DT > watermark (any status), so the whole line is current."]},
          {"text": f"Upsert into {DST} per unique key (incl. SERIAL_NO):", "children": [
-             "Status 2 row, new key (partial cancel = new split serial): insert; HOLD_FLAG = 'N', PO_MAPPED_FLAG = 'N', CANCEL_STATUS = 'P'.",
-             "Status 2 row, existing key (full cancel of the row): update the source columns; CANCEL_STATUS = 'P'; HOLD_FLAG / PO_MAPPED_FLAG not changed.",
+             "Status 2 row, new key (partial cancel = new split serial): insert; HOLD_FLAG = 'N', PO_MAPPED_FLAG = 'N', UPD_STATUS = 'P'.",
+             "Status 2 row, existing key (full cancel of the row): update the source columns; UPD_STATUS = 'P'; HOLD_FLAG / PO_MAPPED_FLAG not changed.",
              "Other rows of the line: update the source columns (e.g. status 7 qty 8 -> 6); NSP columns not changed."]},
          "No error: commit, save the new watermark in the Log, LOG2 (rows, lines). Error: roll back, watermark not changed, LOG3; XD11 is not started. Exit."],
         [upsert_block('XD12', "'2' of lines existing in NSP + other changed rows of these lines",
                       "'P' for status 2 rows (insert and update); other rows: '-' on insert, not changed on update")],
         [{"type": "bullets", "marker": "-", "level": 0, "items": [
-            "Scenario 2 (partial cancel): 14-Oct one row status 7 qty 8 -> 15-Oct the row is split: serial A status 7 qty 6 (update) and serial B status 2 qty 2 (insert, CANCEL_STATUS 'P').",
-            "Scenario 3 (full cancel): 14-Oct status 7 qty 8 -> 15-Oct the same row status 2 qty 8 (update, CANCEL_STATUS 'P').",
+            "Scenario 2 (partial cancel): 14-Oct one row status 7 qty 8 -> 15-Oct the row is split: serial A status 7 qty 6 (update) and serial B status 2 qty 2 (insert, UPD_STATUS 'P').",
+            "Scenario 3 (full cancel): 14-Oct status 7 qty 8 -> 15-Oct the same row status 2 qty 8 (update, UPD_STATUS 'P').",
             "One table with XD08: no separate cancel table and no delete, so the NSP columns of a line are never lost.",
             "A cancel of qty already in a submitted ASN is normally blocked in G-System by the existing ASN feedback and by the SOP of the D/S team; "
             "if it still happens (abnormality), XD11 reports it as CONFLICT.",

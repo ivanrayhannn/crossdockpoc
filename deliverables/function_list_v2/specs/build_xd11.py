@@ -1,6 +1,6 @@
 """XD11 Cancel Crossdock Customer Order Batch (new UISS-Batch).
 NSP never cancels an order: G-System cancels it (H0253 order status 2). XD12 brings the status 2 rows into
-TB_R_H0253_ORDER_CONTROL_PRE with CANCEL_STATUS 'P'. XD11 applies the cancel per line (all serials of the line,
+TB_R_H0253_ORDER_CONTROL_PRE with UPD_STATUS 'P'. XD11 applies the cancel per line (all serials of the line,
 because a partial cancel splits the line into a new SERIAL_NO): it releases the open mapping and reports a
 CONFLICT when qty already in a submitted ASN is cancelled (abnormality: SOP not followed)."""
 from build_h import CHAIN, CTL, CTL_COLS, CTL_TABLE, LINE_KEY
@@ -37,7 +37,7 @@ def build():
         "doc_type": "batch",
         "general": {
             "objective": [
-                "To apply in NSP the cancel of crossdock customer order lines done in G-System (status '2', brought in by XD12 with CANCEL_STATUS 'P'). "
+                "To apply in NSP the cancel of crossdock customer order lines done in G-System (status '2', brought in by XD12 with UPD_STATUS 'P'). "
                 "NSP does not cancel orders; a line can be cancelled with or without HOLD_FLAG = 'Y'.",
                 "Per line (all SERIAL_NO of the line, because a partial cancel splits the line): the open mapping of the line (mapped by [Create ASN], not submitted) "
                 "is released, so the remaining valid qty is pre-mapped again by XD09.",
@@ -45,22 +45,22 @@ def build():
                 "If it still happens (abnormality), the ASN is not changed and the line is reported as CONFLICT to the D/S team."],
             "operation_flow": {"flow": {"direction": "TB", "nodes": [
                 {"id": "a", "label": "Scheduler: after XD12, before XD08", "type": "event"},
-                {"id": "b", "label": "Lines with CANCEL_STATUS 'P'", "type": "process"},
+                {"id": "b", "label": "Lines with UPD_STATUS 'P'", "type": "process"},
                 {"id": "c", "label": "Release open mapping of the line", "type": "process"},
                 {"id": "d", "label": "Qty in ASN > valid qty?", "type": "decision"},
                 {"id": "e", "label": "CANCELLED", "type": "process"},
                 {"id": "f", "label": "CONFLICT: report to D/S", "type": "process"},
-                {"id": "g", "label": "CANCEL_STATUS 'D', result, Log", "type": "process"}],
+                {"id": "g", "label": "UPD_STATUS 'D', result, Log", "type": "process"}],
                 "edges": [{"from": "a", "to": "b"}, {"from": "b", "to": "c"}, {"from": "c", "to": "d"}, {"from": "d", "to": "e", "label": "No"},
                           {"from": "d", "to": "f", "label": "Yes"}, {"from": "e", "to": "g"}, {"from": "f", "to": "g"}]}},
             "inputs": [
-                {"name": CTL, "type": "DB", "description": "Status 2 rows with CANCEL_STATUS 'P' (XD12) and all other rows of the same lines (status 7 / 6)"},
+                {"name": CTL, "type": "DB", "description": "Status 2 rows with UPD_STATUS 'P' (XD12) and all other rows of the same lines (status 7 / 6)"},
                 {"name": INS, "type": "DB", "description": "Mapping rows of the line; ASN_NO filled = in a submitted ASN"},
                 {"name": PMAP, "type": "DB", "description": "MAPPED_QTY per PO part"}],
             "outputs": [
                 {"name": INS, "type": "DB", "description": "Open mapping rows of the line deleted"},
                 {"name": PMAP, "type": "DB", "description": "MAPPED_QTY reduced by the released qty per PO"},
-                {"name": CTL, "type": "DB", "description": "CANCEL_STATUS 'D' on the processed rows; PO_MAPPED_FLAG 'N' on rows of the line without mapping left"},
+                {"name": CTL, "type": "DB", "description": "UPD_STATUS 'D' on the processed rows; PO_MAPPED_FLAG 'N' on rows of the line without mapping left"},
                 {"name": RES, "type": "DB", "description": "One record per processed status 2 row (CANCELLED / CONFLICT)"},
                 {"name": LOG, "type": "DB", "description": "Start, cancel per line, conflicts and end messages"}],
             "extra_tables": [
@@ -68,7 +68,7 @@ def build():
                  "rows": [["-", "No parameter."], ["User", "Batch user ID"]]},
                 {"title": "Line Figures", "columns": [{"title": "Name", "width": 12}, {"title": "Calculation (per line, all serials)", "width": 36}],
                  "rows": [["Line", LINE_KEY + " (unique key without SERIAL_NO)"],
-                          ["CANCEL_QTY", "Sum of ORDER_STATUS_QTY of the status 2 rows with CANCEL_STATUS 'P'"],
+                          ["CANCEL_QTY", "Sum of ORDER_STATUS_QTY of the status 2 rows with UPD_STATUS 'P'"],
                           ["VALID_QTY", "Sum of ORDER_STATUS_QTY of the rows with status 7 or 6"],
                           ["QTY_IN_ASN", f"Sum of QTY of the rows of the line in {INS} with ASN_NO"],
                           ["QTY_OPEN", f"Sum of QTY of the rows of the line in {INS} without ASN_NO"],
@@ -84,13 +84,13 @@ def build():
             "flow": {"direction": "TB", "nodes": [
                 {"id": "p1", "label": "Start (after XD12)", "type": "process", "step": 1},
                 {"id": "c", "label": CTL, "type": "db", "lane": "input"},
-                {"id": "p2", "label": "Lines with CANCEL_STATUS 'P'", "type": "process", "step": 2},
+                {"id": "p2", "label": "Lines with UPD_STATUS 'P'", "type": "process", "step": 2},
                 {"id": "k", "label": INS, "type": "db", "lane": "input"},
                 {"id": "p3", "label": "Line figures", "type": "process", "step": 3},
                 {"id": "p4", "label": "Release open mapping", "type": "process", "step": 4},
                 {"id": "o", "label": f"{INS} / {PMAP} / {CTL}", "type": "db", "lane": "output"},
                 {"id": "d", "label": "Result rule", "type": "decision", "step": 5},
-                {"id": "p6", "label": "CANCEL_STATUS 'D', result, Log per line", "type": "process", "step": 6},
+                {"id": "p6", "label": "UPD_STATUS 'D', result, Log per line", "type": "process", "step": 6},
                 {"id": "r", "label": RES, "type": "db", "lane": "output"},
                 {"id": "p7", "label": "Next line / end, Log", "type": "process", "step": 7},
                 {"id": "log", "label": LOG, "type": "db", "lane": "output"}],
@@ -99,7 +99,7 @@ def build():
                        {"from": "p6", "to": "r"}, {"from": "p6", "to": "p7"}, {"from": "p7", "to": "log"}]},
             "steps": [
                 "The scheduler starts the batch after XD12 has finished successfully (job chain XD12 -> XD11 -> XD08). Write LOG1.",
-                f"Select the lines ({LINE_KEY}) that have rows with ORDER_STATUS = '2' and CANCEL_STATUS = 'P' in {CTL}. Read all rows of these lines (every SERIAL_NO).",
+                f"Select the lines ({LINE_KEY}) that have rows with ORDER_STATUS = '2' and UPD_STATUS = 'P' in {CTL}. Read all rows of these lines (every SERIAL_NO).",
                 {"text": "For each line, compute the line figures (see Line Figures):", "children": [
                     "CANCEL_QTY (status 2 rows 'P'), VALID_QTY (status 7 + 6 rows), QTY_IN_ASN and QTY_OPEN from TB_R_INSTRUCTION."]},
                 {"text": "Release the open mapping of the line (when QTY_OPEN > 0):", "children": [
@@ -110,7 +110,7 @@ def build():
                 {"text": "Judge the result (see Result Rule):", "children": [
                     "CANCELLED: QTY_IN_ASN <= VALID_QTY. Write LOG3.",
                     "CONFLICT: QTY_IN_ASN > VALID_QTY; CONFLICT_QTY pcs were shipped (or will be) without order. Write LOG4."]},
-                f"Set CANCEL_STATUS = 'D' on the processed status 2 rows and insert one record per row in {RES} (with the line figures). Commit per line: an error stops only this line (LOG5); its rows stay 'P' and are processed by the next run.",
+                f"Set UPD_STATUS = 'D' on the processed status 2 rows and insert one record per row in {RES} (with the line figures). Commit per line: an error stops only this line (LOG5); its rows stay 'P' and are processed by the next run.",
                 "More lines: back to step 3. Else write LOG2 (counts per result). Exit."]
         },
         "data_map": {"blocks": [
@@ -126,11 +126,11 @@ def build():
             {"source": {"table": CTL, "keys": [{"field": "Line", "value": "Line with cancel"}]},
              "destination": {"table": CTL, "operation": "Update", "description": "Status 2 rows 'P' -> 'D'; status 7 rows without mapping left -> PO_MAPPED_FLAG 'N'",
                              "keys": [{"field": "Unique key (incl. SERIAL_NO)", "value": "Row of the line"}]},
-             "mappings": full_update([{"dest_field": "CANCEL_STATUS", "description": "'D' for the processed status 2 rows; not changed for other rows"},
+             "mappings": full_update([{"dest_field": "UPD_STATUS", "description": "'D' for the processed status 2 rows; not changed for other rows"},
                                       {"dest_field": "PO_MAPPED_FLAG", "description": "'N' for status 7 rows of the line without mapping row left; else not changed"},
                                       {"dest_field": "UPDATE_BY", "description": "Batch user ID"},
                                       {"dest_field": "UPDATE_DT", "description": "Server system date-time"}], CTL_COLS)},
-            {"source": {"table": CTL, "keys": [{"field": "ORDER_STATUS / CANCEL_STATUS", "value": "'2' / 'P'"}]},
+            {"source": {"table": CTL, "keys": [{"field": "ORDER_STATUS / UPD_STATUS", "value": "'2' / 'P'"}]},
              "destination": {"table": RES, "operation": "Insert", "description": "One record per processed status 2 row"},
              "mappings": [{"source_field": k, "dest_field": k} for k in KEYS + ("ORDER_STATUS_DT",)]
                          + [{"source_field": "SHIPPING_PART_NO", "dest_field": "PART_NO"},

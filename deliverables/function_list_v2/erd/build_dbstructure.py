@@ -24,7 +24,7 @@ TABLES = [
     ('TMP-01', '#TEMP_INSTRUCTION', 'Crossdock Pre-mapping Temporary', 'Temporary', 'Pre-mapping of one [Search] (session).'),
     ('REP-01', 'TB_M_H0125_DESTINATION', 'Destination Master (H0125)', 'Replicated', 'Destination master replicated from DB Surrounding by XD13.'),
     ('REP-02', 'TB_R_ACTUAL_DEMAND_SUMMARY', 'Actual Demand Summary', 'Replicated', 'Actual demand replicated from DB Surrounding by XD04.'),
-    ('REP-03', 'TB_R_H0253_ORDER_CONTROL_PRE', 'Order Control Info (H0253)', 'Replicated', 'Customer order lines replicated by XD08 / XD12, with NSP columns HOLD_FLAG / PO_MAPPED_FLAG / CANCEL_STATUS.'),
+    ('REP-03', 'TB_R_H0253_ORDER_CONTROL_PRE', 'Order Control Info (H0253)', 'Replicated', 'Customer order lines replicated by XD08 / XD12, with NSP columns HOLD_FLAG / PO_MAPPED_FLAG / UPD_STATUS.'),
     ('EXT-01', 'TB_M_PART_MASTER', 'Part Master', 'Existing', 'Existing part master (reference; Crossdock uses PART_NAME).'),
     ('EXT-02', 'TB_R_PRA_DAILY_ORDER_MANIFEST', 'Pra Daily Order Manifest', 'Existing', 'Existing (reference): crossdock order = CROSS_DOCK_FLAG X.'),
     ('EXT-03', 'TB_R_PRA_DAILY_ORDER_PART', 'Pra Daily Order Part', 'Existing', 'Existing (reference): part data of the crossdock manifest.'),

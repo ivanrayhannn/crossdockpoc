@@ -93,7 +93,7 @@ export function AsnBackendProcessPage() {
       <Section no="5" title="Cancel of an order (not in Supplier System)">
         <Steps rows={[
           ['1', 'The order is cancelled in T-System (with or without hold flag Y): the H0253 row changes to ORDER_STATUS 2; a partial cancel splits the line into a new SERIAL_NO. Supplier System never cancels an order itself.', 'H0253 (T-System, insert / update)'],
-          ['2', 'XD12 upserts the status 2 rows of crossdock lines (rows changed since the last run, INTF_UPDATE_DT) with CANCEL_STATUS P.', 'TB_R_H0253_ORDER_CONTROL_PRE'],
+          ['2', 'XD12 upserts the status 2 rows of crossdock lines (rows changed since the last run, INTF_UPDATE_DT) with UPD_STATUS P.', 'TB_R_H0253_ORDER_CONTROL_PRE'],
           ['3', 'XD11 per line (all serials): releases the open mapping; CANCELLED, or CONFLICT when qty already in an ASN is cancelled (abnormality: blocked normally by the existing ASN feedback and the SOP). No Cancel ASN. Then XD08 upserts status 7 / 6.', 'TB_R_INSTRUCTION, TB_R_CROSSDOCK_CANCEL_RESULT'],
           ['4', 'Simulation of the H0253 scenarios: menu Cancel Order Simulation.', 'Prototype'],
         ]} />
