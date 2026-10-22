@@ -149,7 +149,7 @@ export function AsnCrossdockCreationPage() {
       const end = endFor(u, c.seq);
       if (end === null) return;
       const g = groupCases(u, c.group);
-      if (end > c.seq) setCutNote(`Case ${c.seq} is in Group ${c.group} (cases ${g[0].seq}-${g[g.length - 1].seq}): the cases of a group are sent together. Cases 1-${end} of ${u.partNo} / ${niceDate(u.orderDt)} are selected.`);
+      if (end > c.seq) setCutNote(`Cases ${g[0].seq}-${g[g.length - 1].seq} are sent together. Cases 1-${end} of ${u.partNo} / ${niceDate(u.orderDt)} are selected.`);
       else setCutNote(null);
       next[u.key] = { end, held: u.heldLines.length };
     } else {
@@ -214,7 +214,7 @@ export function AsnCrossdockCreationPage() {
           <Chip tone="neutral">Draft</Chip>
         </div>
         <div style={{ ...card, padding: '12px 16px', fontSize: 12.5, background: 'var(--color-accent-100, #eef4fb)' }}>
-          The ticked cases are mapped to their POs. Supplier cases hold {PCS_PER_CASE} pcs in the receiving scan order; the cases of a Case Group are always sent together.
+          The ticked cases are mapped to their POs. Supplier cases hold {PCS_PER_CASE} pcs in the receiving scan order; cases that belong together are always sent together.
         </div>
         <div style={{ ...card, padding: 16, display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 16, fontSize: 12.5 }}>
           <div><div className="ax-lbl">ASN No</div><div style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{nextAsnNo}</div><div className="ax-muted">auto · assigned on submit</div></div>
@@ -287,7 +287,7 @@ export function AsnCrossdockCreationPage() {
         <div style={{ marginRight: 'auto' }}>
           <h1 style={{ fontSize: 22, margin: 0 }}>ASN Crossdock Creation</h1>
           <div style={{ fontSize: 12.5, color: 'var(--color-neutral-700)', marginTop: 3 }}>
-            Choose the Delivery Date and Rit, then Search: customer orders are read in the receiving scan order (Allocation Priority = Customer Order Date), pre-mapped to supplier POs and cut into cases of {PCS_PER_CASE} pcs. Tick the cases to send: the selection starts at case 1 and the cases of a Case Group are always sent together.
+            Choose the Delivery Date and Rit, then Search: customer orders are read in the receiving scan order (Allocation Priority = Customer Order Date), pre-mapped to supplier POs and cut into cases of {PCS_PER_CASE} pcs. Tick the cases to send: the selection starts at case 1 and cases that belong together are always sent together.
           </div>
         </div>
         <div className="field">
@@ -414,24 +414,16 @@ export function AsnCrossdockCreationPage() {
                     <tr key={`${u.key}-c`}>
                       <td colSpan={colCount} style={{ padding: '4px 16px 10px 50px', borderBottom: '1px solid var(--color-divider)' }}>
                         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-                          <thead><tr><th style={{ ...th, background: 'transparent', width: 30 }} />{['Case Group', 'Case', 'Qty', ...(isDs ? ['Content (D/S team)'] : []), 'PO', 'PO Status'].map((h) => <th key={h} style={{ ...th, background: 'transparent', height: 28 }}>{h}</th>)}</tr></thead>
+                          <thead><tr><th style={{ ...th, background: 'transparent', width: 30 }} />{['Case', 'Qty', ...(isDs ? ['Content (D/S team)'] : []), 'PO', 'PO Status'].map((h) => <th key={h} style={{ ...th, background: 'transparent', height: 28 }}>{h}</th>)}</tr></thead>
                           <tbody>
                             {u.cases.map((c) => {
                               const g = groupCases(u, c.group);
-                              const first = g[0].seq === c.seq;
-                              const span = g.length > 1 ? `cases ${g[0].seq}-${g[g.length - 1].seq} are sent together` : 'one case';
-                              const ctip = c.ready ? `Group ${c.group}: ${span}`
+                              const ctip = c.ready ? (g.length > 1 ? `Cases ${g[0].seq}-${g[g.length - 1].seq} are sent together` : `Case ${c.seq} can be sent alone`)
                                 : `Not Ready: case ${c.seq} of ${u.partNo} / ${niceDate(u.orderDt)} (or an earlier case) is not assigned to a PO yet (${u.readyCases} of ${u.caseCount} cases assigned)`;
                               const on = !!s && c.seq <= s.end;
-                              const edge = c.group % 2 ? 'var(--color-accent-500, #4a90d9)' : 'var(--color-accent-2-500, #59a96a)';
                               return (
-                                <tr key={c.seq} style={{ background: on ? 'var(--color-accent-100, #eef4fb)' : undefined, color: c.ready ? undefined : 'var(--color-neutral-600)', borderTop: first ? '2px solid var(--color-divider)' : undefined }}>
+                                <tr key={c.seq} style={{ background: on ? 'var(--color-accent-100, #eef4fb)' : undefined, color: c.ready ? undefined : 'var(--color-neutral-600)' }}>
                                   <td style={td}><input type="checkbox" checked={on} disabled={!c.ready || endFor(u, c.seq) === null} title={ctip} onChange={(e) => tickCase(u, c, e.target.checked)} /></td>
-                                  {first && (
-                                    <td rowSpan={g.length} style={{ ...td, borderLeft: `3px solid ${edge}`, verticalAlign: 'middle' }} title={ctip}>
-                                      <b>Group {c.group}</b>{g.length > 1 && <div className="ax-muted">cases {g[0].seq}-{g[g.length - 1].seq} · sent together</div>}
-                                    </td>
-                                  )}
                                   <td style={{ ...td, fontFamily: 'var(--font-mono)', fontWeight: 600 }}>Case {c.seq}</td>
                                   <td style={td}>{c.qty}</td>
                                   {isDs && <td style={td}>{contentOf(c.lines)}</td>}

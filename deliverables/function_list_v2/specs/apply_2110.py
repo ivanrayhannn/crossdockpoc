@@ -147,27 +147,27 @@ def _case_rows():
     rows = []
     for c in sorted({s['CASE_SEQ'] for s in _CASES}):
         sl = [s for s in _CASES if s['CASE_SEQ'] == c]
-        rows.append([f"Group {sl[0]['GROUP_SEQ']}", c, sum(s['ASSIGNED_QTY'] for s in sl), ' + '.join(f"{s['DESTINATION_CD']} {s['ASSIGNED_QTY']} ({s['CUSTOMER_ORDER_NO']})" for s in sl),
+        rows.append([sl[0]['GROUP_SEQ'], c, sum(s['ASSIGNED_QTY'] for s in sl), ' + '.join(f"{s['DESTINATION_CD']} {s['ASSIGNED_QTY']} ({s['CUSTOMER_ORDER_NO']})" for s in sl),
                      ', '.join(f"{po} {sum(s['ASSIGNED_QTY'] for s in sl if s['PO_NO'] == po)}" for po in dict.fromkeys(s['PO_NO'] for s in sl)),
                      sl[-1]['CROSSDOCK_STATUS']])
     return rows
 
 
 XD10_CASE_SECTIONS = [
-    {'title': 'H. Case selection (decided 21-Oct): PART-A 14-Oct, all cases with PO (p1 24 + p2 6); one check box per supplier case, cases grouped '
-              'in Case Groups (GROUP_SEQ: the cases of a group are sent together); Content shown to the D/S team only',
-     'columns': ['Case Group', 'Case', 'Qty', 'Content (D/S team only)', 'PO', 'PO Status'], 'widths': [12, 6, 6, 34, 18, 10],
+    {'title': 'H. Case selection (decided 21-Oct): PART-A 14-Oct, all cases with PO (p1 24 + p2 6); one check box per supplier case; GROUP_SEQ is '
+              'not shown on the screen (cases of the same GROUP_SEQ are ticked together); Content shown to the D/S team only',
+     'columns': ['GROUP_SEQ (not shown)', 'Case', 'Qty', 'Content (D/S team only)', 'PO', 'PO Status'], 'widths': [12, 6, 6, 34, 18, 10],
      'rows': _case_rows()},
-    {'title': 'I. Check box scenarios (Group 1 = case 1, Group 2 = cases 2-3, Group 3 = case 4, Group 4 = case 5)', 'columns': ['No', 'User action', 'Ticked cases', 'Result'],
+    {'title': 'I. Check box scenarios (cases that belong together: 1 | 2-3 | 4 | 5)', 'columns': ['No', 'User action', 'Ticked cases', 'Result'],
      'widths': [6, 34, 14, 66],
-     'rows': [['C1', 'Tick case 1', '1', 'Group 1; ASN 6 pcs.'],
-              ['C2', 'Tick case 2 (or cases 1 and 2)', '1-3', 'Case 2 is in Group 2 (cases 2-3): cases 1-2 alone are not possible; case 3 is ticked too '
+     'rows': [['C1', 'Tick case 1', '1', 'ASN 6 pcs.'],
+              ['C2', 'Tick case 2 (or cases 1 and 2)', '1-3', 'Cases 2-3 belong together: cases 1-2 alone are not possible; case 3 is ticked too '
                '(message no. 10); ASN 18 pcs. (Reason, D/S view: after case 2 VN 10 / TH 2 would not complete a warehouse case.)'],
-              ['C3', 'Tick case 3', '1-3', 'Groups 1-2; ASN 18 pcs.'],
-              ['C4', 'Tick case 4', '1-4', 'Groups 1-3; ASN 24 pcs.'],
-              ['C5', 'Tick case 5 (or the unit check box)', '1-5', 'All groups; ASN 30 pcs.'],
-              ['C6', 'From 1-4, untick case 3', '1', 'Group 2 and the later groups are unticked (back to Group 1).'],
-              ['C7', 'p2 not released yet (case 5 without PO)', '1 / 1-3 / 1-4', 'Group 4 disabled (tooltip message no. 2); groups 1, 1-2 or 1-3 can be ticked.']]},
+              ['C3', 'Tick case 3', '1-3', 'Cases 1-2 are ticked too; ASN 18 pcs.'],
+              ['C4', 'Tick case 4', '1-4', 'ASN 24 pcs.'],
+              ['C5', 'Tick case 5 (or the unit check box)', '1-5', 'All cases; ASN 30 pcs.'],
+              ['C6', 'From 1-4, untick case 3', '1', 'Cases 2-4 are unticked (case 3 belongs together with case 2); back to case 1.'],
+              ['C7', 'p2 not released yet (case 5 without PO)', '1 / 1-3 / 1-4', 'Case 5 disabled (tooltip message no. 2); cases 1, 1-3 or 1-4 can be ticked.']]},
 ]
 
 
@@ -268,45 +268,43 @@ def xd10():
     g = s['general']
     g['objective'][1] = ("To display the delivery plan per Part Number + Customer Order Date with the supplier cases in receiving scan order (Case Qty, "
                          "PO Readiness, ASN options, ASN Status Ready / Partially Ready / Not Ready). Units fully Created or without any pre-mapped case are not listed.")
-    g['objective'][3] = ("To tick the supplier cases to send (check box per case, from case 1, whole Case Groups) of one Supplier Code + Supplier Plant, map them to their POs "
+    g['objective'][3] = ("To tick the supplier cases to send (check box per case, from case 1, cases that belong together) of one Supplier Code + Supplier Plant, map them to their POs "
                          "(TB_R_INSTRUCTION), review the cases, download the case labels and submit the ASN.")
     g['buttons'][5]['function'] = ("Check that the selected units are of one supplier and not held, map the chosen blocks to their POs (insert TB_R_INSTRUCTION) "
                                    "and open the Case List sub screen.")
     g['screen_mode_remarks'][0] = ('1) Each unit row shows its supplier case rows in scan order (XD09). The check box of a case is enabled only when the case '
                                    'and every earlier case have a PO (Ready, message no. 2 as tooltip otherwise).')
-    g['screen_mode_remarks'][1] = ("2) The cases are shown in Case Groups (GROUP_SEQ of XD09: the cases up to a CUT_FLAG Y); the cases of a group are always "
-                                   "sent together (at receiving every destination then completes its warehouse case). The ticked cases of a unit start at case 1: "
-                                   "ticking case n ticks the earlier groups and the whole group of case n (message no. 10 when more cases are ticked); unticking "
-                                   "case n unticks its group and the later groups. The unit check box ticks all Ready groups. Units of different Customer Order "
-                                   "Dates and Part Numbers can be ticked together.")
-    g['screen_mode_remarks'][2] = ("3) The supplier sees the unit rows and their case rows (Case Group, Case, Qty, PO, PO Status, check box) without destinations; "
+    g['screen_mode_remarks'][1] = ("2) Cases that belong together (Case Group = GROUP_SEQ of XD09, the cases up to a CUT_FLAG Y; not shown as a column) are "
+                                   "always sent together, so that at receiving every destination completes its warehouse case. The ticked cases of a unit start at "
+                                   "case 1: ticking case n ticks the earlier cases and the other cases of its group (message no. 10); unticking case n unticks its "
+                                   "group and the later cases. The unit check box ticks all Ready cases. Units of different Customer Order Dates and Part Numbers can "
+                                   "be ticked together.")
+    g['screen_mode_remarks'][2] = ("3) The supplier sees the unit rows and their case rows (Case, Qty, PO, PO Status, check box) without destinations; "
                                    "the Content of a case (destinations, customer orders), the destination detail and Hold / Release are shown to the D/S team only.")
     for m in g['screen_modes']:
         for sec in m['sections']:
             if sec['description'].startswith('Units of the login supplier'):
-                sec['description'] = ('Units of the login supplier (Supplier Code + Plant) only; unit rows with their supplier case rows in Case Groups (check box per case, no destinations); '
+                sec['description'] = ('Units of the login supplier (Supplier Code + Plant) only; unit rows with their supplier case rows (check box per case, no destinations); '
                                       'Part Number / Status filters')
     nodes = s['screen_flow'][1]['flow']['nodes']
     nodes[3]['label'] = 'First block Ready? (blocks in scan order)'
-    nodes[5]['label'] = 'Tick cases (from case 1, whole Case Groups), Create ASN: insert TB_R_INSTRUCTION'
+    nodes[5]['label'] = 'Tick cases (from case 1, cases that belong together), Create ASN: insert TB_R_INSTRUCTION'
     it = s['items']
     it[9]['validation'] = 'Enabled when the first block of the unit is Ready'
     it[13]['description'] = ('Number of supplier cases of the unit: open qty / pcs/case, cut in scan order (e.g. 30 pcs, 6 pcs/case = 5 cases); '
                              'a case can hold several destinations.')
     it[15]['description'] = ("Ready (all blocks '6', green) / Partially Ready (first block '6', a later block '7', amber) / Not Ready (first block '7', "
                              "row highlighted) / On Hold (D/S only). Refer 5.2.")
-    it[9]['description'] = 'Ticks / unticks all Ready Case Groups of the unit (partly ticked when only some cases are ticked). Refer Screen Mode remark 2).'
+    it[9]['description'] = 'Ticks / unticks all Ready cases of the unit (partly ticked when only some cases are ticked). Refer Screen Mode remark 2).'
     def item(name, src, field, typ, io, control, fmt, val, desc, just='Left', init='-', req='N'):
         return {"name": name, "source": src, "field": field, "type": typ, "len": "-", "io": io, "control": control, "justified": just,
                 "initial": init, "required": req, "format": fmt, "validation": val, "description": desc}
     it[17:17] = [
-        {"group": "<Supplier Cases of a Unit (scan order, Case Groups)>"},
+        {"group": "<Supplier Cases of a Unit (scan order)>"},
         item('Select case (check box)', 'Key-in', '-', 'Char', 'I', 'CheckBox', '-', 'Enabled only when the case and every earlier case have a PO',
-             'One check box per supplier case. The selection always starts at case 1 and takes whole Case Groups: ticking case n ticks the earlier '
-             'groups and the whole group of case n (message no. 10, e.g. tick case 2 -> Group 2 = cases 2-3, so cases 1-3); unticking case n unticks '
-             'its group and the later groups. Refer 5.4.', just='Center', init='<unchecked>'),
-        item('Case Group', '#TEMP_INSTRUCTION', 'GROUP_SEQ', 'Char', 'O', 'Label', 'Group {n} (cases {from}-{to} · sent together)', '-',
-             'Cases that are always sent together (up to a CUT_FLAG Y of XD09); one merged cell per group with a coloured left border.'),
+             'One check box per supplier case. The selection always starts at case 1 and takes the cases that belong together (Case Group = GROUP_SEQ '
+             'of XD09, not shown on the screen): ticking case n ticks the earlier cases and the other cases of its group (message no. 10, e.g. tick '
+             'case 2 -> cases 2-3 belong together, so cases 1-3); unticking case n unticks its group and the later cases. Refer 5.4.', just='Center', init='<unchecked>'),
         item('Case', '#TEMP_INSTRUCTION', 'CASE_SEQ', 'Number', 'O', 'Label', 'Z9', '-', 'Supplier case number in scan order (PCS_CASE pcs).', just='Right'),
         item('Qty (pcs)', '#TEMP_INSTRUCTION', 'ASSIGNED_QTY', 'Number', 'O', 'Label', 'ZZZ9', '-', 'Pcs of the case (= PCS_CASE).', just='Right'),
         item('Content (D/S team)', '#TEMP_INSTRUCTION', 'DESTINATION_CD / CUSTOMER_ORDER_NO / ASSIGNED_QTY', 'Char', 'O', 'Label', '-', '-',
@@ -350,11 +348,12 @@ def xd10():
         "blocks), Partially Ready (the first k blocks), Not Ready (first block; check box disabled, message no. 2).",
         "Created: blocks in a submitted ASN are no longer in the delivery plan (shown in ASN Inquiry); the open qty of the unit is cut again from case 1 "
         "in the same order at the next [Search]."]
-    op[6]['text'] = '5.4 Select Cases (Case Groups) and Create ASN'
-    op[7]['items'][0] = ("The user ticks the supplier cases to send with the check box of each case row. The cases are shown in Case Groups (GROUP_SEQ "
-                         "of XD09); a group is always sent as a whole, so that at receiving every destination completes its warehouse case. The ticked cases of "
-                         "a unit start at case 1: ticking a case ticks the earlier groups and its whole group (message no. 10). Example: Group 2 = cases 2-3 "
-                         "(D/S view: case 2 = VN 4 + TH 2) -> ticking case 2 gives cases 1-3; cases 1-2 alone are not possible. Only Ready cases can be ticked. One ASN is for one Supplier Code + Supplier Plant "
+    op[6]['text'] = '5.4 Select Cases and Create ASN'
+    op[7]['items'][0] = ("The user ticks the supplier cases to send with the check box of each case row. Cases that belong together (Case Group = "
+                         "GROUP_SEQ of XD09, not shown) are always sent together, so that at receiving every destination completes its warehouse case. The "
+                         "ticked cases of a unit start at case 1: ticking a case ticks the earlier cases and the other cases of its group (message no. 10). "
+                         "Example: cases 2-3 belong together (D/S view: case 2 = VN 4 + TH 2) -> ticking case 2 gives cases 1-3; cases 1-2 alone are not "
+                         "possible. Only Ready cases can be ticked. One ASN is for one Supplier Code + Supplier Plant "
                          "(existing rule): ticked units of more than one supplier give message no. 9 and nothing is created.")
     op[7]['items'][1] = ("[Create ASN] does the real mapping of the chosen blocks in one transaction: the slices inserted into TB_R_INSTRUCTION (case and "
                          "line sequence of XD09), MAPPED_QTY in the new table TB_R_PRA_DAILY_ORDER_MAPPED, and PO_MAPPED_FLAG = 'Y' on the H0253 lines "
@@ -378,7 +377,7 @@ def xd10():
             x['description'] = "'{n} units · {c} cases · {q} pcs selected · {units}'. Empty: hint that cases of different units / dates can go into one ASN."
         if x.get('name') == 'Clear selection':
             x['description'] = 'Unticks all cases.'
-    caps = {'c_02_delivery_plan': '2. Delivery plan after Search (supplier view): unit rows with their supplier case rows (Case Group, check box, PO, PO Status; no destinations)',
+    caps = {'c_02_delivery_plan': '2. Delivery plan after Search (supplier view): unit rows with their supplier case rows (check box, Case, Qty, PO, PO Status; no destinations)',
             'c_03_ds_detail': '3. D/S team: destination detail (warehouse cases, Hold Flag) and customer orders of a destination (open qty, cases, PO)',
             'c_04_ds_hold': '4. D/S team: Thailand on hold; the scan order and the cases are computed again without it',
             'c_05_selected': '5. Case 2 of PART-A ticked: MSG10, cases 1-3 are selected together; unit PART-C ticked (different Customer Order Date)',
@@ -390,8 +389,8 @@ def xd10():
             sl['caption'] = caps[k]
     msgs = s['display_messages']
     msgs.insert(msgs.index(next(m for m in msgs if m.get('msg_id') == 'MSG9')) + 1,
-                {"event": "Tick a case of a Case Group with more cases", "cause": "The cases of a Case Group are sent together", "type": "Info",
-                 "msg_id": "MSG10", "message": "Case {n} is in Group {g} (cases {a}-{b}): the cases of a group are sent together. Cases 1-{b} of {Part No} / {Customer Order Date} are selected.",
+                {"event": "Tick a case that belongs together with later cases", "cause": "Cases that belong together (Case Group) are sent together", "type": "Info",
+                 "msg_id": "MSG10", "message": "Cases {a}-{b} are sent together. Cases 1-{b} of {Part No} / {Customer Order Date} are selected.",
                  "action": "Keep the selection or untick."})
     s['sample_sheet']['sections'] += XD10_CASE_SECTIONS
     save('XD10', s)
