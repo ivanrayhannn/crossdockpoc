@@ -710,7 +710,7 @@ export const BPF: BpfData = {
      "band": "B2",
      "slot": 0,
      "fn": "XD12",
-     "title": "Upsert status 2 rows of crossdock lines + other changed rows of the line; CANCEL_STATUS P",
+     "title": "Upsert status 2 rows of crossdock lines + other changed rows of the line; UPD_STATUS P",
      "read": [
       "TB_R_H0253_ORDER_CONTROL_PRE (DB Surrounding)"
      ],
@@ -739,7 +739,7 @@ export const BPF: BpfData = {
      "write": [
       "TB_R_INSTRUCTION (delete rows without ASN_NO)",
       "TB_R_PRA_DAILY_ORDER_MAPPED (MAPPED_QTY −)",
-      "TB_R_H0253_ORDER_CONTROL_PRE (PO_MAPPED_FLAG N, CANCEL_STATUS D)",
+      "TB_R_H0253_ORDER_CONTROL_PRE (PO_MAPPED_FLAG N, UPD_STATUS D)",
       "TB_R_CROSSDOCK_CANCEL_RESULT",
       "Log"
      ],

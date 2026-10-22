@@ -20,7 +20,7 @@
  "general": {
   "objective": [
    "To keep TB_R_H0253_ORDER_CONTROL_PRE in NSP up to date with the crossdock customer order lines of G-System (replicated in DB Surrounding): rows with ORDER_STATUS = '7' are inserted (new key) or updated (existing key); rows that changed to '6' (received) are updated.",
-   "Only the rows changed since the last successful run are taken (INTF_UPDATE_DT > watermark). Nothing is deleted, so the NSP columns HOLD_FLAG / PO_MAPPED_FLAG / CANCEL_STATUS keep their values.",
+   "Only the rows changed since the last successful run are taken (INTF_UPDATE_DT > watermark). Nothing is deleted, so the NSP columns HOLD_FLAG / PO_MAPPED_FLAG / UPD_STATUS keep their values.",
    "Rows with status '2' (cancel) are taken by XD12 and processed by XD11 before this batch runs."
   ],
   "operation_flow": {
@@ -220,8 +220,8 @@
    {
     "text": "Upsert into TB_R_H0253_ORDER_CONTROL_PRE (NSP) per unique key (incl. SERIAL_NO):",
     "children": [
-     "New key: insert all source columns; HOLD_FLAG = 'N', PO_MAPPED_FLAG = 'N', CANCEL_STATUS = '-'.",
-     "Existing key: update all source columns; HOLD_FLAG, PO_MAPPED_FLAG and CANCEL_STATUS are not changed."
+     "New key: insert all source columns; HOLD_FLAG = 'N', PO_MAPPED_FLAG = 'N', UPD_STATUS = '-'.",
+     "Existing key: update all source columns; HOLD_FLAG, PO_MAPPED_FLAG and UPD_STATUS are not changed."
     ]
    },
    "No error: commit, save the new watermark (max INTF_UPDATE_DT taken) in the Log, LOG2. Error: roll back, watermark not changed, LOG3. Exit."
@@ -484,7 +484,7 @@
       "description": "'N' on insert; not changed on update"
      },
      {
-      "dest_field": "CANCEL_STATUS",
+      "dest_field": "UPD_STATUS",
       "description": "'-' on insert; not changed on update"
      },
      {
@@ -609,7 +609,7 @@
    "name": "TB_R_H0253_ORDER_CONTROL_PRE",
    "kind": "transaction",
    "proposed": false,
-   "description": "Order control data, pre-order picking info (I/F H02-53, DVJO950) replicated from DB Surrounding by XD08 / XD12. Structure from the G-System I/F layout; physical names follow the existing table. Key (PK) = unique key of the I/F layout. NSP keeps the rows with status 7, 6 and 2 (insert / update); rows with status 6 / 2 are kept for tracking only (retention optional, TBC). CANCEL_STATUS is a new NSP column (proposed).",
+   "description": "Order control data, pre-order picking info (I/F H02-53, DVJO950) replicated from DB Surrounding by XD08 / XD12. Structure from the G-System I/F layout; physical names follow the existing table. Key (PK) = unique key of the I/F layout. NSP keeps the rows with status 7, 6 and 2 (insert / update); rows with status 6 / 2 are kept for tracking only (retention optional, TBC). UPD_STATUS is a new NSP column (proposed).",
    "columns": [
     [
      "CUSTOMER_CD",
@@ -934,7 +934,7 @@
      "NSP column: line mapped to a PO by [Create ASN] ('Y' / 'N'); 'N' on insert, never changed by XD08 / XD12"
     ],
     [
-     "CANCEL_STATUS",
+     "UPD_STATUS",
      "VARCHAR(1)",
      "",
      "N",

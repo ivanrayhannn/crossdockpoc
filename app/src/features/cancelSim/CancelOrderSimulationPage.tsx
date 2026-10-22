@@ -31,7 +31,7 @@ const SRC14: SrcRow[] = [{ serial: A, status: '7', qty: 8, upd: '14-Oct 03:30' }
 const REP14: RepRow[] = [{ serial: A, status: '7', qty: 8, hold: 'N', mapped: 'N', cancel: '-', changed: true }];
 const START: Step = {
   lane: 'sys', date: '14-Oct', title: 'XD08 inserts the new line (status 7)',
-  text: 'T-System has the crossdock line ID1H4571 / 52119BZV60, 8 pcs, status 7. XD08 takes the rows changed since the last run (INTF_UPDATE_DT > watermark) and inserts the new key; HOLD_FLAG / PO_MAPPED_FLAG = N, CANCEL_STATUS = -.',
+  text: 'T-System has the crossdock line ID1H4571 / 52119BZV60, 8 pcs, status 7. XD08 takes the rows changed since the last run (INTF_UPDATE_DT > watermark) and inserts the new key; HOLD_FLAG / PO_MAPPED_FLAG = N, UPD_STATUS = -.',
   src: SRC14, rep: REP14, instr: [], flags: [['ok', 'Upsert per unique key (incl. SERIAL_NO). Nothing is deleted, so the Supplier System columns are never lost.']],
 };
 const REP14_M: RepRow[] = [{ serial: A, status: '7', qty: 8, hold: 'N', mapped: 'Y', cancel: '-' }];
@@ -79,14 +79,14 @@ const SCENARIOS: { key: string; name: string; tag: Level; summary: string; steps
       },
       {
         lane: 'sys', date: '15-Oct', title: 'XD12 upserts the line (status 2 + other changed rows)',
-        text: 'The line exists in Supplier System, so XD12 inserts the new serial (status 2, CANCEL_STATUS P) and also updates serial 0000001 (qty 8 → 6), so XD11 sees the complete line.',
+        text: 'The line exists in Supplier System, so XD12 inserts the new serial (status 2, UPD_STATUS P) and also updates serial 0000001 (qty 8 → 6), so XD11 sees the complete line.',
         src: [{ serial: A, status: '7', qty: 6, upd: '15-Oct 03:30' }, { serial: B, status: '2', qty: 2, upd: '15-Oct 03:30' }],
         rep: [{ serial: A, status: '7', qty: 6, hold: 'N', mapped: 'N', cancel: '-', changed: true }, { serial: B, status: '2', qty: 2, hold: 'N', mapped: 'N', cancel: 'P', changed: true }],
-        instr: [], flags: [['ok', 'CANCEL_STATUS P = to be processed by XD11.']],
+        instr: [], flags: [['ok', 'UPD_STATUS P = to be processed by XD11.']],
       },
       {
         lane: 'sys', date: '15-Oct', title: 'XD11: CANCELLED',
-        text: 'Line figures: CANCEL 2, VALID (status 7 + 6) 6, in ASN 0, open mapping 0 → CANCELLED. Serial 0000002 → CANCEL_STATUS D. XD08 runs next; the next Search of XD09 pre-maps 6 pcs.',
+        text: 'Line figures: CANCEL 2, VALID (status 7 + 6) 6, in ASN 0, open mapping 0 → CANCELLED. Serial 0000002 → UPD_STATUS D. XD08 runs next; the next Search of XD09 pre-maps 6 pcs.',
         src: [{ serial: A, status: '7', qty: 6, upd: '15-Oct 03:30' }, { serial: B, status: '2', qty: 2, upd: '15-Oct 03:30' }],
         rep: [{ serial: A, status: '7', qty: 6, hold: 'N', mapped: 'N', cancel: '-' }, { serial: B, status: '2', qty: 2, hold: 'N', mapped: 'N', cancel: 'D', changed: true }],
         instr: [], fig: { cancel: 2, valid: 6, inAsn: 0, open: 0, released: 0, poMapped: 0, result: 'CANCELLED' },
@@ -111,14 +111,14 @@ const SCENARIOS: { key: string; name: string; tag: Level; summary: string; steps
         flags: [['ok', 'Not in an ASN: the cancel is allowed.']],
       },
       {
-        lane: 'sys', date: '15-Oct', title: 'XD12 updates the row (CANCEL_STATUS P)',
-        text: 'XD12 updates row 0000001 to status 2 and sets CANCEL_STATUS P. HOLD_FLAG / PO_MAPPED_FLAG are not changed.',
+        lane: 'sys', date: '15-Oct', title: 'XD12 updates the row (UPD_STATUS P)',
+        text: 'XD12 updates row 0000001 to status 2 and sets UPD_STATUS P. HOLD_FLAG / PO_MAPPED_FLAG are not changed.',
         src: [{ serial: A, status: '2', qty: 8, upd: '15-Oct 03:30' }], rep: [{ serial: A, status: '2', qty: 8, hold: 'N', mapped: 'Y', cancel: 'P', changed: true }],
         instr: [{ serial: A, qty: 8, po: 'PO-1', asn: '— (not submitted)' }], flags: [['ok', 'Line ready for XD11.']],
       },
       {
         lane: 'sys', date: '15-Oct', title: 'XD11: release the open mapping, CANCELLED',
-        text: 'Line figures: CANCEL 8, VALID 0, in ASN 0, open 8. The open mapping row is deleted, PO-1 MAPPED_QTY 8 → 0, PO_MAPPED_FLAG → N, CANCEL_STATUS → D. PO-1 is free for the next orders (XD09 FIFO).',
+        text: 'Line figures: CANCEL 8, VALID 0, in ASN 0, open 8. The open mapping row is deleted, PO-1 MAPPED_QTY 8 → 0, PO_MAPPED_FLAG → N, UPD_STATUS → D. PO-1 is free for the next orders (XD09 FIFO).',
         src: [{ serial: A, status: '2', qty: 8, upd: '15-Oct 03:30' }], rep: [{ serial: A, status: '2', qty: 8, hold: 'N', mapped: 'N', cancel: 'D', changed: true }],
         instr: [{ serial: A, qty: 8, po: 'PO-1', asn: '— (not submitted)', deleted: true }],
         fig: { cancel: 8, valid: 0, inAsn: 0, open: 8, released: 8, poMapped: 0, result: 'CANCELLED' },
@@ -145,7 +145,7 @@ const SCENARIOS: { key: string; name: string; tag: Level; summary: string; steps
       },
       {
         lane: 'sys', date: '15-Oct', title: 'XD12 upserts the line',
-        text: 'XD12 updates serial 0000001 (qty 6) and inserts the new serial with status 2, CANCEL_STATUS P.',
+        text: 'XD12 updates serial 0000001 (qty 6) and inserts the new serial with status 2, UPD_STATUS P.',
         src: [{ serial: A, status: '7', qty: 6, upd: '15-Oct 03:30' }, { serial: B, status: '2', qty: 2, upd: '15-Oct 03:30' }],
         rep: [{ serial: A, status: '7', qty: 6, hold: 'N', mapped: 'Y', cancel: '-', changed: true }, { serial: B, status: '2', qty: 2, hold: 'N', mapped: 'N', cancel: 'P', changed: true }],
         instr: [{ serial: A, qty: 8, po: 'PO-1', asn: 'ASN-001' }], flags: [['ok', 'Line ready for XD11.']],
@@ -275,7 +275,7 @@ export function CancelOrderSimulationPage() {
           cols={['SERIAL_NO', 'ORDER_STATUS', 'ORDER_STATUS_QTY', 'INTF_UPDATE_DT']}
           rows={step.src.map((r) => ({ cells: [r.serial, STATUS[r.status], r.qty, r.upd], bg: r.changed ? CHG : undefined }))} />
         <Table title="Supplier System: TB_R_H0253_ORDER_CONTROL_PRE (upsert)"
-          cols={['SERIAL_NO', 'ORDER_STATUS', 'QTY', 'HOLD_FLAG', 'PO_MAPPED_FLAG', 'CANCEL_STATUS']}
+          cols={['SERIAL_NO', 'ORDER_STATUS', 'QTY', 'HOLD_FLAG', 'PO_MAPPED_FLAG', 'UPD_STATUS']}
           rows={step.rep.map((r) => ({ cells: [r.serial, STATUS[r.status], r.qty, r.hold, r.mapped, r.cancel], bg: r.changed ? CHG : undefined }))} />
       </div>
 

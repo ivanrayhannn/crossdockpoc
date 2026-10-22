@@ -22,7 +22,7 @@ COLS = {
     'TB_H_PART_CANDIDATE': ['HIST_ID', 'PART_NO', 'PERIOD', 'EVENT_TYPE', 'SOURCE', 'DEST_CODE', 'FIELD_NAME', 'OLD_VALUE', 'NEW_VALUE', 'CREATED_BY'],
     'TB_R_CROSSDOCK_IF_RESULT': ['PART_NO', 'TARGET_SYSTEM', 'PERIOD', 'IF_STATUS', 'IF_FILE_NAME', 'IF_MESSAGE'],
     'TB_R_H0253_ORDER_CONTROL_PRE': ['CUSTOMER_CD', 'CUSTOMER_ORDER_NO', 'ORDER_DT', 'DESTINATION_CD', 'DETAILED_ITEM_NO', 'SERIAL_NO', 'SHIPPING_PART_NO', 'ORDER_STATUS_QTY',
-                                     'ORDER_STATUS', 'HOLD_FLAG', 'PO_MAPPED_FLAG', 'CANCEL_STATUS'],
+                                     'ORDER_STATUS', 'HOLD_FLAG', 'PO_MAPPED_FLAG', 'UPD_STATUS'],
     'TB_R_PRA_DAILY_ORDER_MANIFEST': ['MANIFEST_NO', 'PO_NO', 'SUPPLIER_CD', 'SUPPLIER_PLANT', 'PO_DT', 'CROSS_DOCK_FLAG', 'TOTAL_QTY', 'DELIVERY_DT', 'SUB_ROUTE_CD'],
     'TB_R_PRA_DAILY_ORDER_PART': ['MANIFEST_NO', 'MANIFEST_ITEM', 'PO_NO', 'PO_ITEM', 'PART_NO', 'ORDER_QTY'],
     '#TEMP_INSTRUCTION': ['SORT_SEQ', 'CUSTOMER_CD', 'CUSTOMER_ORDER_NO', 'DESTINATION_CD', 'PART_NO', 'OPEN_ORDER_QTY', 'PO_NO', 'ASSIGNED_QTY',
@@ -45,7 +45,7 @@ VALUE_FILL = {
     ('SYNC_STATUS', '0'): 'FCE4D6', ('SYNC_STATUS', '1'): 'C6EFCE', ('SYNC_STATUS', '2'): 'FF7C80',
     ('CUT_FLAG', 'Y'): 'BDD7EE', ('CROSSDOCK_STATUS', '6'): 'C6EFCE', ('CROSSDOCK_STATUS', '7'): 'FF7C80',
     ('ORDER_STATUS', '2'): 'FF7C80', ('ORDER_STATUS', '6'): 'DDEBF7', ('HOLD_FLAG', 'Y'): 'FF7C80',
-    ('CANCEL_STATUS', 'P'): 'F4B084', ('CANCEL_STATUS', 'D'): 'C6EFCE',
+    ('UPD_STATUS', 'P'): 'F4B084', ('UPD_STATUS', 'D'): 'C6EFCE',
     ('RESULT', 'CONFLICT'): 'FF7C80', ('RESULT', 'CANCELLED'): 'F4B084', ('CROSS_DOCK_FLAG', 'X'): 'FFE699',
 }
 
@@ -220,7 +220,7 @@ SCENARIOS = [
                 ('ref', [21, 1, 1, 'PART-Y', PH, 'CO-14110', '0000001', 6, 'T0409004', '3126035904', '0001', None, None]),
                 ('ref', [22, 2, 1, 'PART-Y', PH, 'CO-14110', '0000001', 6, 'T0409004', '3126035904', '0001', None, None])]),
             ('', 'TB_R_PRA_DAILY_ORDER_MAPPED', [('ref', ['T0409004', '3126035904', '0001', 'PART-Y', 12, 12])]),
-            ('2. XD12 27:30: status 2 row of the line (CANCEL_STATUS P)', 'TB_R_H0253_ORDER_CONTROL_PRE', [
+            ('2. XD12 27:30: status 2 row of the line (UPD_STATUS P)', 'TB_R_H0253_ORDER_CONTROL_PRE', [
                 ('ref', h('CO-14110', PH, '0000001', 'PART-Y', 12, mapped='Y', od='2026-10-15')),
                 ('new', h('CO-14110', PH, '0000002', 'PART-Y', 6, st='2', mapped='N', cancel='P', od='2026-10-15'), [], 'Cancelled part (new serial)')]),
             ('3. XD11: release the open mapping', 'TB_R_INSTRUCTION', [
@@ -229,7 +229,7 @@ SCENARIOS = [
             ('', 'TB_R_PRA_DAILY_ORDER_MAPPED', [('upd', ['T0409004', '3126035904', '0001', 'PART-Y', 12, 0], ['MAPPED_QTY'], '12 → 0')]),
             ('', 'TB_R_H0253_ORDER_CONTROL_PRE', [
                 ('upd', h('CO-14110', PH, '0000001', 'PART-Y', 12, mapped='N', od='2026-10-15'), ['PO_MAPPED_FLAG'], 'Pre-mapped again by the next XD09'),
-                ('upd', h('CO-14110', PH, '0000002', 'PART-Y', 6, st='2', mapped='N', cancel='D', od='2026-10-15'), ['CANCEL_STATUS'], 'P → D')]),
+                ('upd', h('CO-14110', PH, '0000002', 'PART-Y', 6, st='2', mapped='N', cancel='D', od='2026-10-15'), ['UPD_STATUS'], 'P → D')]),
             ('', 'TB_R_CROSSDOCK_CANCEL_RESULT', [('new', ['CO-14110', PH, '0000002', 'PART-Y', 6, 6, 0, 12, 0, 'CANCELLED', None])]),
             ('4. XD08: valid qty of serial 1 (status 7, 6 pcs)', 'TB_R_H0253_ORDER_CONTROL_PRE', [
                 ('upd', h('CO-14110', PH, '0000001', 'PART-Y', 6, mapped='N', od='2026-10-15'), ['ORDER_STATUS_QTY'], '12 → 6')]),
@@ -242,13 +242,13 @@ SCENARIOS = [
         'steps': [
             ('1. Before: the line is in the ASN', 'TB_R_INSTRUCTION', [
                 ('ref', [5, 3, 2, 'PART-X', VN, 'CO-14103', '0000001', 4, 'T0409002', '3126035902', '0001', ASN, 'C-0003'])]),
-            ('2. XD12 27:30: status 2 (CANCEL_STATUS P)', 'TB_R_H0253_ORDER_CONTROL_PRE', [
-                ('upd', h('CO-14103', VN, '0000001', 'PART-X', 4, st='2', mapped='Y', cancel='P'), ['ORDER_STATUS', 'CANCEL_STATUS'], 'Cancelled in G-System')]),
+            ('2. XD12 27:30: status 2 (UPD_STATUS P)', 'TB_R_H0253_ORDER_CONTROL_PRE', [
+                ('upd', h('CO-14103', VN, '0000001', 'PART-X', 4, st='2', mapped='Y', cancel='P'), ['ORDER_STATUS', 'UPD_STATUS'], 'Cancelled in G-System')]),
             ('3. XD11: CONFLICT, ASN not changed', 'TB_R_INSTRUCTION', [
                 ('ref', [5, 3, 2, 'PART-X', VN, 'CO-14103', '0000001', 4, 'T0409002', '3126035902', '0001', ASN, 'C-0003'], [], 'Not changed (has ASN_NO)')]),
             ('', 'TB_R_PRA_DAILY_ORDER_MAPPED', [('ref', ['T0409002', '3126035902', '0001', 'PART-X', 12, 12], [], 'Not changed (PO qty not blocked)')]),
             ('', 'TB_R_H0253_ORDER_CONTROL_PRE', [
-                ('upd', h('CO-14103', VN, '0000001', 'PART-X', 4, st='2', mapped='Y', cancel='D'), ['CANCEL_STATUS'], 'P → D')]),
+                ('upd', h('CO-14103', VN, '0000001', 'PART-X', 4, st='2', mapped='Y', cancel='D'), ['UPD_STATUS'], 'P → D')]),
             ('', 'TB_R_CROSSDOCK_CANCEL_RESULT', [('new', ['CO-14103', VN, '0000001', 'PART-X', 4, 0, 4, 0, 4, 'CONFLICT', ASN], [], 'Log LOG4 → Log Monitoring')]),
         ]},
     {
