@@ -147,7 +147,7 @@ def _case_rows():
     rows = []
     for c in sorted({s['CASE_SEQ'] for s in _CASES}):
         sl = [s for s in _CASES if s['CASE_SEQ'] == c]
-        rows.append([sl[0]['GROUP_SEQ'], c, sum(s['ASSIGNED_QTY'] for s in sl), ' + '.join(f"{s['DESTINATION_CD']} {s['ASSIGNED_QTY']} ({s['CUSTOMER_ORDER_NO']})" for s in sl),
+        rows.append([sl[0]['GROUP_SEQ'], c, sum(s['ASSIGNED_QTY'] for s in sl), sum(s['ASSIGNED_QTY'] for s in sl if not s['PO_NO']), ' + '.join(f"{s['DESTINATION_CD']} {s['ASSIGNED_QTY']} ({s['CUSTOMER_ORDER_NO']})" for s in sl),
                      ', '.join(f"{po} {sum(s['ASSIGNED_QTY'] for s in sl if s['PO_NO'] == po)}" for po in dict.fromkeys(s['PO_NO'] for s in sl)),
                      sl[-1]['CROSSDOCK_STATUS']])
     return rows
@@ -156,7 +156,7 @@ def _case_rows():
 XD10_CASE_SECTIONS = [
     {'title': 'H. Case selection (decided 21-Oct): PART-A 14-Oct, all cases with PO (p1 24 + p2 6); one check box per supplier case; GROUP_SEQ is '
               'not shown on the screen (cases of the same GROUP_SEQ are ticked together); Content shown to the D/S team only',
-     'columns': ['GROUP_SEQ (not shown)', 'Case', 'Qty', 'Content (D/S team only)', 'PO', 'PO Status'], 'widths': [12, 6, 6, 34, 18, 10],
+     'columns': ['GROUP_SEQ (not shown)', 'Case', 'Qty', 'Remaining Qty (not assigned)', 'Content (D/S team only)', 'PO', 'PO Status'], 'widths': [12, 6, 6, 14, 34, 18, 10],
      'rows': _case_rows()},
     {'title': 'I. Check box scenarios (cases that belong together: 1 | 2-3 | 4 | 5)', 'columns': ['No', 'User action', 'Ticked cases', 'Result'],
      'widths': [6, 34, 14, 66],
@@ -279,7 +279,7 @@ def xd10():
                                    "case 1: ticking case n ticks the earlier cases and the other cases of its group (message no. 10); unticking case n unticks its "
                                    "group and the later cases. The unit check box ticks all Ready cases. Units of different Customer Order Dates and Part Numbers can "
                                    "be ticked together.")
-    g['screen_mode_remarks'][2] = ("3) The supplier sees the unit rows and their case rows (Case, Qty, PO, PO Status, check box) without destinations; "
+    g['screen_mode_remarks'][2] = ("3) The supplier sees the unit rows and their case rows (Case, Qty, Remaining Qty (not assigned), PO, PO Status, check box) without destinations; "
                                    "the Content of a case (destinations, customer orders), the destination detail and Hold / Release are shown to the D/S team only.")
     for m in g['screen_modes']:
         for sec in m['sections']:
@@ -307,9 +307,11 @@ def xd10():
              'case 2 -> cases 2-3 belong together, so cases 1-3); unticking case n unticks its group and the later cases. Refer 5.4.', just='Center', init='<unchecked>'),
         item('Case', '#TEMP_INSTRUCTION', 'CASE_SEQ', 'Number', 'O', 'Label', 'Z9', '-', 'Supplier case number in scan order (PCS_CASE pcs).', just='Right'),
         item('Qty (pcs)', '#TEMP_INSTRUCTION', 'ASSIGNED_QTY', 'Number', 'O', 'Label', 'ZZZ9', '-', 'Pcs of the case (= PCS_CASE).', just='Right'),
+        item('Remaining Qty (not assigned)', '#TEMP_INSTRUCTION', 'ASSIGNED_QTY (PO_NO NULL)', 'Number', 'O', 'Label', 'ZZZ9', '-',
+             'Pcs of the case without a PO yet (sum of the slices with PO_NO NULL); 0 when the whole case is assigned; red when > 0.', just='Right'),
         item('Content (D/S team)', '#TEMP_INSTRUCTION', 'DESTINATION_CD / CUSTOMER_ORDER_NO / ASSIGNED_QTY', 'Char', 'O', 'Label', '-', '-',
              'D/S team only (not shown to the supplier): slices of the case in scan order, e.g. VN 4 (V01) + TH 2 (T01).'),
-        item('PO', '#TEMP_INSTRUCTION', 'PO_NO / ASSIGNED_QTY', 'Char', 'O', 'Label', '{PO No} {qty}', '-', 'POs of the case; pcs without PO shown when not Ready.'),
+        item('PO', '#TEMP_INSTRUCTION', 'PO_NO / ASSIGNED_QTY', 'Char', 'O', 'Label', '{PO No} {qty}', '-', 'POs of the case with the assigned qty, e.g. T0409021 2.'),
         item('PO Status', '#TEMP_INSTRUCTION', 'CROSSDOCK_STATUS', 'Char', 'O', 'Label', '-', '-',
              "'6' Ready (green) / '7' Not Ready (amber): the case or an earlier case has no PO yet."),
     ]
@@ -377,7 +379,7 @@ def xd10():
             x['description'] = "'{n} units · {c} cases · {q} pcs selected · {units}'. Empty: hint that cases of different units / dates can go into one ASN."
         if x.get('name') == 'Clear selection':
             x['description'] = 'Unticks all cases.'
-    caps = {'c_02_delivery_plan': '2. Delivery plan after Search (supplier view): unit rows with their supplier case rows (check box, Case, Qty, PO, PO Status; no destinations)',
+    caps = {'c_02_delivery_plan': '2. Delivery plan after Search (supplier view): unit rows with their supplier case rows (check box, Case, Qty, Remaining Qty, PO, PO Status; no destinations)',
             'c_03_ds_detail': '3. D/S team: destination detail (warehouse cases, Hold Flag) and customer orders of a destination (open qty, cases, PO)',
             'c_04_ds_hold': '4. D/S team: Thailand on hold; the scan order and the cases are computed again without it',
             'c_05_selected': '5. Case 2 of PART-A ticked: MSG10, cases 1-3 are selected together; unit PART-C ticked (different Customer Order Date)',
