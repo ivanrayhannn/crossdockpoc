@@ -5,12 +5,12 @@ VN, TH, PH = '9715310 (Vietnam)', '9722D10 (Thailand)', '9811110 (Philippines)'
 
 # (customer order, detailed item, serial, part, destination, order qty, PO, manifest, manifest item, assigned qty)
 PREMAP = [
-    ('CO-14101', '001', '0000001', 'PART-X', VN, 10, 'T0409001', '3126035901', '0001', 10),
-    ('CO-14102', '001', '0000001', 'PART-X', VN, 4, 'T0409001', '3126035901', '0001', 2),
-    ('CO-14102', '001', '0000001', 'PART-X', VN, 4, 'T0409002', '3126035902', '0001', 2),
-    ('CO-14103', '001', '0000001', 'PART-X', VN, 4, 'T0409002', '3126035902', '0001', 4),
-    ('CO-14104', '001', '0000001', 'PART-X', TH, 6, 'T0409002', '3126035902', '0001', 6),
-    ('CO-14105', '001', '0000001', 'PART-Y', PH, 6, 'T0409003', '3126035903', '0001', 6),
+    ('CO-14101', '001', '0000001', 'PART-X', VN, 10, 'PO-DMY-09001', 'MF-DMY-09001', '0001', 10),
+    ('CO-14102', '001', '0000001', 'PART-X', VN, 4, 'PO-DMY-09001', 'MF-DMY-09001', '0001', 2),
+    ('CO-14102', '001', '0000001', 'PART-X', VN, 4, 'PO-DMY-09002', 'MF-DMY-09002', '0001', 2),
+    ('CO-14103', '001', '0000001', 'PART-X', VN, 4, 'PO-DMY-09002', 'MF-DMY-09002', '0001', 4),
+    ('CO-14104', '001', '0000001', 'PART-X', TH, 6, 'PO-DMY-09002', 'MF-DMY-09002', '0001', 6),
+    ('CO-14105', '001', '0000001', 'PART-Y', PH, 6, 'PO-DMY-09003', 'MF-DMY-09003', '0001', 6),
 ]
 
 # case seq -> rows (pre-map index, qty in the case)
@@ -57,8 +57,8 @@ SAMPLE = {
         {"title": "B. Input: PO parts before [Create ASN] (Pra Daily Order: manifest with CROSS_DOCK_FLAG = 'X', part data from TB_R_PRA_DAILY_ORDER_PART)",
          "columns": ["PO No", "Manifest No", "Manifest Item", "Part No", "PO Qty (ORDER_QTY)", "Mapped Qty (TB_R_PRA_DAILY_ORDER_MAPPED)", "Open Qty"],
          "spans": [1, 1, 1, 1, 1, 2, 1],
-         "rows": [["T0409001", "3126035901", "0001", "PART-X", 12, 0, 12], ["T0409002", "3126035902", "0001", "PART-X", 12, 0, 12],
-                  ["T0409003", "3126035903", "0001", "PART-Y", 6, 0, 6]]},
+         "rows": [["PO-DMY-09001", "MF-DMY-09001", "0001", "PART-X", 12, 0, 12], ["PO-DMY-09002", "MF-DMY-09002", "0001", "PART-X", 12, 0, 12],
+                  ["PO-DMY-09003", "MF-DMY-09003", "0001", "PART-Y", 6, 0, 6]]},
         {"title": "C. Case packing (Vietnam 18 pcs = 3 cases, Thailand 6 pcs = 1 case, Philippines 6 pcs = 1 case)",
          "columns": ["Case", "Part No", "Destination", "Case Qty", "Content (customer order qty (PO))"],
          "spans": [1, 1, 2, 1, 6],
@@ -72,16 +72,16 @@ SAMPLE = {
          "columns": ["Table", "Key", "Column", "Before", "After"],
          "spans": [4, 3, 2, 1, 1],
          "rows": [["TB_R_H0253_ORDER_CONTROL_PRE", "CO-14101 .. CO-14105 (detailed item 001, serial 0000001)", "PO_MAPPED_FLAG", "N", "Y"],
-                  ["TB_R_PRA_DAILY_ORDER_MAPPED", "T0409001 / 3126035901 / 0001 / PART-X", "MAPPED_QTY", 0, 12],
-                  ["TB_R_PRA_DAILY_ORDER_MAPPED", "T0409002 / 3126035902 / 0001 / PART-X", "MAPPED_QTY", 0, 12],
-                  ["TB_R_PRA_DAILY_ORDER_MAPPED", "T0409003 / 3126035903 / 0001 / PART-Y", "MAPPED_QTY", 0, 6]]},
+                  ["TB_R_PRA_DAILY_ORDER_MAPPED", "PO-DMY-09001 / MF-DMY-09001 / 0001 / PART-X", "MAPPED_QTY", 0, 12],
+                  ["TB_R_PRA_DAILY_ORDER_MAPPED", "PO-DMY-09002 / MF-DMY-09002 / 0001 / PART-X", "MAPPED_QTY", 0, 12],
+                  ["TB_R_PRA_DAILY_ORDER_MAPPED", "PO-DMY-09003 / MF-DMY-09003 / 0001 / PART-Y", "MAPPED_QTY", 0, 6]]},
         {"title": "F. Result on the screen: Case List (Draft)",
          "columns": ["Item", "Value"],
          "spans": [3, 12],
          "rows": [["ASN No", "ASN-50221-261016-001 (auto, assigned on submit)"], ["Supplier · Plant", "50221 · 1"],
                   ["Delivery Date · Rit · Route", f"{DT} · {RIT}"], ["Delivery Qty", "30 pcs"], ["Cases", "5 cases"],
                   ["Case 1 .. Case 5", "Case Number, Part Number, Qty (6 each); the expand button shows the PO No, Manifest No, Manifest Item and PO Qty of the case "
-                                       "(Case 2: CO-14101 + CO-14102 of T0409001; Case 3: CO-14102 + CO-14103 of T0409002)"],
+                                       "(Case 2: CO-14101 + CO-14102 of PO-DMY-09001; Case 3: CO-14102 + CO-14103 of PO-DMY-09002)"],
                   ["[Submit ASN]", "Confirmation: Submit ASN? 5 cases (30 pcs) will be created into ASN-50221-261016-001, delivery 16-Oct-2026 · Rit 1."]]},
         {"title": "G. Scenarios",
          "columns": ["No", "Scenario", "Expected result"],

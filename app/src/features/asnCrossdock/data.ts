@@ -123,13 +123,13 @@ export interface Po {
 }
 
 export const POS: Po[] = [
-  { poNo: 'T0409000', manifestNo: '3126035900', manifestItemNo: '0001', partNo: 'PART-A', qty: 12, poDate: '2026-10-13' },
-  { poNo: 'T0409011', manifestNo: '3126035911', manifestItemNo: '0001', partNo: 'PART-A', qty: 24, poDate: '2026-10-15' },
-  { poNo: 'T0410011', manifestNo: '3126036011', manifestItemNo: '0001', partNo: 'PART-A', qty: 6, poDate: '2026-10-16' },
-  { poNo: 'T0409021', manifestNo: '3126035921', manifestItemNo: '0001', partNo: 'PART-B', qty: 20, poDate: '2026-10-15' },
-  { poNo: 'T0410021', manifestNo: '3126036021', manifestItemNo: '0001', partNo: 'PART-B', qty: 10, poDate: '2026-10-16' },
-  { poNo: 'T0409031', manifestNo: '3126035931', manifestItemNo: '0001', partNo: 'PART-C', qty: 18, poDate: '2026-10-14' },
-  { poNo: 'T0409041', manifestNo: '3126035941', manifestItemNo: '0001', partNo: 'PART-D', qty: 12, poDate: '2026-10-14' },
+  { poNo: 'PO-DMY-09000', manifestNo: 'MF-DMY-09000', manifestItemNo: '0001', partNo: 'PART-A', qty: 12, poDate: '2026-10-13' },
+  { poNo: 'PO-DMY-09011', manifestNo: 'MF-DMY-09011', manifestItemNo: '0001', partNo: 'PART-A', qty: 24, poDate: '2026-10-15' },
+  { poNo: 'PO-DMY-10011', manifestNo: 'MF-DMY-10011', manifestItemNo: '0001', partNo: 'PART-A', qty: 6, poDate: '2026-10-16' },
+  { poNo: 'PO-DMY-09021', manifestNo: 'MF-DMY-09021', manifestItemNo: '0001', partNo: 'PART-B', qty: 20, poDate: '2026-10-15' },
+  { poNo: 'PO-DMY-10021', manifestNo: 'MF-DMY-10021', manifestItemNo: '0001', partNo: 'PART-B', qty: 10, poDate: '2026-10-16' },
+  { poNo: 'PO-DMY-09031', manifestNo: 'MF-DMY-09031', manifestItemNo: '0001', partNo: 'PART-C', qty: 18, poDate: '2026-10-14' },
+  { poNo: 'PO-DMY-09041', manifestNo: 'MF-DMY-09041', manifestItemNo: '0001', partNo: 'PART-D', qty: 12, poDate: '2026-10-14' },
 ];
 
 export const BUSINESS_DATES = ['2026-10-14', '2026-10-15', '2026-10-16'];
