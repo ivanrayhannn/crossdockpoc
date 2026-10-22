@@ -379,7 +379,7 @@
   "screen_mode_remarks": [
    "1) Each unit row shows its supplier case rows in scan order (XD09). The check box of a case is enabled only when the case and every earlier case have a PO (Ready, message no. 2 as tooltip otherwise).",
    "2) Cases that belong together (Case Group = GROUP_SEQ of XD09, the cases up to a CUT_FLAG Y; not shown as a column) are always sent together, so that at receiving every destination completes its warehouse case. The ticked cases of a unit start at case 1: ticking case n ticks the earlier cases and the other cases of its group (message no. 10); unticking case n unticks its group and the later cases. The unit check box ticks all Ready cases. Units of different Customer Order Dates and Part Numbers can be ticked together.",
-   "3) The supplier sees the unit rows and their case rows (Case, Qty, PO, PO Status, check box) without destinations; the Content of a case (destinations, customer orders), the destination detail and Hold / Release are shown to the D/S team only.",
+   "3) The supplier sees the unit rows and their case rows (Case, Qty, Remaining Qty (not assigned), PO, PO Status, check box) without destinations; the Content of a case (destinations, customer orders), the destination detail and Hold / Release are shown to the D/S team only.",
    "4) Search is enabled when Delivery Date is filled and a Rit is available (message no. 5 otherwise).",
    "5) One ASN is for one Supplier Code + Supplier Plant: the D/S team may tick units of several suppliers, [Create ASN] then shows message no. 9."
   ]
@@ -567,7 +567,7 @@
    "image": "deliverables/uiss_screens/asn_crossdock/c_01_initial.png"
   },
   {
-   "caption": "2. Delivery plan after Search (supplier view): unit rows with their supplier case rows (check box, Case, Qty, PO, PO Status; no destinations)",
+   "caption": "2. Delivery plan after Search (supplier view): unit rows with their supplier case rows (check box, Case, Qty, Remaining Qty, PO, PO Status; no destinations)",
    "image": "deliverables/uiss_screens/asn_crossdock/c_02_delivery_plan.png"
   },
   {
@@ -900,6 +900,21 @@
    "description": "Pcs of the case (= PCS_CASE)."
   },
   {
+   "name": "Remaining Qty (not assigned)",
+   "source": "#TEMP_INSTRUCTION",
+   "field": "ASSIGNED_QTY (PO_NO NULL)",
+   "type": "Number",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Right",
+   "initial": "-",
+   "required": "N",
+   "format": "ZZZ9",
+   "validation": "-",
+   "description": "Pcs of the case without a PO yet (sum of the slices with PO_NO NULL); 0 when the whole case is assigned; red when > 0."
+  },
+  {
    "name": "Content (D/S team)",
    "source": "#TEMP_INSTRUCTION",
    "field": "DESTINATION_CD / CUSTOMER_ORDER_NO / ASSIGNED_QTY",
@@ -927,7 +942,7 @@
    "required": "N",
    "format": "{PO No} {qty}",
    "validation": "-",
-   "description": "POs of the case; pcs without PO shown when not Ready."
+   "description": "POs of the case with the assigned qty, e.g. T0409021 2."
   },
   {
    "name": "PO Status",
@@ -4127,6 +4142,7 @@
      "GROUP_SEQ (not shown)",
      "Case",
      "Qty",
+     "Remaining Qty (not assigned)",
      "Content (D/S team only)",
      "PO",
      "PO Status"
@@ -4135,6 +4151,7 @@
      12,
      6,
      6,
+     14,
      34,
      18,
      10
@@ -4144,6 +4161,7 @@
       1,
       1,
       6,
+      0,
       "VN 6 (V01)",
       "p1 6",
       "6"
@@ -4152,6 +4170,7 @@
       2,
       2,
       6,
+      0,
       "VN 4 (V01) + TH 2 (T01)",
       "p1 6",
       "6"
@@ -4160,6 +4179,7 @@
       2,
       3,
       6,
+      0,
       "TH 4 (T01) + VN 2 (V02)",
       "p1 6",
       "6"
@@ -4168,6 +4188,7 @@
       3,
       4,
       6,
+      0,
       "VN 6 (V02)",
       "p1 6",
       "6"
@@ -4176,6 +4197,7 @@
       4,
       5,
       6,
+      0,
       "VN 6 (V02)",
       "p2 6",
       "6"

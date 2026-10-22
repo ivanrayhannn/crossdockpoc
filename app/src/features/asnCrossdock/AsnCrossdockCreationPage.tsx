@@ -414,20 +414,22 @@ export function AsnCrossdockCreationPage() {
                     <tr key={`${u.key}-c`}>
                       <td colSpan={colCount} style={{ padding: '4px 16px 10px 50px', borderBottom: '1px solid var(--color-divider)' }}>
                         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-                          <thead><tr><th style={{ ...th, background: 'transparent', width: 30 }} />{['Case', 'Qty', ...(isDs ? ['Content (D/S team)'] : []), 'PO', 'PO Status'].map((h) => <th key={h} style={{ ...th, background: 'transparent', height: 28 }}>{h}</th>)}</tr></thead>
+                          <thead><tr><th style={{ ...th, background: 'transparent', width: 30 }} />{['Case', 'Qty', 'Remaining Qty (not assigned)', ...(isDs ? ['Content (D/S team)'] : []), 'PO', 'PO Status'].map((h) => <th key={h} style={{ ...th, background: 'transparent', height: 28 }}>{h}</th>)}</tr></thead>
                           <tbody>
                             {u.cases.map((c) => {
                               const g = groupCases(u, c.group);
                               const ctip = c.ready ? (g.length > 1 ? `Cases ${g[0].seq}-${g[g.length - 1].seq} are sent together` : `Case ${c.seq} can be sent alone`)
                                 : `Not Ready: case ${c.seq} of ${u.partNo} / ${niceDate(u.orderDt)} (or an earlier case) is not assigned to a PO yet (${u.readyCases} of ${u.caseCount} cases assigned)`;
                               const on = !!s && c.seq <= s.end;
+                              const remain = c.lines.filter((l) => !l.poNo).reduce((a, l) => a + l.qty, 0);
                               return (
                                 <tr key={c.seq} style={{ background: on ? 'var(--color-accent-100, #eef4fb)' : undefined, color: c.ready ? undefined : 'var(--color-neutral-600)' }}>
                                   <td style={td}><input type="checkbox" checked={on} disabled={!c.ready || endFor(u, c.seq) === null} title={ctip} onChange={(e) => tickCase(u, c, e.target.checked)} /></td>
                                   <td style={{ ...td, fontFamily: 'var(--font-mono)', fontWeight: 600 }}>Case {c.seq}</td>
                                   <td style={td}>{c.qty}</td>
+                                  <td style={{ ...td, color: remain ? 'var(--color-danger)' : undefined, fontWeight: remain ? 600 : undefined }}>{remain}</td>
                                   {isDs && <td style={td}>{contentOf(c.lines)}</td>}
-                                  <td style={td}>{poRowsOf(c.lines).map((r) => `${r.poNo} ${r.qty}`).join(', ') || '—'}{c.lines.some((l) => !l.poNo) && <span className="ax-muted"> · {c.lines.filter((l) => !l.poNo).reduce((a, l) => a + l.qty, 0)} pcs without PO</span>}</td>
+                                  <td style={td}>{poRowsOf(c.lines).map((r) => `${r.poNo} ${r.qty}`).join(', ') || '—'}</td>
                                   <td style={td} title={ctip}><Chip tone={c.ready ? 'ok' : 'warn'}>{c.ready ? 'Ready' : 'Not Ready'}</Chip></td>
                                 </tr>
                               );
