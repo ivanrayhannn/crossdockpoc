@@ -311,7 +311,7 @@ def xd10():
              'Pcs of the case without a PO yet (sum of the slices with PO_NO NULL); 0 when the whole case is assigned; red when > 0.', just='Right'),
         item('Content (D/S team)', '#TEMP_INSTRUCTION', 'DESTINATION_CD / CUSTOMER_ORDER_NO / ASSIGNED_QTY', 'Char', 'O', 'Label', '-', '-',
              'D/S team only (not shown to the supplier): slices of the case in scan order, e.g. VN 4 (V01) + TH 2 (T01).'),
-        item('PO', '#TEMP_INSTRUCTION', 'PO_NO / ASSIGNED_QTY', 'Char', 'O', 'Label', '{PO No} {qty}', '-', 'POs of the case with the assigned qty, e.g. T0409021 2.'),
+        item('PO', '#TEMP_INSTRUCTION', 'PO_NO / ASSIGNED_QTY', 'Char', 'O', 'Label', '{PO No} {qty}', '-', 'POs of the case with the assigned qty, e.g. PO-DMY-09021 2.'),
         item('PO Status', '#TEMP_INSTRUCTION', 'CROSSDOCK_STATUS', 'Char', 'O', 'Label', '-', '-',
              "'6' Ready (green) / '7' Not Ready (amber): the case or an earlier case has no PO yet."),
     ]
