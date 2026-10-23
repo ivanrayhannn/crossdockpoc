@@ -54,14 +54,6 @@ EDITS = {
         ("Label format follows the existing case label.",
          "Label format follows the existing case label: 1 case label = 1 case of 1 destination, may list several customer order numbers."),
     ],
-    'XD11': [
-        ("allocate it to an open order with the same destination, otherwise move it to warehouse stock",
-         "allocate it to an open order (same or another destination), otherwise move it to warehouse stock"),
-        ("TB_R_CROSSDOCK_CANCEL_RESULT is the exception list for the D/S team (RESULT = CONFLICT); a screen for it is not in this scope (TBC). The messages are also in the Log (Log Monitoring).",
-         "The exception list of the D/S team is the Log (Log Monitoring, LOG4); TB_R_CROSSDOCK_CANCEL_RESULT keeps the result per row. No separate screen (decided 19-Oct)."),
-        ("Option not in this draft (TBC): keep the released PO qty of a CONFLICT blocked until the D/S team closes the conflict.",
-         "The released PO qty of a CONFLICT is not blocked (decided 19-Oct); it is taken by the next orders in XD09."),
-    ],
     'XD05': [
         ("SYNC_STATUS is not changed: only a change of Pcs/Case, Max Case/Day or the destination mapping requires a new Sync.",
          "SYNC_STATUS: a part that changes from Active to Inactive gets SYNC_STATUS = 0 (No Sync), so the next [Sync] sends it to G-System and AP POLE with "
@@ -102,16 +94,12 @@ def main():
     s['general']['objective'].append("All columns are replicated as they are, including DAD (not used by the calculation) (decided 19-Oct).")
     save('XD04', s)
 
-    for fid, extra in (('XD12', []), ('XD11', [["Condition", "Runs only when XD12 succeeded."]]), ('XD08', [])):
-        s = load(fid)
-        sched(s, [["Trigger", SCHED_DAILY], ["Order", "Job chain: XD12 -> XD11 -> XD08."]] + extra)
-        save(fid, s)
     s = load('XD13')
     sched(s, [["Trigger", "Scheduler after G-System has provided the data (1 time/week, 21:30); auto retry 3 times."]])
     save('XD13', s)
 
     # SERIAL_NO is added to the source table by the DB Surrounding team (decided 19-Oct)
-    for fid in ('XD08', 'XD11', 'XD12'):
+    for fid in ('XD08',):
         s = load(fid)
         for t in s['tables']:
             for c in t['columns']:

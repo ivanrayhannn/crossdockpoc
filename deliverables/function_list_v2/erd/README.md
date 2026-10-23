@@ -6,7 +6,7 @@
 |---|---|
 | ERD | 18 entitas sebagai blok sel dengan **semua kolom** (tanpa collapse), PK / FK, garis relasi (shape) dengan kardinalitas 1 / N; garis putus-putus = relasi logis |
 | Table List / Relationship / Column Definition | Daftar tabel (function, sheet simulasi), 21 relasi, semua kolom dengan filter |
-| Simulation Index + SIM-1 … SIM-6 | Satu sheet per skenario: SIM-1 master setup & kalkulasi bulanan, SIM-2 order → ASN normal, SIM-3 unit Not Ready (PO kurang) lalu Ready, SIM-4 hold destinasi, SIM-5 partial cancel sebelum submit (CANCELLED), SIM-6 cancel setelah ASN (CONFLICT). Highlight: baris NEW (hijau) / UPD (kuning, sel yang berubah oranye) / DEL (merah, coret) / READ (putih) / TEMP (abu); header kolom PK kuning; nilai status berwarna (Active, Ready, CONFLICT, HOLD_FLAG Y, …) |
+| Simulation Index + SIM-1 … SIM-9 | Satu sheet per skenario: SIM-1 master setup & kalkulasi bulanan, SIM-2 order → ASN normal, SIM-3 unit Not Ready (PO kurang) lalu Ready, SIM-4 hold destinasi, SIM-5 partial cancel sebelum submit (CANCELLED), SIM-6 cancel setelah ASN (CONFLICT). Highlight: baris NEW (hijau) / UPD (kuning, sel yang berubah oranye) / DEL (merah, coret) / READ (putih) / TEMP (abu); header kolom PK kuning; nilai status berwarna (Active, Ready, CONFLICT, HOLD_FLAG Y, …) |
 
 `Crossdock_DB_Structure.xlsx` (`build_dbstructure.py`): format dokumen DB Structure (G-System SPS): Revision, Table List (ID, logical / physical name, Row Size, PK Row Size, Logging) dan satu sheet per tabel (MST / HIS / TR / TMP = tabel baru Crossdock, REP = replika DB Surrounding, EXT = tabel existing sebagai referensi) dengan No / Field Name / Logical Name / Type / Len / Prec / PK / N-N / Default / Description. Data simulasi: `sim_data.py`.
 
@@ -30,3 +30,7 @@ Dari `NSP_INSERT_TB_R_PRA_DAILY_ORDER_MANIFEST.sql` (54 kolom, 391 baris) dan `N
 | `TB_R_DAILY_ORDER_PART` PK `SUB_MANIFEST_NO + MANIFEST_NO + MANIFEST_ITEM + CASE_NO` | Satu baris per manifest item x case |
 | `ASN_NO` VARCHAR(15), `CASE_NO` VARCHAR(9) | Format dummy `ASN-50221-261016-001` (20 karakter) di prototype / simulasi lebih panjang dari kolom asli: format asli mengikuti numbering existing |
 | Dokumen DB vs export SQL Pra Manifest | Dokumen: `PO_DATE`, `ORDER_RELEASE_DT`, `RE_EXPORT_CD`; export: `PO_DT`, `MANIFEST_LAST_SEQ`, `CANCEL_*`, `SEND_*_MDI` (ERD memakai kolom export) |
+
+## Update 23-Oct
+- `TB_R_CROSSDOCK_CANCEL_RESULT` diganti `TB_H_CROSSDOCK_ORDER_CHANGE` (riwayat Change Order Number XD11, DB Structure HIS-02). UPD_STATUS = NULL / 6 / 2.
+- SIM-5 = simulasi_asn.xlsx (15–18 Oct: UPD_STATUS, cancel setelah ASN → Change Order Number). SIM-6 = draft dilepas XD08 + partial cancel di ASN diganti 2 line (CO-E 4 + CO-F 2, baris dipecah).

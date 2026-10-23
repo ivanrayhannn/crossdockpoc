@@ -16,7 +16,7 @@ PRE_X8 = [
     ('Submit handed to the batch X14', 'Submit handed to the submit process (5.7)'),
     ('[Submit ASN] (X14) fills', '[Submit ASN] (5.7) fills'),
     ('(X14)', '(5.7)'),
-    ('Refer X10.', 'Refer XD11 / XD12.'),
+    ('Refer X10.', 'Refer XD08 / XD11.'),
     ('X14', 'the submit process (5.7)'),
 ]
 

@@ -47,3 +47,6 @@ WHERE OPEN_ORDER_QTY > 0
 ORDER BY SHIPPING_PART_NO, ALLOCATION_PRIORITY, CUSTOMER_CD, CUSTOMER_ORDER_NO, ORDER_DT, ORDER_TIME,
          DESTINATION_CD, DETAILED_ITEM_NO, SERIAL_NO;
 ```
+
+## Keputusan 23-Oct
+- Line yang diambil: ORDER_STATUS 7 **dan UPD_STATUS NULL** (line yang berubah di G-System, UPD_STATUS 6 / 2, tidak diambil), HOLD_FLAG N, open qty > 0. Query di Appendix ikut ditambah `H.UPD_STATUS IS NULL`.

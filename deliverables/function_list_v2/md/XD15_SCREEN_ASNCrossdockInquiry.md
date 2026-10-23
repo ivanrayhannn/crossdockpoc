@@ -3,7 +3,7 @@
 Sumber: UISS `XD15_UISS_Screen_ASNCrossdockInquiry.xlsx` (0.1 Initial Draft, 18-Oct-26). Nama sistem di UISS: G-System / NSP.
 
 - Isi sama dengan X13 ASN Inquiry (detail: `deliverables/md/X13_SCREEN_ASNInquiry.md`): daftar ASN yang di-submit di **XD10**, detail case, Download Case Label (format existing).
-- Tidak ada Cancel ASN; cancel order dari G-System diproses **XD12 / XD11**.
+- Tidak ada Cancel ASN; cancel order dari G-System dibawa **XD08** (UPD_STATUS 2); qty yang sudah di ASN dipindah lewat **XD11 Change Order Number**.
 - **XD14 DAD Volume Calculation Result Screen (Buffer)** belum dibuat: perlu penjelasan isi layar (mis. menampilkan TB_R_PART_DAD_RESULT per periode).
 
 ## Keputusan 19-Oct
