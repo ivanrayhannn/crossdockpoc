@@ -329,7 +329,7 @@ export const BPF: BpfData = {
     },
     {
      "id": "B2",
-     "label": "27:30 (D 03:30) · job chain XD12 → XD11 → XD08",
+     "label": "27:30 (D 03:30) · XD08 (one H0253 batch)",
      "slots": 1
     },
     {
@@ -383,7 +383,7 @@ export const BPF: BpfData = {
      "band": "B2",
      "slot": 0,
      "fn": "XD08",
-     "title": "Upsert status 7 rows + status 6 of existing keys (delta INTF_UPDATE_DT)",
+     "title": "Upsert changed rows (delta INTF_UPDATE_DT); UPD_STATUS 6 / 2; release all drafts",
      "read": [
       "TB_R_H0253_ORDER_CONTROL_PRE (DB Surrounding)"
      ],
@@ -573,7 +573,7 @@ export const BPF: BpfData = {
   {
    "id": "F4",
    "title": "Hold & Cancel Crossdock Customer Order",
-   "desc": "Hold: the D/S team holds / releases a destination in XD10; held lines are not pre-mapped and a hold placed after the supplier ticked a unit stops [Create ASN]. Cancel: an order is cancelled in G-System only (with or without hold); NSP takes the status 2 rows (XD12), releases the open mapping (XD11) and then takes status 7 / 6 (XD08).",
+   "desc": "Hold: the D/S team holds / releases a destination in XD10; held lines are not pre-mapped and a hold placed after the supplier ticked a unit stops [Create ASN]. Cancel: an order is cancelled in G-System only (with or without hold); XD08 writes UPD_STATUS 2 and releases all drafts; a cancel of qty already in a submitted ASN is moved to received lines of the same part by the D/S team in Change Order Number (XD11) (decided 23-Oct).",
    "lanes": [
     "GT",
     "NB",
@@ -593,7 +593,7 @@ export const BPF: BpfData = {
     },
     {
      "id": "B2",
-     "label": "27:30 · job chain XD12 → XD11 → XD08",
+     "label": "27:30 · XD08 (one H0253 batch)",
      "slots": 3
     },
     {
@@ -709,17 +709,17 @@ export const BPF: BpfData = {
      "lane": "NB",
      "band": "B2",
      "slot": 0,
-     "fn": "XD12",
-     "title": "Upsert status 2 rows of crossdock lines + other changed rows of the line; UPD_STATUS P",
+     "fn": "XD08",
+     "title": "Upsert the changed rows: UPD_STATUS 2 (cancel) / 6 (received); ORDER_STATUS keeps the first value",
      "read": [
       "TB_R_H0253_ORDER_CONTROL_PRE (DB Surrounding)"
      ],
      "write": [
-      "TB_R_H0253_ORDER_CONTROL_PRE (NSP)",
+      "TB_R_H0253_ORDER_CONTROL_PRE (NSP, UPD_STATUS)",
       "Log"
      ],
      "ab": [
-      "AB14"
+      "AB07"
      ],
      "next": [
       "C4"
@@ -730,26 +730,22 @@ export const BPF: BpfData = {
      "lane": "NB",
      "band": "B2",
      "slot": 1,
-     "fn": "XD11",
-     "title": "Per line: CANCEL / VALID / IN ASN / OPEN; release open mapping; CANCELLED or CONFLICT",
+     "fn": "XD08",
+     "title": "Release all drafts (Create ASN not submitted); the cases come back in the delivery plan",
      "read": [
-      "TB_R_H0253_ORDER_CONTROL_PRE (NSP)",
-      "TB_R_INSTRUCTION"
+      "TB_R_INSTRUCTION (ASN_NO NULL)"
      ],
      "write": [
-      "TB_R_INSTRUCTION (delete rows without ASN_NO)",
+      "TB_R_INSTRUCTION (delete drafts)",
       "TB_R_PRA_DAILY_ORDER_MAPPED (MAPPED_QTY −)",
-      "TB_R_H0253_ORDER_CONTROL_PRE (PO_MAPPED_FLAG N, UPD_STATUS D)",
-      "TB_R_CROSSDOCK_CANCEL_RESULT",
-      "Log"
+      "TB_R_H0253_ORDER_CONTROL_PRE (PO_MAPPED_FLAG N)"
      ],
      "ab": [
-      "AB15",
-      "AB16"
+      "AB12"
      ],
      "next": [
       "C5",
-      "C7"
+      "C6"
      ]
     },
     {
@@ -758,19 +754,19 @@ export const BPF: BpfData = {
      "band": "B2",
      "slot": 2,
      "fn": "XD08",
-     "title": "Upsert status 7 / 6 rows; valid qty is pre-mapped again by the next XD09",
+     "title": "Cancel of qty in a submitted ASN: LOG5, listed in Change Order Number (ASN not changed)",
      "read": [
-      "TB_R_H0253_ORDER_CONTROL_PRE (DB Surrounding)"
+      "TB_R_H0253_ORDER_CONTROL_PRE (UPD_STATUS 2)",
+      "TB_R_INSTRUCTION (ASN_NO)"
      ],
      "write": [
-      "TB_R_H0253_ORDER_CONTROL_PRE (NSP)",
       "Log"
      ],
      "ab": [
-      "AB07"
+      "AB16"
      ],
      "next": [
-      "C6"
+      "C7"
      ]
     },
     {
@@ -779,7 +775,7 @@ export const BPF: BpfData = {
      "band": "B3",
      "slot": 0,
      "fn": "XD10",
-     "title": "[Search] again; an open Case List of cancelled rows cannot be submitted",
+     "title": "[Search] again and tick the cases again; [Submit ASN] of an old draft fails (MSG11)",
      "read": [
       "#TEMP_INSTRUCTION"
      ],
@@ -794,11 +790,11 @@ export const BPF: BpfData = {
      "lane": "DS",
      "band": "B3",
      "slot": 1,
-     "fn": "Log Monitoring",
-     "title": "Check CONFLICT lines (LOG4)",
+     "fn": "XD11",
+     "title": "Change Order Number: cancelled qty and candidates (same part, UPD_STATUS 6, PO_MAPPED N, no ASN, oldest first)",
      "read": [
-      "Log",
-      "TB_R_CROSSDOCK_CANCEL_RESULT"
+      "TB_R_H0253_ORDER_CONTROL_PRE",
+      "TB_R_INSTRUCTION"
      ],
      "write": [],
      "ab": [
@@ -813,11 +809,17 @@ export const BPF: BpfData = {
      "lane": "DS",
      "band": "B3",
      "slot": 2,
-     "fn": "manual",
-     "title": "Handle the shipped case: allocate to an open order (same / other destination) or warehouse stock",
+     "fn": "XD11",
+     "title": "Move the qty from the last case (row split when needed) to one or more lines; history",
      "read": [],
-     "write": [],
-     "ab": [],
+     "write": [
+      "TB_R_INSTRUCTION (order key / split)",
+      "TB_R_H0253_ORDER_CONTROL_PRE (PO_MAPPED_FLAG Y)",
+      "TB_H_CROSSDOCK_ORDER_CHANGE"
+     ],
+     "ab": [
+      "AB15"
+     ],
      "next": []
     }
    ]
@@ -893,7 +895,7 @@ export const BPF: BpfData = {
   {
    "id": "AB07",
    "flow": "F2 / F4",
-   "step": "D3 / C5",
+   "step": "D3 / C3",
    "fn": "XD08",
    "condition": "DB Surrounding cannot be read or the upsert fails (after 3 retries)",
    "detection": "Log FAILED",
@@ -948,13 +950,13 @@ export const BPF: BpfData = {
   {
    "id": "AB12",
    "flow": "F2 / F4",
-   "step": "D9 / C6",
-   "fn": "XD10 / XD11",
-   "condition": "A line is cancelled (XD11) while its Case List is open and not yet submitted",
-   "detection": "Submit fails; Log",
-   "system": "XD11 deleted the TB_R_INSTRUCTION rows without ASN_NO; the submit is refused.",
+   "step": "D9 / C4 / C6",
+   "fn": "XD08 / XD10",
+   "condition": "A draft (Create ASN not submitted) is released by XD08, or a line of it changed in G-System",
+   "detection": "MSG11 on [Submit ASN]; Log LOG2 (drafts released)",
+   "system": "XD08 deletes every draft row (ASN_NO NULL), gives the mapped qty back, PO_MAPPED_FLAG N; the submit of the old draft is refused.",
    "pic": "Supplier",
-   "action": "[Search] again and create the ASN again."
+   "action": "[Search] again, tick the cases and create the ASN again."
   },
   {
    "id": "AB13",
@@ -968,37 +970,26 @@ export const BPF: BpfData = {
    "action": "Check Log Monitoring, create and submit again."
   },
   {
-   "id": "AB14",
-   "flow": "F4",
-   "step": "C3",
-   "fn": "XD12",
-   "condition": "DB Surrounding cannot be read or the upsert fails (after 3 retries)",
-   "detection": "Log FAILED",
-   "system": "Roll back; watermark not changed; XD11 does not run (runs only when XD12 succeeded). XD08 in this case: follows the job chain (TBC).",
-   "pic": "System admin",
-   "action": "Contact PIC; the next run takes the rows again."
-  },
-  {
    "id": "AB15",
    "flow": "F4",
-   "step": "C4",
+   "step": "C8",
    "fn": "XD11",
-   "condition": "Delete / update / insert of a line fails, or any other system error",
-   "detection": "Log LOG5 / LOG6",
-   "system": "Line error: roll back the line, rows stay 'P' for the next run. System error: stop, STATUS ERROR, XD08 is not started.",
-   "pic": "System admin",
-   "action": "Contact PIC if it persists."
+   "condition": "A candidate was taken in another session, or the save fails",
+   "detection": "MSG4 / error on the screen",
+   "system": "Roll back; nothing is moved; candidates refreshed.",
+   "pic": "D/S Team",
+   "action": "Tick other candidates and save again."
   },
   {
    "id": "AB16",
    "flow": "F4",
-   "step": "C2 / C4 / C7",
-   "fn": "XD11",
-   "condition": "Qty already in an ASN is cancelled (SOP not followed): QTY_IN_ASN > VALID_QTY",
-   "detection": "RESULT = CONFLICT, Log LOG4",
-   "system": "Release the open mapping; the ASN is not changed (no Cancel ASN); PO qty is not blocked.",
+   "step": "C2 / C5 / C7",
+   "fn": "XD08 / XD11",
+   "condition": "Qty already in a submitted ASN is cancelled in G-System (SOP not followed)",
+   "detection": "Log LOG5 (LOG6 when not a multiple of pcs/case); row in XD11",
+   "system": "The ASN is not changed (no Cancel ASN); the cancelled qty stays in Change Order Number until it is moved (no time limit; Waiting for a candidate without candidate).",
    "pic": "D/S Team",
-   "action": "Check Log Monitoring; at receiving allocate the case to an open order (same or other destination) or move it to warehouse stock."
+   "action": "Move the qty to received lines of the same part (UPD_STATUS 6) in Change Order Number; several lines / another destination allowed."
   }
  ]
 };

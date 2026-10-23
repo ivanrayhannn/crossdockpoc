@@ -18,11 +18,10 @@ FUNCS = {
     'XD05': ('DAD Volume Calculation Batch', 'Batch', 'XD05_UISS_Batch_DADVolumeCalculation.xlsx'),
     'XD06': ('IF Cross Dock Master to G-System', 'Batch', 'XD06_UISS_Batch_IFCrossDockMasterToGSystem.xlsx'),
     'XD07': ('IF Cross Dock Master to AP POLE', 'Batch', 'XD07_UISS_Batch_IFCrossDockMasterToAPPOLE.xlsx'),
-    'XD08': ('Order Control Information to NSP Batch (ASN)', 'Batch', 'XD08_UISS_Batch_OrderControlInfoToNSP_ASN.xlsx'),
+    'XD08': ('Order Control Information to NSP Batch', 'Batch', 'XD08_UISS_Batch_OrderControlInfoToNSP.xlsx'),
     'XD09': ('Mapping Customer Order and PO Batch', 'Batch', 'XD09_UISS_Batch_MappingCustomerOrderPO.xlsx'),
     'XD10': ('ASN Cross Dock Creation Screen', 'Screen', 'XD10_UISS_Screen_ASNCrossDockCreation.xlsx'),
-    'XD11': ('Cancel Crossdock Customer Order Batch', 'Batch', 'XD11_UISS_Batch_CancelCrossdockCustomerOrder.xlsx'),
-    'XD12': ('Order Control Information to NSP Batch (Cancel)', 'Batch', 'XD12_UISS_Batch_OrderControlInfoToNSP_Cancel.xlsx'),
+    'XD11': ('Change Order Number Screen', 'Screen', 'XD11_UISS_Screen_ChangeOrderNumber.xlsx'),
     'XD13': ('Destination Master Synch into NSP', 'Batch', 'XD13_UISS_Batch_DestinationMasterSync.xlsx'),
     'XD15': ('ASN Crossdock Inquiry Screen (Buffer)', 'Screen', 'XD15_UISS_Screen_ASNCrossdockInquiry.xlsx'),
 }

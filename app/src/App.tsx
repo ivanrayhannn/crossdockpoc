@@ -3,6 +3,7 @@ import { AppShell } from './components/shell/AppShell';
 import { Breadcrumb } from './components/shell/Breadcrumb';
 import { AsnCrossdockCreationPage } from './features/asnCrossdock/AsnCrossdockCreationPage';
 import { AsnInquiryPage } from './features/asnCrossdock/AsnInquiryPage';
+import { ChangeOrderNumberPage } from './features/changeOrder/ChangeOrderNumberPage';
 import { CaseConsolidationPage } from './features/caseConsolidation/CaseConsolidationPage';
 import { CrossdockMasterSettingPage } from './features/crossdock/CrossdockMasterSettingPage';
 import { BatchProcessPage } from './features/batchProcess/BatchProcessPage';
@@ -43,6 +44,14 @@ function App() {
     return (
       <AppShell activeItem="ASN Creation" onNavigate={navigate} breadcrumb={<Breadcrumb group="ASN" label="ASN Crossdock Creation" />}>
         <AsnCrossdockCreationPage />
+      </AppShell>
+    );
+  }
+
+  if (route === 'change-order') {
+    return (
+      <AppShell activeItem="Change Order Number" onNavigate={navigate} breadcrumb={<Breadcrumb group="ASN" label="Change Order Number" />}>
+        <ChangeOrderNumberPage />
       </AppShell>
     );
   }

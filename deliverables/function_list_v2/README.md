@@ -22,11 +22,11 @@ Nama sistem di UISS tetap **G-System** dan **NSP** (rename T-System / Supplier S
 | XD05 | DAD Volume Calculation Batch | Batch | X6 DAD Volume Calc + X7 Mapping Destination Calc | **Digabung**: proses 1 (status part) lalu proses 2 (mapping destinasi) |
 | XD06 | IF Cross Dock Master to G-System | Batch | bagian RPA dari X3 (Sync) | **Baru / dipisah**: file SFTP berisi Part List + Mapping per Destination ke G-System |
 | XD07 | IF Cross Dock Master to AP POLE | Batch | bagian RPA dari X3 (Sync) | **Baru / dipisah**: file SFTP dengan data sama ke AP POLE |
-| XD08 | Order Control Information to NSP Batch (ASN) | Batch | X10 H0253 Sync | Sekarang hanya **ORDER_STATUS = 7** |
+| XD08 | Order Control Information to NSP Batch | Batch | X10 H0253 Sync | **Satu batch H0253** (23-Oct, XD12 digabung): status 7 / 6 / 2, UPD_STATUS, lepas semua draft |
 | XD09 | Mapping Customer Order and PO Batch | Batch | X12 Get Order (pre-mapping) | Ganti ID / nama (tetap on demand dari [Search] di XD10) |
 | XD10 | ASN Cross Dock Creation Screen | Screen | X8 + X14 ASN Submit | **Digabung**: proses Submit ASN jadi section 5.7 |
-| XD11 | Cancel Crossdock Customer Order Batch | Batch | – | **Baru** (usulan dari diskusi cancel 16-Oct) |
-| XD12 | Order Control Information to NSP Batch (Cancel) | Batch | – (pola X10) | **Baru**: H0253 **ORDER_STATUS = 2** ke tabel cancel |
+| XD11 | Change Order Number Screen | Screen | – | **Baru 23-Oct** (menggantikan Cancel Crossdock Customer Order Batch): layar D/S ganti order number untuk qty cancel di ASN |
+| ~~XD12~~ | ~~Order Control Information to NSP Batch (Cancel)~~ | – | – | **Dihapus 23-Oct**, digabung ke XD08 |
 | XD13 | Destination Master Synch into NSP | Batch | X11 H0125 Sync | Ganti ID / nama |
 | XD14 | DAD Volume Calculation Result Screen (Buffer) | Screen | – | **Tidak dipakai** (keputusan 19-Oct) |
 | XD15 | ASN Crossdock Inquiry Screen (Buffer) | Screen | X13 | Ganti ID / nama |
@@ -78,6 +78,12 @@ Simulasi: menu prototype **ASN → Cancel Order Simulation**.
 - Urutan baris H0253 = urutan alokasi G-System, Allocation Priority = Customer Order Date: Allocation Priority → Customer Code → Customer Order No → Customer Order Date → Order Time → Destination → Detailed Item No → Serial No; per Part No + Customer Order Date (Cara B).
 - Pcs dipotong jadi case supplier @ PCS_CASE (boleh campur destinasi). ASN hanya boleh berhenti di titik potong valid (qty kumulatif tiap destinasi kelipatan PCS_CASE, karena di gudang 1 case = 1 destinasi) → blok = opsi ASN. Blok harus berurutan (tidak boleh dilompati).
 - Logika di `specs/scan_pack.py` (dipakai sample XD09 dan simulasi ERD); perubahan spec di `specs/apply_2110.py`; simulasi baru SIM-7.
+
+## Keputusan 23-Oct (UPD_STATUS, satu batch H0253, Change Order Number)
+- `CANCEL_STATUS` → **UPD_STATUS**: NULL / '6' received / '2' cancel dari H0253 original; ORDER_STATUS replicate tetap nilai pertama. XD09 hanya ambil UPD_STATUS NULL.
+- **XD08** = satu batch H0253 (XD12 digabung, file XD12 dihapus). Setiap run **melepas semua draft** TB_R_INSTRUCTION (ASN_NO NULL); XD10 cek ulang saat Submit (MSG11); TB_R_INSTRUCTION + kolom DRAFT_ID.
+- **XD11** = layar D/S **Change Order Number** (menggantikan cancel batch): qty cancel di ASN dipindah ke line part sama dengan UPD_STATUS 6, PO_MAPPED_FLAG N, tanpa ASN (tertua dulu, boleh beberapa line / destinasi lain, total qty sama); baris dipecah dari case terakhir; riwayat **TB_H_CROSSDOCK_ORDER_CHANGE** (pengganti TB_R_CROSSDOCK_CANCEL_RESULT).
+- Logika di `specs/build_h.py`, `specs/build_xd11.py`, `specs/apply_2310.py`; simulasi SIM-5 / SIM-6 diganti (simulasi_asn.xlsx).
 
 ## Business Process Flow Level 2
 Lihat `bpf/README.md`: Excel `bpf/Crossdock_BPF_Level2.xlsx` (X = PIC, Y = timeline, sampai level tabel, abnormality AB01–AB16) dan menu prototype Common → Business Process Flow.

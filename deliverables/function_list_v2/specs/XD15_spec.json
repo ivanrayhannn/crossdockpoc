@@ -483,7 +483,7 @@
    "items": [
     "Shows the ASN summary and its cases from the existing table TB_R_DAILY_ORDER_PART (rows with the ASN No), grouped by CASE_NO. All items are read only.",
     "[Download Case Label]: follows the existing case label of NSP. [Back] returns to the list in the current search state.",
-    "The screen does not change data (display only). There is no Cancel ASN: an order is cancelled in the source (H0253 order status '2') for lines already on hold (HOLD_FLAG = 'Y'), not in NSP (refer XD11 / XD12)."
+    "The screen does not change data (display only). There is no Cancel ASN: an order is cancelled in the source (H0253 order status '2') for lines already on hold (HOLD_FLAG = 'Y'), not in NSP (refer XD08 / XD11)."
    ]
   }
  ],

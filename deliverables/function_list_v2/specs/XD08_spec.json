@@ -3,7 +3,7 @@
   "phase": "DR",
   "project_name": "Crossdock Optimization",
   "block_name": "Batch",
-  "function_name": "XD08 Order Control Information to NSP Batch (ASN)",
+  "function_name": "XD08 Order Control Information to NSP Batch",
   "created_date": "18-Oct-26",
   "created_by": "FID Rayhan"
  },
@@ -19,9 +19,10 @@
  "doc_type": "batch",
  "general": {
   "objective": [
-   "To keep TB_R_H0253_ORDER_CONTROL_PRE in NSP up to date with the crossdock customer order lines of G-System (replicated in DB Surrounding): rows with ORDER_STATUS = '7' are inserted (new key) or updated (existing key); rows that changed to '6' (received) are updated.",
-   "Only the rows changed since the last successful run are taken (INTF_UPDATE_DT > watermark). Nothing is deleted, so the NSP columns HOLD_FLAG / PO_MAPPED_FLAG / UPD_STATUS keep their values.",
-   "Rows with status '2' (cancel) are taken by XD12 and processed by XD11 before this batch runs."
+   "To keep TB_R_H0253_ORDER_CONTROL_PRE in NSP up to date with the crossdock customer order lines of G-System (replicated in DB Surrounding), in one batch (decided 23-Oct; the former XD12 is merged into XD08): the rows changed since the last successful run are inserted (new key) or updated.",
+   "ORDER_STATUS keeps the value of the first replication; a later change in G-System is written to UPD_STATUS: '6' received / allocated, '2' cancelled. Lines with UPD_STATUS are not taken by XD09.",
+   "Every run releases all drafts of TB_R_INSTRUCTION (Create ASN done, Submit not done): the cases come back in the delivery plan of XD10.",
+   "A cancel of qty already in a submitted ASN is not changed by the batch: it is listed in Change Order Number (XD11) for the D/S team."
   ],
   "operation_flow": {
    "flow": {
@@ -29,17 +30,22 @@
     "nodes": [
      {
       "id": "a",
-      "label": "Scheduler (job chain)",
+      "label": "Scheduler (daily)",
       "type": "event"
      },
      {
       "id": "b",
-      "label": "Rows changed since watermark: status 7 (all) and 6 (known keys)",
+      "label": "Rows changed since watermark",
       "type": "process"
      },
      {
       "id": "c",
-      "label": "Upsert into NSP, Log",
+      "label": "Upsert, UPD_STATUS",
+      "type": "process"
+     },
+     {
+      "id": "d",
+      "label": "Release all drafts, check cancels in ASN, Log",
       "type": "process"
      }
     ],
@@ -51,6 +57,10 @@
      {
       "from": "b",
       "to": "c"
+     },
+     {
+      "from": "c",
+      "to": "d"
      }
     ]
    }
@@ -67,6 +77,11 @@
     "description": "Existing NSP rows (key check, NSP columns)"
    },
    {
+    "name": "TB_R_INSTRUCTION",
+    "type": "DB",
+    "description": "Drafts (ASN_NO NULL) and submitted rows (cancel check)"
+   },
+   {
     "name": "Log",
     "type": "DB",
     "description": "Watermark of the last successful run"
@@ -76,12 +91,22 @@
    {
     "name": "TB_R_H0253_ORDER_CONTROL_PRE (NSP)",
     "type": "DB",
-    "description": "if successful: rows inserted / updated"
+    "description": "Rows inserted / updated; PO_MAPPED_FLAG 'N' for the lines of released drafts"
+   },
+   {
+    "name": "TB_R_INSTRUCTION",
+    "type": "DB",
+    "description": "Draft rows deleted"
+   },
+   {
+    "name": "TB_R_PRA_DAILY_ORDER_MAPPED",
+    "type": "DB",
+    "description": "MAPPED_QTY of the released drafts given back"
    },
    {
     "name": "Log",
     "type": "DB",
-    "description": "One record per run with status and watermark"
+    "description": "One record per run with status, counts and watermark; LOG5 / LOG6 per cancel in an ASN"
    }
   ],
   "extra_tables": [
@@ -104,7 +129,7 @@
      ],
      [
       "Statuses",
-      "'7' all rows; '6' existing keys only"
+      "'7' / '6' / '2' of crossdock lines; '6' / '2' go to UPD_STATUS"
      ]
     ]
    },
@@ -123,11 +148,11 @@
     "rows": [
      [
       "Trigger",
-      "Scheduler, daily after G-System has provided the data (27:30); auto retry 3 times."
+      "Daily scheduler after G-System has provided the data (27:30); auto retry 3 times."
      ],
      [
       "Order",
-      "Job chain: XD12 -> XD11 -> XD08."
+      "One batch (decided 23-Oct): runs after G-System has provided the data (1 time/day, 27:30); XD12 is merged into XD08."
      ]
     ]
    }
@@ -139,7 +164,7 @@
    "nodes": [
     {
      "id": "p1",
-     "label": "Start (job chain)",
+     "label": "Start (scheduler)",
      "type": "process",
      "step": 1
     },
@@ -151,13 +176,13 @@
     },
     {
      "id": "p2",
-     "label": "Rows changed since watermark: status 7 (all) and 6 (known keys)",
+     "label": "Rows changed since watermark",
      "type": "process",
      "step": 2
     },
     {
      "id": "p3",
-     "label": "Insert new keys / update existing keys",
+     "label": "Insert new keys / update existing keys, UPD_STATUS",
      "type": "process",
      "step": 3
     },
@@ -169,9 +194,27 @@
     },
     {
      "id": "p4",
-     "label": "Commit or roll back, Log (watermark)",
+     "label": "Release all drafts",
      "type": "process",
      "step": 4
+    },
+    {
+     "id": "i",
+     "label": "TB_R_INSTRUCTION / TB_R_PRA_DAILY_ORDER_MAPPED",
+     "type": "db",
+     "lane": "output"
+    },
+    {
+     "id": "p5",
+     "label": "Check cancels in submitted ASNs",
+     "type": "process",
+     "step": 5
+    },
+    {
+     "id": "p6",
+     "label": "Commit or roll back, Log (watermark)",
+     "type": "process",
+     "step": 6
     },
     {
      "id": "log",
@@ -203,25 +246,49 @@
     },
     {
      "from": "p4",
+     "to": "i"
+    },
+    {
+     "from": "p4",
+     "to": "p5"
+    },
+    {
+     "from": "p5",
+     "to": "p6"
+    },
+    {
+     "from": "p6",
      "to": "log"
     }
    ]
   },
   "steps": [
-   "The scheduler starts the batch after XD11 (job chain XD12 -> XD11 -> XD08). Write LOG1.",
+   "The scheduler starts the batch (daily, after G-System has provided the data). Write LOG1.",
    {
-    "text": "Read the rows of TB_R_H0253_ORDER_CONTROL_PRE (DB Surrounding) with INTF_UPDATE_DT > watermark:",
+    "text": "Read the rows of TB_R_H0253_ORDER_CONTROL_PRE (DB Surrounding) with INTF_UPDATE_DT > watermark (crossdock lines, ORDER_STATUS '7', '6' or '2').",
     "children": [
-     "ORDER_STATUS = '7': all rows (new crossdock lines, changed qty, split serials).",
-     "ORDER_STATUS = '6': only rows whose unique key already exists in TB_R_H0253_ORDER_CONTROL_PRE (NSP) (received / allocated; no further action in NSP).",
-     "Other statuses are not taken; status '2' is taken by XD12."
+     "New crossdock lines, changed qty, split serials (partial cancel / receipt) and status changes."
     ]
    },
    {
     "text": "Upsert into TB_R_H0253_ORDER_CONTROL_PRE (NSP) per unique key (incl. SERIAL_NO):",
     "children": [
-     "New key: insert all source columns; HOLD_FLAG = 'N', PO_MAPPED_FLAG = 'N', UPD_STATUS = '-'.",
-     "Existing key: update all source columns; HOLD_FLAG, PO_MAPPED_FLAG and UPD_STATUS are not changed."
+     "New key: insert all source columns; HOLD_FLAG = 'N', PO_MAPPED_FLAG = 'N'; UPD_STATUS = NULL when the source status is '7', else the source status.",
+     "Existing key: update the source columns except ORDER_STATUS (first value kept); UPD_STATUS = source ORDER_STATUS when it is '6' or '2'; HOLD_FLAG / PO_MAPPED_FLAG not changed."
+    ]
+   },
+   {
+    "text": "Release all drafts of TB_R_INSTRUCTION (rows with ASN_NO NULL), whatever changed:",
+    "children": [
+     "Delete the rows; MAPPED_QTY of TB_R_PRA_DAILY_ORDER_MAPPED - their qty; PO_MAPPED_FLAG = 'N' on their lines.",
+     "The cases come back in the delivery plan of XD10; the supplier ticks them again and creates the ASN again (lines with UPD_STATUS are no longer taken)."
+    ]
+   },
+   {
+    "text": "Check the lines with UPD_STATUS '2' that have rows in TB_R_INSTRUCTION with ASN_NO (cancel of qty in a submitted ASN):",
+    "children": [
+     "Write LOG5 per line and ASN; the line is listed in Change Order Number (XD11). Nothing is changed in the ASN.",
+     "Cancelled qty not a multiple of pcs/case: LOG6 (abnormality)."
     ]
    },
    "No error: commit, save the new watermark (max INTF_UPDATE_DT taken) in the Log, LOG2. Error: roll back, watermark not changed, LOG3. Exit."
@@ -239,7 +306,7 @@
       },
       {
        "field": "ORDER_STATUS",
-       "value": "'7' (all) / '6' (existing keys only)"
+       "value": "'7' / '6' / '2' of crossdock lines"
       }
      ]
     },
@@ -323,7 +390,7 @@
      {
       "source_field": "ORDER_STATUS",
       "dest_field": "ORDER_STATUS",
-      "description": "Same value as the source (insert and update)"
+      "description": "Insert: same value as the source; update: not changed (first value kept)"
      },
      {
       "source_field": "BO_INSTRUCTION_CD",
@@ -477,15 +544,15 @@
      },
      {
       "dest_field": "HOLD_FLAG",
-      "description": "'N' on insert; not changed on update"
+      "description": "'N' on insert; not changed on update (PO_MAPPED_FLAG: refer the draft release)"
      },
      {
       "dest_field": "PO_MAPPED_FLAG",
-      "description": "'N' on insert; not changed on update"
+      "description": "'N' on insert; not changed on update (PO_MAPPED_FLAG: refer the draft release)"
      },
      {
       "dest_field": "UPD_STATUS",
-      "description": "'-' on insert; not changed on update"
+      "description": "Insert: NULL when the source status is 7, else the source status ('6' / '2'). Update: source ORDER_STATUS when it is '6' or '2'; not changed when '7'"
      },
      {
       "dest_field": "CREATE_DT",
@@ -502,6 +569,74 @@
      {
       "dest_field": "UPDATE_BY",
       "description": "Batch system date-time / batch user ID"
+     }
+    ]
+   },
+   {
+    "source": "TB_R_INSTRUCTION (rows with ASN_NO NULL = drafts)",
+    "destination": {
+     "table": "TB_R_INSTRUCTION",
+     "operation": "Delete",
+     "description": "Every run: all drafts (Create ASN not submitted) are released, whatever changed",
+     "keys": [
+      {
+       "field": "ASN_NO",
+       "value": "IS NULL"
+      }
+     ]
+    },
+    "mappings": [
+     {
+      "dest_field": "(row)",
+      "description": "Deleted"
+     }
+    ]
+   },
+   {
+    "source": "TB_R_INSTRUCTION drafts (sum of QTY per PO line)",
+    "destination": {
+     "table": "TB_R_PRA_DAILY_ORDER_MAPPED",
+     "operation": "Update",
+     "description": "Mapped qty of the released drafts given back",
+     "keys": [
+      {
+       "field": "PO_NO + MANIFEST_NO + MANIFEST_ITEM",
+       "value": "PO lines of the drafts"
+      }
+     ]
+    },
+    "mappings": [
+     {
+      "dest_field": "MAPPED_QTY",
+      "description": "- QTY of the released rows"
+     },
+     {
+      "dest_field": "CHANGED_BY / CHANGED_DT",
+      "description": "Batch user ID / system date-time"
+     }
+    ]
+   },
+   {
+    "source": "TB_R_INSTRUCTION drafts (lines)",
+    "destination": {
+     "table": "TB_R_H0253_ORDER_CONTROL_PRE (NSP)",
+     "operation": "Update",
+     "description": "Lines of the released drafts",
+     "keys": [
+      {
+       "field": "Unique key (incl. SERIAL_NO)",
+       "value": "Lines of the released rows"
+      }
+     ]
+    },
+    "mappings": [
+     {
+      "dest_field": "PO_MAPPED_FLAG",
+      "description": "'N'"
+     },
+     {
+      "dest_field": "UPDATE_BY / UPDATE_DT",
+      "description": "Batch user ID / system date-time"
      }
     ]
    },
@@ -526,6 +661,10 @@
       "description": "Rows inserted / updated (0 when FAILED)"
      },
      {
+      "dest_field": "DRAFT_COUNT",
+      "description": "Draft rows of TB_R_INSTRUCTION released"
+     },
+     {
       "dest_field": "WATERMARK",
       "description": "Max INTF_UPDATE_DT taken in this run (next watermark; only when SUCCESS)"
      },
@@ -548,11 +687,13 @@
    "marker": "-",
    "level": 0,
    "items": [
-    "The source table is insert / update: a crossdock line starts with status 7 and can change to 6 (received / allocated) or 2 (reject / cancel). A partial cancel or receipt splits the line into a new SERIAL_NO (scenario file skenario_h0253.xlsx).",
-    "Scenario 1 (normal): 14-Oct status 7, qty 8 -> 15-Oct the same row status 6, qty 8: XD08 updates the row; the line is no longer taken by XD09 (status 7 only).",
-    "Only changed rows are read (INTF_UPDATE_DT > watermark); insert and update run in one transaction; the watermark is saved only when the run succeeds.",
-    "Rows with status 6 / 2 stay in the table for tracking (retention optional, TBC).",
-    "Read by XD09 (status 7 rows not mapped, not on hold), XD10 and XD11. Table structure: see Appendix."
+    "One batch for H0253 (decided 23-Oct): the former XD08 (status 7 / 6) and XD12 (status 2) are merged; the old XD11 cancel batch is replaced by the screen Change Order Number (XD11).",
+    "The source table is insert / update: a crossdock line starts with status 7 and can change to 6 (received / allocated) or 2 (cancel). A partial cancel or receipt splits the line into a new SERIAL_NO (scenario files skenario_h0253.xlsx, simulasi_asn.xlsx).",
+    "UPD_STATUS: NULL = status 7 (no change); '6' = received / allocated in G-System; '2' = cancelled in G-System. ORDER_STATUS of NSP keeps the first value.",
+    "Example (simulasi_asn.xlsx): 15-Oct CO-14101 / CO-14102 inserted (UPD_STATUS NULL); 16-Oct CO-14101 → UPD_STATUS 6 (received), CO-14102 → UPD_STATUS 2 (cancelled while on hold, no ASN: nothing else to do); 18-Oct CO-14104 → UPD_STATUS 2 although in ASN00003 → listed in XD11; CO-14105 → UPD_STATUS 6 (candidate for the replacement).",
+    "Drafts: every run deletes all TB_R_INSTRUCTION rows with ASN_NO NULL (Create ASN not submitted), gives the mapped qty back and sets PO_MAPPED_FLAG 'N'; rows with ASN_NO are never deleted. [Submit ASN] of XD10 re-checks the draft too.",
+    "Only changed rows are read (INTF_UPDATE_DT > watermark); upsert and draft release run in one transaction; the watermark is saved only when the run succeeds.",
+    "Read by XD09 (lines with UPD_STATUS NULL, not mapped, not on hold), XD10 and XD11. Table structure: see Appendix."
    ]
   }
  ],
@@ -562,7 +703,7 @@
    "cause": "Batch is called",
    "type": "Info",
    "msg_id": "LOG1",
-   "message": "H0253 status 7 / 6 sync started. Watermark <WATERMARK>.",
+   "message": "H0253 sync started. Watermark <WATERMARK>.",
    "action": {
     "system": "Write the log.",
     "user": "-"
@@ -573,18 +714,40 @@
    "cause": "Batch finishes",
    "type": "Info",
    "msg_id": "LOG2",
-   "message": "H0253 status 7 / 6 sync ended. Status <STATUS>, inserted <INS>, updated <UPD>.",
+   "message": "H0253 sync ended. Status <STATUS>, inserted <INS>, updated <UPD> (UPD_STATUS 6: <N6>, 2: <N2>), drafts released <DRAFTS>.",
    "action": {
     "system": "Write the log; save the new watermark when SUCCESS.",
     "user": "-"
    }
   },
   {
+   "event": "Cancel after ASN",
+   "cause": "A line with UPD_STATUS '2' has qty in a submitted ASN",
+   "type": "Warning",
+   "msg_id": "LOG5",
+   "message": "<CUSTOMER_ORDER_NO> <PART_NO>: <QTY> pcs cancelled in <ASN_NO>; listed in Change Order Number (XD11).",
+   "action": {
+    "system": "Write the log; nothing is changed in the ASN.",
+    "user": "D/S team: Change Order Number (XD11)."
+   }
+  },
+  {
+   "event": "Cancel qty check",
+   "cause": "Cancelled qty of a line in a submitted ASN is not a multiple of pcs/case (should not happen in G-System)",
+   "type": "Error",
+   "msg_id": "LOG6",
+   "message": "<CUSTOMER_ORDER_NO> <PART_NO>: cancelled qty <QTY> is not a multiple of pcs/case <PCS>.",
+   "action": {
+    "system": "Write the log (abnormality); the line is still listed in XD11.",
+    "user": "D/S team checks with G-System."
+   }
+  },
+  {
    "event": "Upsert",
-   "cause": "Read from DB Surrounding or insert / update in NSP fails",
+   "cause": "Read from DB Surrounding, insert / update in NSP or draft release fails",
    "type": "Error",
    "msg_id": "LOG3",
-   "message": "Cannot replicate H0253 status 7 / 6 rows: <ERROR_DETAIL>.",
+   "message": "Cannot replicate H0253 rows: <ERROR_DETAIL>.",
    "action": {
     "system": "Roll back; watermark not changed (rows taken again next run). STATUS = FAILED.",
     "user": "User contact PIC"
@@ -609,7 +772,7 @@
    "name": "TB_R_H0253_ORDER_CONTROL_PRE",
    "kind": "transaction",
    "proposed": false,
-   "description": "Order control data, pre-order picking info (I/F H02-53, DVJO950) replicated from DB Surrounding by XD08 / XD12. Structure from the G-System I/F layout; physical names follow the existing table. Key (PK) = unique key of the I/F layout. NSP keeps the rows with status 7, 6 and 2 (insert / update); rows with status 6 / 2 are kept for tracking only (retention optional, TBC). UPD_STATUS is a new NSP column (proposed).",
+   "description": "Order control data, pre-order picking info (I/F H02-53, DVJO950) replicated from DB Surrounding by XD08. Structure from the G-System I/F layout; physical names follow the existing table. Key (PK) = unique key of the I/F layout. Rows with UPD_STATUS 6 / 2 are kept for tracking (retention optional, TBC). UPD_STATUS is a new NSP column (proposed).",
    "columns": [
     [
      "CUSTOMER_CD",
@@ -707,7 +870,7 @@
      "VARCHAR(1)",
      "",
      "Y",
-     "No.14 Order Status: '1': Pending '2': Reject/Cancel '3': B/O '4': Firm Order '5': Vender Direct '6': Allocation '7': Cross Dock"
+     "No.14 Order Status: '1': Pending '2': Reject/Cancel '3': B/O '4': Firm Order '5': Vender Direct '6': Allocation '7': Cross Dock In NSP: value of the first replication (normally '7'); a later change is written to UPD_STATUS"
     ],
     [
      "BO_INSTRUCTION_CD",
@@ -924,21 +1087,21 @@
      "VARCHAR(1)",
      "",
      "N",
-     "NSP column: hold by the D/S team in ASN Cross Dock Creation (XD10) ('Y' / 'N'); 'N' on insert, never changed by XD08 / XD12"
+     "NSP column: hold by the D/S team in ASN Cross Dock Creation (XD10) ('Y' / 'N'); 'N' on insert, never changed by XD08"
     ],
     [
      "PO_MAPPED_FLAG",
      "VARCHAR(1)",
      "",
      "N",
-     "NSP column: line mapped to a PO by [Create ASN] ('Y' / 'N'); 'N' on insert, never changed by XD08 / XD12"
+     "NSP column: 'Y' when the whole line is in TB_R_INSTRUCTION ([Create ASN] XD10, Change Order Number XD11); 'N' on insert; set back to 'N' by XD08 when a draft of the line is released"
     ],
     [
      "UPD_STATUS",
      "VARCHAR(1)",
      "",
-     "N",
-     "NSP column: '-' no cancel / 'P' cancel to be processed by XD11 (set by XD12) / 'D' processed by XD11"
+     "Y",
+     "NSP column: status change in G-System after the first replication: NULL = no change (status 7) / '6' = received or allocated (source ORDER_STATUS 6) / '2' = cancelled (source ORDER_STATUS 2). Set by XD08; lines with UPD_STATUS are not taken by XD09"
     ],
     [
      "CREATE_DT",
@@ -967,6 +1130,295 @@
      "",
      "Y",
      "Updated by (NSP)"
+    ]
+   ]
+  },
+  {
+   "name": "TB_R_INSTRUCTION",
+   "kind": "transaction",
+   "proposed": true,
+   "description": "Real mapping made by [Create ASN]: one row per supplier case x customer order line x PO of the chosen blocks (case and line sequence of XD09). Rows are deleted by [Back] / [Cancel] on the Case List; [Submit ASN] (5.7) fills ASN_NO and CASE_NO. Columns proposed. Rows without ASN_NO are a draft: every run of XD08 releases all drafts (decided 23-Oct); a cancelled line in a submitted ASN is moved to other lines in Change Order Number (XD11).",
+   "columns": [
+    [
+     "INSTRUCTION_ID",
+     "BIGINT",
+     "Y",
+     "N",
+     "Running number (identity)"
+    ],
+    [
+     "SUPPLIER_CD",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "Supplier code (one ASN = one Supplier Code + Plant)"
+    ],
+    [
+     "SUPPLIER_PLANT",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "Supplier plant"
+    ],
+    [
+     "CASE_SEQ",
+     "NUMBER(4)",
+     "",
+     "N",
+     "Case sequence of the Create ASN (Case 1, 2, ...)"
+    ],
+    [
+     "LINE_SEQ",
+     "NUMBER(4)",
+     "",
+     "N",
+     "Order line x PO within the case"
+    ],
+    [
+     "PART_NO",
+     "VARCHAR(15)",
+     "",
+     "N",
+     "Part number of the case"
+    ],
+    [
+     "ORDER_DT",
+     "DATE",
+     "",
+     "N",
+     "Customer Order Date of the case"
+    ],
+    [
+     "DESTINATION_CD",
+     "VARCHAR(7)",
+     "",
+     "N",
+     "Destination of the case"
+    ],
+    [
+     "CUSTOMER_CD",
+     "VARCHAR(7)",
+     "",
+     "N",
+     "Customer code"
+    ],
+    [
+     "CUSTOMER_ORDER_NO",
+     "VARCHAR(8)",
+     "",
+     "N",
+     "Customer order number"
+    ],
+    [
+     "DETAILED_ITEM_NO",
+     "VARCHAR(4)",
+     "",
+     "N",
+     "Detailed item number"
+    ],
+    [
+     "SERIAL_NO",
+     "VARCHAR(7)",
+     "",
+     "N",
+     "Serial number"
+    ],
+    [
+     "QTY",
+     "NUMBER(8)",
+     "",
+     "N",
+     "Qty of the line mapped to the PO in this case"
+    ],
+    [
+     "PO_NO",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "PO number"
+    ],
+    [
+     "MANIFEST_NO",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "Manifest number of the Pra Daily Order"
+    ],
+    [
+     "MANIFEST_ITEM",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "Manifest item number"
+    ],
+    [
+     "ORDER_QTY",
+     "NUMBER(TBD)",
+     "",
+     "N",
+     "PO qty"
+    ],
+    [
+     "DELIVERY_DT",
+     "DATE",
+     "",
+     "N",
+     "Delivery Date of the Search"
+    ],
+    [
+     "RIT_CYCLE",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "Rit of the Search (route master, existing)"
+    ],
+    [
+     "ROUTE",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "Route of the Rit (route master, existing)"
+    ],
+    [
+     "DRAFT_ID",
+     "VARCHAR(20)",
+     "",
+     "Y",
+     "Draft of one [Create ASN] (all rows of the creation); NULL after [Submit ASN] is not needed (ASN_NO filled). Every run of XD08 deletes the rows with ASN_NO NULL"
+    ],
+    [
+     "ASN_NO",
+     "VARCHAR(TBD)",
+     "",
+     "Y",
+     "ASN number; NULL until the ASN is submitted (5.7)"
+    ],
+    [
+     "CASE_NO",
+     "VARCHAR(TBD)",
+     "",
+     "Y",
+     "Case number; NULL until submitted (auto generated with the existing last sequence)"
+    ],
+    [
+     "CREATED_BY",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "User who created the record"
+    ],
+    [
+     "CREATED_DT",
+     "DATETIME",
+     "",
+     "N",
+     "Created date and time"
+    ],
+    [
+     "CHANGED_BY",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "User who last changed the record"
+    ],
+    [
+     "CHANGED_DT",
+     "DATETIME",
+     "",
+     "N",
+     "Last changed date and time"
+    ]
+   ]
+  },
+  {
+   "name": "TB_R_PRA_DAILY_ORDER_MAPPED",
+   "kind": "transaction",
+   "proposed": true,
+   "description": "New table: mapped qty per Pra Daily Order PO part (instead of a new column in the Pra Daily Order). Name and columns proposed.",
+   "columns": [
+    [
+     "PO_NO",
+     "VARCHAR(TBD)",
+     "Y",
+     "N",
+     "PO number (Pra Daily Order Manifest)"
+    ],
+    [
+     "MANIFEST_NO",
+     "VARCHAR(TBD)",
+     "Y",
+     "N",
+     "Manifest number"
+    ],
+    [
+     "MANIFEST_ITEM",
+     "VARCHAR(TBD)",
+     "Y",
+     "N",
+     "Manifest item number (Pra Daily Order Part)"
+    ],
+    [
+     "PART_NO",
+     "VARCHAR(15)",
+     "",
+     "N",
+     "Part number"
+    ],
+    [
+     "SUPPLIER_CD",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "Supplier code"
+    ],
+    [
+     "SUPPLIER_PLANT",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "Supplier plant"
+    ],
+    [
+     "ORDER_QTY",
+     "NUMBER(TBD)",
+     "",
+     "N",
+     "PO qty of the part"
+    ],
+    [
+     "MAPPED_QTY",
+     "NUMBER(TBD)",
+     "",
+     "N",
+     "Qty already mapped to customer orders by [Create ASN]; open qty = ORDER_QTY - MAPPED_QTY"
+    ],
+    [
+     "CREATED_BY",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "User who created the record"
+    ],
+    [
+     "CREATED_DT",
+     "DATETIME",
+     "",
+     "N",
+     "Created date and time"
+    ],
+    [
+     "CHANGED_BY",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "User who last changed the record"
+    ],
+    [
+     "CHANGED_DT",
+     "DATETIME",
+     "",
+     "N",
+     "Last changed date and time"
     ]
    ]
   }

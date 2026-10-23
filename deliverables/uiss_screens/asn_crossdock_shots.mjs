@@ -54,4 +54,9 @@ await pg.waitForTimeout(1700);
 await pg.goto(url + '#/asn-inquiry'); await pg.waitForTimeout(600); await shot('c_11_inquiry');
 await pg.locator('a', { hasText: 'ASN-50221-261015-001' }).click(); await shot('c_12_inquiry_detail');
 await pg.goto(url + '#/log-monitoring'); await pg.waitForTimeout(600); await shot('c_13_log_monitoring');
+// XD11 Change Order Number (D/S team)
+await pg.goto(url + '#/change-order'); await pg.waitForTimeout(600); await shot('x_01_change_order_list');
+await pg.getByTitle('Replacement').first().click(); await shot('x_02_change_order_detail');
+await pg.getByRole('button', { name: 'Change Order Number', exact: true }).click(); await shot('x_03_change_order_confirm');
+await pg.getByRole('button', { name: 'Yes, change' }).click(); await shot('x_04_change_order_after');
 await b.close();

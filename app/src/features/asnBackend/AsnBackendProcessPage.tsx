@@ -93,9 +93,10 @@ export function AsnBackendProcessPage() {
       <Section no="5" title="Cancel of an order (not in Supplier System)">
         <Steps rows={[
           ['1', 'The order is cancelled in T-System (with or without hold flag Y): the H0253 row changes to ORDER_STATUS 2; a partial cancel splits the line into a new SERIAL_NO. Supplier System never cancels an order itself.', 'H0253 (T-System, insert / update)'],
-          ['2', 'XD12 upserts the status 2 rows of crossdock lines (rows changed since the last run, INTF_UPDATE_DT) with UPD_STATUS P.', 'TB_R_H0253_ORDER_CONTROL_PRE'],
-          ['3', 'XD11 per line (all serials): releases the open mapping; CANCELLED, or CONFLICT when qty already in an ASN is cancelled (abnormality: blocked normally by the existing ASN feedback and the SOP). No Cancel ASN. Then XD08 upserts status 7 / 6.', 'TB_R_INSTRUCTION, TB_R_CROSSDOCK_CANCEL_RESULT'],
-          ['4', 'Simulation of the H0253 scenarios: menu Cancel Order Simulation.', 'Prototype'],
+          ['2', 'XD08 (one batch) upserts the rows changed since the last run (INTF_UPDATE_DT): ORDER_STATUS keeps the first value, UPD_STATUS = 2 (cancel) or 6 (received). Lines with UPD_STATUS are not taken by XD09.', 'TB_R_H0253_ORDER_CONTROL_PRE'],
+          ['3', 'XD08 releases every draft (TB_R_INSTRUCTION without ASN No): rows deleted, MAPPED_QTY reduced, PO_MAPPED_FLAG N; the cases come back in the delivery plan. [Submit ASN] re-checks the draft as well.', 'TB_R_INSTRUCTION, TB_R_PRA_DAILY_ORDER_MAPPED'],
+          ['4', 'A cancel of qty already in a submitted ASN (abnormality) is listed in Change Order Number (XD11, D/S team) until the qty is moved to received lines of the same part (UPD_STATUS 6, PO_MAPPED_FLAG N, no ASN; oldest first; several lines / another destination allowed). No Cancel ASN.', 'TB_R_INSTRUCTION, TB_H_CROSSDOCK_ORDER_CHANGE'],
+          ['5', 'Simulation of the H0253 scenarios: menu Cancel Order Simulation; replacement: menu Change Order Number.', 'Prototype'],
         ]} />
       </Section>
 

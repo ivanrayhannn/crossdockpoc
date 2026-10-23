@@ -83,7 +83,7 @@
    {
     "name": "TB_R_H0253_ORDER_CONTROL_PRE",
     "type": "DB",
-    "description": "ORDER_STATUS = '7', HOLD_FLAG = 'N', PO_MAPPED_FLAG = 'N'; open qty = ORDER_STATUS_QTY - qty of the line already in TB_R_INSTRUCTION; latest data (replicated by XD08)"
+    "description": "ORDER_STATUS = '7', UPD_STATUS IS NULL (no status change in G-System), HOLD_FLAG = 'N', PO_MAPPED_FLAG = 'N'; open qty = ORDER_STATUS_QTY - qty of the line already in TB_R_INSTRUCTION; latest data (replicated by XD08)"
    },
    {
     "name": "TB_R_PRA_DAILY_ORDER_MANIFEST / TB_R_PRA_DAILY_ORDER_PART",
@@ -271,7 +271,7 @@
    {
     "text": "Get the customer order lines from TB_R_H0253_ORDER_CONTROL_PRE:",
     "children": [
-     "ORDER_STATUS = '7' (Cross Dock), HOLD_FLAG = 'N', PO_MAPPED_FLAG = 'N'; latest data; open qty = ORDER_STATUS_QTY - qty of the line already in TB_R_INSTRUCTION (> 0). Status '2' (cancel) is not taken.",
+     "ORDER_STATUS = '7' (Cross Dock), UPD_STATUS IS NULL (no status change in G-System), HOLD_FLAG = 'N', PO_MAPPED_FLAG = 'N'; latest data; open qty = ORDER_STATUS_QTY - qty of the line already in TB_R_INSTRUCTION (> 0). Lines changed in G-System (UPD_STATUS '6' / '2', set by XD08) are not taken.",
      "Get: Customer Code, Customer Order No, Order Date, Order Time, Destination Code, Detailed Item No, Serial No, Part Number, Order Status Qty; Pcs/Case of the part from TB_M_PART_CANDIDATE."
     ]
    },
@@ -600,7 +600,7 @@
   {
    "type": "text",
    "level": 0,
-   "text": "              WHERE H.ORDER_STATUS = '7' AND H.HOLD_FLAG = 'N' AND H.PO_MAPPED_FLAG = 'N')"
+   "text": "              WHERE H.ORDER_STATUS = '7' AND H.UPD_STATUS IS NULL AND H.HOLD_FLAG = 'N' AND H.PO_MAPPED_FLAG = 'N')"
   },
   {
    "type": "text",

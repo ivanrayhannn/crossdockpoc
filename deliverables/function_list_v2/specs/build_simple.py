@@ -26,7 +26,7 @@ def build():
         ('Get Order', 'Mapping Customer Order and PO')]))
     out.append(simple('H0125Sync_spec.json', 'XD13'))
     out.append(simple('AsnInquiry_spec.json', 'XD15', [
-        ('(refer XD08)', '(refer XD11 / XD12)')]))
+        ('(refer XD08)', '(refer XD08 / XD11)')]))
     return out
 
 

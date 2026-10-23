@@ -4,7 +4,7 @@ Sumber: UISS `XD10_UISS_Screen_ASNCrossDockCreation.xlsx` (0.1 Initial Draft, 18
 
 - Isi layar sama dengan X8 (detail: `deliverables/md/X8_SCREEN_ASNCrossdockCreation.md`).
 - **Digabung** dengan X14 ASN Submit: proses Submit ASN (Submit ID, insert TB_R_DAILY_ORDER_MANIFEST / PART, tulis ASN_NO / CASE_NO ke TB_R_INSTRUCTION, log existing) sekarang di **Operation Description 5.7**, Data Edit Mapping dan Logging Message **LOG2–LOG5** (LOG1 = error Create ASN).
-- [Search] menjalankan **XD09**. Cancel order tidak di NSP: lihat **XD11 / XD12**.
+- [Search] menjalankan **XD09**. Cancel order tidak di NSP: lihat **XD08** (UPD_STATUS, lepas draft) dan **XD11** (Change Order Number).
 - Tabel: #TEMP_INSTRUCTION, TB_R_INSTRUCTION, TB_R_PRA_DAILY_ORDER_MAPPED, TB_R_DAILY_ORDER_MANIFEST, TB_R_DAILY_ORDER_PART.
 
 ## Keputusan 19-Oct
@@ -27,3 +27,9 @@ Contoh dummy PART-X / PART-Y (6 pcs/case, delivery 16-Oct Rit 1): input pre-mapp
 - **Content (destinasi / customer order) hanya untuk D/S team**; supplier tidak melihat destinasi (juga di Case List).
 - [Create ASN] insert slice blok terpilih ke TB_R_INSTRUCTION (CASE_SEQ / LINE_SEQ dari XD09). PO_MAPPED_FLAG = 'Y' hanya untuk line yang sudah lengkap; sisa line ikut [Search] berikutnya dan dipotong ulang dari case 1 dengan urutan yang sama.
 - Aturan lama "1 case per Part + Customer Order Date + destinasi" dan "unit selalu utuh (A2) / Kondisi 3" diganti aturan blok. Gambar layar di UISS masih dari prototype lama (belum ada kolom ASN Option).
+
+## Keputusan 23-Oct (draft dan Submit)
+- `TB_R_INSTRUCTION` dapat kolom **DRAFT_ID** (satu per Create ASN). Baris tanpa ASN_NO = draft.
+- **Setiap run XD08 melepas semua draft**: case kembali ke delivery plan, supplier centang ulang dan Create ASN lagi.
+- **[Submit ASN] cek ulang**: draft masih ada dan semua line masih UPD_STATUS NULL dengan qty sama; kalau tidak → draft dilepas, **MSG11** "Some orders have changed… Search and create the ASN again".
+- Line yang di-cancel setelah Submit ditangani di **XD11 Change Order Number** (D/S).
