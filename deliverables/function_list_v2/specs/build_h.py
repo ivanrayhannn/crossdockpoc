@@ -170,9 +170,9 @@ def build():
             "The source table is insert / update: a crossdock line starts with status 7 and can change to 6 (received / allocated) or 2 (cancel). "
             "A partial cancel or receipt splits the line into a new SERIAL_NO (scenario files skenario_h0253.xlsx, simulasi_asn.xlsx).",
             "UPD_STATUS: NULL = status 7 (no change); '6' = received / allocated in G-System; '2' = cancelled in G-System. ORDER_STATUS of NSP keeps the first value.",
-            "Example (simulasi_asn.xlsx): 15-Oct CO-14101 / CO-14102 inserted (UPD_STATUS NULL); 16-Oct CO-14101 → UPD_STATUS 6 (received), CO-14102 → UPD_STATUS 2 "
-            "(cancelled while on hold, no ASN: nothing else to do); 18-Oct CO-14104 → UPD_STATUS 2 although in ASN00003 → listed in XD11; CO-14105 → UPD_STATUS 6 "
-            "(candidate for the replacement).",
+            "Example (simulasi_asn.xlsx): 16-Oct CO-14101 / CO-14102 inserted (UPD_STATUS NULL); 17-Oct CO-14101 → UPD_STATUS 6 (received), CO-14102 → UPD_STATUS 2 "
+            "(cancelled while on hold, no ASN: nothing else to do); 19-Oct CO-14104 → UPD_STATUS 2 although in case 3 of ASN0003 → listed in XD11; CO-14108 → "
+            "UPD_STATUS 6 without ASN (candidate for the replacement).",
             "Drafts: every run deletes all TB_R_INSTRUCTION rows with ASN_NO NULL (Create ASN not submitted), gives the mapped qty back and sets PO_MAPPED_FLAG 'N'; "
             "rows with ASN_NO are never deleted. [Submit ASN] of XD10 re-checks the draft too.",
             "Only changed rows are read (INTF_UPDATE_DT > watermark); upsert and draft release run in one transaction; the watermark is saved only when the run succeeds.",

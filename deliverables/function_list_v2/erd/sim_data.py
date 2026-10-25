@@ -214,43 +214,68 @@ SCENARIOS = [
         'id': 'SIM-5', 'title': 'UPD_STATUS day by day; cancel after ASN → Change Order Number (simulasi_asn.xlsx)', 'flow': 'BPF F2 / F4',
         'functions': 'XD08, XD09, XD10, XD11 (Change Order Number)',
         'story': ['PART-X, 6 pcs/case. ORDER_STATUS of the replicate keeps the first value (7); a change in G-System is written to UPD_STATUS: 6 received, 2 cancel.',
-                  '15-Oct CO-14101 VN → ASN0001, CO-14102 TH on hold. 16-Oct CO-14101 received (6), CO-14102 cancelled (2, no ASN: nothing else), CO-14103 → ASN00002.',
-                  '17-Oct CO-14103 received; CO-14104 TH → ASN00003. 18-Oct CO-14104 cancelled although in ASN00003, CO-14105 VN received without ASN (6, PO_MAPPED N).',
-                  'The D/S team moves the 6 pcs of ASN00003 from CO-14104 to CO-14105 in Change Order Number (XD11); history in TB_H_CROSSDOCK_ORDER_CHANGE.'],
+                  '16-Oct CO-14101 VN → ASN0001, CO-14102 TH on hold. 17-Oct CO-14101 received (6), CO-14102 cancelled (2, no ASN: nothing else), CO-14103 → ASN0002.',
+                  '18-Oct order date 17-Oct: scan order CO-14105, CO-14106 + CO-14107, CO-14104 (customer code 9715300 before 9722D10); all 3 cases Ready, '
+                  'sent together in ASN0003. CO-14108 (order date 18-Oct) gets no PO (Not Ready).',
+                  '19-Oct ASN0003 received; CO-14104 cancelled although in case 3, its pcs go to CO-14108 in G-System (6, PO_MAPPED N, no ASN). '
+                  'The D/S team moves case 3 from CO-14104 to CO-14108 in Change Order Number (XD11); history in TB_H_CROSSDOCK_ORDER_CHANGE.'],
         'steps': [
-            ('1. 15-Oct XD08: first replication', 'TB_R_H0253_ORDER_CONTROL_PRE', [
-                ('new', h('CO-14101', VN, '0000001', 'PART-X', 6), [], 'Source status 7'),
-                ('new', h('CO-14102', TH, '0000001', 'PART-X', 6, cust='9722D10'), [], 'Source status 7')]),
-            ('2. 15-Oct D/S holds CO-14102; supplier creates and submits ASN0001 (CO-14101)', 'TB_R_INSTRUCTION', [
-                ('new', [1, 1, 1, 'PART-X', VN, 'CO-14101', '0000001', 6, 'PO-DMY-09051', 'MF-DMY-09051', '0001', 'ASN0001', 'C-0001-01'])]),
+            ('1. 16-Oct XD08: first replication', 'TB_R_H0253_ORDER_CONTROL_PRE', [
+                ('new', h('CO-14101', VN, '0000001', 'PART-X', 6, od='2026-10-15'), [], 'Source status 7'),
+                ('new', h('CO-14102', TH, '0000001', 'PART-X', 6, od='2026-10-15', cust=TH), [], 'Source status 7')]),
+            ('2. 16-Oct D/S holds CO-14102; supplier creates and submits ASN0001 (CO-14101)', 'TB_R_INSTRUCTION', [
+                ('new', [1, 1, 1, 'PART-X', VN, 'CO-14101', '0000001', 6, 'PO-DMY-09011', 'MF-DMY-09011', '0001', 'ASN0001', 'C-0001-01'])]),
             ('', 'TB_R_H0253_ORDER_CONTROL_PRE', [
-                ('upd', h('CO-14101', VN, '0000001', 'PART-X', 6, mapped='Y'), ['PO_MAPPED_FLAG'], 'In ASN0001'),
-                ('upd', h('CO-14102', TH, '0000001', 'PART-X', 6, hold='Y', cust='9722D10'), ['HOLD_FLAG'], 'Hold by D/S (screen)')]),
-            ('3. 16-Oct XD08: source CO-14101 → 6, CO-14102 → 2, CO-14103 new', 'TB_R_H0253_ORDER_CONTROL_PRE', [
-                ('upd', h('CO-14101', VN, '0000001', 'PART-X', 6, mapped='Y', upd='6'), ['UPD_STATUS'], 'Received in G-System; ORDER_STATUS stays 7'),
-                ('upd', h('CO-14102', TH, '0000001', 'PART-X', 6, hold='Y', upd='2', cust='9722D10'), ['UPD_STATUS'], 'Cancelled, no ASN: ignored (PO_MAPPED_FLAG stays N)'),
-                ('new', h('CO-14103', TH, '0000001', 'PART-X', 6, od='2026-10-16', cust='9722D10'), [], 'Source status 7')]),
-            ('4. 16-Oct CO-14103 → ASN00002', 'TB_R_INSTRUCTION', [
-                ('new', [2, 1, 1, 'PART-X', TH, 'CO-14103', '0000001', 6, 'PO-DMY-10052', 'MF-DMY-10052', '0001', 'ASN00002', 'C-0002-01'])]),
-            ('', 'TB_R_H0253_ORDER_CONTROL_PRE', [('upd', h('CO-14103', TH, '0000001', 'PART-X', 6, mapped='Y', od='2026-10-16', cust='9722D10'), ['PO_MAPPED_FLAG'])]),
-            ('5. 17-Oct XD08: CO-14103 → 6, CO-14104 and CO-14105 new; CO-14104 → ASN00003', 'TB_R_H0253_ORDER_CONTROL_PRE', [
-                ('upd', h('CO-14103', TH, '0000001', 'PART-X', 6, mapped='Y', upd='6', od='2026-10-16', cust='9722D10'), ['UPD_STATUS'], 'Received'),
-                ('new', h('CO-14104', TH, '0000001', 'PART-X', 6, od='2026-10-17', cust='9722D10')),
-                ('new', h('CO-14105', VN, '0000001', 'PART-X', 6, od='2026-10-17', cust='9722D10'))]),
-            ('', 'TB_R_INSTRUCTION', [
-                ('new', [3, 1, 1, 'PART-X', TH, 'CO-14104', '0000001', 6, 'PO-DMY-10053', 'MF-DMY-10053', '0001', 'ASN00003', 'C-0003-01'], [], 'CO-14105: no PO yet')]),
-            ('6. 18-Oct XD08: CO-14104 → 2 (in ASN00003), CO-14105 → 6', 'TB_R_H0253_ORDER_CONTROL_PRE', [
-                ('upd', h('CO-14104', TH, '0000001', 'PART-X', 6, mapped='Y', upd='2', od='2026-10-17', cust='9722D10'), ['UPD_STATUS'],
+                ('upd', h('CO-14101', VN, '0000001', 'PART-X', 6, mapped='Y', od='2026-10-15'), ['PO_MAPPED_FLAG'], 'In ASN0001'),
+                ('upd', h('CO-14102', TH, '0000001', 'PART-X', 6, hold='Y', od='2026-10-15', cust=TH), ['HOLD_FLAG'], 'Hold by D/S (screen); PO-DMY-09012 stays open')]),
+            ('3. 17-Oct XD08: source CO-14101 → 6, CO-14102 → 2, CO-14103 new', 'TB_R_H0253_ORDER_CONTROL_PRE', [
+                ('upd', h('CO-14101', VN, '0000001', 'PART-X', 6, mapped='Y', upd='6', od='2026-10-15'), ['UPD_STATUS'], 'Received in G-System; ORDER_STATUS stays 7'),
+                ('upd', h('CO-14102', TH, '0000001', 'PART-X', 6, hold='Y', upd='2', od='2026-10-15', cust=TH), ['UPD_STATUS'], 'Cancelled, no ASN: ignored (PO_MAPPED_FLAG stays N)'),
+                ('new', h('CO-14103', TH, '0000001', 'PART-X', 6, od='2026-10-16', cust=TH), [], 'Source status 7')]),
+            ('4. 17-Oct CO-14103 → ASN0002 (PO-DMY-09012)', 'TB_R_INSTRUCTION', [
+                ('new', [2, 1, 1, 'PART-X', TH, 'CO-14103', '0000001', 6, 'PO-DMY-09012', 'MF-DMY-09012', '0001', 'ASN0002', 'C-0002-01'])]),
+            ('', 'TB_R_H0253_ORDER_CONTROL_PRE', [('upd', h('CO-14103', TH, '0000001', 'PART-X', 6, mapped='Y', od='2026-10-16', cust=TH), ['PO_MAPPED_FLAG'])]),
+            ('5. 18-Oct XD08: CO-14103 → 6; CO-14104 … CO-14108 new (rows in scan order)', 'TB_R_H0253_ORDER_CONTROL_PRE', [
+                ('upd', h('CO-14103', TH, '0000001', 'PART-X', 6, mapped='Y', upd='6', od='2026-10-16', cust=TH), ['UPD_STATUS'], 'Received'),
+                ('new', h('CO-14105', VN, '0000001', 'PART-X', 6, od='2026-10-17')),
+                ('new', h('CO-14106', VN, '0000001', 'PART-X', 3, od='2026-10-17')),
+                ('new', h('CO-14107', VN, '0000001', 'PART-X', 3, od='2026-10-17')),
+                ('new', h('CO-14104', TH, '0000001', 'PART-X', 6, od='2026-10-17', cust=TH), [], 'Customer code 9722D10 after 9715300'),
+                ('new', h('CO-14108', TH, '0000001', 'PART-X', 6, od='2026-10-18', cust=TH), [], 'Order date 18-Oct')]),
+            ('6. 18-Oct [Search] → XD09 (unit 17-Oct: 3 cases Ready; unit 18-Oct: no PO)', '#TEMP_INSTRUCTION', tmp(
+                [[line('CO-14104', TH, 'PART-X', 6, cust=TH, od='2026-10-17'), line('CO-14105', VN, 'PART-X', 6, od='2026-10-17'),
+                  line('CO-14106', VN, 'PART-X', 3, od='2026-10-17'), line('CO-14107', VN, 'PART-X', 3, od='2026-10-17')],
+                 [line('CO-14108', TH, 'PART-X', 6, cust=TH, od='2026-10-18')]],
+                [['PO-DMY-09013', 'MF-DMY-09013', '0001', 6], ['PO-DMY-09014', 'MF-DMY-09014', '0001', 12]],
+                notes={('CO-14105', 1): 'Cases 1-3 ticked → ASN0003', ('CO-14108', 1): 'Not Ready (no PO left)'})),
+            ('7. 18-Oct ASN0003 = cases 1-3 (whole order date 17-Oct)', 'TB_R_INSTRUCTION', [
+                ('new', [3, 1, 1, 'PART-X', VN, 'CO-14105', '0000001', 6, 'PO-DMY-09013', 'MF-DMY-09013', '0001', 'ASN0003', 'C-0003-01']),
+                ('new', [4, 2, 1, 'PART-X', VN, 'CO-14106', '0000001', 3, 'PO-DMY-09014', 'MF-DMY-09014', '0001', 'ASN0003', 'C-0003-02']),
+                ('new', [5, 2, 2, 'PART-X', VN, 'CO-14107', '0000001', 3, 'PO-DMY-09014', 'MF-DMY-09014', '0001', 'ASN0003', 'C-0003-02']),
+                ('new', [6, 3, 1, 'PART-X', TH, 'CO-14104', '0000001', 6, 'PO-DMY-09014', 'MF-DMY-09014', '0001', 'ASN0003', 'C-0003-03'])]),
+            ('', 'TB_R_PRA_DAILY_ORDER_MAPPED', [
+                ('new', ['PO-DMY-09013', 'MF-DMY-09013', '0001', 'PART-X', 6, 6]),
+                ('new', ['PO-DMY-09014', 'MF-DMY-09014', '0001', 'PART-X', 12, 12])]),
+            ('', 'TB_R_H0253_ORDER_CONTROL_PRE', [
+                ('upd', h('CO-14105', VN, '0000001', 'PART-X', 6, mapped='Y', od='2026-10-17'), ['PO_MAPPED_FLAG']),
+                ('upd', h('CO-14106', VN, '0000001', 'PART-X', 3, mapped='Y', od='2026-10-17'), ['PO_MAPPED_FLAG']),
+                ('upd', h('CO-14107', VN, '0000001', 'PART-X', 3, mapped='Y', od='2026-10-17'), ['PO_MAPPED_FLAG']),
+                ('upd', h('CO-14104', TH, '0000001', 'PART-X', 6, mapped='Y', od='2026-10-17', cust=TH), ['PO_MAPPED_FLAG'])]),
+            ('8. 19-Oct XD08: ASN0003 received, CO-14104 → 2 (in case 3), CO-14108 → 6', 'TB_R_H0253_ORDER_CONTROL_PRE', [
+                ('upd', h('CO-14105', VN, '0000001', 'PART-X', 6, mapped='Y', upd='6', od='2026-10-17'), ['UPD_STATUS'], 'Received'),
+                ('upd', h('CO-14106', VN, '0000001', 'PART-X', 3, mapped='Y', upd='6', od='2026-10-17'), ['UPD_STATUS'], 'Received'),
+                ('upd', h('CO-14107', VN, '0000001', 'PART-X', 3, mapped='Y', upd='6', od='2026-10-17'), ['UPD_STATUS'], 'Received'),
+                ('upd', h('CO-14104', TH, '0000001', 'PART-X', 6, mapped='Y', upd='2', od='2026-10-17', cust=TH), ['UPD_STATUS'],
                  'Cancel after ASN: LOG5, listed in XD11; ASN not changed'),
-                ('upd', h('CO-14105', VN, '0000001', 'PART-X', 6, upd='6', od='2026-10-17', cust='9722D10'), ['UPD_STATUS'],
-                 'Received without ASN (allocated by G-System): candidate')]),
-            ('7. 18-Oct XD11 Change Order Number: ASN00003 6 pcs → CO-14105', 'TB_R_INSTRUCTION', [
-                ('upd', [3, 1, 1, 'PART-X', VN, 'CO-14105', '0000001', 6, 'PO-DMY-10053', 'MF-DMY-10053', '0001', 'ASN00003', 'C-0003-01'],
-                 ['DESTINATION_CD', 'CUSTOMER_ORDER_NO'], 'Whole row moved; case, PO and ASN not changed')]),
+                ('upd', h('CO-14108', TH, '0000001', 'PART-X', 6, upd='6', od='2026-10-18', cust=TH), ['UPD_STATUS'],
+                 'Received without ASN (pcs of case 3 allocated by G-System): candidate')]),
+            ('9. 19-Oct XD11 Change Order Number: ASN0003 case 3 → CO-14108', 'TB_R_INSTRUCTION', [
+                ('upd', [6, 3, 1, 'PART-X', TH, 'CO-14108', '0000001', 6, 'PO-DMY-09014', 'MF-DMY-09014', '0001', 'ASN0003', 'C-0003-03'],
+                 ['CUSTOMER_ORDER_NO'], 'Whole row moved; case, PO and ASN not changed')]),
             ('', 'TB_R_H0253_ORDER_CONTROL_PRE', [
-                ('ref', h('CO-14104', TH, '0000001', 'PART-X', 6, mapped='Y', upd='2', od='2026-10-17', cust='9722D10'), [], 'Not changed (PO_MAPPED_FLAG stays Y)'),
-                ('upd', h('CO-14105', VN, '0000001', 'PART-X', 6, mapped='Y', upd='6', od='2026-10-17', cust='9722D10'), ['PO_MAPPED_FLAG'], 'PO and ASN through ASN00003')]),
-            ('', 'TB_H_CROSSDOCK_ORDER_CHANGE', [('new', [1, 'ASN00003', 'C-0003-01', 'PART-X', 'CO-14104', '0000001', 'CO-14105', VN, 6, 3, 3])]),
+                ('ref', h('CO-14104', TH, '0000001', 'PART-X', 6, mapped='Y', upd='2', od='2026-10-17', cust=TH), [], 'Not changed (PO_MAPPED_FLAG stays Y)'),
+                ('upd', h('CO-14108', TH, '0000001', 'PART-X', 6, mapped='Y', upd='6', od='2026-10-18', cust=TH), ['PO_MAPPED_FLAG'], 'PO and ASN through ASN0003')]),
+            ('', 'TB_H_CROSSDOCK_ORDER_CHANGE', [('new', [1, 'ASN0003', 'C-0003-03', 'PART-X', 'CO-14104', '0000001', 'CO-14108', TH, 6, 6, 6])]),
         ]},
     {
         'id': 'SIM-6', 'title': 'Draft released by XD08; partial cancel after ASN replaced by two lines', 'flow': 'BPF F2 / F4',
