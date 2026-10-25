@@ -63,9 +63,9 @@ interface History {
 }
 
 const LINES: Line[] = [
-  // simulasi_asn.xlsx: CO-14104 (TH) cancelled after ASN00003, CO-14105 (VN) received in G-System (UPD_STATUS 6)
+  // simulasi_asn.xlsx: CO-14104 (TH) cancelled after ASN0003 (case 3), CO-14108 (TH) received in G-System (UPD_STATUS 6)
   { custOrderNo: 'CO-14104', orderDt: '2026-10-17', destCd: TH, partNo: 'PART-X', qty: 6, updStatus: '2', poMapped: true, serialNo: '0000001' },
-  { custOrderNo: 'CO-14105', orderDt: '2026-10-17', destCd: VN, partNo: 'PART-X', qty: 6, updStatus: '6', poMapped: false, serialNo: '0000001' },
+  { custOrderNo: 'CO-14108', orderDt: '2026-10-18', destCd: TH, partNo: 'PART-X', qty: 6, updStatus: '6', poMapped: false, serialNo: '0000001' },
   // partial cancel: CO-B 8 pcs in ASN00020 (case 1: 4, case 2: 4); G-System cancels 6 (split serial 0000002, status 2)
   { custOrderNo: 'CO-B', orderDt: '2026-10-16', destCd: VN, partNo: 'PART-Y', qty: 6, updStatus: '2', poMapped: true, serialNo: '0000002' },
   { custOrderNo: 'CO-E', orderDt: '2026-10-16', destCd: PH, partNo: 'PART-Y', qty: 4, updStatus: '6', poMapped: false, serialNo: '0000001' },
@@ -76,7 +76,10 @@ const LINES: Line[] = [
 ];
 
 const SLICES: Slice[] = [
-  { id: 31, asnNo: 'ASN00003', caseNo: 'C-00003-01', caseSeq: 1, partNo: 'PART-X', custOrderNo: 'CO-14104', serialNo: '0000001', destCd: TH, qty: 6, poNo: 'PO-DMY-10031' },
+  { id: 3, asnNo: 'ASN0003', caseNo: 'C-0003-01', caseSeq: 1, partNo: 'PART-X', custOrderNo: 'CO-14105', serialNo: '0000001', destCd: VN, qty: 6, poNo: 'PO-DMY-09013' },
+  { id: 4, asnNo: 'ASN0003', caseNo: 'C-0003-02', caseSeq: 2, partNo: 'PART-X', custOrderNo: 'CO-14106', serialNo: '0000001', destCd: VN, qty: 3, poNo: 'PO-DMY-09014' },
+  { id: 5, asnNo: 'ASN0003', caseNo: 'C-0003-02', caseSeq: 2, partNo: 'PART-X', custOrderNo: 'CO-14107', serialNo: '0000001', destCd: VN, qty: 3, poNo: 'PO-DMY-09014' },
+  { id: 6, asnNo: 'ASN0003', caseNo: 'C-0003-03', caseSeq: 3, partNo: 'PART-X', custOrderNo: 'CO-14104', serialNo: '0000001', destCd: TH, qty: 6, poNo: 'PO-DMY-09014' },
   { id: 41, asnNo: 'ASN00020', caseNo: 'C-00020-01', caseSeq: 1, partNo: 'PART-Y', custOrderNo: 'CO-A', serialNo: '0000001', destCd: VN, qty: 2, poNo: 'PO-DMY-10041' },
   { id: 42, asnNo: 'ASN00020', caseNo: 'C-00020-01', caseSeq: 1, partNo: 'PART-Y', custOrderNo: 'CO-B', serialNo: '0000001', destCd: VN, qty: 4, poNo: 'PO-DMY-10041' },
   { id: 43, asnNo: 'ASN00020', caseNo: 'C-00020-02', caseSeq: 2, partNo: 'PART-Y', custOrderNo: 'CO-B', serialNo: '0000001', destCd: VN, qty: 4, poNo: 'PO-DMY-10041' },
@@ -85,7 +88,7 @@ const SLICES: Slice[] = [
 ];
 
 const OPEN: Open[] = [
-  { key: 'ASN00003|CO-14104', asnNo: 'ASN00003', partNo: 'PART-X', custOrderNo: 'CO-14104', serialNo: '0000001', destCd: TH, cancelQty: 6 },
+  { key: 'ASN0003|CO-14104', asnNo: 'ASN0003', partNo: 'PART-X', custOrderNo: 'CO-14104', serialNo: '0000001', destCd: TH, cancelQty: 6 },
   { key: 'ASN00020|CO-B', asnNo: 'ASN00020', partNo: 'PART-Y', custOrderNo: 'CO-B', serialNo: '0000002', destCd: VN, cancelQty: 6 },
   { key: 'ASN00031|CO-14120', asnNo: 'ASN00031', partNo: 'PART-Z', custOrderNo: 'CO-14120', serialNo: '0000001', destCd: PH, cancelQty: 6 },
 ];
