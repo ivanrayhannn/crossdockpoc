@@ -112,7 +112,9 @@ export const H0253: InstrLine[] = [
   ...lines('2026-10-13', 'PART-D', [['CO-13007', VN, 6], ['CO-13008', TH, 4], ['CO-13009', TH, 2]]),
 ];
 
-/** Crossdock PO part of the Pra Daily Order (manifest with CROSS_DOCK_FLAG = 'X'); released on poDate. */
+/** Crossdock PO part of the Pra Daily Order (manifest with CROSS_DOCK_FLAG = 'X'); released on poDate.
+ * Business logic: one PO per Part Number per Customer Order Date, PO date = order date + 1, qty = total order qty of all destinations;
+ * a lower qty is an abnormality and the rest comes in a split PO later. */
 export interface Po {
   poNo: string;
   manifestNo: string;
@@ -120,16 +122,22 @@ export interface Po {
   partNo: string;
   qty: number;
   poDate: string;
+  /** Customer Order Date the PO is for. */
+  orderDt: string;
+  /** Split PO: the rest of a short PO. */
+  split?: boolean;
 }
 
 export const POS: Po[] = [
-  { poNo: 'PO-DMY-09000', manifestNo: 'MF-DMY-09000', manifestItemNo: '0001', partNo: 'PART-A', qty: 12, poDate: '2026-10-13' },
-  { poNo: 'PO-DMY-09011', manifestNo: 'MF-DMY-09011', manifestItemNo: '0001', partNo: 'PART-A', qty: 24, poDate: '2026-10-15' },
-  { poNo: 'PO-DMY-10011', manifestNo: 'MF-DMY-10011', manifestItemNo: '0001', partNo: 'PART-A', qty: 6, poDate: '2026-10-16' },
-  { poNo: 'PO-DMY-09021', manifestNo: 'MF-DMY-09021', manifestItemNo: '0001', partNo: 'PART-B', qty: 20, poDate: '2026-10-15' },
-  { poNo: 'PO-DMY-10021', manifestNo: 'MF-DMY-10021', manifestItemNo: '0001', partNo: 'PART-B', qty: 10, poDate: '2026-10-16' },
-  { poNo: 'PO-DMY-09031', manifestNo: 'MF-DMY-09031', manifestItemNo: '0001', partNo: 'PART-C', qty: 18, poDate: '2026-10-14' },
-  { poNo: 'PO-DMY-09041', manifestNo: 'MF-DMY-09041', manifestItemNo: '0001', partNo: 'PART-D', qty: 12, poDate: '2026-10-14' },
+  { poNo: 'PO-DMY-09000', manifestNo: 'MF-DMY-09000', manifestItemNo: '0001', partNo: 'PART-A', qty: 12, poDate: '2026-10-13', orderDt: '2026-10-12' },
+  // PART-A 14-Oct: order 30, PO 24 (short) → split PO 6 the next day
+  { poNo: 'PO-DMY-09011', manifestNo: 'MF-DMY-09011', manifestItemNo: '0001', partNo: 'PART-A', qty: 24, poDate: '2026-10-15', orderDt: '2026-10-14' },
+  { poNo: 'PO-DMY-10011', manifestNo: 'MF-DMY-10011', manifestItemNo: '0001', partNo: 'PART-A', qty: 6, poDate: '2026-10-16', orderDt: '2026-10-14', split: true },
+  // PART-B 14-Oct: order 30, PO 20 (short) → split PO 10 the next day
+  { poNo: 'PO-DMY-09021', manifestNo: 'MF-DMY-09021', manifestItemNo: '0001', partNo: 'PART-B', qty: 20, poDate: '2026-10-15', orderDt: '2026-10-14' },
+  { poNo: 'PO-DMY-10021', manifestNo: 'MF-DMY-10021', manifestItemNo: '0001', partNo: 'PART-B', qty: 10, poDate: '2026-10-16', orderDt: '2026-10-14', split: true },
+  { poNo: 'PO-DMY-09031', manifestNo: 'MF-DMY-09031', manifestItemNo: '0001', partNo: 'PART-C', qty: 18, poDate: '2026-10-14', orderDt: '2026-10-13' },
+  { poNo: 'PO-DMY-09041', manifestNo: 'MF-DMY-09041', manifestItemNo: '0001', partNo: 'PART-D', qty: 12, poDate: '2026-10-14', orderDt: '2026-10-13' },
 ];
 
 export const BUSINESS_DATES = ['2026-10-14', '2026-10-15', '2026-10-16'];
@@ -190,6 +198,23 @@ export interface Unit {
   /** Some qty of the unit is already in a submitted ASN. */
   sent: boolean;
   status: UnitStatus;
+  /** PO check of the Customer Order Date (business logic 1-2). */
+  poCheck: PoCheck;
+}
+
+export interface PoCheck {
+  /** Total customer order qty of all destinations. */
+  orderQty: number;
+  /** Expected PO date (order date + 1). */
+  due: string;
+  /** Regular PO of the order date, released by the business date (null = not released yet). */
+  regular: Po | null;
+  /** Split POs released by the business date. */
+  splits: Po[];
+  /** Regular PO qty < order qty (abnormality). */
+  short: boolean;
+  /** Qty still without a released PO. */
+  missing: number;
 }
 
 export function unitKey(partNo: string, orderDt: string): string {
@@ -238,7 +263,8 @@ function cutCases(ls: InstrLine[], pos: { po: Po; open: number }[]): UnitCase[] 
 export function buildUnits(today: string, sentByLine: Record<string, number>, sentByPo: Record<string, number>, hold: Record<string, boolean> = {}): Unit[] {
   const units: Unit[] = [];
   for (const partNo of [...new Set(H0253.map((l) => l.partNo))]) {
-    const pos = POS.filter((p) => p.partNo === partNo && p.poDate <= today).sort((a, b) => a.poDate.localeCompare(b.poDate))
+    const released = POS.filter((p) => p.partNo === partNo && p.poDate <= today);
+    const pos = [...released].sort((a, b) => a.poDate.localeCompare(b.poDate) || a.poNo.localeCompare(b.poNo))
       .map((po) => ({ po, open: po.qty - (sentByPo[po.poNo] ?? 0) }));
     const partLines = H0253.filter((l) => l.partNo === partNo).sort((a, b) => scanKey(a).localeCompare(scanKey(b)));
     for (const orderDt of [...new Set(partLines.map((l) => l.orderDt))]) {
@@ -250,10 +276,18 @@ export function buildUnits(today: string, sentByLine: Record<string, number>, se
       const sent = all.some((l) => (sentByLine[l.id] ?? 0) > 0);
       const status: UnitStatus = !open.length ? 'created' : !ls.length ? 'hold' : readyCases === cases.length ? 'ready'
         : cases.some((c) => c.ready && c.cut) ? 'partial' : 'notReady';
+      const orderQty = all.reduce((a, l) => a + l.qty, 0);
+      const forDate = released.filter((p) => p.orderDt === orderDt);
+      const regular = forDate.find((p) => !p.split) ?? null;
+      const splits = forDate.filter((p) => p.split);
+      const poCheck: PoCheck = {
+        orderQty, due: addDays(orderDt, 1), regular, splits, short: !!regular && regular.qty < orderQty,
+        missing: Math.max(0, orderQty - forDate.reduce((a, p) => a + p.qty, 0)),
+      };
       units.push({
         key: unitKey(partNo, orderDt), partNo, supplier: all[0].supplier, orderDt, lines: ls, heldLines: open.filter((l) => hold[l.id]),
         qty: ls.reduce((a, l) => a + l.qty, 0), cases, caseCount: cases.length, readyCases,
-        validEnds: cases.filter((c) => c.ready && c.cut).map((c) => c.seq), sent, status,
+        validEnds: cases.filter((c) => c.ready && c.cut).map((c) => c.seq), sent, status, poCheck,
       });
     }
   }
