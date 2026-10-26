@@ -6,6 +6,16 @@ Sumber: UISS `XD09_UISS_Batch_MappingCustomerOrderPO.xlsx` (0.1 Initial Draft, 1
 - Tetap **on demand** dari [Search] di **XD10** (tidak ada scheduler). Sumber order dari **XD08** (status 7, HOLD_FLAG N, PO_MAPPED_FLAG N); qty PO terbuka = PO qty − MAPPED_QTY (TB_R_PRA_DAILY_ORDER_MAPPED).
 - Mapping sebenarnya tetap oleh [Create ASN] di XD10 (TB_R_INSTRUCTION).
 
+## Business Logic ASN (24–26 Oct; UISS Func Desc 4.0)
+1. Customer Order Date (D) → PO Date D+1: 1 PO per Part Number per Customer Order Date.
+2. Total customer order qty semua destinasi = PO qty. Kurang → abnormality (Short PO), sisanya di split PO; case tanpa PO menunggu.
+3. 1 line customer order bisa di beberapa ASN; receive terpisah → line di H0253 dipecah (SERIAL_NO baru), tiap bagian tetap terhubung ke ASN-nya (XD08, asumsi urutan receive = urutan ASN, TBC).
+4. PO_MAPPED_FLAG diisi oleh Create ASN (Y kalau seluruh line sudah di ASN).
+5. Case Ready dikirim sesuai CUT_FLAG (dari case 1 sampai cut).
+6. Per Part Number, Customer Order Date terlama dulu (tidak boleh loncat); case Not Ready di order date lama menahan order date berikutnya; line hold tidak dihitung.
+
+Contoh lengkap: `deliverables/simulasi_asn_rev.xlsx` (16–22 Oct), prototype menu **ASN Simulation** dan **ASN Creation** (data sama).
+
 ## Keputusan 19-Oct
 - Jumlah case per destinasi = qty / pcs/case (selalu kelipatan pcs/case). PO Readiness dihitung per case. 1 case boleh berisi beberapa Customer Order dan beberapa PO dari destinasi yang sama.
 

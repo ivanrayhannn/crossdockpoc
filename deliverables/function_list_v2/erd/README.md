@@ -28,9 +28,9 @@ Dari `NSP_INSERT_TB_R_PRA_DAILY_ORDER_MANIFEST.sql` (54 kolom, 391 baris) dan `N
 |---|---|
 | `TB_R_DAILY_ORDER_MANIFEST` PK `SUB_MANIFEST_NO + MANIFEST_NO`, kolom `ASN_NO` | Satu ASN crossdock = beberapa baris manifest dengan `ASN_NO` sama |
 | `TB_R_DAILY_ORDER_PART` PK `SUB_MANIFEST_NO + MANIFEST_NO + MANIFEST_ITEM + CASE_NO` | Satu baris per manifest item x case |
-| `ASN_NO` VARCHAR(15), `CASE_NO` VARCHAR(9) | Format dummy `ASN-50221-261016-001` (20 karakter) di prototype / simulasi lebih panjang dari kolom asli: format asli mengikuti numbering existing |
+| `ASN_NO` VARCHAR(15), `CASE_NO` VARCHAR(9) | Prototype / simulasi memakai nomor contoh `ASN0001` / `C-0003-01`; format asli mengikuti numbering existing |
 | Dokumen DB vs export SQL Pra Manifest | Dokumen: `PO_DATE`, `ORDER_RELEASE_DT`, `RE_EXPORT_CD`; export: `PO_DT`, `MANIFEST_LAST_SEQ`, `CANCEL_*`, `SEND_*_MDI` (ERD memakai kolom export) |
 
 ## Update 23-Oct
 - `TB_R_CROSSDOCK_CANCEL_RESULT` diganti `TB_H_CROSSDOCK_ORDER_CHANGE` (riwayat Change Order Number XD11, DB Structure HIS-02). UPD_STATUS = NULL / 6 / 2.
-- SIM-5 = simulasi_asn.xlsx (15–18 Oct: UPD_STATUS, cancel setelah ASN → Change Order Number). SIM-6 = draft dilepas XD08 + partial cancel di ASN diganti 2 line (CO-E 4 + CO-F 2, baris dipecah).
+- SIM-5 = simulasi_asn_rev.xlsx (16–21 Oct: 1 PO per order date, Short PO + split PO, 4 destinasi, cancel baris tengah setelah ASN → Change Order Number). SIM-10 = 1 line di 2 ASN, pecah serial (CO-14115). SIM-6 = draft dilepas XD08 + partial cancel di ASN diganti 2 line (CO-E 4 + CO-F 2, baris dipecah).

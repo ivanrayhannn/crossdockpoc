@@ -7,6 +7,18 @@ Sumber: UISS `XD10_UISS_Screen_ASNCrossDockCreation.xlsx` (0.1 Initial Draft, 18
 - [Search] menjalankan **XD09**. Cancel order tidak di NSP: lihat **XD08** (UPD_STATUS, lepas draft) dan **XD11** (Change Order Number).
 - Tabel: #TEMP_INSTRUCTION, TB_R_INSTRUCTION, TB_R_PRA_DAILY_ORDER_MAPPED, TB_R_DAILY_ORDER_MANIFEST, TB_R_DAILY_ORDER_PART.
 
+## Business Logic ASN (24–26 Oct; UISS Operation 5.0)
+1. Customer Order Date (D) → PO Date D+1: 1 PO per Part Number per Customer Order Date.
+2. Total customer order qty semua destinasi = PO qty. Kurang → abnormality (Short PO), sisanya di split PO; case tanpa PO menunggu.
+3. 1 line customer order bisa di beberapa ASN; receive terpisah → line di H0253 dipecah (SERIAL_NO baru), tiap bagian tetap terhubung ke ASN-nya (XD08, asumsi urutan receive = urutan ASN, TBC).
+4. PO_MAPPED_FLAG diisi oleh Create ASN (Y kalau seluruh line sudah di ASN).
+5. Case Ready dikirim sesuai CUT_FLAG (dari case 1 sampai cut).
+6. Per Part Number, Customer Order Date terlama dulu (tidak boleh loncat); case Not Ready di order date lama menahan order date berikutnya; line hold tidak dihitung.
+
+Contoh lengkap: `deliverables/simulasi_asn_rev.xlsx` (16–22 Oct), prototype menu **ASN Simulation** dan **ASN Creation** (data sama).
+
+Sample Input UISS (A–G) = Create ASN 18-Oct dari simulasi_asn_rev (PART-X 17-Oct, case 1–4 → ASN0003); H–I = contoh aturan case yang dikirim bersama (V01 / T01 / V02).
+
 ## Keputusan 19-Oct
 - **Case:** per destinasi dipecah sesuai pcs/case (Vietnam 24 pcs, 6 pcs/case = 4 case). G-System rilis kelipatan pcs/case, jadi case selalu penuh. 1 case boleh berisi beberapa Customer Order dan beberapa PO (Supplier) dari destinasi yang sama; line yang tidak muat lanjut ke case berikutnya.
 - **Unit tetap utuh** (Part Number + Customer Order Date): kalau 1 line belum dapat PO, unit belum bisa di-ASN.

@@ -3638,26 +3638,27 @@
  ],
  "sample_sheet": {
   "title": "Sample Input",
-  "heading": "Sample Create ASN - ASN Cross Dock Creation (case packing and real mapping)",
+  "heading": "Sample Create ASN - ASN Cross Dock Creation (simulasi_asn_rev.xlsx, 18-Oct-2026)",
   "intro": [
-   "Dummy data. Supplier 50221 plant 1, Delivery Date 16-Oct-2026, Rit 1, Route SD01. Pcs/Case = 6 for PART-X and PART-Y.",
-   "The supplier ticks PART-X 14-Oct-2026 and PART-Y 14-Oct-2026 (both Ready) on the delivery plan and clicks [Create ASN].",
-   "Rule: per Part Number + Customer Order Date + destination the order lines (FIFO, then by PO) are packed in cases of pcs/case. A case can hold several customer orders and several POs of the same destination; a line that does not fit continues in the next case."
+   "Data of simulasi_asn_rev.xlsx (also in the prototype, business date 18-Oct). Supplier 50221 plant 1, Delivery Date 18-Oct-2026, Rit 1, Route SD01. PART-X, Pcs/Case = 6. ASN0001 (CO-14101) and ASN0002 (CO-14103) are already submitted, so the oldest open Customer Order Date is 17-Oct.",
+   "Order date 17-Oct: 4 destinations, 30 pcs; PO T0409013 (PO date 18-Oct) has only 18 pcs (Short PO, abnormality); the rest of T0409012 (6) is taken first (older PO date). The split PO T0409014 (12) comes on 19-Oct.",
+   "The supplier ticks the unit PART-X 17-Oct (cases 1-4, case 5 is Not Ready) and clicks [Create ASN]; the submit gives ASN0003."
   ],
   "sections": [
    {
-    "title": "A. Input: pre-mapping of the ticked units (XD09, #TEMP_INSTRUCTION, one row per customer order line x PO)",
+    "title": "A. Input: pre-mapping of XD09 (#TEMP_INSTRUCTION) in scan order: Customer Order Date, Customer Code, Customer Order No, …",
     "columns": [
+     "Sort Seq",
      "Customer Order No",
      "Detailed Item No",
      "Serial No",
-     "Part No",
      "Destination",
-     "Order Qty",
+     "Open Qty",
      "PO No",
-     "Manifest No",
-     "Manifest Item",
-     "Assigned Qty"
+     "Assigned Qty",
+     "Case",
+     "Cut",
+     "Status"
     ],
     "spans": [
      1,
@@ -3669,85 +3670,92 @@
      1,
      1,
      1,
+     1,
      1
     ],
     "rows": [
      [
-      "CO-14101",
-      "001",
-      "0000001",
-      "PART-X",
-      "9715310 (Vietnam)",
-      10,
-      "PO-DMY-09001",
-      "MF-DMY-09001",
-      "0001",
-      10
-     ],
-     [
-      "CO-14102",
-      "001",
-      "0000001",
-      "PART-X",
-      "9715310 (Vietnam)",
-      4,
-      "PO-DMY-09001",
-      "MF-DMY-09001",
-      "0001",
-      2
-     ],
-     [
-      "CO-14102",
-      "001",
-      "0000001",
-      "PART-X",
-      "9715310 (Vietnam)",
-      4,
-      "PO-DMY-09002",
-      "MF-DMY-09002",
-      "0001",
-      2
-     ],
-     [
-      "CO-14103",
-      "001",
-      "0000001",
-      "PART-X",
-      "9715310 (Vietnam)",
-      4,
-      "PO-DMY-09002",
-      "MF-DMY-09002",
-      "0001",
-      4
-     ],
-     [
-      "CO-14104",
-      "001",
-      "0000001",
-      "PART-X",
-      "9722D10 (Thailand)",
-      6,
-      "PO-DMY-09002",
-      "MF-DMY-09002",
-      "0001",
-      6
-     ],
-     [
+      1,
       "CO-14105",
       "001",
       "0000001",
-      "PART-Y",
+      "9715310 (Vietnam)",
+      6,
+      "T0409012",
+      6,
+      1,
+      "Y",
+      "6"
+     ],
+     [
+      2,
+      "CO-14106",
+      "001",
+      "0000001",
+      "9715310 (Vietnam)",
+      3,
+      "T0409013",
+      3,
+      2,
+      "N",
+      "6"
+     ],
+     [
+      3,
+      "CO-14107",
+      "001",
+      "0000001",
+      "9715310 (Vietnam)",
+      3,
+      "T0409013",
+      3,
+      2,
+      "Y",
+      "6"
+     ],
+     [
+      4,
+      "CO-14104",
+      "001",
+      "0000001",
+      "9722D10 (Thailand)",
+      6,
+      "T0409013",
+      6,
+      3,
+      "Y",
+      "6"
+     ],
+     [
+      5,
+      "CO-14109",
+      "001",
+      "0000001",
       "9811110 (Philippines)",
       6,
-      "PO-DMY-09003",
-      "MF-DMY-09003",
-      "0001",
-      6
+      "T0409013",
+      6,
+      4,
+      "Y",
+      "6"
+     ],
+     [
+      6,
+      "CO-14110",
+      "001",
+      "0000001",
+      "982220",
+      6,
+      "—",
+      6,
+      5,
+      "Y",
+      "7"
      ]
     ]
    },
    {
-    "title": "B. Input: PO parts before [Create ASN] (Pra Daily Order: manifest with CROSS_DOCK_FLAG = 'X', part data from TB_R_PRA_DAILY_ORDER_PART)",
+    "title": "B. Input: PO parts before [Create ASN] (Pra Daily Order: manifest with CROSS_DOCK_FLAG = 'X')",
     "columns": [
      "PO No",
      "Manifest No",
@@ -3768,90 +3776,81 @@
     ],
     "rows": [
      [
-      "PO-DMY-09001",
-      "MF-DMY-09001",
+      "T0409012",
+      "3126035912",
       "0001",
       "PART-X",
-      12,
-      0,
-      12
-     ],
-     [
-      "PO-DMY-09002",
-      "MF-DMY-09002",
-      "0001",
-      "PART-X",
-      12,
-      0,
-      12
-     ],
-     [
-      "PO-DMY-09003",
-      "MF-DMY-09003",
-      "0001",
-      "PART-Y",
       6,
       0,
       6
+     ],
+     [
+      "T0409013",
+      "3126035913",
+      "0001",
+      "PART-X",
+      18,
+      0,
+      18
      ]
     ]
    },
    {
-    "title": "C. Case packing (Vietnam 18 pcs = 3 cases, Thailand 6 pcs = 1 case, Philippines 6 pcs = 1 case)",
+    "title": "C. Supplier cases (6 pcs in scan order; CUT_FLAG Y = the ASN may stop after the case)",
     "columns": [
      "Case",
-     "Part No",
-     "Destination",
-     "Case Qty",
-     "Content (customer order qty (PO))"
+     "Qty",
+     "Content (customer order qty (PO))",
+     "CUT_FLAG",
+     "Status"
     ],
     "spans": [
      1,
      1,
-     2,
+     8,
      1,
-     6
+     2
     ],
     "rows": [
      [
       "Case 1",
-      "PART-X",
-      "9715310 (Vietnam)",
       6,
-      "CO-14101 6 (PO-DMY-09001)"
+      "CO-14105 6 (T0409012)",
+      "Y",
+      "Ready"
      ],
      [
       "Case 2",
-      "PART-X",
-      "9715310 (Vietnam)",
       6,
-      "CO-14101 4 (PO-DMY-09001) + CO-14102 2 (PO-DMY-09001)"
+      "CO-14106 3 (T0409013) + CO-14107 3 (T0409013)",
+      "Y",
+      "Ready"
      ],
      [
       "Case 3",
-      "PART-X",
-      "9715310 (Vietnam)",
       6,
-      "CO-14102 2 (PO-DMY-09002) + CO-14103 4 (PO-DMY-09002)"
+      "CO-14104 6 (T0409013)",
+      "Y",
+      "Ready"
      ],
      [
       "Case 4",
-      "PART-X",
-      "9722D10 (Thailand)",
       6,
-      "CO-14104 6 (PO-DMY-09002)"
+      "CO-14109 6 (T0409013)",
+      "Y",
+      "Ready"
      ],
      [
       "Case 5",
-      "PART-Y",
-      "9811110 (Philippines)",
       6,
-      "CO-14105 6 (PO-DMY-09003)"
+      "CO-14110 6 (no PO)",
+      "Y",
+      "Not Ready"
      ]
     ]
    },
    {
-    "title": "D. Result: rows inserted into TB_R_INSTRUCTION (one row per case x customer order line x PO; ASN_NO / CASE_NO filled on submit)",
+    "title": "D. Result: rows inserted into TB_R_INSTRUCTION (cases 1-4; ASN_NO / CASE_NO filled on submit)",
     "columns": [
      "INSTRUCTION_ID",
      "CASE_SEQ",
@@ -3894,140 +3893,100 @@
     ],
     "rows": [
      [
-      "INS-0001",
+      3,
       1,
       1,
       "PART-X",
-      "14-Oct-2026",
+      "17-Oct-2026",
       "9715310",
-      "CO-14101",
+      "CO-14105",
       "001",
       "0000001",
       6,
-      "PO-DMY-09001",
-      "MF-DMY-09001",
+      "T0409012",
+      "3126035912",
       "0001",
-      "16-Oct-2026",
+      "18-Oct-2026",
       "1",
       "SD01",
       "(NULL)",
       "(NULL)"
      ],
      [
-      "INS-0002",
+      4,
       2,
       1,
       "PART-X",
-      "14-Oct-2026",
+      "17-Oct-2026",
       "9715310",
-      "CO-14101",
+      "CO-14106",
       "001",
       "0000001",
-      4,
-      "PO-DMY-09001",
-      "MF-DMY-09001",
+      3,
+      "T0409013",
+      "3126035913",
       "0001",
-      "16-Oct-2026",
+      "18-Oct-2026",
       "1",
       "SD01",
       "(NULL)",
       "(NULL)"
      ],
      [
-      "INS-0003",
+      5,
       2,
       2,
       "PART-X",
-      "14-Oct-2026",
+      "17-Oct-2026",
       "9715310",
-      "CO-14102",
+      "CO-14107",
       "001",
       "0000001",
-      2,
-      "PO-DMY-09001",
-      "MF-DMY-09001",
+      3,
+      "T0409013",
+      "3126035913",
       "0001",
-      "16-Oct-2026",
+      "18-Oct-2026",
       "1",
       "SD01",
       "(NULL)",
       "(NULL)"
      ],
      [
-      "INS-0004",
+      6,
       3,
       1,
       "PART-X",
-      "14-Oct-2026",
-      "9715310",
-      "CO-14102",
-      "001",
-      "0000001",
-      2,
-      "PO-DMY-09002",
-      "MF-DMY-09002",
-      "0001",
-      "16-Oct-2026",
-      "1",
-      "SD01",
-      "(NULL)",
-      "(NULL)"
-     ],
-     [
-      "INS-0005",
-      3,
-      2,
-      "PART-X",
-      "14-Oct-2026",
-      "9715310",
-      "CO-14103",
-      "001",
-      "0000001",
-      4,
-      "PO-DMY-09002",
-      "MF-DMY-09002",
-      "0001",
-      "16-Oct-2026",
-      "1",
-      "SD01",
-      "(NULL)",
-      "(NULL)"
-     ],
-     [
-      "INS-0006",
-      4,
-      1,
-      "PART-X",
-      "14-Oct-2026",
+      "17-Oct-2026",
       "9722D10",
       "CO-14104",
       "001",
       "0000001",
       6,
-      "PO-DMY-09002",
-      "MF-DMY-09002",
+      "T0409013",
+      "3126035913",
       "0001",
-      "16-Oct-2026",
+      "18-Oct-2026",
       "1",
       "SD01",
       "(NULL)",
       "(NULL)"
      ],
      [
-      "INS-0007",
-      5,
+      7,
+      4,
       1,
-      "PART-Y",
-      "14-Oct-2026",
+      "PART-X",
+      "17-Oct-2026",
       "9811110",
-      "CO-14105",
+      "CO-14109",
       "001",
       "0000001",
       6,
-      "PO-DMY-09003",
-      "MF-DMY-09003",
+      "T0409013",
+      "3126035913",
       "0001",
-      "16-Oct-2026",
+      "18-Oct-2026",
       "1",
       "SD01",
       "(NULL)",
@@ -4054,31 +4013,31 @@
     "rows": [
      [
       "TB_R_H0253_ORDER_CONTROL_PRE",
-      "CO-14101 .. CO-14105 (detailed item 001, serial 0000001)",
+      "CO-14104, CO-14105, CO-14106, CO-14107, CO-14109 (whole line in the ASN)",
       "PO_MAPPED_FLAG",
       "N",
       "Y"
      ],
      [
-      "TB_R_PRA_DAILY_ORDER_MAPPED",
-      "PO-DMY-09001 / MF-DMY-09001 / 0001 / PART-X",
-      "MAPPED_QTY",
-      0,
-      12
+      "TB_R_H0253_ORDER_CONTROL_PRE",
+      "CO-14110 (case 5, not sent)",
+      "PO_MAPPED_FLAG",
+      "N",
+      "N"
      ],
      [
       "TB_R_PRA_DAILY_ORDER_MAPPED",
-      "PO-DMY-09002 / MF-DMY-09002 / 0001 / PART-X",
-      "MAPPED_QTY",
-      0,
-      12
-     ],
-     [
-      "TB_R_PRA_DAILY_ORDER_MAPPED",
-      "PO-DMY-09003 / MF-DMY-09003 / 0001 / PART-Y",
+      "T0409012 / 3126035912 / 0001 / PART-X",
       "MAPPED_QTY",
       0,
       6
+     ],
+     [
+      "TB_R_PRA_DAILY_ORDER_MAPPED",
+      "T0409013 / 3126035913 / 0001 / PART-X",
+      "MAPPED_QTY",
+      0,
+      18
      ]
     ]
    },
@@ -4095,7 +4054,7 @@
     "rows": [
      [
       "ASN No",
-      "ASN-50221-261016-001 (auto, assigned on submit)"
+      "ASN0003 (auto, assigned on submit)"
      ],
      [
       "Supplier · Plant",
@@ -4103,23 +4062,23 @@
      ],
      [
       "Delivery Date · Rit · Route",
-      "16-Oct-2026 · Rit 1 · SD01"
+      "18-Oct-2026 · Rit 1 · SD01"
      ],
      [
       "Delivery Qty",
-      "30 pcs"
+      "24 pcs"
      ],
      [
       "Cases",
-      "5 cases"
+      "4 cases"
      ],
      [
-      "Case 1 .. Case 5",
-      "Case Number, Part Number, Qty (6 each); the expand button shows the PO No, Manifest No, Manifest Item and PO Qty of the case (Case 2: CO-14101 + CO-14102 of PO-DMY-09001; Case 3: CO-14102 + CO-14103 of PO-DMY-09002)"
+      "Case 1 .. Case 4",
+      "Case Number, Part Number, Customer Order Date, Qty (6 each); the expand button shows the PO No, Manifest No, Manifest Item and PO Qty (Case 1: T0409012; Cases 2-4: T0409013)"
      ],
      [
       "[Submit ASN]",
-      "Confirmation: Submit ASN? 5 cases (30 pcs) will be created into ASN-50221-261016-001, delivery 16-Oct-2026 · Rit 1."
+      "Confirmation: Submit ASN? 4 cases (24 pcs) will be created into ASN0003, delivery 18-Oct-2026 · Rit 1."
      ]
     ]
    },
@@ -4138,27 +4097,32 @@
     "rows": [
      [
       "N1",
-      "Create ASN with PART-X 14-Oct and PART-Y 14-Oct ticked",
-      "Sections C to F: 5 cases, 7 rows in TB_R_INSTRUCTION, PO_MAPPED_FLAG Y, mapped qty added; Case List opens."
+      "Create ASN with the unit PART-X 17-Oct ticked (cases 1-4)",
+      "Sections C to F: 4 cases, 5 rows in TB_R_INSTRUCTION, PO_MAPPED_FLAG Y on 5 lines, mapped qty added; Case List opens."
      ],
      [
       "N2",
       "[Submit ASN] and [Yes, submit]",
-      "Submit ID handed to the submit process (5.7); ASN_NO and CASE_NO (existing sequence) are written back to the 7 rows; ASN status Created; PART-X / PART-Y 14-Oct are no longer listed."
+      "Submit ID handed to the submit process (5.7); ASN0003 and CASE_NO are written back to the 5 rows; only case 5 (CO-14110, Not Ready) stays in the delivery plan."
      ],
      [
       "N3",
       "[Back] / [Cancel] on the Case List",
-      "The 7 rows are deleted from TB_R_INSTRUCTION, PO_MAPPED_FLAG back to N, MAPPED_QTY back to 0; the units are listed again as Ready."
+      "The 5 rows are deleted from TB_R_INSTRUCTION, PO_MAPPED_FLAG back to N, MAPPED_QTY back to 0; the unit is listed again."
+     ],
+     [
+      "N4",
+      "19-Oct: split PO T0409014 released",
+      "Case 5 (CO-14110) is Ready → ASN0004; order date 18-Oct (3 destinations) → ASN0005."
      ],
      [
       "E1",
-      "The D/S team holds Thailand of PART-X 14-Oct after the supplier ticked it",
-      "MSG8; the whole create fails (also PART-Y), nothing is inserted, the delivery plan is refreshed and all units are unticked."
+      "The D/S team holds Thailand (CO-14104) after the supplier ticked the unit",
+      "MSG8; the whole create fails, nothing is inserted, the delivery plan is refreshed and all units are unticked."
      ],
      [
       "E2",
-      "PART-X 14-Oct is no longer Ready (e.g. a PO was changed) when [Create ASN] is clicked",
+      "The unit is no longer Ready when [Create ASN] is clicked",
       "MSG7; nothing is inserted; the delivery plan is refreshed."
      ],
      [
@@ -4168,13 +4132,18 @@
      ],
      [
       "E4",
+      "No ASN yet on 22-Oct: the supplier wants order date 18-Oct first",
+      "Not possible: per Part Number the oldest Customer Order Date first (15-Oct, then 16-Oct, 17-Oct …); later dates are disabled (Wait: dd-Mon first)."
+     ],
+     [
+      "E5",
       "Database error during the insert",
       "Roll back: nothing is kept; error message on the screen and Log FAILED."
      ]
     ]
    },
    {
-    "title": "H. Case selection (decided 21-Oct): PART-A 14-Oct, all cases with PO (p1 24 + p2 6); one check box per supplier case; GROUP_SEQ is not shown on the screen (cases of the same GROUP_SEQ are ticked together); Content shown to the D/S team only",
+    "title": "H. Case selection rule (example of 21-Oct, not in simulasi_asn: PART-A 14-Oct V01 / T01 / V02, cases that belong together), all cases with PO (p1 24 + p2 6); one check box per supplier case; GROUP_SEQ is not shown on the screen (cases of the same GROUP_SEQ are ticked together); Content shown to the D/S team only",
     "columns": [
      "GROUP_SEQ (not shown)",
      "Case",

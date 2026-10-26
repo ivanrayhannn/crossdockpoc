@@ -6,7 +6,7 @@ const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
 const pg = await b.newPage({ viewport: { width: 1700, height: 1000 }, deviceScaleFactor: 2 });
 await pg.goto(url + '#/bpf'); await pg.waitForTimeout(800);
 await pg.getByLabel('Names').selectOption('doc');
-for (const id of ['F1', 'F2', 'F3']) {
+for (const id of ['F1', 'F2', 'F4']) {
   await pg.getByRole('button', { name: new RegExp(`^${id} `) }).click(); await pg.waitForTimeout(300);
   await pg.locator('#bpf-diagram').screenshot({ path: `${dir}/${id}.png` });
 }
