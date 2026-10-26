@@ -20,7 +20,7 @@ Sumber: UISS `XD11_UISS_Screen_ChangeOrderNumber.xlsx` (0.1 Initial Draft). Sub 
 5. Re-check di transaksi yang sama: kandidat yang sudah dipakai di sesi lain → MSG4, tidak ada yang disimpan.
 
 ## Contoh
-- simulasi_asn.xlsx 19-Oct: CO-14104 (TH 6) di case 3 ASN0003 di-cancel → 6 pcs case C-0003-03 pindah ke **CO-14108** (TH 6, UPD 6).
+- simulasi_asn.xlsx: CO-14104 (TH 6, baris tengah) di case 3 ASN0003 di-cancel 19-Oct → 21-Oct 6 pcs case C-0003-03 pindah ke **CO-14111** (TH 6, UPD 6).
 - Partial cancel: CO-B 6 dari 8 pcs di ASN00020 → **CO-E 4 + CO-F 2** (dua line, destinasi PH dan VN).
 
 ## Pesan

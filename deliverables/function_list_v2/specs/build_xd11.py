@@ -86,7 +86,7 @@ def build():
                       {"from": "c", "to": "h", "label": "Yes"}, {"from": "h", "to": "l", "label": "row removed"}]}}],
         "screen_layout": [
             {"caption": "1. List Mode with the detail of ASN00020 (partial cancel of CO-B: 6 of 8 pcs; candidates CO-E 4 + CO-F 2 pre-ticked, oldest first)", "image": IMG + "x_01_change_order_list.png"},
-            {"caption": "2. Detail of ASN0003 (simulasi_asn.xlsx: CO-14104 cancelled after the ASN; candidate CO-14108, UPD_STATUS 6)", "image": IMG + "x_02_change_order_detail.png"},
+            {"caption": "2. Detail of ASN0003 (simulasi_asn.xlsx: CO-14104 cancelled after the ASN; candidate CO-14111, UPD_STATUS 6)", "image": IMG + "x_02_change_order_detail.png"},
             {"caption": "3. Confirmation", "image": IMG + "x_03_change_order_confirm.png"},
             {"caption": "4. After the change: row removed from the list, history written", "image": IMG + "x_04_change_order_after.png"}],
         "items": [
@@ -147,8 +147,9 @@ def build():
                 "message no. 4 is shown; the detail is refreshed."]},
             {"type": "heading", "text": "5.3 Example (simulasi_asn.xlsx)"},
             {"type": "bullets", "marker": "a.", "level": 2, "items": [
-                "18-Oct: all 3 cases of order date 17-Oct are sent in ASN0003 (case 3 = CO-14104, TH, 6 pcs). 19-Oct: CO-14104 is cancelled; CO-14108 (TH, 6 pcs, "
-                "order date 18-Oct) is received in G-System (UPD_STATUS 6, PO_MAPPED_FLAG N, no ASN). The D/S team moves the 6 pcs of case C-0003-03 to CO-14108.",
+                "18-Oct: cases 1-4 of order date 17-Oct are sent in ASN0003 (case 3 = CO-14104, TH, 6 pcs, a middle row). 19-Oct: CO-14104 is cancelled (waiting for a "
+                "candidate). 21-Oct: CO-14111 (TH, 6 pcs, order date 19-Oct) is received in G-System (UPD_STATUS 6, PO_MAPPED_FLAG N, no ASN). "
+                "The D/S team moves the 6 pcs of case C-0003-03 to CO-14111.",
                 "Partial cancel: CO-B 8 pcs in ASN00020 (case 1: 4, case 2: 4), 6 pcs cancelled: case 2 4 pcs + 2 of the 4 pcs of case 1 (row split) move to CO-E (4) and CO-F (2)."]}],
         "display_messages": [
             {"group": "List"},

@@ -23,5 +23,6 @@ Sumber: UISS `XD08_UISS_Batch_OrderControlInfoToNSP.xlsx` (0.1 Initial Draft). N
 |---|---|---|
 | 16-Oct | CO-14101 VN 6, CO-14102 TH 6 (status 7) | insert, UPD_STATUS NULL; CO-14101 → ASN0001, CO-14102 di-hold D/S |
 | 17-Oct | CO-14101 → 6, CO-14102 → 2, CO-14103 baru | CO-14101 UPD 6; CO-14102 UPD 2 (tanpa ASN → diabaikan, PO_MAPPED_FLAG tetap N); CO-14103 insert → ASN0002 |
-| 18-Oct | CO-14103 → 6; CO-14104 … CO-14107 (order date 17-Oct) dan CO-14108 (18-Oct) baru | CO-14103 UPD 6; case 1-3 order date 17-Oct (CO-14105, CO-14106 + CO-14107, CO-14104) semua → ASN0003; CO-14108 belum ada PO |
-| 19-Oct | CO-14104 → 2, CO-14105 … CO-14107 → 6, CO-14108 → 6 | CO-14104 UPD 2 padahal di ASN0003 case 3 → muncul di XD11; CO-14108 UPD 6, PO_MAPPED N, tanpa ASN → kandidat pengganti |
+| 18-Oct | CO-14103 → 6; order date 17-Oct baru: 4 destinasi, 30 pcs (PO hanya 18 = abnormal) | CO-14103 UPD 6; case 1-4 → ASN0003, case 5 (CO-14110) Not Ready |
+| 19-Oct | ASN0003 received; CO-14104 (baris tengah, case 3) → 2; split PO 12 | CO-14104 UPD 2 padahal di ASN0003 → muncul di XD11 (menunggu kandidat); CO-14110 → ASN0004 |
+| 21-Oct | CO-14111 (order date 19-Oct) → 6 | CO-14111 UPD 6, PO_MAPPED N, tanpa ASN → kandidat pengganti |
