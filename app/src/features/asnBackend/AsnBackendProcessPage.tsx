@@ -53,6 +53,7 @@ export function AsnBackendProcessPage() {
           <li>One customer order line can be in different ASNs. When T-System receives them separately, the line is split in H0253 (new serial); each part stays linked to its ASN (XD08). See Cancel Order Simulation, scenario 5.</li>
           <li>PO_MAPPED_FLAG is set by Create ASN (Y when the whole line is in the ASN).</li>
           <li>Ready cases are sent following the cut (CUT_FLAG): from case 1 up to a cut; the cases between two cuts are sent together.</li>
+          <li>Per Part Number the oldest Customer Order Date is sent first (no skip): a later date can be ticked only when every case of the earlier dates is in an ASN or ticked in the same ASN; a Not Ready case of an earlier date holds the later dates. ASN Creation shows <b>Wait: dd-Mon first</b>; try it with Start state <b>No ASN yet</b>.</li>
         </ol>
       </Section>
 
