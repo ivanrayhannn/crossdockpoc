@@ -101,7 +101,10 @@ BL = ["Customer Order Date (today, D) → PO Date (tomorrow, D+1): one PO per Pa
       "One customer order line can be in different ASNs (its cases split). When G-System receives them separately, the line is split in H0253 "
       "(new SERIAL_NO); each part stays linked to its ASN (XD08).",
       "PO_MAPPED_FLAG is set by [Create ASN] ('Y' when the whole line is in the ASN; a draft not submitted is released by XD08).",
-      "Ready cases of the delivery plan are sent following the cut (CUT_FLAG): the supplier selects from case 1 up to a cut; the cases between two cuts are sent together."]
+      "Ready cases of the delivery plan are sent following the cut (CUT_FLAG): the supplier selects from case 1 up to a cut; the cases between two cuts are sent together.",
+      "Per Part Number the oldest Customer Order Date is sent first (no skip): a later date can be selected only when every case of the earlier dates is in an "
+      "ASN or selected in the same ASN. A Not Ready case of an earlier date holds the later dates (receiving allocates to the oldest open order first). "
+      "Lines on hold are not counted."]
 
 
 def business_logic(fid, key, num):

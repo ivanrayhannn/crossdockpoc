@@ -31,13 +31,16 @@ function seed(): SubmittedAsn[] {
 
 const SEEDS = seed();
 let businessDate = '2026-10-18';
+/** Start state of the business date: 'workbook' = the ASNs of the earlier days of the workbook are submitted; 'none' = no ASN yet. */
+export type StartState = 'workbook' | 'none';
+let startState: StartState = 'workbook';
 let created: SubmittedAsn[] = [];
 let asns: SubmittedAsn[] = [];
 const listeners = new Set<() => void>();
 
 /** ASNs visible on the business date: those of the workbook created before it, and those created in this session. */
 function refresh(): void {
-  asns = [...created, ...SEEDS.filter((a) => a.businessDate < businessDate).reverse()];
+  asns = [...created, ...SEEDS.filter((a) => startState === 'workbook' && a.businessDate < businessDate).reverse()];
   listeners.forEach((l) => l());
 }
 refresh();
@@ -52,6 +55,17 @@ export function setBusinessDate(d: string): void {
   businessDate = d;
   created = [];
   refresh();
+}
+
+/** Start state of the prototype; ASNs created in the session are dropped. */
+export function setStartState(s: StartState): void {
+  startState = s;
+  created = [];
+  refresh();
+}
+
+export function useStartState(): StartState {
+  return useSyncExternalStore(subscribe, () => startState);
 }
 
 function subscribe(l: () => void): () => void {

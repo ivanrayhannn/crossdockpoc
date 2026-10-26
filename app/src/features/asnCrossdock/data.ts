@@ -264,7 +264,8 @@ function cutCases(ls: InstrLine[], pos: { po: Po; open: number }[]): UnitCase[] 
 
 /** XD09 [Search]: open qty (order qty - qty in submitted ASNs) of the lines not on hold, in scan order, pre-mapped to the POs released
  * by the business date (open PO qty = PO qty - qty in submitted ASNs), cut into supplier cases. Units of a part take the POs oldest date first. */
-export function buildUnits(today: string, sentByLine: Record<string, number>, sentByPo: Record<string, number>, hold: Record<string, boolean> = {}): Unit[] {
+export function buildUnits(today: string, sentByLine: Record<string, number>, sentByPo: Record<string, number>, hold: Record<string, boolean> = {},
+  noAsn = false): Unit[] {
   const units: Unit[] = [];
   for (const partNo of [...new Set(H0253.map((l) => l.partNo))]) {
     const released = POS.filter((p) => p.partNo === partNo && p.poDate <= today);
@@ -275,7 +276,8 @@ export function buildUnits(today: string, sentByLine: Record<string, number>, se
     for (const orderDt of [...new Set(partLines.map((l) => l.orderDt))]) {
       const all = partLines.filter((l) => l.orderDt === orderDt);
       // lines with UPD_STATUS (changed in G-System) are not taken
-      const open = all.filter((l) => !(l.upd && l.upd.date <= today)).map((l) => ({ ...l, qty: l.qty - (sentByLine[l.id] ?? 0) })).filter((l) => l.qty > 0);
+      // without any ASN nothing can be received in G-System: only the cancels (status 2) apply
+      const open = all.filter((l) => !(l.upd && l.upd.date <= today && (!noAsn || l.upd.status === '2'))).map((l) => ({ ...l, qty: l.qty - (sentByLine[l.id] ?? 0) })).filter((l) => l.qty > 0);
       const ls = open.filter((l) => !hold[l.id]);
       const cases = cutCases(ls, pos);
       const readyCases = cases.filter((c) => c.ready).length;

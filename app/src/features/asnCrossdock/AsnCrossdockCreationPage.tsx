@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { setBusinessDate, submitAsnBatch, useAsns, useBusinessDate } from './asnStore';
+import { setBusinessDate, setStartState, submitAsnBatch, useAsns, useBusinessDate, useStartState, type StartState } from './asnStore';
 import {
   asnNoFor, BUSINESS_DATES, buildCases, buildUnits, contentOf, DESTS, endBefore, endFor, groupCases, HOLD_INIT, niceDate, PCS_PER_CASE, poQtyOf,
   LOGIN_SUPPLIER, ritCyclesFor, sentQty, SUPPLIERS, type AsnCase, type InstrLine, type Unit, type UnitCase, type UnitStatus,
@@ -90,6 +90,7 @@ function poRowsOf(ls: InstrLine[]): PoRow[] {
 export function AsnCrossdockCreationPage() {
   const asns = useAsns();
   const today = useBusinessDate();
+  const startState = useStartState();
   const [viewAs, setViewAs] = useState<ViewAs>('sup');
   const isDs = viewAs === 'ds';
   const [deliveryDate, setDeliveryDate] = useState(today);
@@ -115,12 +116,24 @@ export function AsnCrossdockCreationPage() {
 
   const rits = ritCyclesFor(deliveryDate);
   const rit = rits.find((r) => r.no === ritNo) ?? rits[0];
-  const units = useMemo(() => { const s = sentQty(asns); return buildUnits(today, s.byLine, s.byPo, hold); }, [today, asns, hold]);
+  const units = useMemo(() => { const s = sentQty(asns); return buildUnits(today, s.byLine, s.byPo, hold, startState === 'none'); }, [today, asns, hold, startState]);
   // Units fully in an ASN and units without any pre-mapped case are not listed; a fully held unit only for the D/S team.
   // The supplier sees only its own Supplier Code + Plant; the D/S team (super admin) sees every supplier.
   const visible = units.filter((u) => (isDs || u.supplier === LOGIN_SUPPLIER) && u.status !== 'created'
     && (u.cases.some((c) => c.lines.some((l) => l.poNo)) || (isDs && u.status === 'hold')));
   const rows = visible.filter((u) => (!partFilter || u.partNo === partFilter) && (stFilter === 'all' || u.status === stFilter));
+  /** Oldest Customer Order Date first (per Part Number): the earlier unit that still has cases not in an ASN and not ticked. */
+  const blockerIn = (u: Unit, s: Record<string, Sel>): Unit | null =>
+    units.filter((e) => e.partNo === u.partNo && e.orderDt < u.orderDt && e.status !== 'created' && e.lines.length > 0)
+      .sort((a, b) => a.orderDt.localeCompare(b.orderDt))
+      .find((e) => s[e.key]?.end !== e.caseCount) ?? null;
+  const blocker = (u: Unit) => blockerIn(u, sel);
+  /** Drops the selection of units that are no longer allowed (an earlier date was unticked). */
+  const prune = (next: Record<string, Sel>): Record<string, Sel> => {
+    const out = { ...next };
+    for (const u of [...units].sort((a, b) => a.orderDt.localeCompare(b.orderDt))) if (out[u.key] && blockerIn(u, out)) delete out[u.key];
+    return out;
+  };
   const ticked = units.filter((u) => sel[u.key] !== undefined);
   const selected = ticked.filter((u) => u.validEnds.includes(sel[u.key].end));
   const cases = useMemo(() => buildCases(selected.map((u) => ({ unit: u, end: sel[u.key].end }))), [selected, sel]);
@@ -169,7 +182,7 @@ export function AsnCrossdockCreationPage() {
       else next[u.key] = { end, held: u.heldLines.length };
       setCutNote(null);
     }
-    setSel(next);
+    setSel(prune(next));
   };
 
   /** Unit check box: ticks all Ready cases (up to the last valid end) or unticks the unit. */
@@ -179,7 +192,7 @@ export function AsnCrossdockCreationPage() {
     if (sel[u.key]?.end === last) delete next[u.key];
     else next[u.key] = { end: last, held: u.heldLines.length };
     setCutNote(null);
-    setSel(next);
+    setSel(prune(next));
   };
 
   /** [Create ASN]: re-check the ticked units first; a hold made by the D/S team in the meantime makes the create fail. */
@@ -316,6 +329,13 @@ export function AsnCrossdockCreationPage() {
             {BUSINESS_DATES.map((d) => <option key={d} value={d}>{niceDate(d)}</option>)}
           </select>
         </div>
+        <div className="field" style={{ width: 200 }}>
+          <label>Start state (prototype)</label>
+          <select className="input" value={startState} title="ASNs of the earlier days of simulasi_asn_rev.xlsx, or no ASN created yet" onChange={(e) => { setStartState(e.target.value as StartState); changeToday(today); }}>
+            <option value="workbook">ASNs of the workbook</option>
+            <option value="none">No ASN yet</option>
+          </select>
+        </div>
       </div>
 
       {notice && (
@@ -406,8 +426,10 @@ export function AsnCrossdockCreationPage() {
               {rows.map((u) => {
                 const s = sel[u.key];
                 const last = u.validEnds[u.validEnds.length - 1];
-                const enabled = u.validEnds.length > 0;
-                const tip = u.status === 'notReady' ? `Not Ready: case 1 of ${u.partNo} / ${niceDate(u.orderDt)} is not assigned to a PO yet (${u.readyCases} of ${u.caseCount} cases assigned)`
+                const wait = blocker(u);
+                const enabled = u.validEnds.length > 0 && !wait;
+                const tip = wait ? `Send ${u.partNo} / ${niceDate(wait.orderDt)} first: the oldest Customer Order Date first (all its cases in an ASN or ticked)`
+                  : u.status === 'notReady' ? `Not Ready: case 1 of ${u.partNo} / ${niceDate(u.orderDt)} is not assigned to a PO yet (${u.readyCases} of ${u.caseCount} cases assigned)`
                   : u.status === 'hold' ? 'All destinations are on hold' : 'Tick all Ready cases of the unit';
                 return [
                   <tr key={u.key} style={{ background: u.status === 'notReady' ? 'var(--color-warn-bg, #fff8e6)' : undefined }}>
@@ -418,7 +440,7 @@ export function AsnCrossdockCreationPage() {
                     <td style={{ ...td, textAlign: 'right', fontWeight: 600 }}>{u.caseCount}</td>
                     <td style={{ ...td, textAlign: 'right', color: u.readyCases < u.caseCount ? 'var(--color-danger)' : undefined }}>{u.readyCases}</td>
                     <td style={{ ...td, textAlign: 'right' }}>{s ? `${s.end} case${s.end > 1 ? 's' : ''}` : '—'}</td>
-                    <td style={td} title={tip}><StatusChip s={u.status} />{u.poCheck.short && <span title={poCheckText(u)} style={{ marginLeft: 4 }}><Chip tone="warn">Short PO</Chip></span>}{u.sent && <div className="ax-muted">rest of an earlier ASN</div>}{u.heldLines.length > 0 && isDs && <div className="ax-muted">{new Set(u.heldLines.map((l) => l.destCd)).size} destination(s) on hold</div>}</td>
+                    <td style={td} title={tip}><StatusChip s={u.status} />{wait && <span title={tip} style={{ marginLeft: 4 }}><Chip tone="neutral">{`Wait: ${niceDate(wait.orderDt).slice(0, 6)} first`}</Chip></span>}{u.poCheck.short && <span title={poCheckText(u)} style={{ marginLeft: 4 }}><Chip tone="warn">Short PO</Chip></span>}{u.sent && <div className="ax-muted">rest of an earlier ASN</div>}{u.heldLines.length > 0 && isDs && <div className="ax-muted">{new Set(u.heldLines.map((l) => l.destCd)).size} destination(s) on hold</div>}</td>
                     <td style={td}>{isDs && <button className="btn btn-secondary" title="Destination detail (D/S team)" style={{ padding: '2px 8px', fontSize: 11 }} onClick={() => setOpen({ ...open, [u.key]: !open[u.key] })}>{open[u.key] ? '▾' : '▸'}</button>}</td>
                   </tr>,
                   u.cases.length > 0 && (
@@ -436,7 +458,7 @@ export function AsnCrossdockCreationPage() {
                               const remain = c.lines.filter((l) => !l.poNo).reduce((a, l) => a + l.qty, 0);
                               return (
                                 <tr key={c.seq} style={{ background: on ? 'var(--color-accent-100, #eef4fb)' : undefined, color: c.ready ? undefined : 'var(--color-neutral-600)' }}>
-                                  <td style={td}><input type="checkbox" checked={on} disabled={!c.ready || endFor(u, c.seq) === null} title={ctip} onChange={(e) => tickCase(u, c, e.target.checked)} /></td>
+                                  <td style={td}><input type="checkbox" checked={on} disabled={!c.ready || endFor(u, c.seq) === null || !!wait} title={wait ? tip : ctip} onChange={(e) => tickCase(u, c, e.target.checked)} /></td>
                                   <td style={{ ...td, fontFamily: 'var(--font-mono)', fontWeight: 600 }}>Case {c.seq}</td>
                                   <td style={td}>{c.qty}</td>
                                   <td style={{ ...td, color: remain ? 'var(--color-danger)' : undefined, fontWeight: remain ? 600 : undefined }}>{remain}</td>

@@ -91,6 +91,7 @@ Simulasi: menu prototype **ASN → Cancel Order Simulation**.
 3. 1 line customer order bisa ada di beberapa ASN; kalau receive-nya terpisah, line di H0253 ikut terpecah (SERIAL_NO baru) dan tiap bagian tetap terhubung ke ASN-nya.
 4. PO_MAPPED_FLAG diisi saat Create ASN.
 5. Case Ready di delivery plan dikirim sesuai CUT_FLAG (dari case 1 sampai cut; case di antara dua cut dikirim bersama).
+6. Per Part Number, Customer Order Date terlama dulu (tidak boleh loncat): order date berikutnya baru bisa dipilih kalau semua case order date sebelumnya sudah di ASN atau ikut dipilih di ASN yang sama. Case Not Ready di order date lama menahan order date berikutnya. Line yang di-hold tidak dihitung.
 
 ## Business Process Flow Level 2
 Lihat `bpf/README.md`: Excel `bpf/Crossdock_BPF_Level2.xlsx` (X = PIC, Y = timeline, sampai level tabel, abnormality AB01–AB16) dan menu prototype Common → Business Process Flow.
