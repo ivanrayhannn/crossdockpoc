@@ -1,9 +1,9 @@
-"""Decisions of 21-Oct-26: XD09 pre-mapping in the receiving scan order of G-System and ASN options (blocks of supplier cases).
-- Scan order of the H0253 lines = G-System allocation order with Allocation Priority = Customer Order Date: Allocation Priority, Customer Code,
+"""Decisions of 21-Oct-26: XD09 pre-mapping in the H0253 order and ASN options (blocks of supplier cases).
+- Order of the H0253 lines (ORDER BY) with Allocation Priority = Customer Order Date: Allocation Priority, Customer Code,
   Customer Order No, Customer Order Date, Customer Order Time,
   Destination Code, Detailed Item No, Serial No; per Part Number + Customer Order Date (unit), units by Customer Order Date ascending (way B).
-- The pcs are cut into supplier cases of PCS_CASE pcs in this order: a case can hold several lines and destinations. At receiving the scan
-  allocates the pcs in this fixed order and the warehouse packs 1 case = 1 destination, so an ASN may only stop after a case where the
+- The pcs are cut into supplier cases of PCS_CASE pcs in this order: a case can hold several lines and destinations. The warehouse packs
+  1 case = 1 destination, so an ASN may only stop after a case where the
   cumulative qty of every destination is a multiple of PCS_CASE (valid cut). The cases up to a valid cut form a block (ASN option).
 - A block is Ready when it and every earlier block have a PO: the supplier sends the first n Ready blocks, never skipping a block.
 - A line can be sent over several ASNs: PO_MAPPED_FLAG = 'Y' only when the whole line is in TB_R_INSTRUCTION; XD09 takes the open qty.
@@ -16,7 +16,7 @@ from scan_pack import pack  # noqa: E402
 
 H, I, PRA_M, PRA_P = 'TB_R_H0253_ORDER_CONTROL_PRE', 'TB_R_INSTRUCTION', 'TB_R_PRA_DAILY_ORDER_MANIFEST', 'TB_R_PRA_DAILY_ORDER_PART'
 FLAG_RULE = f"manifests with {PRA_M}.CROSS_DOCK_FLAG = 'X'; their part data from {PRA_P} (join MANIFEST_NO)"
-SCAN = ("1) Allocation Priority (= Customer Order Date), 2) Customer Code, 3) Customer Order No, 4) Customer Order Date, 5) Customer Order Time, 6) Destination Code, 7) Detailed Item No, 8) Serial No (order of G-System allocation)")
+SCAN = ("1) Allocation Priority (= Customer Order Date), 2) Customer Code, 3) Customer Order No, 4) Customer Order Date, 5) Customer Order Time, 6) Destination Code, 7) Detailed Item No, 8) Serial No")
 QUERY = """WITH MAPPED AS (SELECT CUSTOMER_CD, CUSTOMER_ORDER_NO, ORDER_DT, DESTINATION_CD, DETAILED_ITEM_NO, SERIAL_NO, SUM(QTY) AS MAPPED_QTY
                 FROM TB_R_INSTRUCTION
                 GROUP BY CUSTOMER_CD, CUSTOMER_ORDER_NO, ORDER_DT, DESTINATION_CD, DETAILED_ITEM_NO, SERIAL_NO),
@@ -53,14 +53,14 @@ def col(name, typ, desc, pk='', null='N'):
 
 TEMP_COLS = [
     col('INSTRUCTION_ID', 'BIGINT', 'Running number within the session', 'Y'),
-    col('SORT_SEQ', 'NUMBER(6)', 'Scan order of the line within the unit (refer 4.1)'),
-    col('CUSTOMER_CD', 'VARCHAR(7)', 'H0253.CUSTOMER_CD (scan key 1)'),
-    col('CUSTOMER_ORDER_NO', 'VARCHAR(8)', 'H0253.CUSTOMER_ORDER_NO (scan key 2)'),
-    col('ORDER_DT', 'DATE', 'Customer Order Date (H0253.ORDER_DT; unit and scan key 3)'),
-    col('ORDER_TIME', 'VARCHAR(6)', 'H0253.ORDER_TIME (scan key 4)'),
-    col('DESTINATION_CD', 'VARCHAR(7)', 'H0253.DESTINATION_CD (scan key 5)'),
-    col('DETAILED_ITEM_NO', 'VARCHAR(4)', 'H0253.DETAILED_ITEM_NO (scan key 6)'),
-    col('SERIAL_NO', 'VARCHAR(7)', 'H0253.SERIAL_NO (scan key 7)'),
+    col('SORT_SEQ', 'NUMBER(6)', 'H0253 order of the line within the unit (refer 4.1)'),
+    col('CUSTOMER_CD', 'VARCHAR(7)', 'H0253.CUSTOMER_CD (order key 1)'),
+    col('CUSTOMER_ORDER_NO', 'VARCHAR(8)', 'H0253.CUSTOMER_ORDER_NO (order key 2)'),
+    col('ORDER_DT', 'DATE', 'Customer Order Date (H0253.ORDER_DT; unit and order key 3)'),
+    col('ORDER_TIME', 'VARCHAR(6)', 'H0253.ORDER_TIME (order key 4)'),
+    col('DESTINATION_CD', 'VARCHAR(7)', 'H0253.DESTINATION_CD (order key 5)'),
+    col('DETAILED_ITEM_NO', 'VARCHAR(4)', 'H0253.DETAILED_ITEM_NO (order key 6)'),
+    col('SERIAL_NO', 'VARCHAR(7)', 'H0253.SERIAL_NO (order key 7)'),
     col('PART_NO', 'VARCHAR(15)', 'Order part number (H0253.SHIPPING_PART_NO)'),
     col('ORDER_STATUS', 'VARCHAR(1)', "H0253.ORDER_STATUS ('7' Cross Dock)"),
     col('CUST_ORDER_QTY', 'NUMBER(8)', 'Order status qty of the customer order line (H0253.ORDER_STATUS_QTY)'),
@@ -79,7 +79,7 @@ TEMP_COLS = [
     col('DOCK_CD', 'VARCHAR(TBD)', 'Dock code', null='Y'),
     col('ETD_ORI', 'DATE', 'Original ETD', null='Y'),
     col('PCS_CASE', 'NUMBER(4)', 'Pcs per case of the part (TB_M_PART_CANDIDATE.PCS_CASE)'),
-    col('CASE_SEQ', 'NUMBER(4)', 'Supplier case of the slice within the unit (PCS_CASE pcs in scan order)'),
+    col('CASE_SEQ', 'NUMBER(4)', 'Supplier case of the slice within the unit (PCS_CASE pcs in H0253 order)'),
     col('LINE_SEQ', 'NUMBER(4)', 'Sequence of the slice within the case'),
     col('CUM_DEST_QTY', 'NUMBER(8)', 'Cumulative qty of the destination within the unit up to this slice'),
     col('SEQ_QTY', 'NUMBER(4)', 'Fill of the warehouse case (1 case = 1 destination) of the destination after this slice: 1..PCS_CASE, starts again after PCS_CASE'),
@@ -88,7 +88,7 @@ TEMP_COLS = [
     col('CROSSDOCK_STATUS', 'VARCHAR(1)', "Status of the block: '6' Ready (the block and every earlier block have a PO) / '7' Not Ready"),
 ]
 TEMP_DESC = ("Temporary table of one Search run (session): the open qty of the customer order lines (H0253, order status 7, Hold Flag N) "
-             "in scan order, pre-mapped to the supplier POs (Pra Daily Order) and cut into supplier cases and blocks. One row per line x PO x "
+             "in H0253 order, pre-mapped to the supplier POs (Pra Daily Order) and cut into supplier cases and blocks. One row per line x PO x "
              "supplier case; PO_NO NULL for the qty still without a PO. Columns proposed.")
 
 # ---- sample of the user (21-Oct): date 1 = 14-Oct (customer order), PO p1 released 15-Oct, p2 released 16-Oct
@@ -107,17 +107,17 @@ def sample_rows(pos):
 
 SAMPLE = {
     'title': 'Sample Input',
-    'heading': 'Sample pre-mapping - scan order, supplier cases and ASN options (blocks)',
+    'heading': 'Sample pre-mapping - H0253 order, supplier cases and ASN options (blocks)',
     'intro': [
         "Part PART-A, 6 pcs/case, Customer Order Date 14-Oct-2026 (one unit). H0253 lines (order status 7, Hold Flag N): V01 VN 10, T01 TH 6, "
-        "V02 VN 14 (30 pcs). Dummy customer codes CUST-A / B / C give the scan order V01, T01, V02.",
+        "V02 VN 14 (30 pcs). Dummy customer codes CUST-A / B / C give the H0253 order V01, T01, V02.",
         f"PO parts ({FLAG_RULE}): p1 24 pcs (released 15-Oct), p2 6 pcs (released 16-Oct).",
         "Cut check after each case: cumulative VN / TH = case 1: 6 / 0 valid; case 2: 10 / 2 not valid (VN short 2, TH short 4); case 3: 12 / 6 valid; "
         "case 4: 18 / 6 valid; case 5: 24 / 6 valid. Blocks: 1 = case 1; 2 = cases 2-3; 3 = case 4; 4 = case 5."],
     'sections': [
         {'title': 'A. [Search] on 15-Oct: only p1 (24 pcs) is released', 'columns': SAMPLE_COLS, 'widths': SAMPLE_W,
          'rows': sample_rows([['p1', 'M-0001', '0001', 24]])},
-        {'title': 'B. ASN options on 15-Oct (the supplier chooses one; blocks are taken in order)', 'columns': ['Option', 'Blocks', 'Cases', 'Pcs', 'Scan order at receiving'],
+        {'title': 'B. ASN options on 15-Oct (the supplier chooses one; blocks are taken in order)', 'columns': ['Option', 'Blocks', 'Cases', 'Pcs', 'Content (H0253 order)'],
          'widths': [8, 10, 10, 8, 70],
          'rows': [['1', '1', '1', 6, 'VN 6 (V01)'],
                   ['2', '1-2', '1-3', 18, 'VN 6, VN 4, TH 2 | TH 4, VN 2: VN 12 and TH 6 close their cases'],
@@ -132,9 +132,9 @@ SAMPLE = {
         {'title': 'D. Result on the screen', 'columns': ['No', 'Scenario', 'Expected result'], 'widths': [6, 50, 70],
          'rows': [['N1', 'A: blocks 1-3 Ready, block 4 Not Ready', 'PART-A 14-Oct: Case Qty 5, PO Readiness 4, ASN Status Partially Ready; ASN options 1 / 3 / 4 cases.'],
                   ['N2', 'Supplier sends option 1 only', 'Next [Search]: open qty V01 4, T01 6, V02 14 is cut again from case 1 in the same order (same cases).'],
-                  ['N3', 'Block 2 without PO, block 3 with PO', 'Block 3 is Not Ready too: blocks are never skipped (scan order is fixed).'],
+                  ['N3', 'Block 2 without PO, block 3 with PO', 'Block 3 is Not Ready too: blocks are never skipped (H0253 order is fixed).'],
                   ['N4', 'C: all open qty pre-mapped', 'ASN Status Ready; one option (1 case).'],
-                  ['N5', 'A destination is on hold (Hold Flag Y)', 'Its lines are not taken; the scan order and the blocks are computed without them.'],
+                  ['N5', 'A destination is on hold (Hold Flag Y)', 'Its lines are not taken; the H0253 order and the blocks are computed without them.'],
                   ['E1', 'Database error', 'Nothing is kept in the temporary table; message on the screen, Log FAILED.']]},
     ]}
 
@@ -174,12 +174,12 @@ XD10_CASE_SECTIONS = [
 def xd09():
     s = load('XD09')
     g = s['general']
-    g['objective'][0] = (f"To get the open qty of the crossdock customer orders (H0253, order status 7, Hold Flag N) in the receiving scan order of G-System, "
+    g['objective'][0] = (f"To get the open qty of the crossdock customer orders (H0253, order status 7, Hold Flag N) in the H0253 order, "
                          f"pre-map them to the crossdock supplier PO parts (Pra Daily Order: {FLAG_RULE}), cut them into supplier cases and blocks "
                          "(ASN options) into the temporary table #TEMP_INSTRUCTION.")
     g['objective'][1] = ("To give ASN Crossdock Creation (XD10) the delivery plan per Part Number + Customer Order Date with Case Qty, PO Readiness (case), "
                          "the ASN options (blocks that can be sent) and the status Ready / Partially Ready / Not Ready.")
-    g['operation_flow']['flow']['nodes'][3]['label'] = 'Pre-map in scan order, cut cases and blocks'
+    g['operation_flow']['flow']['nodes'][3]['label'] = 'Pre-map in H0253 order, cut cases and blocks'
     g['operation_flow']['flow']['nodes'][4]['label'] = 'Fill #TEMP_INSTRUCTION, block status'
     g['inputs'][1]['description'] = f"ORDER_STATUS = '7', HOLD_FLAG = 'N', PO_MAPPED_FLAG = 'N'; {OPEN}; latest data (replicated by XD08)"
     g['inputs'] += [{'name': I, 'type': 'DB', 'description': 'Qty of each line already mapped (open Case List or submitted ASN)'},
@@ -188,17 +188,17 @@ def xd09():
     g['outputs'][1]['description'] = 'Delivery plan: Customer Order Date, Part Number, Case Qty, PO Readiness (case), ASN options, ASN Status'
     for t in g['extra_tables']:
         if t['title'] == 'Grouping Keys':
-            t['rows'] = ['PART_NO + ORDER_DT (unit; units by ORDER_DT ascending)', 'Scan order: ORDER_DT (Allocation Priority), CUSTOMER_CD, CUSTOMER_ORDER_NO, ORDER_DT, ORDER_TIME, '
-                         'DESTINATION_CD, DETAILED_ITEM_NO, SERIAL_NO', 'CASE_SEQ (PCS_CASE pcs in scan order)', 'GROUP_SEQ (block up to a valid cut)']
+            t['rows'] = ['PART_NO + ORDER_DT (unit; units by ORDER_DT ascending)', 'H0253 order: ORDER_DT (Allocation Priority), CUSTOMER_CD, CUSTOMER_ORDER_NO, ORDER_DT, ORDER_TIME, '
+                         'DESTINATION_CD, DETAILED_ITEM_NO, SERIAL_NO', 'CASE_SEQ (PCS_CASE pcs in H0253 order)', 'GROUP_SEQ (block up to a valid cut)']
     ff = s['func_flow']
-    ff['flow']['nodes'][5]['label'] = 'Pre-map in scan order, cut cases and blocks'
+    ff['flow']['nodes'][5]['label'] = 'Pre-map in H0253 order, cut cases and blocks'
     ff['flow']['nodes'][7]['label'] = 'Block status and return to screen'
     ff['steps'][1] = {'text': f'Get the customer order lines from {H}:', 'children': [
         f"ORDER_STATUS = '7' (Cross Dock), HOLD_FLAG = 'N', PO_MAPPED_FLAG = 'N'; latest data; {OPEN} (> 0). Status '2' (cancel) is not taken.",
         "Get: Customer Code, Customer Order No, Order Date, Order Time, Destination Code, Detailed Item No, Serial No, Part Number, Order Status Qty; "
         "Pcs/Case of the part from TB_M_PART_CANDIDATE."]}
-    ff['steps'][3] = {'text': 'Per unit (Part Number + Customer Order Date, oldest date first), pre-map in scan order (see 4.1 and 4.2) and insert the result in #TEMP_INSTRUCTION.', 'children': [
-        f"Lines in scan order: {SCAN}.",
+    ff['steps'][3] = {'text': 'Per unit (Part Number + Customer Order Date, oldest date first), pre-map in H0253 order (see 4.1 and 4.2) and insert the result in #TEMP_INSTRUCTION.', 'children': [
+        f"Lines in H0253 order: {SCAN}.",
         "Each PO qty (PO_DT ascending) goes to the open qty in this order; a line may be split over several POs.",
         "The pcs are cut into supplier cases of PCS_CASE pcs in this order (a case can hold several lines and destinations); each slice line x PO x case is one row."]}
     ff['steps'][4] = {'text': 'Mark the valid cuts, number the blocks, set the status of each block and return the delivery plan to XD10 (see 4.3).', 'children': [
@@ -207,12 +207,12 @@ def xd09():
     m['source']['table'] = f'{H} + {PRA_M} / {PRA_P} + {I} + TB_M_PART_CANDIDATE'
     m['destination']['description'] = 'Line x PO x supplier case pre-mapping (temporary)'
     keep = {x['dest_field']: x for x in m['mappings']}
-    new = {'SORT_SEQ': {'dest_field': 'SORT_SEQ', 'description': 'Scan order of the line in the unit'},
+    new = {'SORT_SEQ': {'dest_field': 'SORT_SEQ', 'description': 'H0253 order of the line in the unit'},
            'ORDER_TIME': {'source_field': 'H0253.ORDER_TIME', 'dest_field': 'ORDER_TIME'},
            'OPEN_ORDER_QTY': {'dest_field': 'OPEN_ORDER_QTY', 'description': f'H0253.ORDER_STATUS_QTY - SUM({I}.QTY) of the line'},
            'ASSIGNED_QTY': {'dest_field': 'ASSIGNED_QTY', 'description': 'Qty of the slice (line x PO x case)'},
            'PCS_CASE': {'source_field': 'TB_M_PART_CANDIDATE.PCS_CASE', 'dest_field': 'PCS_CASE'},
-           'CASE_SEQ': {'dest_field': 'CASE_SEQ', 'description': 'Supplier case: running number every PCS_CASE pcs in scan order'},
+           'CASE_SEQ': {'dest_field': 'CASE_SEQ', 'description': 'Supplier case: running number every PCS_CASE pcs in H0253 order'},
            'LINE_SEQ': {'dest_field': 'LINE_SEQ', 'description': 'Sequence of the slice in the case'},
            'CUM_DEST_QTY': {'dest_field': 'CUM_DEST_QTY', 'description': 'Cumulative qty of the destination in the unit'},
            'SEQ_QTY': {'dest_field': 'SEQ_QTY', 'description': 'MOD(CUM_DEST_QTY - 1, PCS_CASE) + 1: fill of the warehouse case of the destination (refer 4.3)'},
@@ -223,27 +223,26 @@ def xd09():
     s['func_desc'] = [
         {'type': 'text', 'level': 0, 'text': 'This function builds the delivery plan of ASN Crossdock Creation on demand. It only pre-maps: nothing permanent is changed; '
                                             'the real mapping is done by [Create ASN] (XD10).'},
-        {'type': 'heading', 'text': '4.1 Scan Order'},
+        {'type': 'heading', 'text': '4.1 H0253 Order'},
         {'type': 'bullets', 'marker': '-', 'level': 0, 'items': [
-            "At receiving, the scan allocates the delivered pcs to the customer orders in a fixed order that cannot be changed. XD09 uses the same order "
-            f"(decided 21-Oct): {SCAN}.",
+            f"XD09 reads the H0253 replicate in this fixed order (decided 21-Oct): {SCAN}.",
             "The order is applied per unit = Part Number + Customer Order Date (way B): the units of a part are processed by Customer Order Date ascending, "
             "so the POs go to the oldest date first.",
-            f"The scan keys are the primary key of {H} (same columns, same order), so the replicate keeps the rows in scan order. The PK order is "
+            f"Keys 2) to 8) are the primary key of {H} (same columns, same order). The PK order is "
             "global (all parts, dates and statuses) and a read without ORDER BY has no guaranteed order: XD09 filters the unit and reads it with "
             "ORDER BY SHIPPING_PART_NO, Allocation Priority (ORDER_DT), then the PK columns (query: Appendix). SORT_SEQ = ROW_NUMBER() in this order per unit (it can be derived again at any time).",
             f"Lines with HOLD_FLAG = 'Y' are not taken. Only the open qty of a line is taken ({OPEN}): a line can be sent over several ASNs; "
             "PO_MAPPED_FLAG becomes 'Y' only when the whole line is in TB_R_INSTRUCTION."]},
         {'type': 'heading', 'text': '4.2 PO and Supplier Cases'},
         {'type': 'bullets', 'marker': '-', 'level': 0, 'items': [
-            "PO parts by PO_DT ascending; each PO qty goes to the open qty in scan order; a line may be split over several POs; qty without PO = PO_NO NULL.",
-            "The pcs of the unit are cut into supplier cases of PCS_CASE pcs in scan order (e.g. 6 pcs/case: case 1 = V01 6; case 2 = V01 4 + T01 2). "
+            "PO parts by PO_DT ascending; each PO qty goes to the open qty in H0253 order; a line may be split over several POs; qty without PO = PO_NO NULL.",
+            "The pcs of the unit are cut into supplier cases of PCS_CASE pcs in H0253 order (e.g. 6 pcs/case: case 1 = V01 6; case 2 = V01 4 + T01 2). "
             "A supplier case can hold several lines and destinations. G-System releases each destination in multiples of PCS_CASE, so every case is full.",
             "A PO remainder without open line stays open for later customer orders."]},
         {'type': 'column_break'},
         {'type': 'heading', 'text': '4.3 Blocks (ASN Options) and Status'},
         {'type': 'bullets', 'marker': '-', 'level': 0, 'items': [
-            "In the warehouse the scanned pcs are packed 1 case = 1 destination (max PCS_CASE pcs). An ASN may therefore stop only after a case where the "
+            "In the warehouse 1 case = 1 destination (max PCS_CASE pcs). An ASN may therefore stop only after a case where the "
             "cumulative qty of every destination of the unit is a multiple of PCS_CASE (valid cut, CUT_FLAG 'Y'). SEQ_QTY = fill of the warehouse case of the destination (1..PCS_CASE, starts again after PCS_CASE): the cut is valid when the last SEQ_QTY of every destination = PCS_CASE. Example: after case 2 VN 10 / TH 2 is "
             "not valid (VN short 2, TH short 4); after case 3 VN 12 / TH 6 is valid.",
             "Block = the cases after the previous valid cut up to the next valid cut (GROUP_SEQ). A block is never split.",
@@ -255,7 +254,7 @@ def xd09():
             "Nothing is saved by this function: #TEMP_INSTRUCTION is the pre-mapping only."]}]
     s['sample_sheet'] = SAMPLE
     s['appendix'] = [{'type': 'text', 'level': 0, 'text': 'Sample pre-mapping: see sheet Sample Input.'},
-                     {'type': 'heading', 'text': 'Query: H0253 lines in scan order (Allocation Priority = Customer Order Date)'},
+                     {'type': 'heading', 'text': 'Query: H0253 lines in H0253 order (Allocation Priority = Customer Order Date)'},
                      *[{'type': 'text', 'level': 0, 'text': ln} for ln in QUERY.split('\n')]]
     for t in s['tables']:
         if t['name'] == '#TEMP_INSTRUCTION':
@@ -266,13 +265,13 @@ def xd09():
 def xd10():
     s = load('XD10')
     g = s['general']
-    g['objective'][1] = ("To display the delivery plan per Part Number + Customer Order Date with the supplier cases in receiving scan order (Case Qty, "
+    g['objective'][1] = ("To display the delivery plan per Part Number + Customer Order Date with the supplier cases in H0253 order (Case Qty, "
                          "PO Readiness, ASN options, ASN Status Ready / Partially Ready / Not Ready). Units fully Created or without any pre-mapped case are not listed.")
     g['objective'][3] = ("To tick the supplier cases to send (check box per case, from case 1, cases that belong together) of one Supplier Code + Supplier Plant, map them to their POs "
                          "(TB_R_INSTRUCTION), review the cases, download the case labels and submit the ASN.")
     g['buttons'][5]['function'] = ("Check that the selected units are of one supplier and not held, map the chosen blocks to their POs (insert TB_R_INSTRUCTION) "
                                    "and open the Case List sub screen.")
-    g['screen_mode_remarks'][0] = ('1) Each unit row shows its supplier case rows in scan order (XD09). The check box of a case is enabled only when the case '
+    g['screen_mode_remarks'][0] = ('1) Each unit row shows its supplier case rows in H0253 order (XD09). The check box of a case is enabled only when the case '
                                    'and every earlier case have a PO (Ready, message no. 2 as tooltip otherwise).')
     g['screen_mode_remarks'][1] = ("2) Cases that belong together (Case Group = GROUP_SEQ of XD09, the cases up to a CUT_FLAG Y; not shown as a column) are "
                                    "always sent together, so that at receiving every destination completes its warehouse case. The ticked cases of a unit start at "
@@ -287,11 +286,11 @@ def xd10():
                 sec['description'] = ('Units of the login supplier (Supplier Code + Plant) only; unit rows with their supplier case rows (check box per case, no destinations); '
                                       'Part Number / Status filters')
     nodes = s['screen_flow'][1]['flow']['nodes']
-    nodes[3]['label'] = 'First block Ready? (blocks in scan order)'
+    nodes[3]['label'] = 'First block Ready? (blocks in H0253 order)'
     nodes[5]['label'] = 'Tick cases (from case 1, cases that belong together), Create ASN: insert TB_R_INSTRUCTION'
     it = s['items']
     it[9]['validation'] = 'Enabled when the first block of the unit is Ready'
-    it[13]['description'] = ('Number of supplier cases of the unit: open qty / pcs/case, cut in scan order (e.g. 30 pcs, 6 pcs/case = 5 cases); '
+    it[13]['description'] = ('Number of supplier cases of the unit: open qty / pcs/case, cut in H0253 order (e.g. 30 pcs, 6 pcs/case = 5 cases); '
                              'a case can hold several destinations.')
     it[15]['description'] = ("Ready (all blocks '6', green) / Partially Ready (first block '6', a later block '7', amber) / Not Ready (first block '7', "
                              "row highlighted) / On Hold (D/S only). Refer 5.2.")
@@ -300,24 +299,24 @@ def xd10():
         return {"name": name, "source": src, "field": field, "type": typ, "len": "-", "io": io, "control": control, "justified": just,
                 "initial": init, "required": req, "format": fmt, "validation": val, "description": desc}
     it[17:17] = [
-        {"group": "<Supplier Cases of a Unit (scan order)>"},
+        {"group": "<Supplier Cases of a Unit (H0253 order)>"},
         item('Select case (check box)', 'Key-in', '-', 'Char', 'I', 'CheckBox', '-', 'Enabled only when the case and every earlier case have a PO',
              'One check box per supplier case. The selection always starts at case 1 and takes the cases that belong together (Case Group = GROUP_SEQ '
              'of XD09, not shown on the screen): ticking case n ticks the earlier cases and the other cases of its group (message no. 10, e.g. tick '
              'case 2 -> cases 2-3 belong together, so cases 1-3); unticking case n unticks its group and the later cases. Refer 5.4.', just='Center', init='<unchecked>'),
-        item('Case', '#TEMP_INSTRUCTION', 'CASE_SEQ', 'Number', 'O', 'Label', 'Z9', '-', 'Supplier case number in scan order (PCS_CASE pcs).', just='Right'),
+        item('Case', '#TEMP_INSTRUCTION', 'CASE_SEQ', 'Number', 'O', 'Label', 'Z9', '-', 'Supplier case number in H0253 order (PCS_CASE pcs).', just='Right'),
         item('Qty (pcs)', '#TEMP_INSTRUCTION', 'ASSIGNED_QTY', 'Number', 'O', 'Label', 'ZZZ9', '-', 'Pcs of the case (= PCS_CASE).', just='Right'),
         item('Remaining Qty (not assigned)', '#TEMP_INSTRUCTION', 'ASSIGNED_QTY (PO_NO NULL)', 'Number', 'O', 'Label', 'ZZZ9', '-',
              'Pcs of the case without a PO yet (sum of the slices with PO_NO NULL); 0 when the whole case is assigned; red when > 0.', just='Right'),
         item('Content (D/S team)', '#TEMP_INSTRUCTION', 'DESTINATION_CD / CUSTOMER_ORDER_NO / ASSIGNED_QTY', 'Char', 'O', 'Label', '-', '-',
-             'D/S team only (not shown to the supplier): slices of the case in scan order, e.g. VN 4 (V01) + TH 2 (T01).'),
+             'D/S team only (not shown to the supplier): slices of the case in H0253 order, e.g. VN 4 (V01) + TH 2 (T01).'),
         item('PO', '#TEMP_INSTRUCTION', 'PO_NO / ASSIGNED_QTY', 'Char', 'O', 'Label', '{PO No} {qty}', '-', 'POs of the case with the assigned qty, e.g. PO-DMY-09021 2.'),
         item('PO Status', '#TEMP_INSTRUCTION', 'CROSSDOCK_STATUS', 'Char', 'O', 'Label', '-', '-',
              "'6' Ready (green) / '7' Not Ready (amber): the case or an earlier case has no PO yet."),
     ]
     for x in it:
         if x.get('name') == 'Part Number' and x.get('source') == I:
-            x['description'] = 'Supplier case of PCS_CASE pcs in scan order; a case can hold several destinations.'
+            x['description'] = 'Supplier case of PCS_CASE pcs in H0253 order; a case can hold several destinations.'
     b1 = s['data_map']['blocks'][1]
     b1['source'] = '#TEMP_INSTRUCTION (chosen blocks)'
     b1['destination']['description'] = '[Create ASN]: the lines of the chosen blocks'
@@ -328,20 +327,20 @@ def xd10():
         s['data_map']['blocks'][k]['source'] = '#TEMP_INSTRUCTION (chosen blocks)'
     s['data_map']['blocks'][2]['destination']['description'] = '[Create ASN]: one row per PO part used by the chosen blocks (insert when none yet)'
     s['data_map']['blocks'][2]['mappings'][0]['description'] = '+ ASSIGNED_QTY of the chosen blocks; - again on Back / Cancel'
-    s['data_map']['blocks'][3]['mappings'][0]['description'] = 'Case sequence: selected unit, then CASE_SEQ of XD09 (scan order)'
+    s['data_map']['blocks'][3]['mappings'][0]['description'] = 'Case sequence: selected unit, then CASE_SEQ of XD09 (H0253 order)'
     s['data_map']['blocks'][3]['mappings'][1]['description'] = 'LINE_SEQ of XD09 (sequence within the case)'
     op = s['operation']
     op[1]['items'][1] = ("[Search] runs XD09 Mapping Customer Order and PO Batch (UISS XD09): the open qty of the H0253 customer orders with order status 7 "
-                         "and Hold Flag N, in the receiving scan order of G-System per Part Number + Customer Order Date, pre-mapped to the PO parts of the "
+                         "and Hold Flag N, in the H0253 order per Part Number + Customer Order Date, pre-mapped to the PO parts of the "
                          "Pra Daily Order (PO date order), cut into supplier cases and blocks in the temporary table #TEMP_INSTRUCTION (pre-mapping only; "
                          "nothing is saved yet). Supplier: units of the login Supplier Code + Plant; D/S team: all suppliers.")
     op[1]['items'][2] = ("The delivery plan shows one row per Part Number + Customer Order Date, sorted Ready, Partially Ready, Not Ready, then Part Number "
                          "ascending. Units without any pre-mapped case and units fully Created are not listed. Part Number and Status filters apply at once. "
                          "No row: message no. 3.")
     op[3]['items'] = [
-        "Unit = Part Number + Customer Order Date. Scan order (decided 21-Oct): Allocation Priority (= Customer Order Date), Customer Code, Customer Order No, Customer Order Date, Customer Order Time, "
-        "Destination Code, Detailed Item No, Serial No; at receiving the pcs are scanned in this fixed order.",
-        "Supplier case = PCS_CASE pcs in scan order; a case can hold several customer orders, POs and destinations. Case Qty = number of supplier cases; "
+        "Unit = Part Number + Customer Order Date. H0253 order (decided 21-Oct): Allocation Priority (= Customer Order Date), Customer Code, Customer Order No, Customer Order Date, Customer Order Time, "
+        "Destination Code, Detailed Item No, Serial No (fixed order).",
+        "Supplier case = PCS_CASE pcs in H0253 order; a case can hold several customer orders, POs and destinations. Case Qty = number of supplier cases; "
         "PO Readiness (case) = cases whose whole qty is pre-mapped to a PO.",
         "The warehouse packs 1 case = 1 destination, so an ASN may stop only after a case where every destination of the unit is a multiple of "
         "PCS_CASE (valid cut). The cases up to a valid cut are a block = one ASN option step (e.g. VN 10, TH 6, VN 14: blocks case 1 | cases 2-3 | "
@@ -381,7 +380,7 @@ def xd10():
             x['description'] = 'Unticks all cases.'
     caps = {'c_02_delivery_plan': '2. Delivery plan after Search (supplier view): unit rows with their supplier case rows (check box, Case, Qty, Remaining Qty, PO, PO Status; no destinations)',
             'c_03_ds_detail': '3. D/S team: destination detail (warehouse cases, Hold Flag) and customer orders of a destination (open qty, cases, PO)',
-            'c_04_ds_hold': '4. D/S team: Thailand on hold; the scan order and the cases are computed again without it',
+            'c_04_ds_hold': '4. D/S team: Thailand on hold; the H0253 order and the cases are computed again without it',
             'c_05_selected': '5. Case 2 of PART-A ticked: MSG10, cases 1-3 are selected together; unit PART-C ticked (different Customer Order Date)',
             'c_05d_after_refresh': '5c. Delivery plan refreshed automatically, all cases unticked',
             'c_10_list_after': '10. Delivery plan after submit: PART-C is no longer listed, the rest of PART-A (V02 12 pcs) is listed again'}

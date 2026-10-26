@@ -422,7 +422,7 @@ export const BPF: BpfData = {
      "band": "B3",
      "slot": 1,
      "fn": "XD09",
-     "title": "Pre-map in scan order; supplier cases, blocks (ASN options), Ready / Not Ready",
+     "title": "Pre-map in H0253 order; supplier cases, blocks (ASN options), Ready / Not Ready",
      "read": [
       "TB_R_H0253_ORDER_CONTROL_PRE (status 7, HOLD N, open qty)",
       "TB_R_INSTRUCTION",
@@ -578,7 +578,7 @@ export const BPF: BpfData = {
      "band": "B4",
      "slot": 1,
      "fn": "existing",
-     "title": "Receive the ASN in scan order → ORDER_STATUS 6; a partial receipt splits the line (new SERIAL_NO); taken by the next XD08 run (D3)",
+     "title": "Receive the ASN → ORDER_STATUS 6; a partial receipt splits the line (new SERIAL_NO); taken by the next XD08 run (D3)",
      "read": [],
      "write": [
       "TB_R_H0253_ORDER_CONTROL_PRE (DB Surrounding, INTF_UPDATE_DT)"
@@ -930,7 +930,7 @@ export const BPF: BpfData = {
    "fn": "XD09 / XD10",
    "condition": "Case without PO: the case and every later case are Not Ready; later Customer Order Dates of the part wait too",
    "detection": "Partially Ready / check box disabled + MSG2; Wait: dd-Mon first",
-   "system": "Only the Ready cases before it can be sent; cases and order dates are never skipped (scan order, decided 21-Oct / 26-Oct).",
+   "system": "Only the Ready cases before it can be sent; cases and order dates are never skipped (H0253 order, decided 21-Oct / 26-Oct).",
    "pic": "Supplier",
    "action": "Send the Ready cases or wait for the next PO; the case becomes Ready on a later [Search]."
   },

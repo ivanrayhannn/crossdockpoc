@@ -363,7 +363,7 @@ export const SIM: SimData = {
      ]
     },
     {
-     "title": "Condition setelah XD08 replicate data (baris NSP diurutkan sesuai scan order: ORDER_DT, CUSTOMER_CD, CUSTOMER_ORDER_NO)",
+     "title": "Condition setelah XD08 replicate data (baris NSP diurutkan ORDER BY ORDER_DT (Allocation Priority), CUSTOMER_CD, CUSTOMER_ORDER_NO, …)",
      "table": "NSP.TB_R_H0253_ORDER_CONTROL_PRE",
      "kind": "rep",
      "headers": [
@@ -871,7 +871,7 @@ export const SIM: SimData = {
      ]
     },
     {
-     "title": "Condition setelah XD08 replicate data (baris NSP diurutkan sesuai scan order: ORDER_DT, CUSTOMER_CD, CUSTOMER_ORDER_NO)",
+     "title": "Condition setelah XD08 replicate data (baris NSP diurutkan ORDER BY ORDER_DT (Allocation Priority), CUSTOMER_CD, CUSTOMER_ORDER_NO, …)",
      "table": "NSP.TB_R_H0253_ORDER_CONTROL_PRE",
      "kind": "rep",
      "headers": [
@@ -1008,7 +1008,7 @@ export const SIM: SimData = {
         "N",
         "N",
         "NULL",
-        "Scan ke-1 → Case 1 (T0409012)"
+        "Urutan ke-1 → Case 1 (T0409012)"
        ],
        "mark": [
         null,
@@ -1042,7 +1042,7 @@ export const SIM: SimData = {
         "N",
         "N",
         "NULL",
-        "Scan ke-2 → Case 2 (T0409013)"
+        "Urutan ke-2 → Case 2 (T0409013)"
        ],
        "mark": [
         null,
@@ -1076,7 +1076,7 @@ export const SIM: SimData = {
         "N",
         "N",
         "NULL",
-        "Scan ke-3 → Case 2 (T0409013)"
+        "Urutan ke-3 → Case 2 (T0409013)"
        ],
        "mark": [
         null,
@@ -1110,7 +1110,7 @@ export const SIM: SimData = {
         "N",
         "N",
         "NULL",
-        "Scan ke-4 → Case 3 (T0409013), baris tengah"
+        "Urutan ke-4 → Case 3 (T0409013), baris tengah"
        ],
        "mark": [
         null,
@@ -1144,7 +1144,7 @@ export const SIM: SimData = {
         "N",
         "N",
         "NULL",
-        "Scan ke-5 → Case 4 (T0409013)"
+        "Urutan ke-5 → Case 4 (T0409013)"
        ],
        "mark": [
         null,
@@ -1178,7 +1178,7 @@ export const SIM: SimData = {
         "N",
         "N",
         "NULL",
-        "Scan ke-6 → Case 5: PO kurang → Not Ready"
+        "Urutan ke-6 → Case 5: PO kurang → Not Ready"
        ],
        "mark": [
         null,
@@ -1507,7 +1507,7 @@ export const SIM: SimData = {
         "N",
         "N",
         "NULL",
-        "Scan ke-6 → Case 5: PO kurang → Not Ready"
+        "Urutan ke-6 → Case 5: PO kurang → Not Ready"
        ],
        "mark": [
         null,
@@ -1865,7 +1865,7 @@ export const SIM: SimData = {
      ]
     },
     {
-     "title": "Condition setelah XD08 replicate data (baris NSP diurutkan sesuai scan order: ORDER_DT, CUSTOMER_CD, CUSTOMER_ORDER_NO)",
+     "title": "Condition setelah XD08 replicate data (baris NSP diurutkan ORDER BY ORDER_DT (Allocation Priority), CUSTOMER_CD, CUSTOMER_ORDER_NO, …)",
      "table": "NSP.TB_R_H0253_ORDER_CONTROL_PRE",
      "kind": "rep",
      "headers": [
@@ -3115,7 +3115,7 @@ export const SIM: SimData = {
      ]
     },
     {
-     "title": "Condition setelah XD08 replicate data (baris NSP diurutkan sesuai scan order: ORDER_DT, CUSTOMER_CD, CUSTOMER_ORDER_NO)",
+     "title": "Condition setelah XD08 replicate data (baris NSP diurutkan ORDER BY ORDER_DT (Allocation Priority), CUSTOMER_CD, CUSTOMER_ORDER_NO, …)",
      "table": "NSP.TB_R_H0253_ORDER_CONTROL_PRE",
      "kind": "rep",
      "headers": [
@@ -3558,7 +3558,7 @@ export const SIM: SimData = {
         "N",
         "N",
         "NULL",
-        "Scan ke-1: Case 1 (sisa T0409015) + Case 2 (T0409016)"
+        "Urutan ke-1: Case 1 (sisa T0409015) + Case 2 (T0409016)"
        ],
        "mark": [
         null,
@@ -3592,7 +3592,7 @@ export const SIM: SimData = {
         "N",
         "N",
         "NULL",
-        "Scan ke-2: Case 3 (T0409016), belum dikirim supplier"
+        "Urutan ke-2: Case 3 (T0409016), belum dikirim supplier"
        ],
        "mark": [
         null,
@@ -4091,7 +4091,7 @@ export const SIM: SimData = {
         "N",
         "N",
         "NULL",
-        "Scan ke-2: Case 3 (T0409016), belum dikirim supplier"
+        "Urutan ke-2: Case 3 (T0409016), belum dikirim supplier"
        ],
        "mark": [
         null,
@@ -4590,7 +4590,7 @@ export const SIM: SimData = {
         "N",
         "N",
         "NULL",
-        "Scan ke-2: Case 3 (T0409016), belum dikirim supplier"
+        "Urutan ke-2: Case 3 (T0409016), belum dikirim supplier"
        ],
        "mark": [
         null,
@@ -7039,7 +7039,7 @@ export const SIM: SimData = {
      ]
     },
     {
-     "title": "Condition setelah XD08 replicate data (baris NSP diurutkan sesuai scan order: ORDER_DT, CUSTOMER_CD, CUSTOMER_ORDER_NO)",
+     "title": "Condition setelah XD08 replicate data (baris NSP diurutkan ORDER BY ORDER_DT (Allocation Priority), CUSTOMER_CD, CUSTOMER_ORDER_NO, …)",
      "table": "NSP.TB_R_H0253_ORDER_CONTROL_PRE",
      "kind": "rep",
      "headers": [

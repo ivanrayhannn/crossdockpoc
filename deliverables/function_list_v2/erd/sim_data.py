@@ -7,7 +7,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'
 from scan_pack import pack  # noqa: E402
 
 VN, TH, PH, D4 = '9715310', '9722D10', '9811110', '982220'
-CUST = {VN: '9715300', TH: '9722D00', PH: '9811100', D4: '982200'}  # dummy customer code per destination (scan key 1)
+CUST = {VN: '9715300', TH: '9722D00', PH: '9811100', D4: '982200'}  # dummy customer code per destination (order key 1)
 OD, T = '2026-10-14', '080000'
 ASN = 'ASN0101'  # example number (format of the existing numbering not detailed)
 
@@ -136,7 +136,7 @@ SCENARIOS = [
     {
         'id': 'SIM-2', 'title': 'Daily order to ASN (normal)', 'flow': 'BPF F2', 'functions': 'XD08, XD09, XD10 (Create ASN, Submit 5.7)',
         'story': ['G-System releases crossdock orders 14-Oct (status 7); the supplier POs of 15-Oct are crossdock manifests (CROSS_DOCK_FLAG X).',
-                  'Supplier searches delivery 16-Oct Rit 1: PART-X (VN 18 + TH 6 = 4 cases in scan order, 4 blocks) and PART-Y (PH 6 = 1 case) are Ready; all blocks are chosen, Create ASN and Submit.',
+                  'Supplier searches delivery 16-Oct Rit 1: PART-X (VN 18 + TH 6 = 4 cases in H0253 order, 4 blocks) and PART-Y (PH 6 = 1 case) are Ready; all blocks are chosen, Create ASN and Submit.',
                   'Result: one ASN with 5 cases / 30 pcs, 3 ASN manifests (one per Pra manifest), 5 ASN part rows (manifest item x case).'],
         'steps': [
             ('1. XD08 27:30: status 7 rows (insert)', 'TB_R_H0253_ORDER_CONTROL_PRE', [
@@ -145,7 +145,7 @@ SCENARIOS = [
                 ('new', h('CO-14105', PH, '0000001', 'PART-Y', 6))]),
             ('2. Existing daily order: crossdock manifests and their parts', 'TB_R_PRA_DAILY_ORDER_MANIFEST', [('ref', PRA_MAN[k]) for k in '123']),
             ('', 'TB_R_PRA_DAILY_ORDER_PART', [('ref', PRA_PART[k]) for k in '123']),
-            ('3. [Search] → XD09 pre-mapping in scan order: cases and blocks (session)', '#TEMP_INSTRUCTION',
+            ('3. [Search] → XD09 pre-mapping in H0253 order: cases and blocks (session)', '#TEMP_INSTRUCTION',
              tmp([PX], [P1, P2]) + tmp([PY], [P3])),
             ('4. [Create ASN]: real mapping, flags, mapped qty', 'TB_R_INSTRUCTION', [
                 ('new', [i + 1, c, l, p, d, co, '0000001', q, po, m, '0001', None, None]) for i, (c, l, p, d, co, q, po, m) in enumerate((
@@ -179,7 +179,7 @@ SCENARIOS = [
     {
         'id': 'SIM-3', 'title': 'Unit Partially Ready (PO short), Ready the next day', 'flow': 'BPF F2 / AB08', 'functions': 'XD09, XD10',
         'story': ['PART-X 14-Oct needs 24 pcs (VN 18, TH 6) but only 18 pcs of crossdock PO are released on 15-Oct (PO-DMY-09001 12 + PO-DMY-09002 6).',
-                  'Scan order VN (CO-14101..14103) then TH (CO-14104): cases 1-3 (VN) have a PO, case 4 (TH) has none. Every case ends a valid cut, so '
+                  'H0253 order VN (CO-14101..14103) then TH (CO-14104): cases 1-3 (VN) have a PO, case 4 (TH) has none. Every case ends a valid cut, so '
                   'blocks 1-3 are Ready and block 4 Not Ready: the unit is Partially Ready (ASN options 1 / 2 / 3 cases).',
                   'In this simulation the supplier waits: on 16-Oct a new crossdock manifest (PO-DMY-10001, 6 pcs) is released → [Search] again → block 4 Ready.'],
         'steps': [
@@ -197,7 +197,7 @@ SCENARIOS = [
     {
         'id': 'SIM-4', 'title': 'Hold a destination (D/S team)', 'flow': 'BPF F4 / AB09', 'functions': 'XD10 (D/S view), XD09, XD10 Create ASN',
         'story': ['The D/S team holds Thailand of PART-X 14-Oct: HOLD_FLAG Y on CO-14104.',
-                  'XD09 does not take held lines: the scan order and the blocks are computed with Vietnam only (18 pcs = 3 cases, 3 blocks) and the unit is Ready.',
+                  'XD09 does not take held lines: the H0253 order and the blocks are computed with Vietnam only (18 pcs = 3 cases, 3 blocks) and the unit is Ready.',
                   'If the supplier had ticked the unit before the hold, [Create ASN] fails for the whole selection (MSG8): nothing is inserted.'],
         'steps': [
             ('1. D/S Hold Thailand (XD10)', 'TB_R_H0253_ORDER_CONTROL_PRE', [
@@ -327,8 +327,8 @@ SCENARIOS = [
                 ('new', [3, 'ASN00020', 'C-0020-01', 'PART-Y', 'CO-B', '0000002', 'CO-F', VN, 2, 42, 45])]),
         ]},
     {
-        'id': 'SIM-7', 'title': 'Scan order, supplier cases and ASN options (two ASNs)', 'flow': 'BPF F2', 'functions': 'XD09, XD10 (ASN Option, Create ASN)',
-        'story': ['PART-A 14-Oct, 6 pcs/case: V01 VN 10, T01 TH 6, V02 VN 14 (dummy customer codes CUST-A / B / C give this scan order).',
+        'id': 'SIM-7', 'title': 'H0253 order, supplier cases and ASN options (two ASNs)', 'flow': 'BPF F2', 'functions': 'XD09, XD10 (ASN Option, Create ASN)',
+        'story': ['PART-A 14-Oct, 6 pcs/case: V01 VN 10, T01 TH 6, V02 VN 14 (dummy customer codes CUST-A / B / C give this H0253 order).',
                   'p1 (24 pcs) is released 15-Oct, p2 (6 pcs) 16-Oct. Cuts are valid after cases 1, 3, 4 and 5 (VN / TH multiples of 6): blocks case 1 | 2-3 | 4 | 5.',
                   '15-Oct: blocks 1-3 Ready, the supplier chooses option 4 cases (blocks 1-3, 24 pcs). 16-Oct: the open 6 pcs of V02 get p2 and go in a second ASN.'],
         'steps': [
@@ -357,8 +357,8 @@ SCENARIOS = [
                 ('upd', h('V02', VN, '0000001', 'PART-A', 14, mapped='Y', cust='CUST-C'), ['PO_MAPPED_FLAG'], 'Whole line mapped (8 + 6)')]),
         ]},
     {
-        'id': 'SIM-8', 'title': 'SORT_SEQ: H0253 lines into scan order, partial send and re-cut', 'flow': 'BPF F2', 'functions': 'XD09, XD10 (ASN Option, Create ASN)',
-        'story': ['PART-B, 6 pcs/case. Scan order = G-System allocation order with Allocation Priority = Customer Order Date: 1) Allocation Priority, '
+        'id': 'SIM-8', 'title': 'SORT_SEQ: H0253 lines into H0253 order, partial send and re-cut', 'flow': 'BPF F2', 'functions': 'XD09, XD10 (ASN Option, Create ASN)',
+        'story': ['PART-B, 6 pcs/case. H0253 order (ORDER BY) with Allocation Priority = Customer Order Date: 1) Allocation Priority, '
                   '2) Customer Code, 3) Customer Order No, 4) Order Date, 5) Order Time, 6) Destination, 7) Detailed Item No, 8) Serial No. Keys 2-8 are the PK '
                   'of the H0253 replicate; XD09 reads with ORDER BY Part, Allocation Priority + the PK columns (query in XD09 Appendix). SORT_SEQ = row number per unit.',
                   'Unit 14-Oct: A-0101 item 001 VN 8 (seq 1), A-0101 item 002 VN 2 (seq 2), B-0102 TH 6 (seq 3), C-0103 VN 14 of a second VN customer '
@@ -368,7 +368,7 @@ SCENARIOS = [
                   '16-Oct: PO2 10 pcs. The open qty (24) is cut again from case 1 in the same SORT_SEQ: the cases are the same as before. Unit 15-Oct '
                   '(A-0201) comes after unit 14-Oct (way B), so it gets no PO yet.'],
         'steps': [
-            ('1. H0253 lines in scan order: ORDER BY Part, Allocation Priority (= Order Date), PK columns', 'TB_R_H0253_ORDER_CONTROL_PRE', [
+            ('1. H0253 lines in H0253 order: ORDER BY Part, Allocation Priority (= Order Date), PK columns', 'TB_R_H0253_ORDER_CONTROL_PRE', [
                 ('ref', h('A-0101', VN, '0000001', 'PART-B', 8, item='001'), [], 'Priority 14-Oct · SORT_SEQ 1'),
                 ('ref', h('A-0101', VN, '0000001', 'PART-B', 2, item='002'), [], 'Priority 14-Oct · SORT_SEQ 2'),
                 ('ref', h('B-0102', TH, '0000001', 'PART-B', 6), [], 'Priority 14-Oct · SORT_SEQ 3'),

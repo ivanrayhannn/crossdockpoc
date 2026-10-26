@@ -1,9 +1,9 @@
-"""Pre-mapping of XD09 (decided 21-Oct): customer order lines in the receiving scan order of G-System, PO given in PO_DT order,
+"""Pre-mapping of XD09 (decided 21-Oct): customer order lines in the H0253 order (ORDER BY SCAN_KEYS), PO given in PO_DT order,
 the pcs cut into supplier cases of PCS_CASE pcs, and the cases grouped into blocks (ASN options).
 A cut after a case is valid when the cumulative qty of every destination of the unit is a multiple of PCS_CASE, so that the
 warehouse can close its cases (1 case = 1 destination). A block is Ready ('6') when it and every earlier block of the unit have a PO."""
 
-# Allocation Priority = Customer Order Date (ORDER_DT) first, then the G-System allocation keys
+# ORDER BY of the H0253 replicate: Allocation Priority = Customer Order Date (ORDER_DT) first, then the PK columns
 SCAN_KEYS = ['ORDER_DT', 'CUSTOMER_CD', 'CUSTOMER_ORDER_NO', 'ORDER_DT', 'ORDER_TIME', 'DESTINATION_CD', 'DETAILED_ITEM_NO', 'SERIAL_NO']
 
 

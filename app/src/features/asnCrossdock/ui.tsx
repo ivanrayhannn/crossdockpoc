@@ -24,7 +24,7 @@ export function Modal({ title, children, actions, onClose }: { title: string; ch
   );
 }
 
-/** Cases of an ASN: supplier cases of pcs/case in scan order (a case can hold several destinations). */
+/** Cases of an ASN: supplier cases of pcs/case in H0253 order (a case can hold several destinations). */
 export function CaseTable({ cases, caseLabel }: { cases: AsnCase[]; caseLabel: (c: AsnCase) => string }) {
   const total = cases.reduce((a, c) => a + c.qty, 0);
   return (

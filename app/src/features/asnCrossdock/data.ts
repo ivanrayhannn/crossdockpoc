@@ -1,5 +1,5 @@
 /* ASN Crossdock — mock data and the Search pre-mapping of XD09 (decided 21-Oct):
-   - the open qty of the customer order lines (H0253, order status 7, Hold Flag N) is read in the receiving scan order of G-System
+   - the open qty of the customer order lines (H0253, order status 7, Hold Flag N) is read in the H0253 order
      (Allocation Priority = Customer Order Date, Customer Code, Customer Order No, Order Date, Order Time, Destination, Detailed Item No, Serial No);
    - per unit (Part Number + Customer Order Date, oldest date first) the released POs are given in PO date order;
    - the pcs are cut into supplier cases of pcs/case (a case can hold several lines and destinations);
@@ -73,7 +73,7 @@ const VN = '9715310';
 const PH = '9811110';
 const TH = '9722D10';
 const D4 = '982220';
-/** Customer code per destination (scan key 2), as in simulasi_asn_rev.xlsx. */
+/** Customer code per destination (order key 2), as in simulasi_asn_rev.xlsx. */
 const CUST: Record<string, string> = { [VN]: '9715300', [TH]: '9722D10', [PH]: '9811100', [D4]: '982200' };
 
 type Raw = [order: string, dest: string, qty: number, upd?: { status: '2' | '6'; date: string }];
@@ -158,12 +158,12 @@ export function addDays(iso: string, n: number): string {
   return t.toISOString().slice(0, 10);
 }
 
-/** Scan order key: Allocation Priority (= Customer Order Date), then the G-System allocation keys. */
+/** H0253 order key: Allocation Priority (= Customer Order Date), then the PK columns of the replicate. */
 function scanKey(l: InstrLine): string {
   return [l.orderDt, l.custCd, l.custOrderNo, l.orderDt, l.orderTime, l.destCd, l.detailedItemNo, l.serialNo].join('|');
 }
 
-/** A supplier case of a unit: PCS_PER_CASE pcs in scan order. */
+/** A supplier case of a unit: PCS_PER_CASE pcs in H0253 order. */
 export interface UnitCase {
   seq: number;
   lines: InstrLine[];
@@ -187,7 +187,7 @@ export interface Unit {
   /** Supplier Code + Plant key of SUPPLIERS. */
   supplier: string;
   orderDt: string;
-  /** Open order lines in scan order (Hold Flag = N, qty = open qty). */
+  /** Open order lines in H0253 order (Hold Flag = N, qty = open qty). */
   lines: InstrLine[];
   /** Order lines put on hold by the D/S team (Hold Flag = Y); shown in the D/S detail only. */
   heldLines: InstrLine[];
@@ -227,7 +227,7 @@ export function unitKey(partNo: string, orderDt: string): string {
 
 const STATUS_ORDER: Record<UnitStatus, number> = { ready: 0, partial: 1, notReady: 2, hold: 3, created: 4 };
 
-/** Cuts the open qty of one unit (lines in scan order) into supplier cases, taking the PO qty in order (pos are reduced in place). */
+/** Cuts the open qty of one unit (lines in H0253 order) into supplier cases, taking the PO qty in order (pos are reduced in place). */
 function cutCases(ls: InstrLine[], pos: { po: Po; open: number }[]): UnitCase[] {
   const slices: InstrLine[][] = [];
   let cur: InstrLine[] = [];
@@ -262,7 +262,7 @@ function cutCases(ls: InstrLine[], pos: { po: Po; open: number }[]): UnitCase[] 
   });
 }
 
-/** XD09 [Search]: open qty (order qty - qty in submitted ASNs) of the lines not on hold, in scan order, pre-mapped to the POs released
+/** XD09 [Search]: open qty (order qty - qty in submitted ASNs) of the lines not on hold, in H0253 order, pre-mapped to the POs released
  * by the business date (open PO qty = PO qty - qty in submitted ASNs), cut into supplier cases. Units of a part take the POs oldest date first. */
 export function buildUnits(today: string, sentByLine: Record<string, number>, sentByPo: Record<string, number>, hold: Record<string, boolean> = {},
   noAsn = false): Unit[] {
@@ -329,7 +329,7 @@ export interface AsnCase {
   qty: number;
 }
 
-/** Cases of an ASN: cases 1..end of each selected unit (supplier cases in scan order), numbered through the ASN. */
+/** Cases of an ASN: cases 1..end of each selected unit (supplier cases in H0253 order), numbered through the ASN. */
 export function buildCases(sel: { unit: Unit; end: number }[]): AsnCase[] {
   const out: AsnCase[] = [];
   for (const { unit, end } of sel) {

@@ -33,7 +33,7 @@ Contoh dummy PART-X / PART-Y (6 pcs/case, delivery 16-Oct Rit 1): input pre-mapp
 - `PART_NAME` diambil dari `TB_M_PART_MASTER`.
 
 ## Keputusan 21-Oct (opsi ASN per blok)
-- Delivery plan tetap 1 baris per Part No + Customer Order Date. Case Qty = jumlah **case supplier** (PCS_CASE pcs dalam urutan scan, boleh campur destinasi).
+- Delivery plan tetap 1 baris per Part No + Customer Order Date. Case Qty = jumlah **case supplier** (PCS_CASE pcs dalam urutan H0253, boleh campur destinasi).
 - Status unit: **Ready** (semua blok '6'), **Partially Ready** (blok pertama '6', blok berikutnya '7'), **Not Ready** (blok pertama '7', check box disabled, MSG2).
 - **Checkbox per case supplier**: kolom Case, Qty, **Remaining Qty (not assigned)** (pcs case yang belum punya PO), PO, PO Status. Case Group (GROUP_SEQ XD09 = case sampai CUT_FLAG Y) **tidak ditampilkan sebagai kolom**, hanya dipakai di logika: case yang satu group selalu dikirim bersama. Centang case n → case sebelumnya + case lain di group-nya ikut tercentang (info **MSG10** "Cases 2-3 are sent together. Cases 1-3 … are selected."). Uncentang → group itu dan case sesudahnya lepas. Case tanpa PO disabled (MSG2).
 - **Content (destinasi / customer order) hanya untuk D/S team**; supplier tidak melihat destinasi (juga di Case List).

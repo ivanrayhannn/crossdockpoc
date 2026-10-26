@@ -85,7 +85,7 @@ function poRowsOf(ls: InstrLine[]): PoRow[] {
   return [...m.values()];
 }
 
-/** Screen ASN Crossdock Creation: Search (XD09 pre-mapping in scan order), delivery plan with a check box per supplier case,
+/** Screen ASN Crossdock Creation: Search (XD09 pre-mapping in H0253 order), delivery plan with a check box per supplier case,
  * Create ASN and the Case List sub screen. */
 export function AsnCrossdockCreationPage() {
   const asns = useAsns();
@@ -238,7 +238,7 @@ export function AsnCrossdockCreationPage() {
           <Chip tone="neutral">Draft</Chip>
         </div>
         <div style={{ ...card, padding: '12px 16px', fontSize: 12.5, background: 'var(--color-accent-100, #eef4fb)' }}>
-          The ticked cases are mapped to their POs. Supplier cases hold {PCS_PER_CASE} pcs in the receiving scan order; cases that belong together are always sent together.
+          The ticked cases are mapped to their POs. Supplier cases hold {PCS_PER_CASE} pcs in the H0253 order; cases that belong together are always sent together.
         </div>
         <div style={{ ...card, padding: 16, display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 16, fontSize: 12.5 }}>
           <div><div className="ax-lbl">ASN No</div><div style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{nextAsnNo}</div><div className="ax-muted">auto · assigned on submit</div></div>
@@ -311,7 +311,7 @@ export function AsnCrossdockCreationPage() {
         <div style={{ marginRight: 'auto' }}>
           <h1 style={{ fontSize: 22, margin: 0 }}>ASN Crossdock Creation</h1>
           <div style={{ fontSize: 12.5, color: 'var(--color-neutral-700)', marginTop: 3 }}>
-            Choose the Delivery Date and Rit, then Search: customer orders are read in the receiving scan order (Allocation Priority = Customer Order Date), pre-mapped to supplier POs and cut into cases of {PCS_PER_CASE} pcs. Tick the cases to send: the selection starts at case 1 and cases that belong together are always sent together.
+            Choose the Delivery Date and Rit, then Search: customer orders are read in the H0253 order (Allocation Priority = Customer Order Date), pre-mapped to supplier POs and cut into cases of {PCS_PER_CASE} pcs. Tick the cases to send: the selection starts at case 1 and cases that belong together are always sent together.
           </div>
         </div>
         <div className="field">
