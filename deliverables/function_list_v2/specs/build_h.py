@@ -100,6 +100,9 @@ LOGS = [
     {"event": "Cancel qty check", "cause": "Cancelled qty of a line in a submitted ASN is not a multiple of pcs/case (should not happen in G-System)", "type": "Error", "msg_id": "LOG6",
      "message": "<CUSTOMER_ORDER_NO> <PART_NO>: cancelled qty <QTY> is not a multiple of pcs/case <PCS>.",
      "action": {"system": "Write the log (abnormality); the line is still listed in XD11.", "user": "D/S team checks with G-System."}},
+    {"event": "Serial split", "cause": "A line in TB_R_INSTRUCTION is split into a new SERIAL_NO by G-System", "type": "Info", "msg_id": "LOG7",
+     "message": "<CUSTOMER_ORDER_NO> item <DETAILED_ITEM_NO> split into serial <SERIAL_NO>: <QTY> pcs of <ASN_NO> moved to the new serial.",
+     "action": {"system": "Write the log.", "user": "-"}},
     {"event": "Upsert", "cause": "Read from DB Surrounding, insert / update in NSP or draft release fails", "type": "Error", "msg_id": "LOG3", "message": "Cannot replicate H0253 rows: <ERROR_DETAIL>.", "action": {"system": "Roll back; watermark not changed (rows taken again next run). STATUS = FAILED.", "user": "User contact PIC"}},
     {"event": "Unexpected error", "cause": "Any other system error", "type": "Critical", "msg_id": "LOG4", "message": "Unexpected error: <ERROR_DETAIL>.", "action": {"system": "Roll back. STATUS = FAILED.", "user": "User contact PIC"}}]
 
@@ -155,6 +158,11 @@ def build():
                     "New key: insert all source columns; HOLD_FLAG = 'N', PO_MAPPED_FLAG = 'N'; UPD_STATUS = NULL when the source status is '7', else the source status.",
                     "Existing key: update the source columns except ORDER_STATUS (first value kept); UPD_STATUS = source ORDER_STATUS when it is '6' or '2'; "
                     "HOLD_FLAG / PO_MAPPED_FLAG not changed."]},
+                {"text": f"Serial split (G-System split a line with rows in {INS} into a new SERIAL_NO, e.g. partial receipt):", "children": [
+                    f"Re-assign the {INS} rows (ASN_NO filled) of the customer order + detailed item over its serials: the serial with status '6' takes the rows of "
+                    "the oldest ASN (the received one) up to its qty, the serial with status '7' the next ASN, the serial with status '2' the rest (then the "
+                    "cancel check below). Only SERIAL_NO changes; a row is split when the qty does not fit (case, PO and ASN not changed).",
+                    "PO_MAPPED_FLAG of each serial = 'Y' when its qty is fully in TB_R_INSTRUCTION, else 'N' (open qty taken by the next Search). Write LOG7."]},
                 {"text": f"Release all drafts of {INS} (rows with ASN_NO NULL), whatever changed:", "children": [
                     f"Delete the rows; MAPPED_QTY of {PMAP} - their qty; PO_MAPPED_FLAG = 'N' on their lines.",
                     "The cases come back in the delivery plan of XD10; the supplier ticks them again and creates the ASN again (lines with UPD_STATUS are no longer taken)."]},
