@@ -567,7 +567,7 @@
    "image": "deliverables/uiss_screens/asn_crossdock/c_01_initial.png"
   },
   {
-   "caption": "2. Delivery plan after Search (supplier view): unit rows with their supplier case rows (check box, Case, Qty, Remaining Qty, PO, PO Status; no destinations)",
+   "caption": "2. Delivery plan after Search (supplier view, 18-Oct, simulasi_asn_rev.xlsx): PART-X 17-Oct, cases 1-4 Ready, case 5 Not Ready (Short PO: T0409013 18 of 30 pcs)",
    "image": "deliverables/uiss_screens/asn_crossdock/c_02_delivery_plan.png"
   },
   {
@@ -575,11 +575,11 @@
    "image": "deliverables/uiss_screens/asn_crossdock/c_03_ds_detail.png"
   },
   {
-   "caption": "4. D/S team: Thailand on hold; the scan order and the cases are computed again without it",
+   "caption": "4. D/S team: Thailand (CO-14104) on hold; the scan order and the cases are computed again without it",
    "image": "deliverables/uiss_screens/asn_crossdock/c_04_ds_hold.png"
   },
   {
-   "caption": "5. Case 2 of PART-A ticked: MSG10, cases 1-3 are selected together; unit PART-C ticked (different Customer Order Date)",
+   "caption": "5. Case 3 of PART-X 17-Oct ticked: cases 1-3 are selected (the selection always starts at case 1)",
    "image": "deliverables/uiss_screens/asn_crossdock/c_05_selected.png"
   },
   {
@@ -595,11 +595,11 @@
    "image": "deliverables/uiss_screens/asn_crossdock/c_05d_after_refresh.png"
   },
   {
-   "caption": "5d. D/S team: units of two suppliers ticked, Create ASN: one supplier per ASN",
+   "caption": "5d. D/S team: units of two suppliers ticked (PART-D of supplier 50330, prototype only), Create ASN: one supplier per ASN",
    "image": "deliverables/uiss_screens/asn_crossdock/c_05e_supplier_conflict.png"
   },
   {
-   "caption": "6. Case List sub screen",
+   "caption": "6. Case List sub screen: cases 1-4 of PART-X 17-Oct = ASN0003",
    "image": "deliverables/uiss_screens/asn_crossdock/c_06_case_list.png"
   },
   {
@@ -615,7 +615,7 @@
    "image": "deliverables/uiss_screens/asn_crossdock/c_09_submit_id.png"
   },
   {
-   "caption": "10. Delivery plan after submit: PART-C is no longer listed, the rest of PART-A (V02 12 pcs) is listed again",
+   "caption": "10. Delivery plan after submit: only case 5 (CO-14110) is left, Not Ready until the split PO T0409014",
    "image": "deliverables/uiss_screens/asn_crossdock/c_10_list_after.png"
   }
  ],

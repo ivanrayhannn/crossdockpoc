@@ -1,28 +1,57 @@
 import { useSyncExternalStore } from 'react';
-import { buildCases, buildUnits, niceDate, type SubmittedAsn } from './data';
+import { buildCases, buildUnits, HOLD_INIT, niceDate, sentQty, type SubmittedAsn } from './data';
 
-/** Submitted ASNs shared by ASN Crossdock Creation and ASN Inquiry (two routes), kept for the browser session. */
-let asns: SubmittedAsn[] = seed();
-const listeners = new Set<() => void>();
+/** ASNs of simulasi_asn_rev.xlsx in creation order: [ASN No, business date, rit, units (Part + Customer Order Date, cases 1..end)]. */
+const SEED_PLAN: [string, string, string, [string, number][]][] = [
+  ['ASN0001', '2026-10-16', 'Rit 1', [['PART-X|2026-10-15', 1]]],
+  ['ASN0002', '2026-10-17', 'Rit 1', [['PART-X|2026-10-16', 1]]],
+  ['ASN0003', '2026-10-18', 'Rit 1', [['PART-X|2026-10-17', 4]]],
+  ['ASN0004', '2026-10-19', 'Rit 1', [['PART-X|2026-10-17', 1]]],
+  ['ASN0005', '2026-10-19', 'Rit 1', [['PART-X|2026-10-18', 3]]],
+  ['ASN0006', '2026-10-20', 'Rit 1', [['PART-X|2026-10-19', 1]]],
+  ['ASN0007', '2026-10-20', 'Rit 2', [['PART-X|2026-10-19', 1]]],
+];
 
+/** Builds the ASNs of the workbook with the same Search (XD09) as the screen, one after the other. */
 function seed(): SubmittedAsn[] {
-  const unit = buildUnits('2026-10-13', {}, {}).find((u) => u.key === 'PART-A|2026-10-12');
-  if (!unit) return [];
-  return [{
-    asnNo: 'ASN-50221-261013-001',
-    supplier: '50221-1',
-    deliveryDate: '2026-10-13',
-    rit: { no: 'Rit 1', route: 'SD01' },
-    unitKeys: [unit.key],
-    cases: buildCases([{ unit, end: unit.caseCount }]),
-    createdBy: 'D. Anggraini',
-    createdAt: '13-Oct-2026 08:14',
-  }];
+  const out: SubmittedAsn[] = [];
+  for (const [asnNo, date, rit, picks] of SEED_PLAN) {
+    const s = sentQty(out);
+    const units = buildUnits(date, s.byLine, s.byPo, HOLD_INIT);
+    const sel = picks.map(([key, end]) => ({ unit: units.find((u) => u.key === key), end })).filter((x) => x.unit && x.unit.validEnds.includes(x.end));
+    if (sel.length !== picks.length) console.warn(`seed ${asnNo}: unit or case not available`);
+    const ok = sel as { unit: NonNullable<(typeof sel)[number]['unit']>; end: number }[];
+    out.push({
+      asnNo, supplier: '50221-1', deliveryDate: date, rit: { no: rit, route: rit === 'Rit 2' ? 'SD02' : 'SD01' }, unitKeys: ok.map((x) => x.unit.key),
+      cases: buildCases(ok), createdBy: 'D. Anggraini', createdAt: `${date.slice(8)}-Oct-2026 08:${rit === 'Rit 2' ? '40' : '14'}`, businessDate: date, seed: true,
+    });
+  }
+  return out;
 }
 
-export function addAsn(a: SubmittedAsn): void {
-  asns = [a, ...asns];
+const SEEDS = seed();
+let businessDate = '2026-10-18';
+let created: SubmittedAsn[] = [];
+let asns: SubmittedAsn[] = [];
+const listeners = new Set<() => void>();
+
+/** ASNs visible on the business date: those of the workbook created before it, and those created in this session. */
+function refresh(): void {
+  asns = [...created, ...SEEDS.filter((a) => a.businessDate < businessDate).reverse()];
   listeners.forEach((l) => l());
+}
+refresh();
+
+export function addAsn(a: SubmittedAsn): void {
+  created = [a, ...created];
+  refresh();
+}
+
+/** Business date of the prototype; a new date starts again from the workbook state (ASNs created in the session are dropped). */
+export function setBusinessDate(d: string): void {
+  businessDate = d;
+  created = [];
+  refresh();
 }
 
 function subscribe(l: () => void): () => void {
@@ -32,6 +61,10 @@ function subscribe(l: () => void): () => void {
 
 export function useAsns(): SubmittedAsn[] {
   return useSyncExternalStore(subscribe, () => asns);
+}
+
+export function useBusinessDate(): string {
+  return useSyncExternalStore(subscribe, () => businessDate);
 }
 
 /* ---- Submit ASN batch and its log (prototype of the existing Supplier System log) ---- */
