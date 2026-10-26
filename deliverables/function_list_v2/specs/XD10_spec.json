@@ -20,7 +20,7 @@
  "general": {
   "objective": [
    "To get the crossdock customer orders for a Delivery Date and Rit and pre-map them to supplier POs ([Search], XD09 Mapping Customer Order and PO Batch).",
-   "To display the delivery plan per Part Number + Customer Order Date with the supplier cases in receiving scan order (Case Qty, PO Readiness, ASN options, ASN Status Ready / Partially Ready / Not Ready). Units fully Created or without any pre-mapped case are not listed.",
+   "To display the delivery plan per Part Number + Customer Order Date with the supplier cases in H0253 order (Case Qty, PO Readiness, ASN options, ASN Status Ready / Partially Ready / Not Ready). Units fully Created or without any pre-mapped case are not listed.",
    "To let the D/S team (super admin) see the units of all suppliers, the destination detail and hold / release a destination of a unit.",
    "To tick the supplier cases to send (check box per case, from case 1, cases that belong together) of one Supplier Code + Supplier Plant, map them to their POs (TB_R_INSTRUCTION), review the cases, download the case labels and submit the ASN.",
    "Submit ASN runs in the background with a Submit ID and follows the existing ASN submit of NSP (refer 5.7).",
@@ -377,7 +377,7 @@
    }
   ],
   "screen_mode_remarks": [
-   "1) Each unit row shows its supplier case rows in scan order (XD09). The check box of a case is enabled only when the case and every earlier case have a PO (Ready, message no. 2 as tooltip otherwise).",
+   "1) Each unit row shows its supplier case rows in H0253 order (XD09). The check box of a case is enabled only when the case and every earlier case have a PO (Ready, message no. 2 as tooltip otherwise).",
    "2) Cases that belong together (Case Group = GROUP_SEQ of XD09, the cases up to a CUT_FLAG Y; not shown as a column) are always sent together, so that at receiving every destination completes its warehouse case. The ticked cases of a unit start at case 1: ticking case n ticks the earlier cases and the other cases of its group (message no. 10); unticking case n unticks its group and the later cases. The unit check box ticks all Ready cases. Units of different Customer Order Dates and Part Numbers can be ticked together.",
    "3) The supplier sees the unit rows and their case rows (Case, Qty, Remaining Qty (not assigned), PO, PO Status, check box) without destinations; the Content of a case (destinations, customer orders), the destination detail and Hold / Release are shown to the D/S team only.",
    "4) Search is enabled when Delivery Date is filled and a Rit is available (message no. 5 otherwise).",
@@ -462,7 +462,7 @@
      },
      {
       "id": "d",
-      "label": "First block Ready? (blocks in scan order)",
+      "label": "First block Ready? (blocks in H0253 order)",
       "type": "decision"
      },
      {
@@ -575,7 +575,7 @@
    "image": "deliverables/uiss_screens/asn_crossdock/c_03_ds_detail.png"
   },
   {
-   "caption": "4. D/S team: Thailand (CO-14104) on hold; the scan order and the cases are computed again without it",
+   "caption": "4. D/S team: Thailand (CO-14104) on hold; the H0253 order and the cases are computed again without it",
    "image": "deliverables/uiss_screens/asn_crossdock/c_04_ds_hold.png"
   },
   {
@@ -804,7 +804,7 @@
    "required": "N",
    "format": "ZZ9",
    "validation": "-",
-   "description": "Number of supplier cases of the unit: open qty / pcs/case, cut in scan order (e.g. 30 pcs, 6 pcs/case = 5 cases); a case can hold several destinations."
+   "description": "Number of supplier cases of the unit: open qty / pcs/case, cut in H0253 order (e.g. 30 pcs, 6 pcs/case = 5 cases); a case can hold several destinations."
   },
   {
    "name": "PO Readiness (case)",
@@ -852,7 +852,7 @@
    "description": "Shown to the D/S team only. Opens the destination detail."
   },
   {
-   "group": "<Supplier Cases of a Unit (scan order)>"
+   "group": "<Supplier Cases of a Unit (H0253 order)>"
   },
   {
    "name": "Select case (check box)",
@@ -882,7 +882,7 @@
    "required": "N",
    "format": "Z9",
    "validation": "-",
-   "description": "Supplier case number in scan order (PCS_CASE pcs)."
+   "description": "Supplier case number in H0253 order (PCS_CASE pcs)."
   },
   {
    "name": "Qty (pcs)",
@@ -927,7 +927,7 @@
    "required": "N",
    "format": "-",
    "validation": "-",
-   "description": "D/S team only (not shown to the supplier): slices of the case in scan order, e.g. VN 4 (V01) + TH 2 (T01)."
+   "description": "D/S team only (not shown to the supplier): slices of the case in H0253 order, e.g. VN 4 (V01) + TH 2 (T01)."
   },
   {
    "name": "PO",
@@ -1287,7 +1287,7 @@
    "required": "N",
    "format": "-",
    "validation": "-",
-   "description": "Supplier case of PCS_CASE pcs in scan order; a case can hold several destinations."
+   "description": "Supplier case of PCS_CASE pcs in H0253 order; a case can hold several destinations."
   },
   {
    "name": "Qty / Total",
@@ -1877,7 +1877,7 @@
      },
      {
       "dest_field": "CASE_SEQ",
-      "description": "Case sequence: selected unit, then CASE_SEQ of XD09 (scan order)"
+      "description": "Case sequence: selected unit, then CASE_SEQ of XD09 (H0253 order)"
      },
      {
       "dest_field": "LINE_SEQ",
@@ -2395,7 +2395,7 @@
     "One customer order line can be in different ASNs (its cases split). When G-System receives them separately, the line is split in H0253 (new SERIAL_NO); each part stays linked to its ASN (XD08).",
     "PO_MAPPED_FLAG is set by [Create ASN] ('Y' when the whole line is in the ASN; a draft not submitted is released by XD08).",
     "Ready cases of the delivery plan are sent following the cut (CUT_FLAG): the supplier selects from case 1 up to a cut; the cases between two cuts are sent together.",
-    "Per Part Number the oldest Customer Order Date is sent first (no skip): a later date can be selected only when every case of the earlier dates is in an ASN or selected in the same ASN. A Not Ready case of an earlier date holds the later dates (receiving allocates to the oldest open order first). Lines on hold are not counted."
+    "Per Part Number the oldest Customer Order Date is sent first (no skip): a later date can be selected only when every case of the earlier dates is in an ASN or selected in the same ASN. A Not Ready case of an earlier date holds the later dates. Lines on hold are not counted."
    ]
   },
   {
@@ -2408,7 +2408,7 @@
    "level": 2,
    "items": [
     "On first display Delivery Date = today (business date), Rit = first rit of the date, Route displayed (disabled). The delivery plan is empty.",
-    "[Search] runs XD09 Mapping Customer Order and PO Batch (UISS XD09): the open qty of the H0253 customer orders with order status 7 and Hold Flag N, in the receiving scan order of G-System per Part Number + Customer Order Date, pre-mapped to the PO parts of the Pra Daily Order (PO date order), cut into supplier cases and blocks in the temporary table #TEMP_INSTRUCTION (pre-mapping only; nothing is saved yet). Supplier: units of the login Supplier Code + Plant; D/S team: all suppliers.",
+    "[Search] runs XD09 Mapping Customer Order and PO Batch (UISS XD09): the open qty of the H0253 customer orders with order status 7 and Hold Flag N, in the H0253 order per Part Number + Customer Order Date, pre-mapped to the PO parts of the Pra Daily Order (PO date order), cut into supplier cases and blocks in the temporary table #TEMP_INSTRUCTION (pre-mapping only; nothing is saved yet). Supplier: units of the login Supplier Code + Plant; D/S team: all suppliers.",
     "The delivery plan shows one row per Part Number + Customer Order Date, sorted Ready, Partially Ready, Not Ready, then Part Number ascending. Units without any pre-mapped case and units fully Created are not listed. Part Number and Status filters apply at once. No row: message no. 3.",
     "Delivery Date and Rit do not filter the orders; they are carried to the ASN. Rit and Route come from the existing route master table."
    ]
@@ -2422,8 +2422,8 @@
    "marker": "a.",
    "level": 2,
    "items": [
-    "Unit = Part Number + Customer Order Date. Scan order (decided 21-Oct): Allocation Priority (= Customer Order Date), Customer Code, Customer Order No, Customer Order Date, Customer Order Time, Destination Code, Detailed Item No, Serial No; at receiving the pcs are scanned in this fixed order.",
-    "Supplier case = PCS_CASE pcs in scan order; a case can hold several customer orders, POs and destinations. Case Qty = number of supplier cases; PO Readiness (case) = cases whose whole qty is pre-mapped to a PO.",
+    "Unit = Part Number + Customer Order Date. H0253 order (decided 21-Oct): Allocation Priority (= Customer Order Date), Customer Code, Customer Order No, Customer Order Date, Customer Order Time, Destination Code, Detailed Item No, Serial No (fixed order).",
+    "Supplier case = PCS_CASE pcs in H0253 order; a case can hold several customer orders, POs and destinations. Case Qty = number of supplier cases; PO Readiness (case) = cases whose whole qty is pre-mapped to a PO.",
     "The warehouse packs 1 case = 1 destination, so an ASN may stop only after a case where every destination of the unit is a multiple of PCS_CASE (valid cut). The cases up to a valid cut are a block = one ASN option step (e.g. VN 10, TH 6, VN 14: blocks case 1 | cases 2-3 | case 4 | case 5).",
     "A block is Ready ('6') when it and every earlier block have a PO; otherwise Not Ready ('7'): blocks are never skipped. Unit: Ready (all blocks), Partially Ready (the first k blocks), Not Ready (first block; check box disabled, message no. 2).",
     "Created: blocks in a submitted ASN are no longer in the delivery plan (shown in ASN Inquiry); the open qty of the unit is cut again from case 1 in the same order at the next [Search]."
@@ -2680,7 +2680,7 @@
    "name": "#TEMP_INSTRUCTION",
    "kind": "temp",
    "proposed": true,
-   "description": "Temporary table of one Search run (session): the open qty of the customer order lines (H0253, order status 7, Hold Flag N) in scan order, pre-mapped to the supplier POs (Pra Daily Order) and cut into supplier cases and blocks. One row per line x PO x supplier case; PO_NO NULL for the qty still without a PO. Columns proposed.",
+   "description": "Temporary table of one Search run (session): the open qty of the customer order lines (H0253, order status 7, Hold Flag N) in H0253 order, pre-mapped to the supplier POs (Pra Daily Order) and cut into supplier cases and blocks. One row per line x PO x supplier case; PO_NO NULL for the qty still without a PO. Columns proposed.",
    "columns": [
     [
      "INSTRUCTION_ID",
@@ -2694,56 +2694,56 @@
      "NUMBER(6)",
      "",
      "N",
-     "Scan order of the line within the unit (refer 4.1)"
+     "H0253 order of the line within the unit (refer 4.1)"
     ],
     [
      "CUSTOMER_CD",
      "VARCHAR(7)",
      "",
      "N",
-     "H0253.CUSTOMER_CD (scan key 1)"
+     "H0253.CUSTOMER_CD (order key 1)"
     ],
     [
      "CUSTOMER_ORDER_NO",
      "VARCHAR(8)",
      "",
      "N",
-     "H0253.CUSTOMER_ORDER_NO (scan key 2)"
+     "H0253.CUSTOMER_ORDER_NO (order key 2)"
     ],
     [
      "ORDER_DT",
      "DATE",
      "",
      "N",
-     "Customer Order Date (H0253.ORDER_DT; unit and scan key 3)"
+     "Customer Order Date (H0253.ORDER_DT; unit and order key 3)"
     ],
     [
      "ORDER_TIME",
      "VARCHAR(6)",
      "",
      "N",
-     "H0253.ORDER_TIME (scan key 4)"
+     "H0253.ORDER_TIME (order key 4)"
     ],
     [
      "DESTINATION_CD",
      "VARCHAR(7)",
      "",
      "N",
-     "H0253.DESTINATION_CD (scan key 5)"
+     "H0253.DESTINATION_CD (order key 5)"
     ],
     [
      "DETAILED_ITEM_NO",
      "VARCHAR(4)",
      "",
      "N",
-     "H0253.DETAILED_ITEM_NO (scan key 6)"
+     "H0253.DETAILED_ITEM_NO (order key 6)"
     ],
     [
      "SERIAL_NO",
      "VARCHAR(7)",
      "",
      "N",
-     "H0253.SERIAL_NO (scan key 7)"
+     "H0253.SERIAL_NO (order key 7)"
     ],
     [
      "PART_NO",
@@ -2876,7 +2876,7 @@
      "NUMBER(4)",
      "",
      "N",
-     "Supplier case of the slice within the unit (PCS_CASE pcs in scan order)"
+     "Supplier case of the slice within the unit (PCS_CASE pcs in H0253 order)"
     ],
     [
      "LINE_SEQ",
@@ -3646,7 +3646,7 @@
   ],
   "sections": [
    {
-    "title": "A. Input: pre-mapping of XD09 (#TEMP_INSTRUCTION) in scan order: Customer Order Date, Customer Code, Customer Order No, …",
+    "title": "A. Input: pre-mapping of XD09 (#TEMP_INSTRUCTION) in H0253 order: Customer Order Date, Customer Code, Customer Order No, …",
     "columns": [
      "Sort Seq",
      "Customer Order No",
@@ -3796,7 +3796,7 @@
     ]
    },
    {
-    "title": "C. Supplier cases (6 pcs in scan order; CUT_FLAG Y = the ASN may stop after the case)",
+    "title": "C. Supplier cases (6 pcs in H0253 order; CUT_FLAG Y = the ASN may stop after the case)",
     "columns": [
      "Case",
      "Qty",

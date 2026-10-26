@@ -19,7 +19,7 @@
  ],
  "general": {
   "objective": [
-   "To get the open qty of the crossdock customer orders (H0253, order status 7, Hold Flag N) in the receiving scan order of G-System, pre-map them to the crossdock supplier PO parts (Pra Daily Order: manifests with TB_R_PRA_DAILY_ORDER_MANIFEST.CROSS_DOCK_FLAG = 'X'; their part data from TB_R_PRA_DAILY_ORDER_PART (join MANIFEST_NO)), cut them into supplier cases and blocks (ASN options) into the temporary table #TEMP_INSTRUCTION.",
+   "To get the open qty of the crossdock customer orders (H0253, order status 7, Hold Flag N) in the H0253 order, pre-map them to the crossdock supplier PO parts (Pra Daily Order: manifests with TB_R_PRA_DAILY_ORDER_MANIFEST.CROSS_DOCK_FLAG = 'X'; their part data from TB_R_PRA_DAILY_ORDER_PART (join MANIFEST_NO)), cut them into supplier cases and blocks (ASN options) into the temporary table #TEMP_INSTRUCTION.",
    "To give ASN Crossdock Creation (XD10) the delivery plan per Part Number + Customer Order Date with Case Qty, PO Readiness (case), the ASN options (blocks that can be sent) and the status Ready / Partially Ready / Not Ready.",
    "It runs when the user clicks [Search] on XD10; there is no scheduler. The real mapping is done later by [Create ASN] on XD10.",
    "Crossdock PO (decided 20-Oct): the order is taken from the manifest with TB_R_PRA_DAILY_ORDER_MANIFEST.CROSS_DOCK_FLAG = 'X' and its part data from TB_R_PRA_DAILY_ORDER_PART (MANIFEST_NO). The PO line is identified by MANIFEST_NO + MANIFEST_ITEM (PO_ITEM can differ from MANIFEST_ITEM; one PO can have several manifests)."
@@ -45,7 +45,7 @@
      },
      {
       "id": "d",
-      "label": "Pre-map in scan order, cut cases and blocks",
+      "label": "Pre-map in H0253 order, cut cases and blocks",
       "type": "process"
      },
      {
@@ -156,8 +156,8 @@
     ],
     "rows": [
      "PART_NO + ORDER_DT (unit; units by ORDER_DT ascending)",
-     "Scan order: ORDER_DT (Allocation Priority), CUSTOMER_CD, CUSTOMER_ORDER_NO, ORDER_DT, ORDER_TIME, DESTINATION_CD, DETAILED_ITEM_NO, SERIAL_NO",
-     "CASE_SEQ (PCS_CASE pcs in scan order)",
+     "H0253 order: ORDER_DT (Allocation Priority), CUSTOMER_CD, CUSTOMER_ORDER_NO, ORDER_DT, ORDER_TIME, DESTINATION_CD, DETAILED_ITEM_NO, SERIAL_NO",
+     "CASE_SEQ (PCS_CASE pcs in H0253 order)",
      "GROUP_SEQ (block up to a valid cut)"
     ]
    },
@@ -218,7 +218,7 @@
     },
     {
      "id": "p4",
-     "label": "Pre-map in scan order, cut cases and blocks",
+     "label": "Pre-map in H0253 order, cut cases and blocks",
      "type": "process",
      "step": 4
     },
@@ -283,9 +283,9 @@
     ]
    },
    {
-    "text": "Per unit (Part Number + Customer Order Date, oldest date first), pre-map in scan order (see 4.1 and 4.2) and insert the result in #TEMP_INSTRUCTION.",
+    "text": "Per unit (Part Number + Customer Order Date, oldest date first), pre-map in H0253 order (see 4.1 and 4.2) and insert the result in #TEMP_INSTRUCTION.",
     "children": [
-     "Lines in scan order: 1) Allocation Priority (= Customer Order Date), 2) Customer Code, 3) Customer Order No, 4) Customer Order Date, 5) Customer Order Time, 6) Destination Code, 7) Detailed Item No, 8) Serial No (order of G-System allocation).",
+     "Lines in H0253 order: 1) Allocation Priority (= Customer Order Date), 2) Customer Code, 3) Customer Order No, 4) Customer Order Date, 5) Customer Order Time, 6) Destination Code, 7) Detailed Item No, 8) Serial No.",
      "Each PO qty (PO_DT ascending) goes to the open qty in this order; a line may be split over several POs.",
      "The pcs are cut into supplier cases of PCS_CASE pcs in this order (a case can hold several lines and destinations); each slice line x PO x case is one row."
     ]
@@ -326,7 +326,7 @@
      },
      {
       "dest_field": "SORT_SEQ",
-      "description": "Scan order of the line in the unit"
+      "description": "H0253 order of the line in the unit"
      },
      {
       "source_field": "H0253.CUSTOMER_CD",
@@ -431,7 +431,7 @@
      },
      {
       "dest_field": "CASE_SEQ",
-      "description": "Supplier case: running number every PCS_CASE pcs in scan order"
+      "description": "Supplier case: running number every PCS_CASE pcs in H0253 order"
      },
      {
       "dest_field": "LINE_SEQ",
@@ -482,21 +482,21 @@
     "One customer order line can be in different ASNs (its cases split). When G-System receives them separately, the line is split in H0253 (new SERIAL_NO); each part stays linked to its ASN (XD08).",
     "PO_MAPPED_FLAG is set by [Create ASN] ('Y' when the whole line is in the ASN; a draft not submitted is released by XD08).",
     "Ready cases of the delivery plan are sent following the cut (CUT_FLAG): the supplier selects from case 1 up to a cut; the cases between two cuts are sent together.",
-    "Per Part Number the oldest Customer Order Date is sent first (no skip): a later date can be selected only when every case of the earlier dates is in an ASN or selected in the same ASN. A Not Ready case of an earlier date holds the later dates (receiving allocates to the oldest open order first). Lines on hold are not counted."
+    "Per Part Number the oldest Customer Order Date is sent first (no skip): a later date can be selected only when every case of the earlier dates is in an ASN or selected in the same ASN. A Not Ready case of an earlier date holds the later dates. Lines on hold are not counted."
    ]
   },
   {
    "type": "heading",
-   "text": "4.1 Scan Order"
+   "text": "4.1 H0253 Order"
   },
   {
    "type": "bullets",
    "marker": "-",
    "level": 0,
    "items": [
-    "At receiving, the scan allocates the delivered pcs to the customer orders in a fixed order that cannot be changed. XD09 uses the same order (decided 21-Oct): 1) Allocation Priority (= Customer Order Date), 2) Customer Code, 3) Customer Order No, 4) Customer Order Date, 5) Customer Order Time, 6) Destination Code, 7) Detailed Item No, 8) Serial No (order of G-System allocation).",
+    "XD09 reads the H0253 replicate in this fixed order (decided 21-Oct): 1) Allocation Priority (= Customer Order Date), 2) Customer Code, 3) Customer Order No, 4) Customer Order Date, 5) Customer Order Time, 6) Destination Code, 7) Detailed Item No, 8) Serial No.",
     "The order is applied per unit = Part Number + Customer Order Date (way B): the units of a part are processed by Customer Order Date ascending, so the POs go to the oldest date first.",
-    "The scan keys are the primary key of TB_R_H0253_ORDER_CONTROL_PRE (same columns, same order), so the replicate keeps the rows in scan order. The PK order is global (all parts, dates and statuses) and a read without ORDER BY has no guaranteed order: XD09 filters the unit and reads it with ORDER BY SHIPPING_PART_NO, Allocation Priority (ORDER_DT), then the PK columns (query: Appendix). SORT_SEQ = ROW_NUMBER() in this order per unit (it can be derived again at any time).",
+    "Keys 2) to 8) are the primary key of TB_R_H0253_ORDER_CONTROL_PRE (same columns, same order). The PK order is global (all parts, dates and statuses) and a read without ORDER BY has no guaranteed order: XD09 filters the unit and reads it with ORDER BY SHIPPING_PART_NO, Allocation Priority (ORDER_DT), then the PK columns (query: Appendix). SORT_SEQ = ROW_NUMBER() in this order per unit (it can be derived again at any time).",
     "Lines with HOLD_FLAG = 'Y' are not taken. Only the open qty of a line is taken (open qty = ORDER_STATUS_QTY - qty of the line already in TB_R_INSTRUCTION): a line can be sent over several ASNs; PO_MAPPED_FLAG becomes 'Y' only when the whole line is in TB_R_INSTRUCTION."
    ]
   },
@@ -509,8 +509,8 @@
    "marker": "-",
    "level": 0,
    "items": [
-    "PO parts by PO_DT ascending; each PO qty goes to the open qty in scan order; a line may be split over several POs; qty without PO = PO_NO NULL.",
-    "The pcs of the unit are cut into supplier cases of PCS_CASE pcs in scan order (e.g. 6 pcs/case: case 1 = V01 6; case 2 = V01 4 + T01 2). A supplier case can hold several lines and destinations. G-System releases each destination in multiples of PCS_CASE, so every case is full.",
+    "PO parts by PO_DT ascending; each PO qty goes to the open qty in H0253 order; a line may be split over several POs; qty without PO = PO_NO NULL.",
+    "The pcs of the unit are cut into supplier cases of PCS_CASE pcs in H0253 order (e.g. 6 pcs/case: case 1 = V01 6; case 2 = V01 4 + T01 2). A supplier case can hold several lines and destinations. G-System releases each destination in multiples of PCS_CASE, so every case is full.",
     "A PO remainder without open line stays open for later customer orders."
    ]
   },
@@ -526,7 +526,7 @@
    "marker": "-",
    "level": 0,
    "items": [
-    "In the warehouse the scanned pcs are packed 1 case = 1 destination (max PCS_CASE pcs). An ASN may therefore stop only after a case where the cumulative qty of every destination of the unit is a multiple of PCS_CASE (valid cut, CUT_FLAG 'Y'). SEQ_QTY = fill of the warehouse case of the destination (1..PCS_CASE, starts again after PCS_CASE): the cut is valid when the last SEQ_QTY of every destination = PCS_CASE. Example: after case 2 VN 10 / TH 2 is not valid (VN short 2, TH short 4); after case 3 VN 12 / TH 6 is valid.",
+    "In the warehouse 1 case = 1 destination (max PCS_CASE pcs). An ASN may therefore stop only after a case where the cumulative qty of every destination of the unit is a multiple of PCS_CASE (valid cut, CUT_FLAG 'Y'). SEQ_QTY = fill of the warehouse case of the destination (1..PCS_CASE, starts again after PCS_CASE): the cut is valid when the last SEQ_QTY of every destination = PCS_CASE. Example: after case 2 VN 10 / TH 2 is not valid (VN short 2, TH short 4); after case 3 VN 12 / TH 6 is valid.",
     "Block = the cases after the previous valid cut up to the next valid cut (GROUP_SEQ). A block is never split.",
     "CROSSDOCK_STATUS of a block: '6' Ready when the block and every earlier block are fully pre-mapped to a PO; '7' Not Ready otherwise. A later block with PO stays '7' while an earlier block has no PO (blocks are never skipped).",
     "ASN options of the unit = the first 1..n Ready blocks. Unit status on XD10: Ready (all blocks '6'), Partially Ready (first block '6', a later block '7'), Not Ready (first block '7'). Units without any pre-mapped case are not listed.",
@@ -567,7 +567,7 @@
   },
   {
    "type": "heading",
-   "text": "Query: H0253 lines in scan order (Allocation Priority = Customer Order Date)"
+   "text": "Query: H0253 lines in H0253 order (Allocation Priority = Customer Order Date)"
   },
   {
    "type": "text",
@@ -667,9 +667,9 @@
  ],
  "sample_sheet": {
   "title": "Sample Input",
-  "heading": "Sample pre-mapping - scan order, supplier cases and ASN options (blocks)",
+  "heading": "Sample pre-mapping - H0253 order, supplier cases and ASN options (blocks)",
   "intro": [
-   "Part PART-A, 6 pcs/case, Customer Order Date 14-Oct-2026 (one unit). H0253 lines (order status 7, Hold Flag N): V01 VN 10, T01 TH 6, V02 VN 14 (30 pcs). Dummy customer codes CUST-A / B / C give the scan order V01, T01, V02.",
+   "Part PART-A, 6 pcs/case, Customer Order Date 14-Oct-2026 (one unit). H0253 lines (order status 7, Hold Flag N): V01 VN 10, T01 TH 6, V02 VN 14 (30 pcs). Dummy customer codes CUST-A / B / C give the H0253 order V01, T01, V02.",
    "PO parts (manifests with TB_R_PRA_DAILY_ORDER_MANIFEST.CROSS_DOCK_FLAG = 'X'; their part data from TB_R_PRA_DAILY_ORDER_PART (join MANIFEST_NO)): p1 24 pcs (released 15-Oct), p2 6 pcs (released 16-Oct).",
    "Cut check after each case: cumulative VN / TH = case 1: 6 / 0 valid; case 2: 10 / 2 not valid (VN short 2, TH short 4); case 3: 12 / 6 valid; case 4: 18 / 6 valid; case 5: 24 / 6 valid. Blocks: 1 = case 1; 2 = cases 2-3; 3 = case 4; 4 = case 5."
   ],
@@ -820,7 +820,7 @@
      "Blocks",
      "Cases",
      "Pcs",
-     "Scan order at receiving"
+     "Content (H0253 order)"
     ],
     "widths": [
      8,
@@ -935,7 +935,7 @@
      [
       "N3",
       "Block 2 without PO, block 3 with PO",
-      "Block 3 is Not Ready too: blocks are never skipped (scan order is fixed)."
+      "Block 3 is Not Ready too: blocks are never skipped (H0253 order is fixed)."
      ],
      [
       "N4",
@@ -945,7 +945,7 @@
      [
       "N5",
       "A destination is on hold (Hold Flag Y)",
-      "Its lines are not taken; the scan order and the blocks are computed without them."
+      "Its lines are not taken; the H0253 order and the blocks are computed without them."
      ],
      [
       "E1",
@@ -961,7 +961,7 @@
    "name": "#TEMP_INSTRUCTION",
    "kind": "temp",
    "proposed": true,
-   "description": "Temporary table of one Search run (session): the open qty of the customer order lines (H0253, order status 7, Hold Flag N) in scan order, pre-mapped to the supplier POs (Pra Daily Order) and cut into supplier cases and blocks. One row per line x PO x supplier case; PO_NO NULL for the qty still without a PO. Columns proposed.",
+   "description": "Temporary table of one Search run (session): the open qty of the customer order lines (H0253, order status 7, Hold Flag N) in H0253 order, pre-mapped to the supplier POs (Pra Daily Order) and cut into supplier cases and blocks. One row per line x PO x supplier case; PO_NO NULL for the qty still without a PO. Columns proposed.",
    "columns": [
     [
      "INSTRUCTION_ID",
@@ -975,56 +975,56 @@
      "NUMBER(6)",
      "",
      "N",
-     "Scan order of the line within the unit (refer 4.1)"
+     "H0253 order of the line within the unit (refer 4.1)"
     ],
     [
      "CUSTOMER_CD",
      "VARCHAR(7)",
      "",
      "N",
-     "H0253.CUSTOMER_CD (scan key 1)"
+     "H0253.CUSTOMER_CD (order key 1)"
     ],
     [
      "CUSTOMER_ORDER_NO",
      "VARCHAR(8)",
      "",
      "N",
-     "H0253.CUSTOMER_ORDER_NO (scan key 2)"
+     "H0253.CUSTOMER_ORDER_NO (order key 2)"
     ],
     [
      "ORDER_DT",
      "DATE",
      "",
      "N",
-     "Customer Order Date (H0253.ORDER_DT; unit and scan key 3)"
+     "Customer Order Date (H0253.ORDER_DT; unit and order key 3)"
     ],
     [
      "ORDER_TIME",
      "VARCHAR(6)",
      "",
      "N",
-     "H0253.ORDER_TIME (scan key 4)"
+     "H0253.ORDER_TIME (order key 4)"
     ],
     [
      "DESTINATION_CD",
      "VARCHAR(7)",
      "",
      "N",
-     "H0253.DESTINATION_CD (scan key 5)"
+     "H0253.DESTINATION_CD (order key 5)"
     ],
     [
      "DETAILED_ITEM_NO",
      "VARCHAR(4)",
      "",
      "N",
-     "H0253.DETAILED_ITEM_NO (scan key 6)"
+     "H0253.DETAILED_ITEM_NO (order key 6)"
     ],
     [
      "SERIAL_NO",
      "VARCHAR(7)",
      "",
      "N",
-     "H0253.SERIAL_NO (scan key 7)"
+     "H0253.SERIAL_NO (order key 7)"
     ],
     [
      "PART_NO",
@@ -1157,7 +1157,7 @@
      "NUMBER(4)",
      "",
      "N",
-     "Supplier case of the slice within the unit (PCS_CASE pcs in scan order)"
+     "Supplier case of the slice within the unit (PCS_CASE pcs in H0253 order)"
     ],
     [
      "LINE_SEQ",

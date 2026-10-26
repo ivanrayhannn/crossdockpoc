@@ -48,7 +48,7 @@ SAMPLE = {
         "The supplier ticks the unit PART-X 17-Oct (cases 1-4, case 5 is Not Ready) and clicks [Create ASN]; the submit gives ASN0003.",
     ],
     "sections": [
-        {"title": "A. Input: pre-mapping of XD09 (#TEMP_INSTRUCTION) in scan order: Customer Order Date, Customer Code, Customer Order No, …",
+        {"title": "A. Input: pre-mapping of XD09 (#TEMP_INSTRUCTION) in H0253 order: Customer Order Date, Customer Code, Customer Order No, …",
          "columns": ["Sort Seq", "Customer Order No", "Detailed Item No", "Serial No", "Destination", "Open Qty", "PO No", "Assigned Qty", "Case", "Cut", "Status"],
          "spans": [1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1],
          "rows": premap_rows()},
@@ -56,7 +56,7 @@ SAMPLE = {
          "columns": ["PO No", "Manifest No", "Manifest Item", "Part No", "PO Qty (ORDER_QTY)", "Mapped Qty (TB_R_PRA_DAILY_ORDER_MAPPED)", "Open Qty"],
          "spans": [1, 1, 1, 1, 1, 2, 1],
          "rows": [["T0409012", MF['T0409012'], "0001", "PART-X", 6, 0, 6], ["T0409013", MF['T0409013'], "0001", "PART-X", 18, 0, 18]]},
-        {"title": "C. Supplier cases (6 pcs in scan order; CUT_FLAG Y = the ASN may stop after the case)",
+        {"title": "C. Supplier cases (6 pcs in H0253 order; CUT_FLAG Y = the ASN may stop after the case)",
          "columns": ["Case", "Qty", "Content (customer order qty (PO))", "CUT_FLAG", "Status"],
          "spans": [1, 1, 8, 1, 2],
          "rows": case_rows()},

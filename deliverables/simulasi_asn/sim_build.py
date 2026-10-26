@@ -61,7 +61,7 @@ def gsys(title, date, rows):
         new[co] = (s, q)
     prev_g = new; cur[0] = r + len(rows) + 3
 def rep(title, date, rows):
-    """NSP replicate in scan order: rows = {co: (upd, hold, mapped, asn, note)}."""
+    """NSP replicate in H0253 order: rows = {co: (upd, hold, mapped, asn, note)}."""
     global prev_r
     r = head(title, date, 'NSP.TB_R_H0253_ORDER_CONTROL_PRE'); put(r, RH, 'rh')
     for i, co in enumerate(sorted(rows, key=scan)):
@@ -79,7 +79,7 @@ def upd(base, **kw):
     return out
 
 N, GS = 'NULL', 'Condition Data di Surrounding DB'
-XR = 'Condition setelah XD08 replicate data (baris NSP diurutkan sesuai scan order: ORDER_DT, CUSTOMER_CD, CUSTOMER_ORDER_NO)'
+XR = 'Condition setelah XD08 replicate data (baris NSP diurutkan ORDER BY ORDER_DT (Allocation Priority), CUSTOMER_CD, CUSTOMER_ORDER_NO, …)'
 gsys(GS + ' (order date 15/10 → 1 PO T0409011 PO_DT 16/10, qty 12)', '16/10/2026', [('CO-14101', '7', None), ('CO-14102', '7', None)])
 R = {'CO-14101': (N, 'N', 'N', N, None), 'CO-14102': (N, 'N', 'N', N, None)}
 rep('Condition baru pertama replicate data', '16/10/2026', R)
@@ -95,9 +95,9 @@ gsys(GS + ' (order date 17/10: 4 destinasi, total 30 pcs → T0409013 PO_DT 18/1
      [('CO-14101', '6', None), ('CO-14102', '2', None), ('CO-14103', '6', None), ('CO-14104', '7', None), ('CO-14105', '7', None), ('CO-14106', '7', None),
       ('CO-14107', '7', None), ('CO-14109', '7', None), ('CO-14110', '7', None)])
 R = upd(R, CO_14103=('6', 'N', 'Y', 'ASN0002', '6 pcs received'),
-        CO_14105=(N, 'N', 'N', N, 'Scan ke-1 → Case 1 (T0409012)'), CO_14106=(N, 'N', 'N', N, 'Scan ke-2 → Case 2 (T0409013)'),
-        CO_14107=(N, 'N', 'N', N, 'Scan ke-3 → Case 2 (T0409013)'), CO_14104=(N, 'N', 'N', N, 'Scan ke-4 → Case 3 (T0409013), baris tengah'),
-        CO_14109=(N, 'N', 'N', N, 'Scan ke-5 → Case 4 (T0409013)'), CO_14110=(N, 'N', 'N', N, 'Scan ke-6 → Case 5: PO kurang → Not Ready'))
+        CO_14105=(N, 'N', 'N', N, 'Urutan ke-1 → Case 1 (T0409012)'), CO_14106=(N, 'N', 'N', N, 'Urutan ke-2 → Case 2 (T0409013)'),
+        CO_14107=(N, 'N', 'N', N, 'Urutan ke-3 → Case 2 (T0409013)'), CO_14104=(N, 'N', 'N', N, 'Urutan ke-4 → Case 3 (T0409013), baris tengah'),
+        CO_14109=(N, 'N', 'N', N, 'Urutan ke-5 → Case 4 (T0409013)'), CO_14110=(N, 'N', 'N', N, 'Urutan ke-6 → Case 5: PO kurang → Not Ready'))
 rep(XR, '18/10/2026', R)
 R = upd(R, **{c.replace('-', '_'): (N, 'N', 'Y', 'ASN0003', f'Udah ASN (Case {k})') for c, k in
               [('CO-14105', 1), ('CO-14106', 2), ('CO-14107', 2), ('CO-14104', 3), ('CO-14109', 4)]})
@@ -123,8 +123,8 @@ gsys(GS + ' (ASN0004 & ASN0005 received; order date 19/10: CO-14111 TH 6 + CO-14
       ('CO-14107', '6', None), ('CO-14109', '6', None), ('CO-14110', '6', None), ('CO-14112', '6', None), ('CO-14113', '6', None),
       ('CO-14114', '6', None), ('CO-14111', '7', None), ('CO-14115', '7', '1 line 12 pcs = 2 case')])
 R = upd(R, CO_14110=('6', 'N', 'Y', 'ASN0004', 'Received'), CO_14112=('6', 'N', 'Y', 'ASN0005', 'Received'), CO_14113=('6', 'N', 'Y', 'ASN0005', 'Received'),
-        CO_14114=('6', 'N', 'Y', 'ASN0005', 'Received'), CO_14115=(N, 'N', 'N', N, 'Scan ke-1: Case 1 (sisa T0409015) + Case 2 (T0409016)'),
-        CO_14111=(N, 'N', 'N', N, 'Scan ke-2: Case 3 (T0409016), belum dikirim supplier'))
+        CO_14114=('6', 'N', 'Y', 'ASN0005', 'Received'), CO_14115=(N, 'N', 'N', N, 'Urutan ke-1: Case 1 (sisa T0409015) + Case 2 (T0409016)'),
+        CO_14111=(N, 'N', 'N', N, 'Urutan ke-2: Case 3 (T0409016), belum dikirim supplier'))
 rep(XR, '20/10/2026', R)
 R = upd(R, CO_14115=(N, 'N', 'N', 'ASN0006', 'Case 1 (6 dari 12) → ASN0006 rit 1; PO_MAPPED tetap N (line belum lengkap), open qty 6'))
 rep('Condition saat create ASN0006 (Case 1 CO-14115, 6 pcs)', '20/10/2026', R)
