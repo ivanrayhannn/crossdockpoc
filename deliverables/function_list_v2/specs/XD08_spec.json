@@ -278,6 +278,13 @@
     ]
    },
    {
+    "text": "Serial split (G-System split a line with rows in TB_R_INSTRUCTION into a new SERIAL_NO, e.g. partial receipt):",
+    "children": [
+     "Re-assign the TB_R_INSTRUCTION rows (ASN_NO filled) of the customer order + detailed item over its serials: the serial with status '6' takes the rows of the oldest ASN (the received one) up to its qty, the serial with status '7' the next ASN, the serial with status '2' the rest (then the cancel check below). Only SERIAL_NO changes; a row is split when the qty does not fit (case, PO and ASN not changed).",
+     "PO_MAPPED_FLAG of each serial = 'Y' when its qty is fully in TB_R_INSTRUCTION, else 'N' (open qty taken by the next Search). Write LOG7."
+    ]
+   },
+   {
     "text": "Release all drafts of TB_R_INSTRUCTION (rows with ASN_NO NULL), whatever changed:",
     "children": [
      "Delete the rows; MAPPED_QTY of TB_R_PRA_DAILY_ORDER_MAPPED - their qty; PO_MAPPED_FLAG = 'N' on their lines.",
@@ -740,6 +747,17 @@
    "action": {
     "system": "Write the log (abnormality); the line is still listed in XD11.",
     "user": "D/S team checks with G-System."
+   }
+  },
+  {
+   "event": "Serial split",
+   "cause": "A line in TB_R_INSTRUCTION is split into a new SERIAL_NO by G-System",
+   "type": "Info",
+   "msg_id": "LOG7",
+   "message": "<CUSTOMER_ORDER_NO> item <DETAILED_ITEM_NO> split into serial <SERIAL_NO>: <QTY> pcs of <ASN_NO> moved to the new serial.",
+   "action": {
+    "system": "Write the log.",
+    "user": "-"
    }
   },
   {

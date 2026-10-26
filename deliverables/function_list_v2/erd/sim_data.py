@@ -406,4 +406,29 @@ SCENARIOS = [
                 ('upd', h('T01', TH, '0000001', 'PART-A', 6, mapped='Y', cust='CUST-B'), ['PO_MAPPED_FLAG'], 'Whole line in cases 2-3'),
                 ('ref', h('V02', VN, '0000001', 'PART-A', 14, cust='CUST-C'), [], '2 of 14 sent: stays N, open qty 12 (cases 4-5 at the next Search)')]),
         ]},
+    {
+        'id': 'SIM-10', 'title': 'One line in 2 ASNs; partial receipt splits the serial → XD08 re-assigns TB_R_INSTRUCTION (simulasi_asn.xlsx)', 'flow': 'BPF F2',
+        'functions': 'XD09, XD10, XD08 (serial split)',
+        'story': ['CO-14115 VN 12 pcs (order date 19-Oct), 6 pcs/case: case 1 → ASN0006 (rit 1), case 2 → ASN0007 (rit 2). One H0253 row, two TB_R_INSTRUCTION rows.',
+                  '21-Oct ASN0006 received: G-System splits the line into serial 0000001 6 pcs status 6 and serial 0000002 6 pcs status 7.',
+                  'Upsert alone: serial 0000001 has 12 pcs in TB_R_INSTRUCTION for qty 6 and serial 0000002 looks open (6) → XD09 would map it again (double). '
+                  'XD08 re-assigns the rows: serial 0000001 = ASN0006 (oldest ASN = received), serial 0000002 = ASN0007; both PO_MAPPED_FLAG Y.'],
+        'steps': [
+            ('1. 20-Oct ASN0006 (case 1) and ASN0007 (case 2): one line in 2 ASNs', 'TB_R_INSTRUCTION', [
+                ('new', [12, 1, 1, 'PART-X', VN, 'CO-14115', '0000001', 6, 'PO-DMY-09015', 'MF-DMY-09015', '0001', 'ASN0006', 'C-0006-01']),
+                ('new', [13, 1, 1, 'PART-X', VN, 'CO-14115', '0000001', 6, 'PO-DMY-09016', 'MF-DMY-09016', '0001', 'ASN0007', 'C-0007-01'])]),
+            ('', 'TB_R_H0253_ORDER_CONTROL_PRE', [
+                ('upd', h('CO-14115', VN, '0000001', 'PART-X', 12, mapped='Y', od='2026-10-19'), ['PO_MAPPED_FLAG'], 'N after ASN0006 (6 of 12), Y after ASN0007')]),
+            ('2. 21-Oct XD08 upsert: ASN0006 received, G-System split the line', 'TB_R_H0253_ORDER_CONTROL_PRE', [
+                ('upd', h('CO-14115', VN, '0000001', 'PART-X', 6, mapped='Y', upd='6', od='2026-10-19'), ['ORDER_STATUS_QTY', 'UPD_STATUS'], '12 → 6, received'),
+                ('new', h('CO-14115', VN, '0000002', 'PART-X', 6, od='2026-10-19'), [], 'New serial, status 7: without step 3 open qty 6 = double mapping')]),
+            ('3. 21-Oct XD08 serial split: rows re-assigned (LOG7)', 'TB_R_INSTRUCTION', [
+                ('ref', [12, 1, 1, 'PART-X', VN, 'CO-14115', '0000001', 6, 'PO-DMY-09015', 'MF-DMY-09015', '0001', 'ASN0006', 'C-0006-01'], [], 'Oldest ASN → serial with status 6'),
+                ('upd', [13, 1, 1, 'PART-X', VN, 'CO-14115', '0000002', 6, 'PO-DMY-09016', 'MF-DMY-09016', '0001', 'ASN0007', 'C-0007-01'], ['SERIAL_NO'],
+                 'Next ASN → serial with status 7; case, PO, ASN not changed')]),
+            ('', 'TB_R_H0253_ORDER_CONTROL_PRE', [
+                ('upd', h('CO-14115', VN, '0000002', 'PART-X', 6, mapped='Y', od='2026-10-19'), ['PO_MAPPED_FLAG'], 'Fully in TB_R_INSTRUCTION: not taken by XD09')]),
+            ('4. 22-Oct XD08: ASN0007 received', 'TB_R_H0253_ORDER_CONTROL_PRE', [
+                ('upd', h('CO-14115', VN, '0000002', 'PART-X', 6, mapped='Y', upd='6', od='2026-10-19'), ['UPD_STATUS'], 'Received')]),
+        ]},
 ]
