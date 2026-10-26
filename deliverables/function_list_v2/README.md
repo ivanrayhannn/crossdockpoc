@@ -85,6 +85,13 @@ Simulasi: menu prototype **ASN → Cancel Order Simulation**.
 - **XD11** = layar D/S **Change Order Number** (menggantikan cancel batch): qty cancel di ASN dipindah ke line part sama dengan UPD_STATUS 6, PO_MAPPED_FLAG N, tanpa ASN (tertua dulu, boleh beberapa line / destinasi lain, total qty sama); baris dipecah dari case terakhir; riwayat **TB_H_CROSSDOCK_ORDER_CHANGE** (pengganti TB_R_CROSSDOCK_CANCEL_RESULT).
 - Logika di `specs/build_h.py`, `specs/build_xd11.py`, `specs/apply_2310.py`; simulasi SIM-5 / SIM-6 diganti (simulasi_asn.xlsx).
 
+## Business Logic ASN (UISS XD09 4.0 / XD10 5.0)
+1. Customer Order Date (hari ini, D) → PO Date (besok, D+1): 1 PO per Part Number per Customer Order Date.
+2. Total customer order qty semua destinasi per Part Number = total PO qty dalam 1 PO. Kalau kurang → abnormality, sisanya di split PO; customer order yang belum dapat PO menunggu PO berikutnya.
+3. 1 line customer order bisa ada di beberapa ASN; kalau receive-nya terpisah, line di H0253 ikut terpecah (SERIAL_NO baru) dan tiap bagian tetap terhubung ke ASN-nya.
+4. PO_MAPPED_FLAG diisi saat Create ASN.
+5. Case Ready di delivery plan dikirim sesuai CUT_FLAG (dari case 1 sampai cut; case di antara dua cut dikirim bersama).
+
 ## Business Process Flow Level 2
 Lihat `bpf/README.md`: Excel `bpf/Crossdock_BPF_Level2.xlsx` (X = PIC, Y = timeline, sampai level tabel, abnormality AB01–AB16) dan menu prototype Common → Business Process Flow.
 

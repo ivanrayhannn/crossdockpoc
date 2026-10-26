@@ -94,7 +94,29 @@ def xd15():
     save('XD15', s)
 
 
+BL_HEAD = "Business Logic ASN"
+BL = ["Customer Order Date (today, D) → PO Date (tomorrow, D+1): one PO per Part Number per Customer Order Date.",
+      "Total customer order qty of all destinations per Part Number and Customer Order Date = total PO qty of that PO. When the PO qty is lower: "
+      "abnormality; the rest comes in a split PO, the customer orders without PO wait (Not Ready) until the next PO is issued.",
+      "One customer order line can be in different ASNs (its cases split). When G-System receives them separately, the line is split in H0253 "
+      "(new SERIAL_NO); each part stays linked to its ASN (XD08).",
+      "PO_MAPPED_FLAG is set by [Create ASN] ('Y' when the whole line is in the ASN; a draft not submitted is released by XD08).",
+      "Ready cases of the delivery plan are sent following the cut (CUT_FLAG): the supplier selects from case 1 up to a cut; the cases between two cuts are sent together."]
+
+
+def business_logic(fid, key, num):
+    s = load(fid)
+    blocks = s[key]
+    if not any(b.get('type') == 'heading' and b.get('text', '').endswith(BL_HEAD) for b in blocks):
+        i = 1 if key == 'func_desc' else 0   # XD09: after the intro text
+        blocks[i:i] = [{"type": "heading", "text": f"{num} {BL_HEAD}"},
+                       {"type": "bullets", "marker": "1.", "level": 0, "items": BL}]
+    save(fid, s)
+
+
 def main():
+    business_logic('XD09', 'func_desc', '4.0')
+    business_logic('XD10', 'operation', '5.0')
     tabs = xd10()
     xd09()
     batch_tables('XD08', tabs)
