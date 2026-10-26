@@ -324,7 +324,7 @@ export const BPF: BpfData = {
    "bands": [
     {
      "id": "B1",
-     "label": "D-1 · during the day",
+     "label": "D-1 · customer order / D · PO (existing)",
      "slots": 1
     },
     {
@@ -339,7 +339,7 @@ export const BPF: BpfData = {
     },
     {
      "id": "B4",
-     "label": "Day D · after submit",
+     "label": "Day D · after submit / receiving",
      "slots": 2
     }
    ],
@@ -366,13 +366,15 @@ export const BPF: BpfData = {
      "band": "B1",
      "slot": 0,
      "fn": "existing",
-     "title": "Release PO Supplier (manifest CROSS_DOCK_FLAG X, parts in Pra Daily Order Part)",
+     "title": "Release PO Supplier: one PO per Part per Customer Order Date, PO date = order date + 1, qty = total order qty of all destinations (CROSS_DOCK_FLAG X)",
      "read": [],
      "write": [
       "TB_R_PRA_DAILY_ORDER_MANIFEST",
       "TB_R_PRA_DAILY_ORDER_PART"
      ],
-     "ab": [],
+     "ab": [
+      "AB17"
+     ],
      "next": [
       "D3"
      ]
@@ -383,16 +385,18 @@ export const BPF: BpfData = {
      "band": "B2",
      "slot": 0,
      "fn": "XD08",
-     "title": "Upsert changed rows (delta INTF_UPDATE_DT); UPD_STATUS 6 / 2; release all drafts",
+     "title": "Upsert changed rows (delta INTF_UPDATE_DT); UPD_STATUS 6 / 2; serial split: each part stays linked to its ASN; release all drafts",
      "read": [
       "TB_R_H0253_ORDER_CONTROL_PRE (DB Surrounding)"
      ],
      "write": [
       "TB_R_H0253_ORDER_CONTROL_PRE (NSP)",
+      "TB_R_INSTRUCTION (SERIAL_NO)",
       "Log"
      ],
      "ab": [
-      "AB07"
+      "AB07",
+      "AB18"
      ],
      "next": [
       "D5"
@@ -442,7 +446,7 @@ export const BPF: BpfData = {
      "band": "B3",
      "slot": 2,
      "fn": "XD10",
-     "title": "Tick units, choose ASN option (first n Ready blocks), [Create ASN]",
+     "title": "Tick cases: per part the oldest Customer Order Date first; from case 1 up to a cut (CUT_FLAG); [Create ASN]",
      "read": [
       "#TEMP_INSTRUCTION"
      ],
@@ -461,7 +465,7 @@ export const BPF: BpfData = {
      "band": "B3",
      "slot": 3,
      "fn": "XD10",
-     "title": "Lock + re-check; insert the chosen blocks (cases of XD09); real mapping",
+     "title": "Lock + re-check; insert the ticked cases (XD09); real mapping; PO_MAPPED_FLAG Y when the whole line is in the ASN",
      "read": [
       "#TEMP_INSTRUCTION",
       "TB_R_H0253_ORDER_CONTROL_PRE"
@@ -565,6 +569,22 @@ export const BPF: BpfData = {
      "write": [],
      "ab": [
       "AB13"
+     ],
+     "next": []
+    },
+    {
+     "id": "D14",
+     "lane": "GT",
+     "band": "B4",
+     "slot": 1,
+     "fn": "existing",
+     "title": "Receive the ASN in scan order → ORDER_STATUS 6; a partial receipt splits the line (new SERIAL_NO); taken by the next XD08 run (D3)",
+     "read": [],
+     "write": [
+      "TB_R_H0253_ORDER_CONTROL_PRE (DB Surrounding, INTF_UPDATE_DT)"
+     ],
+     "ab": [
+      "AB18"
      ],
      "next": []
     }
@@ -906,13 +926,13 @@ export const BPF: BpfData = {
   {
    "id": "AB08",
    "flow": "F2",
-   "step": "D6",
-   "fn": "XD09",
-   "condition": "Block without PO: the block and every later block are Not Ready",
-   "detection": "Partially Ready (later block) / check box disabled + MSG2 (first block)",
-   "system": "Only the Ready blocks before it can be sent; blocks are never skipped (scan order, decided 21-Oct).",
+   "step": "D6 / D7",
+   "fn": "XD09 / XD10",
+   "condition": "Case without PO: the case and every later case are Not Ready; later Customer Order Dates of the part wait too",
+   "detection": "Partially Ready / check box disabled + MSG2; Wait: dd-Mon first",
+   "system": "Only the Ready cases before it can be sent; cases and order dates are never skipped (scan order, decided 21-Oct / 26-Oct).",
    "pic": "Supplier",
-   "action": "Send the Ready blocks or wait for the next PO; the block becomes Ready on a later [Search]."
+   "action": "Send the Ready cases or wait for the next PO; the case becomes Ready on a later [Search]."
   },
   {
    "id": "AB09",
@@ -990,6 +1010,50 @@ export const BPF: BpfData = {
    "system": "The ASN is not changed (no Cancel ASN); the cancelled qty stays in Change Order Number until it is moved (no time limit; Waiting for a candidate without candidate).",
    "pic": "D/S Team",
    "action": "Move the qty to received lines of the same part (UPD_STATUS 6) in Change Order Number; several lines / another destination allowed."
+  },
+  {
+   "id": "AB17",
+   "flow": "F2",
+   "step": "D2 / D6",
+   "fn": "existing PO / XD09",
+   "condition": "Short PO: PO qty < total customer order qty of the Customer Order Date (all destinations)",
+   "detection": "Short PO chip and PO check on XD10; last cases Not Ready",
+   "system": "The cases without PO wait; the rest comes in a split PO (later PO date); later order dates of the part wait (AB08).",
+   "pic": "Procurement / Supplier",
+   "action": "Procurement issues the split PO; the supplier sends when the cases are Ready."
+  },
+  {
+   "id": "AB18",
+   "flow": "F2",
+   "step": "D14 / D3",
+   "fn": "XD08",
+   "condition": "A line in more than one ASN is received partly; H0253 does not carry the received ASN No (TBC G-System: receiving in ASN order?)",
+   "detection": "New SERIAL_NO in H0253; LOG7",
+   "system": "XD08 links the received part to the ASN sent first and the remaining part to the next ASN; qty always correct, the ASN-serial link can be swapped when the receiving order differs.",
+   "pic": "System admin / G-System",
+   "action": "Confirm the receiving order with G-System; if not in ASN order, G-System provides the received ASN No."
+  },
+  {
+   "id": "AB19",
+   "flow": "F2 / F4",
+   "step": "D2 / C2",
+   "fn": "existing PO",
+   "condition": "Open decision: PO qty left by cancelled orders (e.g. 12 pcs in simulasi_asn_rev) has no owner",
+   "detection": "-",
+   "system": "Today: the open PO qty is taken by the next customer orders of the part (older PO date first).",
+   "pic": "Procurement / D/S Team",
+   "action": "To decide: keep for the next orders, reduce / cancel the PO, or deliver as stock."
+  },
+  {
+   "id": "AB20",
+   "flow": "F4",
+   "step": "C7",
+   "fn": "XD11",
+   "condition": "Open decision: a cancelled qty in an ASN without candidate stays in Change Order Number without time limit",
+   "detection": "Waiting for a candidate",
+   "system": "Nothing is moved until a received line of the same part exists.",
+   "pic": "D/S Team",
+   "action": "To decide: time limit and escalation when no candidate comes (pcs already in the warehouse)."
   }
  ]
 };

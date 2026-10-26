@@ -40,11 +40,13 @@ Tidak dipakai (dikonfirmasi 19-Oct): **X9** H0202 Demand History Sync, **X15** M
 | 2 | XD10 | **Disetujui**: X14 (Submit ASN) masuk ke XD10 (section 5.7) |
 | 3 | XD06 / XD07 | Kirim lewat **file SFTP – Option #3** (NSP Send IF → SFTP TMMIN → SFTP TMA → receive IF → AP POLE Crossdock Kanban Part Master / Crossdock Export Part Master). **TB_R_CROSSDOCK_IF_RESULT = tabel dummy** untuk status kirim; output sebenarnya file ke G-System (XD06) dan AP POLE (XD07). Field dan proses bisnis sudah didetailkan (Interface Data di UISS dan md). Sync Status gabungan **disetujui** |
 | 4 | XD08 / XD12 / tabel H0253 | **Satu tabel replicate upsert** (delta INTF_UPDATE_DT, partial cancel = serial baru, status 6 / 2 disimpan untuk tracking); kolom baru UPD_STATUS; tabel cancel terpisah dihapus |
-| 5 | Urutan job | **Disetujui**: XD12 → XD11 → XD08 |
+| 5 | Urutan job | ~~XD12 → XD11 → XD08~~ — tidak berlaku sejak 23-Oct (XD08 satu batch) |
 | 6 | XD11 | Cancel bisa **dengan atau tanpa Hold Flag Y**. Perhitungan **per line (semua serial)**. Qty yang sudah ASN dicegah oleh feedback ASN existing ke G-System + SOP; kalau tetap terjadi → **CONFLICT** (abnormality, lihat simulasi skenario 4) |
 | 7 | ID | Prefix **XD** (XD01–XD15) |
 
 ## Skenario H0253 (skenario_h0253.xlsx)
+Kolom NSP di tabel ini = konsep lama (sebelum 23-Oct). Konsep sekarang: XD08 UPD_STATUS 6 / 2, cancel setelah ASN → XD11 Change Order Number (lihat Keputusan 23-Oct).
+
 | Skenario | H0253 14-Oct → 15-Oct | NSP |
 |---|---|---|
 | 1 Normal | Status 7 qty 8 → status 6 qty 8 | XD08 update (diterima) |

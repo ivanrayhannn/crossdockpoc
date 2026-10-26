@@ -154,7 +154,7 @@ def _case_rows():
 
 
 XD10_CASE_SECTIONS = [
-    {'title': 'H. Case selection (decided 21-Oct): PART-A 14-Oct, all cases with PO (p1 24 + p2 6); one check box per supplier case; GROUP_SEQ is '
+    {'title': 'H. Case selection rule (example of 21-Oct, not in simulasi_asn: PART-A 14-Oct V01 / T01 / V02, cases that belong together), all cases with PO (p1 24 + p2 6); one check box per supplier case; GROUP_SEQ is '
               'not shown on the screen (cases of the same GROUP_SEQ are ticked together); Content shown to the D/S team only',
      'columns': ['GROUP_SEQ (not shown)', 'Case', 'Qty', 'Remaining Qty (not assigned)', 'Content (D/S team only)', 'PO', 'PO Status'], 'widths': [12, 6, 6, 14, 34, 18, 10],
      'rows': _case_rows()},

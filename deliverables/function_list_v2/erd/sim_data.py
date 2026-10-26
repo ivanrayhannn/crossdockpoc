@@ -9,7 +9,7 @@ from scan_pack import pack  # noqa: E402
 VN, TH, PH, D4 = '9715310', '9722D10', '9811110', '982220'
 CUST = {VN: '9715300', TH: '9722D00', PH: '9811100', D4: '982200'}  # dummy customer code per destination (scan key 1)
 OD, T = '2026-10-14', '080000'
-ASN = 'ASN-50221-261016-001'
+ASN = 'ASN0101'  # example number (format of the existing numbering not detailed)
 
 # columns shown per table in the simulation sheets
 COLS = {
