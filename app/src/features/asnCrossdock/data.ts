@@ -33,6 +33,7 @@ export const DESTS: Record<string, Dest> = {
   '9715310': { code: '9715310', short: 'VN', name: 'Vietnam' },
   '9811110': { code: '9811110', short: 'PH', name: 'Philippines' },
   '9722D10': { code: '9722D10', short: 'TH', name: 'Thailand' },
+  '982220': { code: '982220', short: 'D4', name: 'Destination 982220' },
 };
 
 /** A customer order line of H0253 (order status 7); on a slice of #TEMP_INSTRUCTION the PO fields are filled and qty is the slice qty. */
@@ -56,35 +57,36 @@ export interface InstrLine {
   manifestItemNo: string | null;
   /** Supplier Code + Plant key of SUPPLIERS. */
   supplier: string;
+  /** Change in G-System written to UPD_STATUS by XD08 on date (a line with UPD_STATUS is not taken by XD09). */
+  upd?: { status: '2' | '6'; date: string };
 }
 
 export const PART_NAME: Record<string, string> = {
-  'PART-A': 'Dummy Part A',
-  'PART-B': 'Dummy Part B',
-  'PART-C': 'Dummy Part C',
+  'PART-X': 'Dummy Part X',
   'PART-D': 'Dummy Part D',
 };
 
 /** Supplier of each part (PO supplier of the Pra Daily Order). */
-const PART_SUPPLIER: Record<string, string> = { 'PART-A': '50221-1', 'PART-B': '50221-1', 'PART-C': '50221-1', 'PART-D': '50330-2' };
+const PART_SUPPLIER: Record<string, string> = { 'PART-X': '50221-1', 'PART-D': '50330-2' };
 
 const VN = '9715310';
 const PH = '9811110';
 const TH = '9722D10';
-/** Dummy customer code per destination (scan key 2). */
-const CUST: Record<string, string> = { [VN]: '9715300', [TH]: '9722D00', [PH]: '9811100' };
+const D4 = '982220';
+/** Customer code per destination (scan key 2), as in simulasi_asn_rev.xlsx. */
+const CUST: Record<string, string> = { [VN]: '9715300', [TH]: '9722D10', [PH]: '9811100', [D4]: '982200' };
 
-type Raw = [order: string, dest: string, qty: number, cust?: string, item?: string, time?: string];
+type Raw = [order: string, dest: string, qty: number, upd?: { status: '2' | '6'; date: string }];
 
 function lines(orderDt: string, partNo: string, raw: Raw[]): InstrLine[] {
-  return raw.map(([order, dest, qty, cust, item, time]) => ({
-    id: `${partNo}|${orderDt}|${order}|${item ?? '0001'}`,
-    custCd: cust ?? CUST[dest],
+  return raw.map(([order, dest, qty, upd]) => ({
+    id: `${partNo}|${orderDt}|${order}|001`,
+    custCd: CUST[dest],
     custOrderNo: order,
     orderDt,
-    orderTime: time ?? '080000',
+    orderTime: '080000',
     destCd: dest,
-    detailedItemNo: item ?? '0001',
+    detailedItemNo: '001',
     serialNo: '0000001',
     partNo,
     qty,
@@ -93,24 +95,27 @@ function lines(orderDt: string, partNo: string, raw: Raw[]): InstrLine[] {
     manifestNo: null,
     manifestItemNo: null,
     supplier: PART_SUPPLIER[partNo],
+    upd,
   }));
 }
 
-/** H0253 lines (6 pcs / case). Every destination qty of a unit is a multiple of pcs/case (G-System releases multiples of pcs/case).
- * - PART-A 12-Oct: already in an ASN.
- * - PART-A 14-Oct: V01 VN 10, T01 TH 6, V02 VN 14 (SIM-7 / SIM-9): case 2 = VN 4 + TH 2 cannot be the last case.
- * - PART-B 14-Oct: SIM-8 (A-0101 two items, B-0102 TH, C-0103 of a second VN customer); PART-B 15-Oct A-0201 is the next unit.
- * - PART-C 13-Oct: normal unit, all cases Ready.
- * - PART-D 13-Oct: second supplier (D/S team only). */
+/** H0253 lines = simulasi_asn_rev.xlsx (PART-X, 6 pcs/case). A line is replicated by XD08 the day after its Customer Order Date.
+ * - 15-Oct CO-14101 VN 6 (ASN0001), CO-14102 TH 6 (hold, cancelled 17-Oct).
+ * - 16-Oct CO-14103 TH 6 (ASN0002). 17-Oct: 4 destinations, 30 pcs, PO 18 (short) + split PO 12; CO-14104 cancelled 19-Oct after ASN0003.
+ * - 18-Oct: 3 destinations (ASN0005). 19-Oct: CO-14111 TH 6 (received without ASN 21-Oct), CO-14115 VN 12 (ASN0006 + ASN0007).
+ * PART-D of a second supplier is not in the workbook: it only shows the rule one ASN = one Supplier Code + Plant (D/S team). */
 export const H0253: InstrLine[] = [
-  ...lines('2026-10-12', 'PART-A', [['CO-12001', VN, 6], ['CO-12002', TH, 6]]),
-  ...lines('2026-10-14', 'PART-A', [['V01', VN, 10, 'CUST-A'], ['T01', TH, 6, 'CUST-B'], ['V02', VN, 14, 'CUST-C']]),
-  ...lines('2026-10-14', 'PART-B', [['C-0103', VN, 14, '9730000', '0001', '070000'], ['B-0102', TH, 6, undefined, '0001', '090000'],
-    ['A-0101', VN, 2, undefined, '0002'], ['A-0101', VN, 8, undefined, '0001']]),
-  ...lines('2026-10-15', 'PART-B', [['A-0201', VN, 6]]),
-  ...lines('2026-10-13', 'PART-C', [['CO-13001', VN, 4], ['CO-13002', VN, 8], ['CO-13003', PH, 6]]),
-  ...lines('2026-10-13', 'PART-D', [['CO-13007', VN, 6], ['CO-13008', TH, 4], ['CO-13009', TH, 2]]),
+  ...lines('2026-10-15', 'PART-X', [['CO-14101', VN, 6], ['CO-14102', TH, 6, { status: '2', date: '2026-10-17' }]]),
+  ...lines('2026-10-16', 'PART-X', [['CO-14103', TH, 6]]),
+  ...lines('2026-10-17', 'PART-X', [['CO-14104', TH, 6, { status: '2', date: '2026-10-19' }], ['CO-14105', VN, 6], ['CO-14106', VN, 3],
+    ['CO-14107', VN, 3], ['CO-14109', PH, 6], ['CO-14110', D4, 6]]),
+  ...lines('2026-10-18', 'PART-X', [['CO-14112', VN, 6], ['CO-14113', PH, 6], ['CO-14114', D4, 6]]),
+  ...lines('2026-10-19', 'PART-X', [['CO-14111', TH, 6, { status: '6', date: '2026-10-21' }], ['CO-14115', VN, 12]]),
+  ...lines('2026-10-17', 'PART-D', [['CO-13007', VN, 6], ['CO-13008', TH, 4], ['CO-13009', TH, 2]]),
 ];
+
+/** Hold Flag Y set by the D/S team before the first Search (CO-14102, 16-Oct). */
+export const HOLD_INIT: Record<string, boolean> = { 'PART-X|2026-10-15|CO-14102|001': true };
 
 /** Crossdock PO part of the Pra Daily Order (manifest with CROSS_DOCK_FLAG = 'X'); released on poDate.
  * Business logic: one PO per Part Number per Customer Order Date, PO date = order date + 1, qty = total order qty of all destinations;
@@ -128,19 +133,18 @@ export interface Po {
   split?: boolean;
 }
 
+/** PO of simulasi_asn_rev.xlsx: one PO per Customer Order Date, PO date = order date + 1; T0409014 = split PO of 17-Oct (T0409013 18 < 30). */
 export const POS: Po[] = [
-  { poNo: 'PO-DMY-09000', manifestNo: 'MF-DMY-09000', manifestItemNo: '0001', partNo: 'PART-A', qty: 12, poDate: '2026-10-13', orderDt: '2026-10-12' },
-  // PART-A 14-Oct: order 30, PO 24 (short) → split PO 6 the next day
-  { poNo: 'PO-DMY-09011', manifestNo: 'MF-DMY-09011', manifestItemNo: '0001', partNo: 'PART-A', qty: 24, poDate: '2026-10-15', orderDt: '2026-10-14' },
-  { poNo: 'PO-DMY-10011', manifestNo: 'MF-DMY-10011', manifestItemNo: '0001', partNo: 'PART-A', qty: 6, poDate: '2026-10-16', orderDt: '2026-10-14', split: true },
-  // PART-B 14-Oct: order 30, PO 20 (short) → split PO 10 the next day
-  { poNo: 'PO-DMY-09021', manifestNo: 'MF-DMY-09021', manifestItemNo: '0001', partNo: 'PART-B', qty: 20, poDate: '2026-10-15', orderDt: '2026-10-14' },
-  { poNo: 'PO-DMY-10021', manifestNo: 'MF-DMY-10021', manifestItemNo: '0001', partNo: 'PART-B', qty: 10, poDate: '2026-10-16', orderDt: '2026-10-14', split: true },
-  { poNo: 'PO-DMY-09031', manifestNo: 'MF-DMY-09031', manifestItemNo: '0001', partNo: 'PART-C', qty: 18, poDate: '2026-10-14', orderDt: '2026-10-13' },
-  { poNo: 'PO-DMY-09041', manifestNo: 'MF-DMY-09041', manifestItemNo: '0001', partNo: 'PART-D', qty: 12, poDate: '2026-10-14', orderDt: '2026-10-13' },
+  { poNo: 'T0409011', manifestNo: '3126035911', manifestItemNo: '0001', partNo: 'PART-X', qty: 12, poDate: '2026-10-16', orderDt: '2026-10-15' },
+  { poNo: 'T0409012', manifestNo: '3126035912', manifestItemNo: '0001', partNo: 'PART-X', qty: 6, poDate: '2026-10-17', orderDt: '2026-10-16' },
+  { poNo: 'T0409013', manifestNo: '3126035913', manifestItemNo: '0001', partNo: 'PART-X', qty: 18, poDate: '2026-10-18', orderDt: '2026-10-17' },
+  { poNo: 'T0409014', manifestNo: '3126035914', manifestItemNo: '0001', partNo: 'PART-X', qty: 12, poDate: '2026-10-19', orderDt: '2026-10-17', split: true },
+  { poNo: 'T0409015', manifestNo: '3126035915', manifestItemNo: '0001', partNo: 'PART-X', qty: 18, poDate: '2026-10-19', orderDt: '2026-10-18' },
+  { poNo: 'T0409016', manifestNo: '3126035916', manifestItemNo: '0001', partNo: 'PART-X', qty: 18, poDate: '2026-10-20', orderDt: '2026-10-19' },
+  { poNo: 'PO-DMY-09041', manifestNo: 'MF-DMY-09041', manifestItemNo: '0001', partNo: 'PART-D', qty: 12, poDate: '2026-10-18', orderDt: '2026-10-17' },
 ];
 
-export const BUSINESS_DATES = ['2026-10-14', '2026-10-15', '2026-10-16'];
+export const BUSINESS_DATES = ['2026-10-16', '2026-10-17', '2026-10-18', '2026-10-19', '2026-10-20', '2026-10-21', '2026-10-22'];
 
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 export function niceDate(iso: string | null): string {
@@ -266,10 +270,12 @@ export function buildUnits(today: string, sentByLine: Record<string, number>, se
     const released = POS.filter((p) => p.partNo === partNo && p.poDate <= today);
     const pos = [...released].sort((a, b) => a.poDate.localeCompare(b.poDate) || a.poNo.localeCompare(b.poNo))
       .map((po) => ({ po, open: po.qty - (sentByPo[po.poNo] ?? 0) }));
-    const partLines = H0253.filter((l) => l.partNo === partNo).sort((a, b) => scanKey(a).localeCompare(scanKey(b)));
+    // replicated by XD08 the day after the Customer Order Date
+    const partLines = H0253.filter((l) => l.partNo === partNo && l.orderDt < today).sort((a, b) => scanKey(a).localeCompare(scanKey(b)));
     for (const orderDt of [...new Set(partLines.map((l) => l.orderDt))]) {
       const all = partLines.filter((l) => l.orderDt === orderDt);
-      const open = all.map((l) => ({ ...l, qty: l.qty - (sentByLine[l.id] ?? 0) })).filter((l) => l.qty > 0);
+      // lines with UPD_STATUS (changed in G-System) are not taken
+      const open = all.filter((l) => !(l.upd && l.upd.date <= today)).map((l) => ({ ...l, qty: l.qty - (sentByLine[l.id] ?? 0) })).filter((l) => l.qty > 0);
       const ls = open.filter((l) => !hold[l.id]);
       const cases = cutCases(ls, pos);
       const readyCases = cases.filter((c) => c.ready).length;
@@ -331,11 +337,12 @@ export function buildCases(sel: { unit: Unit; end: number }[]): AsnCase[] {
 }
 
 export function caseNoOf(asnNo: string, seq: number): string {
-  return `${asnNo.replace('ASN-', 'C-')}-${String(seq).padStart(2, '0')}`;
+  return `C-${asnNo.replace(/^ASN/, '')}-${String(seq).padStart(2, '0')}`;
 }
 
-export function asnNoFor(supplier: string, deliveryDate: string, seq: number): string {
-  return `ASN-${SUPPLIERS[supplier].code}-${deliveryDate.slice(2).replace(/-/g, '')}-${String(seq).padStart(3, '0')}`;
+/** ASN number as in simulasi_asn_rev.xlsx (ASN0001, ASN0002, ...). */
+export function asnNoFor(seq: number): string {
+  return `ASN${String(seq).padStart(4, '0')}`;
 }
 
 export interface RitCycle {
@@ -343,12 +350,13 @@ export interface RitCycle {
   route: string;
 }
 
-/** Mock route master: Sunday has no rit cycle, Saturday has one. */
+/** Mock route master: a holiday has no rit cycle, Saturday has one (the workbook days 16-22 Oct all have a rit). */
+const NO_RIT = ['2026-10-25', '2026-11-01'];
 export function ritCyclesFor(deliveryDate: string): RitCycle[] {
   if (!deliveryDate) return [];
   const day = new Date(`${deliveryDate}T00:00:00Z`).getUTCDay();
   const all = [{ no: 'Rit 1', route: 'SD01' }, { no: 'Rit 2', route: 'SD02' }, { no: 'Rit 3', route: 'SD03' }];
-  if (day === 0) return [];
+  if (NO_RIT.includes(deliveryDate)) return [];
   return day === 6 ? all.slice(0, 1) : all;
 }
 
@@ -362,6 +370,10 @@ export interface SubmittedAsn {
   cases: AsnCase[];
   createdBy: string;
   createdAt: string;
+  /** Business date of the creation. */
+  businessDate: string;
+  /** ASN of simulasi_asn_rev.xlsx created before the business date. */
+  seed?: boolean;
 }
 
 /** Qty already in submitted ASNs per H0253 line and per PO. */

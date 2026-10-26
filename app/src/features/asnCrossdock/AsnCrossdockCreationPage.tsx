@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
-import { submitAsnBatch, useAsns } from './asnStore';
+import { setBusinessDate, submitAsnBatch, useAsns, useBusinessDate } from './asnStore';
 import {
-  asnNoFor, BUSINESS_DATES, buildCases, buildUnits, contentOf, DESTS, endBefore, endFor, groupCases, niceDate, PCS_PER_CASE, poQtyOf,
+  asnNoFor, BUSINESS_DATES, buildCases, buildUnits, contentOf, DESTS, endBefore, endFor, groupCases, HOLD_INIT, niceDate, PCS_PER_CASE, poQtyOf,
   LOGIN_SUPPLIER, ritCyclesFor, sentQty, SUPPLIERS, type AsnCase, type InstrLine, type Unit, type UnitCase, type UnitStatus,
 } from './data';
 import { Chip, Modal } from './ui';
@@ -89,15 +89,15 @@ function poRowsOf(ls: InstrLine[]): PoRow[] {
  * Create ASN and the Case List sub screen. */
 export function AsnCrossdockCreationPage() {
   const asns = useAsns();
-  const [today, setToday] = useState('2026-10-15');
+  const today = useBusinessDate();
   const [viewAs, setViewAs] = useState<ViewAs>('sup');
   const isDs = viewAs === 'ds';
-  const [deliveryDate, setDeliveryDate] = useState('2026-10-15');
+  const [deliveryDate, setDeliveryDate] = useState(today);
   const [ritNo, setRitNo] = useState('');
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const [partFilter, setPartFilter] = useState('');
   const [stFilter, setStFilter] = useState<StatusFilter>('all');
-  const [hold, setHold] = useState<Record<string, boolean>>({});
+  const [hold, setHold] = useState<Record<string, boolean>>(HOLD_INIT);
   // Each view is its own session (supplier / D/S team).
   const [selByView, setSelByView] = useState<Record<ViewAs, Record<string, Sel>>>({ sup: {}, ds: {} });
   const sel = selByView[viewAs];
@@ -125,12 +125,12 @@ export function AsnCrossdockCreationPage() {
   const selected = ticked.filter((u) => u.validEnds.includes(sel[u.key].end));
   const cases = useMemo(() => buildCases(selected.map((u) => ({ unit: u, end: sel[u.key].end }))), [selected, sel]);
   const selQty = cases.reduce((a, c) => a + c.qty, 0);
-  const asnDate = loaded?.deliveryDate ?? deliveryDate;
   const asnSupplier = selected[0]?.supplier ?? LOGIN_SUPPLIER;
-  const nextAsnNo = asnNoFor(asnSupplier, asnDate, asns.filter((a) => a.deliveryDate === asnDate && a.supplier === asnSupplier).length + 1);
+  const nextAsnNo = asnNoFor(asns.length + 1);
 
   const changeToday = (d: string) => {
-    setToday(d);
+    setBusinessDate(d);
+    setHold(HOLD_INIT);
     setSelByView({ sup: {}, ds: {} });
     setLoaded(null);
     setDeliveryDate(d);
@@ -205,7 +205,7 @@ export function AsnCrossdockCreationPage() {
     if (!loaded) return;
     const submitId = submitAsnBatch({
       asnNo: nextAsnNo, supplier: asnSupplier, deliveryDate: loaded.deliveryDate, rit: { no: loaded.ritNo, route: loaded.route }, unitKeys: selected.map((u) => u.key), cases,
-      createdBy: 'D. Anggraini', createdAt: `${niceDate(today)} ${new Date().toTimeString().slice(0, 5)}`,
+      createdBy: 'D. Anggraini', createdAt: `${niceDate(today)} ${new Date().toTimeString().slice(0, 5)}`, businessDate: today,
     }, today);
     setNotice(submitId);
     setCutNote(null);
