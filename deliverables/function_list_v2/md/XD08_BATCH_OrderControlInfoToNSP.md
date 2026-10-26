@@ -8,14 +8,14 @@ Sumber: UISS `XD08_UISS_Batch_OrderControlInfoToNSP.xlsx` (0.1 Initial Draft). N
 - **ORDER_STATUS** di replicate = nilai saat pertama direplikasi (biasanya 7), tidak diubah lagi.
 - **UPD_STATUS** (kolom NSP, sebelumnya CANCEL_STATUS): NULL = tidak ada perubahan; **'6'** = original ORDER_STATUS jadi 6 (received / allocated); **'2'** = original jadi 2 (cancel). Line dengan UPD_STATUS tidak diambil XD09.
 - **Setiap run, semua draft dilepas**: baris `TB_R_INSTRUCTION` dengan ASN_NO NULL (Create ASN belum Submit) dihapus, MAPPED_QTY dikurangi, PO_MAPPED_FLAG = N. Case kembali muncul di delivery plan XD10, supplier centang ulang dan Create ASN lagi. Baris yang sudah punya ASN_NO tidak pernah dihapus.
-- **Pecah serial** (G-System memecah line yang sudah ada di TB_R_INSTRUCTION jadi SERIAL_NO baru, mis. partial receive 1 line di 2 ASN): baris TB_R_INSTRUCTION line itu **ditata ulang** per serial. Serial status 6 dapat baris ASN paling dulu (yang di-receive), serial status 7 ASN berikutnya, serial status 2 sisanya; hanya SERIAL_NO yang pindah (baris dipecah kalau qty tidak pas). PO_MAPPED_FLAG tiap serial dihitung ulang. LOG7. Tanpa ini serial baru dianggap open dan ter-mapping dua kali (simulasi_asn_rev 21/10, CO-14115).
+- **Pecah serial** (1 line di beberapa ASN, G-System memecah jadi bagian received dan sisa): tiap bagian tetap terhubung ke ASN-nya; bagian received = ASN yang dikirim duluan. Bagian yang sudah di ASN tidak ditawarkan lagi ke supplier. LOG7. Asumsi: receive mengikuti urutan ASN (**TBC G-System**; kalau tidak, G-System perlu kirim ASN No yang di-receive).
 - **Cancel setelah ASN** (UPD_STATUS 2 dan line punya baris TB_R_INSTRUCTION dengan ASN_NO): ASN tidak diubah; line muncul di **XD11 Change Order Number** (LOG5). Qty cancel tidak kelipatan pcs/case → LOG6 (abnormality).
 
 ## Alur
 1. Scheduler harian setelah data G-System tersedia (27:30), retry 3x. LOG1.
 2. Ambil baris source INTF_UPDATE_DT > watermark (line crossdock, status 7 / 6 / 2).
 3. Upsert: key baru → insert (HOLD_FLAG / PO_MAPPED_FLAG = N, UPD_STATUS = NULL kalau status 7, selain itu = status source). Key lama → update kolom source kecuali ORDER_STATUS; UPD_STATUS = status source kalau 6 / 2.
-4. Pecah serial: tata ulang baris TB_R_INSTRUCTION ke serial-serial line itu, hitung ulang PO_MAPPED_FLAG (LOG7).
+4. Pecah serial: hubungkan tiap bagian line ke ASN-nya (LOG7).
 4a. Lepas semua draft TB_R_INSTRUCTION.
 5. Cek line UPD_STATUS 2 yang ada di ASN → LOG5 (dan LOG6 kalau qty tidak kelipatan pcs/case).
 6. Sukses → commit, watermark baru, LOG2. Gagal → rollback, watermark tetap, LOG3.
