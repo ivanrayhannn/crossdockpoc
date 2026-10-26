@@ -2383,6 +2383,22 @@
  "operation": [
   {
    "type": "heading",
+   "text": "5.0 Business Logic ASN"
+  },
+  {
+   "type": "bullets",
+   "marker": "1.",
+   "level": 0,
+   "items": [
+    "Customer Order Date (today, D) → PO Date (tomorrow, D+1): one PO per Part Number per Customer Order Date.",
+    "Total customer order qty of all destinations per Part Number and Customer Order Date = total PO qty of that PO. When the PO qty is lower: abnormality; the rest comes in a split PO, the customer orders without PO wait (Not Ready) until the next PO is issued.",
+    "One customer order line can be in different ASNs (its cases split). When G-System receives them separately, the line is split in H0253 (new SERIAL_NO); each part stays linked to its ASN (XD08).",
+    "PO_MAPPED_FLAG is set by [Create ASN] ('Y' when the whole line is in the ASN; a draft not submitted is released by XD08).",
+    "Ready cases of the delivery plan are sent following the cut (CUT_FLAG): the supplier selects from case 1 up to a cut; the cases between two cuts are sent together."
+   ]
+  },
+  {
+   "type": "heading",
    "text": "5.1 Initial Display and Search"
   },
   {
