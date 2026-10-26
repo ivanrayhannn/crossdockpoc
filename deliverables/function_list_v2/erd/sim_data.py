@@ -217,7 +217,7 @@ SCENARIOS = [
                   'PO qty < order qty is an abnormality: the rest comes in a split PO. ORDER_STATUS of the replicate keeps 7; changes go to UPD_STATUS.',
                   'Order date 15-Oct (12) → PO-DMY-09011; CO-14102 on hold then cancelled, so its 6 pcs of PO-DMY-09011 go to CO-14103 (older PO_DT first).',
                   'Order date 17-Oct: 4 destinations, 30 pcs, PO-DMY-09013 only 18 (abnormal) → case 5 Not Ready until the split PO-DMY-09014 (12, 19-Oct). '
-                  'Cases 1-4 → ASN0003; CO-14104 (middle row, case 3) is cancelled after the ASN.',
+                  'Cases 1-4 → ASN0003; CO-14104 (middle row, case 3) is cancelled after the ASN. Order date 18-Oct: 3 destinations, 18 pcs, PO-DMY-09015 18 (OK) → ASN0005.',
                   '21-Oct G-System allocates the pcs of case 3 to CO-14111 (UPD_STATUS 6, no ASN): the D/S team moves case 3 to CO-14111 (XD11). '
                   'Open PO qty at the end (12) = cancelled qty (CO-14102 + CO-14104).'],
         'steps': [
@@ -255,14 +255,27 @@ SCENARIOS = [
                 ('new', [5, 2, 2, 'PART-X', VN, 'CO-14107', '0000001', 3, 'PO-DMY-09013', 'MF-DMY-09013', '0001', 'ASN0003', 'C-0003-02']),
                 ('new', [6, 3, 1, 'PART-X', TH, 'CO-14104', '0000001', 6, 'PO-DMY-09013', 'MF-DMY-09013', '0001', 'ASN0003', 'C-0003-03']),
                 ('new', [7, 4, 1, 'PART-X', PH, 'CO-14109', '0000001', 6, 'PO-DMY-09013', 'MF-DMY-09013', '0001', 'ASN0003', 'C-0003-04'])]),
-            ('8. 19-Oct XD08: ASN0003 received, CO-14104 → 2 (middle row, in case 3); split PO-DMY-09014 (PO_DT 19-Oct, 12)', 'TB_R_H0253_ORDER_CONTROL_PRE', [
+            ('8. 19-Oct XD08: ASN0003 received, CO-14104 → 2 (middle row, in case 3); split PO-DMY-09014 (PO_DT 19-Oct, 12); order date 18-Oct new', 'TB_R_H0253_ORDER_CONTROL_PRE', [
                 ('upd', h('CO-14104', TH, '0000001', 'PART-X', 6, mapped='Y', upd='2', od='2026-10-17', cust=TH), ['UPD_STATUS'],
                  'Cancel after ASN: LOG5, listed in XD11 (waiting for a candidate)')]),
-            ('9. 19-Oct CO-14110 → ASN0004 with the split PO', 'TB_R_INSTRUCTION', [
-                ('new', [8, 1, 1, 'PART-X', D4, 'CO-14110', '0000001', 6, 'PO-DMY-09014', 'MF-DMY-09014', '0001', 'ASN0004', 'C-0004-01'], [], '6 pcs of the split PO stay open')]),
-            ('10. 20-Oct XD08: CO-14111 new (order date 19-Oct, PO-DMY-09015); 21-Oct → 6 (pcs of case 3 allocated by G-System)', 'TB_R_H0253_ORDER_CONTROL_PRE', [
+            ('', 'TB_R_H0253_ORDER_CONTROL_PRE', [
+                ('new', h('CO-14112', VN, '0000001', 'PART-X', 6, od='2026-10-18'), [], 'Order date 18-Oct, 3 destinations (PO-DMY-09015, PO_DT 19-Oct, 18)'),
+                ('new', h('CO-14113', PH, '0000001', 'PART-X', 6, od='2026-10-18')),
+                ('new', h('CO-14114', D4, '0000001', 'PART-X', 6, od='2026-10-18'))]),
+            ('9. 19-Oct [Search] → XD09: rest of 17-Oct with the split PO, then 18-Oct', '#TEMP_INSTRUCTION', tmp(
+                [[line('CO-14110', D4, 'PART-X', 6, od='2026-10-17')],
+                 [line('CO-14112', VN, 'PART-X', 6, od='2026-10-18'), line('CO-14113', PH, 'PART-X', 6, od='2026-10-18'),
+                  line('CO-14114', D4, 'PART-X', 6, od='2026-10-18')]],
+                [['PO-DMY-09014', 'MF-DMY-09014', '0001', 12], ['PO-DMY-09015', 'MF-DMY-09015', '0001', 18]],
+                notes={('CO-14110', 1): '→ ASN0004', ('CO-14112', 1): 'Rest of the split PO; cases 1-3 → ASN0005'})),
+            ('10. 19-Oct ASN0004 (CO-14110) and ASN0005 (order date 18-Oct, cases 1-3)', 'TB_R_INSTRUCTION', [
+                ('new', [8, 1, 1, 'PART-X', D4, 'CO-14110', '0000001', 6, 'PO-DMY-09014', 'MF-DMY-09014', '0001', 'ASN0004', 'C-0004-01'], [], 'Split PO'),
+                ('new', [9, 1, 1, 'PART-X', VN, 'CO-14112', '0000001', 6, 'PO-DMY-09014', 'MF-DMY-09014', '0001', 'ASN0005', 'C-0005-01']),
+                ('new', [10, 2, 1, 'PART-X', PH, 'CO-14113', '0000001', 6, 'PO-DMY-09015', 'MF-DMY-09015', '0001', 'ASN0005', 'C-0005-02']),
+                ('new', [11, 3, 1, 'PART-X', D4, 'CO-14114', '0000001', 6, 'PO-DMY-09015', 'MF-DMY-09015', '0001', 'ASN0005', 'C-0005-03'], [], '6 pcs of PO-DMY-09015 stay open')]),
+            ('11. 20-Oct XD08: CO-14111 new (order date 19-Oct, PO-DMY-09016); 21-Oct → 6 (pcs of case 3 allocated by G-System)', 'TB_R_H0253_ORDER_CONTROL_PRE', [
                 ('upd', h('CO-14111', TH, '0000001', 'PART-X', 6, upd='6', od='2026-10-19', cust=TH), ['UPD_STATUS'], 'Received without ASN: candidate')]),
-            ('11. 21-Oct XD11 Change Order Number: ASN0003 case 3 → CO-14111', 'TB_R_INSTRUCTION', [
+            ('12. 21-Oct XD11 Change Order Number: ASN0003 case 3 → CO-14111', 'TB_R_INSTRUCTION', [
                 ('upd', [6, 3, 1, 'PART-X', TH, 'CO-14111', '0000001', 6, 'PO-DMY-09013', 'MF-DMY-09013', '0001', 'ASN0003', 'C-0003-03'],
                  ['CUSTOMER_ORDER_NO'], 'Whole row moved; case, PO and ASN not changed')]),
             ('', 'TB_R_H0253_ORDER_CONTROL_PRE', [
