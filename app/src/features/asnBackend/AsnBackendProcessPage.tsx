@@ -46,6 +46,16 @@ export function AsnBackendProcessPage() {
         </div>
       </div>
 
+      <Section no="0" title="Business Logic ASN">
+        <ol style={{ margin: '2px 0 0', paddingLeft: 20 }}>
+          <li>Customer Order Date (today, D) → PO Date (tomorrow, D+1): one PO per Part Number per Customer Order Date.</li>
+          <li>Total customer order qty of all destinations per Part Number = total PO qty of that PO. A lower PO qty is an abnormality: the rest comes in a split PO and the customer orders without PO wait (Not Ready) for it. ASN Creation shows it as <b>Short PO</b>.</li>
+          <li>One customer order line can be in different ASNs. When T-System receives them separately, the line is split in H0253 (new serial); each part stays linked to its ASN (XD08). See Cancel Order Simulation, scenario 5.</li>
+          <li>PO_MAPPED_FLAG is set by Create ASN (Y when the whole line is in the ASN).</li>
+          <li>Ready cases are sent following the cut (CUT_FLAG): from case 1 up to a cut; the cases between two cuts are sent together.</li>
+        </ol>
+      </Section>
+
       <Section no="1" title="Search – Get Order (X12, on demand)">
         <Steps rows={[
           ['1', 'Read the open qty of the H0253 customer orders (ORDER_STATUS 7, HOLD_FLAG N; open qty = order qty minus the qty in TB_R_INSTRUCTION) in the receiving scan order: Allocation Priority (= Customer Order Date), Customer Code, Customer Order No, Order Date, Order Time, Destination, Detailed Item No, Serial No.', 'TB_R_H0253_ORDER_CONTROL_PRE, TB_R_INSTRUCTION'],
@@ -96,7 +106,8 @@ export function AsnBackendProcessPage() {
           ['2', 'XD08 (one batch) upserts the rows changed since the last run (INTF_UPDATE_DT): ORDER_STATUS keeps the first value, UPD_STATUS = 2 (cancel) or 6 (received). Lines with UPD_STATUS are not taken by XD09.', 'TB_R_H0253_ORDER_CONTROL_PRE'],
           ['3', 'XD08 releases every draft (TB_R_INSTRUCTION without ASN No): rows deleted, MAPPED_QTY reduced, PO_MAPPED_FLAG N; the cases come back in the delivery plan. [Submit ASN] re-checks the draft as well.', 'TB_R_INSTRUCTION, TB_R_PRA_DAILY_ORDER_MAPPED'],
           ['4', 'A cancel of qty already in a submitted ASN (abnormality) is listed in Change Order Number (XD11, D/S team) until the qty is moved to received lines of the same part (UPD_STATUS 6, PO_MAPPED_FLAG N, no ASN; oldest first; several lines / another destination allowed). No Cancel ASN.', 'TB_R_INSTRUCTION, TB_H_CROSSDOCK_ORDER_CHANGE'],
-          ['5', 'Simulation of the H0253 scenarios: menu Cancel Order Simulation; replacement: menu Change Order Number.', 'Prototype'],
+          ['5', 'Serial split: a line in more than one ASN is split by T-System when only part of it is received. XD08 keeps each part linked to its ASN (received part = ASN sent first, TBC with T-System), so nothing is offered to the supplier again (LOG7).', 'TB_R_INSTRUCTION (SERIAL_NO), TB_R_H0253_ORDER_CONTROL_PRE'],
+          ['6', 'Simulation of the H0253 scenarios: menu Cancel Order Simulation; replacement: menu Change Order Number.', 'Prototype'],
         ]} />
       </Section>
 

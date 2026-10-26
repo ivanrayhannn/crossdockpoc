@@ -147,6 +147,58 @@ const SCENARIOS: { key: string; name: string; tag: Level; summary: string; steps
       },
     ],
   },
+  {
+    key: '5', name: '5 · One line in 2 ASNs → partial receipt splits the serial', tag: 'warn',
+    summary: 'Business logic 3: the 8 pcs go in ASN-001 (6) and ASN-002 (2). ASN-001 is received first: T-System splits the line into serial 0000001 6 pcs status 6 and a new serial 2 pcs status 7. XD08 keeps each part linked to its ASN.',
+    steps: [START,
+      {
+        lane: 'sup', date: '14-Oct', title: 'ASN-001: case 1 (6 of 8 pcs)',
+        text: 'Create ASN + Submit for case 1 only. The line is not complete yet: PO_MAPPED_FLAG stays N and the open qty is 2 (8 − 6 in TB_R_INSTRUCTION).',
+        src: SRC14, rep: REP14, instr: [{ order: O, serial: A, qty: 6, po: PO, asn: 'ASN-001', added: true }],
+        flags: [['ok', 'One line may be sent in several ASNs.']],
+      },
+      {
+        lane: 'sup', date: '14-Oct', title: 'ASN-002: the remaining 2 pcs',
+        text: 'A later Search shows the open 2 pcs; Create ASN + Submit → ASN-002. Now the whole line is in TB_R_INSTRUCTION: PO_MAPPED_FLAG = Y.',
+        src: SRC14, rep: [{ order: O, serial: A, status: '7', qty: 8, hold: 'N', mapped: 'Y', upd: '-', changed: true }],
+        instr: [{ order: O, serial: A, qty: 6, po: PO, asn: 'ASN-001' }, { order: O, serial: A, qty: 2, po: PO, asn: 'ASN-002', added: true }],
+        flags: [['ok', 'One H0253 row, two TB_R_INSTRUCTION rows (two ASNs).']],
+      },
+      {
+        lane: 'gt', date: '15-Oct', title: 'ASN-001 received: T-System splits the line',
+        text: 'Only ASN-001 (6 pcs) is received. T-System keeps serial 0000001 with 6 pcs status 6 and creates a new serial with the remaining 2 pcs status 7.',
+        src: [{ order: O, serial: A, status: '6', qty: 6, upd: '15-Oct 03:30', changed: true }, { order: O, serial: B, status: '7', qty: 2, upd: '15-Oct 03:30', changed: true }],
+        rep: [{ order: O, serial: A, status: '7', qty: 8, hold: 'N', mapped: 'Y', upd: '-' }],
+        instr: [{ order: O, serial: A, qty: 6, po: PO, asn: 'ASN-001' }, { order: O, serial: A, qty: 2, po: PO, asn: 'ASN-002' }],
+        flags: [['warn', 'H0253 does not carry the received ASN No: NSP assumes the ASNs are received in the order they were sent (TBC with G-System).']],
+      },
+      {
+        lane: 'sys', date: '15-Oct', title: 'Wrong: upsert only (no re-assignment)',
+        text: 'If XD08 only upserted the rows: serial 0000001 has 8 pcs in TB_R_INSTRUCTION for qty 6, and the new serial looks open (2 pcs, PO_MAPPED_FLAG N) → XD09 would offer the 2 pcs again although they are already in ASN-002.',
+        src: [{ order: O, serial: A, status: '6', qty: 6, upd: '15-Oct 03:30' }, { order: O, serial: B, status: '7', qty: 2, upd: '15-Oct 03:30' }],
+        rep: [{ order: O, serial: A, status: '7', qty: 6, hold: 'N', mapped: 'Y', upd: '6', changed: true }, { order: O, serial: B, status: '7', qty: 2, hold: 'N', mapped: 'N', upd: '-', changed: true }],
+        instr: [{ order: O, serial: A, qty: 6, po: PO, asn: 'ASN-001' }, { order: O, serial: A, qty: 2, po: PO, asn: 'ASN-002' }],
+        flags: [['err', 'Double mapping: the 2 pcs of ASN-002 would be mapped again.']],
+      },
+      {
+        lane: 'sys', date: '15-Oct', title: 'XD08 serial split: each part stays with its ASN',
+        text: 'XD08 links the received part (serial 0000001, status 6) to the ASN sent first (ASN-001) and the remaining part (new serial, status 7) to ASN-002. Only SERIAL_NO of the ASN-002 row changes; case, PO and ASN stay. Both serials are fully in TB_R_INSTRUCTION → PO_MAPPED_FLAG Y, nothing is offered again. LOG7.',
+        src: [{ order: O, serial: A, status: '6', qty: 6, upd: '15-Oct 03:30' }, { order: O, serial: B, status: '7', qty: 2, upd: '15-Oct 03:30' }],
+        rep: [{ order: O, serial: A, status: '7', qty: 6, hold: 'N', mapped: 'Y', upd: '6', changed: true }, { order: O, serial: B, status: '7', qty: 2, hold: 'N', mapped: 'Y', upd: '-', changed: true }],
+        instr: [{ order: O, serial: A, qty: 6, po: PO, asn: 'ASN-001' }, { order: O, serial: A, qty: 2, po: PO, asn: 'ASN-002', deleted: true },
+          { order: O, serial: B, qty: 2, po: PO, asn: 'ASN-002', added: true }],
+        flags: [['ok', 'Each part of the line stays linked to its ASN.']],
+      },
+      {
+        lane: 'sys', date: '16-Oct', title: 'ASN-002 received: UPD_STATUS 6',
+        text: 'T-System sets the new serial to status 6; XD08 writes UPD_STATUS 6. The whole line is received.',
+        src: [{ order: O, serial: A, status: '6', qty: 6, upd: '15-Oct 03:30' }, { order: O, serial: B, status: '6', qty: 2, upd: '16-Oct 03:30', changed: true }],
+        rep: [{ order: O, serial: A, status: '7', qty: 6, hold: 'N', mapped: 'Y', upd: '6' }, { order: O, serial: B, status: '7', qty: 2, hold: 'N', mapped: 'Y', upd: '6', changed: true }],
+        instr: [{ order: O, serial: A, qty: 6, po: PO, asn: 'ASN-001' }, { order: O, serial: B, qty: 2, po: PO, asn: 'ASN-002' }],
+        flags: [['ok', 'Normal end.']],
+      },
+    ],
+  },
 ];
 
 const LEVEL: Record<Level, { bg: string; fg: string; icon: string }> = {
