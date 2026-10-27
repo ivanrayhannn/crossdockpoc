@@ -78,7 +78,7 @@ Sumber: UISS-Screen `X1_UISS_Screen_PartList.xlsx` (X1, 0.1 Initial Draft) dan k
 
 ## 8. Upload Excel
 - Modal menampilkan kolom template, aturan, dan area file (.xlsx, max 5 MB, max 5.000 baris).
-- Kolom: part_no, min_mad (wajib), pcs_case, max_case_day, status, flag_add_edit (A/E), effective_start_date.
+- Kolom: part_no, min_mad (wajib), pcs_case, max_case_day, status, upload (A/E), effective_start_date.
 - Base file Edit = sheet **Upload** dari Export Excel (flag E sudah terisi).
 - Aturan status: Candidate **tidak bisa diubah** lewat upload; Active ↔ Inactive boleh; tidak ada yang bisa diubah ke Candidate.
 - [Validate file] = tombol simpan upload → batch Part List Upload (validasi, simpan all-or-nothing, Log). Detail: `X2_BATCH_PartList_Upload.md`.
@@ -90,7 +90,7 @@ File `Crossdock_Part_List_YYYYMMDD.xlsx`:
 | Sheet | Isi |
 |---|---|
 | Part List | Baris filter aktif (semua halaman): Part Number, Part Name, Min MAD, Pcs/Case, Max Case/Day, Total Pcs/Day, Status, Effective Start Date, Last Update. Informasi saja |
-| Upload | Semua part terdaftar: part_no, min_mad, pcs_case, max_case_day, status, flag_add_edit = E, effective_start_date (DD-Mon-YYYY). Base file upload Edit |
+| Upload | Semua part terdaftar: part_no, min_mad, pcs_case, max_case_day, status, upload = E, effective_start_date (DD-Mon-YYYY). Base file upload Edit |
 
 Gagal dibuat → MSG13.
 

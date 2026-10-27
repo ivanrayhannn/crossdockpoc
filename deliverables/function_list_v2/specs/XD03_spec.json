@@ -693,7 +693,7 @@
     "File size is 5 MB or less.",
     "Sheet Upload has 1 to 5,000 data rows.",
     "Sheet \"Upload\" exists. Other sheets are ignored.",
-    "Header has the 4 template columns (see Appendix). Extra columns are ignored."
+    "Header has the 5 template columns (see Appendix). Extra columns are ignored."
    ]
   },
   {
@@ -780,6 +780,11 @@
      "7",
      "The upload is for the ongoing calculation period only (the screen enables [Validate file] only for that period).",
      "-"
+    ],
+    [
+     "8",
+     "upload is A or E. A only for a destination that is not yet mapped for the part, E only for a destination that is already mapped (ongoing period). A placeholder row left blank is skipped.",
+     "upload"
     ]
    ]
   }
@@ -919,6 +924,10 @@
      "Case/Day of the destination, whole number greater than 0."
     ],
     [
+     "upload",
+     "A = Add (destination not yet mapped for the part in the ongoing period), E = Edit (destination already mapped; case_day can be changed). Export Excel pre-fills E, and A for the blank row of a part without mapping."
+    ],
+    [
      "total_case_day",
      "Max Case/Day of the part, for reference only (not read by the batch)."
     ]
@@ -1011,6 +1020,7 @@
      "part_no",
      "dest_code",
      "case_day",
+     "upload",
      "total_case_day",
      "Expected result"
     ],
@@ -1020,6 +1030,7 @@
      12,
      11,
      10,
+     8,
      15,
      60
     ],
@@ -1030,6 +1041,7 @@
       "PART-A",
       "9722D10",
       10,
+      "E",
       24,
       "Replaced. Total 24 (equal to Max). Sync Status No Sync."
      ],
@@ -1039,6 +1051,7 @@
       "PART-A",
       "9811110",
       8,
+      "E",
       24,
       ""
      ],
@@ -1048,6 +1061,7 @@
       "PART-A",
       "9715310",
       6,
+      "E",
       24,
       ""
      ],
@@ -1057,6 +1071,7 @@
       "PART-A",
       "9722D10",
       12,
+      "E",
       24,
       "Replaced. 9715310 removed. Total 20, 4 case/day left (below Max is allowed)."
      ],
@@ -1066,6 +1081,7 @@
       "PART-A",
       "9811110",
       8,
+      "E",
       24,
       ""
      ],
@@ -1075,6 +1091,7 @@
       "PART-C",
       "9715310",
       18,
+      "E",
       30,
       "Replaced. 9811110 added. Total 30 (equal to Max)."
      ],
@@ -1084,6 +1101,7 @@
       "PART-C",
       "9811110",
       12,
+      "A",
       30,
       ""
      ],
@@ -1093,6 +1111,7 @@
       "PART-G",
       "9722D10",
       22,
+      "A",
       22,
       "Inserted. Total 22. Sync Status No Sync."
      ],
@@ -1102,6 +1121,7 @@
       "PART-G",
       "",
       "",
+      "A",
       22,
       "NO CHANGE. PART-G stays without mapping."
      ],
@@ -1111,6 +1131,7 @@
       "PART-A",
       "9722D10",
       12,
+      "E",
       24,
       "NO CHANGE. Sync Status and last update stay."
      ],
@@ -1120,6 +1141,7 @@
       "PART-A",
       "9811110",
       8,
+      "E",
       24,
       ""
      ],
@@ -1129,6 +1151,7 @@
       "PART-A",
       "9715310",
       4,
+      "E",
       24,
       ""
      ],
@@ -1138,6 +1161,7 @@
       "PART-C",
       "9715310",
       18,
+      "E",
       30,
       "Only PART-C is processed (here NO CHANGE). PART-A and PART-G are not changed."
      ]
@@ -1151,6 +1175,7 @@
      "part_no",
      "dest_code",
      "case_day",
+     "upload",
      "total_case_day",
      "Error (4.2 check no.)"
     ],
@@ -1160,6 +1185,7 @@
      12,
      11,
      10,
+     8,
      15,
      60
     ],
@@ -1170,6 +1196,7 @@
       "PART-Z99",
       "9722D10",
       10,
+      "A",
       "",
       "Check 1: Part No is not registered or its status is not Active."
      ],
@@ -1179,6 +1206,7 @@
       "PART-I",
       "9722D10",
       10,
+      "A",
       20,
       "Check 1: Part No is not registered or its status is not Active."
      ],
@@ -1188,6 +1216,7 @@
       "PART-A",
       "ZZZZZ99",
       10,
+      "A",
       24,
       "Check 2: Destination code ZZZZZ99 not found in the destination master (TB_M_H0125_DESTINATION)."
      ],
@@ -1197,6 +1226,7 @@
       "PART-A",
       "9722D10",
       0,
+      "E",
       24,
       "Check 3: case_day must be a whole number greater than 0."
      ],
@@ -1206,6 +1236,7 @@
       "PART-A",
       "9722D10",
       10,
+      "E",
       24,
       "Check 4: Destination 9722D10 appears more than once for this part."
      ],
@@ -1215,6 +1246,7 @@
       "PART-A",
       "9722D10",
       4,
+      "E",
       24,
       ""
      ],
@@ -1224,6 +1256,7 @@
       "PART-G",
       "9722D10",
       "",
+      "A",
       22,
       "Check 5: dest_code and case_day must both be filled or both blank."
      ],
@@ -1233,6 +1266,7 @@
       "PART-A",
       "9722D10",
       12,
+      "E",
       24,
       "Check 6: Total allocation of 30 case/day exceeds Max Case/Day (24). Reduce one of the destinations."
      ],
@@ -1242,6 +1276,7 @@
       "PART-A",
       "9811110",
       8,
+      "E",
       24,
       ""
      ],
@@ -1251,6 +1286,7 @@
       "PART-A",
       "9715310",
       10,
+      "E",
       24,
       ""
      ],
@@ -1260,6 +1296,7 @@
       "PART-G",
       "9722D10",
       22,
+      "A",
       22,
       "Whole file rejected. The valid row is NOT saved."
      ],
@@ -1269,8 +1306,19 @@
       "PART-A",
       "ZZZZZ99",
       10,
+      "A",
       24,
       "Check 2 on this row. Result report sheet Re-upload lists the rows to correct."
+     ],
+     [
+      "E9",
+      "upload E for a destination that is not mapped yet",
+      "PART-C",
+      "9811110",
+      12,
+      "E",
+      30,
+      "Check 8: Destination 9811110 is not mapped for PART-C yet; use upload A."
      ]
     ]
    },

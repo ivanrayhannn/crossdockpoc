@@ -340,7 +340,7 @@
      "table": "Excel file - sheet Upload (valid rows)",
      "keys": [
       {
-       "field": "flag_add_edit",
+       "field": "upload",
        "value": "'A'"
       }
      ]
@@ -427,7 +427,7 @@
      "table": "Excel file - sheet Upload (valid rows)",
      "keys": [
       {
-       "field": "flag_add_edit",
+       "field": "upload",
        "value": "'E'"
       }
      ]
@@ -711,7 +711,7 @@
     [
      "1",
      "Flag is A (Add) or E (Edit).",
-     "flag_add_edit"
+     "upload"
     ],
     [
      "2",
@@ -899,7 +899,7 @@
      "Candidate / Active / Inactive. Flag A: blank. Flag E: a Candidate part stays Candidate (blank or Candidate); Active <-> Inactive allowed; never Candidate for an Active or Inactive part."
     ],
     [
-     "flag_add_edit",
+     "upload",
      "A = Add, E = Edit"
     ],
     [
@@ -1045,7 +1045,7 @@
      "pcs_case",
      "max_case_day",
      "status",
-     "flag_add_edit",
+     "upload",
      "effective_start_date",
      "Expected result"
     ],
@@ -1170,7 +1170,7 @@
      "pcs_case",
      "max_case_day",
      "status",
-     "flag_add_edit",
+     "upload",
      "effective_start_date",
      "Error (4.2 check no.)"
     ],
@@ -1197,7 +1197,7 @@
       "",
       "X",
       "20-Sep-2026",
-      "Check 1: flag_add_edit must be A or E."
+      "Check 1: upload must be A or E."
      ],
      [
       "E2",
@@ -1423,7 +1423,7 @@
      ],
      [
       "F5",
-      "A template column is missing (e.g. flag_add_edit deleted)",
+      "A template column is missing (e.g. upload deleted)",
       "Rejected: required column not found."
      ]
     ]

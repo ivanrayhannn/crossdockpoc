@@ -33,3 +33,6 @@ Sumber: UISS `XD01_UISS_Screen_CrossDockPartMaster.xlsx` (0.1 Initial Draft, 18-
 ## Keputusan 19-Oct
 - [Sync] juga mengirim part yang jadi **Inactive** (CROSSDOCK_FLAG 'N').
 - Viewer = hanya Search / Export. Effective Start Date: default besok, minimal hari ini, wajib. Panjang kolom sesuai existing; retensi history 24 bulan.
+
+## Update 27-Oct (kolom upload)
+- Template Part List: `flag_add_edit` → **`upload`** (A / E). Template Mapping: kolom baru **`upload`** (E = destinasi sudah di-mapping, A = destinasi baru / baris placeholder). Screenshot modal upload diperbarui.
