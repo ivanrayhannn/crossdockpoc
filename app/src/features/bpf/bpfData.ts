@@ -598,7 +598,90 @@ export const BPF: BpfData = {
   {
    "id": "F4",
    "title": "Hold & Cancel Crossdock Customer Order",
-   "desc": "Hold: the D/S team holds / releases a destination in XD10; held lines are not pre-mapped and a hold placed after the supplier ticked a unit stops [Create ASN]. Cancel: an order is cancelled in GTOPAS only (with or without hold); XD08 writes UPD_STATUS 2 and releases all drafts; a cancel of qty already in a submitted ASN is moved to received lines of the same part by the D/S team in Change Order Number (XD11) (decided 23-Oct).",
+   "desc": "Hold: the D/S team holds / releases a destination in XD10. On Search, order lines with HOLD_FLAG = Y are excluded from pre-mapping and the unit calculation excludes the held destination(s); a hold placed after the supplier ticked a unit stops [Create ASN]. Once HOLD_FLAG is released to N, the lines are automatically included in pre-mapping and unit calculation on the next Search (no manual process). Cancel: an order is cancelled in GTOPAS only (with or without hold); XD08 writes UPD_STATUS 2 and releases all drafts; a cancel of qty already in a submitted ASN is moved to received lines of the same part by the D/S team in Change Order Number (XD11) (decided 23-Oct).",
+   "notes": [
+    [
+     "Business rule – HOLD_FLAG on [Search] (XD09)",
+     [
+      "Condition",
+      "Pre-mapping",
+      "Unit calculation"
+     ],
+     [
+      [
+       "D",
+       "D"
+      ],
+      [
+       "F",
+       "H"
+      ],
+      [
+       "J",
+       "L"
+      ]
+     ],
+     [
+      [
+       "HOLD_FLAG = Y",
+       "Excluded",
+       "Excluded (the held destination is not counted)"
+      ],
+      [
+       "HOLD_FLAG = N (released)",
+       "Included on the next Search (automatic, no manual process)",
+       "Included on the next Search"
+      ]
+     ]
+    ],
+    [
+     "Test scenarios – Hold / Release",
+     [
+      "No",
+      "Scenario",
+      "Steps",
+      "Expected result"
+     ],
+     [
+      [
+       "D",
+       "D"
+      ],
+      [
+       "F",
+       "H"
+      ],
+      [
+       "J",
+       "N"
+      ],
+      [
+       "P",
+       "V"
+      ]
+     ],
+     [
+      [
+       "T1",
+       "Hold → Search",
+       "D/S team holds a destination (H2), supplier clicks [Search] (H3).",
+       "The held lines are not pre-mapped and the unit does not count them. E.g. PART-X 17-Oct: hold 9722D10 (CO-14104, 6 pcs) → unit 24 pcs instead of 30."
+      ],
+      [
+       "T2",
+       "Release → Search again",
+       "D/S team releases the destination (H5), supplier clicks [Search] again (H6).",
+       "The lines are in pre-mapping again and the unit total increases by their qty (PART-X 17-Oct back to 30 pcs)."
+      ],
+      [
+       "T3",
+       "Hold after the tick → Create ASN",
+       "Supplier ticks the cases, D/S team holds a destination of that unit, supplier clicks [Create ASN] (H4).",
+       "Create ASN fails with MSG8 (AB09), the list is refreshed without the held destination."
+      ]
+     ]
+    ]
+   ],
    "lanes": [
     "GT",
     "NB",
@@ -610,6 +693,11 @@ export const BPF: BpfData = {
      "id": "B0",
      "label": "Day D · working hours (hold)",
      "slots": 4
+    },
+    {
+     "id": "BR",
+     "label": "Later · working hours (release)",
+     "slots": 2
     },
     {
      "id": "B1",
@@ -650,10 +738,10 @@ export const BPF: BpfData = {
      "band": "B0",
      "slot": 1,
      "fn": "XD10",
-     "title": "Hold / Release a destination (all its order lines)",
+     "title": "Hold a destination (all its order lines): HOLD_FLAG = Y",
      "read": [],
      "write": [
-      "TB_R_H0253_ORDER_CONTROL_PRE (HOLD_FLAG Y / N)"
+      "TB_R_H0253_ORDER_CONTROL_PRE (HOLD_FLAG Y)"
      ],
      "ab": [],
      "next": [
@@ -666,7 +754,7 @@ export const BPF: BpfData = {
      "band": "B0",
      "slot": 2,
      "fn": "XD09",
-     "title": "[Search]: lines with HOLD_FLAG Y are not pre-mapped; the unit is computed without the held destination",
+     "title": "[Search]: lines with HOLD_FLAG Y are excluded from pre-mapping; the unit calculation excludes the held destination(s)",
      "read": [
       "TB_R_H0253_ORDER_CONTROL_PRE (HOLD N)"
      ],
@@ -693,6 +781,38 @@ export const BPF: BpfData = {
      "ab": [
       "AB09"
      ],
+     "next": []
+    },
+    {
+     "id": "H5",
+     "lane": "DS",
+     "band": "BR",
+     "slot": 0,
+     "fn": "XD10",
+     "title": "Release the destination: HOLD_FLAG = N",
+     "read": [],
+     "write": [
+      "TB_R_H0253_ORDER_CONTROL_PRE (HOLD_FLAG N)"
+     ],
+     "ab": [],
+     "next": [
+      "H6"
+     ]
+    },
+    {
+     "id": "H6",
+     "lane": "NB",
+     "band": "BR",
+     "slot": 1,
+     "fn": "XD09",
+     "title": "Next [Search]: released lines are automatically included in pre-mapping and unit calculation (unit qty increases by their qty)",
+     "read": [
+      "TB_R_H0253_ORDER_CONTROL_PRE (HOLD N)"
+     ],
+     "write": [
+      "#TEMP_INSTRUCTION"
+     ],
+     "ab": [],
      "next": []
     },
     {
