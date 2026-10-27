@@ -21,4 +21,6 @@ Prototype: menu **Common → Business Process Flow** (`#/bpf`); pilihan nama Pro
 
 Open point AB14 (XD08 jalan kalau XD12 gagal) tidak berlaku lagi: XD12 digabung ke XD08 (23-Oct).
 
+Sheet **F1 / F2** diedit manual di Excel (tidak di-generate ulang). Update 27-Oct: diagram F2 dipatch dengan `patch_f2_manual.py` (teks D2 / D3 / D6 / D7 / D8, step baru **D14 receiving**, badge AB17 / AB18, label band XD08 satu batch).
+
 **Edit manual (20-Oct):** sheet F1 dan F2 diedit langsung di Excel (decision, box Log, teks). `build_bpf.py` mempertahankan sheet di `KEEP = ['F1', 'F2']` apa adanya (sel dan shape) saat workbook di-build ulang; sheet lain (F4, Step Detail, User Process, Abnormality) dibuat ulang dari `bpf_data.py`. Teks F1 / F2 di `bpf_data.py` sudah disamakan untuk Step Detail, prototype dan draw.io (decision manual hanya ada di Excel).
