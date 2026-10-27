@@ -15,3 +15,7 @@ while read -r fid out; do
   python3 deliverables/uiss_specs/uiss_build.py "$V/specs/${fid}_spec.json" -o "$V/uiss/$out" > "$V/specs/${fid}_build.log"
   echo "built $V/uiss/$out"
 done < $V/specs/outputs.txt
+
+# Markdown copy of the UISS for coding (prepare_code/)
+python3 prepare_code/build_md.py > /dev/null
+echo "built prepare_code (Markdown)"
