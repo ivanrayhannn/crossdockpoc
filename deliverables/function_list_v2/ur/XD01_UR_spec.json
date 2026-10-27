@@ -1,0 +1,4604 @@
+{
+ "doc_type": "screen",
+ "header": {
+  "phase": "UR",
+  "project_name": "Crossdock Optimization",
+  "block_name": "Screen",
+  "function_name": "XD01 Cross Dock Part Master Screen",
+  "created_date": "28-Oct-26",
+  "created_by": "FID Rayhan",
+  "document_name": "User Requirement"
+ },
+ "revisions": [
+  {
+   "revision": "0.1",
+   "author": "FID Rayhan",
+   "date": "28-Oct-26",
+   "reviewed_by": "",
+   "description": "Initial Draft: business version of UISS XD01_UISS_Screen_CrossDockPartMaster.xlsx"
+  }
+ ],
+ "general": {
+  "objective": [
+   "Give Procurement and the D/S team one place to manage which parts are handled by crossdock and how many cases per day go to each destination, and to send this master to GTOPAS and AP POLE.",
+   "One screen with two tabs: Part List (part number level) and Mapping per Destination (part + calculation period + destination level).",
+   "Part List tab: To register crossdock candidate parts (Part No, Min MAD, Pcs/Case, Max Case/Day, Effective Start Date).",
+   "Part List tab: To search and display registered crossdock parts with their status, capacity and mapping completeness.",
+   "Part List tab: To change part data and part status (Candidate / Active / Inactive) of a registered part.",
+   "Part List tab: To display the change history of a part.",
+   "Part List tab: To export the Part List to Excel and upload part settings from Excel (Add and Edit).",
+   "Part List tab: This sub-menu is opened only for users logged in with a Procurement account; users with a D/S account open the Mapping per Destination sub-menu instead.",
+   "Mapping per Destination tab: To split the Max Case/Day of each Active part over destinations (Thailand, Philippines, Vietnam) for the ongoing calculation period.",
+   "Mapping per Destination tab: To display the destination mapping per part and calculation period, including past periods (read only).",
+   "Mapping per Destination tab: To start the interfaces of the cross dock master to GTOPAS (XD06) and AP POLE (XD07) for changed parts, and show the Sync Status of each part.",
+   "Mapping per Destination tab: To export the mapping to Excel and upload the mapping of the ongoing period from Excel.",
+   "Mapping per Destination tab: This sub-menu is opened only for users logged in with a D/S account; users with a Procurement account open the Part List sub-menu instead."
+  ],
+  "display_order": [
+   {
+    "section": "Part List - Result List (Sort by = Newer to Older, default)",
+    "fields": [
+     {
+      "field": "Last Update (last update time)",
+      "order": "Descending"
+     }
+    ]
+   },
+   {
+    "section": "Part List - Result List (Sort by = Older to Newer)",
+    "fields": [
+     {
+      "field": "Last Update (last update time)",
+      "order": "Ascending"
+     }
+    ]
+   },
+   {
+    "section": "Part List - Result List (Sort by = Default)",
+    "fields": [
+     {
+      "field": "Part Number",
+      "order": "Ascending"
+     }
+    ]
+   },
+   {
+    "section": "Part List - History Setting modal",
+    "fields": [
+     {
+      "field": "Event date and time",
+      "order": "Descending"
+     }
+    ]
+   },
+   {
+    "section": "Mapping - Result List",
+    "fields": [
+     {
+      "field": "Part Number",
+      "order": "Ascending (TBD)"
+     }
+    ]
+   },
+   {
+    "section": "Mapping - Destination Mapping panel",
+    "fields": [
+     {
+      "field": "Order in which destinations were added",
+      "order": "-"
+     }
+    ]
+   }
+  ],
+  "buttons": [
+   {
+    "name": "Tab (Part List / Mapping per Destination)",
+    "function": "Switch between the Part List tab and the Mapping per Destination tab."
+   },
+   {
+    "name": "Add Part",
+    "function": "Open the \"Add Part Candidate Crossdock\" modal (Add Mode), ready to register a new part."
+   },
+   {
+    "name": "Upload Excel (Part List)",
+    "function": "Open the \"Upload Excel - part settings\" modal (Upload Mode)."
+   },
+   {
+    "name": "Export Excel (Part List)",
+    "function": "Download the Part List as .xlsx: sheet \"Part List\" (active filter) and sheet \"Upload\" (base file for Edit uploads)."
+   },
+   {
+    "name": "Run calculation (Part List)",
+    "function": "Start the DAD Volume Calculation batch manually. Enabled only when the scheduled run and its 3 auto retries have failed."
+   },
+   {
+    "name": "Reset",
+    "function": "Clear criteria and reset the screen to its initial value."
+   },
+   {
+    "name": "Search",
+    "function": "To retrieve records according to the specified criteria. The criteria are applied only when [Search] is clicked (or Enter is pressed in a text box); Sort by is applied at once."
+   },
+   {
+    "name": "Part Number link / Edit",
+    "function": "Change the screen into edit mode to modify the selected row (\"Edit part data\" modal)."
+   },
+   {
+    "name": "History",
+    "function": "Open the \"History setting\" modal of the selected part."
+   },
+   {
+    "name": "Prev / Next",
+    "function": "Move to the previous / next page of the result list."
+   },
+   {
+    "name": "Save",
+    "function": "Part List tab: Save the part data entered in the Add / Edit modal.; Mapping per Destination tab: Save the destination mapping of the part."
+   },
+   {
+    "name": "Cancel",
+    "function": "Part List tab: Close the Add / Edit modal without saving.; Mapping per Destination tab: Leave edit mode and discard all changes of the panel."
+   },
+   {
+    "name": "Close",
+    "function": "Part List tab: Close the History setting / Upload Excel modal (also the X icon of every modal).; Mapping per Destination tab: Close the Upload Excel modal without uploading."
+   },
+   {
+    "name": "Validate file",
+    "function": "Save button of the upload: validate the uploaded file and save it (all-or-nothing), then show the success popup."
+   },
+   {
+    "name": "OK",
+    "function": "Close the success popup."
+   },
+   {
+    "name": "Run calculation (Mapping)",
+    "function": "Start process 2 (mapping destination) of the XD05 DAD Volume Calculation batch manually. Enabled only when the scheduled run and its 3 auto retries have failed."
+   },
+   {
+    "name": "Sync",
+    "function": "Start XD06 (GTOPAS) and XD07 (AP POLE) for every Active part of the ongoing period, and every part that became Inactive, with Sync Status No Sync or Failed, whatever the filter shows; the parts become Waiting. The label shows the number of parts, e.g. Sync (9)."
+   },
+   {
+    "name": "Upload Excel (Mapping)",
+    "function": "Open the \"Upload Excel - destination mapping\" modal. Enabled only when the ongoing calculation period is selected."
+   },
+   {
+    "name": "Export Excel (Mapping)",
+    "function": "Download the mapping as .xlsx: sheet \"Mapping per Destination\" (active filter) and sheet \"Upload\" (base file for the upload)."
+   },
+   {
+    "name": "Expand (arrow)",
+    "function": "Open / close the Destination Mapping panel of the part row."
+   },
+   {
+    "name": "Edit mapping",
+    "function": "Change the Destination Mapping panel into edit mode (ongoing period only)."
+   },
+   {
+    "name": "Split evenly",
+    "function": "Divide Max Case/Day evenly over all destinations of the part."
+   },
+   {
+    "name": "Add destination",
+    "function": "Add a new destination row (destination not selected, Case/Day 0)."
+   },
+   {
+    "name": "Remove destination",
+    "function": "Remove the destination row (trash icon)."
+   }
+  ],
+  "screen_modes": [
+   {
+    "mode": "Part List - Initial Mode",
+    "sections": [
+     {
+      "section": "Search Criteria",
+      "description": "Part Number and Part Name blank, Status = All, Sort by = Newer to Older",
+      "buttons": {
+       "Tab (Part List / Mapping per Destination)": "E",
+       "Add Part": "E",
+       "Upload Excel (Part List)": "E",
+       "Export Excel (Part List)": "E",
+       "Run calculation (Part List)": "D",
+       "Reset": "E",
+       "Search": "E",
+       "Part Number link / Edit": "E",
+       "History": "E",
+       "Prev / Next": "E",
+       "Save": "D",
+       "Cancel": "D",
+       "Close": "D",
+       "Validate file": "D",
+       "OK": "D",
+       "Run calculation (Mapping)": "-",
+       "Sync": "-",
+       "Upload Excel (Mapping)": "-",
+       "Export Excel (Mapping)": "-",
+       "Expand (arrow)": "-",
+       "Edit mapping": "-",
+       "Split evenly": "-",
+       "Add destination": "-",
+       "Remove destination": "-"
+      }
+     },
+     {
+      "section": "Result List",
+      "description": "All registered parts, 25 rows per page, page 1. Refer below 1)",
+      "buttons": {
+       "Tab (Part List / Mapping per Destination)": "E",
+       "Add Part": "E",
+       "Upload Excel (Part List)": "E",
+       "Export Excel (Part List)": "E",
+       "Run calculation (Part List)": "D",
+       "Reset": "E",
+       "Search": "E",
+       "Part Number link / Edit": "E",
+       "History": "E",
+       "Prev / Next": "E",
+       "Save": "D",
+       "Cancel": "D",
+       "Close": "D",
+       "Validate file": "D",
+       "OK": "D",
+       "Run calculation (Mapping)": "-",
+       "Sync": "-",
+       "Upload Excel (Mapping)": "-",
+       "Export Excel (Mapping)": "-",
+       "Expand (arrow)": "-",
+       "Edit mapping": "-",
+       "Split evenly": "-",
+       "Add destination": "-",
+       "Remove destination": "-"
+      }
+     }
+    ]
+   },
+   {
+    "mode": "Part List - Search Result Mode",
+    "sections": [
+     {
+      "section": "Result List",
+      "description": "Parts matching all criteria (AND); page returns to 1",
+      "buttons": {
+       "Tab (Part List / Mapping per Destination)": "E",
+       "Add Part": "E",
+       "Upload Excel (Part List)": "E",
+       "Export Excel (Part List)": "E",
+       "Run calculation (Part List)": "D",
+       "Reset": "E",
+       "Search": "E",
+       "Part Number link / Edit": "E",
+       "History": "E",
+       "Prev / Next": "E",
+       "Save": "D",
+       "Cancel": "D",
+       "Close": "D",
+       "Validate file": "D",
+       "OK": "D",
+       "Run calculation (Mapping)": "-",
+       "Sync": "-",
+       "Upload Excel (Mapping)": "-",
+       "Export Excel (Mapping)": "-",
+       "Expand (arrow)": "-",
+       "Edit mapping": "-",
+       "Split evenly": "-",
+       "Add destination": "-",
+       "Remove destination": "-"
+      }
+     },
+     {
+      "section": "Empty State",
+      "description": "No matching parts; table and paging hidden; [Reset filter] shown",
+      "buttons": {
+       "Tab (Part List / Mapping per Destination)": "E",
+       "Add Part": "E",
+       "Upload Excel (Part List)": "E",
+       "Export Excel (Part List)": "E",
+       "Run calculation (Part List)": "D",
+       "Reset": "E",
+       "Search": "E",
+       "Part Number link / Edit": "D",
+       "History": "D",
+       "Prev / Next": "D",
+       "Save": "D",
+       "Cancel": "D",
+       "Close": "D",
+       "Validate file": "D",
+       "OK": "D",
+       "Run calculation (Mapping)": "-",
+       "Sync": "-",
+       "Upload Excel (Mapping)": "-",
+       "Export Excel (Mapping)": "-",
+       "Expand (arrow)": "-",
+       "Edit mapping": "-",
+       "Split evenly": "-",
+       "Add destination": "-",
+       "Remove destination": "-"
+      }
+     }
+    ]
+   },
+   {
+    "mode": "Part List - Add Mode (modal)",
+    "sections": [
+     {
+      "section": "Part No not selected",
+      "description": "Status locked to Candidate; Max Case/Day locked; Save disabled",
+      "buttons": {
+       "Tab (Part List / Mapping per Destination)": "E",
+       "Add Part": "D",
+       "Upload Excel (Part List)": "D",
+       "Export Excel (Part List)": "D",
+       "Run calculation (Part List)": "D",
+       "Reset": "D",
+       "Search": "D",
+       "Part Number link / Edit": "D",
+       "History": "D",
+       "Prev / Next": "D",
+       "Save": "D",
+       "Cancel": "E",
+       "Close": "E",
+       "Validate file": "D",
+       "OK": "D",
+       "Run calculation (Mapping)": "-",
+       "Sync": "-",
+       "Upload Excel (Mapping)": "-",
+       "Export Excel (Mapping)": "-",
+       "Expand (arrow)": "-",
+       "Edit mapping": "-",
+       "Split evenly": "-",
+       "Add destination": "-",
+       "Remove destination": "-"
+      }
+     },
+     {
+      "section": "Part No selected, Pcs/Case blank",
+      "description": "Part Name autofilled; Max Case/Day still locked; Save disabled",
+      "buttons": {
+       "Tab (Part List / Mapping per Destination)": "E",
+       "Add Part": "D",
+       "Upload Excel (Part List)": "D",
+       "Export Excel (Part List)": "D",
+       "Run calculation (Part List)": "D",
+       "Reset": "D",
+       "Search": "D",
+       "Part Number link / Edit": "D",
+       "History": "D",
+       "Prev / Next": "D",
+       "Save": "D",
+       "Cancel": "E",
+       "Close": "E",
+       "Validate file": "D",
+       "OK": "D",
+       "Run calculation (Mapping)": "-",
+       "Sync": "-",
+       "Upload Excel (Mapping)": "-",
+       "Export Excel (Mapping)": "-",
+       "Expand (arrow)": "-",
+       "Edit mapping": "-",
+       "Split evenly": "-",
+       "Add destination": "-",
+       "Remove destination": "-"
+      }
+     },
+     {
+      "section": "All required items filled",
+      "description": "Total Pcs/Day calculated; Save enabled",
+      "buttons": {
+       "Tab (Part List / Mapping per Destination)": "E",
+       "Add Part": "D",
+       "Upload Excel (Part List)": "D",
+       "Export Excel (Part List)": "D",
+       "Run calculation (Part List)": "D",
+       "Reset": "D",
+       "Search": "D",
+       "Part Number link / Edit": "D",
+       "History": "D",
+       "Prev / Next": "D",
+       "Save": "E",
+       "Cancel": "E",
+       "Close": "E",
+       "Validate file": "D",
+       "OK": "D",
+       "Run calculation (Mapping)": "-",
+       "Sync": "-",
+       "Upload Excel (Mapping)": "-",
+       "Export Excel (Mapping)": "-",
+       "Expand (arrow)": "-",
+       "Edit mapping": "-",
+       "Split evenly": "-",
+       "Add destination": "-",
+       "Remove destination": "-"
+      }
+     }
+    ]
+   },
+   {
+    "mode": "Part List - Edit Mode (modal)",
+    "sections": [
+     {
+      "section": "Saved status Candidate",
+      "description": "Part No locked; Status, Effective Start Date, Min MAD, Pcs/Case, Max Case/Day editable",
+      "buttons": {
+       "Tab (Part List / Mapping per Destination)": "E",
+       "Add Part": "D",
+       "Upload Excel (Part List)": "D",
+       "Export Excel (Part List)": "D",
+       "Run calculation (Part List)": "D",
+       "Reset": "D",
+       "Search": "D",
+       "Part Number link / Edit": "D",
+       "History": "D",
+       "Prev / Next": "D",
+       "Save": "E",
+       "Cancel": "E",
+       "Close": "E",
+       "Validate file": "D",
+       "OK": "D",
+       "Run calculation (Mapping)": "-",
+       "Sync": "-",
+       "Upload Excel (Mapping)": "-",
+       "Export Excel (Mapping)": "-",
+       "Expand (arrow)": "-",
+       "Edit mapping": "-",
+       "Split evenly": "-",
+       "Add destination": "-",
+       "Remove destination": "-"
+      }
+     },
+     {
+      "section": "Saved status Active / Inactive",
+      "description": "Same as 4.a but Effective Start Date locked (it can only change while the status is Candidate)",
+      "buttons": {
+       "Tab (Part List / Mapping per Destination)": "E",
+       "Add Part": "D",
+       "Upload Excel (Part List)": "D",
+       "Export Excel (Part List)": "D",
+       "Run calculation (Part List)": "D",
+       "Reset": "D",
+       "Search": "D",
+       "Part Number link / Edit": "D",
+       "History": "D",
+       "Prev / Next": "D",
+       "Save": "E",
+       "Cancel": "E",
+       "Close": "E",
+       "Validate file": "D",
+       "OK": "D",
+       "Run calculation (Mapping)": "-",
+       "Sync": "-",
+       "Upload Excel (Mapping)": "-",
+       "Export Excel (Mapping)": "-",
+       "Expand (arrow)": "-",
+       "Edit mapping": "-",
+       "Split evenly": "-",
+       "Add destination": "-",
+       "Remove destination": "-"
+      }
+     }
+    ]
+   },
+   {
+    "mode": "Part List - History Mode (modal)",
+    "sections": [
+     {
+      "section": "History setting",
+      "description": "Change timeline of the selected part, read only",
+      "buttons": {
+       "Tab (Part List / Mapping per Destination)": "E",
+       "Add Part": "D",
+       "Upload Excel (Part List)": "D",
+       "Export Excel (Part List)": "D",
+       "Run calculation (Part List)": "D",
+       "Reset": "D",
+       "Search": "D",
+       "Part Number link / Edit": "D",
+       "History": "D",
+       "Prev / Next": "D",
+       "Save": "D",
+       "Cancel": "D",
+       "Close": "E",
+       "Validate file": "D",
+       "OK": "D",
+       "Run calculation (Mapping)": "-",
+       "Sync": "-",
+       "Upload Excel (Mapping)": "-",
+       "Export Excel (Mapping)": "-",
+       "Expand (arrow)": "-",
+       "Edit mapping": "-",
+       "Split evenly": "-",
+       "Add destination": "-",
+       "Remove destination": "-"
+      }
+     }
+    ]
+   },
+   {
+    "mode": "Part List - Upload Mode (modal)",
+    "sections": [
+     {
+      "section": "Upload Excel",
+      "description": "Template columns, rules, file area",
+      "buttons": {
+       "Tab (Part List / Mapping per Destination)": "E",
+       "Add Part": "D",
+       "Upload Excel (Part List)": "D",
+       "Export Excel (Part List)": "D",
+       "Run calculation (Part List)": "D",
+       "Reset": "D",
+       "Search": "D",
+       "Part Number link / Edit": "D",
+       "History": "D",
+       "Prev / Next": "D",
+       "Save": "D",
+       "Cancel": "D",
+       "Close": "E",
+       "Validate file": "E",
+       "OK": "D",
+       "Run calculation (Mapping)": "-",
+       "Sync": "-",
+       "Upload Excel (Mapping)": "-",
+       "Export Excel (Mapping)": "-",
+       "Expand (arrow)": "-",
+       "Edit mapping": "-",
+       "Split evenly": "-",
+       "Add destination": "-",
+       "Remove destination": "-"
+      }
+     },
+     {
+      "section": "Success popup",
+      "description": "\"Saved successfully\" after Save or Validate file",
+      "buttons": {
+       "Tab (Part List / Mapping per Destination)": "E",
+       "Add Part": "D",
+       "Upload Excel (Part List)": "D",
+       "Export Excel (Part List)": "D",
+       "Run calculation (Part List)": "D",
+       "Reset": "D",
+       "Search": "D",
+       "Part Number link / Edit": "D",
+       "History": "D",
+       "Prev / Next": "D",
+       "Save": "D",
+       "Cancel": "D",
+       "Close": "D",
+       "Validate file": "D",
+       "OK": "E",
+       "Run calculation (Mapping)": "-",
+       "Sync": "-",
+       "Upload Excel (Mapping)": "-",
+       "Export Excel (Mapping)": "-",
+       "Expand (arrow)": "-",
+       "Edit mapping": "-",
+       "Split evenly": "-",
+       "Add destination": "-",
+       "Remove destination": "-"
+      }
+     }
+    ]
+   },
+   {
+    "mode": "Mapping - Initial Mode",
+    "sections": [
+     {
+      "section": "Search Criteria",
+      "description": "Calculation period = ongoing period, Part Number blank, Sync Status = No Sync",
+      "buttons": {
+       "Tab (Part List / Mapping per Destination)": "E",
+       "Add Part": "-",
+       "Upload Excel (Part List)": "-",
+       "Export Excel (Part List)": "-",
+       "Run calculation (Part List)": "-",
+       "Reset": "E",
+       "Search": "E",
+       "Part Number link / Edit": "-",
+       "History": "-",
+       "Prev / Next": "E",
+       "Save": "D",
+       "Cancel": "D",
+       "Close": "D",
+       "Validate file": "D",
+       "OK": "D",
+       "Run calculation (Mapping)": "E",
+       "Sync": "E",
+       "Upload Excel (Mapping)": "E",
+       "Export Excel (Mapping)": "E",
+       "Expand (arrow)": "E",
+       "Edit mapping": "D",
+       "Split evenly": "D",
+       "Add destination": "D",
+       "Remove destination": "D"
+      }
+     },
+     {
+      "section": "Result List",
+      "description": "Parts of the ongoing period with Sync Status No Sync. Refer below 1)",
+      "buttons": {
+       "Tab (Part List / Mapping per Destination)": "E",
+       "Add Part": "-",
+       "Upload Excel (Part List)": "-",
+       "Export Excel (Part List)": "-",
+       "Run calculation (Part List)": "-",
+       "Reset": "E",
+       "Search": "E",
+       "Part Number link / Edit": "-",
+       "History": "-",
+       "Prev / Next": "E",
+       "Save": "D",
+       "Cancel": "D",
+       "Close": "D",
+       "Validate file": "D",
+       "OK": "D",
+       "Run calculation (Mapping)": "E",
+       "Sync": "E",
+       "Upload Excel (Mapping)": "E",
+       "Export Excel (Mapping)": "E",
+       "Expand (arrow)": "E",
+       "Edit mapping": "D",
+       "Split evenly": "D",
+       "Add destination": "D",
+       "Remove destination": "D"
+      }
+     }
+    ]
+   },
+   {
+    "mode": "Mapping - Search Result Mode",
+    "sections": [
+     {
+      "section": "Result List - ongoing period",
+      "description": "Active parts matching all criteria",
+      "buttons": {
+       "Tab (Part List / Mapping per Destination)": "E",
+       "Add Part": "-",
+       "Upload Excel (Part List)": "-",
+       "Export Excel (Part List)": "-",
+       "Run calculation (Part List)": "-",
+       "Reset": "E",
+       "Search": "E",
+       "Part Number link / Edit": "-",
+       "History": "-",
+       "Prev / Next": "E",
+       "Save": "D",
+       "Cancel": "D",
+       "Close": "D",
+       "Validate file": "D",
+       "OK": "D",
+       "Run calculation (Mapping)": "E",
+       "Sync": "E",
+       "Upload Excel (Mapping)": "E",
+       "Export Excel (Mapping)": "E",
+       "Expand (arrow)": "E",
+       "Edit mapping": "D",
+       "Split evenly": "D",
+       "Add destination": "D",
+       "Remove destination": "D"
+      }
+     },
+     {
+      "section": "Result List - past period / All periods",
+      "description": "All parts of the period; Upload Excel disabled",
+      "buttons": {
+       "Tab (Part List / Mapping per Destination)": "E",
+       "Add Part": "-",
+       "Upload Excel (Part List)": "-",
+       "Export Excel (Part List)": "-",
+       "Run calculation (Part List)": "-",
+       "Reset": "E",
+       "Search": "E",
+       "Part Number link / Edit": "-",
+       "History": "-",
+       "Prev / Next": "D",
+       "Save": "D",
+       "Cancel": "D",
+       "Close": "D",
+       "Validate file": "D",
+       "OK": "D",
+       "Run calculation (Mapping)": "D",
+       "Sync": "E",
+       "Upload Excel (Mapping)": "D",
+       "Export Excel (Mapping)": "E",
+       "Expand (arrow)": "E",
+       "Edit mapping": "D",
+       "Split evenly": "D",
+       "Add destination": "D",
+       "Remove destination": "D"
+      }
+     },
+     {
+      "section": "Empty State",
+      "description": "No parts match the filters; table hidden",
+      "buttons": {
+       "Tab (Part List / Mapping per Destination)": "E",
+       "Add Part": "-",
+       "Upload Excel (Part List)": "-",
+       "Export Excel (Part List)": "-",
+       "Run calculation (Part List)": "-",
+       "Reset": "E",
+       "Search": "E",
+       "Part Number link / Edit": "-",
+       "History": "-",
+       "Prev / Next": "D",
+       "Save": "D",
+       "Cancel": "D",
+       "Close": "D",
+       "Validate file": "D",
+       "OK": "D",
+       "Run calculation (Mapping)": "D",
+       "Sync": "D",
+       "Upload Excel (Mapping)": "E",
+       "Export Excel (Mapping)": "E",
+       "Expand (arrow)": "D",
+       "Edit mapping": "D",
+       "Split evenly": "D",
+       "Add destination": "D",
+       "Remove destination": "D"
+      }
+     }
+    ]
+   },
+   {
+    "mode": "Mapping - Detail View Mode",
+    "sections": [
+     {
+      "section": "Ongoing period",
+      "description": "Panel read only; [Edit mapping] shown",
+      "buttons": {
+       "Tab (Part List / Mapping per Destination)": "E",
+       "Add Part": "-",
+       "Upload Excel (Part List)": "-",
+       "Export Excel (Part List)": "-",
+       "Run calculation (Part List)": "-",
+       "Reset": "E",
+       "Search": "E",
+       "Part Number link / Edit": "-",
+       "History": "-",
+       "Prev / Next": "E",
+       "Save": "D",
+       "Cancel": "D",
+       "Close": "D",
+       "Validate file": "D",
+       "OK": "D",
+       "Run calculation (Mapping)": "E",
+       "Sync": "E",
+       "Upload Excel (Mapping)": "E",
+       "Export Excel (Mapping)": "E",
+       "Expand (arrow)": "E",
+       "Edit mapping": "E",
+       "Split evenly": "D",
+       "Add destination": "D",
+       "Remove destination": "D"
+      }
+     },
+     {
+      "section": "Past period",
+      "description": "Panel read only; badge 'Past period - read only' instead of [Edit mapping]",
+      "buttons": {
+       "Tab (Part List / Mapping per Destination)": "E",
+       "Add Part": "-",
+       "Upload Excel (Part List)": "-",
+       "Export Excel (Part List)": "-",
+       "Run calculation (Part List)": "-",
+       "Reset": "E",
+       "Search": "E",
+       "Part Number link / Edit": "-",
+       "History": "-",
+       "Prev / Next": "D",
+       "Save": "D",
+       "Cancel": "D",
+       "Close": "D",
+       "Validate file": "D",
+       "OK": "D",
+       "Run calculation (Mapping)": "D",
+       "Sync": "E",
+       "Upload Excel (Mapping)": "D",
+       "Export Excel (Mapping)": "E",
+       "Expand (arrow)": "E",
+       "Edit mapping": "D",
+       "Split evenly": "D",
+       "Add destination": "D",
+       "Remove destination": "D"
+      }
+     }
+    ]
+   },
+   {
+    "mode": "Mapping - Edit Mapping Mode",
+    "sections": [
+     {
+      "section": "Valid mapping",
+      "description": "Destination and Case/Day editable; total <= Max Case/Day",
+      "buttons": {
+       "Tab (Part List / Mapping per Destination)": "E",
+       "Add Part": "-",
+       "Upload Excel (Part List)": "-",
+       "Export Excel (Part List)": "-",
+       "Run calculation (Part List)": "-",
+       "Reset": "E",
+       "Search": "E",
+       "Part Number link / Edit": "-",
+       "History": "-",
+       "Prev / Next": "E",
+       "Save": "E",
+       "Cancel": "E",
+       "Close": "D",
+       "Validate file": "D",
+       "OK": "D",
+       "Run calculation (Mapping)": "E",
+       "Sync": "E",
+       "Upload Excel (Mapping)": "E",
+       "Export Excel (Mapping)": "E",
+       "Expand (arrow)": "E",
+       "Edit mapping": "D",
+       "Split evenly": "E",
+       "Add destination": "E",
+       "Remove destination": "E"
+      }
+     },
+     {
+      "section": "Mapping cannot be saved",
+      "description": "Total > Max Case/Day, no destination, or a row without destination; Save disabled",
+      "buttons": {
+       "Tab (Part List / Mapping per Destination)": "E",
+       "Add Part": "-",
+       "Upload Excel (Part List)": "-",
+       "Export Excel (Part List)": "-",
+       "Run calculation (Part List)": "-",
+       "Reset": "E",
+       "Search": "E",
+       "Part Number link / Edit": "-",
+       "History": "-",
+       "Prev / Next": "E",
+       "Save": "D",
+       "Cancel": "E",
+       "Close": "D",
+       "Validate file": "D",
+       "OK": "D",
+       "Run calculation (Mapping)": "E",
+       "Sync": "E",
+       "Upload Excel (Mapping)": "E",
+       "Export Excel (Mapping)": "E",
+       "Expand (arrow)": "E",
+       "Edit mapping": "D",
+       "Split evenly": "E",
+       "Add destination": "E",
+       "Remove destination": "E"
+      }
+     }
+    ]
+   },
+   {
+    "mode": "Mapping - Upload Mode (modal)",
+    "sections": [
+     {
+      "section": "Upload Excel",
+      "description": "Template columns, rules, file area",
+      "buttons": {
+       "Tab (Part List / Mapping per Destination)": "E",
+       "Add Part": "-",
+       "Upload Excel (Part List)": "-",
+       "Export Excel (Part List)": "-",
+       "Run calculation (Part List)": "-",
+       "Reset": "D",
+       "Search": "D",
+       "Part Number link / Edit": "-",
+       "History": "-",
+       "Prev / Next": "D",
+       "Save": "D",
+       "Cancel": "D",
+       "Close": "E",
+       "Validate file": "E",
+       "OK": "D",
+       "Run calculation (Mapping)": "D",
+       "Sync": "D",
+       "Upload Excel (Mapping)": "D",
+       "Export Excel (Mapping)": "D",
+       "Expand (arrow)": "D",
+       "Edit mapping": "D",
+       "Split evenly": "D",
+       "Add destination": "D",
+       "Remove destination": "D"
+      }
+     },
+     {
+      "section": "Success popup",
+      "description": "'Saved successfully' after Validate file",
+      "buttons": {
+       "Tab (Part List / Mapping per Destination)": "E",
+       "Add Part": "-",
+       "Upload Excel (Part List)": "-",
+       "Export Excel (Part List)": "-",
+       "Run calculation (Part List)": "-",
+       "Reset": "D",
+       "Search": "D",
+       "Part Number link / Edit": "-",
+       "History": "-",
+       "Prev / Next": "D",
+       "Save": "D",
+       "Cancel": "D",
+       "Close": "D",
+       "Validate file": "D",
+       "OK": "E",
+       "Run calculation (Mapping)": "D",
+       "Sync": "D",
+       "Upload Excel (Mapping)": "D",
+       "Export Excel (Mapping)": "D",
+       "Expand (arrow)": "D",
+       "Edit mapping": "D",
+       "Split evenly": "D",
+       "Add destination": "D",
+       "Remove destination": "D"
+      }
+     }
+    ]
+   }
+  ],
+  "screen_mode_remarks": [
+   "1) Prev is disabled on the first page and Next on the last page.",
+   "2) A user logged in with a read-only account sees [View] instead of [Edit] and cannot use Add Part / Upload Excel / Save. TBD: which accounts are read-only is not defined yet.",
+   "3) Run calculation is shown as D (disabled) by default; it is enabled only when the scheduled DAD Volume Calculation has failed 3 times (auto retry).",
+   "4) Sync is enabled only when at least one Active part of the ongoing period, or a part that became Inactive, is No Sync or Failed (not limited to the listed rows).",
+   "5) Split evenly is shown only in edit mode when the part has more than one destination row.",
+   "7) Prev is disabled on the first page and Next on the last page.",
+   "8) Run calculation is enabled only when the scheduled XD05 DAD Volume Calculation (process 2) has failed 3 times (auto retry); otherwise disabled with message no. 30 as tooltip.",
+   "6) A user logged in with a read-only account cannot use Edit mapping, Sync or Upload Excel. TBD: which accounts are read-only is not defined yet.",
+   "9) '-' = the button is not on the tab of the mode."
+  ]
+ },
+ "screen_flow": [
+  {
+   "title": "Screen Flow for Cross Dock Part Master (tabs)",
+   "flow": {
+    "direction": "LR",
+    "nodes": [
+     {
+      "id": "pl",
+      "label": "Part List tab",
+      "type": "screen"
+     },
+     {
+      "id": "mp",
+      "label": "Mapping per Destination tab",
+      "type": "screen"
+     }
+    ],
+    "edges": [
+     {
+      "from": "pl",
+      "to": "mp",
+      "label": "Tab"
+     },
+     {
+      "from": "mp",
+      "to": "pl",
+      "label": "Tab"
+     }
+    ]
+   }
+  },
+  {
+   "title": "Screen Flow for Part List",
+   "flow": {
+    "direction": "LR",
+    "nodes": [
+     {
+      "id": "list",
+      "label": "Part List",
+      "type": "screen"
+     },
+     {
+      "id": "add",
+      "label": "Add Part modal",
+      "type": "screen"
+     },
+     {
+      "id": "edit",
+      "label": "Edit part data modal",
+      "type": "screen"
+     },
+     {
+      "id": "hist",
+      "label": "History setting modal",
+      "type": "screen"
+     },
+     {
+      "id": "up",
+      "label": "Upload Excel modal",
+      "type": "screen"
+     },
+     {
+      "id": "ok",
+      "label": "Saved successfully popup",
+      "type": "message"
+     },
+     {
+      "id": "xls",
+      "label": "Excel file (.xlsx)",
+      "type": "file"
+     }
+    ],
+    "edges": [
+     {
+      "from": "list",
+      "to": "add",
+      "label": "Add Part"
+     },
+     {
+      "from": "list",
+      "to": "edit",
+      "label": "Part Number / Edit"
+     },
+     {
+      "from": "list",
+      "to": "hist",
+      "label": "History icon"
+     },
+     {
+      "from": "list",
+      "to": "up",
+      "label": "Upload Excel"
+     },
+     {
+      "from": "list",
+      "to": "xls",
+      "label": "Export Excel"
+     },
+     {
+      "from": "add",
+      "to": "ok",
+      "label": "Save"
+     },
+     {
+      "from": "edit",
+      "to": "ok",
+      "label": "Save"
+     },
+     {
+      "from": "up",
+      "to": "ok",
+      "label": "Validate file"
+     },
+     {
+      "from": "ok",
+      "to": "list",
+      "label": "OK"
+     }
+    ]
+   },
+   "notes": [
+    "Cancel / Close / X on any modal returns to the Part List without saving."
+   ]
+  },
+  {
+   "title": "Screen Flow for Save (Add / Edit part data)",
+   "flow": {
+    "direction": "TB",
+    "nodes": [
+     {
+      "id": "s",
+      "label": "START",
+      "type": "start"
+     },
+     {
+      "id": "e",
+      "label": "On Click of Save button",
+      "type": "event"
+     },
+     {
+      "id": "d1",
+      "label": "Mandatory items valid and Max Case/Day >= mapped total?",
+      "type": "decision"
+     },
+     {
+      "id": "m1",
+      "label": "Save stays disabled (tooltip / message no. 14)",
+      "type": "message"
+     },
+     {
+      "id": "p1",
+      "label": "Save the part",
+      "type": "process"
+     },
+     {
+      "id": "db",
+      "label": "Part List",
+      "type": "db"
+     },
+     {
+      "id": "p2",
+      "label": "Sync Status = No Sync, move part to top",
+      "type": "process"
+     },
+     {
+      "id": "m2",
+      "label": "Show Saved successfully",
+      "type": "message"
+     },
+     {
+      "id": "x",
+      "label": "END",
+      "type": "end"
+     }
+    ],
+    "edges": [
+     {
+      "from": "s",
+      "to": "e"
+     },
+     {
+      "from": "e",
+      "to": "d1"
+     },
+     {
+      "from": "d1",
+      "to": "m1",
+      "label": "No"
+     },
+     {
+      "from": "d1",
+      "to": "p1",
+      "label": "Yes"
+     },
+     {
+      "from": "p1",
+      "to": "db",
+      "style": "dashed"
+     },
+     {
+      "from": "p1",
+      "to": "p2"
+     },
+     {
+      "from": "p2",
+      "to": "m2"
+     },
+     {
+      "from": "m2",
+      "to": "x"
+     }
+    ],
+    "same_rank": [
+     [
+      "p1",
+      "db"
+     ]
+    ]
+   }
+  },
+  {
+   "title": "Screen Flow for Mapping per Destination",
+   "flow": {
+    "direction": "LR",
+    "nodes": [
+     {
+      "id": "list",
+      "label": "Mapping per Destination list",
+      "type": "screen"
+     },
+     {
+      "id": "view",
+      "label": "Destination Mapping panel (view)",
+      "type": "screen"
+     },
+     {
+      "id": "edit",
+      "label": "Edit mapping mode",
+      "type": "screen"
+     },
+     {
+      "id": "up",
+      "label": "Upload Excel modal",
+      "type": "screen"
+     },
+     {
+      "id": "ok",
+      "label": "Saved successfully popup",
+      "type": "message"
+     },
+     {
+      "id": "xls",
+      "label": "Excel file (.xlsx)",
+      "type": "file"
+     },
+     {
+      "id": "tgt",
+      "label": "XD06 -> GTOPAS / XD07 -> AP POLE",
+      "type": "db"
+     }
+    ],
+    "edges": [
+     {
+      "from": "list",
+      "to": "view",
+      "label": "Expand"
+     },
+     {
+      "from": "view",
+      "to": "edit",
+      "label": "Edit mapping"
+     },
+     {
+      "from": "edit",
+      "to": "view",
+      "label": "Save / Cancel"
+     },
+     {
+      "from": "list",
+      "to": "up",
+      "label": "Upload Excel"
+     },
+     {
+      "from": "up",
+      "to": "ok",
+      "label": "Validate file"
+     },
+     {
+      "from": "ok",
+      "to": "list",
+      "label": "OK"
+     },
+     {
+      "from": "list",
+      "to": "xls",
+      "label": "Export Excel"
+     },
+     {
+      "from": "list",
+      "to": "tgt",
+      "label": "Sync"
+     }
+    ]
+   },
+   "notes": [
+    "Close on the Upload Excel modal returns to the list without uploading. Closing the panel while editing discards the changes."
+   ]
+  },
+  {
+   "title": "Screen Flow for Save (Edit mapping)",
+   "flow": {
+    "direction": "TB",
+    "nodes": [
+     {
+      "id": "s",
+      "label": "START",
+      "type": "start"
+     },
+     {
+      "id": "e",
+      "label": "On Click of Save button",
+      "type": "event"
+     },
+     {
+      "id": "d1",
+      "label": "Total <= Max Case/Day and every row has a destination?",
+      "type": "decision"
+     },
+     {
+      "id": "m1",
+      "label": "Save stays disabled, show banner",
+      "type": "message"
+     },
+     {
+      "id": "p1",
+      "label": "Replace mapping of part and ongoing period",
+      "type": "process"
+     },
+     {
+      "id": "db",
+      "label": "destination mapping",
+      "type": "db"
+     },
+     {
+      "id": "p2",
+      "label": "Sync Status = No Sync",
+      "type": "process"
+     },
+     {
+      "id": "db2",
+      "label": "Part List",
+      "type": "db"
+     },
+     {
+      "id": "x",
+      "label": "Back to view mode",
+      "type": "end"
+     }
+    ],
+    "edges": [
+     {
+      "from": "s",
+      "to": "e"
+     },
+     {
+      "from": "e",
+      "to": "d1"
+     },
+     {
+      "from": "d1",
+      "to": "m1",
+      "label": "No"
+     },
+     {
+      "from": "d1",
+      "to": "p1",
+      "label": "Yes"
+     },
+     {
+      "from": "p1",
+      "to": "db",
+      "style": "dashed"
+     },
+     {
+      "from": "p1",
+      "to": "p2"
+     },
+     {
+      "from": "p2",
+      "to": "db2",
+      "style": "dashed"
+     },
+     {
+      "from": "p2",
+      "to": "x"
+     }
+    ],
+    "same_rank": [
+     [
+      "p1",
+      "db"
+     ],
+     [
+      "p2",
+      "db2"
+     ]
+    ]
+   }
+  }
+ ],
+ "screen_layout": [
+  {
+   "caption": "1. Initial Mode - Part List (Status = All, Sort by = Newer to Older)",
+   "image": "deliverables/uiss_screens/part_list/c_01_initial.png"
+  },
+  {
+   "caption": "2. Search Result Mode - Status = Candidate",
+   "image": "deliverables/uiss_screens/part_list/c_02_filter_candidate.png"
+  },
+  {
+   "caption": "3. Search Result Mode - no matching parts (empty state)",
+   "image": "deliverables/uiss_screens/part_list/c_03_no_result.png"
+  },
+  {
+   "caption": "4. Add Mode - empty form (Save disabled)",
+   "image": "deliverables/uiss_screens/part_list/c_04_add_empty.png"
+  },
+  {
+   "caption": "5. Add Mode - Part No list (only parts not yet registered)",
+   "image": "deliverables/uiss_screens/part_list/c_05_add_partno_list.png"
+  },
+  {
+   "caption": "6. Add Mode - Part No not found",
+   "image": "deliverables/uiss_screens/part_list/c_06_add_partno_notfound.png"
+  },
+  {
+   "caption": "7. Add Mode - all required items filled (Save enabled)",
+   "image": "deliverables/uiss_screens/part_list/c_07_add_filled.png"
+  },
+  {
+   "caption": "8. Saved successfully popup after Save",
+   "image": "deliverables/uiss_screens/part_list/c_08_save_success.png"
+  },
+  {
+   "caption": "9. Edit Mode - Candidate part (Effective Start Date editable)",
+   "image": "deliverables/uiss_screens/part_list/c_09_edit_candidate.png"
+  },
+  {
+   "caption": "10. Edit Mode - Active part (Effective Start Date locked)",
+   "image": "deliverables/uiss_screens/part_list/c_10_edit_active.png"
+  },
+  {
+   "caption": "11. Edit Mode - Max Case/Day below the mapped total (message no. 14, Save disabled)",
+   "image": "deliverables/uiss_screens/part_list/c_14_edit_below_mapped.png"
+  },
+  {
+   "caption": "12. History Mode - History setting",
+   "image": "deliverables/uiss_screens/part_list/c_11_history.png"
+  },
+  {
+   "caption": "13. Upload Mode - Upload Excel modal",
+   "image": "deliverables/uiss_screens/part_list/c_12_upload.png"
+  },
+  {
+   "caption": "14. Upload Mode - Saved successfully popup after Validate file",
+   "image": "deliverables/uiss_screens/part_list/c_13_upload_success.png"
+  },
+  {
+   "caption": "15. Initial Mode - ongoing period, Sync Status = No Sync",
+   "image": "deliverables/uiss_screens/mapping/c_01_default.png"
+  },
+  {
+   "caption": "16. Search Result Mode - Sync Status = All",
+   "image": "deliverables/uiss_screens/mapping/c_02_sync_all.png"
+  },
+  {
+   "caption": "17. Search Result Mode - past period (Upload Excel disabled)",
+   "image": "deliverables/uiss_screens/mapping/c_03_past_period.png"
+  },
+  {
+   "caption": "18. Search Result Mode - no parts match the filters",
+   "image": "deliverables/uiss_screens/mapping/c_04_no_result.png"
+  },
+  {
+   "caption": "19. Detail View Mode - ongoing period",
+   "image": "deliverables/uiss_screens/mapping/c_05_details_view.png"
+  },
+  {
+   "caption": "20. Detail View Mode - past period (read only)",
+   "image": "deliverables/uiss_screens/mapping/c_06_details_past.png"
+  },
+  {
+   "caption": "21. Edit Mapping Mode",
+   "image": "deliverables/uiss_screens/mapping/c_07_edit_mode.png"
+  },
+  {
+   "caption": "22. Edit Mapping Mode - allocation above Max Case/Day (Save disabled)",
+   "image": "deliverables/uiss_screens/mapping/c_08_over_allocation.png"
+  },
+  {
+   "caption": "23. Edit Mapping Mode - row without destination (Save disabled)",
+   "image": "deliverables/uiss_screens/mapping/c_09_missing_destination.png"
+  },
+  {
+   "caption": "24. Detail View Mode - part without destination",
+   "image": "deliverables/uiss_screens/mapping/c_10_no_destination.png"
+  },
+  {
+   "caption": "25. Edit Mapping Mode - after Split evenly",
+   "image": "deliverables/uiss_screens/mapping/c_11_split_evenly.png"
+  },
+  {
+   "caption": "26. Before Sync - Sync (9): 4 No Sync + 5 Failed Active parts of the ongoing period",
+   "image": "deliverables/uiss_screens/mapping/c_12_before_sync.png"
+  },
+  {
+   "caption": "27. After Sync - the 9 parts are Waiting for XD06 / XD07 (viewed with Sync Status = All)",
+   "image": "deliverables/uiss_screens/mapping/c_13_after_sync.png"
+  },
+  {
+   "caption": "28. Upload Mode - Upload Excel modal",
+   "image": "deliverables/uiss_screens/mapping/c_14_upload.png"
+  },
+  {
+   "caption": "29. Upload Mode - Saved successfully popup after Validate file",
+   "image": "deliverables/uiss_screens/mapping/c_15_upload_success.png"
+  },
+  {
+   "caption": "30. Run calculation - Calculation completed popup",
+   "image": "deliverables/uiss_screens/mapping/c_16_calc_success.png"
+  }
+ ],
+ "items": [
+  {
+   "group": "<Tab Bar>"
+  },
+  {
+   "name": "Tab (Part List / Mapping per Destination)",
+   "source": "",
+   "field": "-",
+   "type": "",
+   "len": "-",
+   "io": "I",
+   "control": "Tab",
+   "justified": "Left",
+   "initial": "Part List",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Part List tab (default) / Mapping per Destination tab."
+  },
+  {
+   "group": "<Part List - Header Section>"
+  },
+  {
+   "name": "Add Part",
+   "source": "",
+   "field": "-",
+   "type": "",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Opens the Add Part modal. Refer Operation Description 5.4."
+  },
+  {
+   "name": "Upload Excel (Part List)",
+   "source": "",
+   "field": "-",
+   "type": "",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Opens the Upload Excel modal. Refer Operation Description 5.7."
+  },
+  {
+   "name": "Export Excel (Part List)",
+   "source": "",
+   "field": "-",
+   "type": "",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Downloads Crossdock_Part_List_YYYYMMDD.xlsx. Refer Operation Description 5.8."
+  },
+  {
+   "group": "<Part List - Search Criteria Section>"
+  },
+  {
+   "name": "Part Number",
+   "source": "Entered by user",
+   "field": "-",
+   "type": "Text",
+   "len": "-",
+   "io": "I",
+   "control": "Text box with suggestion list",
+   "justified": "Left",
+   "initial": "Blank",
+   "required": "N",
+   "format": "-",
+   "validation": "Contains, case-insensitive",
+   "description": "Suggestions = Part No of registered parts (Part List). Placeholder 'e.g. PART-B'. Combined with the other criteria by AND."
+  },
+  {
+   "name": "Part Name",
+   "source": "Entered by user",
+   "field": "-",
+   "type": "Text",
+   "len": "-",
+   "io": "I",
+   "control": "Text box",
+   "justified": "Left",
+   "initial": "Blank",
+   "required": "N",
+   "format": "-",
+   "validation": "Contains, case-insensitive",
+   "description": "Placeholder 'Part name'. Combined with the other criteria by AND."
+  },
+  {
+   "name": "Status",
+   "source": "Entered by user",
+   "field": "-",
+   "type": "Text",
+   "len": "-",
+   "io": "I",
+   "control": "Combo Box",
+   "justified": "Left",
+   "initial": "All",
+   "required": "N",
+   "format": "-",
+   "validation": "",
+   "description": "Options: All / Candidate / Active / Inactive. Filters status."
+  },
+  {
+   "name": "Sort by",
+   "source": "Entered by user",
+   "field": "-",
+   "type": "Text",
+   "len": "-",
+   "io": "I",
+   "control": "Combo Box",
+   "justified": "Left",
+   "initial": "Newer to Older",
+   "required": "N",
+   "format": "-",
+   "validation": "",
+   "description": "Options: Default (Part Number A-Z) / Newer to Older / Older to Newer (by Last Update)."
+  },
+  {
+   "name": "Reset",
+   "source": "",
+   "field": "-",
+   "type": "",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Returns every criterion to its initial value."
+  },
+  {
+   "name": "Search",
+   "source": "",
+   "field": "-",
+   "type": "",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Applies the criteria to the result list. Typing or selecting a criterion alone does not change the list; Enter in a text box = [Search]."
+  },
+  {
+   "group": "<Part List - Result List Section>"
+  },
+  {
+   "name": "Registered parts counter",
+   "source": "",
+   "field": "-",
+   "type": "Text",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "N = number of filtered rows (all pages). M = filtered rows whose mapping is incomplete (no destination, or total destination Case/Day differs from Max Case/Day)."
+  },
+  {
+   "name": "Last DAD calculation",
+   "source": "",
+   "field": "-",
+   "type": "Date and time",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "DD-Mon-YYYY HH:MM",
+   "validation": "",
+   "description": "Date-time of the last successful run of the DAD Volume Calculation batch (one date per batch run, all-or-nothing)."
+  },
+  {
+   "name": "Failed badge",
+   "source": "",
+   "field": "-",
+   "type": "Text",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "'Scheduled run failed 3x'; shown when the scheduled run and its 3 auto retries have failed."
+  },
+  {
+   "name": "Run calculation (Part List)",
+   "source": "",
+   "field": "-",
+   "type": "",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Manual trigger of the DAD Volume Calculation batch. Enabled only when the scheduled run has failed 3 times; otherwise disabled with message no. 17 as tooltip. Refer Operation Description 5.9."
+  },
+  {
+   "name": "Incomplete mapping marker",
+   "source": "destination mapping",
+   "field": "-",
+   "type": "",
+   "len": "-",
+   "io": "O",
+   "control": "Row marker (blue bar)",
+   "justified": "",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Shown when the part has no destination or the sum of destination Case/Day differs from Max Case/Day."
+  },
+  {
+   "name": "Part Number",
+   "source": "Part List",
+   "field": "-",
+   "type": "Text",
+   "len": "-",
+   "io": "O",
+   "control": "Hyperlink",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Click opens the Edit part data modal (same as [Edit])."
+  },
+  {
+   "name": "Part Name",
+   "source": "Part List",
+   "field": "-",
+   "type": "Text",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Truncated with '...' when long; full name in tooltip."
+  },
+  {
+   "name": "Min MAD",
+   "source": "Part List",
+   "field": "-",
+   "type": "Number",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Right",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Minimum MAD of the part, entered by the user. Reference value compared with the MAD result of the calculation."
+  },
+  {
+   "name": "Pcs/Case",
+   "source": "Part List",
+   "field": "-",
+   "type": "Number",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Right",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": ""
+  },
+  {
+   "name": "Max Case/Day",
+   "source": "Part List",
+   "field": "-",
+   "type": "Number",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Right",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": ""
+  },
+  {
+   "name": "Total Pcs/Day",
+   "source": "Part List",
+   "field": "-",
+   "type": "Number",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Right",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "= Pcs/Case x Max Case/Day."
+  },
+  {
+   "name": "Status",
+   "source": "Part List",
+   "field": "-",
+   "type": "Text",
+   "len": "-",
+   "io": "O",
+   "control": "Chip",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Candidate (blue) / Active (green) / Inactive (grey)."
+  },
+  {
+   "name": "Last Update",
+   "source": "Part List",
+   "field": "-",
+   "type": "Date and time",
+   "len": "-",
+   "io": "O",
+   "control": "Label (2 lines)",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Line 1 date-time, line 2 user name of the last change."
+  },
+  {
+   "name": "Edit",
+   "source": "",
+   "field": "-",
+   "type": "",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Opens the Edit part data modal of the row. Shown as [View] for a read-only account (TBD: read-only accounts not defined)."
+  },
+  {
+   "name": "History (clock icon)",
+   "source": "",
+   "field": "-",
+   "type": "",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Opens the History setting modal of the row."
+  },
+  {
+   "group": "<Part List - Footer Section>"
+  },
+  {
+   "name": "Rows per page",
+   "source": "Entered by user",
+   "field": "-",
+   "type": "Number",
+   "len": "-",
+   "io": "I",
+   "control": "Combo Box",
+   "justified": "Left",
+   "initial": "25",
+   "required": "N",
+   "format": "-",
+   "validation": "",
+   "description": "Options 25 / 50 / 100. Change returns to page 1."
+  },
+  {
+   "name": "Paging information",
+   "source": "",
+   "field": "-",
+   "type": "Text",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Right",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": ""
+  },
+  {
+   "name": "Prev / Next",
+   "source": "",
+   "field": "-",
+   "type": "",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Previous / next page. Refer Screen Mode remark 1)."
+  },
+  {
+   "group": "<Part List - Empty State Section>"
+  },
+  {
+   "name": "Empty state message",
+   "source": "",
+   "field": "-",
+   "type": "Text",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Display message no. 1 (filter result empty) or no. 2 (no part registered)."
+  },
+  {
+   "name": "Reset filter",
+   "source": "",
+   "field": "-",
+   "type": "",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Same as [Reset]. Shown with message no. 1."
+  },
+  {
+   "name": "Upload Excel / Add one part",
+   "source": "",
+   "field": "-",
+   "type": "",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Shown with message no. 2; same as header [Upload Excel] / [Add Part]."
+  },
+  {
+   "group": "<Part List - Add Part / Edit Part Data Modal>"
+  },
+  {
+   "name": "Modal title",
+   "source": "",
+   "field": "-",
+   "type": "Text",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Left",
+   "initial": "Add: 'Add Part Candidate Crossdock'; Edit: 'Edit part data'",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": ""
+  },
+  {
+   "name": "Step indicator",
+   "source": "",
+   "field": "-",
+   "type": "",
+   "len": "-",
+   "io": "O",
+   "control": "Stepper",
+   "justified": "Left",
+   "initial": "Step 1 active",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Step 1 Part Candidate (Part No), step 2 Pcs/Case & Max Case/Day, step 3 Total Pcs/Day; a step gets a check when its items are filled."
+  },
+  {
+   "name": "Status",
+   "source": "Part List",
+   "field": "-",
+   "type": "Text",
+   "len": "-",
+   "io": "I/O",
+   "control": "Combo Box",
+   "justified": "Left",
+   "initial": "Candidate",
+   "required": "Y",
+   "format": "-",
+   "validation": "Add: always Candidate. Edit: Candidate / Active / Inactive",
+   "description": "Add: locked to Candidate (tooltip 'New parts are automatically Candidate'). Edit: Candidate / Active / Inactive."
+  },
+  {
+   "name": "Part No",
+   "source": "Part Master (Add) / Part List (Edit)",
+   "field": "-",
+   "type": "Text",
+   "len": "-",
+   "io": "I/O",
+   "control": "Combo Box with search",
+   "justified": "Left",
+   "initial": "Blank",
+   "required": "Y",
+   "format": "-",
+   "validation": "Must exist in Part Master and not yet be registered (no duplicate Part No)",
+   "description": "Add: lists parts of Part Master not yet registered (Part No + name, contains search, arrow keys / Enter / Esc). Edit: locked."
+  },
+  {
+   "name": "Part Name",
+   "source": "Part Master",
+   "field": "-",
+   "type": "Text",
+   "len": "-",
+   "io": "O",
+   "control": "Text box (disabled)",
+   "justified": "Left",
+   "initial": "Blank",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Autofilled from the selected Part No."
+  },
+  {
+   "name": "Effective Start Date",
+   "source": "Part List",
+   "field": "-",
+   "type": "Date",
+   "len": "-",
+   "io": "I",
+   "control": "Date picker",
+   "justified": "Left",
+   "initial": "Add: System date + 1 day",
+   "required": "N (TBD: mandatory or not)",
+   "format": "DD-Mon-YYYY",
+   "validation": "Today or later; editable only while the saved status is Candidate",
+   "description": "Editable in Add, and in Edit only while the saved status is Candidate; otherwise locked with tooltip 'Can only be changed while the status is still Candidate'."
+  },
+  {
+   "name": "Min MAD",
+   "source": "Part List",
+   "field": "-",
+   "type": "Number",
+   "len": "-",
+   "io": "I",
+   "control": "Text box",
+   "justified": "Right",
+   "initial": "Blank",
+   "required": "Y",
+   "format": "-",
+   "validation": "Mandatory; whole number, 0 or more",
+   "description": "Minimum MAD of the part, entered by the user. Reference value compared with the MAD result of the calculation. Mandatory on Add and Edit; tooltip of disabled [Save] = message no. 15."
+  },
+  {
+   "name": "Pcs/Case",
+   "source": "Part List",
+   "field": "-",
+   "type": "Number",
+   "len": "-",
+   "io": "I",
+   "control": "Text box",
+   "justified": "Right",
+   "initial": "Blank",
+   "required": "Y",
+   "format": "-",
+   "validation": "Whole number > 0",
+   "description": ""
+  },
+  {
+   "name": "Max Case/Day",
+   "source": "Part List",
+   "field": "-",
+   "type": "Number",
+   "len": "-",
+   "io": "I",
+   "control": "Text box",
+   "justified": "Right",
+   "initial": "Blank",
+   "required": "Y",
+   "format": "-",
+   "validation": "Whole number > 0",
+   "description": "Locked until Pcs/Case is filled (tooltip 'Enter Pcs/Case first'). Edit: can not be less than the total Case/Day already mapped in the ongoing period (destination mapping); otherwise the field is marked red, message no. 14 is shown and [Save] is disabled."
+  },
+  {
+   "name": "Total Pcs/Day",
+   "source": "",
+   "field": "-",
+   "type": "Number",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Right",
+   "initial": "'-'",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "= Pcs/Case x Max Case/Day, recalculated on every change."
+  },
+  {
+   "name": "Cancel",
+   "source": "",
+   "field": "-",
+   "type": "",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Closes the modal without saving."
+  },
+  {
+   "name": "Save",
+   "source": "",
+   "field": "-",
+   "type": "",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Enabled only when Part No, Min MAD, Pcs/Case > 0 and Max Case/Day > 0 are filled and, in Edit, Max Case/Day is not below the mapped total. Refer Operation Description 5.4 / 5.5."
+  },
+  {
+   "name": "Close (X)",
+   "source": "",
+   "field": "-",
+   "type": "",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Same as [Cancel]."
+  },
+  {
+   "group": "<Part List - History Setting Modal>"
+  },
+  {
+   "name": "Part identity",
+   "source": "Part List",
+   "field": "-",
+   "type": "Text",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Part No · Part Name of the selected row."
+  },
+  {
+   "name": "Event title",
+   "source": "change history",
+   "field": "-",
+   "type": "Text",
+   "len": "-",
+   "io": "O",
+   "control": "Timeline",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "e.g. 'Part registered', 'Status changed'. Latest event marked with a blue dot."
+  },
+  {
+   "name": "Event date-time",
+   "source": "change history",
+   "field": "-",
+   "type": "Date and time",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Right",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": ""
+  },
+  {
+   "name": "Changed field (old → new)",
+   "source": "change history",
+   "field": "-",
+   "type": "Text",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Field name, old value struck through, new value."
+  },
+  {
+   "name": "User",
+   "source": "change history",
+   "field": "-",
+   "type": "Text",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Right",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "User who made the change."
+  },
+  {
+   "name": "Close",
+   "source": "",
+   "field": "-",
+   "type": "",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Closes the modal."
+  },
+  {
+   "group": "<Part List - Upload Excel Modal>"
+  },
+  {
+   "name": "Template columns",
+   "source": "",
+   "field": "-",
+   "type": "Text",
+   "len": "-",
+   "io": "O",
+   "control": "Label (chips)",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "part_no, min_mad, pcs_case, max_case_day, status, upload, effective_start_date (same order as sheet 'Upload' of Export Excel)."
+  },
+  {
+   "name": "Rules per upload value and status",
+   "source": "",
+   "field": "-",
+   "type": "Text",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Add / Edit / Status rules; Candidate status cannot be changed by upload, Active <-> Inactive allowed, nothing can become Candidate."
+  },
+  {
+   "name": "Upload file",
+   "source": "Entered by user",
+   "field": "-",
+   "type": "File",
+   "len": "-",
+   "io": "I",
+   "control": "Drag-and-drop area + [Choose file]",
+   "justified": "Center",
+   "initial": "Blank",
+   "required": "Y",
+   "format": "-",
+   "validation": "Max 5 MB, max 5,000 rows",
+   "description": "File checks and row validation are done by the batch (UISS-Batch XD02 Cross Dock Part Master Upload)."
+  },
+  {
+   "name": "Download template .xlsx",
+   "source": "",
+   "field": "-",
+   "type": "",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Downloads the empty upload template. TBD: template file location."
+  },
+  {
+   "name": "Close",
+   "source": "",
+   "field": "-",
+   "type": "",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Closes the modal without uploading."
+  },
+  {
+   "name": "Validate file",
+   "source": "",
+   "field": "-",
+   "type": "",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Save button of the upload. Refer Operation Description 5.7."
+  },
+  {
+   "group": "<Part List - Saved Successfully Popup>"
+  },
+  {
+   "name": "Success message",
+   "source": "",
+   "field": "-",
+   "type": "Text",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Display message no. 9 (Add / Edit) or no. 11 (upload)."
+  },
+  {
+   "name": "OK",
+   "source": "",
+   "field": "-",
+   "type": "",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Closes the popup."
+  },
+  {
+   "group": "<Mapping - Search Criteria Section>"
+  },
+  {
+   "name": "Calculation period",
+   "source": "Entered by user",
+   "field": "-",
+   "type": "Text",
+   "len": "-",
+   "io": "I",
+   "control": "Combo Box",
+   "justified": "Left",
+   "initial": "Ongoing period, e.g. 'Sep 2026 (ongoing)'",
+   "required": "N",
+   "format": "-",
+   "validation": "",
+   "description": "Options: All periods / every calculation period; the ongoing one is marked '(ongoing)'. The label shows (ongoing) / (past) / (all). Calculation periods are created by the calculation batch; the latest period created is the ongoing period and earlier ones become past. A new period starts empty: the mapping of the previous period is not copied. Every Active part is listed with its Max Case/Day from Part List (the quota) but no destination yet (Total Case/Day 0, 0%), until the D/S user assigns it by Edit mapping or Upload Excel."
+  },
+  {
+   "name": "Part Number",
+   "source": "Entered by user",
+   "field": "-",
+   "type": "Text",
+   "len": "-",
+   "io": "I",
+   "control": "Text box with suggestion list",
+   "justified": "Left",
+   "initial": "Blank",
+   "required": "N",
+   "format": "-",
+   "validation": "Contains, case-insensitive",
+   "description": "Suggestions = registered Part Numbers. Placeholder 'e.g. PART-B'. Combined with the other criteria by AND."
+  },
+  {
+   "name": "Sync Status",
+   "source": "Entered by user",
+   "field": "-",
+   "type": "Text",
+   "len": "-",
+   "io": "I",
+   "control": "Combo Box",
+   "justified": "Left",
+   "initial": "No Sync",
+   "required": "N",
+   "format": "-",
+   "validation": "",
+   "description": "Options: All / No Sync / Waiting / Success / Failed."
+  },
+  {
+   "name": "Reset",
+   "source": "",
+   "field": "-",
+   "type": "",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Returns every criterion to its initial value (Calculation period = ongoing, Sync Status = No Sync)."
+  },
+  {
+   "name": "Search",
+   "source": "",
+   "field": "-",
+   "type": "",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Applies the criteria to the result list. Typing or selecting a criterion alone does not change the list; Enter in a text box = [Search]."
+  },
+  {
+   "group": "<Mapping - Result List Section>"
+  },
+  {
+   "name": "Section title",
+   "source": "",
+   "field": "-",
+   "type": "Text",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Left",
+   "initial": "'Destination mapping per part'",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": ""
+  },
+  {
+   "name": "Last mapping calculation",
+   "source": "",
+   "field": "-",
+   "type": "Date and time",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "DD-Mon-YYYY HH:MM",
+   "validation": "",
+   "description": "Date-time of the last successful run of process 2 (mapping destination) of the XD05 DAD Volume Calculation batch (one date per batch run)."
+  },
+  {
+   "name": "Failed badge",
+   "source": "",
+   "field": "-",
+   "type": "Text",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "'Scheduled run failed 3x'; shown when the scheduled run and its 3 auto retries have failed."
+  },
+  {
+   "name": "Run calculation (Mapping)",
+   "source": "",
+   "field": "-",
+   "type": "",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Manual trigger of process 2 (mapping destination) of the XD05 DAD Volume Calculation batch. Refer Operation Description 5.19 and Screen Mode remark 8)."
+  },
+  {
+   "name": "Sync (n)",
+   "source": "",
+   "field": "-",
+   "type": "",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "n = Active parts of the ongoing period and parts that became Inactive, with Sync Status No Sync or Failed, whatever the filter. Disabled when n = 0. Refer Operation Description 5.16."
+  },
+  {
+   "name": "Upload Excel (Mapping)",
+   "source": "",
+   "field": "-",
+   "type": "",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Disabled for a past period or All periods (tooltip message no. 23). Refer Operation Description 5.17."
+  },
+  {
+   "name": "Export Excel (Mapping)",
+   "source": "",
+   "field": "-",
+   "type": "",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Refer Operation Description 5.18."
+  },
+  {
+   "name": "Period",
+   "source": "destination mapping",
+   "field": "-",
+   "type": "Text",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Calculation period of the row. Stored as YYYYMM (e.g. 202609), displayed as Mon YYYY."
+  },
+  {
+   "name": "Expand (arrow)",
+   "source": "",
+   "field": "-",
+   "type": "",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Opens / closes the Destination Mapping panel of the row."
+  },
+  {
+   "name": "Part Number",
+   "source": "Part List",
+   "field": "-",
+   "type": "Text",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": ""
+  },
+  {
+   "name": "Part Name",
+   "source": "Part List",
+   "field": "-",
+   "type": "Text",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": ""
+  },
+  {
+   "name": "Pcs/Case",
+   "source": "Part List",
+   "field": "-",
+   "type": "Number",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Right",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": ""
+  },
+  {
+   "name": "Total Case/Day",
+   "source": "destination mapping",
+   "field": "-",
+   "type": "Number",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Right",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Sum of Case/Day of all destinations of the part and period."
+  },
+  {
+   "name": "Pcs/Day",
+   "source": "",
+   "field": "-",
+   "type": "Number",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Right",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "= Pcs/Case x Total Case/Day."
+  },
+  {
+   "name": "Percentage",
+   "source": "",
+   "field": "-",
+   "type": "Number",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Right",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "= Total Case/Day / Max Case/Day (Max Case/Day). Never above 100%: Save, upload and the Max Case/Day edit in Part List are blocked above the limit."
+  },
+  {
+   "name": "Sync Status",
+   "source": "Part List",
+   "field": "-",
+   "type": "Text",
+   "len": "-",
+   "io": "O",
+   "control": "Chip",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "0 = No Sync (grey), 3 = Waiting (amber), 1 = Success (green), 2 = Failed (red). The Failed chip shows sync message as tooltip (message no. 28)."
+  },
+  {
+   "group": "<Mapping - Footer Section>"
+  },
+  {
+   "name": "Rows per page",
+   "source": "Entered by user",
+   "field": "-",
+   "type": "Number",
+   "len": "-",
+   "io": "I",
+   "control": "Combo Box",
+   "justified": "Left",
+   "initial": "25",
+   "required": "N",
+   "format": "-",
+   "validation": "",
+   "description": "Options 25 / 50 / 100. Change returns to page 1."
+  },
+  {
+   "name": "Paging information",
+   "source": "",
+   "field": "-",
+   "type": "Text",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Right",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "'{from}-{to} of {n} parts · page {p}/{total}'."
+  },
+  {
+   "name": "Prev / Next",
+   "source": "",
+   "field": "-",
+   "type": "",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Previous / next page. Refer Screen Mode remark 7)."
+  },
+  {
+   "group": "<Mapping - Empty State Section>"
+  },
+  {
+   "name": "Empty state message",
+   "source": "",
+   "field": "-",
+   "type": "Text",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Display message no. 18."
+  },
+  {
+   "group": "<Mapping - Destination Mapping Panel>"
+  },
+  {
+   "name": "Allocation chip",
+   "source": "",
+   "field": "-",
+   "type": "Text",
+   "len": "-",
+   "io": "O",
+   "control": "Chip",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Red when the total is above Max Case/Day, grey when below, green when equal."
+  },
+  {
+   "name": "Allocation note",
+   "source": "",
+   "field": "-",
+   "type": "Text",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "'no destination yet' / '{n} case/day over' / '{n} case/day left' / 'capacity fully allocated'."
+  },
+  {
+   "name": "Past period badge",
+   "source": "",
+   "field": "-",
+   "type": "Text",
+   "len": "-",
+   "io": "O",
+   "control": "Badge",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Display message no. 22; shown instead of [Edit mapping] for a period that is not ongoing."
+  },
+  {
+   "name": "Split evenly",
+   "source": "",
+   "field": "-",
+   "type": "",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Refer Operation Description 5.15."
+  },
+  {
+   "name": "Edit mapping",
+   "source": "",
+   "field": "-",
+   "type": "",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Shown only for the ongoing period."
+  },
+  {
+   "name": "Cancel",
+   "source": "",
+   "field": "-",
+   "type": "",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Shown in edit mode; discards the changes."
+  },
+  {
+   "name": "Save",
+   "source": "",
+   "field": "-",
+   "type": "",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Shown in edit mode. Disabled while the mapping cannot be saved (Operation Description 5.15)."
+  },
+  {
+   "name": "Destination (CD)",
+   "source": "destination mapping",
+   "field": "-",
+   "type": "Text",
+   "len": "-",
+   "io": "I/O",
+   "control": "Combo Box",
+   "justified": "Left",
+   "initial": "New row: 'Select destination'",
+   "required": "Y",
+   "format": "-",
+   "validation": "Once per part",
+   "description": "List = destination code - destination name of Destination Master (Destination Master) (e.g. 9722D10 - Thailand, 9811110 - Philippines, 9715310 - Vietnam). Destinations already used by another row of the same part are hidden."
+  },
+  {
+   "name": "Case/Day",
+   "source": "destination mapping",
+   "field": "-",
+   "type": "Number",
+   "len": "-",
+   "io": "I/O",
+   "control": "Text box",
+   "justified": "Right",
+   "initial": "New row: 0",
+   "required": "Y",
+   "format": "-",
+   "validation": "Whole number (TBD: upper limit)",
+   "description": "Editable in edit mode only."
+  },
+  {
+   "name": "Pcs/Day",
+   "source": "",
+   "field": "-",
+   "type": "Number",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Right",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "= Pcs/Case x Case/Day of the destination."
+  },
+  {
+   "name": "Percentage",
+   "source": "",
+   "field": "-",
+   "type": "Number",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Right",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "= Case/Day of the destination / total Case/Day of the part."
+  },
+  {
+   "name": "Remove destination (trash icon)",
+   "source": "",
+   "field": "-",
+   "type": "",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Shown in edit mode on every row."
+  },
+  {
+   "name": "Add destination",
+   "source": "",
+   "field": "-",
+   "type": "",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Shown in edit mode, with the hint 'New row - pick a destination from the destination master in the Destination (CD) column.'"
+  },
+  {
+   "name": "No destination message",
+   "source": "",
+   "field": "-",
+   "type": "Text",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Display message no. 19; shown when the part has no destination."
+  },
+  {
+   "name": "Validation banner",
+   "source": "",
+   "field": "-",
+   "type": "Text",
+   "len": "-",
+   "io": "O",
+   "control": "Banner",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Display message no. 20 (over allocation) or no. 4 (row without destination)."
+  },
+  {
+   "group": "<Mapping - Upload Excel Modal>"
+  },
+  {
+   "name": "Template columns",
+   "source": "",
+   "field": "-",
+   "type": "Text",
+   "len": "-",
+   "io": "O",
+   "control": "Label (chips)",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "part_no, dest_code, case_day, upload, total_case_day (same order as sheet 'Upload' of Export Excel)."
+  },
+  {
+   "name": "Upload rules",
+   "source": "",
+   "field": "-",
+   "type": "Text",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Rows / Replace / Limits / Base rules. Refer Operation Description 5.17."
+  },
+  {
+   "name": "Upload file",
+   "source": "Entered by user",
+   "field": "-",
+   "type": "File",
+   "len": "-",
+   "io": "I",
+   "control": "Drag-and-drop area + [Choose file]",
+   "justified": "Center",
+   "initial": "Blank",
+   "required": "Y",
+   "format": "-",
+   "validation": "Max 5 MB, max 5,000 rows",
+   "description": "File checks and row validation are done by the batch (UISS-Batch XD03 Part and Destination Mapping Upload)."
+  },
+  {
+   "name": "Download template .xlsx",
+   "source": "",
+   "field": "-",
+   "type": "",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Downloads the empty upload template. TBD: template file location."
+  },
+  {
+   "name": "Close",
+   "source": "",
+   "field": "-",
+   "type": "",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Closes the modal without uploading."
+  },
+  {
+   "name": "Validate file",
+   "source": "",
+   "field": "-",
+   "type": "",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Save button of the upload. Refer Operation Description 5.17."
+  },
+  {
+   "group": "<Mapping - Saved Successfully Popup>"
+  },
+  {
+   "name": "Success message",
+   "source": "",
+   "field": "-",
+   "type": "Text",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Display message no. 24."
+  },
+  {
+   "name": "OK",
+   "source": "",
+   "field": "-",
+   "type": "",
+   "len": "-",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "-",
+   "validation": "",
+   "description": "Closes the popup."
+  }
+ ],
+ "data_map": {
+  "blocks": [
+   {
+    "source": "Key-in from screen",
+    "destination": {
+     "table": "Part List",
+     "operation": "Add",
+     "description": "Add Part modal - [Save]"
+    },
+    "mappings": [
+     {
+      "source_field": "Part No",
+      "dest_field": "Part No",
+      "description": "-"
+     },
+     {
+      "source_field": "Part Name",
+      "dest_field": "Part Name",
+      "description": "From Part Master by Part No"
+     },
+     {
+      "source_field": "Min MAD",
+      "dest_field": "Min MAD",
+      "description": "Mandatory; entered by the user"
+     },
+     {
+      "source_field": "Pcs/Case",
+      "dest_field": "Pcs/Case",
+      "description": "-"
+     },
+     {
+      "source_field": "Max Case/Day",
+      "dest_field": "Max Case/Day",
+      "description": "-"
+     },
+     {
+      "dest_field": "Total Pcs/Day",
+      "description": "Pcs/Case x Max Case/Day"
+     },
+     {
+      "source_field": "Effective Start Date",
+      "dest_field": "Effective Start Date",
+      "description": "-"
+     },
+     {
+      "dest_field": "status",
+      "description": "'Candidate' (every new part)"
+     },
+     {
+      "dest_field": "Sync Status",
+      "description": "No Sync"
+     },
+     {
+      "dest_field": "Saved by / time",
+      "description": "User who saved, date and time of saving"
+     }
+    ]
+   },
+   {
+    "source": "Key-in from screen",
+    "destination": {
+     "table": "Part List",
+     "operation": "Change",
+     "description": "Edit part data - [Save]",
+     "keys": [
+      {
+       "field": "Part No",
+       "value": "Part No of the edited row"
+      }
+     ]
+    },
+    "mappings": [
+     {
+      "source_field": "Status",
+      "dest_field": "status",
+      "description": "-"
+     },
+     {
+      "source_field": "Min MAD",
+      "dest_field": "Min MAD",
+      "description": "Mandatory; entered by the user"
+     },
+     {
+      "source_field": "Pcs/Case",
+      "dest_field": "Pcs/Case",
+      "description": "-"
+     },
+     {
+      "source_field": "Max Case/Day",
+      "dest_field": "Max Case/Day",
+      "description": "-"
+     },
+     {
+      "dest_field": "Total Pcs/Day",
+      "description": "Pcs/Case x Max Case/Day"
+     },
+     {
+      "source_field": "Effective Start Date",
+      "dest_field": "Effective Start Date",
+      "description": "Only while saved status is Candidate"
+     },
+     {
+      "dest_field": "Sync Status",
+      "description": "No Sync on every Save"
+     },
+     {
+      "dest_field": "Saved by / time",
+      "description": "User who saved, date and time of saving"
+     }
+    ]
+   },
+   {
+    "source": {
+     "table": "Part List",
+     "keys": [
+      {
+       "field": "Part No",
+       "value": "Saved part"
+      }
+     ]
+    },
+    "destination": {
+     "table": "change history",
+     "operation": "Add",
+     "description": "Add / Edit - [Save]"
+    },
+    "mappings": [
+     {
+      "dest_field": "Part No",
+      "description": "Part of the event"
+     },
+     {
+      "dest_field": "period",
+      "description": "empty (Part List has no period)"
+     },
+     {
+      "dest_field": "event",
+      "description": "'ADD' (Add Part) / 'EDIT' (Edit part data)"
+     },
+     {
+      "dest_field": "source",
+      "description": "Screen"
+     },
+     {
+      "dest_field": "destination code",
+      "description": "empty"
+     },
+     {
+      "dest_field": "field",
+      "description": "Changed field, e.g. Pcs/Case, Max Case/Day, status"
+     },
+     {
+      "dest_field": "old value",
+      "description": "Value before Save (empty for ADD)"
+     },
+     {
+      "dest_field": "new value",
+      "description": "Value after Save"
+     },
+     {
+      "dest_field": "Saved by / time",
+      "description": "User who saved, date and time of saving"
+     }
+    ]
+   },
+   {
+    "source": {
+     "table": "destination mapping",
+     "keys": [
+      {
+       "field": "Part No",
+       "value": "Edited part"
+      },
+      {
+       "field": "period",
+       "value": "Ongoing period"
+      }
+     ]
+    },
+    "destination": {
+     "table": "destination mapping",
+     "operation": "Remove",
+     "description": "Edit mapping - [Save]",
+     "keys": [
+      {
+       "field": "Part No",
+       "value": "Edited part"
+      },
+      {
+       "field": "period",
+       "value": "Ongoing period"
+      }
+     ]
+    },
+    "mappings": [
+     {
+      "dest_field": "Part No",
+      "description": "Current rows of the part are removed"
+     },
+     {
+      "dest_field": "period",
+      "description": "Ongoing period only"
+     },
+     {
+      "dest_field": "destination code",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "Case/Day",
+      "description": "Row is deleted"
+     }
+    ]
+   },
+   {
+    "source": "Key-in from screen",
+    "destination": {
+     "table": "destination mapping",
+     "operation": "Add",
+     "description": "Edit mapping - [Save]"
+    },
+    "mappings": [
+     {
+      "source_field": "Part Number",
+      "dest_field": "Part No",
+      "description": "-"
+     },
+     {
+      "source_field": "Calculation period",
+      "dest_field": "period",
+      "description": "Ongoing calculation period"
+     },
+     {
+      "source_field": "Destination (CD)",
+      "dest_field": "destination code",
+      "description": "One row per destination in the panel"
+     },
+     {
+      "source_field": "Case/Day",
+      "dest_field": "Case/Day",
+      "description": "-"
+     },
+     {
+      "dest_field": "Saved by / time",
+      "description": "User who saved, date and time of saving"
+     }
+    ]
+   },
+   {
+    "source": "Key-in from screen",
+    "destination": {
+     "table": "Part List",
+     "operation": "Change",
+     "description": "Edit mapping - [Save]",
+     "keys": [
+      {
+       "field": "Part No",
+       "value": "Edited part"
+      }
+     ]
+    },
+    "mappings": [
+     {
+      "dest_field": "Sync Status",
+      "description": "No Sync"
+     },
+     {
+      "dest_field": "Saved by / time",
+      "description": "User who saved, date and time of saving"
+     }
+    ]
+   },
+   {
+    "source": "Key-in from screen",
+    "destination": {
+     "table": "change history",
+     "operation": "Add",
+     "description": "Edit mapping - [Save]"
+    },
+    "mappings": [
+     {
+      "dest_field": "Part No",
+      "description": "Part of the event"
+     },
+     {
+      "dest_field": "period",
+      "description": "Ongoing calculation period"
+     },
+     {
+      "dest_field": "event",
+      "description": "'MAPPING'"
+     },
+     {
+      "dest_field": "source",
+      "description": "Screen"
+     },
+     {
+      "dest_field": "destination code",
+      "description": "Destination added, changed or removed"
+     },
+     {
+      "dest_field": "field",
+      "description": "'Case/Day'"
+     },
+     {
+      "dest_field": "old value",
+      "description": "Case/Day before (empty when added)"
+     },
+     {
+      "dest_field": "new value",
+      "description": "Case/Day after (empty when removed)"
+     },
+     {
+      "dest_field": "Saved by / time",
+      "description": "User who saved, date and time of saving"
+     }
+    ]
+   },
+   {
+    "source": {
+     "table": "Part List",
+     "keys": [
+      {
+       "field": "status",
+       "value": "'Active'"
+      },
+      {
+       "field": "Sync Status",
+       "value": "'0' or '2'"
+      }
+     ]
+    },
+    "destination": {
+     "table": "Part List",
+     "operation": "Change",
+     "description": "[Sync]",
+     "keys": [
+      {
+       "field": "Part No",
+       "value": "Each part to synchronise"
+      }
+     ]
+    },
+    "mappings": [
+     {
+      "dest_field": "Sync Status",
+      "description": "Waiting; XD06 and XD07 are started"
+     }
+    ]
+   },
+   {
+    "source": {
+     "table": "Part List",
+     "keys": [
+      {
+       "field": "Sync Status",
+       "value": "'3' (set by this [Sync])"
+      }
+     ]
+    },
+    "destination": {
+     "table": "sending result",
+     "operation": "Add / change",
+     "description": "[Sync]: one row per part and target system",
+     "keys": [
+      {
+       "field": "Part No + target system",
+       "value": "Each part to synchronise x 'GTOPAS' / 'APPOLE'"
+      }
+     ]
+    },
+    "mappings": [
+     {
+      "source_field": "Part No",
+      "dest_field": "Part No",
+      "description": "-"
+     },
+     {
+      "dest_field": "target system",
+      "description": "'GTOPAS' and 'APPOLE'"
+     },
+     {
+      "dest_field": "period",
+      "description": "Ongoing calculation period"
+     },
+     {
+      "dest_field": "sending status",
+      "description": "Waiting"
+     },
+     {
+      "dest_field": "sending time",
+      "description": "empty"
+     },
+     {
+      "dest_field": "file name",
+      "description": "empty"
+     },
+     {
+      "dest_field": "sending message",
+      "description": "empty"
+     },
+     {
+      "dest_field": "Saved by / time",
+      "description": "User who saved, date and time of saving"
+     }
+    ]
+   }
+  ]
+ },
+ "operation": [
+  {
+   "type": "heading",
+   "text": "5.0 Business Rules"
+  },
+  {
+   "type": "table",
+   "level": 1,
+   "columns": [
+    {
+     "title": "ID",
+     "width": 6
+    },
+    {
+     "title": "Topic",
+     "width": 12
+    },
+    {
+     "title": "Rule",
+     "width": 80
+    }
+   ],
+   "rows": [
+    [
+     "BR-01",
+     "Part status",
+     "A new part always starts as Candidate. Active / Inactive is decided by the monthly calculation: average MAD of the last months ≥ Min MAD → Active, otherwise Inactive."
+    ],
+    [
+     "BR-02",
+     "Part status",
+     "The user may change Active ↔ Inactive, but a part can never go back to Candidate."
+    ],
+    [
+     "BR-03",
+     "Effective Start Date",
+     "Default is tomorrow, it cannot be in the past, and it can only be changed while the part is Candidate. A part is calculated only from its Effective Start Date."
+    ],
+    [
+     "BR-04",
+     "Capacity",
+     "The total case/day of all destinations must not exceed the Max Case/Day of the part. A lower total is allowed and shown as \"n case/day left\"."
+    ],
+    [
+     "BR-05",
+     "Capacity",
+     "Max Case/Day cannot be reduced below the case/day already mapped; the mapping has to be reduced first."
+    ],
+    [
+     "BR-06",
+     "Destination",
+     "A destination appears only once per part and must exist in the destination master (GTOPAS)."
+    ],
+    [
+     "BR-07",
+     "Period",
+     "Each monthly calculation creates a new period that starts from the calculated proposal; previous periods are kept view-only."
+    ],
+    [
+     "BR-08",
+     "Sending",
+     "Any change to a part or its mapping (screen or upload) marks the part \"Not yet sent\"."
+    ],
+    [
+     "BR-09",
+     "Sending",
+     "One Sync sends every Active part that is not yet sent or failed, plus the parts that became Inactive (sent as \"stop crossdock\")."
+    ],
+    [
+     "BR-10",
+     "Sending",
+     "A part is \"Sent\" only when both GTOPAS and AP POLE received it. If one target fails, the part is \"Failed\" with the reason; if it is changed while sending, it goes back to \"Not yet sent\"."
+    ],
+    [
+     "BR-11",
+     "Upload",
+     "An Excel upload is saved only when the whole file is valid; otherwise nothing is saved and the user gets a report with the rows to correct."
+    ],
+    [
+     "BR-12",
+     "History",
+     "Every change is kept in the history for 24 months."
+    ]
+   ]
+  },
+  {
+   "type": "text",
+   "level": 1,
+   "text": "5.1 - 5.10: Part List tab. 5.11 - 5.20: Mapping per Destination tab."
+  },
+  {
+   "type": "heading",
+   "text": "5.1 Initial Display"
+  },
+  {
+   "type": "bullets",
+   "marker": "a.",
+   "level": 2,
+   "items": [
+    "The sub-menu is opened only for users logged in with a Procurement account.",
+    "Search criteria: 'Part Number' and 'Part Name' blank, 'Status' = All, 'Sort by' = Newer to Older.",
+    "Show all parts of the Part List sorted by last update time, newest first, 25 rows per page, page 1.",
+    "If no part is registered at all, hide the table and display message no. 2 with [Upload Excel] and [Add one part]."
+   ]
+  },
+  {
+   "type": "heading",
+   "text": "5.2 Specifying Criteria"
+  },
+  {
+   "type": "bullets",
+   "marker": "a.",
+   "level": 2,
+   "items": [
+    "The criteria are applied when the user clicks [Search] (or presses Enter in 'Part Number' / 'Part Name'); changing a criterion alone does not change the list. 'Sort by' is applied at once.",
+    "'Part Number' and 'Part Name' match by 'contains', case-insensitive; 'Status' matches exactly. All criteria are combined with AND.",
+    "Clicking [Search] or changing 'Sort by' or 'Rows per page' returns the list to page 1.",
+    "If no row matches, hide the table and paging and display message no. 1 with [Reset filter]."
+   ]
+  },
+  {
+   "type": "heading",
+   "text": "5.3 Result List"
+  },
+  {
+   "type": "bullets",
+   "marker": "a.",
+   "level": 2,
+   "items": [
+    "Counter 'N parts · M incomplete mappings' is counted over the whole filtered result, not only the current page.",
+    "Incomplete mapping: the part has no destination in destination mapping, or the sum of destination Case/Day differs from Max Case/Day. Mark the row with a blue bar and count it in 'M incomplete mappings'.",
+    "Total Pcs/Day = Pcs/Case x Max Case/Day."
+   ]
+  },
+  {
+   "type": "heading",
+   "text": "5.4 Add Part"
+  },
+  {
+   "type": "item",
+   "marker": "a.",
+   "level": 2,
+   "text": "User clicks [Add Part]."
+  },
+  {
+   "type": "bullets",
+   "marker": "1.",
+   "level": 3,
+   "items": [
+    "Open the 'Add Part Candidate Crossdock' modal. 'Status' = Candidate and locked (a new part is always Candidate); 'Effective Start Date' = system date + 1 day, minimum today.",
+    "'Part No' lists the parts of the Part Master that are not yet in the Part List (a part can be registered only once).",
+    "Selecting a Part No autofills 'Part Name'. 'Max Case/Day' is locked until 'Pcs/Case' is filled.",
+    "[Save] is enabled only when Part No, Min MAD (whole number, 0 or more), Pcs/Case > 0 and Max Case/Day > 0 are filled; otherwise its tooltip shows message no. 5, 15, 6 or 7 for the first missing item. Effective Start Date"
+   ]
+  },
+  {
+   "type": "item",
+   "marker": "b.",
+   "level": 2,
+   "text": "User clicks [Save]."
+  },
+  {
+   "type": "bullets",
+   "marker": "1.",
+   "level": 3,
+   "items": [
+    "If the Part No was registered by another user in the meantime, display message no. 3. Stop.",
+    "Save the part in the Part List with status = Candidate and Sync Status No Sync (see Data Edit Mapping).",
+    "Record the change in the change history.",
+    "Close the modal, reset the Part Number / Part Name / Status filters, sort Newer to Older and display message no. 9. The new part is shown at the top."
+   ]
+  },
+  {
+   "type": "item",
+   "marker": "c.",
+   "level": 2,
+   "text": "User clicks [Cancel] or the X icon: close the modal without saving."
+  },
+  {
+   "type": "heading",
+   "text": "5.5 Edit Part Data"
+  },
+  {
+   "type": "item",
+   "marker": "a.",
+   "level": 2,
+   "text": "User clicks the 'Part Number' link or [Edit] on a row."
+  },
+  {
+   "type": "bullets",
+   "marker": "1.",
+   "level": 3,
+   "items": [
+    "Open the 'Edit part data' modal with the saved values. 'Part No' is locked; 'Status' can be Candidate / Active / Inactive.",
+    "'Effective Start Date' is editable only while the saved status is Candidate (minimum today); otherwise locked with message no. 10 as tooltip.",
+    "'Min MAD' (mandatory, whole number 0 or more), 'Pcs/Case' and 'Max Case/Day' can be changed; 'Total Pcs/Day' is recalculated.",
+    "Max Case/Day can not be less than the total Case/Day already mapped to destinations in the ongoing period (destination mapping); otherwise the field is marked red, message no. 14 is shown below Pcs/Case & Max Case/Day and [Save] is disabled. The user must first reduce the mapping in Mapping per Destination (same rule as upload check 9)."
+   ]
+  },
+  {
+   "type": "item",
+   "marker": "b.",
+   "level": 2,
+   "text": "User clicks [Save]."
+  },
+  {
+   "type": "bullets",
+   "marker": "1.",
+   "level": 3,
+   "items": [
+    "If the record was changed by another user after it was opened, display message no. 4. Stop.",
+    "Check again that Max Case/Day is not below the mapped total of the ongoing period; if it is, display message no. 14. Stop.",
+    "Save the changes in the Part List and set Sync Status No Sync, updated by and last update time. Every Save returns the part to No Sync so the D/S user synchronises it again.",
+    "Record the change in the change history.",
+    "Close the modal, move the part to the top of the list and display message no. 9."
+   ]
+  },
+  {
+   "type": "heading",
+   "text": "5.6 History Setting"
+  },
+  {
+   "type": "bullets",
+   "marker": "a.",
+   "level": 2,
+   "items": [
+    "The history shows every change made to the part.",
+    "User clicks the clock icon on a row: open 'History setting' with the change timeline of the part, newest first.",
+    "Each event shows the title, date-time, field name, old value (struck through) → new value and user.",
+    "The history records every change of the part: Add / Edit by screen, Upload, mapping changes (add, change or remove a destination) and Sync results. A part without history shows message no. 12."
+   ]
+  },
+  {
+   "type": "text",
+   "level": 2,
+   "text": "The history is kept for 24 months (to be confirmed)."
+  },
+  {
+   "type": "heading",
+   "text": "5.7 Upload Excel"
+  },
+  {
+   "type": "bullets",
+   "marker": "a.",
+   "level": 2,
+   "items": [
+    "User clicks [Upload Excel]: open the modal with the template columns, the rules and the file area (.xlsx, max 5 MB, max 5,000 rows).",
+    "Edit rows use sheet 'Upload' of the Part List Export Excel as base file (pre-filled with upload = E).",
+    "Status rule: a Candidate part's status cannot be changed by upload; Active <-> Inactive can be changed; no part can be changed to Candidate.",
+    "User clicks [Validate file] (save button of the upload): the file is passed to the upload batch; validation, saving (all-or-nothing) and logging follow UISS-Batch \"XD02 Cross Dock Part Master Upload Batch\".",
+    "When the upload is completed, close the modal and display message no. 11. When it is rejected, show the batch result (error list) - refer UISS-Batch.",
+    "Changed parts show Sync Status No Sync."
+   ]
+  },
+  {
+   "type": "heading",
+   "text": "5.8 Export Excel"
+  },
+  {
+   "type": "bullets",
+   "marker": "a.",
+   "level": 2,
+   "items": [
+    "User clicks [Export Excel]: download Crossdock_Part_List_YYYYMMDD.xlsx.",
+    "Sheet 'Part List': rows of the active filter and sort (all pages) with Part Number, Part Name, Min MAD, Pcs/Case, Max Case/Day, Total Pcs/Day, Status, Effective Start Date, Last Update. Information only.",
+    "Sheet 'Upload': every registered part with part_no, min_mad, pcs_case, max_case_day, status, upload = E, effective_start_date (DD-Mon-YYYY). Base file for Edit uploads.",
+    "If the file cannot be created, display message no. 13."
+   ]
+  },
+  {
+   "type": "heading",
+   "text": "5.9 Run DAD Calculation"
+  },
+  {
+   "type": "bullets",
+   "marker": "a.",
+   "level": 2,
+   "items": [
+    "The DAD Volume Calculation batch runs on its own scheduler (set in system master) with 3 auto retries. It compares the average MAD of each part with Min MAD and sets the part status to Active or Inactive (refer UISS-Batch XD05 DAD Volume Calculation (process 1)).",
+    "The result list header shows 'Last DAD calculation' (last successful run) and, when the scheduled run and its 3 retries have failed, the badge 'Scheduled run failed 3x'.",
+    "[Run calculation] is enabled only in that failed state; otherwise it is disabled with message no. 17 as tooltip.",
+    "User clicks [Run calculation]: start the batch. When it completes, update 'Last DAD calculation', hide the badge, refresh the list and display message no. 16. When it fails, the batch logs the error (all-or-nothing) and the button stays enabled.",
+    "A change from Active to Inactive made by the batch sets the part to No Sync (it is sent as inactive by the next [Sync]); other status changes made by the batch do not change the Sync Status. The user may still change the status afterwards by screen or upload."
+   ]
+  },
+  {
+   "type": "heading",
+   "text": "5.10 Status Definitions"
+  },
+  {
+   "type": "table",
+   "level": 2,
+   "columns": [
+    {
+     "title": "Status",
+     "width": 12
+    },
+    {
+     "title": "Value",
+     "width": 9
+    },
+    {
+     "title": "Definition",
+     "width": 25
+    }
+   ],
+   "rows": [
+    [
+     "Part Status",
+     "Candidate",
+     "Newly registered part without MAD history. Initial status of every new part; cannot be chosen when adding."
+    ],
+    [
+     "Part Status",
+     "Active",
+     "Active part. Only Active parts can be mapped in the Mapping per Destination sub-menu."
+    ],
+    [
+     "Part Status",
+     "Inactive",
+     "Inactive part. Not mapped in the Mapping per Destination sub-menu."
+    ],
+    [
+     "Sync Status",
+     "No Sync (0)",
+     "Not sent yet, or changed since the last synchronisation. Set on every Save."
+    ],
+    [
+     "Sync Status",
+     "Waiting (3)",
+     "[Sync] clicked in the Mapping per Destination tab; waiting for XD06 (GTOPAS) and / or XD07 (AP POLE)."
+    ],
+    [
+     "Sync Status",
+     "Success (1)",
+     "Both XD06 (GTOPAS) and XD07 (AP POLE) sent Pcs/Case, Max Case/Day and the destination mapping of the ongoing period."
+    ],
+    [
+     "Sync Status",
+     "Failed (2)",
+     "XD06 or XD07 could not send the part (target and reason in sync message); sent again by the next [Sync]."
+    ]
+   ],
+   "row_lines": "all"
+  },
+  {
+   "type": "text",
+   "level": 2,
+   "text": "Only Active parts are synchronised. A Save while the part is Waiting returns it to No Sync, so the result of XD06 / XD07 for the old data is not kept as Success."
+  },
+  {
+   "type": "heading",
+   "text": "5.11 Initial Display"
+  },
+  {
+   "type": "bullets",
+   "marker": "a.",
+   "level": 2,
+   "items": [
+    "The sub-menu is opened only for users logged in with a D/S account.",
+    "Search criteria: 'Calculation period' = ongoing period, 'Part Number' blank, 'Sync Status' = No Sync.",
+    "Ongoing period: list every Active part of Part List, with its destinations of destination mapping for that period (a part without destinations is listed with Total Case/Day 0).",
+    "A new period starts empty: the mapping of the previous period is not copied. Every Active part is listed with its Max Case/Day from Part List (the quota) but no destination yet (Total Case/Day 0, 0%), until the D/S user assigns it by Edit mapping or Upload Excel.",
+    "Past period: list every part that has rows in destination mapping for that period, whatever its current status. 'All periods' lists both."
+   ]
+  },
+  {
+   "type": "heading",
+   "text": "5.12 Specifying Criteria"
+  },
+  {
+   "type": "bullets",
+   "marker": "a.",
+   "level": 2,
+   "items": [
+    "The criteria are applied when the user clicks [Search] (or presses Enter in 'Part Number'); changing a criterion alone does not change the list.",
+    "'Part Number' matches by 'contains', case-insensitive; 'Calculation period' and 'Sync Status' match exactly. All criteria are combined with AND.",
+    "[Upload Excel] and Export Excel follow the period of the applied criteria.",
+    "If no row matches, hide the table and display message no. 18.",
+    "With the default Sync Status = No Sync, parts that are Success or Failed are hidden until the filter is changed."
+   ]
+  },
+  {
+   "type": "heading",
+   "text": "5.13 Result List"
+  },
+  {
+   "type": "bullets",
+   "marker": "a.",
+   "level": 2,
+   "items": [
+    "Total Case/Day = sum of Case/Day of the part and period; Pcs/Day = Pcs/Case x Total Case/Day.",
+    "Percentage = Total Case/Day / Max Case/Day; it never exceeds 100% because the total can not go above Max Case/Day (Save, upload and the Max Case/Day edit in Part List are blocked).",
+    "The list is paged: 25 rows per page by default (25 / 50 / 100), with paging information and [Prev] / [Next]. A part with its Destination Mapping panel counts as one row. [Search], Reset and a change of Rows per page return to page 1."
+   ]
+  },
+  {
+   "type": "heading",
+   "text": "5.14 Destination Mapping Panel"
+  },
+  {
+   "type": "bullets",
+   "marker": "a.",
+   "level": 2,
+   "items": [
+    "User clicks the arrow on a row: open the panel with the allocation chip, the note and the destination table (Destination, Case/Day, Pcs/Day, Percentage). All items are read only.",
+    "Ongoing period: show [Edit mapping]. Past period: show message no. 22 instead; the mapping cannot be changed.",
+    "A part without destination shows message no. 19."
+   ]
+  },
+  {
+   "type": "heading",
+   "text": "5.15 Edit Mapping"
+  },
+  {
+   "type": "item",
+   "marker": "a.",
+   "level": 2,
+   "text": "User clicks [Edit mapping]."
+  },
+  {
+   "type": "bullets",
+   "marker": "1.",
+   "level": 3,
+   "items": [
+    "Copy the mapping into a draft; Destination and Case/Day become editable, a trash icon appears per row and [Add destination] is shown.",
+    "The Destination list hides destinations already used by another row of the same part (one destination per part).",
+    "[Add destination] adds a row with 'Select destination' and Case/Day 0.",
+    "[Split evenly] (more than one row): Case/Day of each row = floor(Max Case/Day / number of rows); the remainder is added +1 per row from the first row. Example 24 / 3 = 8 / 8 / 8; 25 / 3 = 9 / 8 / 8.",
+    "The allocation chip and note are recalculated on every change."
+   ]
+  },
+  {
+   "type": "item",
+   "marker": "b.",
+   "level": 2,
+   "text": "Save rules - [Save] is disabled while:"
+  },
+  {
+   "type": "bullets",
+   "marker": "-",
+   "level": 3,
+   "items": [
+    "the total Case/Day is above Max Case/Day (show message no. 20);",
+    "the part has no destination row; or",
+    "a row has no destination selected (show message no. 21).",
+    "A total below or equal to Max Case/Day is allowed; below is shown as '{n} case/day left'."
+   ]
+  },
+  {
+   "type": "item",
+   "marker": "c.",
+   "level": 2,
+   "text": "User clicks [Save]."
+  },
+  {
+   "type": "bullets",
+   "marker": "1.",
+   "level": 3,
+   "items": [
+    "If the mapping was changed by another user after edit mode started, display message no. 25. Stop.",
+    "Save the new destination mapping of the part for the ongoing period (see Data Edit Mapping).",
+    "Set Sync Status No Sync in Part List, so the D/S user synchronises the part again.",
+    "Record every added, changed or removed destination in the change history (old and new Case/Day).",
+    "Leave edit mode and show the saved mapping."
+   ]
+  },
+  {
+   "type": "item",
+   "marker": "d.",
+   "level": 2,
+   "text": "User clicks [Cancel] or closes the panel: discard the draft."
+  },
+  {
+   "type": "heading",
+   "text": "5.16 Sync"
+  },
+  {
+   "type": "item",
+   "marker": "a.",
+   "level": 2,
+   "text": "User clicks [Sync (n)] (on demand)."
+  },
+  {
+   "type": "bullets",
+   "marker": "1.",
+   "level": 3,
+   "items": [
+    "Select every Active part of the ongoing period, and every part that became Inactive (set to No Sync by XD05), with Sync Status No Sync or Failed, whatever the search criteria show (n of the button). Inactive parts are sent with crossdock flag (Y / N) 'N' so GTOPAS and AP POLE change their status to inactive. Candidate parts are never synchronised.",
+    "Set Sync Status Waiting for these parts in Part List, mark the sending to GTOPAS and AP POLE as Waiting, and start the interfaces XD06 (GTOPAS) and XD07 (AP POLE). Display message no. 27.",
+    "With the default filter No Sync the parts leave the list; select Sync Status = Waiting or All to follow them."
+   ]
+  },
+  {
+   "type": "item",
+   "marker": "b.",
+   "level": 2,
+   "text": "Interface functions (one per target system; refer UISS-Batch XD06 and XD07)."
+  },
+  {
+   "type": "bullets",
+   "marker": "1.",
+   "level": 3,
+   "items": [
+    "XD06 IF Cross Dock Master to GTOPAS and XD07 IF Cross Dock Master to AP POLE each send, per Waiting part, Pcs/Case and Max Case/Day (Part List) and all destinations with Case/Day of the ongoing period (destination mapping) as one complete set.",
+    "Each function creates an interface file and sends it by SFTP to its target; the result (sent or failed, with the reason) is kept per target system.",
+    "Overall Sync Status of the part: stays Waiting while one target is still Waiting; Success when both targets are Success; Failed when a target failed (sync message = target and reason); No Sync when the part was changed after it was read.",
+    "Every result is recorded in the change history."
+   ]
+  },
+  {
+   "type": "item",
+   "marker": "c.",
+   "level": 2,
+   "text": "A Failed part shows sync message (target and reason) as tooltip on its chip (message no. 28) and is sent again to both targets by the next [Sync] (replace is repeatable)."
+  },
+  {
+   "type": "item",
+   "marker": "d.",
+   "level": 2,
+   "text": "Interface method: file by SFTP to GTOPAS (XD06) and AP POLE (XD07); fields and topology refer UISS-Batch XD06 / XD07 (topology TBC)."
+  },
+  {
+   "type": "heading",
+   "text": "5.17 Upload Excel"
+  },
+  {
+   "type": "bullets",
+   "marker": "a.",
+   "level": 2,
+   "items": [
+    "[Upload Excel] is enabled only when the ongoing calculation period is selected; otherwise it is disabled with message no. 23 as tooltip.",
+    "The modal shows the template columns (part_no, dest_code, case_day, upload, total_case_day), the upload rules and the file area (.xlsx, max 5 MB, max 5,000 rows).",
+    "Base file: sheet 'Upload' of Export Excel with the ongoing period selected. A part in the file gets its whole mapping replaced; parts not in the file are not changed.",
+    "User clicks [Validate file] (save button of the upload): the file is passed to the upload batch; validation, saving (all-or-nothing) and logging follow UISS-Batch \"XD03 Part and Destination Mapping Upload Batch\".",
+    "When the upload is completed, close the modal and display message no. 24. When it is rejected, show the batch result (error list) - refer UISS-Batch.",
+    "Changed parts show Sync Status No Sync."
+   ]
+  },
+  {
+   "type": "heading",
+   "text": "5.18 Export Excel"
+  },
+  {
+   "type": "bullets",
+   "marker": "a.",
+   "level": 2,
+   "items": [
+    "User clicks [Export Excel]: download Crossdock_Mapping_per_Destination_<period>_YYYYMMDD.xlsx (<period> e.g. Sep_2026 or All_periods).",
+    "Sheet 'Mapping per Destination': rows of the active filter, one row per destination (a part without destination gives one row with blank destination columns). Columns: Period, Part Number, Part Name, Pcs/Case, Total Case/Day, Pcs/Day, Percentage, Sync Status, Destination Code, Destination, Dest Case/Day, Dest Pcs/Day, Dest Percentage. Information only.",
+    "Sheet 'Upload': every Active part of the ongoing period with part_no, dest_code, case_day, upload, total_case_day (= Max Case/Day); one row per destination, and one row with dest_code and case_day blank for a part without mapping. Empty when a past period or All periods is selected. upload = E for a mapped destination, A for the blank row.",
+    "If the file cannot be created, display message no. 26."
+   ]
+  },
+  {
+   "type": "heading",
+   "text": "5.19 Run Mapping Calculation"
+  },
+  {
+   "type": "bullets",
+   "marker": "a.",
+   "level": 2,
+   "items": [
+    "The XD05 process 2 (mapping destination) batch runs on its own scheduler (set in system master) with 3 auto retries. It creates the new calculation period and its destination mapping (refer UISS-Batch XD05 DAD Volume Calculation (process 2)).",
+    "The section header shows 'Last mapping calculation' (last successful run) and, when the scheduled run and its 3 retries have failed, the badge 'Scheduled run failed 3x'.",
+    "[Run calculation] is enabled only in that failed state; otherwise it is disabled with message no. 30 as tooltip.",
+    "User clicks [Run calculation]: start the batch. When it completes, update 'Last mapping calculation', hide the badge and display message no. 29. When it fails, the batch logs the error (all-or-nothing) and the button stays enabled."
+   ]
+  },
+  {
+   "type": "heading",
+   "text": "5.20 Data Level and Status Definitions"
+  },
+  {
+   "type": "table",
+   "level": 2,
+   "row_lines": "all",
+   "columns": [
+    {
+     "title": "Item",
+     "width": 12
+    },
+    {
+     "title": "Value",
+     "width": 9
+    },
+    {
+     "title": "Definition",
+     "width": 25
+    }
+   ],
+   "rows": [
+    [
+     "Table",
+     "Part List",
+     "Part List data, part number level (key Part No). Holds Max Case/Day, status and Sync Status."
+    ],
+    [
+     "Table",
+     "destination mapping",
+     "Mapping data, part number + calculation period + destination level (key Part No, period, destination code). period = CHAR(6) YYYYMM, e.g. 202609; displayed as 'Sep 2026'."
+    ],
+    [
+     "Table",
+     "Destination Master",
+     "Destination Master (existing, read only). Crossdock uses destination code and destination name only."
+    ],
+    [
+     "Part Status",
+     "Active",
+     "Only Active parts are mapped in the ongoing period."
+    ],
+    [
+     "Sync Status",
+     "No Sync (0)",
+     "Not sent yet, or changed since the last synchronisation."
+    ],
+    [
+     "Sync Status",
+     "Waiting (3)",
+     "[Sync] clicked; waiting for XD06 (GTOPAS) and / or XD07 (AP POLE)."
+    ],
+    [
+     "Sync Status",
+     "Success (1)",
+     "The part was sent to GTOPAS and AP POLE."
+    ],
+    [
+     "Sync Status",
+     "Failed (2)",
+     "GTOPAS or AP POLE could not receive the part; target and reason in sync message; retried by the next [Sync]."
+    ],
+    [
+     "Period",
+     "Ongoing / past",
+     "Created by the calculation batch. Ongoing (latest period): mapping can be edited and uploaded. Past: read only."
+    ]
+   ]
+  },
+  {
+   "type": "text",
+   "level": 2,
+   "text": "Sync Status is kept per part in Part List because a part is sent as one set (Pcs/Case, Max Case/Day and all destinations); the result per target system is in sending result. Every mapping change and every Sync result is recorded in change history (with the period)."
+  },
+  {
+   "type": "page_break"
+  },
+  {
+   "type": "heading",
+   "text": "6. Acceptance Criteria (UAT)"
+  },
+  {
+   "type": "table",
+   "level": 1,
+   "columns": [
+    {
+     "title": "ID",
+     "width": 6
+    },
+    {
+     "title": "Scenario (Given / When / Then)",
+     "width": 62
+    },
+    {
+     "title": "Rule",
+     "width": 18
+    },
+    {
+     "title": "Result",
+     "width": 10
+    }
+   ],
+   "rows": [
+    [
+     "AC-01",
+     "Given a new part, when Procurement saves it, then its status is Candidate and the Effective Start Date is tomorrow unless changed.",
+     "BR-01, BR-03",
+     ""
+    ],
+    [
+     "AC-02",
+     "Given an Active part, when Procurement opens Edit, then the Effective Start Date is locked and the status can only be Active or Inactive.",
+     "BR-02, BR-03",
+     ""
+    ],
+    [
+     "AC-03",
+     "Given Max Case/Day 24 and destinations totalling 24, when D/S adds 1 case/day to a destination, then Save is blocked with the over-capacity message.",
+     "BR-04",
+     ""
+    ],
+    [
+     "AC-04",
+     "Given a part with 20 case/day mapped, when Procurement changes Max Case/Day to 18, then Save is blocked until the mapping is reduced.",
+     "BR-05",
+     ""
+    ],
+    [
+     "AC-05",
+     "Given 3 changed Active parts and 1 part that became Inactive, when D/S clicks Sync, then 4 parts are sent and the Inactive part is sent as \"stop crossdock\".",
+     "BR-08, BR-09",
+     ""
+    ],
+    [
+     "AC-06",
+     "Given GTOPAS receives a part and AP POLE fails, when the sending ends, then the part is Failed with the AP POLE reason.",
+     "BR-10",
+     ""
+    ],
+    [
+     "AC-07",
+     "Given an upload file with 1 invalid row out of 100, when validated, then nothing is saved and the report lists that row.",
+     "BR-11",
+     ""
+    ],
+    [
+     "AC-08",
+     "Given the scheduled calculation failed 3 times, when the user clicks Run calculation, then the calculation runs and the last success date is updated.",
+     "-",
+     ""
+    ]
+   ]
+  }
+ ],
+ "operation_layout": "full",
+ "display_messages": [
+  {
+   "group": "Part List - Search Operation"
+  },
+  {
+   "event": "Change search criteria",
+   "cause": "No part matches the criteria",
+   "type": "Info",
+   "msg_id": "MSG1",
+   "message": "No matching parts - Loosen the search criteria or reset all filters.",
+   "action": "Change the criteria or click [Reset filter]"
+  },
+  {
+   "event": "Open Part List",
+   "cause": "No part registered yet",
+   "type": "Info",
+   "msg_id": "MSG2",
+   "message": "No crossdock parts registered yet",
+   "action": "Click [Upload Excel] or [Add one part]"
+  },
+  {
+   "group": "Part List - Add / Edit Operation"
+  },
+  {
+   "event": "Click [Save] button",
+   "cause": "Part No already registered (concurrent add)",
+   "type": "Error",
+   "msg_id": "MSG3",
+   "message": "Duplication found for {Part No}",
+   "action": "Close the modal and search the part"
+  },
+  {
+   "event": "Click [Save] button",
+   "cause": "Record changed by another user",
+   "type": "Error",
+   "msg_id": "MSG4",
+   "message": "Error in Update because of concurrency check.",
+   "action": "Close the modal, refresh and edit again"
+  },
+  {
+   "event": "Hover disabled [Save]",
+   "cause": "Part No not selected",
+   "type": "Info",
+   "msg_id": "MSG5",
+   "message": "Part No is required",
+   "action": "Select a Part No"
+  },
+  {
+   "event": "Hover disabled [Save]",
+   "cause": "Pcs/Case not filled",
+   "type": "Info",
+   "msg_id": "MSG6",
+   "message": "Enter Pcs/Case first (step 2)",
+   "action": "Fill Pcs/Case"
+  },
+  {
+   "event": "Hover disabled [Save]",
+   "cause": "Max Case/Day not filled",
+   "type": "Info",
+   "msg_id": "MSG7",
+   "message": "Enter Max Case/Day (step 2)",
+   "action": "Fill Max Case/Day"
+  },
+  {
+   "event": "Type in 'Part No'",
+   "cause": "No unregistered part matches the text",
+   "type": "Info",
+   "msg_id": "MSG8",
+   "message": "Part not found",
+   "action": "Check the Part No"
+  },
+  {
+   "event": "Click [Save] button",
+   "cause": "Part saved successfully",
+   "type": "Info",
+   "msg_id": "MSG9",
+   "message": "Saved successfully - {Part No} · {Part Name} has been added/updated. It is now at the top of the Part List.",
+   "action": "Click [OK]"
+  },
+  {
+   "event": "Hover 'Effective Start Date'",
+   "cause": "Saved status is Active / Inactive",
+   "type": "Info",
+   "msg_id": "MSG10",
+   "message": "Can only be changed while the status is still Candidate",
+   "action": "-"
+  },
+  {
+   "group": "Part List - Upload Operation"
+  },
+  {
+   "event": "Click [Validate file] button",
+   "cause": "Upload validated and saved",
+   "type": "Info",
+   "msg_id": "MSG11",
+   "message": "Saved successfully - Upload completed. The file has been validated and the part settings have been saved to the Part List.",
+   "action": "Click [OK]"
+  },
+  {
+   "group": "Part List - History Operation"
+  },
+  {
+   "event": "Click History icon",
+   "cause": "Part has no history",
+   "type": "Info",
+   "msg_id": "MSG12",
+   "message": "No change history for this part yet.",
+   "action": "Click [Close]"
+  },
+  {
+   "group": "Part List - Export Operation"
+  },
+  {
+   "event": "Click [Export Excel] button",
+   "cause": "Excel file cannot be created",
+   "type": "Error",
+   "msg_id": "MSG13",
+   "message": "Export Excel failed. Please try again.",
+   "action": "Click [Export Excel] again; contact administrator if it persists"
+  },
+  {
+   "event": "Change 'Max Case/Day' in Edit / click [Save]",
+   "cause": "Max Case/Day below the total Case/Day mapped in the ongoing period",
+   "type": "Error",
+   "msg_id": "MSG14",
+   "message": "Max Case/Day can not be less than the mapped total ({n} case/day) of the ongoing period. Reduce the mapping in Mapping per Destination first.",
+   "action": "Reduce the mapping in Mapping per Destination first, or enter a higher Max Case/Day"
+  },
+  {
+   "event": "Hover disabled [Save]",
+   "cause": "Min MAD blank or not a whole number",
+   "type": "Info",
+   "msg_id": "MSG15",
+   "message": "Enter Min MAD (whole number, 0 or more)",
+   "action": "Fill Min MAD"
+  },
+  {
+   "group": "Part List - Calculation Operation"
+  },
+  {
+   "event": "Click [Run calculation] button",
+   "cause": "DAD Volume Calculation completed",
+   "type": "Info",
+   "msg_id": "MSG16",
+   "message": "Calculation completed - DAD volume calculation completed. Part statuses have been updated from the average MAD against Min MAD.",
+   "action": "Click [OK]"
+  },
+  {
+   "event": "Hover disabled [Run calculation]",
+   "cause": "Scheduled run has not failed 3 times",
+   "type": "Info",
+   "msg_id": "MSG17",
+   "message": "Enabled only when the scheduled run has failed 3 times",
+   "action": "-"
+  },
+  {
+   "group": "Mapping - Search Operation"
+  },
+  {
+   "event": "Change search criteria",
+   "cause": "No part matches the criteria",
+   "type": "Info",
+   "msg_id": "MSG18",
+   "message": "No parts match these filters - Change the period or sync status, or press Reset to show all parts.",
+   "action": "Change the criteria or click [Reset]"
+  },
+  {
+   "group": "Mapping - Edit Mapping Operation"
+  },
+  {
+   "event": "Open Destination Mapping panel",
+   "cause": "Part has no destination",
+   "type": "Info",
+   "msg_id": "MSG19",
+   "message": "No destination yet - Click Edit mapping and add at least one destination so the part is included in the volume calculation.",
+   "action": "Click [Edit mapping] and add a destination"
+  },
+  {
+   "event": "Change Case/Day in edit mode",
+   "cause": "Total Case/Day above Max Case/Day",
+   "type": "Error",
+   "msg_id": "MSG20",
+   "message": "Allocation of {n} case/day exceeds Max Case/Day ({m}). Reduce one of the destinations.",
+   "action": "Reduce Case/Day of a destination"
+  },
+  {
+   "event": "Edit mode",
+   "cause": "A row has no destination selected",
+   "type": "Error",
+   "msg_id": "MSG21",
+   "message": "Select a destination for every row, or remove the empty row, before saving.",
+   "action": "Select a destination or remove the row"
+  },
+  {
+   "event": "Open panel of a past period",
+   "cause": "Period is not ongoing",
+   "type": "Info",
+   "msg_id": "MSG22",
+   "message": "Past period - read only",
+   "action": "-"
+  },
+  {
+   "group": "Mapping - Upload Operation"
+  },
+  {
+   "event": "Hover disabled [Upload Excel]",
+   "cause": "Past period or All periods selected",
+   "type": "Info",
+   "msg_id": "MSG23",
+   "message": "Past period - read only. Select the ongoing period to upload.",
+   "action": "Select the ongoing period"
+  },
+  {
+   "event": "Click [Validate file] button",
+   "cause": "Upload validated and saved",
+   "type": "Info",
+   "msg_id": "MSG24",
+   "message": "Saved successfully - Upload completed. The file has been validated and the destination mapping has been saved to Mapping per Destination.",
+   "action": "Click [OK]"
+  },
+  {
+   "group": "Mapping - Save Operation"
+  },
+  {
+   "event": "Click [Save] button",
+   "cause": "Mapping changed by another user",
+   "type": "Error",
+   "msg_id": "MSG25",
+   "message": "Error in Update because of concurrency check.",
+   "action": "Cancel, refresh and edit again"
+  },
+  {
+   "group": "Mapping - Export Operation"
+  },
+  {
+   "event": "Click [Export Excel] button",
+   "cause": "Excel file cannot be created",
+   "type": "Error",
+   "msg_id": "MSG26",
+   "message": "Export Excel failed. Please try again.",
+   "action": "Click [Export Excel] again; contact administrator if it persists"
+  },
+  {
+   "group": "Mapping - Sync Operation"
+  },
+  {
+   "event": "Click [Sync] button",
+   "cause": "Parts handed to XD06 / XD07",
+   "type": "Info",
+   "msg_id": "MSG27",
+   "message": "Sync requested for {n} part(s). They stay Waiting until GTOPAS and AP POLE have received them.",
+   "action": "-"
+  },
+  {
+   "event": "Hover a Failed Sync Status chip",
+   "cause": "GTOPAS or AP POLE could not receive the part",
+   "type": "Info",
+   "msg_id": "MSG28",
+   "message": "Sync failed: {sync message}. The part is sent again with the next Sync.",
+   "action": "Correct the cause if needed and click [Sync]"
+  },
+  {
+   "group": "Mapping - Calculation Operation"
+  },
+  {
+   "event": "Click [Run calculation] button",
+   "cause": "Mapping calculation (XD05 process 2) completed",
+   "type": "Info",
+   "msg_id": "MSG29",
+   "message": "Calculation completed - Mapping destination calculation completed. The destination mapping of the new period has been created.",
+   "action": "Click [OK]"
+  },
+  {
+   "event": "Hover disabled [Run calculation]",
+   "cause": "Scheduled run has not failed 3 times",
+   "type": "Info",
+   "msg_id": "MSG30",
+   "message": "Enabled only when the scheduled run has failed 3 times",
+   "action": "-"
+  }
+ ],
+ "logging_messages": [
+  {
+   "event": "Click [Save] button",
+   "cause": "System error on saving Part List",
+   "type": "Error",
+   "msg_id": "LOG1",
+   "message": "Failed to save part <Part No>: <error detail>.",
+   "exception": "Y",
+   "action": "Show [Corresponding Screen Message] on screen (TBD)"
+  },
+  {
+   "event": "Click [Export Excel] button",
+   "cause": "Excel file generation error",
+   "type": "Error",
+   "msg_id": "LOG2",
+   "message": "Export Excel of Part List failed: <error message>.",
+   "exception": "Y",
+   "action": "Display Message no. 13"
+  },
+  {
+   "event": "Click [Validate file] button",
+   "cause": "Upload processing",
+   "type": "Info",
+   "msg_id": "-",
+   "message": "Logging is handled by the Part List Upload batch (refer UISS-Batch \"XD02 Cross Dock Part Master Upload Batch\").",
+   "exception": "N",
+   "action": "-"
+  },
+  {
+   "event": "Click [Save] button",
+   "cause": "System error on replace of destination mapping",
+   "type": "Error",
+   "msg_id": "LOG3",
+   "message": "Failed to save mapping of part <Part No>, period <period>: <error detail>.",
+   "exception": "Y",
+   "action": "Show [Corresponding Screen Message] on screen (TBD)"
+  },
+  {
+   "event": "XD06 / XD07",
+   "cause": "GTOPAS or AP POLE rejects a part",
+   "type": "Error",
+   "msg_id": "LOG4",
+   "message": "Logging is done by XD06 / XD07 (refer UISS-Batch XD06 / XD07); the chip shows the result.",
+   "exception": "N",
+   "action": "Status Failed; Display Message no. 28 on the chip"
+  },
+  {
+   "event": "Click [Export Excel] button",
+   "cause": "Excel file generation error",
+   "type": "Error",
+   "msg_id": "LOG5",
+   "message": "Export Excel of Mapping per Destination failed: <error message>.",
+   "exception": "Y",
+   "action": "Display Message no. 26"
+  },
+  {
+   "event": "Click [Validate file] button",
+   "cause": "Upload processing",
+   "type": "Info",
+   "msg_id": "-",
+   "message": "Logging is handled by the Mapping per Destination Upload batch (refer UISS-Batch \"XD03 Part and Destination Mapping Upload Batch\").",
+   "exception": "N",
+   "action": "-"
+  }
+ ]
+}
