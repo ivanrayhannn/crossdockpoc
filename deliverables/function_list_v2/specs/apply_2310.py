@@ -136,9 +136,19 @@ def captions():
     save('XD10', s)
 
 
+def xd09_sim():
+    """XD09 Func Desc and Sample Input from the results of simulasi_asn_rev.xlsx (decided 27-Oct)."""
+    from xd09_sim import FUNC_DESC, SAMPLE
+    s = load('XD09')
+    s['func_desc'] = FUNC_DESC
+    s['sample_sheet'] = SAMPLE
+    s['appendix'][0] = {'type': 'text', 'level': 0, 'text': 'Sample [Search] of simulasi_asn_rev.xlsx: see sheet Sample Input.'}
+    save('XD09', s)
+
+
 def main():
     captions()
-    business_logic('XD09', 'func_desc', '4.0')
+    xd09_sim()
     business_logic('XD10', 'operation', '5.0')
     tabs = xd10()
     xd09()
