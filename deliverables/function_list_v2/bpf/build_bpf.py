@@ -153,7 +153,7 @@ def user_process_sheet(wb, table, f_title, f_sub, lane_fill):
     ws['A1'] = 'Business user process (illustration)'
     ws['A1'].font = f_title
     ws['A2'] = ('What the business users (Procurement, D/S Team, Supplier) do, in time order, on which screen, what the system keeps and what to do '
-                'when something goes wrong. Screens: prototype (names may show T-System / Supplier System).')
+                'when something goes wrong. Screens: prototype (names show G-System / Supplier System).')
     ws['A2'].font = f_sub
     persona = {'PR': ('👤 Procurement', 'Registers candidate parts and checks the monthly status (XD01 Part List).'),
                'DS': ('👤 D/S Team', 'Keeps the mapping per destination, sends it ([Sync]), holds destinations, handles CONFLICT.'),

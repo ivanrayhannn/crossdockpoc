@@ -24,7 +24,7 @@
    "To let the D/S team (super admin) see the units of all suppliers, the destination detail and hold / release a destination of a unit.",
    "To tick the supplier cases to send (check box per case, from case 1, cases that belong together) of one Supplier Code + Supplier Plant, map them to their POs (TB_R_INSTRUCTION), review the cases, download the case labels and submit the ASN.",
    "Submit ASN runs in the background with a Submit ID and follows the existing ASN submit of NSP (refer 5.7).",
-   "Submit ASN (decided 20-Oct, existing structure G-System SPS DB): one TB_R_DAILY_ORDER_MANIFEST row per Pra Daily Order manifest of the cases (same ASN_NO) and one TB_R_DAILY_ORDER_PART row per manifest item and case; the ASN number and the case numbers (case label) are auto generated and their last sequence is saved in TB_R_CASE_LABEL_LAST_SEQ; PART_NAME from TB_M_PART_MASTER."
+   "Submit ASN (decided 20-Oct, existing structure GTOPAS SPS DB): one TB_R_DAILY_ORDER_MANIFEST row per Pra Daily Order manifest of the cases (same ASN_NO) and one TB_R_DAILY_ORDER_PART row per manifest item and case; the ASN number and the case numbers (case label) are auto generated and their last sequence is saved in TB_R_CASE_LABEL_LAST_SEQ; PART_NAME from TB_M_PART_MASTER."
   ],
   "display_order": [
    {
@@ -2628,7 +2628,7 @@
   },
   {
    "event": "Click [Submit ASN] / [Yes]",
-   "cause": "The draft was released by XD08 or a line changed in G-System (UPD_STATUS, qty)",
+   "cause": "The draft was released by XD08 or a line changed in GTOPAS (UPD_STATUS, qty)",
    "type": "Error",
    "msg_id": "MSG11",
    "message": "Some orders have changed. The draft is released; please Search and create the ASN again.",
@@ -3222,7 +3222,7 @@
    "name": "TB_R_DAILY_ORDER_MANIFEST",
    "kind": "transaction",
    "proposed": false,
-   "description": "Existing ASN manifest (G-System SPS DB structure TR-01). Submit ASN: one row per Pra Daily Order manifest of the cases, all with the same ASN_NO. Only the columns used are listed.",
+   "description": "Existing ASN manifest (GTOPAS SPS DB structure TR-01). Submit ASN: one row per Pra Daily Order manifest of the cases, all with the same ASN_NO. Only the columns used are listed.",
    "columns": [
     [
      "DEPOT_CD",

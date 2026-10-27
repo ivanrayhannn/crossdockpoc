@@ -25,7 +25,7 @@ type Names = 'proto' | 'doc';
 
 function rename(s: string, names: Names): string {
   if (names === 'doc') return s;
-  return s.replace(/G-System/g, 'T-System').replace(/NSP Batch \(System\)/g, 'Supplier System (Batch)').replace(/\bNSP\b/g, 'Supplier System');
+  return s.replace(/GTOPAS/g, 'G-System').replace(/NSP Batch \(System\)/g, 'Supplier System (Batch)').replace(/\bNSP\b/g, 'Supplier System');
 }
 
 const lines = (s: string, perLine: number) => Math.max(1, Math.ceil(s.length / perLine));
@@ -210,8 +210,8 @@ export function BusinessProcessFlowPage() {
         <span style={{ marginLeft: 'auto', fontSize: 12 }}>
           Names:{' '}
           <select aria-label="Names" value={names} onChange={(e) => setNames(e.target.value as Names)} style={{ fontSize: 12, padding: '3px 6px' }}>
-            <option value="proto">Prototype (T-System / Supplier System)</option>
-            <option value="doc">Document (G-System / NSP)</option>
+            <option value="proto">Prototype (G-System / Supplier System)</option>
+            <option value="doc">Document (GTOPAS / NSP)</option>
           </select>
         </span>
       </div>

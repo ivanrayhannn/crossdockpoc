@@ -6,7 +6,7 @@ SRC = 'simulasi_asn_rev.xlsx'
 # ---------------- XD08 ----------------
 XD08_EXAMPLE = (f"Example ({SRC}, sheet Sample Input): 17-Oct CO-14101 → UPD_STATUS 6, CO-14102 (on hold, no ASN) → UPD_STATUS 2: nothing else; "
                 "19-Oct CO-14104 → UPD_STATUS 2 although in case 3 of ASN0003 → LOG5, listed in XD11; 21-Oct CO-14111 → UPD_STATUS 6 without ASN "
-                "(candidate) and CO-14115 (12 pcs in ASN0006 + ASN0007) split by G-System into serial 0000001 6 pcs (6) and 0000002 6 pcs (7): "
+                "(candidate) and CO-14115 (12 pcs in ASN0006 + ASN0007) split by GTOPAS into serial 0000001 6 pcs (6) and 0000002 6 pcs (7): "
                 "the ASN0007 row moves to serial 0000002 (LOG7).")
 XD08_SAMPLE = {
     'title': 'Sample Input',
@@ -16,7 +16,7 @@ XD08_SAMPLE = {
               '(drafts would be released by every run).'],
     'sections': [
         {'title': 'A. Runs (03:30) and result',
-         'columns': ['Run', 'Source change (G-System)', 'NSP replicate', 'TB_R_INSTRUCTION / Log'], 'widths': [8, 40, 46, 40],
+         'columns': ['Run', 'Source change (GTOPAS)', 'NSP replicate', 'TB_R_INSTRUCTION / Log'], 'widths': [8, 40, 46, 40],
          'rows': [
              ['16-Oct', 'Order date 15-Oct: CO-14101 VN 6, CO-14102 TH 6 (status 7)', 'Insert; UPD_STATUS NULL, HOLD_FLAG N, PO_MAPPED_FLAG N', '-'],
              ['17-Oct', 'CO-14101 → 6, CO-14102 → 2; order date 16-Oct: CO-14103 TH 6', 'CO-14101 UPD_STATUS 6; CO-14102 UPD_STATUS 2 (PO_MAPPED_FLAG stays N); CO-14103 insert', 'CO-14102 has no ASN: nothing else'],
@@ -80,8 +80,8 @@ XD11_CAPTION = ('1. List Mode: ASN0003 (CO-14104 cancelled after the ASN, candid
 XD11_SAMPLE = {
     'title': 'Sample Input',
     'heading': f'Sample Change Order Number - {SRC} (ASN0003, 21-Oct)',
-    'intro': ['18-Oct: cases 1-4 of PART-X 17-Oct in ASN0003. 19-Oct: CO-14104 (TH 6, case 3) is cancelled in G-System (UPD_STATUS 2, LOG5): listed, waiting for a candidate. '
-              '21-Oct: CO-14111 (TH 6, order date 19-Oct) is received in G-System with the pcs of case 3 (UPD_STATUS 6, PO_MAPPED_FLAG N, no ASN): candidate.'],
+    'intro': ['18-Oct: cases 1-4 of PART-X 17-Oct in ASN0003. 19-Oct: CO-14104 (TH 6, case 3) is cancelled in GTOPAS (UPD_STATUS 2, LOG5): listed, waiting for a candidate. '
+              '21-Oct: CO-14111 (TH 6, order date 19-Oct) is received in GTOPAS with the pcs of case 3 (UPD_STATUS 6, PO_MAPPED_FLAG N, no ASN): candidate.'],
     'sections': [
         {'title': 'A. List and detail', 'columns': ['ASN No', 'Part', 'Cancelled order', 'Cancelled qty', 'Cases (from the last case)', 'Candidate', 'Status'],
          'widths': [10, 8, 16, 10, 18, 26, 18],

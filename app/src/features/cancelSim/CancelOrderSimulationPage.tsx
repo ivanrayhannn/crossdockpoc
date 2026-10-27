@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { card, th, td } from '../asnCrossdock/styles';
 
 /* Simulation of the H0253 scenarios with the rules of 23-Oct: one replicate table kept by XD08 (upsert of the rows changed since the
- * last run). ORDER_STATUS keeps the value of the first replication; a later change in T-System is written to UPD_STATUS:
+ * last run). ORDER_STATUS keeps the value of the first replication; a later change in G-System is written to UPD_STATUS:
  * '6' received / allocated, '2' cancel. Every run of XD08 releases all drafts (Create ASN not submitted). A cancel of qty already in a
  * submitted ASN is handled by the D/S team in Change Order Number (XD11): the qty is moved to received lines of the same part. */
 
@@ -19,7 +19,7 @@ interface Step { lane: Lane; date: string; title: string; text: string; src: Src
 const LANE: Record<Lane, { label: string; bg: string }> = {
   sup: { label: 'Supplier', bg: '#fff2cc' },
   ds: { label: 'D/S team', bg: '#fce4d6' },
-  gt: { label: 'T-System (source H0253)', bg: '#e2efda' },
+  gt: { label: 'G-System (source H0253)', bg: '#e2efda' },
   sys: { label: 'Supplier System batch', bg: '#d9e1f2' },
 };
 
@@ -35,7 +35,7 @@ const SRC14: SrcRow[] = [{ order: O, serial: A, status: '7', qty: 8, upd: '14-Oc
 const REP14: RepRow[] = [{ order: O, serial: A, status: '7', qty: 8, hold: 'N', mapped: 'N', upd: '-', changed: true }];
 const START: Step = {
   lane: 'sys', date: '14-Oct', title: 'XD08 inserts the new line (status 7)',
-  text: 'T-System has the crossdock line ID1H4571 / 52119BZV60, 8 pcs, status 7. XD08 takes the rows changed since the last run (INTF_UPDATE_DT > watermark) and inserts the new key; HOLD_FLAG / PO_MAPPED_FLAG = N, UPD_STATUS empty.',
+  text: 'G-System has the crossdock line ID1H4571 / 52119BZV60, 8 pcs, status 7. XD08 takes the rows changed since the last run (INTF_UPDATE_DT > watermark) and inserts the new key; HOLD_FLAG / PO_MAPPED_FLAG = N, UPD_STATUS empty.',
   src: SRC14, rep: REP14, instr: [], flags: [['ok', 'Upsert per unique key (incl. SERIAL_NO). Nothing is deleted, so the Supplier System columns are never lost.']],
 };
 const REP14_M: RepRow[] = [{ order: O, serial: A, status: '7', qty: 8, hold: 'N', mapped: 'Y', upd: '-' }];
@@ -43,7 +43,7 @@ const REP14_M: RepRow[] = [{ order: O, serial: A, status: '7', qty: 8, hold: 'N'
 const SCENARIOS: { key: string; name: string; tag: Level; summary: string; steps: Step[] }[] = [
   {
     key: '1', name: '1 · Normal (received: UPD_STATUS 6)', tag: 'ok',
-    summary: 'Skenario #1: the line is shipped with an ASN and received; T-System updates the same row from status 7 to 6.',
+    summary: 'Skenario #1: the line is shipped with an ASN and received; G-System updates the same row from status 7 to 6.',
     steps: [START,
       {
         lane: 'sup', date: '14-Oct', title: 'Search, Create ASN and Submit',
@@ -52,8 +52,8 @@ const SCENARIOS: { key: string; name: string; tag: Level; summary: string; steps
         flags: [['ok', 'Line in ASN-001 (TB_R_INSTRUCTION.ASN_NO).']],
       },
       {
-        lane: 'gt', date: '15-Oct', title: 'Received in T-System: same row status 6',
-        text: 'The 8 pcs arrive and are allocated to the order. T-System updates the same row: status 6, qty 8, new INTF_UPDATE_DT.',
+        lane: 'gt', date: '15-Oct', title: 'Received in G-System: same row status 6',
+        text: 'The 8 pcs arrive and are allocated to the order. G-System updates the same row: status 6, qty 8, new INTF_UPDATE_DT.',
         src: [{ order: O, serial: A, status: '6', qty: 8, upd: '15-Oct 03:30', changed: true }], rep: REP14_M, instr: [{ order: O, serial: A, qty: 8, po: PO, asn: 'ASN-001' }],
         flags: [['ok', 'Normal flow; no cancel.']],
       },
@@ -62,16 +62,16 @@ const SCENARIOS: { key: string; name: string; tag: Level; summary: string; steps
         text: 'XD08 updates the row: ORDER_STATUS stays 7 (value of the first replication), UPD_STATUS = 6. A line with UPD_STATUS is no longer taken by XD09. All drafts are released (none here).',
         src: [{ order: O, serial: A, status: '6', qty: 8, upd: '15-Oct 03:30' }], rep: [{ order: O, serial: A, status: '7', qty: 8, hold: 'N', mapped: 'Y', upd: '6', changed: true }],
         instr: [{ order: O, serial: A, qty: 8, po: PO, asn: 'ASN-001' }],
-        flags: [['ok', 'UPD_STATUS 6 = received / allocated in T-System.']],
+        flags: [['ok', 'UPD_STATUS 6 = received / allocated in G-System.']],
       },
     ],
   },
   {
     key: '2', name: '2 · Partial cancel before any mapping', tag: 'ok',
-    summary: 'Skenario #2: 2 of 8 pcs are cancelled before Create ASN; T-System splits the line into a new serial (2 pcs status 2) and keeps 6 pcs status 7.',
+    summary: 'Skenario #2: 2 of 8 pcs are cancelled before Create ASN; G-System splits the line into a new serial (2 pcs status 2) and keeps 6 pcs status 7.',
     steps: [START,
       {
-        lane: 'gt', date: '15-Oct', title: 'T-System partial cancel: serial split',
+        lane: 'gt', date: '15-Oct', title: 'G-System partial cancel: serial split',
         text: 'Row 0000001 becomes status 7 qty 6 and a new serial row is created with status 2 qty 2.',
         src: [{ order: O, serial: A, status: '7', qty: 6, upd: '15-Oct 03:30', changed: true }, { order: O, serial: B, status: '2', qty: 2, upd: '15-Oct 03:30', changed: true }],
         rep: REP14, instr: [], flags: [['ok', 'A cancel is allowed with or without hold flag.']],
@@ -96,7 +96,7 @@ const SCENARIOS: { key: string; name: string; tag: Level; summary: string; steps
         flags: [['warn', 'Draft: not yet in an ASN.']],
       },
       {
-        lane: 'gt', date: '15-Oct', title: 'T-System full cancel: same row status 2',
+        lane: 'gt', date: '15-Oct', title: 'G-System full cancel: same row status 2',
         text: 'Row 0000001 changes to status 2, qty 8.',
         src: [{ order: O, serial: A, status: '2', qty: 8, upd: '15-Oct 03:30', changed: true }], rep: REP14_M, instr: [{ order: O, serial: A, qty: 8, po: PO, asn: '— (draft)' }],
         flags: [['ok', 'Not in an ASN: the cancel is allowed.']],
@@ -112,7 +112,7 @@ const SCENARIOS: { key: string; name: string; tag: Level; summary: string; steps
   },
   {
     key: '4', name: '4 · Cancel after ASN → Change Order Number', tag: 'err',
-    summary: 'Abnormality: the line is already in a submitted ASN and T-System cancels 2 pcs. The D/S team moves the 2 pcs to a received line of the same part in Change Order Number (XD11).',
+    summary: 'Abnormality: the line is already in a submitted ASN and G-System cancels 2 pcs. The D/S team moves the 2 pcs to a received line of the same part in Change Order Number (XD11).',
     steps: [START,
       {
         lane: 'sup', date: '14-Oct', title: 'Create ASN and Submit: ASN-001 (8 pcs)',
@@ -121,8 +121,8 @@ const SCENARIOS: { key: string; name: string; tag: Level; summary: string; steps
         flags: [['ok', 'Line in ASN: a cancel should be blocked (existing ASN feedback + SOP).']],
       },
       {
-        lane: 'gt', date: '15-Oct', title: 'T-System cancels 2 pcs and receives line ID1H4580',
-        text: 'Abnormality: T-System splits the line (0000001 status 7 qty 6, new serial status 2 qty 2). At receiving the 2 pcs are allocated to the open line ID1H4580 of the same part (status 6).',
+        lane: 'gt', date: '15-Oct', title: 'G-System cancels 2 pcs and receives line ID1H4580',
+        text: 'Abnormality: G-System splits the line (0000001 status 7 qty 6, new serial status 2 qty 2). At receiving the 2 pcs are allocated to the open line ID1H4580 of the same part (status 6).',
         src: [{ order: O, serial: A, status: '7', qty: 6, upd: '15-Oct 03:30', changed: true }, { order: O, serial: B, status: '2', qty: 2, upd: '15-Oct 03:30', changed: true },
           { order: O2, serial: A, status: '6', qty: 2, upd: '15-Oct 03:30', changed: true }],
         rep: [...REP14_M, { order: O2, serial: A, status: '7', qty: 2, hold: 'N', mapped: 'N', upd: '-' }], instr: [{ order: O, serial: A, qty: 8, po: PO, asn: 'ASN-001' }],
@@ -150,7 +150,7 @@ const SCENARIOS: { key: string; name: string; tag: Level; summary: string; steps
   },
   {
     key: '5', name: '5 · One line in 2 ASNs → partial receipt splits the serial (simulasi_asn CO-14115)', tag: 'warn',
-    summary: 'Same data as simulasi_asn_rev.xlsx: CO-14115 VN 12 pcs (order date 19-Oct) goes in ASN0006 (case 1, T0409015) and ASN0007 (case 2, T0409016). On 21-Oct ASN0006 is received: T-System splits the line into serial 0000001 6 pcs status 6 and serial 0000002 6 pcs status 7. XD08 keeps each part linked to its ASN.',
+    summary: 'Same data as simulasi_asn_rev.xlsx: CO-14115 VN 12 pcs (order date 19-Oct) goes in ASN0006 (case 1, T0409015) and ASN0007 (case 2, T0409016). On 21-Oct ASN0006 is received: G-System splits the line into serial 0000001 6 pcs status 6 and serial 0000002 6 pcs status 7. XD08 keeps each part linked to its ASN.',
     steps: [
       {
         lane: 'sys', date: '20-Oct', title: 'XD08 inserts CO-14115 (status 7, 12 pcs)',
@@ -176,8 +176,8 @@ const SCENARIOS: { key: string; name: string; tag: Level; summary: string; steps
         flags: [['ok', 'One H0253 row, two TB_R_INSTRUCTION rows (two ASNs).']],
       },
       {
-        lane: 'gt', date: '21-Oct', title: 'ASN0006 received: T-System splits the line',
-        text: 'Only ASN0006 (6 pcs) is received. T-System keeps serial 0000001 with 6 pcs status 6 and creates serial 0000002 with the remaining 6 pcs status 7.',
+        lane: 'gt', date: '21-Oct', title: 'ASN0006 received: G-System splits the line',
+        text: 'Only ASN0006 (6 pcs) is received. G-System keeps serial 0000001 with 6 pcs status 6 and creates serial 0000002 with the remaining 6 pcs status 7.',
         src: [{ order: C5, serial: A, status: '6', qty: 6, upd: '21-Oct 03:30', changed: true }, { order: C5, serial: B, status: '7', qty: 6, upd: '21-Oct 03:30', changed: true }],
         rep: [{ order: C5, serial: A, status: '7', qty: 12, hold: 'N', mapped: 'Y', upd: '-' }],
         instr: [{ order: C5, serial: A, qty: 6, po: 'T0409015', asn: 'ASN0006' }, { order: C5, serial: A, qty: 6, po: 'T0409016', asn: 'ASN0007' }],
@@ -202,7 +202,7 @@ const SCENARIOS: { key: string; name: string; tag: Level; summary: string; steps
       },
       {
         lane: 'sys', date: '22-Oct', title: 'ASN0007 received: UPD_STATUS 6',
-        text: 'T-System sets serial 0000002 to status 6; XD08 writes UPD_STATUS 6. The whole line is received.',
+        text: 'G-System sets serial 0000002 to status 6; XD08 writes UPD_STATUS 6. The whole line is received.',
         src: [{ order: C5, serial: A, status: '6', qty: 6, upd: '21-Oct 03:30' }, { order: C5, serial: '0000002', status: '6', qty: 6, upd: '22-Oct 03:30', changed: true }],
         rep: [{ order: C5, serial: A, status: '7', qty: 6, hold: 'N', mapped: 'Y', upd: '6' }, { order: C5, serial: '0000002', status: '7', qty: 6, hold: 'N', mapped: 'Y', upd: '6', changed: true }],
         instr: [{ order: C5, serial: A, qty: 6, po: 'T0409015', asn: 'ASN0006' }, { order: C5, serial: '0000002', qty: 6, po: 'T0409016', asn: 'ASN0007' }],
@@ -254,7 +254,7 @@ export function CancelOrderSimulationPage() {
         <h1 style={{ fontSize: 22, margin: 0 }}>Cancel Order Simulation</h1>
         <div style={{ fontSize: 12.5, color: 'var(--color-neutral-700)', marginTop: 3 }}>
           H0253 scenarios (skenario_h0253.xlsx, simulasi_asn.xlsx): Supplier System keeps one replicate table updated by XD08 (rows with INTF_UPDATE_DT after the last run).
-          ORDER_STATUS keeps the first value; a change in T-System is written to UPD_STATUS (6 received, 2 cancel). Every XD08 run releases the drafts; a cancel after an ASN goes to Change Order Number (XD11).
+          ORDER_STATUS keeps the first value; a change in G-System is written to UPD_STATUS (6 received, 2 cancel). Every XD08 run releases the drafts; a cancel after an ASN goes to Change Order Number (XD11).
         </div>
       </div>
 
@@ -313,7 +313,7 @@ export function CancelOrderSimulationPage() {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: 14 }}>
-        <Table title="T-System H0253 (DB Surrounding, insert / update)"
+        <Table title="G-System H0253 (DB Surrounding, insert / update)"
           cols={['CUSTOMER_ORDER_NO', 'SERIAL_NO', 'ORDER_STATUS', 'ORDER_STATUS_QTY', 'INTF_UPDATE_DT']}
           rows={step.src.map((r) => ({ cells: [r.order, r.serial, STATUS[r.status], r.qty, r.upd], bg: r.changed ? CHG : undefined }))} />
         <Table title="Supplier System: TB_R_H0253_ORDER_CONTROL_PRE (XD08 upsert)"
@@ -331,7 +331,7 @@ export function CancelOrderSimulationPage() {
       <div style={{ ...card, padding: '12px 16px', fontSize: 12.5, lineHeight: 1.6 }}>
         <b>Rules (decided 23-Oct)</b>
         <ol style={{ margin: '4px 0 0', paddingLeft: 18 }}>
-          <li>One replicate table kept by XD08 (one batch; upsert per unique key with the rows changed since the last run). ORDER_STATUS keeps the first value; UPD_STATUS = 6 (received) or 2 (cancel) from T-System.</li>
+          <li>One replicate table kept by XD08 (one batch; upsert per unique key with the rows changed since the last run). ORDER_STATUS keeps the first value; UPD_STATUS = 6 (received) or 2 (cancel) from G-System.</li>
           <li>Lines with UPD_STATUS are not taken by XD09. A cancelled line without mapping needs nothing else.</li>
           <li>Every XD08 run releases all drafts (TB_R_INSTRUCTION without ASN No); [Submit ASN] re-checks the lines of the draft.</li>
           <li>A cancel of qty in a submitted ASN is listed in Change Order Number (D/S team) until it is moved to lines of the same part with UPD_STATUS 6, PO_MAPPED_FLAG N and no ASN (oldest first; several lines and another destination allowed; the qty must add up). The TB_R_INSTRUCTION row is split when needed; the history is kept in TB_H_CROSSDOCK_ORDER_CHANGE.</li>

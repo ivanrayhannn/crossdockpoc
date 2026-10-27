@@ -1,6 +1,6 @@
 # XD01 – Cross Dock Part Master Screen
 
-Sumber: UISS `XD01_UISS_Screen_CrossDockPartMaster.xlsx` (0.1 Initial Draft, 18-Oct-26). Nama sistem di UISS: G-System / NSP.
+Sumber: UISS `XD01_UISS_Screen_CrossDockPartMaster.xlsx` (0.1 Initial Draft, 18-Oct-26). Nama sistem di UISS: GTOPAS / NSP.
 
 ## Ringkasan
 - **Gabungan** X1 (Part List) dan X3 (Mapping per Destination) menjadi **1 screen dengan 2 tab**. Prototype: menu *Crossdock Master Setting* (tab Part List / Mapping per Destination).
@@ -11,7 +11,7 @@ Sumber: UISS `XD01_UISS_Screen_CrossDockPartMaster.xlsx` (0.1 Initial Draft, 18-
   - Screen mode diberi awalan "Part List -" / "Mapping -"; tombol yang namanya sama tapi beda fungsi diberi akhiran: *Upload Excel (Part List)* / *(Mapping)*, *Export Excel*, *Run calculation*. Di matriks tombol, "-" = tombol tidak ada di tab mode itu.
 
 ## Perubahan Sync (dulu 1 RPA ke global system)
-- [Sync (n)] di tab Mapping: SYNC_STATUS = 3 (Waiting) dan 1 baris per part × target (**G-System**, **APPOLE**) di tabel baru **TB_R_CROSSDOCK_IF_RESULT** (IF_STATUS = 3), lalu menjalankan **XD06** (G-System) dan **XD07** (AP POLE).
+- [Sync (n)] di tab Mapping: SYNC_STATUS = 3 (Waiting) dan 1 baris per part × target (**GTOPAS**, **APPOLE**) di tabel baru **TB_R_CROSSDOCK_IF_RESULT** (IF_STATUS = 3), lalu menjalankan **XD06** (GTOPAS) dan **XD07** (AP POLE).
 - Sync Status part = gabungan dua target:
 
 | Kondisi | SYNC_STATUS |
@@ -24,10 +24,10 @@ Sumber: UISS `XD01_UISS_Screen_CrossDockPartMaster.xlsx` (0.1 Initial Draft, 18-
 - [Run calculation] tab Part List → XD05 proses 1 + 2; tab Mapping → XD05 proses 2 saja.
 
 ## Tabel
-- TB_M_PART_CANDIDATE, TB_M_PART_CANDIDATE_DEST, TB_H_PART_CANDIDATE (history, SOURCE sekarang SCREEN / UPLOAD / IF / BATCH), **TB_R_CROSSDOCK_IF_RESULT** (tabel dummy untuk status kirim; output sebenarnya file SFTP ke G-System / AP POLE).
+- TB_M_PART_CANDIDATE, TB_M_PART_CANDIDATE_DEST, TB_H_PART_CANDIDATE (history, SOURCE sekarang SCREEN / UPLOAD / IF / BATCH), **TB_R_CROSSDOCK_IF_RESULT** (tabel dummy untuk status kirim; output sebenarnya file SFTP ke GTOPAS / AP POLE).
 
 ## Open points
-- Topology SFTP dan nama field di G-System / AP POLE (detail field sumber ada di md XD06 / XD07).
+- Topology SFTP dan nama field di GTOPAS / AP POLE (detail field sumber ada di md XD06 / XD07).
 - Open points versi pertama X1 / X3 tetap berlaku (akun read only, Effective Start Date, dll.).
 
 ## Keputusan 19-Oct

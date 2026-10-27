@@ -1,4 +1,4 @@
-"""Spec builder for the replication batches of G-System tables (UISS-Batch, structure only, no sample data):
+"""Spec builder for the replication batches of GTOPAS tables (UISS-Batch, structure only, no sample data):
   X9  TB_R_H0202_DEMAND_HISTORY_SUM  -> X9_UISS_Batch_H0202DemandHistorySync.xlsx
   X10 TB_R_H0253_ORDER_CONTROL_PRE   -> X10_UISS_Batch_H0253OrderControlSync.xlsx
   X11 TB_M_H0125_DESTINATION (Destination Master) -> X11_UISS_Batch_H0125DestinationMasterSync.xlsx
@@ -8,17 +8,17 @@ from calc_common import LOG, header, revisions
 
 from h_tables import H0125_COLS, H0202_COLS, H0253_COLS
 
-NOTE = "Structure from the G-System I/F layout; physical names follow the existing table. Key (PK) = unique key of the I/F layout."
+NOTE = "Structure from the GTOPAS I/F layout; physical names follow the existing table. Key (PK) = unique key of the I/F layout."
 
 CFG = {"H0202": {"fid": "X9", "table": "TB_R_H0202_DEMAND_HISTORY_SUM", "title": "Demand History Summary (H0202) Sync to NSP",
                  "desc": "Demand history summary (I/F H02-02, DVJO250)", "cols": H0202_COLS, "kind": "transaction",
-                 "freq": "G-System provides the data 1 time/day (26:00)."},
+                 "freq": "GTOPAS provides the data 1 time/day (26:00)."},
        "H0253": {"fid": "X10", "table": "TB_R_H0253_ORDER_CONTROL_PRE", "title": "Order Control Pre (H0253) Sync to NSP",
                  "desc": "Order control data, pre-order picking info (I/F H02-53, DVJO950)", "cols": H0253_COLS, "kind": "transaction",
-                 "freq": "G-System provides the data 1 time/day (27:30)."},
+                 "freq": "GTOPAS provides the data 1 time/day (27:30)."},
        "H0125": {"fid": "X11", "table": "TB_M_H0125_DESTINATION", "title": "Destination Master (H0125) Sync to NSP",
                  "desc": "Destination master (I/F H01-25, DVJO820)", "cols": H0125_COLS, "kind": "master",
-                 "freq": "G-System provides the data 1 time/week (21:30)."}}
+                 "freq": "GTOPAS provides the data 1 time/week (21:30)."}}
 c = CFG[sys.argv[2]]
 T, COLS, KEY = c["table"], c["cols"], sys.argv[2]
 # NSP-only columns of H0253 (set in ASN Crossdock Creation); they survive the full replace

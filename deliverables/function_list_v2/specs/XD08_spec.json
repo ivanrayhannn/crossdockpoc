@@ -19,8 +19,8 @@
  "doc_type": "batch",
  "general": {
   "objective": [
-   "To keep TB_R_H0253_ORDER_CONTROL_PRE in NSP up to date with the crossdock customer order lines of G-System (replicated in DB Surrounding), in one batch (decided 23-Oct; the former XD12 is merged into XD08): the rows changed since the last successful run are inserted (new key) or updated.",
-   "ORDER_STATUS keeps the value of the first replication; a later change in G-System is written to UPD_STATUS: '6' received / allocated, '2' cancelled. Lines with UPD_STATUS are not taken by XD09.",
+   "To keep TB_R_H0253_ORDER_CONTROL_PRE in NSP up to date with the crossdock customer order lines of GTOPAS (replicated in DB Surrounding), in one batch (decided 23-Oct; the former XD12 is merged into XD08): the rows changed since the last successful run are inserted (new key) or updated.",
+   "ORDER_STATUS keeps the value of the first replication; a later change in GTOPAS is written to UPD_STATUS: '6' received / allocated, '2' cancelled. Lines with UPD_STATUS are not taken by XD09.",
    "Every run releases all drafts of TB_R_INSTRUCTION (Create ASN done, Submit not done): the cases come back in the delivery plan of XD10.",
    "A cancel of qty already in a submitted ASN is not changed by the batch: it is listed in Change Order Number (XD11) for the D/S team."
   ],
@@ -148,11 +148,11 @@
     "rows": [
      [
       "Trigger",
-      "Daily scheduler after G-System has provided the data (27:30); auto retry 3 times."
+      "Daily scheduler after GTOPAS has provided the data (27:30); auto retry 3 times."
      ],
      [
       "Order",
-      "One batch (decided 23-Oct): runs after G-System has provided the data (1 time/day, 27:30); XD12 is merged into XD08."
+      "One batch (decided 23-Oct): runs after GTOPAS has provided the data (1 time/day, 27:30); XD12 is merged into XD08."
      ]
     ]
    }
@@ -263,7 +263,7 @@
    ]
   },
   "steps": [
-   "The scheduler starts the batch (daily, after G-System has provided the data). Write LOG1.",
+   "The scheduler starts the batch (daily, after GTOPAS has provided the data). Write LOG1.",
    {
     "text": "Read the rows of TB_R_H0253_ORDER_CONTROL_PRE (DB Surrounding) with INTF_UPDATE_DT > watermark (crossdock lines, ORDER_STATUS '7', '6' or '2').",
     "children": [
@@ -278,7 +278,7 @@
     ]
    },
    {
-    "text": "Serial split (a line in more than one ASN is split by G-System into a received part and a remaining part):",
+    "text": "Serial split (a line in more than one ASN is split by GTOPAS into a received part and a remaining part):",
     "children": [
      "Keep each part linked to its ASN in TB_R_INSTRUCTION: the received part to the ASN sent first, the remaining part to the next ASN. A part already in an ASN is not offered to the supplier again (PO_MAPPED_FLAG 'Y'). Write LOG7."
     ]
@@ -695,9 +695,9 @@
    "items": [
     "One batch for H0253 (decided 23-Oct): the former XD08 (status 7 / 6) and XD12 (status 2) are merged; the old XD11 cancel batch is replaced by the screen Change Order Number (XD11).",
     "The source table is insert / update: a crossdock line starts with status 7 and can change to 6 (received / allocated) or 2 (cancel). A partial cancel or receipt splits the line into a new SERIAL_NO (scenario files skenario_h0253.xlsx, simulasi_asn.xlsx).",
-    "One line can be in more than one ASN. H0253 does not carry the received ASN No, so NSP assumes the ASNs are received in the order they were sent (TBC with G-System; otherwise G-System provides the received ASN No).",
-    "UPD_STATUS: NULL = status 7 (no change); '6' = received / allocated in G-System; '2' = cancelled in G-System. ORDER_STATUS of NSP keeps the first value.",
-    "Example (simulasi_asn_rev.xlsx, sheet Sample Input): 17-Oct CO-14101 → UPD_STATUS 6, CO-14102 (on hold, no ASN) → UPD_STATUS 2: nothing else; 19-Oct CO-14104 → UPD_STATUS 2 although in case 3 of ASN0003 → LOG5, listed in XD11; 21-Oct CO-14111 → UPD_STATUS 6 without ASN (candidate) and CO-14115 (12 pcs in ASN0006 + ASN0007) split by G-System into serial 0000001 6 pcs (6) and 0000002 6 pcs (7): the ASN0007 row moves to serial 0000002 (LOG7).",
+    "One line can be in more than one ASN. H0253 does not carry the received ASN No, so NSP assumes the ASNs are received in the order they were sent (TBC with GTOPAS; otherwise GTOPAS provides the received ASN No).",
+    "UPD_STATUS: NULL = status 7 (no change); '6' = received / allocated in GTOPAS; '2' = cancelled in GTOPAS. ORDER_STATUS of NSP keeps the first value.",
+    "Example (simulasi_asn_rev.xlsx, sheet Sample Input): 17-Oct CO-14101 → UPD_STATUS 6, CO-14102 (on hold, no ASN) → UPD_STATUS 2: nothing else; 19-Oct CO-14104 → UPD_STATUS 2 although in case 3 of ASN0003 → LOG5, listed in XD11; 21-Oct CO-14111 → UPD_STATUS 6 without ASN (candidate) and CO-14115 (12 pcs in ASN0006 + ASN0007) split by GTOPAS into serial 0000001 6 pcs (6) and 0000002 6 pcs (7): the ASN0007 row moves to serial 0000002 (LOG7).",
     "Drafts: every run deletes all TB_R_INSTRUCTION rows with ASN_NO NULL (Create ASN not submitted), gives the mapped qty back and sets PO_MAPPED_FLAG 'N'; rows with ASN_NO are never deleted. [Submit ASN] of XD10 re-checks the draft too.",
     "Only changed rows are read (INTF_UPDATE_DT > watermark); upsert and draft release run in one transaction; the watermark is saved only when the run succeeds.",
     "Read by XD09 (lines with UPD_STATUS NULL, not mapped, not on hold), XD10 and XD11. Table structure: see Appendix."
@@ -740,18 +740,18 @@
   },
   {
    "event": "Cancel qty check",
-   "cause": "Cancelled qty of a line in a submitted ASN is not a multiple of pcs/case (should not happen in G-System)",
+   "cause": "Cancelled qty of a line in a submitted ASN is not a multiple of pcs/case (should not happen in GTOPAS)",
    "type": "Error",
    "msg_id": "LOG6",
    "message": "<CUSTOMER_ORDER_NO> <PART_NO>: cancelled qty <QTY> is not a multiple of pcs/case <PCS>.",
    "action": {
     "system": "Write the log (abnormality); the line is still listed in XD11.",
-    "user": "D/S team checks with G-System."
+    "user": "D/S team checks with GTOPAS."
    }
   },
   {
    "event": "Serial split",
-   "cause": "A line in TB_R_INSTRUCTION is split into a new SERIAL_NO by G-System",
+   "cause": "A line in TB_R_INSTRUCTION is split into a new SERIAL_NO by GTOPAS",
    "type": "Info",
    "msg_id": "LOG7",
    "message": "<CUSTOMER_ORDER_NO> item <DETAILED_ITEM_NO> split into serial <SERIAL_NO>: <QTY> pcs of <ASN_NO> moved to the new serial.",
@@ -790,7 +790,7 @@
    "name": "TB_R_H0253_ORDER_CONTROL_PRE",
    "kind": "transaction",
    "proposed": false,
-   "description": "Order control data, pre-order picking info (I/F H02-53, DVJO950) replicated from DB Surrounding by XD08. Structure from the G-System I/F layout; physical names follow the existing table. Key (PK) = unique key of the I/F layout. Rows with UPD_STATUS 6 / 2 are kept for tracking (retention optional, TBC). UPD_STATUS is a new NSP column (proposed).",
+   "description": "Order control data, pre-order picking info (I/F H02-53, DVJO950) replicated from DB Surrounding by XD08. Structure from the GTOPAS I/F layout; physical names follow the existing table. Key (PK) = unique key of the I/F layout. Rows with UPD_STATUS 6 / 2 are kept for tracking (retention optional, TBC). UPD_STATUS is a new NSP column (proposed).",
    "columns": [
     [
      "CUSTOMER_CD",
@@ -1119,7 +1119,7 @@
      "VARCHAR(1)",
      "",
      "Y",
-     "NSP column: status change in G-System after the first replication: NULL = no change (status 7) / '6' = received or allocated (source ORDER_STATUS 6) / '2' = cancelled (source ORDER_STATUS 2). Set by XD08; lines with UPD_STATUS are not taken by XD09"
+     "NSP column: status change in GTOPAS after the first replication: NULL = no change (status 7) / '6' = received or allocated (source ORDER_STATUS 6) / '2' = cancelled (source ORDER_STATUS 2). Set by XD08; lines with UPD_STATUS are not taken by XD09"
     ],
     [
      "CREATE_DT",
@@ -1452,7 +1452,7 @@
     "title": "A. Runs (03:30) and result",
     "columns": [
      "Run",
-     "Source change (G-System)",
+     "Source change (GTOPAS)",
      "NSP replicate",
      "TB_R_INSTRUCTION / Log"
     ],

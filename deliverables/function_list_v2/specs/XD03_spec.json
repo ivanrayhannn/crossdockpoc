@@ -719,7 +719,7 @@
     "For a changed part, all its rows of the ongoing period in TB_M_PART_CANDIDATE_DEST are replaced by the rows of the file: destinations in the file are inserted or updated, destinations not in the file are removed.",
     "A part whose rows are all blank (placeholder) is not changed, so a mapping cannot be removed completely by upload (same as the screen: at least one destination).",
     "Every changed part gets a history record per added, changed or removed destination in TB_H_PART_CANDIDATE (event MAPPING, source UPLOAD, DEST_CODE and FIELD_NAME CASE_DAY; refer Appendix).",
-    "Every changed part gets Sync Status = No Sync in TB_M_PART_CANDIDATE. It is sent to G-System and AP POLE by the IF functions (XD06 / XD07) when D/S clicks [Sync] on the screen.",
+    "Every changed part gets Sync Status = No Sync in TB_M_PART_CANDIDATE. It is sent to GTOPAS and AP POLE by the IF functions (XD06 / XD07) when D/S clicks [Sync] on the screen.",
     "A result report (.xlsx) is created for both cases."
    ]
   },

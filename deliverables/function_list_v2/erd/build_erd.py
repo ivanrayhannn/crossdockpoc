@@ -50,11 +50,11 @@ def load_tables():
             d = doc.get(c[0])
             typ, null = (d[1], d[3]) if d else (c[1] + ' (inferred)', c[3])
             cols.append((c[0], typ, c[2], null, '; '.join(x for x in (notes.get(c[0], ''), d[4] if d else 'not in the DB structure document', c[4]) if x)))
-        tables[name] = (desc + ' Columns from the data export (20-Oct), types from GSystem_SPS_DB_Structure_20240423.', cols)
+        tables[name] = (desc + ' Columns from the data export (20-Oct), types from GTOPAS_SPS_DB_Structure_20240423.', cols)
         used[name] = EXTRA_USED.get(name, [])
     for name in ('TB_R_DAILY_ORDER_MANIFEST', 'TB_R_DAILY_ORDER_PART', 'TB_R_CASE_LABEL_LAST_SEQ', 'TB_M_PART_MASTER'):
         desc = tables.get(name, ('',))[0] or ''
-        tables[name] = (desc + f" Full structure: GSystem_SPS_DB_Structure_20240423 sheet {gt[name]['sheet']}.",
+        tables[name] = (desc + f" Full structure: GTOPAS_SPS_DB_Structure_20240423 sheet {gt[name]['sheet']}.",
                         [tuple(c) for c in gt[name]['columns']])
     used['TB_M_PART_MASTER'] = sorted(set(used.get('TB_M_PART_MASTER', [])) | {'XD01', 'XD02'})
     return tables, used

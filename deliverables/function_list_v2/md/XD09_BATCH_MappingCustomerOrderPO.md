@@ -1,6 +1,6 @@
 # XD09 – Mapping Customer Order and PO Batch
 
-Sumber: UISS `XD09_UISS_Batch_MappingCustomerOrderPO.xlsx` (0.1 Initial Draft, 18-Oct-26). Nama sistem di UISS: G-System / NSP.
+Sumber: UISS `XD09_UISS_Batch_MappingCustomerOrderPO.xlsx` (0.1 Initial Draft, 18-Oct-26). Nama sistem di UISS: GTOPAS / NSP.
 
 - Isi sama dengan X12 (Get Order – pre-mapping FIFO customer order ↔ PO ke #TEMP_INSTRUCTION). Detail: `deliverables/md/X12_FUNCTION_GetOrder_PO_PreMapping.md`.
 - Tetap **on demand** dari [Search] di **XD10** (tidak ada scheduler). Sumber order dari **XD08** (status 7, HOLD_FLAG N, PO_MAPPED_FLAG N); qty PO terbuka = PO qty − MAPPED_QTY (TB_R_PRA_DAILY_ORDER_MAPPED).
@@ -27,7 +27,7 @@ Contoh lengkap: `deliverables/simulasi_asn_rev.xlsx` (16–22 Oct), prototype me
 - Nama kolom tabel baru disamakan: `MANIFEST_ITEM_NO` → `MANIFEST_ITEM`, `PO_ORDER_QTY` → `ORDER_QTY`, `PO_ORDER_DT` → `PO_DT` (juga di XD10 / XD11).
 
 ## Keputusan 21-Oct (urutan H0253, case supplier, blok ASN)
-- Urutan baris H0253 = urutan alokasi G-System dengan **Allocation Priority = Customer Order Date**: **Allocation Priority (Customer Order Date) → Customer Code → Customer Order No → Customer Order Date → Customer Order Time → Destination Code → Detailed Item No → Serial No**. Urutannya **fixed**.
+- Urutan baris H0253 = urutan alokasi GTOPAS dengan **Allocation Priority = Customer Order Date**: **Allocation Priority (Customer Order Date) → Customer Code → Customer Order No → Customer Order Date → Customer Order Time → Destination Code → Detailed Item No → Serial No**. Urutannya **fixed**.
 - Diproses **per Part No + Customer Order Date** (Cara B): unit diproses dari tanggal paling lama, lalu di dalam unit pakai urutan H0253.
 - PO diberikan berurutan (PO_DT), lalu pcs dipotong jadi **case supplier @ PCS_CASE** (`TB_M_PART_CANDIDATE.PCS_CASE`). Satu case supplier boleh berisi beberapa line dan destinasi.
 - Di gudang tetap **1 case = 1 destinasi**, jadi ASN hanya boleh berhenti setelah case di mana **qty kumulatif setiap destinasi kelipatan PCS_CASE** (CUT_FLAG Y). Case sampai titik potong valid = **blok** (GROUP_SEQ) = langkah opsi ASN.
@@ -61,4 +61,4 @@ ORDER BY SHIPPING_PART_NO, ALLOCATION_PRIORITY, CUSTOMER_CD, CUSTOMER_ORDER_NO, 
 ```
 
 ## Keputusan 23-Oct
-- Line yang diambil: ORDER_STATUS 7 **dan UPD_STATUS NULL** (line yang berubah di G-System, UPD_STATUS 6 / 2, tidak diambil), HOLD_FLAG N, open qty > 0. Query di Appendix ikut ditambah `H.UPD_STATUS IS NULL`.
+- Line yang diambil: ORDER_STATUS 7 **dan UPD_STATUS NULL** (line yang berubah di GTOPAS, UPD_STATUS 6 / 2, tidak diambil), HOLD_FLAG N, open qty > 0. Query di Appendix ikut ditambah `H.UPD_STATUS IS NULL`.

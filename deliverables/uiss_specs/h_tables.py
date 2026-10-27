@@ -1,4 +1,4 @@
-"""Table structures of the replicated G-System tables (from the I/F layouts H01-25 DVJO820, H02-02 DVJO250, H02-53 DVJO950).
+"""Table structures of the replicated GTOPAS tables (from the I/F layouts H01-25 DVJO820, H02-02 DVJO250, H02-53 DVJO950).
 Column: [name, type, PK, Null, description]. Physical names follow the table exports (TB_R_H0202_DEMAND_HISTORY_SUM, TB_R_H0253_ORDER_CONTROL_PRE, TB_M_H0125_DESTINATION)."""
 
 H0125_COLS = [

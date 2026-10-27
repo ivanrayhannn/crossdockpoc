@@ -9,7 +9,7 @@ Folder ini berisi UISS sesuai **function list terbaru** (18-Oct-26). Dokumen ver
 | `specs/` | Builder Python + spec JSON (dibuat dari spec versi pertama, tanpa mengubahnya) |
 | `build_all_v2.sh` | Build ulang semua UISS v2 (jalankan dari root repo) |
 
-Nama sistem di UISS tetap **G-System** dan **NSP** (rename T-System / Supplier System hanya di prototype web).
+Nama sistem di dokumen (UISS, BPF, ERD, md) **GTOPAS** dan **NSP**; di simulasi dan prototype web **G-System** / Supplier System (27-Oct).
 
 ## Function list dan asal dokumen
 
@@ -20,7 +20,7 @@ Nama sistem di UISS tetap **G-System** dan **NSP** (rename T-System / Supplier S
 | XD03 | Part and Destination Mapping Upload Batch | Batch | X4 Mapping per Destination Upload | Ganti ID / nama |
 | XD04 | Actual Demand Summary Synch to NSP | Batch | X5 | Tetap replicate tabel Actual Demand Summary ke NSP (delete – insert) |
 | XD05 | DAD Volume Calculation Batch | Batch | X6 DAD Volume Calc + X7 Mapping Destination Calc | **Digabung**: proses 1 (status part) lalu proses 2 (mapping destinasi) |
-| XD06 | IF Cross Dock Master to G-System | Batch | bagian RPA dari X3 (Sync) | **Baru / dipisah**: file SFTP berisi Part List + Mapping per Destination ke G-System |
+| XD06 | IF Cross Dock Master to GTOPAS | Batch | bagian RPA dari X3 (Sync) | **Baru / dipisah**: file SFTP berisi Part List + Mapping per Destination ke GTOPAS |
 | XD07 | IF Cross Dock Master to AP POLE | Batch | bagian RPA dari X3 (Sync) | **Baru / dipisah**: file SFTP dengan data sama ke AP POLE |
 | XD08 | Order Control Information to NSP Batch | Batch | X10 H0253 Sync | **Satu batch H0253** (23-Oct, XD12 digabung): status 7 / 6 / 2, UPD_STATUS, lepas semua draft |
 | XD09 | Mapping Customer Order and PO Batch | Batch | X12 Get Order (pre-mapping) | Ganti ID / nama (tetap on demand dari [Search] di XD10) |
@@ -38,10 +38,10 @@ Tidak dipakai (dikonfirmasi 19-Oct): **X9** H0202 Demand History Sync, **X15** M
 |---|---|---|
 | 1 | XD05 | **Disetujui**: X6 + X7 digabung. Satu run = proses 1 lalu proses 2; [Run calculation (Part List)] = proses 1 + 2, [Run calculation (Mapping)] = proses 2 saja |
 | 2 | XD10 | **Disetujui**: X14 (Submit ASN) masuk ke XD10 (section 5.7) |
-| 3 | XD06 / XD07 | Kirim lewat **file SFTP – Option #3** (NSP Send IF → SFTP TMMIN → SFTP TMA → receive IF → AP POLE Crossdock Kanban Part Master / Crossdock Export Part Master). **TB_R_CROSSDOCK_IF_RESULT = tabel dummy** untuk status kirim; output sebenarnya file ke G-System (XD06) dan AP POLE (XD07). Field dan proses bisnis sudah didetailkan (Interface Data di UISS dan md). Sync Status gabungan **disetujui** |
+| 3 | XD06 / XD07 | Kirim lewat **file SFTP – Option #3** (NSP Send IF → SFTP TMMIN → SFTP TMA → receive IF → AP POLE Crossdock Kanban Part Master / Crossdock Export Part Master). **TB_R_CROSSDOCK_IF_RESULT = tabel dummy** untuk status kirim; output sebenarnya file ke GTOPAS (XD06) dan AP POLE (XD07). Field dan proses bisnis sudah didetailkan (Interface Data di UISS dan md). Sync Status gabungan **disetujui** |
 | 4 | XD08 / XD12 / tabel H0253 | **Satu tabel replicate upsert** (delta INTF_UPDATE_DT, partial cancel = serial baru, status 6 / 2 disimpan untuk tracking); kolom baru UPD_STATUS; tabel cancel terpisah dihapus |
 | 5 | Urutan job | ~~XD12 → XD11 → XD08~~ — tidak berlaku sejak 23-Oct (XD08 satu batch) |
-| 6 | XD11 | Cancel bisa **dengan atau tanpa Hold Flag Y**. Perhitungan **per line (semua serial)**. Qty yang sudah ASN dicegah oleh feedback ASN existing ke G-System + SOP; kalau tetap terjadi → **CONFLICT** (abnormality, lihat simulasi skenario 4) |
+| 6 | XD11 | Cancel bisa **dengan atau tanpa Hold Flag Y**. Perhitungan **per line (semua serial)**. Qty yang sudah ASN dicegah oleh feedback ASN existing ke GTOPAS + SOP; kalau tetap terjadi → **CONFLICT** (abnormality, lihat simulasi skenario 4) |
 | 7 | ID | Prefix **XD** (XD01–XD15) |
 
 ## Skenario H0253 (skenario_h0253.xlsx)
@@ -59,16 +59,16 @@ Simulasi: menu prototype **ASN → Cancel Order Simulation**.
 ## Keputusan (Confirmation Points, 19-Oct)
 | No | Function | Keputusan |
 |---|---|---|
-| A1 | ASN Cross Dock Creation Screen (XD10), Mapping Customer Order and PO Batch (XD09) | Case per destinasi dipecah sesuai pcs/case (Vietnam 24 pcs, 6 pcs/case = 4 case). G-System selalu rilis kelipatan pcs/case (sisa tetap pending, tidak muncul di H0253), jadi case selalu penuh |
+| A1 | ASN Cross Dock Creation Screen (XD10), Mapping Customer Order and PO Batch (XD09) | Case per destinasi dipecah sesuai pcs/case (Vietnam 24 pcs, 6 pcs/case = 4 case). GTOPAS selalu rilis kelipatan pcs/case (sisa tetap pending, tidak muncul di H0253), jadi case selalu penuh |
 | A2 | ASN Cross Dock Creation Screen (XD10) | Tetap utuh per unit (Part Number + Customer Order Date): kalau 1 line belum dapat PO, unit belum bisa di-ASN |
 | A3 | ASN Cross Dock Creation Screen (XD10), ASN Crossdock Inquiry Screen (XD15) | 1 case label = 1 case 1 destinasi, bisa berisi beberapa Customer Order No; format sesuai label existing |
 | A4 | Cancel Crossdock Customer Order Batch (XD11) | Barang CONFLICT boleh dialokasikan ke order destinasi lain juga, atau stok gudang |
 | A5 | Cancel Crossdock Customer Order Batch (XD11) | PO qty tidak diblok |
 | A6 | Cancel Crossdock Customer Order Batch (XD11) | Exception list = Log (Log Monitoring), tanpa layar khusus |
-| A7 | DAD Volume Calculation Batch (XD05), IF Cross Dock Master to G-System / AP POLE (XD06 / XD07) | Part yang jadi Inactive dikirim (CROSSDOCK_FLAG 'N') supaya statusnya jadi inactive di G-System dan AP POLE; XD05 set part itu No Sync |
-| A8 | IF Cross Dock Master to G-System (XD06) | G-System **tidak** pakai SFTP (interface existing, tidak didetailkan) |
-| A9–A11 | IF Cross Dock Master to G-System / AP POLE (XD06 / XD07) | Tabel tujuan, detail SFTP dan format file **tidak didetailkan** |
-| B1 | XD08, XD11, XD12, XD13 | Jadwal setelah data G-System tersedia (27:30), retry 3x |
+| A7 | DAD Volume Calculation Batch (XD05), IF Cross Dock Master to GTOPAS / AP POLE (XD06 / XD07) | Part yang jadi Inactive dikirim (CROSSDOCK_FLAG 'N') supaya statusnya jadi inactive di GTOPAS dan AP POLE; XD05 set part itu No Sync |
+| A8 | IF Cross Dock Master to GTOPAS (XD06) | GTOPAS **tidak** pakai SFTP (interface existing, tidak didetailkan) |
+| A9–A11 | IF Cross Dock Master to GTOPAS / AP POLE (XD06 / XD07) | Tabel tujuan, detail SFTP dan format file **tidak didetailkan** |
+| B1 | XD08, XD11, XD12, XD13 | Jadwal setelah data GTOPAS tersedia (27:30), retry 3x |
 | B2 | XD04, XD05 | Jadwal bulanan tidak didetailkan |
 | B3 | XD04, XD05 | Kalau XD04 gagal, XD05 tetap jalan |
 | B4 | XD08, XD12 | SERIAL_NO ditambahkan tim DB Surrounding |
@@ -77,7 +77,7 @@ Simulasi: menu prototype **ASN → Cancel Order Simulation**.
 | C2–C8 | XD01–XD05 | N + S dijumlahkan; retensi history 24 bulan; panjang kolom sesuai existing; template / log upload tidak didetailkan; Viewer = Search / Export; Effective Start Date default besok, min hari ini, wajib; label prototype dibiarkan |
 
 ## Keputusan 21-Oct (XD09 / XD10: urutan H0253 dan blok ASN)
-- Urutan baris H0253 = urutan alokasi G-System, Allocation Priority = Customer Order Date: Allocation Priority → Customer Code → Customer Order No → Customer Order Date → Order Time → Destination → Detailed Item No → Serial No; per Part No + Customer Order Date (Cara B).
+- Urutan baris H0253 = urutan alokasi GTOPAS, Allocation Priority = Customer Order Date: Allocation Priority → Customer Code → Customer Order No → Customer Order Date → Order Time → Destination → Detailed Item No → Serial No; per Part No + Customer Order Date (Cara B).
 - Pcs dipotong jadi case supplier @ PCS_CASE (boleh campur destinasi). ASN hanya boleh berhenti di titik potong valid (qty kumulatif tiap destinasi kelipatan PCS_CASE, karena di gudang 1 case = 1 destinasi) → blok = opsi ASN. Blok harus berurutan (tidak boleh dilompati).
 - Logika di `specs/scan_pack.py` (dipakai sample XD09 dan simulasi ERD); perubahan spec di `specs/apply_2110.py`; simulasi baru SIM-7.
 

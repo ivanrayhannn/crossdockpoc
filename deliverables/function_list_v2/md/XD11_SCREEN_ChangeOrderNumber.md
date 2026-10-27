@@ -7,12 +7,12 @@ Sumber: UISS `XD11_UISS_Screen_ChangeOrderNumber.xlsx` (0.1 Initial Draft). Sub 
 UISS sheet **Sample Input** baru: ASN0003 case 3 (C-0003-03) CO-14104 → CO-14111 (21-Oct): baris TB_R_INSTRUCTION sama di-update, CO-14111 PO_MAPPED_FLAG Y, CO-14104 tetap Y, 1 baris TB_H. Partial cancel CO-B (ASN00020) tetap sebagai contoh kedua (ERD SIM-6).
 
 ## Kapan muncul
-- Line H0253 replicate dengan **UPD_STATUS '2'** (di-cancel G-System, di-set XD08) yang qty-nya **sudah di ASN yang di-submit** (baris `TB_R_INSTRUCTION` dengan ASN_NO).
+- Line H0253 replicate dengan **UPD_STATUS '2'** (di-cancel GTOPAS, di-set XD08) yang qty-nya **sudah di ASN yang di-submit** (baris `TB_R_INSTRUCTION` dengan ASN_NO).
 - Cancel tanpa ASN (contoh CO-14102) tidak muncul. Draft (belum Submit) sudah dilepas XD08.
 - Baris tetap di daftar **sampai diganti** (tanpa batas waktu); tanpa kandidat = "Waiting for a candidate".
 
 ## Kandidat pengganti
-- **Part sama**, **UPD_STATUS '6'** (sudah received / allocated di G-System), **PO_MAPPED_FLAG 'N'**, **tidak ada di TB_R_INSTRUCTION** (belum punya ASN).
+- **Part sama**, **UPD_STATUS '6'** (sudah received / allocated di GTOPAS), **PO_MAPPED_FLAG 'N'**, **tidak ada di TB_R_INSTRUCTION** (belum punya ASN).
 - **Destinasi boleh beda**. Urutan: **Customer Order Date paling tua**.
 - **Boleh beberapa line** asalkan total qty = qty cancel. Default tercentang: line paling tua yang jumlahnya pas.
 

@@ -7,7 +7,7 @@ from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
 ORDER = ['GT', 'NB', 'DB', 'PR', 'DS', 'SP', 'AP']
-LANE_NAME = {'GT': 'G-System /\nDB Surrounding', 'NB': 'NSP System', 'DB': 'NSP Database', 'PR': 'Procurement', 'DS': 'D/S Team',
+LANE_NAME = {'GT': 'GTOPAS /\nDB Surrounding', 'NB': 'NSP System', 'DB': 'NSP Database', 'PR': 'Procurement', 'DS': 'D/S Team',
              'SP': 'Supplier', 'AP': 'AP POLE'}
 GROUP = {'GT': 'External', 'NB': 'NSP', 'DB': 'NSP', 'PR': 'TMMIN', 'DS': 'TMMIN', 'SP': 'Supplier', 'AP': 'External'}
 FILL = {'GT': 'E4DFEC', 'NB': 'DBE5F4', 'PR': 'FFFFFF', 'DS': 'FFFFFF', 'SP': 'FFFFFF', 'AP': 'E4DFEC'}
@@ -331,7 +331,7 @@ def draw_flow(ws, flow, lanes_label, header):
                                            right=thin if c == lc else None)
     cell = ws.cell(rl, 1, 'Legend :')
     cell.font, cell.alignment = f9b, Alignment(horizontal='center', vertical='center', text_rotation=90)
-    items = [('NSP System', 'proc', FILL['NB'], None), ('G-System / AP POLE', 'proc', FILL['GT'], None), ('User (manual / screen)', 'proc', 'FFFFFF', None),
+    items = [('NSP System', 'proc', FILL['NB'], None), ('GTOPAS / AP POLE', 'proc', FILL['GT'], None), ('User (manual / screen)', 'proc', 'FFFFFF', None),
              ('Existing / manual', 'proc', 'FFFFFF', 'dash'), ('DB Storage (table)', 'can', 'D9D9E8', None), ('Step No', 'no', None, None),
              ('Abnormality', 'ab', None, None), ('Process flow', 'flow', None, None), ('Data flow', 'data', None, None)]
     x0, y0 = G['col_x'][3] + 4, G['row_y'][rl] + 6

@@ -1,13 +1,13 @@
 # Batch – Crossdock – Destination Master (H0125) Sync to NSP (X11)
 
 Replikasi tabel **TB_M_H0125_DESTINATION** dari **DB Surrounding** ke **DB NSP**.
-Sumber: UISS-Batch `X11_UISS_Batch_H0125DestinationMasterSync.xlsx` (0.1 Initial Draft). Struktur dari I/F layout G-System **H01-25 / DVJO820 (Destination Master)**; nama kolom dari contoh data tabel (20261014_tb_m_h0125_destination.xlsx).
+Sumber: UISS-Batch `X11_UISS_Batch_H0125DestinationMasterSync.xlsx` (0.1 Initial Draft). Struktur dari I/F layout GTOPAS **H01-25 / DVJO820 (Destination Master)**; nama kolom dari contoh data tabel (20261014_tb_m_h0125_destination.xlsx).
 
 ## Poin utama
 - Nama tabel di NSP sama dengan sumber.
 - Cara simpan: **delete – insert** (isi tabel NSP diganti semua setiap jalan), semua kolom disalin apa adanya.
 - **All-or-nothing**: gagal → roll back, NSP tetap berisi data run sukses terakhir.
-- G-System mengirim data **1x/minggu (21:30)**; jadwal NSP di system master (**TBC**), setelah data tersedia. Hasil run dicatat di **Log**.
+- GTOPAS mengirim data **1x/minggu (21:30)**; jadwal NSP di system master (**TBC**), setelah data tersedia. Hasil run dicatat di **Log**.
 - PK = DESTINATION_CD (unique key di I/F layout).
 
 ## Struktur tabel (39 kolom)

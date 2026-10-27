@@ -66,7 +66,7 @@ FUNC_DESC = [
         'The H0253 replicate has the lines of a Customer Order Date from the next day (XD08 run). A line is taken when ORDER_STATUS = 7, UPD_STATUS IS NULL, '
         'HOLD_FLAG = N and open qty > 0 (open qty = ORDER_STATUS_QTY - qty of the line in TB_R_INSTRUCTION).',
         'Not taken: a line on hold (CO-14102 on 16-Oct), a cancelled line (UPD_STATUS 2: CO-14102 from 17-Oct, CO-14104 from 19-Oct), a line received '
-        'in G-System (UPD_STATUS 6: CO-14111 on 21-Oct), the qty already in an ASN (CO-14115: open 6 after ASN0006, 0 after ASN0007).',
+        'in GTOPAS (UPD_STATUS 6: CO-14111 on 21-Oct), the qty already in an ASN (CO-14115: open 6 after ASN0006, 0 after ASN0007).',
         'Order of the lines (ORDER BY): ORDER_DT (Allocation Priority), CUSTOMER_CD, CUSTOMER_ORDER_NO, ORDER_DT, ORDER_TIME, DESTINATION_CD, '
         'DETAILED_ITEM_NO, SERIAL_NO, per unit = Part Number + Customer Order Date, units of a part oldest date first. Example 18-Oct: CO-14105, CO-14106, '
         'CO-14107 (9715300), CO-14104 (9722D10), CO-14109 (9811100), CO-14110 (982200). SORT_SEQ = row number per unit.']},
@@ -93,6 +93,6 @@ FUNC_DESC = [
         'Units without a pre-mapped case and units fully in an ASN are not listed.',
         'Per Part Number the oldest Customer Order Date is sent first: on 19-Oct the cases of 18-Oct can be ticked only together with or after case 1 of '
         '17-Oct (CO-14110). A Not Ready case of an older date holds the later dates.',
-        'After the receiving in G-System XD08 sets UPD_STATUS 6 and the line is no longer taken; a partly received line is split into a new SERIAL_NO and '
+        'After the receiving in GTOPAS XD08 sets UPD_STATUS 6 and the line is no longer taken; a partly received line is split into a new SERIAL_NO and '
         'each part stays with its ASN (CO-14115: serial 0000001 = ASN0006, serial 0000002 = ASN0007), so nothing is taken again.']},
 ]

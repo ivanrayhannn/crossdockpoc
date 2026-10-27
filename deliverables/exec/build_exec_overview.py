@@ -166,7 +166,7 @@ landscape(kf, f'A1:K{KF_LAST + 1}')
 # ---------------------------------------------------------------- Business Flow (swimlane)
 bf = wb.create_sheet('Business Flow')
 LANES = [
-    ('G-System /\nDB Surrounding', 'E7E6E6'),
+    ('GTOPAS /\nDB Surrounding', 'E7E6E6'),
     ('NSP Batch\n(System)', 'D9E1F2'),
     ('Procurement', 'E2EFDA'),
     ('D/S Team', 'FCE4D6'),
@@ -175,7 +175,7 @@ LANES = [
 ]
 LANE_IDX = {n.split('\n')[0].split(' /')[0].split(' (')[0]: i for i, (n, _) in enumerate(LANES)}
 # column -> list of (lane key, ids, text, next_scope)
-G, N, P, D, S, GS = 'G-System', 'NSP Batch', 'Procurement', 'D/S Team', 'Supplier', 'Global System'
+G, N, P, D, S, GS = 'GTOPAS', 'NSP Batch', 'Procurement', 'D/S Team', 'Supplier', 'Global System'
 COLS = [
     [(G, 'Source', 'Actual demand &\ndestination master', False)],
     [(N, 'X5 · X11', 'Replicate data\nto NSP', False), (P, 'X1 · X2', 'Register candidate part\n(Min MAD, Pcs/Case,\nMax Case/Day)', False)],

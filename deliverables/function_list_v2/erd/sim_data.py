@@ -125,17 +125,17 @@ SCENARIOS = [
                 ('new', [1002, 'PART-Y', '202610', 'CALC', 'BATCH', None, 'PART_STATUS', 'Candidate', 'Active', 'XD05']),
                 ('new', [1003, 'PART-Z', '202610', 'CALC', 'BATCH', None, 'PART_STATUS', 'Active', 'Inactive', 'XD05']),
                 ('new', [1004, 'PART-X', '202610', 'MAPPING', 'BATCH', VN, 'CASE_DAY', '5', '6', 'XD05'])]),
-            ('6. D/S [Sync] → XD06 (G-System) / XD07 (AP POLE)', 'TB_R_CROSSDOCK_IF_RESULT', [
-                ('new', ['PART-Y', 'G-System', '202610', '1', 'SEND-20261002-01', 'OK']), ('new', ['PART-Y', 'APPOLE', '202610', '1', 'XDOCK_MASTER_20261002.csv', 'OK']),
-                ('new', ['PART-Z', 'G-System', '202610', '1', 'SEND-20261002-01', 'OK (CROSSDOCK_FLAG N)']),
+            ('6. D/S [Sync] → XD06 (GTOPAS) / XD07 (AP POLE)', 'TB_R_CROSSDOCK_IF_RESULT', [
+                ('new', ['PART-Y', 'GTOPAS', '202610', '1', 'SEND-20261002-01', 'OK']), ('new', ['PART-Y', 'APPOLE', '202610', '1', 'XDOCK_MASTER_20261002.csv', 'OK']),
+                ('new', ['PART-Z', 'GTOPAS', '202610', '1', 'SEND-20261002-01', 'OK (CROSSDOCK_FLAG N)']),
                 ('new', ['PART-Z', 'APPOLE', '202610', '1', 'XDOCK_MASTER_20261002.csv', 'OK (CROSSDOCK_FLAG N)'])]),
             ('', 'TB_M_PART_CANDIDATE', [
                 ('upd', ['PART-Y', 'DUMMY PART Y', 100, 6, 2, 12, 'Active', '1', 'CALC'], ['SYNC_STATUS'], 'No Sync → Success'),
-                ('upd', ['PART-Z', 'DUMMY PART Z', 50, 6, 4, 24, 'Inactive', '1', 'CALC'], ['SYNC_STATUS'], 'No Sync → Success (inactive in G-System / AP POLE)')]),
+                ('upd', ['PART-Z', 'DUMMY PART Z', 50, 6, 4, 24, 'Inactive', '1', 'CALC'], ['SYNC_STATUS'], 'No Sync → Success (inactive in GTOPAS / AP POLE)')]),
         ]},
     {
         'id': 'SIM-2', 'title': 'Daily order to ASN (normal)', 'flow': 'BPF F2', 'functions': 'XD08, XD09, XD10 (Create ASN, Submit 5.7)',
-        'story': ['G-System releases crossdock orders 14-Oct (status 7); the supplier POs of 15-Oct are crossdock manifests (CROSS_DOCK_FLAG X).',
+        'story': ['GTOPAS releases crossdock orders 14-Oct (status 7); the supplier POs of 15-Oct are crossdock manifests (CROSS_DOCK_FLAG X).',
                   'Supplier searches delivery 16-Oct Rit 1: PART-X (VN 18 + TH 6 = 4 cases in H0253 order, 4 blocks) and PART-Y (PH 6 = 1 case) are Ready; all blocks are chosen, Create ASN and Submit.',
                   'Result: one ASN with 5 cases / 30 pcs, 3 ASN manifests (one per Pra manifest), 5 ASN part rows (manifest item x case).'],
         'steps': [
@@ -218,7 +218,7 @@ SCENARIOS = [
                   'Order date 15-Oct (12) → PO-DMY-09011; CO-14102 on hold then cancelled, so its 6 pcs of PO-DMY-09011 go to CO-14103 (older PO_DT first).',
                   'Order date 17-Oct: 4 destinations, 30 pcs, PO-DMY-09013 only 18 (abnormal) → case 5 Not Ready until the split PO-DMY-09014 (12, 19-Oct). '
                   'Cases 1-4 → ASN0003; CO-14104 (middle row, case 3) is cancelled after the ASN. Order date 18-Oct: 3 destinations, 18 pcs, PO-DMY-09015 18 (OK) → ASN0005.',
-                  '21-Oct G-System allocates the pcs of case 3 to CO-14111 (UPD_STATUS 6, no ASN): the D/S team moves case 3 to CO-14111 (XD11). '
+                  '21-Oct GTOPAS allocates the pcs of case 3 to CO-14111 (UPD_STATUS 6, no ASN): the D/S team moves case 3 to CO-14111 (XD11). '
                   'Open PO qty at the end (12) = cancelled qty (CO-14102 + CO-14104).'],
         'steps': [
             ('1. 16-Oct XD08 (order date 15-Oct; PO-DMY-09011 PO_DT 16-Oct, 12)', 'TB_R_H0253_ORDER_CONTROL_PRE', [
@@ -273,7 +273,7 @@ SCENARIOS = [
                 ('new', [9, 1, 1, 'PART-X', VN, 'CO-14112', '0000001', 6, 'PO-DMY-09014', 'MF-DMY-09014', '0001', 'ASN0005', 'C-0005-01']),
                 ('new', [10, 2, 1, 'PART-X', PH, 'CO-14113', '0000001', 6, 'PO-DMY-09015', 'MF-DMY-09015', '0001', 'ASN0005', 'C-0005-02']),
                 ('new', [11, 3, 1, 'PART-X', D4, 'CO-14114', '0000001', 6, 'PO-DMY-09015', 'MF-DMY-09015', '0001', 'ASN0005', 'C-0005-03'], [], '6 pcs of PO-DMY-09015 stay open')]),
-            ('11. 20-Oct XD08: CO-14111 new (order date 19-Oct, PO-DMY-09016); 21-Oct → 6 (pcs of case 3 allocated by G-System)', 'TB_R_H0253_ORDER_CONTROL_PRE', [
+            ('11. 20-Oct XD08: CO-14111 new (order date 19-Oct, PO-DMY-09016); 21-Oct → 6 (pcs of case 3 allocated by GTOPAS)', 'TB_R_H0253_ORDER_CONTROL_PRE', [
                 ('upd', h('CO-14111', TH, '0000001', 'PART-X', 6, upd='6', od='2026-10-19', cust=TH), ['UPD_STATUS'], 'Received without ASN: candidate')]),
             ('12. 21-Oct XD11 Change Order Number: ASN0003 case 3 → CO-14111', 'TB_R_INSTRUCTION', [
                 ('upd', [6, 3, 1, 'PART-X', TH, 'CO-14111', '0000001', 6, 'PO-DMY-09013', 'MF-DMY-09013', '0001', 'ASN0003', 'C-0003-03'],
@@ -288,7 +288,7 @@ SCENARIOS = [
         'functions': 'XD10 (Create ASN), XD08, XD11 (Change Order Number)',
         'story': ['A: CO-14110 (PART-Y, PH, 12 pcs) is in a draft (Create ASN done, not submitted). The next run of XD08 releases every draft, whatever changed: '
                   'the rows are deleted, the mapped qty is given back and the cases come back in the delivery plan.',
-                  'B: CO-B (PART-Y, VN, 8 pcs) is in ASN00020: case 1 = CO-A 2 + CO-B 4, case 2 = CO-B 4 + CO-C 2. G-System cancels 6 pcs (new serial 0000002, status 2).',
+                  'B: CO-B (PART-Y, VN, 8 pcs) is in ASN00020: case 1 = CO-A 2 + CO-B 4, case 2 = CO-B 4 + CO-C 2. GTOPAS cancels 6 pcs (new serial 0000002, status 2).',
                   'Candidates (UPD_STATUS 6, PO_MAPPED_FLAG N, no ASN, oldest first): CO-E PH 4, CO-F VN 2. From the last case: case 2 CO-B 4 → CO-E; case 1: '
                   '2 of the 4 pcs → CO-F (row split), 2 pcs stay with CO-B.'],
         'steps': [
@@ -410,7 +410,7 @@ SCENARIOS = [
         'id': 'SIM-10', 'title': 'One line in 2 ASNs; partial receipt splits the serial → XD08 re-assigns TB_R_INSTRUCTION (simulasi_asn.xlsx)', 'flow': 'BPF F2',
         'functions': 'XD09, XD10, XD08 (serial split)',
         'story': ['CO-14115 VN 12 pcs (order date 19-Oct), 6 pcs/case: case 1 → ASN0006 (rit 1), case 2 → ASN0007 (rit 2). One H0253 row, two TB_R_INSTRUCTION rows.',
-                  '21-Oct ASN0006 received: G-System splits the line into serial 0000001 6 pcs status 6 and serial 0000002 6 pcs status 7.',
+                  '21-Oct ASN0006 received: GTOPAS splits the line into serial 0000001 6 pcs status 6 and serial 0000002 6 pcs status 7.',
                   'Upsert alone: serial 0000001 has 12 pcs in TB_R_INSTRUCTION for qty 6 and serial 0000002 looks open (6) → XD09 would map it again (double). '
                   'XD08 re-assigns the rows: serial 0000001 = ASN0006 (oldest ASN = received), serial 0000002 = ASN0007; both PO_MAPPED_FLAG Y.'],
         'steps': [
@@ -419,7 +419,7 @@ SCENARIOS = [
                 ('new', [13, 1, 1, 'PART-X', VN, 'CO-14115', '0000001', 6, 'PO-DMY-09016', 'MF-DMY-09016', '0001', 'ASN0007', 'C-0007-01'])]),
             ('', 'TB_R_H0253_ORDER_CONTROL_PRE', [
                 ('upd', h('CO-14115', VN, '0000001', 'PART-X', 12, mapped='Y', od='2026-10-19'), ['PO_MAPPED_FLAG'], 'N after ASN0006 (6 of 12), Y after ASN0007')]),
-            ('2. 21-Oct XD08 upsert: ASN0006 received, G-System split the line', 'TB_R_H0253_ORDER_CONTROL_PRE', [
+            ('2. 21-Oct XD08 upsert: ASN0006 received, GTOPAS split the line', 'TB_R_H0253_ORDER_CONTROL_PRE', [
                 ('upd', h('CO-14115', VN, '0000001', 'PART-X', 6, mapped='Y', upd='6', od='2026-10-19'), ['ORDER_STATUS_QTY', 'UPD_STATUS'], '12 → 6, received'),
                 ('new', h('CO-14115', VN, '0000002', 'PART-X', 6, od='2026-10-19'), [], 'New serial, status 7: without step 3 open qty 6 = double mapping')]),
             ('3. 21-Oct XD08 serial split: rows re-assigned (LOG7)', 'TB_R_INSTRUCTION', [
