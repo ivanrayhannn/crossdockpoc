@@ -50,7 +50,7 @@ export function AsnBackendProcessPage() {
         <ol style={{ margin: '2px 0 0', paddingLeft: 20 }}>
           <li>Customer Order Date (today, D) → PO Date (tomorrow, D+1): one PO per Part Number per Customer Order Date.</li>
           <li>Total customer order qty of all destinations per Part Number = total PO qty of that PO. A lower PO qty is an abnormality: the rest comes in a split PO and the customer orders without PO wait (Not Ready) for it. ASN Creation shows it as <b>Short PO</b>.</li>
-          <li>One customer order line can be in different ASNs. When T-System receives them separately, the line is split in H0253 (new serial); each part stays linked to its ASN (XD08). See Cancel Order Simulation, scenario 5.</li>
+          <li>One customer order line can be in different ASNs. When G-System receives them separately, the line is split in H0253 (new serial); each part stays linked to its ASN (XD08). See Cancel Order Simulation, scenario 5.</li>
           <li>PO_MAPPED_FLAG is set by Create ASN (Y when the whole line is in the ASN).</li>
           <li>Ready cases are sent following the cut (CUT_FLAG): from case 1 up to a cut; the cases between two cuts are sent together.</li>
           <li>Per Part Number the oldest Customer Order Date is sent first (no skip): a later date can be ticked only when every case of the earlier dates is in an ASN or ticked in the same ASN; a Not Ready case of an earlier date holds the later dates. ASN Creation shows <b>Wait: dd-Mon first</b>; try it with Start state <b>No ASN yet</b>.</li>
@@ -103,11 +103,11 @@ export function AsnBackendProcessPage() {
 
       <Section no="5" title="Cancel of an order (not in Supplier System)">
         <Steps rows={[
-          ['1', 'The order is cancelled in T-System (with or without hold flag Y): the H0253 row changes to ORDER_STATUS 2; a partial cancel splits the line into a new SERIAL_NO. Supplier System never cancels an order itself.', 'H0253 (T-System, insert / update)'],
+          ['1', 'The order is cancelled in G-System (with or without hold flag Y): the H0253 row changes to ORDER_STATUS 2; a partial cancel splits the line into a new SERIAL_NO. Supplier System never cancels an order itself.', 'H0253 (G-System, insert / update)'],
           ['2', 'XD08 (one batch) upserts the rows changed since the last run (INTF_UPDATE_DT): ORDER_STATUS keeps the first value, UPD_STATUS = 2 (cancel) or 6 (received). Lines with UPD_STATUS are not taken by XD09.', 'TB_R_H0253_ORDER_CONTROL_PRE'],
           ['3', 'XD08 releases every draft (TB_R_INSTRUCTION without ASN No): rows deleted, MAPPED_QTY reduced, PO_MAPPED_FLAG N; the cases come back in the delivery plan. [Submit ASN] re-checks the draft as well.', 'TB_R_INSTRUCTION, TB_R_PRA_DAILY_ORDER_MAPPED'],
           ['4', 'A cancel of qty already in a submitted ASN (abnormality) is listed in Change Order Number (XD11, D/S team) until the qty is moved to received lines of the same part (UPD_STATUS 6, PO_MAPPED_FLAG N, no ASN; oldest first; several lines / another destination allowed). No Cancel ASN.', 'TB_R_INSTRUCTION, TB_H_CROSSDOCK_ORDER_CHANGE'],
-          ['5', 'Serial split: a line in more than one ASN is split by T-System when only part of it is received. XD08 keeps each part linked to its ASN (received part = ASN sent first, TBC with T-System), so nothing is offered to the supplier again (LOG7).', 'TB_R_INSTRUCTION (SERIAL_NO), TB_R_H0253_ORDER_CONTROL_PRE'],
+          ['5', 'Serial split: a line in more than one ASN is split by G-System when only part of it is received. XD08 keeps each part linked to its ASN (received part = ASN sent first, TBC with G-System), so nothing is offered to the supplier again (LOG7).', 'TB_R_INSTRUCTION (SERIAL_NO), TB_R_H0253_ORDER_CONTROL_PRE'],
           ['6', 'Simulation of the H0253 scenarios: menu Cancel Order Simulation; replacement: menu Change Order Number.', 'Prototype'],
         ]} />
       </Section>

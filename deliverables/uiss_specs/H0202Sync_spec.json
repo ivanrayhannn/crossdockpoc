@@ -112,7 +112,7 @@
      ],
      [
       "Source",
-      "G-System provides the data 1 time/day (26:00)."
+      "GTOPAS provides the data 1 time/day (26:00)."
      ]
     ]
    }
@@ -676,7 +676,7 @@
    "name": "TB_R_H0202_DEMAND_HISTORY_SUM",
    "kind": "transaction",
    "proposed": false,
-   "description": "Demand history summary (I/F H02-02, DVJO250) replicated from DB Surrounding. Structure from the G-System I/F layout; physical names follow the existing table. Key (PK) = unique key of the I/F layout.",
+   "description": "Demand history summary (I/F H02-02, DVJO250) replicated from DB Surrounding. Structure from the GTOPAS I/F layout; physical names follow the existing table. Key (PK) = unique key of the I/F layout.",
    "columns": [
     [
      "CUSTOMER_CD",

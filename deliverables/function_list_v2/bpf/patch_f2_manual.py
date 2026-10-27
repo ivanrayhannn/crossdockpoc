@@ -35,11 +35,11 @@ def clone(a, dcol, drow, dx, dy, name, texts=None, drop_after=None):
         b = re.sub(r'<a:p>(?:(?!</a:p>)[\s\S])*?<a:t>' + re.escape(drop_after) + r'</a:t>[\s\S]*?</a:p>', '', b)
     return b
 if 'step D14' not in d:
-    box12, lab12 = find('ASN feedback: ASN qty known in G-System (basis of the cancel SOP)'), find('D12')
+    box12, lab12 = find('ASN feedback: ASN qty known in GTOPAS (basis of the cancel SOP)'), find('D12')
     box13 = find('Check the submit result per Submit ID')
     corner12 = anchors[anchors.index(box12) + 1]       # small corner mark of the D12 box
     dx = offx(box13)[0] - offx(find('ASN Inquiry; download case label (1 label = 1 case of 1 destination)'))[0]
-    new = [clone(box12, 2, 0, dx, 0, 'step D14', {'ASN feedback: ASN qty known in G-System (basis of the cancel SOP)':
+    new = [clone(box12, 2, 0, dx, 0, 'step D14', {'ASN feedback: ASN qty known in GTOPAS (basis of the cancel SOP)':
                  'Receive the ASN → ORDER_STATUS 6; a partial receipt splits the line (new SERIAL_NO); taken by the next XD08 run (D3)'}, drop_after='R: Existing ASN feedback'),
            clone(corner12, 2, 0, dx, 0, 'corner D14'), clone(lab12, 2, 0, dx, 0, 'no D14', {'D12': 'D14'})]
     ab13 = find('AB13')   # badge on D10 (col 17 row 10)

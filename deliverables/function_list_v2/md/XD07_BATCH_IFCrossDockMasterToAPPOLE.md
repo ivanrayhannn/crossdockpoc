@@ -1,11 +1,11 @@
 # XD07 – IF Cross Dock Master to AP POLE
 
-Sumber: UISS `XD07_UISS_Batch_IFCrossDockMasterToAPPOLE.xlsx` (0.1 Initial Draft, 18-Oct-26). Nama sistem di UISS: G-System / NSP.
+Sumber: UISS `XD07_UISS_Batch_IFCrossDockMasterToAPPOLE.xlsx` (0.1 Initial Draft, 18-Oct-26). Nama sistem di UISS: GTOPAS / NSP.
 
 ## Tujuan
 - Mengirim cross dock master part **Active** yang menunggu sync ke **AP POLE** sebagai **file interface lewat SFTP** (keputusan 18-Oct, Option #3).
 - Sumber: **Part List** (TB_M_PART_CANDIDATE) dan **Part Mapping per Destination** (TB_M_PART_CANDIDATE_DEST, periode berjalan).
-- Dulu satu RPA mengirim ke G-System dan AP POLE sekaligus (X3 Sync). Sekarang dipisah: XD07 ke AP POLE, XD06 ke G-System (data sama).
+- Dulu satu RPA mengirim ke GTOPAS dan AP POLE sekaligus (X3 Sync). Sekarang dipisah: XD07 ke AP POLE, XD06 ke GTOPAS (data sama).
 
 ## Topology (Option #3 – SFTP)
 ```
@@ -29,7 +29,7 @@ NSP: Cross Dock Part Master (XD01) -> XD07 Send IF (generate file)
 3. Buat file `XD_CDMASTER_APPOLE_<YYYYMMDDHHMMSS>.csv` di folder outbound (1 record per part × destinasi). Gagal → LOG3.
 4. **SFTP put** ke folder inbound AP POLE, cek ukuran / jumlah record; gagal → retry, lalu LOG4. Berhasil → file dipindah ke folder backup.
 5. Status kirim per part di tabel dummy: 1 = terkirim, 2 = gagal (TBC: kalau AP POLE mengembalikan file hasil / acknowledge, status diambil dari file itu).
-6. Sync Status gabungan di TB_M_PART_CANDIDATE (Success kalau G-System dan AP POLE dua-duanya terkirim, Failed kalau salah satu gagal, No Sync kalau part berubah saat dikirim) + history (event SYNC, source IF).
+6. Sync Status gabungan di TB_M_PART_CANDIDATE (Success kalau GTOPAS dan AP POLE dua-duanya terkirim, Failed kalau salah satu gagal, No Sync kalau part berubah saat dikirim) + history (event SYNC, source IF).
 7. LOG2 (nama file, jumlah part / record).
 
 ## Field yang dikirim (Interface Data)

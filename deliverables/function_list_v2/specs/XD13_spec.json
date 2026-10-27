@@ -108,7 +108,7 @@
     "rows": [
      [
       "Trigger",
-      "Scheduler after G-System has provided the data (1 time/week, 21:30); auto retry 3 times."
+      "Scheduler after GTOPAS has provided the data (1 time/week, 21:30); auto retry 3 times."
      ]
     ]
    }
@@ -663,7 +663,7 @@
    "name": "TB_M_H0125_DESTINATION",
    "kind": "master",
    "proposed": false,
-   "description": "Destination master (I/F H01-25, DVJO820) replicated from DB Surrounding. Structure from the G-System I/F layout; physical names follow the existing table. Key (PK) = unique key of the I/F layout.",
+   "description": "Destination master (I/F H01-25, DVJO820) replicated from DB Surrounding. Structure from the GTOPAS I/F layout; physical names follow the existing table. Key (PK) = unique key of the I/F layout.",
    "columns": [
     [
      "DESTINATION_CD",

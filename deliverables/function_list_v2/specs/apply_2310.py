@@ -33,7 +33,7 @@ def rep(s, pairs, fid, must=True):
 
 DRAFT_COL = ["DRAFT_ID", "VARCHAR(20)", "", "Y", "Draft of one [Create ASN] (all rows of the creation); NULL after [Submit ASN] is not needed (ASN_NO filled). "
              "Every run of XD08 deletes the rows with ASN_NO NULL"]
-UPD_FILTER = "UPD_STATUS IS NULL (no status change in G-System)"
+UPD_FILTER = "UPD_STATUS IS NULL (no status change in GTOPAS)"
 
 
 def xd10():
@@ -64,7 +64,7 @@ def xd10():
                                        "and the same qty. Otherwise nothing is submitted, the draft is released and message no. 11 is shown; the supplier searches again.")
     msgs = s['display_messages']
     if not any(m.get('msg_id') == 'MSG11' for m in msgs):
-        msgs.append({"event": "Click [Submit ASN] / [Yes]", "cause": "The draft was released by XD08 or a line changed in G-System (UPD_STATUS, qty)", "type": "Error",
+        msgs.append({"event": "Click [Submit ASN] / [Yes]", "cause": "The draft was released by XD08 or a line changed in GTOPAS (UPD_STATUS, qty)", "type": "Error",
                      "msg_id": "MSG11", "message": "Some orders have changed. The draft is released; please Search and create the ASN again.",
                      "action": "Click [OK]; back to the delivery plan."})
     s = rep(s, [("refer XD11 / XD12", "refer XD08 / XD11"), ("Refer XD11 / XD12.", "Refer XD08 / XD11.")], 'XD10', must=False)
@@ -77,7 +77,7 @@ def xd09():
     s = rep(s, [("ORDER_STATUS = '7', HOLD_FLAG = 'N', PO_MAPPED_FLAG = 'N'", f"ORDER_STATUS = '7', {UPD_FILTER}, HOLD_FLAG = 'N', PO_MAPPED_FLAG = 'N'"),
                 ("ORDER_STATUS = '7' (Cross Dock), HOLD_FLAG = 'N', PO_MAPPED_FLAG = 'N'", f"ORDER_STATUS = '7' (Cross Dock), {UPD_FILTER}, HOLD_FLAG = 'N', PO_MAPPED_FLAG = 'N'"),
                 ("WHERE H.ORDER_STATUS = '7' AND H.HOLD_FLAG = 'N'", "WHERE H.ORDER_STATUS = '7' AND H.UPD_STATUS IS NULL AND H.HOLD_FLAG = 'N'"),
-                ("Status '2' (cancel) is not taken.", "Lines changed in G-System (UPD_STATUS '6' / '2', set by XD08) are not taken.")], 'XD09', must=False)
+                ("Status '2' (cancel) is not taken.", "Lines changed in GTOPAS (UPD_STATUS '6' / '2', set by XD08) are not taken.")], 'XD09', must=False)
     save('XD09', s)
 
 
@@ -98,7 +98,7 @@ BL_HEAD = "Business Logic ASN"
 BL = ["Customer Order Date (today, D) → PO Date (tomorrow, D+1): one PO per Part Number per Customer Order Date.",
       "Total customer order qty of all destinations per Part Number and Customer Order Date = total PO qty of that PO. When the PO qty is lower: "
       "abnormality; the rest comes in a split PO, the customer orders without PO wait (Not Ready) until the next PO is issued.",
-      "One customer order line can be in different ASNs (its cases split). When G-System receives them separately, the line is split in H0253 "
+      "One customer order line can be in different ASNs (its cases split). When GTOPAS receives them separately, the line is split in H0253 "
       "(new SERIAL_NO); each part stays linked to its ASN (XD08).",
       "PO_MAPPED_FLAG is set by [Create ASN] ('Y' when the whole line is in the ASN; a draft not submitted is released by XD08).",
       "Ready cases of the delivery plan are sent following the cut (CUT_FLAG): the supplier selects from case 1 up to a cut; the cases between two cuts are sent together.",

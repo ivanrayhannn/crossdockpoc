@@ -22,11 +22,11 @@ FUNCTIONS = [
     ('X8', 'ASN Crossdock Creation', 'Screen', 'Supplier / D/S team (super admin)', 'B. Daily operation', 'On demand',
      'Delivery Date, Rit (route master); #TEMP_INSTRUCTION (X12)', 'H0253 flags, TB_R_INSTRUCTION, TB_R_PRA_DAILY_ORDER_MAPPED, Submit ID to X14', 'Yes'),
     ('X9', 'H0202 Demand History Sync', 'Batch', 'System', 'B. Daily operation', 'Daily (TBC)',
-     'G-System H0202', 'NSP TB_R_H0202', 'N/A'),
+     'GTOPAS H0202', 'NSP TB_R_H0202', 'N/A'),
     ('X10', 'H0253 Order Control Sync', 'Batch', 'System', 'B. Daily operation', 'Daily (TBC)',
-     'G-System H0253', 'NSP TB_R_H0253_ORDER_CONTROL_PRE', 'N/A'),
+     'GTOPAS H0253', 'NSP TB_R_H0253_ORDER_CONTROL_PRE', 'N/A'),
     ('X11', 'H0125 Destination Master Sync', 'Batch', 'System', 'A. Master setup', 'Weekly (TBC)',
-     'G-System H0125', 'NSP TB_M_H0125_DESTINATION', 'N/A'),
+     'GTOPAS H0125', 'NSP TB_M_H0125_DESTINATION', 'N/A'),
     ('X12', 'Get Order - Customer Order PO Pre-mapping', 'Function', 'Supplier (button in X8)', 'B. Daily operation', 'On demand ([Search] in X8)',
      'H0253 (status 7, Hold N), Pra Daily Order, TB_R_PRA_DAILY_ORDER_MAPPED', '#TEMP_INSTRUCTION (temp, FIFO)', 'Yes (in X8)'),
     ('X13', 'ASN Inquiry', 'Screen', 'Supplier / D/S team', 'B. Daily operation', 'On demand',
@@ -39,7 +39,7 @@ FUNCTIONS = [
 
 # function, topic, question, proposal, impact if open
 CONFIRMATIONS = [
-    ('X9-X11', 'Jadwal & retry', 'Jadwal scheduler NSP untuk X9, X10, X11 dan perlu auto retry seperti X6 / X7?', 'Setelah data G-System tersedia; auto retry 3x.', 'Schedule sheet di UISS masih TBC.'),
+    ('X9-X11', 'Jadwal & retry', 'Jadwal scheduler NSP untuk X9, X10, X11 dan perlu auto retry seperti X6 / X7?', 'Setelah data GTOPAS tersedia; auto retry 3x.', 'Schedule sheet di UISS masih TBC.'),
     ('X5', 'Jadwal X5', 'Tanggal / jam scheduler bulanan X5.', 'Tanggal 1 jam 01:00, sebelum X6.', 'Schedule sheet X5 / X6.'),
     ('X5 / X6', 'X5 gagal', 'Kalau X5 gagal, apakah X6 dibatalkan?', 'Ya, X6 tidak jalan.', 'Aturan dependensi batch.'),
     ('X5', 'Kolom DAD', 'Kolom DAD di Actual Demand Summary dipakai atau tidak?', 'Tidak dipakai (hanya MAD).', 'Mapping kolom X5.'),
@@ -76,7 +76,7 @@ DONE = [
     'UISS 15 fungsi (X1-X15) versi 0.1 + file .md per fungsi',
     'Prototype Part List, Mapping per Destination, ASN Crossdock Creation, ASN Inquiry (GitHub Pages)',
     'Rumus kalkulasi DAD (X6) dan mapping destinasi (X7) termasuk aturan pembulatan, dikonfirmasi 14-Oct-26',
-    'Struktur tabel H0202 / H0253 / H0125 dari I/F layout G-System, termasuk SERIAL_NO',
+    'Struktur tabel H0202 / H0253 / H0125 dari I/F layout GTOPAS, termasuk SERIAL_NO',
     'Alur ASN baru sesuai ASN_Flow_Normal.xlsx (unit Part + Customer Order Date, 1 case per destinasi, FIFO)',
     'Header delivery plan level case; detail destinasi & pcs hanya untuk tim D/S',
     'ASN flow versi 15-Oct: Search (X12 on-demand pre-mapping), Hold Flag per destinasi oleh D/S, Create ASN (mapping), status Ready / Not Ready / Created',

@@ -9,15 +9,15 @@ Excel / draw.io: timeline di kolom (X), PIC di baris (Y), sesuai referensi BPF. 
 | `bpf_data.py` | Satu sumber data (lane, timeline, step, tabel, abnormality) |
 | `build_bpf.py`, `build_bpf.sh`, `bpf_shots.mjs` | Generator: data prototype → screenshot diagram → Excel |
 | `bpf_ref.py` | Sheet flow format referensi (grid sel + shape ter-anchor ke sel) dan draw.io |
-| `shots/` | Gambar preview diagram per flow dari prototype (nama dokumen G-System / NSP) |
+| `shots/` | Gambar preview diagram per flow dari prototype (nama dokumen GTOPAS / NSP) |
 
-Prototype: menu **Common → Business Process Flow** (`#/bpf`); pilihan nama Prototype (T-System / Supplier System) atau Document (G-System / NSP).
+Prototype: menu **Common → Business Process Flow** (`#/bpf`); pilihan nama Prototype (G-System / Supplier System) atau Document (GTOPAS / NSP).
 
 | Flow | Lane (PIC) | Timeline |
 |---|---|---|
-| F1 Master Setup | G-System / DB Surrounding, NSP Batch, Procurement, D/S Team, AP POLE | Weekly 21:30 (XD13) · kapan saja (XD01 / XD02) · bulanan (XD04 → XD05 P1 → P2) · setelah run bulanan (XD01 / XD03, [Sync] → XD06 / XD07) · setelah Sync (G-System, AP POLE) |
-| F2 Daily Order to ASN | G-System, NSP Batch, Supplier | D-2 (customer order H0253 status 7) · D-1 (PO) · 27:30 (XD08) · daily (Search / XD09, Create, Submit 5.7) · setelah submit / receiving (XD15, Receive ASN, Log) |
-| F4 Hold & Cancel | G-System, NSP Batch, D/S Team, Supplier | Hari D: Hold / Release destinasi (XD10), Search tanpa baris hold (XD09), Create ASN gagal kalau di-hold setelah dicentang. Cancel (23-Oct): G-System cancel → XD08 (satu batch) set UPD_STATUS 2 dan melepas semua draft; cancel qty yang sudah di ASN → D/S pindahkan ke line UPD_STATUS 6 di Change Order Number (XD11), riwayat TB_H_CROSSDOCK_ORDER_CHANGE |
+| F1 Master Setup | GTOPAS / DB Surrounding, NSP Batch, Procurement, D/S Team, AP POLE | Weekly 21:30 (XD13) · kapan saja (XD01 / XD02) · bulanan (XD04 → XD05 P1 → P2) · setelah run bulanan (XD01 / XD03, [Sync] → XD06 / XD07) · setelah Sync (GTOPAS, AP POLE) |
+| F2 Daily Order to ASN | GTOPAS, NSP Batch, Supplier | D-2 (customer order H0253 status 7) · D-1 (PO) · 27:30 (XD08) · daily (Search / XD09, Create, Submit 5.7) · setelah submit / receiving (XD15, Receive ASN, Log) |
+| F4 Hold & Cancel | GTOPAS, NSP Batch, D/S Team, Supplier | Hari D: Hold / Release destinasi (XD10), Search tanpa baris hold (XD09), Create ASN gagal kalau di-hold setelah dicentang. Cancel (23-Oct): GTOPAS cancel → XD08 (satu batch) set UPD_STATUS 2 dan melepas semua draft; cancel qty yang sudah di ASN → D/S pindahkan ke line UPD_STATUS 6 di Change Order Number (XD11), riwayat TB_H_CROSSDOCK_ORDER_CHANGE |
 
 Open point AB14 (XD08 jalan kalau XD12 gagal) tidak berlaku lagi: XD12 digabung ke XD08 (23-Oct).
 

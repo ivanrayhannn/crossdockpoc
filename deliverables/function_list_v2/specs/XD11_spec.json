@@ -19,8 +19,8 @@
  ],
  "general": {
   "objective": [
-   "To list the customer order lines cancelled in G-System (UPD_STATUS '2', set by XD08) whose qty is already in a submitted ASN.",
-   "To move the cancelled qty to order lines of the same part that G-System has received (UPD_STATUS '6', PO_MAPPED_FLAG 'N', not in an ASN), so that the cases of the ASN keep a valid customer order (decided 23-Oct; replaces the former XD11 cancel batch and the CONFLICT handling outside the system).",
+   "To list the customer order lines cancelled in GTOPAS (UPD_STATUS '2', set by XD08) whose qty is already in a submitted ASN.",
+   "To move the cancelled qty to order lines of the same part that GTOPAS has received (UPD_STATUS '6', PO_MAPPED_FLAG 'N', not in an ASN), so that the cases of the ASN keep a valid customer order (decided 23-Oct; replaces the former XD11 cancel batch and the CONFLICT handling outside the system).",
    "D/S team only: sub menu of ASN (next to ASN Creation)."
   ],
   "display_order": [
@@ -298,7 +298,7 @@
    "required": "N",
    "format": "ZZZ9",
    "validation": "-",
-   "description": "Qty cancelled by G-System that is in the ASN."
+   "description": "Qty cancelled by GTOPAS that is in the ASN."
   },
   {
    "name": "Cases (from the last case)",
@@ -639,7 +639,7 @@
    "marker": "a.",
    "level": 2,
    "items": [
-    "18-Oct: cases 1-4 of order date 17-Oct are sent in ASN0003 (case 3 = CO-14104, TH, 6 pcs, a middle row). 19-Oct: CO-14104 is cancelled (waiting for a candidate). 21-Oct: CO-14111 (TH, 6 pcs, order date 19-Oct) is received in G-System (UPD_STATUS 6, PO_MAPPED_FLAG N, no ASN). The D/S team moves the 6 pcs of case C-0003-03 to CO-14111.",
+    "18-Oct: cases 1-4 of order date 17-Oct are sent in ASN0003 (case 3 = CO-14104, TH, 6 pcs, a middle row). 19-Oct: CO-14104 is cancelled (waiting for a candidate). 21-Oct: CO-14111 (TH, 6 pcs, order date 19-Oct) is received in GTOPAS (UPD_STATUS 6, PO_MAPPED_FLAG N, no ASN). The D/S team moves the 6 pcs of case C-0003-03 to CO-14111.",
     "Other example (ERD SIM-6, partial cancel): CO-B 8 pcs in ASN00020 (case 1: 4, case 2: 4), 6 pcs cancelled: case 2 4 pcs + 2 of the 4 pcs of case 1 (row split) move to CO-E (4) and CO-F (2)."
    ]
   }
@@ -1135,7 +1135,7 @@
   "title": "Sample Input",
   "heading": "Sample Change Order Number - simulasi_asn_rev.xlsx (ASN0003, 21-Oct)",
   "intro": [
-   "18-Oct: cases 1-4 of PART-X 17-Oct in ASN0003. 19-Oct: CO-14104 (TH 6, case 3) is cancelled in G-System (UPD_STATUS 2, LOG5): listed, waiting for a candidate. 21-Oct: CO-14111 (TH 6, order date 19-Oct) is received in G-System with the pcs of case 3 (UPD_STATUS 6, PO_MAPPED_FLAG N, no ASN): candidate."
+   "18-Oct: cases 1-4 of PART-X 17-Oct in ASN0003. 19-Oct: CO-14104 (TH 6, case 3) is cancelled in GTOPAS (UPD_STATUS 2, LOG5): listed, waiting for a candidate. 21-Oct: CO-14111 (TH 6, order date 19-Oct) is received in GTOPAS with the pcs of case 3 (UPD_STATUS 6, PO_MAPPED_FLAG N, no ASN): candidate."
   ],
   "sections": [
    {

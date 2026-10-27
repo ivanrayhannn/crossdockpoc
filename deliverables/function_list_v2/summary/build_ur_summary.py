@@ -40,7 +40,7 @@ ws = wb.active
 ws.title = 'Cover'
 ws.column_dimensions['A'].width = 24
 ws.column_dimensions['B'].width = 90
-title(ws, 'Crossdock Optimization – XD01–XD15 User Requirement & Business Logic Summary', 'G-System / NSP')
+title(ws, 'Crossdock Optimization – XD01–XD15 User Requirement & Business Logic Summary', 'GTOPAS / NSP')
 info = [('Project', 'Crossdock Optimization (NSP)'), ('Document', 'Summary User Requirement & Business Logic per function'),
         ('Author', 'FID Rayhan'), ('Revision', '0.1 Initial Draft'), ('Date', '27-Oct-2026'),
         ('Source', 'UISS XD01–XD15 (0.1), function_list_v2 md, simulasi_asn_rev.xlsx (16–22 Oct), BPF Level 2'),

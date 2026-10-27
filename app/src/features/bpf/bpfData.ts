@@ -3,7 +3,7 @@ import type { BpfData } from './types';
 
 export const BPF: BpfData = {
  "lanes": {
-  "GT": "G-System / DB Surrounding",
+  "GT": "GTOPAS / DB Surrounding",
   "NB": "NSP Batch (System)",
   "PR": "Procurement",
   "DS": "D/S Team",
@@ -14,7 +14,7 @@ export const BPF: BpfData = {
   {
    "id": "F1",
    "title": "Master Setup (weekly / monthly)",
-   "desc": "Destination master, candidate parts, monthly DAD volume calculation, mapping per destination and sync to G-System / AP POLE.",
+   "desc": "Destination master, candidate parts, monthly DAD volume calculation, mapping per destination and sync to GTOPAS / AP POLE.",
    "lanes": [
     "GT",
     "NB",
@@ -258,7 +258,7 @@ export const BPF: BpfData = {
      "band": "B4",
      "slot": 2,
      "fn": "XD06 · XD07",
-     "title": "Send crossdock master (CROSSDOCK_FLAG Y / N): G-System existing IF, AP POLE file by SFTP",
+     "title": "Send crossdock master (CROSSDOCK_FLAG Y / N): GTOPAS existing IF, AP POLE file by SFTP",
      "read": [
       "TB_M_PART_CANDIDATE",
       "TB_M_PART_CANDIDATE_DEST"
@@ -288,7 +288,7 @@ export const BPF: BpfData = {
       "Interface data from NSP"
      ],
      "write": [
-      "G-System master (not detailed)"
+      "GTOPAS master (not detailed)"
      ],
      "ab": [],
      "next": []
@@ -598,7 +598,7 @@ export const BPF: BpfData = {
   {
    "id": "F4",
    "title": "Hold & Cancel Crossdock Customer Order",
-   "desc": "Hold: the D/S team holds / releases a destination in XD10; held lines are not pre-mapped and a hold placed after the supplier ticked a unit stops [Create ASN]. Cancel: an order is cancelled in G-System only (with or without hold); XD08 writes UPD_STATUS 2 and releases all drafts; a cancel of qty already in a submitted ASN is moved to received lines of the same part by the D/S team in Change Order Number (XD11) (decided 23-Oct).",
+   "desc": "Hold: the D/S team holds / releases a destination in XD10; held lines are not pre-mapped and a hold placed after the supplier ticked a unit stops [Create ASN]. Cancel: an order is cancelled in GTOPAS only (with or without hold); XD08 writes UPD_STATUS 2 and releases all drafts; a cancel of qty already in a submitted ASN is moved to received lines of the same part by the D/S team in Change Order Number (XD11) (decided 23-Oct).",
    "lanes": [
     "GT",
     "NB",
@@ -613,7 +613,7 @@ export const BPF: BpfData = {
     },
     {
      "id": "B1",
-     "label": "Any time · G-System (cancel)",
+     "label": "Any time · GTOPAS (cancel)",
      "slots": 2
     },
     {
@@ -904,14 +904,14 @@ export const BPF: BpfData = {
    "detection": "Log FAILED (LOG11)",
    "system": "Roll back process 2.",
    "pic": "System admin / D/S Team",
-   "action": "Register the destination (via G-System → XD13), then run again."
+   "action": "Register the destination (via GTOPAS → XD13), then run again."
   },
   {
    "id": "AB06",
    "flow": "F1",
    "step": "M11",
    "fn": "XD06 / XD07",
-   "condition": "Interface file cannot be created, or G-System / AP POLE SFTP not available after retry",
+   "condition": "Interface file cannot be created, or GTOPAS / AP POLE SFTP not available after retry",
    "detection": "IF_STATUS 2, SYNC_STATUS Failed, Log",
    "system": "Keep the file in the outbound folder; parts stay Failed.",
    "pic": "D/S Team",
@@ -977,7 +977,7 @@ export const BPF: BpfData = {
    "flow": "F2 / F4",
    "step": "D9 / C4 / C6",
    "fn": "XD08 / XD10",
-   "condition": "A draft (Create ASN not submitted) is released by XD08, or a line of it changed in G-System",
+   "condition": "A draft (Create ASN not submitted) is released by XD08, or a line of it changed in GTOPAS",
    "detection": "MSG11 on [Submit ASN]; Log LOG2 (drafts released)",
    "system": "XD08 deletes every draft row (ASN_NO NULL), gives the mapped qty back, PO_MAPPED_FLAG N; the submit of the old draft is refused.",
    "pic": "Supplier",
@@ -1010,7 +1010,7 @@ export const BPF: BpfData = {
    "flow": "F4",
    "step": "C2 / C5 / C7",
    "fn": "XD08 / XD11",
-   "condition": "Qty already in a submitted ASN is cancelled in G-System (SOP not followed)",
+   "condition": "Qty already in a submitted ASN is cancelled in GTOPAS (SOP not followed)",
    "detection": "Log LOG5 (LOG6 when not a multiple of pcs/case); row in XD11",
    "system": "The ASN is not changed (no Cancel ASN); the cancelled qty stays in Change Order Number until it is moved (no time limit; Waiting for a candidate without candidate).",
    "pic": "D/S Team",
@@ -1032,11 +1032,11 @@ export const BPF: BpfData = {
    "flow": "F2",
    "step": "D14 / D3",
    "fn": "XD08",
-   "condition": "A line in more than one ASN is received partly; H0253 does not carry the received ASN No (TBC G-System: receiving in ASN order?)",
+   "condition": "A line in more than one ASN is received partly; H0253 does not carry the received ASN No (TBC GTOPAS: receiving in ASN order?)",
    "detection": "New SERIAL_NO in H0253; LOG7",
    "system": "XD08 links the received part to the ASN sent first and the remaining part to the next ASN; qty always correct, the ASN-serial link can be swapped when the receiving order differs.",
-   "pic": "System admin / G-System",
-   "action": "Confirm the receiving order with G-System; if not in ASN order, G-System provides the received ASN No."
+   "pic": "System admin / GTOPAS",
+   "action": "Confirm the receiving order with GTOPAS; if not in ASN order, GTOPAS provides the received ASN No."
   },
   {
    "id": "AB19",

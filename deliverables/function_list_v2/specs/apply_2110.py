@@ -237,7 +237,7 @@ def xd09():
         {'type': 'bullets', 'marker': '-', 'level': 0, 'items': [
             "PO parts by PO_DT ascending; each PO qty goes to the open qty in H0253 order; a line may be split over several POs; qty without PO = PO_NO NULL.",
             "The pcs of the unit are cut into supplier cases of PCS_CASE pcs in H0253 order (e.g. 6 pcs/case: case 1 = V01 6; case 2 = V01 4 + T01 2). "
-            "A supplier case can hold several lines and destinations. G-System releases each destination in multiples of PCS_CASE, so every case is full.",
+            "A supplier case can hold several lines and destinations. GTOPAS releases each destination in multiples of PCS_CASE, so every case is full.",
             "A PO remainder without open line stays open for later customer orders."]},
         {'type': 'column_break'},
         {'type': 'heading', 'text': '4.3 Blocks (ASN Options) and Status'},

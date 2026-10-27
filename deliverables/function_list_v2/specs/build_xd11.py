@@ -1,7 +1,7 @@
 """XD11 Change Order Number Screen (D/S team, sub menu of ASN; decided 23-Oct; replaces the former XD11 Cancel Crossdock Customer Order Batch).
-A line of the H0253 replicate gets UPD_STATUS '2' from XD08 when G-System cancels it. When qty of the line is already in a submitted
+A line of the H0253 replicate gets UPD_STATUS '2' from XD08 when GTOPAS cancels it. When qty of the line is already in a submitted
 ASN (rows of TB_R_INSTRUCTION with ASN_NO), the D/S team moves the cancelled qty to other lines of the same part with UPD_STATUS '6'
-(received in G-System), PO_MAPPED_FLAG 'N' and no ASN, oldest Customer Order Date first. Several lines and another destination are
+(received in GTOPAS), PO_MAPPED_FLAG 'N' and no ASN, oldest Customer Order Date first. Several lines and another destination are
 allowed as long as their qty adds up to the cancelled qty. The qty is taken from the last case backwards; a row of TB_R_INSTRUCTION is
 split when needed (record only: the shipped case does not change). Every change is kept in TB_H_CROSSDOCK_ORDER_CHANGE."""
 from build_h import CTL
@@ -52,8 +52,8 @@ def build():
     spec.update({
         "general": {
             "objective": [
-                "To list the customer order lines cancelled in G-System (UPD_STATUS '2', set by XD08) whose qty is already in a submitted ASN.",
-                "To move the cancelled qty to order lines of the same part that G-System has received (UPD_STATUS '6', PO_MAPPED_FLAG 'N', not in an ASN), "
+                "To list the customer order lines cancelled in GTOPAS (UPD_STATUS '2', set by XD08) whose qty is already in a submitted ASN.",
+                "To move the cancelled qty to order lines of the same part that GTOPAS has received (UPD_STATUS '6', PO_MAPPED_FLAG 'N', not in an ASN), "
                 "so that the cases of the ASN keep a valid customer order (decided 23-Oct; replaces the former XD11 cancel batch and the CONFLICT handling outside the system).",
                 "D/S team only: sub menu of ASN (next to ASN Creation)."],
             "display_order": [{"section": "Cancelled qty", "fields": [{"field": "ASN No", "order": "Ascending"}, {"field": "Customer Order Date of the cancelled line", "order": "Ascending"}]},
@@ -96,7 +96,7 @@ def build():
             item("Part Number", CTL, "SHIPPING_PART_NO", "Char", "O", "Label", "Part number of the cancelled line.", ln="15"),
             item("Cancelled Customer Order", CTL, "CUSTOMER_ORDER_NO / SERIAL_NO", "Char", "O", "Label", "Line with UPD_STATUS '2' (serial of the status 2 row)."),
             item("Destination", CTL, "DESTINATION_CD", "Char", "O", "Label", "Destination of the cancelled line.", ln="7"),
-            item("Cancelled Qty", CTL, "ORDER_STATUS_QTY (UPD_STATUS 2)", "Number", "O", "Label", "Qty cancelled by G-System that is in the ASN.", fmt="ZZZ9", just="Right"),
+            item("Cancelled Qty", CTL, "ORDER_STATUS_QTY (UPD_STATUS 2)", "Number", "O", "Label", "Qty cancelled by GTOPAS that is in the ASN.", fmt="ZZZ9", just="Right"),
             item("Cases (from the last case)", INS, "CASE_NO / QTY", "Char", "O", "Label",
                  "Proposal of the qty to move: from the last case of the ASN backwards (e.g. C-00020-02: 4, C-00020-01: 2); a row is split when only part of it is needed."),
             item("Status", "Computed", "-", "Char", "O", "Label", "Candidate available (amber) / Waiting for a candidate (grey)."),
@@ -148,7 +148,7 @@ def build():
             {"type": "heading", "text": "5.3 Example (simulasi_asn.xlsx)"},
             {"type": "bullets", "marker": "a.", "level": 2, "items": [
                 "18-Oct: cases 1-4 of order date 17-Oct are sent in ASN0003 (case 3 = CO-14104, TH, 6 pcs, a middle row). 19-Oct: CO-14104 is cancelled (waiting for a "
-                "candidate). 21-Oct: CO-14111 (TH, 6 pcs, order date 19-Oct) is received in G-System (UPD_STATUS 6, PO_MAPPED_FLAG N, no ASN). "
+                "candidate). 21-Oct: CO-14111 (TH, 6 pcs, order date 19-Oct) is received in GTOPAS (UPD_STATUS 6, PO_MAPPED_FLAG N, no ASN). "
                 "The D/S team moves the 6 pcs of case C-0003-03 to CO-14111.",
                 "Partial cancel: CO-B 8 pcs in ASN00020 (case 1: 4, case 2: 4), 6 pcs cancelled: case 2 4 pcs + 2 of the 4 pcs of case 1 (row split) move to CO-E (4) and CO-F (2)."]}],
         "display_messages": [

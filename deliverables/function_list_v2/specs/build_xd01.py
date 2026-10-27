@@ -1,5 +1,5 @@
 """XD01 Cross Dock Part Master Screen = Part List (X1) + Mapping per Destination (X3) as two tabs of one screen.
-The Sync of X3 no longer starts one RPA for the global system: it starts XD06 (G-System) and XD07 (AP POLE)."""
+The Sync of X3 no longer starts one RPA for the global system: it starts XD06 (GTOPAS) and XD07 (AP POLE)."""
 import copy
 from build_simple import CALC_POST
 from v2lib import (derive, full_update, load, replace_all, set_header, shift_ids, shift_msg_refs, shift_section_refs,
@@ -9,25 +9,25 @@ import re
 IFR = 'TB_R_CROSSDOCK_IF_RESULT'
 IFR_COLS = [
     ["PART_NO", "VARCHAR(TBD)", "Y", "N", "Part number (TB_M_PART_CANDIDATE)"],
-    ["TARGET_SYSTEM", "VARCHAR(10)", "Y", "N", "'G-System' (XD06) / 'APPOLE' (XD07)"],
+    ["TARGET_SYSTEM", "VARCHAR(10)", "Y", "N", "'GTOPAS' (XD06) / 'APPOLE' (XD07)"],
     ["PERIOD", "CHAR(6)", "", "N", "Calculation period of the mapping sent (YYYYMM)"],
     ["IF_STATUS", "VARCHAR(1)", "", "N", "'3' Waiting / '1' Success / '2' Failed"],
     ["IF_DT", "DATETIME", "", "Y", "Date-time of the result of the target system"],
-    ["IF_FILE_NAME", "VARCHAR(100)", "", "Y", "Name of the interface file (AP POLE) or send ID (G-System)"],
+    ["IF_FILE_NAME", "VARCHAR(100)", "", "Y", "Name of the interface file (AP POLE) or send ID (GTOPAS)"],
     ["IF_MESSAGE", "VARCHAR(500)", "", "Y", "Reason when Failed; blank when Success"],
     ["CREATED_BY", "VARCHAR(TBD)", "", "N", "User who created the record"],
     ["CREATED_DT", "DATETIME", "", "N", "Created date and time"],
     ["CHANGED_BY", "VARCHAR(TBD)", "", "N", "User who last changed the record"],
     ["CHANGED_DT", "DATETIME", "", "N", "Last changed date and time"]]
 IFR_TABLE = {"name": IFR, "kind": "transaction", "proposed": True,
-             "description": "Dummy table (proposed): send status of the cross dock master per part and target system (XD06 G-System, XD07 AP POLE). "
-                            "The real output is the interface data sent to the target (AP POLE: file by SFTP; G-System: existing interface). The overall Sync Status of the part stays in TB_M_PART_CANDIDATE.",
+             "description": "Dummy table (proposed): send status of the cross dock master per part and target system (XD06 GTOPAS, XD07 AP POLE). "
+                            "The real output is the interface data sent to the target (AP POLE: file by SFTP; GTOPAS: existing interface). The overall Sync Status of the part stays in TB_M_PART_CANDIDATE.",
              "columns": IFR_COLS}
 
 SYNC_ROWS_PL = [
     ["Sync Status", "No Sync (0)", "Not sent yet, or changed since the last synchronisation. Set on every Save."],
-    ["Sync Status", "Waiting (3)", "[Sync] clicked in the Mapping per Destination tab; waiting for XD06 (G-System) and / or XD07 (AP POLE)."],
-    ["Sync Status", "Success (1)", "Both XD06 (G-System) and XD07 (AP POLE) sent Pcs/Case, Max Case/Day and the destination mapping of the ongoing period."],
+    ["Sync Status", "Waiting (3)", "[Sync] clicked in the Mapping per Destination tab; waiting for XD06 (GTOPAS) and / or XD07 (AP POLE)."],
+    ["Sync Status", "Success (1)", "Both XD06 (GTOPAS) and XD07 (AP POLE) sent Pcs/Case, Max Case/Day and the destination mapping of the ongoing period."],
     ["Sync Status", "Failed (2)", "XD06 or XD07 could not send the part (target and reason in SYNC_MESSAGE); sent again by the next [Sync]."]]
 
 
@@ -43,22 +43,22 @@ def patch_part_list(s):
 
 
 def patch_mapping(s):
-    s['general']['objective'][2] = ("To start the interfaces of the cross dock master to G-System (XD06) and AP POLE (XD07) for changed parts, "
+    s['general']['objective'][2] = ("To start the interfaces of the cross dock master to GTOPAS (XD06) and AP POLE (XD07) for changed parts, "
                                     "and show the Sync Status of each part.")
     for b in s['general']['buttons']:
         if b['name'] == 'Sync':
-            b['function'] = ("Start XD06 (G-System) and XD07 (AP POLE) for every Active part of the ongoing period with Sync Status No Sync or Failed, "
+            b['function'] = ("Start XD06 (GTOPAS) and XD07 (AP POLE) for every Active part of the ongoing period with Sync Status No Sync or Failed, "
                              "whatever the filter shows; the parts become Waiting. The label shows the number of parts, e.g. Sync (9).")
     for n in s['screen_flow'][0]['flow']['nodes']:
         if n['id'] == 'tgt':
-            n['label'] = 'XD06 -> G-System / XD07 -> AP POLE'
+            n['label'] = 'XD06 -> GTOPAS / XD07 -> AP POLE'
     s['screen_layout'][12]['caption'] = '13. After Sync - the 9 parts are Waiting for XD06 / XD07 (viewed with Sync Status = All)'
     op = s['operation']
     op[18]['items'][1] = ("Set SYNC_STATUS = 3 (Waiting) for these parts in TB_M_PART_CANDIDATE, set one row per part and target system "
-                          "(G-System, AP POLE) to IF_STATUS = 3 (Waiting) in TB_R_CROSSDOCK_IF_RESULT, and start XD06 and XD07. Display message no. 10.")
+                          "(GTOPAS, AP POLE) to IF_STATUS = 3 (Waiting) in TB_R_CROSSDOCK_IF_RESULT, and start XD06 and XD07. Display message no. 10.")
     op[19]['text'] = "Interface functions (one per target system; refer UISS-Batch XD06 and XD07)."
     op[20]['items'] = [
-        "XD06 IF Cross Dock Master to G-System and XD07 IF Cross Dock Master to AP POLE each send, per Waiting part, Pcs/Case and Max Case/Day "
+        "XD06 IF Cross Dock Master to GTOPAS and XD07 IF Cross Dock Master to AP POLE each send, per Waiting part, Pcs/Case and Max Case/Day "
         "(TB_M_PART_CANDIDATE) and all destinations with Case/Day of the ongoing period (TB_M_PART_CANDIDATE_DEST) as one complete set.",
         "Each function creates an interface file and sends it by SFTP to its target; the send status is written in the dummy table TB_R_CROSSDOCK_IF_RESULT (IF_STATUS 1 sent / 2 Failed, IF_DT, IF_FILE_NAME, IF_MESSAGE).",
         "Overall SYNC_STATUS of the part: stays 3 (Waiting) while one target is still Waiting; 1 (Success) when both targets are Success; "
@@ -66,11 +66,11 @@ def patch_mapping(s):
         "Every result is recorded in TB_H_PART_CANDIDATE (event SYNC, source IF, REMARK = target and message)."]
     op[21]['text'] = ("A Failed part shows SYNC_MESSAGE (target and reason) as tooltip on its chip (message no. 11) and is sent again to both "
                       "targets by the next [Sync] (replace is repeatable).")
-    op[22]['text'] = "Interface method: file by SFTP to G-System (XD06) and AP POLE (XD07); fields and topology refer UISS-Batch XD06 / XD07 (topology TBC)."
+    op[22]['text'] = "Interface method: file by SFTP to GTOPAS (XD06) and AP POLE (XD07); fields and topology refer UISS-Batch XD06 / XD07 (topology TBC)."
     op[30]['rows'][5:8] = [
-        ["Sync Status", "Waiting (3)", "[Sync] clicked; waiting for XD06 (G-System) and / or XD07 (AP POLE)."],
-        ["Sync Status", "Success (1)", "The part was sent to G-System and AP POLE."],
-        ["Sync Status", "Failed (2)", "G-System or AP POLE could not receive the part; target and reason in SYNC_MESSAGE; retried by the next [Sync]."]]
+        ["Sync Status", "Waiting (3)", "[Sync] clicked; waiting for XD06 (GTOPAS) and / or XD07 (AP POLE)."],
+        ["Sync Status", "Success (1)", "The part was sent to GTOPAS and AP POLE."],
+        ["Sync Status", "Failed (2)", "GTOPAS or AP POLE could not receive the part; target and reason in SYNC_MESSAGE; retried by the next [Sync]."]]
     op[31]['text'] = ("Sync Status is kept per part in TB_M_PART_CANDIDATE because a part is sent as one set (Pcs/Case, Max Case/Day and all destinations); "
                       "the result per target system is in TB_R_CROSSDOCK_IF_RESULT. Every mapping change and every Sync result is recorded in "
                       "TB_H_PART_CANDIDATE (with the period).")
@@ -79,17 +79,17 @@ def patch_mapping(s):
     blocks[4:7] = [blocks[4], {
         "source": {"table": "TB_M_PART_CANDIDATE", "keys": [{"field": "SYNC_STATUS", "value": "'3' (set by this [Sync])"}]},
         "destination": {"table": IFR, "operation": "Insert / Update", "description": "[Sync]: one row per part and target system",
-                        "keys": [{"field": "PART_NO + TARGET_SYSTEM", "value": "Each part to synchronise x 'G-System' / 'APPOLE'"}]},
-        "mappings": [{"source_field": "PART_NO", "dest_field": "PART_NO"}, {"dest_field": "TARGET_SYSTEM", "description": "'G-System' and 'APPOLE'"},
+                        "keys": [{"field": "PART_NO + TARGET_SYSTEM", "value": "Each part to synchronise x 'GTOPAS' / 'APPOLE'"}]},
+        "mappings": [{"source_field": "PART_NO", "dest_field": "PART_NO"}, {"dest_field": "TARGET_SYSTEM", "description": "'GTOPAS' and 'APPOLE'"},
                      {"dest_field": "PERIOD", "description": "Ongoing calculation period"}, {"dest_field": "IF_STATUS", "description": "'3' (Waiting)"},
                      {"dest_field": "IF_DT", "description": "NULL"}, {"dest_field": "IF_FILE_NAME", "description": "NULL"}, {"dest_field": "IF_MESSAGE", "description": "NULL"},
                      {"dest_field": "CREATED_BY", "description": "Login user ID (insert only)"}, {"dest_field": "CREATED_DT", "description": "Server system date-time (insert only)"},
                      {"dest_field": "CHANGED_BY", "description": "Login user ID"}, {"dest_field": "CHANGED_DT", "description": "Server system date-time"}]}]
     dm = s['display_messages']
     dm[15]['cause'] = 'Parts handed to XD06 / XD07'
-    dm[15]['message'] = 'Sync requested for {n} part(s). They stay Waiting until G-System and AP POLE have received them.'
-    dm[16]['cause'] = 'G-System or AP POLE could not receive the part'
-    s['logging_messages'][1] = {"event": "XD06 / XD07", "cause": "G-System or AP POLE rejects a part", "type": "Error", "msg_id": "LOG2",
+    dm[15]['message'] = 'Sync requested for {n} part(s). They stay Waiting until GTOPAS and AP POLE have received them.'
+    dm[16]['cause'] = 'GTOPAS or AP POLE could not receive the part'
+    s['logging_messages'][1] = {"event": "XD06 / XD07", "cause": "GTOPAS or AP POLE rejects a part", "type": "Error", "msg_id": "LOG2",
                                 "message": "Logging is done by XD06 / XD07 (refer UISS-Batch XD06 / XD07); the chip shows the result.",
                                 "exception": "N", "action": "Status Failed; Display Message no. 11 on the chip"}
     return s

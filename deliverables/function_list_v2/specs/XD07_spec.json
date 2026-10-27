@@ -22,7 +22,7 @@
    "To send the cross dock master of the parts waiting for synchronisation to AP POLE: Active parts with Pcs/Case, Max Case/Day, Effective Start Date and all destinations with Case/Day of the ongoing period, and parts that became Inactive (CROSSDOCK_FLAG 'N', so AP POLE changes their status to inactive). Source: Part List (TB_M_PART_CANDIDATE) and Part Mapping per Destination (TB_M_PART_CANDIDATE_DEST).",
    "Interface method: interface file by SFTP, Option #3 of 'NSP Cross Dock Interfacing Data': NSP Send IF -> TMMIN SFTP -> TMA SFTP -> receive IF (TMA) -> AP POLE master. SFTP details, file format and the AP POLE tables are not detailed in this document.",
    "A part is sent as one complete set; AP POLE replaces the data of the part, so a change such as Philippines up and Thailand down, or a removed destination, arrives as one consistent update.",
-   "The send status per part is kept in TB_R_CROSSDOCK_IF_RESULT (dummy table); together with XD06 (G-System) it gives the overall Sync Status shown on the Cross Dock Part Master screen (XD01)."
+   "The send status per part is kept in TB_R_CROSSDOCK_IF_RESULT (dummy table); together with XD06 (GTOPAS) it gives the overall Sync Status shown on the Cross Dock Part Master screen (XD01)."
   ],
   "operation_flow": {
    "flow": {
@@ -413,7 +413,7 @@
    ]
   },
   "steps": [
-   "[Sync] on XD01 sets the parts to Waiting (SYNC_STATUS = '3' in TB_M_PART_CANDIDATE, IF_STATUS = '3' for 'APPOLE' and 'G-System' in TB_R_CROSSDOCK_IF_RESULT) and starts XD07. Write LOG1.",
+   "[Sync] on XD01 sets the parts to Waiting (SYNC_STATUS = '3' in TB_M_PART_CANDIDATE, IF_STATUS = '3' for 'APPOLE' and 'GTOPAS' in TB_R_CROSSDOCK_IF_RESULT) and starts XD07. Write LOG1.",
    "Select the parts with TARGET_SYSTEM = 'APPOLE' and IF_STATUS = '3' in TB_R_CROSSDOCK_IF_RESULT whose PART_STATUS is still 'Active'. Keep CHANGED_DT of each part. No part: write LOG2 and exit.",
    {
     "text": "Create the interface file XD_CDMASTER_APPOLE_<YYYYMMDDHHMMSS>.csv in the outbound folder (see Interface File / Interface Data):",
@@ -442,7 +442,7 @@
     "text": "Update the overall Sync Status of each part in TB_M_PART_CANDIDATE and record the history:",
     "children": [
      "CHANGED_DT differs from step 2 (part changed while sending): SYNC_STATUS = '0' (No Sync).",
-     "Else, status of 'APPOLE' and of 'G-System' in TB_R_CROSSDOCK_IF_RESULT: one still '3' -> SYNC_STATUS stays '3'; both '1' -> '1' (Success); one '2' -> '2' (Failed, SYNC_MESSAGE = target + reason).",
+     "Else, status of 'APPOLE' and of 'GTOPAS' in TB_R_CROSSDOCK_IF_RESULT: one still '3' -> SYNC_STATUS stays '3'; both '1' -> '1' (Success); one '2' -> '2' (Failed, SYNC_MESSAGE = target + reason).",
      "SYNC_DT = now when SYNC_STATUS becomes 1 or 2.",
      "Insert TB_H_PART_CANDIDATE: event SYNC, source IF, FIELD_NAME SYNC_STATUS, REMARK = 'APPOLE: ' + result / message."
     ]
@@ -896,7 +896,7 @@
    "name": "TB_R_CROSSDOCK_IF_RESULT",
    "kind": "transaction",
    "proposed": true,
-   "description": "Dummy table (proposed): send status of the cross dock master per part and target system (XD06 G-System, XD07 AP POLE). The real output is the interface data sent to the target (AP POLE: file by SFTP; G-System: existing interface). The overall Sync Status of the part stays in TB_M_PART_CANDIDATE.",
+   "description": "Dummy table (proposed): send status of the cross dock master per part and target system (XD06 GTOPAS, XD07 AP POLE). The real output is the interface data sent to the target (AP POLE: file by SFTP; GTOPAS: existing interface). The overall Sync Status of the part stays in TB_M_PART_CANDIDATE.",
    "columns": [
     [
      "PART_NO",
@@ -910,7 +910,7 @@
      "VARCHAR(10)",
      "Y",
      "N",
-     "'G-System' (XD06) / 'APPOLE' (XD07)"
+     "'GTOPAS' (XD06) / 'APPOLE' (XD07)"
     ],
     [
      "PERIOD",
@@ -938,7 +938,7 @@
      "VARCHAR(100)",
      "",
      "Y",
-     "Name of the interface file (AP POLE) or send ID (G-System)"
+     "Name of the interface file (AP POLE) or send ID (GTOPAS)"
     ],
     [
      "IF_MESSAGE",

@@ -1,4 +1,4 @@
-"""XD06 IF Cross Dock Master to G-System and XD07 IF Cross Dock Master to AP POLE (new UISS-Batch).
+"""XD06 IF Cross Dock Master to GTOPAS and XD07 IF Cross Dock Master to AP POLE (new UISS-Batch).
 In the first version one RPA sent the cross dock master to the global system (X3 Sync). Now there is one
 interface function per target system, sending a file by SFTP (decided 18-Oct; topology to follow).
 Source data: Part List (TB_M_PART_CANDIDATE) and Part Mapping per Destination (TB_M_PART_CANDIDATE_DEST).
@@ -8,7 +8,7 @@ from v2lib import batch_header, full_update, replace_all, table_of, write
 
 T, D, H, LOG = 'TB_M_PART_CANDIDATE', 'TB_M_PART_CANDIDATE_DEST', 'TB_H_PART_CANDIDATE', 'Log'
 COMMON_IF = [('RPA user ID', 'IF batch user ID'), ('SCREEN / UPLOAD / RPA / BATCH', 'SCREEN / UPLOAD / IF / BATCH'), ('RPA', 'IF function'),
-             ('the global system', 'G-System and AP POLE')]
+             ('the global system', 'GTOPAS and AP POLE')]
 
 # Interface data: one record per part x destination of the ongoing period (field, source, format, mandatory, business rule)
 FIELDS = [
@@ -24,18 +24,18 @@ FIELDS = [
     ("SEND_DT", "Generated", "DATETIME", "Y", "Date-time the file is created"),
 ]
 TARGET = {
-    'G-System': {"side": "G-System side (owner TBC)", "tables": "cross dock master of G-System (tables TBC)",
-               "note": "Option #3 of 'NSP Cross Dock Interfacing Data' is drawn for AP POLE; the same SFTP pattern is assumed for G-System (TBC)."},
+    'GTOPAS': {"side": "GTOPAS side (owner TBC)", "tables": "cross dock master of GTOPAS (tables TBC)",
+               "note": "Option #3 of 'NSP Cross Dock Interfacing Data' is drawn for AP POLE; the same SFTP pattern is assumed for GTOPAS (TBC)."},
     'APPOLE': {"side": "TMA", "tables": "Crossdock Kanban Part Master and Crossdock Export Part Master (AP POLE)",
                "note": "Option #3 of 'NSP Cross Dock Interfacing Data' (decided 18-Oct)."},
 }
 METHOD = {
-    'G-System': "interface to G-System as existing (not SFTP); the method and the target tables are not detailed in this document.",
+    'GTOPAS': "interface to GTOPAS as existing (not SFTP); the method and the target tables are not detailed in this document.",
     'APPOLE': ("interface file by SFTP, Option #3 of 'NSP Cross Dock Interfacing Data': NSP Send IF -> TMMIN SFTP -> TMA SFTP -> receive IF (TMA) "
                "-> AP POLE master. SFTP details, file format and the AP POLE tables are not detailed in this document."),
 }
 PURPOSE = {
-    'G-System': "G-System (customer order side): which part and destination orders are handled by crossdock (order status 7) and how many cases per day per destination (assumption, TBC)",
+    'GTOPAS': "GTOPAS (customer order side): which part and destination orders are handled by crossdock (order status 7) and how many cases per day per destination (assumption, TBC)",
     'APPOLE': "AP POLE (supplier PO side): which parts are ordered from the supplier as crossdock POs (crossdock flag of the Pra Daily Order), with pieces per case and the daily volume (assumption, TBC)",
 }
 
@@ -49,7 +49,7 @@ def tables():
 
 def if_spec(fid, code, name, other_fid, other_name):
     t, d, h = tables()
-    other_code = 'APPOLE' if code == 'G-System' else 'G-System'
+    other_code = 'APPOLE' if code == 'GTOPAS' else 'GTOPAS'
     fname = f"XD_CDMASTER_{code}_<YYYYMMDDHHMMSS>.csv"
     tg = TARGET[code]
     out_file = f"Interface file to {name} (SFTP)"
@@ -218,11 +218,11 @@ def if_spec(fid, code, name, other_fid, other_name):
     return write(batch_header(fid) | decide(spec, code, name), fid)
 
 
-DETAIL_ROWS = ('TMMIN SFTP server', 'G-System side (owner TBC) SFTP server', 'TMA SFTP server', 'Local folders', 'Transfer retry')
+DETAIL_ROWS = ('TMMIN SFTP server', 'GTOPAS side (owner TBC) SFTP server', 'TMA SFTP server', 'Local folders', 'Transfer retry')
 
 
 def decide(spec, code, name):
-    """Decisions of 19-Oct: Inactive parts are sent (CROSSDOCK_FLAG 'N'); G-System does not use SFTP; SFTP details, file format
+    """Decisions of 19-Oct: Inactive parts are sent (CROSSDOCK_FLAG 'N'); GTOPAS does not use SFTP; SFTP details, file format
     and the destination tables of the target are not detailed in this document."""
     g = spec['general']
     g['extra_tables'] = [t for t in g['extra_tables'] if t['title'] != 'Interface File']
@@ -237,22 +237,22 @@ def decide(spec, code, name):
                          f"so {name} changes their status to inactive). Source: Part List ({T}) and Part Mapping per Destination ({D}).")
     g['objective'][2] = "Interface method: " + METHOD[code]
     g['objective'] = [o for o in g['objective'] if '(assumption, TBC)' not in o]
-    if code == 'G-System':
+    if code == 'GTOPAS':
         spec = replace_all(spec, [
-            ("Create interface file", "Create interface data"), ("SFTP put to TMMIN SFTP server, verify", "Send to G-System (existing method)"),
-            ("SFTP put to TMMIN SFTP server", "Send to G-System (existing method)"),
-            ("G-System side (owner TBC) SFTP -> receive IF -> G-System master", "G-System master"),
-            ("Interface file to G-System (SFTP)", "Interface data to G-System"),
+            ("Create interface file", "Create interface data"), ("SFTP put to TMMIN SFTP server, verify", "Send to GTOPAS (existing method)"),
+            ("SFTP put to TMMIN SFTP server", "Send to GTOPAS (existing method)"),
+            ("GTOPAS side (owner TBC) SFTP -> receive IF -> GTOPAS master", "GTOPAS master"),
+            ("Interface file to GTOPAS (SFTP)", "Interface data to GTOPAS"),
             ("Transfer OK?", "Sent OK?"), ("Transfer OK (file on the TMMIN SFTP server)", "Sent OK"),
             ("File or transfer error", "Create or send error"), ("Result of the file / transfer", "Result of the send"),
-            ("G-System SFTP not available / transfer fails after retry", "G-System not available / send fails after retry"),
-            ("SFTP transfer of <FILE_NAME> to G-System failed", "Send of <SEND_ID> to G-System failed"), ("SFTP transfer", "Send"),
-            ("G-System: cross dock master of G-System (tables TBC)", "G-System: cross dock master of the part"),
-            ("Inserted / updated by the receive IF of the G-System side (owner TBC) (not in NSP scope)", "Updated in G-System (not in NSP scope)"),
+            ("GTOPAS SFTP not available / transfer fails after retry", "GTOPAS not available / send fails after retry"),
+            ("SFTP transfer of <FILE_NAME> to GTOPAS failed", "Send of <SEND_ID> to GTOPAS failed"), ("SFTP transfer", "Send"),
+            ("GTOPAS: cross dock master of GTOPAS (tables TBC)", "GTOPAS: cross dock master of the part"),
+            ("Inserted / updated by the receive IF of the GTOPAS side (owner TBC) (not in NSP scope)", "Updated in GTOPAS (not in NSP scope)"),
             (": one record per part x destination (see Interface Data), put on the TMMIN SFTP server", ": one record per part x destination (see Interface Data)")])
         for st in spec['func_flow']['steps']:
             if isinstance(st, dict) and st['text'].startswith('Put the file by SFTP'):
-                st['text'] = "Send the interface data to G-System by the existing interface method (not SFTP; not detailed in this document)."
+                st['text'] = "Send the interface data to GTOPAS by the existing interface method (not SFTP; not detailed in this document)."
                 st['children'] = ["Send error: retry; still failing: LOG4.", "Sent OK: continue."]
             if isinstance(st, dict) and st['text'].startswith('Create the interface file'):
                 st['text'] = st['text'].replace('Create the interface file', 'Create the interface data').replace(' in the outbound folder', '')
@@ -263,7 +263,7 @@ def decide(spec, code, name):
         ("The field names on the side of the target are TBC (target layout).", "The field names on the side of the target follow the target layout."),
         ("IF batch user ID (TBC)", "IF batch user ID"),
         ("; trailer with the record count (TBC)", ""),
-        ("TBC: if G-System returns a result / acknowledge file, the status per part is taken from it instead of the transfer result.", "The status is the result of the send."),
+        ("TBC: if GTOPAS returns a result / acknowledge file, the status per part is taken from it instead of the transfer result.", "The status is the result of the send."),
         ("TBC: if AP POLE returns a result / acknowledge file, the status per part is taken from it instead of the transfer result.", "The status is the result of the SFTP transfer.")])
     fd = spec['func_desc']
     for i, d in enumerate(fd):
@@ -278,7 +278,7 @@ def decide(spec, code, name):
 
 
 def build():
-    return [if_spec('XD06', 'G-System', 'G-System', 'XD07', 'AP POLE'), if_spec('XD07', 'APPOLE', 'AP POLE', 'XD06', 'G-System')]
+    return [if_spec('XD06', 'GTOPAS', 'GTOPAS', 'XD07', 'AP POLE'), if_spec('XD07', 'APPOLE', 'AP POLE', 'XD06', 'GTOPAS')]
 
 
 if __name__ == '__main__':
