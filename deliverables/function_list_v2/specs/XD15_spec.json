@@ -819,5 +819,159 @@
     ]
    ]
   }
- ]
+ ],
+ "sample_sheet": {
+  "title": "Sample Input",
+  "heading": "Sample ASN Crossdock Inquiry - simulasi_asn_rev.xlsx (supplier 50221-1)",
+  "intro": [
+   "ASNs of the simulation after 22-Oct (the prototype shows the ASNs created before the business date). Case numbers as in the prototype; the real format follows the existing numbering."
+  ],
+  "sections": [
+   {
+    "title": "A. List Mode",
+    "columns": [
+     "ASN No",
+     "Delivery Date",
+     "Rit · Route",
+     "Part / Customer Order Date",
+     "Cases",
+     "Qty",
+     "Status"
+    ],
+    "widths": [
+     10,
+     12,
+     12,
+     26,
+     7,
+     6,
+     9
+    ],
+    "rows": [
+     [
+      "ASN0001",
+      "16-Oct-2026",
+      "Rit 1 · SD01",
+      "PART-X / 15-Oct",
+      1,
+      6,
+      "Created"
+     ],
+     [
+      "ASN0002",
+      "17-Oct-2026",
+      "Rit 1 · SD01",
+      "PART-X / 16-Oct",
+      1,
+      6,
+      "Created"
+     ],
+     [
+      "ASN0003",
+      "18-Oct-2026",
+      "Rit 1 · SD01",
+      "PART-X / 17-Oct",
+      4,
+      24,
+      "Created"
+     ],
+     [
+      "ASN0004",
+      "19-Oct-2026",
+      "Rit 1 · SD01",
+      "PART-X / 17-Oct",
+      1,
+      6,
+      "Created"
+     ],
+     [
+      "ASN0005",
+      "19-Oct-2026",
+      "Rit 1 · SD01",
+      "PART-X / 18-Oct",
+      3,
+      18,
+      "Created"
+     ],
+     [
+      "ASN0006",
+      "20-Oct-2026",
+      "Rit 1 · SD01",
+      "PART-X / 19-Oct",
+      1,
+      6,
+      "Created"
+     ],
+     [
+      "ASN0007",
+      "20-Oct-2026",
+      "Rit 2 · SD02",
+      "PART-X / 19-Oct",
+      1,
+      6,
+      "Created"
+     ]
+    ]
+   },
+   {
+    "title": "B. Detail Mode of ASN0003 (after Change Order Number of 21-Oct)",
+    "columns": [
+     "Case No",
+     "Part",
+     "Customer Order Date",
+     "Destination",
+     "Customer Order No",
+     "Qty",
+     "PO No"
+    ],
+    "widths": [
+     11,
+     8,
+     14,
+     12,
+     26,
+     6,
+     10
+    ],
+    "rows": [
+     [
+      "C-0003-01",
+      "PART-X",
+      "17-Oct-2026",
+      "9715310",
+      "CO-14105",
+      6,
+      "T0409012"
+     ],
+     [
+      "C-0003-02",
+      "PART-X",
+      "17-Oct-2026",
+      "9715310",
+      "CO-14106 3 + CO-14107 3",
+      6,
+      "T0409013"
+     ],
+     [
+      "C-0003-03",
+      "PART-X",
+      "17-Oct-2026",
+      "9722D10",
+      "CO-14111 (was CO-14104)",
+      6,
+      "T0409013"
+     ],
+     [
+      "C-0003-04",
+      "PART-X",
+      "17-Oct-2026",
+      "9811110",
+      "CO-14109",
+      6,
+      "T0409013"
+     ]
+    ]
+   }
+  ]
+ }
 }

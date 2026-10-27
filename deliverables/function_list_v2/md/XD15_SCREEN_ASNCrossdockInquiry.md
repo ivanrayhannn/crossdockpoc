@@ -6,6 +6,10 @@ Sumber: UISS `XD15_UISS_Screen_ASNCrossdockInquiry.xlsx` (0.1 Initial Draft, 18-
 - Tidak ada Cancel ASN; cancel order dari G-System dibawa **XD08** (UPD_STATUS 2); qty yang sudah di ASN dipindah lewat **XD11 Change Order Number**.
 - **XD14 DAD Volume Calculation Result Screen (Buffer)** belum dibuat: perlu penjelasan isi layar (mis. menampilkan TB_R_PART_DAD_RESULT per periode).
 
+
+## Simulasi (27-Oct, `simulasi_asn_rev.xlsx`)
+UISS sheet **Sample Input** baru: daftar ASN0001–ASN0007 (delivery date, rit, unit, case, qty) dan detail ASN0003 setelah Change Order Number (C-0003-03 = CO-14111, sebelumnya CO-14104).
+
 ## Keputusan 19-Oct
 - Case label: 1 label = 1 case 1 destinasi, bisa berisi beberapa Customer Order No; format sesuai existing.
 - XD14 (DAD Volume Calculation Result Screen) tidak dipakai.

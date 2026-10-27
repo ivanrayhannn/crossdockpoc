@@ -697,7 +697,7 @@
     "The source table is insert / update: a crossdock line starts with status 7 and can change to 6 (received / allocated) or 2 (cancel). A partial cancel or receipt splits the line into a new SERIAL_NO (scenario files skenario_h0253.xlsx, simulasi_asn.xlsx).",
     "One line can be in more than one ASN. H0253 does not carry the received ASN No, so NSP assumes the ASNs are received in the order they were sent (TBC with G-System; otherwise G-System provides the received ASN No).",
     "UPD_STATUS: NULL = status 7 (no change); '6' = received / allocated in G-System; '2' = cancelled in G-System. ORDER_STATUS of NSP keeps the first value.",
-    "Example (simulasi_asn.xlsx): 16-Oct CO-14101 / CO-14102 inserted (UPD_STATUS NULL); 17-Oct CO-14101 → UPD_STATUS 6 (received), CO-14102 → UPD_STATUS 2 (cancelled while on hold, no ASN: nothing else to do); 19-Oct CO-14104 (middle row of order date 17-Oct) → UPD_STATUS 2 although in case 3 of ASN0003 → listed in XD11; 21-Oct CO-14111 → UPD_STATUS 6 without ASN (candidate for the replacement).",
+    "Example (simulasi_asn_rev.xlsx, sheet Sample Input): 17-Oct CO-14101 → UPD_STATUS 6, CO-14102 (on hold, no ASN) → UPD_STATUS 2: nothing else; 19-Oct CO-14104 → UPD_STATUS 2 although in case 3 of ASN0003 → LOG5, listed in XD11; 21-Oct CO-14111 → UPD_STATUS 6 without ASN (candidate) and CO-14115 (12 pcs in ASN0006 + ASN0007) split by G-System into serial 0000001 6 pcs (6) and 0000002 6 pcs (7): the ASN0007 row moves to serial 0000002 (LOG7).",
     "Drafts: every run deletes all TB_R_INSTRUCTION rows with ASN_NO NULL (Create ASN not submitted), gives the mapped qty back and sets PO_MAPPED_FLAG 'N'; rows with ASN_NO are never deleted. [Submit ASN] of XD10 re-checks the draft too.",
     "Only changed rows are read (INTF_UPDATE_DT > watermark); upsert and draft release run in one transaction; the watermark is saved only when the run succeeds.",
     "Read by XD09 (lines with UPD_STATUS NULL, not mapped, not on hold), XD10 and XD11. Table structure: see Appendix."
@@ -1440,5 +1440,114 @@
     ]
    ]
   }
- ]
+ ],
+ "sample_sheet": {
+  "title": "Sample Input",
+  "heading": "Sample XD08 runs - simulasi_asn_rev.xlsx (PART-X, 16-22 Oct)",
+  "intro": [
+   "Rows of TB_R_H0253_ORDER_CONTROL_PRE (DB Surrounding) changed since the last run and the result in the NSP replicate. ORDER_STATUS of NSP keeps the first value (7); the change is written to UPD_STATUS. No draft is open at 03:30 in this data (drafts would be released by every run)."
+  ],
+  "sections": [
+   {
+    "title": "A. Runs (03:30) and result",
+    "columns": [
+     "Run",
+     "Source change (G-System)",
+     "NSP replicate",
+     "TB_R_INSTRUCTION / Log"
+    ],
+    "widths": [
+     8,
+     40,
+     46,
+     40
+    ],
+    "rows": [
+     [
+      "16-Oct",
+      "Order date 15-Oct: CO-14101 VN 6, CO-14102 TH 6 (status 7)",
+      "Insert; UPD_STATUS NULL, HOLD_FLAG N, PO_MAPPED_FLAG N",
+      "-"
+     ],
+     [
+      "17-Oct",
+      "CO-14101 → 6, CO-14102 → 2; order date 16-Oct: CO-14103 TH 6",
+      "CO-14101 UPD_STATUS 6; CO-14102 UPD_STATUS 2 (PO_MAPPED_FLAG stays N); CO-14103 insert",
+      "CO-14102 has no ASN: nothing else"
+     ],
+     [
+      "18-Oct",
+      "CO-14103 → 6; order date 17-Oct: CO-14104 TH 6, CO-14105 VN 6, CO-14106 VN 3, CO-14107 VN 3, CO-14109 PH 6, CO-14110 982220 6",
+      "CO-14103 UPD_STATUS 6; 6 lines insert",
+      "-"
+     ],
+     [
+      "19-Oct",
+      "CO-14105 / 06 / 07 / 09 → 6 (ASN0003 received), CO-14104 → 2; order date 18-Oct: CO-14112 VN, CO-14113 PH, CO-14114 982220",
+      "UPD_STATUS 6 / 2; 3 lines insert",
+      "CO-14104 is in ASN0003 case 3: LOG5, listed in XD11 (waiting for a candidate)"
+     ],
+     [
+      "20-Oct",
+      "CO-14110, CO-14112 / 13 / 14 → 6; order date 19-Oct: CO-14111 TH 6, CO-14115 VN 12",
+      "UPD_STATUS 6; 2 lines insert",
+      "-"
+     ],
+     [
+      "21-Oct",
+      "CO-14111 → 6 (pcs of ASN0003 case 3); CO-14115 serial 0000001 → 6 qty 6 + new serial 0000002 qty 6 status 7",
+      "CO-14111 UPD_STATUS 6 (candidate in XD11); CO-14115/0000001 qty 12 → 6, UPD_STATUS 6; CO-14115/0000002 insert, PO_MAPPED_FLAG Y",
+      "Serial split: the ASN0007 row moves to serial 0000002 (ASN0006 stays on 0000001); LOG7"
+     ],
+     [
+      "22-Oct",
+      "CO-14115/0000002 → 6 (ASN0007 received)",
+      "UPD_STATUS 6",
+      "-"
+     ]
+    ]
+   },
+   {
+    "title": "B. Serial split of CO-14115 (one line in 2 ASNs) - TB_R_INSTRUCTION",
+    "columns": [
+     "INSTRUCTION_ID",
+     "Customer Order",
+     "Serial No before",
+     "Serial No after",
+     "Qty",
+     "PO",
+     "ASN_NO"
+    ],
+    "widths": [
+     12,
+     14,
+     14,
+     14,
+     6,
+     10,
+     10
+    ],
+    "rows": [
+     [
+      12,
+      "CO-14115",
+      "0000001",
+      "0000001",
+      6,
+      "T0409015",
+      "ASN0006"
+     ],
+     [
+      13,
+      "CO-14115",
+      "0000001",
+      "0000002",
+      6,
+      "T0409016",
+      "ASN0007"
+     ]
+    ]
+   }
+  ]
+ }
 }

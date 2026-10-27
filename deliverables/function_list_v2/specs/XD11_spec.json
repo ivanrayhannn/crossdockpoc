@@ -190,7 +190,7 @@
  ],
  "screen_layout": [
   {
-   "caption": "1. List Mode with the detail of ASN00020 (partial cancel of CO-B: 6 of 8 pcs; candidates CO-E 4 + CO-F 2 pre-ticked, oldest first)",
+   "caption": "1. List Mode: ASN0003 (CO-14104 cancelled after the ASN, candidate CO-14111), ASN00020 (partial cancel of CO-B, ERD SIM-6), ASN00031 (waiting for a candidate)",
    "image": "deliverables/uiss_screens/asn_crossdock/x_01_change_order_list.png"
   },
   {
@@ -632,7 +632,7 @@
   },
   {
    "type": "heading",
-   "text": "5.3 Example (simulasi_asn.xlsx)"
+   "text": "5.3 Example (simulasi_asn_rev.xlsx; sheet Sample Input)"
   },
   {
    "type": "bullets",
@@ -640,7 +640,7 @@
    "level": 2,
    "items": [
     "18-Oct: cases 1-4 of order date 17-Oct are sent in ASN0003 (case 3 = CO-14104, TH, 6 pcs, a middle row). 19-Oct: CO-14104 is cancelled (waiting for a candidate). 21-Oct: CO-14111 (TH, 6 pcs, order date 19-Oct) is received in G-System (UPD_STATUS 6, PO_MAPPED_FLAG N, no ASN). The D/S team moves the 6 pcs of case C-0003-03 to CO-14111.",
-    "Partial cancel: CO-B 8 pcs in ASN00020 (case 1: 4, case 2: 4), 6 pcs cancelled: case 2 4 pcs + 2 of the 4 pcs of case 1 (row split) move to CO-E (4) and CO-F (2)."
+    "Other example (ERD SIM-6, partial cancel): CO-B 8 pcs in ASN00020 (case 1: 4, case 2: 4), 6 pcs cancelled: case 2 4 pcs + 2 of the 4 pcs of case 1 (row split) move to CO-E (4) and CO-F (2)."
    ]
   }
  ],
@@ -1130,5 +1130,156 @@
     ]
    ]
   }
- ]
+ ],
+ "sample_sheet": {
+  "title": "Sample Input",
+  "heading": "Sample Change Order Number - simulasi_asn_rev.xlsx (ASN0003, 21-Oct)",
+  "intro": [
+   "18-Oct: cases 1-4 of PART-X 17-Oct in ASN0003. 19-Oct: CO-14104 (TH 6, case 3) is cancelled in G-System (UPD_STATUS 2, LOG5): listed, waiting for a candidate. 21-Oct: CO-14111 (TH 6, order date 19-Oct) is received in G-System with the pcs of case 3 (UPD_STATUS 6, PO_MAPPED_FLAG N, no ASN): candidate."
+  ],
+  "sections": [
+   {
+    "title": "A. List and detail",
+    "columns": [
+     "ASN No",
+     "Part",
+     "Cancelled order",
+     "Cancelled qty",
+     "Cases (from the last case)",
+     "Candidate",
+     "Status"
+    ],
+    "widths": [
+     10,
+     8,
+     16,
+     10,
+     18,
+     26,
+     18
+    ],
+    "rows": [
+     [
+      "ASN0003",
+      "PART-X",
+      "CO-14104 / 0000001",
+      6,
+      "C-0003-03: 6",
+      "CO-14111 TH 6 (19-Oct)",
+      "Candidate available"
+     ]
+    ]
+   },
+   {
+    "title": "B. TB_R_INSTRUCTION (same row updated; case, PO and ASN not changed)",
+    "columns": [
+     "INSTRUCTION_ID",
+     "CASE_NO",
+     "Customer Order before",
+     "Customer Order after",
+     "Destination",
+     "Qty",
+     "PO",
+     "ASN_NO"
+    ],
+    "widths": [
+     12,
+     11,
+     16,
+     16,
+     10,
+     6,
+     10,
+     9
+    ],
+    "rows": [
+     [
+      6,
+      "C-0003-03",
+      "CO-14104",
+      "CO-14111",
+      "9722D10",
+      6,
+      "T0409013",
+      "ASN0003"
+     ]
+    ]
+   },
+   {
+    "title": "C. Other tables",
+    "columns": [
+     "Table",
+     "Key",
+     "Column",
+     "Before",
+     "After"
+    ],
+    "widths": [
+     26,
+     26,
+     16,
+     10,
+     10
+    ],
+    "rows": [
+     [
+      "TB_R_H0253_ORDER_CONTROL_PRE",
+      "CO-14111 / 0000001",
+      "PO_MAPPED_FLAG",
+      "N",
+      "Y"
+     ],
+     [
+      "TB_R_H0253_ORDER_CONTROL_PRE",
+      "CO-14104 / 0000001",
+      "PO_MAPPED_FLAG",
+      "Y",
+      "Y (not changed)"
+     ],
+     [
+      "TB_H_CROSSDOCK_ORDER_CHANGE",
+      "HIST_ID 1",
+      "(new row)",
+      "-",
+      "ASN0003, C-0003-03, CO-14104 → CO-14111, 6, instruction 6 → 6"
+     ]
+    ]
+   },
+   {
+    "title": "D. Scenarios",
+    "columns": [
+     "No",
+     "Scenario",
+     "Expected result"
+    ],
+    "widths": [
+     6,
+     40,
+     70
+    ],
+    "rows": [
+     [
+      "N1",
+      "19-Oct: CO-14104 cancelled, no candidate yet",
+      "Row listed with status Waiting for a candidate (no time limit)."
+     ],
+     [
+      "N2",
+      "21-Oct: tick CO-14111 and click [Change Order Number] → Yes",
+      "Sections B and C; the row leaves the list."
+     ],
+     [
+      "N3",
+      "Partial cancel (ERD SIM-6): CO-B 6 of 8 pcs in ASN00020",
+      "Moved from the last case backwards: case 2 4 pcs → CO-E, 2 of the 4 pcs of case 1 → CO-F (row split)."
+     ],
+     [
+      "E1",
+      "The candidate was taken in another session",
+      "MSG4; nothing is saved; candidates refreshed."
+     ]
+    ]
+   }
+  ]
+ }
 }

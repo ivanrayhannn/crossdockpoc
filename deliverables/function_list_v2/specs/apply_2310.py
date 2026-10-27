@@ -146,10 +146,47 @@ def xd09_sim():
     save('XD09', s)
 
 
+def asn_sim_docs():
+    """XD08 / XD10 / XD11 / XD15: examples and sample sheets from the results of simulasi_asn_rev.xlsx (decided 27-Oct)."""
+    import asn_sim_docs as d
+    s = load('XD08')
+    for b in s['func_desc']:
+        for i, x in enumerate(b.get('items', [])):
+            if x.startswith('Example (simulasi_asn'):
+                b['items'][i] = d.XD08_EXAMPLE
+    s['sample_sheet'] = d.XD08_SAMPLE
+    save('XD08', s)
+    s = load('XD10')
+    op = s['operation']
+    op[0:0] = d.XD10_RULES
+    t = json.dumps(op, ensure_ascii=False)
+    for a, b in d.XD10_OP_FIX.items():
+        t = t.replace(json.dumps(a, ensure_ascii=False)[1:-1], json.dumps(b, ensure_ascii=False)[1:-1])
+    s['operation'] = op = json.loads(t)
+    for it in s['items']:
+        for a, b in d.XD10_ITEM_FIX.items():
+            it['description'] = it.get('description', '').replace(a, b)
+    s['sample_sheet']['sections'] = [x for x in s['sample_sheet']['sections'] if x['title'][:2] not in ('H.', 'I.')] + d.XD10_CASE_SECTIONS
+    save('XD10', s)
+    s = load('XD11')
+    s['screen_layout'][0]['caption'] = d.XD11_CAPTION
+    for b in s['operation']:
+        if b.get('type') == 'heading' and b['text'].startswith('5.3'):
+            b['text'] = '5.3 Example (simulasi_asn_rev.xlsx; sheet Sample Input)'
+        for i, x in enumerate(b.get('items', [])):
+            if x.startswith('Partial cancel: CO-B'):
+                b['items'][i] = 'Other example (ERD SIM-6, partial cancel): ' + x[len('Partial cancel: '):]
+    s['sample_sheet'] = d.XD11_SAMPLE
+    save('XD11', s)
+    s = load('XD15')
+    s['sample_sheet'] = d.XD15_SAMPLE
+    save('XD15', s)
+
+
 def main():
     captions()
     xd09_sim()
-    business_logic('XD10', 'operation', '5.0')
+    asn_sim_docs()
     tabs = xd10()
     xd09()
     batch_tables('XD08', tabs)
