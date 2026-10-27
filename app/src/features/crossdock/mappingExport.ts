@@ -43,11 +43,12 @@ const LIST_COLUMNS: (Column<MappingLine> & { width: number })[] = [
   { header: { value: 'Dest Percentage', ...HEADER, align: 'right' }, cell: ({ dest, allocated }) => cell(dest && share(num(dest.al), allocated), PERCENT_FORMAT), width: 16 },
 ];
 
-/** Sheet "Upload": base file for the Mapping upload, pre-filled with the current mapping. */
+/** Sheet "Upload": base file for the Mapping upload, pre-filled with the current mapping (upload E) and A for a part without mapping. */
 const UPLOAD_COLUMNS: (Column<UploadLine> & { width: number })[] = [
   { header: { value: 'part_no', ...HEADER }, cell: ({ part }) => ({ value: part.p }), width: 18 },
   { header: { value: 'dest_code', ...HEADER }, cell: ({ dest }) => cell(dest && (dest.cd || DCODE[dest.d])), width: 12 },
   { header: { value: 'case_day', ...HEADER }, cell: ({ dest }) => cell(dest && num(dest.al)), width: 11 },
+  { header: { value: 'upload', ...HEADER }, cell: ({ dest }) => ({ value: dest ? 'E' : 'A' }), width: 10 },
   { header: { value: 'total_case_day', ...HEADER }, cell: ({ part }) => ({ value: num(part.mc) }), width: 15 },
 ];
 
