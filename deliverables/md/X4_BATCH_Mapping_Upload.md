@@ -36,6 +36,7 @@ Diisi otomatis oleh **Export Excel** (periode berjalan dipilih): semua part **Ac
 | part_no | Part Number part Active |
 | dest_code | Kode destinasi (9722D10 / 9811110 / 9715310), sekali per part |
 | case_day | Case/Day destinasi, bilangan bulat > 0 |
+| upload | **A** = Add (destinasi belum di-mapping untuk part di periode berjalan), **E** = Edit (destinasi sudah di-mapping, case_day boleh diubah). Export mengisi E, dan A untuk baris placeholder |
 | total_case_day | Max Case/Day part, **hanya referensi** (tidak dibaca batch) |
 
 ## 5. Alur proses
@@ -52,7 +53,7 @@ Diisi otomatis oleh **Export Excel** (periode berjalan dipilih): semua part **Ac
 
 ## 6. Validasi
 ### 4.1 Cek file
-1. Ekstensi .xlsx. 2. ≤ 5 MB. 3. 1–5.000 baris data. 4. Sheet "Upload" ada. 5. Header 4 kolom template.
+1. Ekstensi .xlsx. 2. ≤ 5 MB. 3. 1–5.000 baris data. 4. Sheet "Upload" ada. 5. Header 5 kolom template.
 
 ### 4.2 Cek baris / part
 | No | Aturan | Kolom |
@@ -63,6 +64,7 @@ Diisi otomatis oleh **Export Excel** (periode berjalan dipilih): semua part **Ac
 | 4 | Satu kode destinasi hanya sekali per part | dest_code |
 | 5 | dest_code dan case_day **keduanya diisi atau keduanya kosong** (placeholder) | dest_code, case_day |
 | 6 | Total case_day per part **≤ Max Case/Day** (TB_M_PART_CANDIDATE); kurang atau sama boleh | case_day |
+| 8 | upload = A atau E: A hanya untuk destinasi yang belum di-mapping, E hanya untuk destinasi yang sudah di-mapping (periode berjalan). Placeholder kosong di-skip | upload |
 | 7 | Hanya untuk periode berjalan | – |
 
 ## 7. Aturan simpan

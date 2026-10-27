@@ -36,7 +36,7 @@ Urutan kolom = sheet "Upload" hasil **Export Excel** Part List (prefill semua pa
 | pcs_case | Pieces per case | Ya (> 0) |
 | max_case_day | Max Case/Day | Ya (> 0) |
 | status | Candidate / Active / Inactive | Lihat check 6 |
-| flag_add_edit | A = Add, E = Edit | Ya |
+| upload | A = Add, E = Edit | Ya |
 | effective_start_date | DD-Mon-YYYY | Wajib selama status Candidate (selalu untuk flag A) |
 
 ## 5. Alur proses
@@ -62,7 +62,7 @@ Urutan kolom = sheet "Upload" hasil **Export Excel** Part List (prefill semua pa
 ### 4.2 Cek baris
 | No | Aturan | Kolom |
 |---|---|---|
-| 1 | flag_add_edit = A atau E | flag_add_edit |
+| 1 | upload = A atau E | upload |
 | 2 | Part No ada di TB_M_PART_MASTER | part_no |
 | 3 | Flag A: Part No **belum** ada di TB_M_PART_CANDIDATE. Flag E: **sudah** ada | part_no |
 | 4 | Part No hanya muncul sekali dalam file | part_no |

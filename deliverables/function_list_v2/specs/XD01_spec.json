@@ -2251,10 +2251,10 @@
    "required": "",
    "format": "",
    "validation": "",
-   "description": "part_no, min_mad, pcs_case, max_case_day, status, flag_add_edit, effective_start_date (same order as sheet 'Upload' of Export Excel)."
+   "description": "part_no, min_mad, pcs_case, max_case_day, status, upload, effective_start_date (same order as sheet 'Upload' of Export Excel)."
   },
   {
-   "name": "Rules per flag_add_edit and status",
+   "name": "Rules per upload value and status",
    "source": "",
    "field": "",
    "type": "Varchar",
@@ -2992,7 +2992,7 @@
    "required": "",
    "format": "",
    "validation": "",
-   "description": "part_no, dest_code, case_day, total_case_day (same order as sheet 'Upload' of Export Excel)."
+   "description": "part_no, dest_code, case_day, upload, total_case_day (same order as sheet 'Upload' of Export Excel)."
   },
   {
    "name": "Upload rules",
@@ -3914,7 +3914,7 @@
    "items": [
     "User clicks [Export Excel]: download Crossdock_Part_List_YYYYMMDD.xlsx.",
     "Sheet 'Part List': rows of the active filter and sort (all pages) with Part Number, Part Name, Min MAD, Pcs/Case, Max Case/Day, Total Pcs/Day, Status, Effective Start Date, Last Update. Information only.",
-    "Sheet 'Upload': every registered part with part_no, min_mad, pcs_case, max_case_day, status, flag_add_edit = E, effective_start_date (DD-Mon-YYYY). Base file for Edit uploads.",
+    "Sheet 'Upload': every registered part with part_no, min_mad, pcs_case, max_case_day, status, upload = E, effective_start_date (DD-Mon-YYYY). Base file for Edit uploads.",
     "If the file cannot be created, display message no. 13."
    ]
   },
@@ -4181,7 +4181,7 @@
    "level": 2,
    "items": [
     "[Upload Excel] is enabled only when the ongoing calculation period is selected; otherwise it is disabled with message no. 23 as tooltip.",
-    "The modal shows the template columns (part_no, dest_code, case_day, total_case_day), the upload rules and the file area (.xlsx, max 5 MB, max 5,000 rows).",
+    "The modal shows the template columns (part_no, dest_code, case_day, upload, total_case_day), the upload rules and the file area (.xlsx, max 5 MB, max 5,000 rows).",
     "Base file: sheet 'Upload' of Export Excel with the ongoing period selected. A part in the file gets its whole mapping replaced; parts not in the file are not changed.",
     "User clicks [Validate file] (save button of the upload): the file is passed to the upload batch; validation, saving (all-or-nothing) and logging follow UISS-Batch \"XD03 Part and Destination Mapping Upload Batch\".",
     "When the upload is completed, close the modal and display message no. 24. When it is rejected, show the batch result (error list) - refer UISS-Batch.",
@@ -4199,7 +4199,7 @@
    "items": [
     "User clicks [Export Excel]: download Crossdock_Mapping_per_Destination_<period>_YYYYMMDD.xlsx (<period> e.g. Sep_2026 or All_periods).",
     "Sheet 'Mapping per Destination': rows of the active filter, one row per destination (a part without destination gives one row with blank destination columns). Columns: Period, Part Number, Part Name, Pcs/Case, Total Case/Day, Pcs/Day, Percentage, Sync Status, Destination Code, Destination, Dest Case/Day, Dest Pcs/Day, Dest Percentage. Information only.",
-    "Sheet 'Upload': every Active part of the ongoing period with part_no, dest_code, case_day, total_case_day (= Max Case/Day); one row per destination, and one row with dest_code and case_day blank for a part without mapping. Empty when a past period or All periods is selected.",
+    "Sheet 'Upload': every Active part of the ongoing period with part_no, dest_code, case_day, upload, total_case_day (= Max Case/Day); one row per destination, and one row with dest_code and case_day blank for a part without mapping. Empty when a past period or All periods is selected. upload = E for a mapped destination, A for the blank row.",
     "If the file cannot be created, display message no. 26."
    ]
   },

@@ -85,7 +85,7 @@ Detail: `X3_RPA_Sync.md`.
 
 ## 8. Upload Excel
 - Aktif **hanya** kalau periode berjalan dipilih; periode lalu / All periods → disabled, tooltip MSG6.
-- Kolom template: part_no, dest_code, case_day, total_case_day (referensi). File .xlsx, max 5 MB, max 5.000 baris.
+- Kolom template: part_no, dest_code, case_day, upload (A = destinasi baru untuk part, E = destinasi yang sudah di-mapping), total_case_day (referensi). File .xlsx, max 5 MB, max 5.000 baris.
 - Base file: sheet **Upload** dari Export Excel (periode berjalan). Part di file → seluruh mapping di-replace; part yang tidak ada di file tidak berubah.
 - [Validate file] = tombol simpan upload → batch Mapping per Destination Upload (all-or-nothing, Log). Detail: `X4_BATCH_Mapping_Upload.md`.
 - Sukses → tutup modal, MSG7. Ditolak → hasil batch (daftar error). Part yang berubah → No Sync.
@@ -95,7 +95,7 @@ File `Crossdock_Mapping_per_Destination_<period>_YYYYMMDD.xlsx` (<period> mis. S
 | Sheet | Isi |
 |---|---|
 | Mapping per Destination | Baris filter aktif, 1 baris per destinasi (part tanpa destinasi = 1 baris kosong): Period, Part Number, Part Name, Pcs/Case, Total Case/Day, Pcs/Day, Percentage, Sync Status, Destination Code, Destination, Dest Case/Day, Dest Pcs/Day, Dest Percentage. Informasi saja |
-| Upload | Semua part Active periode berjalan: part_no, dest_code, case_day, total_case_day (= Max Case/Day); 1 baris per destinasi, part tanpa mapping = 1 baris placeholder. Kosong untuk periode lalu / All periods |
+| Upload | Semua part Active periode berjalan: part_no, dest_code, case_day, upload (E; A untuk placeholder), total_case_day (= Max Case/Day); 1 baris per destinasi, part tanpa mapping = 1 baris placeholder. Kosong untuk periode lalu / All periods |
 
 Gagal dibuat → MSG9.
 
