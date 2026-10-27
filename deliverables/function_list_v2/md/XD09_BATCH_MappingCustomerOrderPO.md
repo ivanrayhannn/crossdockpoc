@@ -16,6 +16,8 @@ Sumber: UISS `XD09_UISS_Batch_MappingCustomerOrderPO.xlsx` (0.1 Initial Draft, 1
 
 Contoh lengkap: `deliverables/simulasi_asn_rev.xlsx` (16–22 Oct), prototype menu **ASN Simulation** dan **ASN Creation** (data sama).
 
+**Func Desc UISS XD09 (27-Oct)** ditulis ulang dari hasil simulasi: 4.1 line yang diambil (contoh hold / cancel / received / sudah ASN), 4.2 PO (1 PO per order date, sisa PO lama dipakai duluan, Short PO 17-Oct), 4.3 case supplier dan CUT_FLAG (contoh 17-Oct), 4.4 delivery plan (terlama dulu, pecah serial CO-14115). Sample Input = hasil [Search] 16–20 Oct.
+
 ## Keputusan 19-Oct
 - Jumlah case per destinasi = qty / pcs/case (selalu kelipatan pcs/case). PO Readiness dihitung per case. 1 case boleh berisi beberapa Customer Order dan beberapa PO dari destinasi yang sama.
 
