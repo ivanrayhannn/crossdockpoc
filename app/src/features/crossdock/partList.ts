@@ -46,7 +46,7 @@ const UPLOAD_COLUMNS: (Column<Part> & { width: number })[] = [
   { header: { value: 'pcs_case', ...HEADER }, cell: (p) => ({ value: num(p.pc) }), width: 11 },
   { header: { value: 'max_case_day', ...HEADER }, cell: (p) => ({ value: num(p.mc) }), width: 14 },
   { header: { value: 'status', ...HEADER }, cell: (p) => ({ value: p.st }), width: 12 },
-  { header: { value: 'flag_add_edit', ...HEADER }, cell: () => ({ value: 'E' }), width: 14 },
+  { header: { value: 'upload', ...HEADER }, cell: () => ({ value: 'E' }), width: 10 },
   { header: { value: 'effective_start_date', ...HEADER }, cell: (p) => ({ value: uploadDate(p.effDate) }), width: 20 },
 ];
 
