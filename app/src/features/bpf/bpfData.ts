@@ -35,7 +35,7 @@ export const BPF: BpfData = {
     },
     {
      "id": "B3",
-     "label": "Monthly · scheduler (date not detailed)",
+     "label": "Monthly · scheduler",
      "slots": 4
     },
     {
@@ -323,18 +323,23 @@ export const BPF: BpfData = {
    ],
    "bands": [
     {
+     "id": "B0",
+     "label": "D-2 · customer order",
+     "slots": 1
+    },
+    {
      "id": "B1",
-     "label": "D-1 · customer order / D · PO (existing)",
+     "label": "D-1 · PO (existing)",
      "slots": 1
     },
     {
      "id": "B2",
-     "label": "27:30 (D 03:30) · XD08 (one H0253 batch)",
+     "label": "27:30 (D 03:30) · XD08",
      "slots": 1
     },
     {
      "id": "B3",
-     "label": "Day D · working hours",
+     "label": "Daily · scheduler",
      "slots": 6
     },
     {
@@ -347,7 +352,7 @@ export const BPF: BpfData = {
     {
      "id": "D1",
      "lane": "GT",
-     "band": "B1",
+     "band": "B0",
      "slot": 0,
      "fn": "",
      "title": "Release crossdock customer orders (ORDER_STATUS 7, multiples of pcs/case)",
@@ -548,7 +553,7 @@ export const BPF: BpfData = {
      "band": "B4",
      "slot": 0,
      "fn": "existing",
-     "title": "ASN feedback: ASN qty known in G-System (basis of the cancel SOP)",
+     "title": "Receive ASN",
      "read": [
       "Existing ASN feedback"
      ],
