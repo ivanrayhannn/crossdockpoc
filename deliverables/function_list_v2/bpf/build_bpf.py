@@ -96,6 +96,24 @@ def xlsx():
                       created='19-Oct-26', updated='20-Oct-26', by='FID Rayhan', document='Business Process Flow', title=f'Level 2 – {f["id"]} {f["title"]}',
                       level=f'Level 2 – {f["id"]} {f["title"]}', system='NSP Crossdock (XD01 – XD15)')
         drawings[ws.title] = draw_flow(ws, f, LANES, header)
+        r = ws.max_row + 4
+        for title, cols, spans, rows in f.get('notes', []):
+            ws.cell(r, 4, title).font = Font(name='Arial', size=10, bold=True, color='FF1F3864')
+            for i, row in enumerate([cols] + rows):
+                r += 1
+                for (c1, c2), v in zip(spans, row):
+                    if c1 != c2:
+                        ws.merge_cells(f'{c1}{r}:{c2}{r}')
+                    cell = ws[f'{c1}{r}']
+                    cell.value = v
+                    cell.font = f_head if i == 0 else (f_bold if c1 == spans[0][0] else f_body)
+                    if i == 0:
+                        cell.fill = head
+                    cell.alignment = Alignment(wrap_text=True, vertical='center' if i == 0 else 'top')
+                    for col in range(ws[f'{c1}{r}'].column, ws[f'{c2}{r}'].column + 1):
+                        ws.cell(r, col).border = box
+                ws.row_dimensions[r].height = 18 if i == 0 else 30
+            r += 2
 
     ws = wb.create_sheet('Step Detail')
     ws.sheet_view.showGridLines = False
