@@ -7,12 +7,15 @@ class Grid:
     def __init__(self, sheet_xml):
         s = open(sheet_xml).read()
         self.cw = {}
-        for m in re.finditer(r'<col min="(\d+)" max="(\d+)" width="([\d.]+)"', s):
-            for c in range(int(m[1]), int(m[2]) + 1): self.cw[c - 1] = px_w(float(m[3]))
+        for m in re.finditer(r'<col\b([^>]*)/?>', s):            # attribute order differs between Excel and openpyxl
+            at = dict(re.findall(r'(\w+)="([^"]*)"', m[1]))
+            if 'width' in at:
+                for c in range(int(at['min']), int(at['max']) + 1): self.cw[c - 1] = px_w(float(at['width']))
         dh = float(re.search(r'defaultRowHeight="([\d.]+)"', s)[1])
         self.rh = {}
-        for m in re.finditer(r'<row r="(\d+)"[^>]*?ht="([\d.]+)"', s):
-            self.rh[int(m[1]) - 1] = float(m[2])
+        for m in re.finditer(r'<row\b([^>]*)>', s):
+            at = dict(re.findall(r'(\w+)="([^"]*)"', m[1]))
+            if 'ht' in at: self.rh[int(at['r']) - 1] = float(at['ht'])
         self.dh = dh
     def colw(self, c): return self.cw.get(c, 64) * EMU
     def rowh(self, r): return round(self.rh.get(r, self.dh) * 12700)

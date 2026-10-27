@@ -201,16 +201,14 @@ export const BPF: BpfData = {
      "lane": "PR",
      "band": "B3",
      "slot": 3,
-     "fn": "XD01 · XD02",
-     "title": "Check history of the candidate part",
+     "fn": "XD01",
+     "title": "Check status and history of the parts",
      "read": [
       "TB_M_PART_CANDIDATE",
       "Log"
      ],
      "write": [],
-     "ab": [
-      "AB04"
-     ],
+     "ab": [],
      "next": []
     },
     {
@@ -335,7 +333,7 @@ export const BPF: BpfData = {
     {
      "id": "B2",
      "label": "27:30 (D 03:30) · XD08",
-     "slots": 1
+     "slots": 2
     },
     {
      "id": "B3",
@@ -344,19 +342,43 @@ export const BPF: BpfData = {
     },
     {
      "id": "B4",
-     "label": "Day D · after submit / receiving",
+     "label": "Day D · after submit",
+     "slots": 2
+    },
+    {
+     "id": "B5",
+     "label": "Day D+1 · after receive",
      "slots": 2
     }
    ],
    "steps": [
     {
-     "id": "D1",
+     "id": "D0",
      "lane": "GT",
      "band": "B0",
      "slot": 0,
+     "fn": "existing",
+     "title": "Release crossdock customer orders (multiples of pcs/case) from AP POLE System",
+     "read": [],
+     "write": [
+      "GTOPAS"
+     ],
+     "ab": [],
+     "next": [
+      "D1",
+      "D2"
+     ]
+    },
+    {
+     "id": "D1",
+     "lane": "GT",
+     "band": "B2",
+     "slot": 0,
      "fn": "",
      "title": "Release crossdock customer orders (ORDER_STATUS 7, multiples of pcs/case)",
-     "read": [],
+     "read": [
+      "TB_R_H0253_ORDER_CONTROL_PRE (Surrounding DPV)"
+     ],
      "write": [
       "TB_R_H0253_ORDER_CONTROL_PRE (DB Surrounding)"
      ],
@@ -381,14 +403,14 @@ export const BPF: BpfData = {
       "AB17"
      ],
      "next": [
-      "D3"
+      "D6"
      ]
     },
     {
      "id": "D3",
      "lane": "NB",
      "band": "B2",
-     "slot": 0,
+     "slot": 1,
      "fn": "XD08",
      "title": "Upsert changed rows (delta INTF_UPDATE_DT); UPD_STATUS 6 / 2; serial split: each part stays linked to its ASN; release all drafts",
      "read": [
@@ -404,7 +426,7 @@ export const BPF: BpfData = {
       "AB18"
      ],
      "next": [
-      "D5"
+      "D6"
      ]
     },
     {
@@ -457,11 +479,13 @@ export const BPF: BpfData = {
      ],
      "write": [],
      "ab": [
+      "AB09",
       "AB10",
       "AB11"
      ],
      "next": [
-      "D8"
+      "D8",
+      "D9"
      ]
     },
     {
@@ -528,15 +552,14 @@ export const BPF: BpfData = {
      ],
      "next": [
       "D11",
-      "D12",
-      "D13"
+      "D12"
      ]
     },
     {
      "id": "D11",
      "lane": "SP",
      "band": "B4",
-     "slot": 0,
+     "slot": 1,
      "fn": "XD15",
      "title": "ASN Inquiry; download case label (1 label = 1 case of 1 destination)",
      "read": [
@@ -549,42 +572,69 @@ export const BPF: BpfData = {
     },
     {
      "id": "D12",
-     "lane": "GT",
+     "lane": "NB",
      "band": "B4",
      "slot": 0,
      "fn": "existing",
-     "title": "Receive ASN",
+     "title": "Interface ASN data to Surrounding",
      "read": [
-      "Existing ASN feedback"
+      "TB_R_DAILY_ORDER_MANIFEST",
+      "TB_R_DAILY_ORDER_PART"
      ],
-     "write": [],
+     "write": [
+      "ASN data (DB Surrounding)"
+     ],
      "ab": [],
-     "next": []
+     "next": [
+      "D13"
+     ]
     },
     {
      "id": "D13",
-     "lane": "SP",
+     "lane": "GT",
      "band": "B4",
      "slot": 1,
-     "fn": "Log Monitoring",
-     "title": "Check the submit result per Submit ID",
+     "fn": "existing",
+     "title": "Interface ASN data to GTOPAS",
      "read": [
-      "Log"
+      "ASN data (DB Surrounding)"
      ],
-     "write": [],
-     "ab": [
-      "AB13"
+     "write": [
+      "Receiving Data (GTOPAS)"
      ],
-     "next": []
+     "ab": [],
+     "next": [
+      "D14"
+     ]
     },
     {
      "id": "D14",
      "lane": "GT",
-     "band": "B4",
+     "band": "B5",
+     "slot": 0,
+     "fn": "existing",
+     "title": "Receive by GTOPAS",
+     "read": [
+      "Receiving Data (GTOPAS)"
+     ],
+     "write": [
+      "TB_R_H0253_ORDER_CONTROL_PRE (Surrounding DPV)"
+     ],
+     "ab": [],
+     "next": [
+      "D15"
+     ]
+    },
+    {
+     "id": "D15",
+     "lane": "GT",
+     "band": "B5",
      "slot": 1,
      "fn": "existing",
-     "title": "Receive the ASN → ORDER_STATUS 6; a partial receipt splits the line (new SERIAL_NO); taken by the next XD08 run (D3)",
-     "read": [],
+     "title": "H0253 Update Data: ORDER_STATUS 6; a partial receipt splits the line (new SERIAL_NO); taken by the next XD08 run (D3)",
+     "read": [
+      "TB_R_H0253_ORDER_CONTROL_PRE (Surrounding DPV)"
+     ],
      "write": [
       "TB_R_H0253_ORDER_CONTROL_PRE (DB Surrounding, INTF_UPDATE_DT)"
      ],
@@ -1051,7 +1101,7 @@ export const BPF: BpfData = {
   {
    "id": "AB08",
    "flow": "F2",
-   "step": "D6 / D7",
+   "step": "D6",
    "fn": "XD09 / XD10",
    "condition": "Case without PO: the case and every later case are Not Ready; later Customer Order Dates of the part wait too",
    "detection": "Partially Ready / check box disabled + MSG2; Wait: dd-Mon first",
@@ -1061,8 +1111,8 @@ export const BPF: BpfData = {
   },
   {
    "id": "AB09",
-   "flow": "F4",
-   "step": "H4",
+   "flow": "F2 / F4",
+   "step": "D7 / H4",
    "fn": "XD10",
    "condition": "The D/S team holds a destination of a ticked unit before [Create ASN]",
    "detection": "MSG8",
@@ -1139,7 +1189,7 @@ export const BPF: BpfData = {
   {
    "id": "AB17",
    "flow": "F2",
-   "step": "D2 / D6",
+   "step": "D2",
    "fn": "existing PO / XD09",
    "condition": "Short PO: PO qty < total customer order qty of the Customer Order Date (all destinations)",
    "detection": "Short PO chip and PO check on XD10; last cases Not Ready",
@@ -1150,7 +1200,7 @@ export const BPF: BpfData = {
   {
    "id": "AB18",
    "flow": "F2",
-   "step": "D14 / D3",
+   "step": "D15 / D3",
    "fn": "XD08",
    "condition": "A line in more than one ASN is received partly; H0253 does not carry the received ASN No (TBC GTOPAS: receiving in ASN order?)",
    "detection": "New SERIAL_NO in H0253; LOG7",
