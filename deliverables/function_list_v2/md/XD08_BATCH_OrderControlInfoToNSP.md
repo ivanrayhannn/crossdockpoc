@@ -2,6 +2,10 @@
 
 Sumber: UISS `XD08_UISS_Batch_OrderControlInfoToNSP.xlsx` (0.1 Initial Draft). Nama sistem di UISS: G-System / NSP.
 
+
+## Simulasi (27-Oct, `simulasi_asn_rev.xlsx`)
+UISS sheet **Sample Input** = run XD08 16–22 Oct: CO-14102 cancel tanpa ASN (tidak ada aksi), CO-14104 cancel di ASN0003 case 3 (LOG5 → XD11), CO-14111 received tanpa ASN (kandidat), CO-14115 pecah serial 21-Oct (baris ASN0007 pindah ke serial 0000002, LOG7).
+
 ## Keputusan 23-Oct (simulasi_asn.xlsx)
 - **Satu batch** untuk H0253: XD08 lama (status 7 / 6) dan XD12 (status 2) **digabung**. XD11 lama (cancel batch) diganti layar **Change Order Number** (XD11).
 - Tabel source di DB Surrounding **insert / update**. NSP memakai **satu tabel replicate** `TB_R_H0253_ORDER_CONTROL_PRE`, di-**upsert** per unique key (termasuk SERIAL_NO). Hanya baris dengan **INTF_UPDATE_DT > watermark**.

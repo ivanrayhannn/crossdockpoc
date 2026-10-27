@@ -7,6 +7,10 @@ Sumber: UISS `XD10_UISS_Screen_ASNCrossDockCreation.xlsx` (0.1 Initial Draft, 18
 - [Search] menjalankan **XD09**. Cancel order tidak di NSP: lihat **XD08** (UPD_STATUS, lepas draft) dan **XD11** (Change Order Number).
 - Tabel: #TEMP_INSTRUCTION, TB_R_INSTRUCTION, TB_R_PRA_DAILY_ORDER_MAPPED, TB_R_DAILY_ORDER_MANIFEST, TB_R_DAILY_ORDER_PART.
 
+
+## Simulasi (27-Oct, `simulasi_asn_rev.xlsx`)
+UISS **5.0** = perilaku layar dari simulasi (18-Oct: 5 case, Short PO, case 1–4 → ASN0003; centang case 3 = case 1–3; 19-Oct order date 18 menunggu 17; CO-14115 di ASN0006 + ASN0007; hold TH → MSG8; draft dilepas XD08 → MSG11). Sample Input A–I semua dari simulasi (H–I = checkbox 18-Oct dan skenario C1–C7).
+
 ## Business Logic ASN (24–26 Oct; UISS Operation 5.0)
 1. Customer Order Date (D) → PO Date D+1: 1 PO per Part Number per Customer Order Date.
 2. Total customer order qty semua destinasi = PO qty. Kurang → abnormality (Short PO), sisanya di split PO; case tanpa PO menunggu.

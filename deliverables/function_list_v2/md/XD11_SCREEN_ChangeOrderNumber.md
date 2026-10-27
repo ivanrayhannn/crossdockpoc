@@ -2,6 +2,10 @@
 
 Sumber: UISS `XD11_UISS_Screen_ChangeOrderNumber.xlsx` (0.1 Initial Draft). Sub menu ASN (di sebelah ASN Creation), hanya D/S team. Menggantikan XD11 lama (Cancel Crossdock Customer Order Batch) dan penanganan CONFLICT di luar sistem (keputusan 23-Oct).
 
+
+## Simulasi (27-Oct, `simulasi_asn_rev.xlsx`)
+UISS sheet **Sample Input** baru: ASN0003 case 3 (C-0003-03) CO-14104 → CO-14111 (21-Oct): baris TB_R_INSTRUCTION sama di-update, CO-14111 PO_MAPPED_FLAG Y, CO-14104 tetap Y, 1 baris TB_H. Partial cancel CO-B (ASN00020) tetap sebagai contoh kedua (ERD SIM-6).
+
 ## Kapan muncul
 - Line H0253 replicate dengan **UPD_STATUS '2'** (di-cancel G-System, di-set XD08) yang qty-nya **sudah di ASN yang di-submit** (baris `TB_R_INSTRUCTION` dengan ASN_NO).
 - Cancel tanpa ASN (contoh CO-14102) tidak muncul. Draft (belum Submit) sudah dilepas XD08.

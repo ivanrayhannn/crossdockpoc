@@ -95,6 +95,9 @@ Simulasi: menu prototype **ASN → Cancel Order Simulation**.
 5. Case Ready di delivery plan dikirim sesuai CUT_FLAG (dari case 1 sampai cut; case di antara dua cut dikirim bersama).
 6. Per Part Number, Customer Order Date terlama dulu (tidak boleh loncat): order date berikutnya baru bisa dipilih kalau semua case order date sebelumnya sudah di ASN atau ikut dipilih di ASN yang sama. Case Not Ready di order date lama menahan order date berikutnya. Line yang di-hold tidak dihitung.
 
+## Update 27-Oct (dokumen ASN mengikuti simulasi)
+UISS XD08 / XD09 / XD10 / XD11 / XD15: contoh, Func / Operation Description dan sheet **Sample Input** memakai hasil `deliverables/simulasi_asn_rev.xlsx` (PART-X, 16–22 Oct), data yang sama dengan prototype (ASN Creation, ASN Simulation, Change Order Number), ERD SIM-5 / SIM-10 dan BPF F2.
+
 ## Business Process Flow Level 2
 Lihat `bpf/README.md`: Excel `bpf/Crossdock_BPF_Level2.xlsx` (X = PIC, Y = timeline, sampai level tabel, abnormality AB01–AB16) dan menu prototype Common → Business Process Flow.
 
