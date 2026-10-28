@@ -1247,19 +1247,29 @@
       "type": "start"
      },
      {
-      "id": "e",
-      "label": "On Click of Save button",
+      "id": "e1",
+      "label": "Change destination / Case/Day in edit mode",
       "type": "event"
      },
      {
       "id": "d1",
-      "label": "Total <= Max Case/Day and every row has a destination?",
+      "label": "Mapping valid?",
       "type": "decision"
      },
      {
       "id": "m1",
-      "label": "Save stays disabled, show banner",
+      "label": "Save disabled, show banner (message no. 20 / 21)",
       "type": "message"
+     },
+     {
+      "id": "m2",
+      "label": "Save enabled",
+      "type": "message"
+     },
+     {
+      "id": "e2",
+      "label": "On Click of Save button",
+      "type": "event"
      },
      {
       "id": "p1",
@@ -1290,10 +1300,10 @@
     "edges": [
      {
       "from": "s",
-      "to": "e"
+      "to": "e1"
      },
      {
-      "from": "e",
+      "from": "e1",
       "to": "d1"
      },
      {
@@ -1302,9 +1312,22 @@
       "label": "No"
      },
      {
+      "from": "m1",
+      "to": "e1",
+      "label": "correct the mapping"
+     },
+     {
       "from": "d1",
-      "to": "p1",
+      "to": "m2",
       "label": "Yes"
+     },
+     {
+      "from": "m2",
+      "to": "e2"
+     },
+     {
+      "from": "e2",
+      "to": "p1"
      },
      {
       "from": "p1",
@@ -1335,7 +1358,11 @@
       "db2"
      ]
     ]
-   }
+   },
+   "notes": [
+    "Mapping valid = all of: (1) total Case/Day of the part <= Max Case/Day (a lower total is allowed, shown as '{n} case/day left'); (2) the part has at least one destination row; (3) every row has a destination selected.",
+    "The check runs on every change in edit mode, so [Save] is already disabled before it can be clicked (see Operation Description 5.15 Save rules)."
+   ]
   }
  ],
  "screen_layout": [
