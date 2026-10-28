@@ -20,6 +20,8 @@ export interface BpfFlow {
   lanes: string[];
   bands: { id: string; label: string; slots: number }[];
   steps: BpfStep[];
+  /** Tables shown under the diagram in the Excel: [title, headers, column spans, rows]. */
+  notes?: [string, string[], [string, string][], string[][]][];
 }
 
 export interface BpfAbnormality {
