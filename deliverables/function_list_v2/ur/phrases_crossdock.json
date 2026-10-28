@@ -1,0 +1,94 @@
+[
+ [
+  "Retrieve all parts of Part List and display them",
+  "Show all parts of the Part List"
+ ],
+ [
+  "'Part No' lists parts of Part Master that are not yet registered in Part List, so can not register part into Crossdock master",
+  "'Part No' lists the parts of the Part Master that are not yet in the Part List (a part can be registered only once)."
+ ],
+ [
+  "Insert the part into Part List with",
+  "Save the part in the Part List with"
+ ],
+ [
+  "Insert the change history when any register or update data in Part List",
+  "Record the change in the change history."
+ ],
+ [
+  "Insert the change history when any register or update in Part List",
+  "Record the change in the change history."
+ ],
+ [
+  "Update Part List and set",
+  "Save the changes in the Part List and set"
+ ],
+ [
+  "Check Max Case/Day against the mapped total of the ongoing period again on the server; if it is below",
+  "Check again that Max Case/Day is not below the mapped total of the ongoing period; if it is"
+ ],
+ [
+  "History retrieved from inserted data when user add/modify part list data",
+  "The history shows every change made to the part."
+ ],
+ [
+  "History is read from change history, which records every change of the part",
+  "The history records every change of the part"
+ ],
+ [
+  "Replace the rows of the part and the ongoing period in destination mapping by the rows of the draft",
+  "Save the new destination mapping of the part for the ongoing period"
+ ],
+ [
+  "Insert a history record per added, changed or removed destination in change history (event MAPPING, source SCREEN, destination code, field Case/Day, old / new Case/Day).",
+  "Record every added, changed or removed destination in the change history (old and new Case/Day)."
+ ],
+ [
+  "set one row per part and target system (GTOPAS, AP POLE) to sending status Waiting in sending result, and start XD06 and XD07",
+  "mark the sending to GTOPAS and AP POLE as Waiting, and start the interfaces XD06 (GTOPAS) and XD07 (AP POLE)"
+ ],
+ [
+  "the send status is written in the dummy table sending result (sending status 1 sent / 2 Failed, sending time, file name, sending message)",
+  "the result (sent or failed, with the reason) is kept per target system"
+ ],
+ [
+  "Every result is recorded in change history (event SYNC, source IF, REMARK = target and message).",
+  "Every result is recorded in the change history."
+ ],
+ [
+  "in the dummy table sending result",
+  "per target system"
+ ],
+ [
+  "Insert / update part record",
+  "Save the part"
+ ],
+ [
+  "(insert only)",
+  "(first save only)"
+ ],
+ [
+  "on insert/update of",
+  "on saving"
+ ],
+ [
+  "Server system date-time",
+  "Date and time of saving"
+ ],
+ [
+  "Server system date",
+  "Date of saving"
+ ],
+ [
+  "Login user ID",
+  "User who saved"
+ ],
+ [
+  "(pre-filled with flag E)",
+  "(pre-filled with upload = E)"
+ ],
+ [
+  "REMARK",
+  "remark"
+ ]
+]
