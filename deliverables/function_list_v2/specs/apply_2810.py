@@ -17,7 +17,7 @@ for it in s['items']:
     if it.get('name') == 'Max Case/Day' and it.get('io') == 'I' and not any(x.get('name') == 'Mapped Case/Day (current period)' for x in s['items']):
         items.append({'name': 'Mapped Case/Day (current period)', 'source': 'TB_M_PART_CANDIDATE_DEST', 'field': 'CASE_DAY', 'type': 'Number',
                       'len': 'TBD', 'io': 'O', 'control': 'Label', 'justified': 'Left', 'initial': '', 'required': '', 'format': 'ZZ,ZZ9',
-                      'validation': '', 'description': "Edit mode only. Total Case/Day of all destinations of the part in the ongoing period "
+                      'validation': '', 'description': "Edit mode, Active parts only (Candidate / Inactive parts have no mapping). Total Case/Day of all destinations of the part in the ongoing period "
                       "(' · no destination yet' when none); red when Max Case/Day is below it. Shows the lowest allowed Max Case/Day before Save."})
 s['items'] = items
 ops = s['operation']
@@ -27,7 +27,7 @@ for i, b in enumerate(ops):
                                'Total Pcs/Day = Pcs/Case x Max Case/Day.']
     if b.get('type') == 'heading' and b['text'] == '5.5 Edit Part Data':
         lst = ops[i + 2]['items']
-        new = ("Below Max Case/Day show 'Mapped Case/Day (current period): n' = total Case/Day of the part in TB_M_PART_CANDIDATE_DEST for the "
+        new = ("Active part only: below Max Case/Day show 'Mapped Case/Day (current period): n' = total Case/Day of the part in TB_M_PART_CANDIDATE_DEST for the "
                "ongoing period (' · no destination yet' when none), so the user sees the lowest allowed Max Case/Day before Save.")
         if new not in lst:
             lst.insert(3, new)

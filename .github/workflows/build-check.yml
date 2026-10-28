@@ -1,0 +1,28 @@
+name: Build check (web)
+
+# Runs the same build as the Pages deploy on every pull request, so a type / build error shows on the PR
+# before it is merged (the deploy failed silently from PR #77 to #87).
+on:
+  pull_request:
+    branches: [main]
+    paths: ['app/**', '.github/workflows/**']
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - name: Install dependencies
+        working-directory: app
+        run: npm ci
+      - name: Build (tsc -b && vite build)
+        working-directory: app
+        run: npm run build
