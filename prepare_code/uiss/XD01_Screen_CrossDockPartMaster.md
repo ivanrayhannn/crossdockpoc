@@ -407,7 +407,7 @@ flowchart TB
 | 37 | Min MAD | TB_M_PART_CANDIDATE | MIN_MAD | Number | TBD | I | Text box | Right | Blank | Y | ZZ,ZZ9 | Mandatory; whole number, 0 or more | Minimum MAD of the part, entered by the user. Reference value compared with the MAD result of the calculation. Mandatory on Add and Edit; tooltip of disabled [Save] = message no. 15. |
 | 38 | Pcs/Case | TB_M_PART_CANDIDATE | PCS_CASE | Number | TBD | I | Text box | Right | Blank | Y | ZZ,ZZ9 | Whole number > 0 |  |
 | 39 | Max Case/Day | TB_M_PART_CANDIDATE | MAX_CASE_DAY | Number | TBD | I | Text box | Right | Blank | Y | ZZ,ZZ9 | Whole number > 0 | Locked until Pcs/Case is filled (tooltip 'Enter Pcs/Case first'). Edit: can not be less than the total Case/Day already mapped in the ongoing period (TB_M_PART_CANDIDATE_DEST); otherwise the field is marked red, message no. 14 is shown and [Save] is disabled. |
-| 40 | Mapped Case/Day (current period) | TB_M_PART_CANDIDATE_DEST | CASE_DAY | Number | TBD | O | Label | Left |  |  | ZZ,ZZ9 |  | Edit mode only. Total Case/Day of all destinations of the part in the ongoing period (' · no destination yet' when none); red when Max Case/Day is below it. Shows the lowest allowed Max Case/Day before Save. |
+| 40 | Mapped Case/Day (current period) | TB_M_PART_CANDIDATE_DEST | CASE_DAY | Number | TBD | O | Label | Left |  |  | ZZ,ZZ9 |  | Edit mode, Active parts only (Candidate / Inactive parts have no mapping). Total Case/Day of all destinations of the part in the ongoing period (' · no destination yet' when none); red when Max Case/Day is below it. Shows the lowest allowed Max Case/Day before Save. |
 | 41 | Total Pcs/Day |  |  | Number |  | O | Label | Right | '-' |  | ZZ,ZZ9 |  | = Pcs/Case x Max Case/Day, recalculated on every change. |
 | 42 | Cancel |  |  |  |  | I | Button | Center |  |  |  |  | Closes the modal without saving. |
 | 43 | Save |  |  |  |  | I | Button | Center |  |  |  |  | Enabled only when Part No, Min MAD, Pcs/Case > 0 and Max Case/Day > 0 are filled and, in Edit, Max Case/Day is not below the mapped total. Refer Operation Description 5.4 / 5.5. |
@@ -672,7 +672,7 @@ b. Total Pcs/Day = Pcs/Case x Max Case/Day.
   1. Open the 'Edit part data' modal with the saved values. 'Part No' is locked; 'Status' can be Candidate / Active / Inactive.
   2. 'Effective Start Date' is editable only while the saved status is Candidate (minimum today); otherwise locked with message no. 10 as tooltip.
   3. 'Min MAD' (mandatory, whole number 0 or more), 'Pcs/Case' and 'Max Case/Day' can be changed; 'Total Pcs/Day' is recalculated.
-  4. Below Max Case/Day show 'Mapped Case/Day (current period): n' = total Case/Day of the part in TB_M_PART_CANDIDATE_DEST for the ongoing period (' · no destination yet' when none), so the user sees the lowest allowed Max Case/Day before Save.
+  4. Active part only: below Max Case/Day show 'Mapped Case/Day (current period): n' = total Case/Day of the part in TB_M_PART_CANDIDATE_DEST for the ongoing period (' · no destination yet' when none), so the user sees the lowest allowed Max Case/Day before Save.
   5. Max Case/Day can not be less than the total Case/Day already mapped to destinations in the ongoing period (TB_M_PART_CANDIDATE_DEST); otherwise the field is marked red, message no. 14 is shown below Pcs/Case & Max Case/Day and [Save] is disabled. The user must first reduce the mapping in Mapping per Destination (same rule as upload check 9).
 
 - b. User clicks [Save].
