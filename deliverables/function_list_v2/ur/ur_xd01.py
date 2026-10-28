@@ -34,7 +34,7 @@ FR = [
     ('FR-03', 'The user can change the data and the status of a registered part.', 'Procurement', 'Must', 'BR-02, BR-03, BR-05, BR-08', 'M3'),
     ('FR-04', 'The user can see the change history of a part: who changed what and when (before / after).', 'Procurement, D/S Team', 'Must', 'BR-12', 'M8'),
     ('FR-05', 'The user can add or change many parts at once with an Excel template (column upload: A = add, E = edit).', 'Procurement', 'Must', 'BR-11', 'M3'),
-    ('FR-06', 'The system shows which parts have an incomplete mapping (no destination, or total not equal to the capacity).', 'Procurement, D/S Team', 'Should', 'BR-04', 'M8 / M9'),
+    ('FR-06', 'When changing a part, the user sees the Case/Day already mapped to destinations in the current period, i.e. the lowest allowed Max Case/Day.', 'Procurement', 'Should', 'BR-05', 'M8'),
     ('FR-07', 'The user can see and change the case/day per destination of each Active part for the current period; past periods are view-only.', 'D/S Team', 'Must', 'BR-04, BR-06, BR-07, BR-08', 'M9'),
     ('FR-08', 'The user can split the capacity evenly over the destinations of a part with one click.', 'D/S Team', 'Could', 'BR-04', 'M9'),
     ('FR-09', 'The user can upload and export the mapping in Excel (column upload: A = new destination, E = mapped destination).', 'D/S Team', 'Must', 'BR-06, BR-11', 'M9'),

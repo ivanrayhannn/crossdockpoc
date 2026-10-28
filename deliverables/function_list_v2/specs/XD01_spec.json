@@ -4,7 +4,7 @@
   "objective": [
    "One screen with two tabs: Part List (part number level) and Mapping per Destination (part + calculation period + destination level).",
    "Part List tab: To register crossdock candidate parts (Part No, Min MAD, Pcs/Case, Max Case/Day, Effective Start Date).",
-   "Part List tab: To search and display registered crossdock parts with their status, capacity and mapping completeness.",
+   "Part List tab: To search and display registered crossdock parts with their status and capacity.",
    "Part List tab: To change part data and part status (Candidate / Active / Inactive) of a registered part.",
    "Part List tab: To display the change history of a part.",
    "Part List tab: To export the Part List to Excel and upload part settings from Excel (Add and Edit).",
@@ -1634,9 +1634,9 @@
    "justified": "Left",
    "initial": "",
    "required": "",
-   "format": "N parts · M incomplete mappings",
+   "format": "N parts",
    "validation": "",
-   "description": "N = number of filtered rows (all pages). M = filtered rows whose mapping is incomplete (no destination, or total destination Case/Day differs from Max Case/Day)."
+   "description": "N = number of filtered rows (all pages)."
   },
   {
    "name": "Last DAD calculation",
@@ -1682,21 +1682,6 @@
    "format": "",
    "validation": "",
    "description": "Manual trigger of the DAD Volume Calculation batch. Enabled only when the scheduled run has failed 3 times; otherwise disabled with message no. 17 as tooltip. Refer Operation Description 5.9."
-  },
-  {
-   "name": "Incomplete mapping marker",
-   "source": "TB_M_PART_CANDIDATE_DEST",
-   "field": "CASE_DAY",
-   "type": "",
-   "len": "",
-   "io": "O",
-   "control": "Row marker (blue bar)",
-   "justified": "",
-   "initial": "",
-   "required": "",
-   "format": "",
-   "validation": "",
-   "description": "Shown when the part has no destination or the sum of destination Case/Day differs from MAX_CASE_DAY."
   },
   {
    "name": "Part Number",
@@ -2081,6 +2066,21 @@
    "format": "ZZ,ZZ9",
    "validation": "Whole number > 0",
    "description": "Locked until Pcs/Case is filled (tooltip 'Enter Pcs/Case first'). Edit: can not be less than the total Case/Day already mapped in the ongoing period (TB_M_PART_CANDIDATE_DEST); otherwise the field is marked red, message no. 14 is shown and [Save] is disabled."
+  },
+  {
+   "name": "Mapped Case/Day (current period)",
+   "source": "TB_M_PART_CANDIDATE_DEST",
+   "field": "CASE_DAY",
+   "type": "Number",
+   "len": "TBD",
+   "io": "O",
+   "control": "Label",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "ZZ,ZZ9",
+   "validation": "",
+   "description": "Edit mode only. Total Case/Day of all destinations of the part in the ongoing period (' · no destination yet' when none); red when Max Case/Day is below it. Shows the lowest allowed Max Case/Day before Save."
   },
   {
    "name": "Total Pcs/Day",
@@ -3646,8 +3646,7 @@
    "marker": "a.",
    "level": 2,
    "items": [
-    "Counter 'N parts · M incomplete mappings' is counted over the whole filtered result, not only the current page.",
-    "Incomplete mapping: the part has no destination in TB_M_PART_CANDIDATE_DEST, or the sum of destination CASE_DAY differs from MAX_CASE_DAY. Mark the row with a blue bar and count it in 'M incomplete mappings'.",
+    "Counter 'N parts' is counted over the whole filtered result, not only the current page.",
     "Total Pcs/Day = Pcs/Case x Max Case/Day."
    ]
   },
@@ -3713,6 +3712,7 @@
     "Open the 'Edit part data' modal with the saved values. 'Part No' is locked; 'Status' can be Candidate / Active / Inactive.",
     "'Effective Start Date' is editable only while the saved status is Candidate (minimum today); otherwise locked with message no. 10 as tooltip.",
     "'Min MAD' (mandatory, whole number 0 or more), 'Pcs/Case' and 'Max Case/Day' can be changed; 'Total Pcs/Day' is recalculated.",
+    "Below Max Case/Day show 'Mapped Case/Day (current period): n' = total Case/Day of the part in TB_M_PART_CANDIDATE_DEST for the ongoing period (' · no destination yet' when none), so the user sees the lowest allowed Max Case/Day before Save.",
     "Max Case/Day can not be less than the total Case/Day already mapped to destinations in the ongoing period (TB_M_PART_CANDIDATE_DEST); otherwise the field is marked red, message no. 14 is shown below Pcs/Case & Max Case/Day and [Save] is disabled. The user must first reduce the mapping in Mapping per Destination (same rule as upload check 9)."
    ]
   },

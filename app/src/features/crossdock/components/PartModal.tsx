@@ -211,6 +211,12 @@ export function PartModal({ state }: { state: CrossdockState }) {
                   />
                 </div>
               </div>
+              {editId && (
+                <div style={{ marginTop: 7, fontSize: 11.5, color: belowMapped ? 'var(--color-danger)' : 'var(--color-neutral-700)' }} title="Max Case/Day can not be set below this value">
+                  Mapped Case/Day (current period): <b style={{ fontVariantNumeric: 'tabular-nums' }}>{fmt(mapped)}</b>
+                  {ongoing && !ongoing.dests.length ? ' · no destination yet' : ''}
+                </div>
+              )}
             </div>
           </div>
 

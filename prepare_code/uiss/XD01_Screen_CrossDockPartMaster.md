@@ -18,7 +18,7 @@
 
 - One screen with two tabs: Part List (part number level) and Mapping per Destination (part + calculation period + destination level).
 - Part List tab: To register crossdock candidate parts (Part No, Min MAD, Pcs/Case, Max Case/Day, Effective Start Date).
-- Part List tab: To search and display registered crossdock parts with their status, capacity and mapping completeness.
+- Part List tab: To search and display registered crossdock parts with their status and capacity.
 - Part List tab: To change part data and part status (Candidate / Active / Inactive) of a registered part.
 - Part List tab: To display the change history of a part.
 - Part List tab: To export the Part List to Excel and upload part settings from Excel (Add and Edit).
@@ -375,39 +375,39 @@ flowchart TB
 | 9 | Reset |  |  |  |  | I | Button | Center |  |  |  |  | Returns every criterion to its initial value. |
 | 10 | Search |  |  |  |  | I | Button | Center |  |  |  |  | Applies the criteria to the result list. Typing or selecting a criterion alone does not change the list; Enter in a text box = [Search]. |
 | **<Part List - Result List Section>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| 11 | Registered parts counter |  |  | Varchar |  | O | Label | Left |  |  | N parts · M incomplete mappings |  | N = number of filtered rows (all pages). M = filtered rows whose mapping is incomplete (no destination, or total destination Case/Day differs from Max Case/Day). |
+| 11 | Registered parts counter |  |  | Varchar |  | O | Label | Left |  |  | N parts |  | N = number of filtered rows (all pages). |
 | 12 | Last DAD calculation |  |  | Datetime |  | O | Label | Left |  |  | DD-Mon-YYYY HH:MM |  | Date-time of the last successful run of the DAD Volume Calculation batch (one date per batch run, all-or-nothing). |
 | 13 | Failed badge |  |  | Varchar |  | O | Label | Left |  |  |  |  | 'Scheduled run failed 3x'; shown when the scheduled run and its 3 auto retries have failed. |
 | 14 | Run calculation (Part List) |  |  |  |  | I | Button | Center |  |  |  |  | Manual trigger of the DAD Volume Calculation batch. Enabled only when the scheduled run has failed 3 times; otherwise disabled with message no. 17 as tooltip. Refer Operation Description 5.9. |
-| 15 | Incomplete mapping marker | TB_M_PART_CANDIDATE_DEST | CASE_DAY |  |  | O | Row marker (blue bar) |  |  |  |  |  | Shown when the part has no destination or the sum of destination Case/Day differs from MAX_CASE_DAY. |
-| 16 | Part Number | TB_M_PART_CANDIDATE | PART_NO | Varchar | TBD | O | Hyperlink | Left |  |  | X..TBD..X |  | Click opens the Edit part data modal (same as [Edit]). |
-| 17 | Part Name | TB_M_PART_CANDIDATE | PART_NAME | Varchar | TBD | O | Label | Left |  |  | X..TBD..X |  | Truncated with '...' when long; full name in tooltip. |
-| 18 | Min MAD | TB_M_PART_CANDIDATE | MIN_MAD | Number | TBD | O | Label | Right |  |  | ZZ,ZZ9 |  | Minimum MAD of the part, entered by the user. Reference value compared with the MAD result of the calculation. |
-| 19 | Pcs/Case | TB_M_PART_CANDIDATE | PCS_CASE | Number | TBD | O | Label | Right |  |  | ZZ,ZZ9 |  |  |
-| 20 | Max Case/Day | TB_M_PART_CANDIDATE | MAX_CASE_DAY | Number | TBD | O | Label | Right |  |  | ZZ,ZZ9 |  |  |
-| 21 | Total Pcs/Day | TB_M_PART_CANDIDATE | TOTAL_PCS_DAY | Number | TBD | O | Label | Right |  |  | ZZ,ZZ9 |  | = Pcs/Case x Max Case/Day. |
-| 22 | Status | TB_M_PART_CANDIDATE | PART_STATUS | Varchar | TBD | O | Chip | Left |  |  |  |  | Candidate (blue) / Active (green) / Inactive (grey). |
-| 23 | Last Update | TB_M_PART_CANDIDATE | CHANGED_DT, CHANGED_BY | Datetime |  | O | Label (2 lines) | Left |  |  | DD-Mon-YYYY HH:MI |  | Line 1 date-time, line 2 user name of the last change. |
-| 24 | Edit |  |  |  |  | I | Button | Center |  |  |  |  | Opens the Edit part data modal of the row. Shown as [View] for a read-only account (TBD: read-only accounts not defined). |
-| 25 | History (clock icon) |  |  |  |  | I | Button | Center |  |  |  |  | Opens the History setting modal of the row. |
+| 15 | Part Number | TB_M_PART_CANDIDATE | PART_NO | Varchar | TBD | O | Hyperlink | Left |  |  | X..TBD..X |  | Click opens the Edit part data modal (same as [Edit]). |
+| 16 | Part Name | TB_M_PART_CANDIDATE | PART_NAME | Varchar | TBD | O | Label | Left |  |  | X..TBD..X |  | Truncated with '...' when long; full name in tooltip. |
+| 17 | Min MAD | TB_M_PART_CANDIDATE | MIN_MAD | Number | TBD | O | Label | Right |  |  | ZZ,ZZ9 |  | Minimum MAD of the part, entered by the user. Reference value compared with the MAD result of the calculation. |
+| 18 | Pcs/Case | TB_M_PART_CANDIDATE | PCS_CASE | Number | TBD | O | Label | Right |  |  | ZZ,ZZ9 |  |  |
+| 19 | Max Case/Day | TB_M_PART_CANDIDATE | MAX_CASE_DAY | Number | TBD | O | Label | Right |  |  | ZZ,ZZ9 |  |  |
+| 20 | Total Pcs/Day | TB_M_PART_CANDIDATE | TOTAL_PCS_DAY | Number | TBD | O | Label | Right |  |  | ZZ,ZZ9 |  | = Pcs/Case x Max Case/Day. |
+| 21 | Status | TB_M_PART_CANDIDATE | PART_STATUS | Varchar | TBD | O | Chip | Left |  |  |  |  | Candidate (blue) / Active (green) / Inactive (grey). |
+| 22 | Last Update | TB_M_PART_CANDIDATE | CHANGED_DT, CHANGED_BY | Datetime |  | O | Label (2 lines) | Left |  |  | DD-Mon-YYYY HH:MI |  | Line 1 date-time, line 2 user name of the last change. |
+| 23 | Edit |  |  |  |  | I | Button | Center |  |  |  |  | Opens the Edit part data modal of the row. Shown as [View] for a read-only account (TBD: read-only accounts not defined). |
+| 24 | History (clock icon) |  |  |  |  | I | Button | Center |  |  |  |  | Opens the History setting modal of the row. |
 | **<Part List - Footer Section>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| 26 | Rows per page | Key-in |  | Number |  | I | Combo Box | Left | 25 | N |  |  | Options 25 / 50 / 100. Change returns to page 1. |
-| 27 | Paging information |  |  | Varchar |  | O | Label | Right |  |  | a-b of N parts · page x/y |  |  |
-| 28 | Prev / Next |  |  |  |  | I | Button | Center |  |  |  |  | Previous / next page. Refer Screen Mode remark 1). |
+| 25 | Rows per page | Key-in |  | Number |  | I | Combo Box | Left | 25 | N |  |  | Options 25 / 50 / 100. Change returns to page 1. |
+| 26 | Paging information |  |  | Varchar |  | O | Label | Right |  |  | a-b of N parts · page x/y |  |  |
+| 27 | Prev / Next |  |  |  |  | I | Button | Center |  |  |  |  | Previous / next page. Refer Screen Mode remark 1). |
 | **<Part List - Empty State Section>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| 29 | Empty state message |  |  | Varchar |  | O | Label | Center |  |  |  |  | Display message no. 1 (filter result empty) or no. 2 (no part registered). |
-| 30 | Reset filter |  |  |  |  | I | Button | Center |  |  |  |  | Same as [Reset]. Shown with message no. 1. |
-| 31 | Upload Excel / Add one part |  |  |  |  | I | Button | Center |  |  |  |  | Shown with message no. 2; same as header [Upload Excel] / [Add Part]. |
+| 28 | Empty state message |  |  | Varchar |  | O | Label | Center |  |  |  |  | Display message no. 1 (filter result empty) or no. 2 (no part registered). |
+| 29 | Reset filter |  |  |  |  | I | Button | Center |  |  |  |  | Same as [Reset]. Shown with message no. 1. |
+| 30 | Upload Excel / Add one part |  |  |  |  | I | Button | Center |  |  |  |  | Shown with message no. 2; same as header [Upload Excel] / [Add Part]. |
 | **<Part List - Add Part / Edit Part Data Modal>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| 32 | Modal title |  |  | Varchar |  | O | Label | Left | Add: 'Add Part Candidate Crossdock'; Edit: 'Edit part data' |  |  |  |  |
-| 33 | Step indicator |  |  |  |  | O | Stepper | Left | Step 1 active |  |  |  | Step 1 Part Candidate (Part No), step 2 Pcs/Case & Max Case/Day, step 3 Total Pcs/Day; a step gets a check when its items are filled. |
-| 34 | Status | TB_M_PART_CANDIDATE | PART_STATUS | Varchar | TBD | I/O | Combo Box | Left | Candidate | Y |  | Add: always Candidate. Edit: Candidate / Active / Inactive | Add: locked to Candidate (tooltip 'New parts are automatically Candidate'). Edit: Candidate / Active / Inactive. |
-| 35 | Part No | TB_M_PART_MASTER (Add) / TB_M_PART_CANDIDATE (Edit) | PART_NO | Varchar | TBD | I/O | Combo Box with search | Left | Blank | Y | X..TBD..X | Must exist in TB_M_PART_MASTER and not yet be registered (no duplicate Part No) | Add: lists parts of TB_M_PART_MASTER not yet registered (Part No + name, contains search, arrow keys / Enter / Esc). Edit: locked. |
-| 36 | Part Name | TB_M_PART_MASTER | PART_NAME (TBD) | Varchar | TBD | O | Text box (disabled) | Left | Blank |  | X..TBD..X |  | Autofilled from the selected Part No. |
-| 37 | Effective Start Date | TB_M_PART_CANDIDATE | EFFECTIVE_START_DATE | Date |  | I | Date picker | Left | Add: System date + 1 day | N (TBD: mandatory or not) | DD-Mon-YYYY | Today or later; editable only while the saved status is Candidate | Editable in Add, and in Edit only while the saved status is Candidate; otherwise locked with tooltip 'Can only be changed while the status is still Candidate'. |
-| 38 | Min MAD | TB_M_PART_CANDIDATE | MIN_MAD | Number | TBD | I | Text box | Right | Blank | Y | ZZ,ZZ9 | Mandatory; whole number, 0 or more | Minimum MAD of the part, entered by the user. Reference value compared with the MAD result of the calculation. Mandatory on Add and Edit; tooltip of disabled [Save] = message no. 15. |
-| 39 | Pcs/Case | TB_M_PART_CANDIDATE | PCS_CASE | Number | TBD | I | Text box | Right | Blank | Y | ZZ,ZZ9 | Whole number > 0 |  |
-| 40 | Max Case/Day | TB_M_PART_CANDIDATE | MAX_CASE_DAY | Number | TBD | I | Text box | Right | Blank | Y | ZZ,ZZ9 | Whole number > 0 | Locked until Pcs/Case is filled (tooltip 'Enter Pcs/Case first'). Edit: can not be less than the total Case/Day already mapped in the ongoing period (TB_M_PART_CANDIDATE_DEST); otherwise the field is marked red, message no. 14 is shown and [Save] is disabled. |
+| 31 | Modal title |  |  | Varchar |  | O | Label | Left | Add: 'Add Part Candidate Crossdock'; Edit: 'Edit part data' |  |  |  |  |
+| 32 | Step indicator |  |  |  |  | O | Stepper | Left | Step 1 active |  |  |  | Step 1 Part Candidate (Part No), step 2 Pcs/Case & Max Case/Day, step 3 Total Pcs/Day; a step gets a check when its items are filled. |
+| 33 | Status | TB_M_PART_CANDIDATE | PART_STATUS | Varchar | TBD | I/O | Combo Box | Left | Candidate | Y |  | Add: always Candidate. Edit: Candidate / Active / Inactive | Add: locked to Candidate (tooltip 'New parts are automatically Candidate'). Edit: Candidate / Active / Inactive. |
+| 34 | Part No | TB_M_PART_MASTER (Add) / TB_M_PART_CANDIDATE (Edit) | PART_NO | Varchar | TBD | I/O | Combo Box with search | Left | Blank | Y | X..TBD..X | Must exist in TB_M_PART_MASTER and not yet be registered (no duplicate Part No) | Add: lists parts of TB_M_PART_MASTER not yet registered (Part No + name, contains search, arrow keys / Enter / Esc). Edit: locked. |
+| 35 | Part Name | TB_M_PART_MASTER | PART_NAME (TBD) | Varchar | TBD | O | Text box (disabled) | Left | Blank |  | X..TBD..X |  | Autofilled from the selected Part No. |
+| 36 | Effective Start Date | TB_M_PART_CANDIDATE | EFFECTIVE_START_DATE | Date |  | I | Date picker | Left | Add: System date + 1 day | N (TBD: mandatory or not) | DD-Mon-YYYY | Today or later; editable only while the saved status is Candidate | Editable in Add, and in Edit only while the saved status is Candidate; otherwise locked with tooltip 'Can only be changed while the status is still Candidate'. |
+| 37 | Min MAD | TB_M_PART_CANDIDATE | MIN_MAD | Number | TBD | I | Text box | Right | Blank | Y | ZZ,ZZ9 | Mandatory; whole number, 0 or more | Minimum MAD of the part, entered by the user. Reference value compared with the MAD result of the calculation. Mandatory on Add and Edit; tooltip of disabled [Save] = message no. 15. |
+| 38 | Pcs/Case | TB_M_PART_CANDIDATE | PCS_CASE | Number | TBD | I | Text box | Right | Blank | Y | ZZ,ZZ9 | Whole number > 0 |  |
+| 39 | Max Case/Day | TB_M_PART_CANDIDATE | MAX_CASE_DAY | Number | TBD | I | Text box | Right | Blank | Y | ZZ,ZZ9 | Whole number > 0 | Locked until Pcs/Case is filled (tooltip 'Enter Pcs/Case first'). Edit: can not be less than the total Case/Day already mapped in the ongoing period (TB_M_PART_CANDIDATE_DEST); otherwise the field is marked red, message no. 14 is shown and [Save] is disabled. |
+| 40 | Mapped Case/Day (current period) | TB_M_PART_CANDIDATE_DEST | CASE_DAY | Number | TBD | O | Label | Left |  |  | ZZ,ZZ9 |  | Edit mode only. Total Case/Day of all destinations of the part in the ongoing period (' · no destination yet' when none); red when Max Case/Day is below it. Shows the lowest allowed Max Case/Day before Save. |
 | 41 | Total Pcs/Day |  |  | Number |  | O | Label | Right | '-' |  | ZZ,ZZ9 |  | = Pcs/Case x Max Case/Day, recalculated on every change. |
 | 42 | Cancel |  |  |  |  | I | Button | Center |  |  |  |  | Closes the modal without saving. |
 | 43 | Save |  |  |  |  | I | Button | Center |  |  |  |  | Enabled only when Part No, Min MAD, Pcs/Case > 0 and Max Case/Day > 0 are filled and, in Edit, Max Case/Day is not below the mapped total. Refer Operation Description 5.4 / 5.5. |
@@ -647,9 +647,8 @@ d. If no row matches, hide the table and paging and display message no. 1 with [
 
 ### 5.3 Result List
 
-a. Counter 'N parts · M incomplete mappings' is counted over the whole filtered result, not only the current page.
-b. Incomplete mapping: the part has no destination in TB_M_PART_CANDIDATE_DEST, or the sum of destination CASE_DAY differs from MAX_CASE_DAY. Mark the row with a blue bar and count it in 'M incomplete mappings'.
-c. Total Pcs/Day = Pcs/Case x Max Case/Day.
+a. Counter 'N parts' is counted over the whole filtered result, not only the current page.
+b. Total Pcs/Day = Pcs/Case x Max Case/Day.
 
 ### 5.4 Add Part
 
@@ -673,7 +672,8 @@ c. Total Pcs/Day = Pcs/Case x Max Case/Day.
   1. Open the 'Edit part data' modal with the saved values. 'Part No' is locked; 'Status' can be Candidate / Active / Inactive.
   2. 'Effective Start Date' is editable only while the saved status is Candidate (minimum today); otherwise locked with message no. 10 as tooltip.
   3. 'Min MAD' (mandatory, whole number 0 or more), 'Pcs/Case' and 'Max Case/Day' can be changed; 'Total Pcs/Day' is recalculated.
-  4. Max Case/Day can not be less than the total Case/Day already mapped to destinations in the ongoing period (TB_M_PART_CANDIDATE_DEST); otherwise the field is marked red, message no. 14 is shown below Pcs/Case & Max Case/Day and [Save] is disabled. The user must first reduce the mapping in Mapping per Destination (same rule as upload check 9).
+  4. Below Max Case/Day show 'Mapped Case/Day (current period): n' = total Case/Day of the part in TB_M_PART_CANDIDATE_DEST for the ongoing period (' · no destination yet' when none), so the user sees the lowest allowed Max Case/Day before Save.
+  5. Max Case/Day can not be less than the total Case/Day already mapped to destinations in the ongoing period (TB_M_PART_CANDIDATE_DEST); otherwise the field is marked red, message no. 14 is shown below Pcs/Case & Max Case/Day and [Save] is disabled. The user must first reduce the mapping in Mapping per Destination (same rule as upload check 9).
 
 - b. User clicks [Save].
   1. If the record was changed by another user after it was opened, display message no. 4. Stop.

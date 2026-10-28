@@ -73,7 +73,6 @@ export function PartListTab({ parts, q, aq, onSearch, setQ, resetQ, ro, onOpenPa
       .forEach((part) => latestByNumber.set(part.p, part));
     return [...latestByNumber.values()];
   }, [parts]);
-  const incompleteCount = rowsSrc.filter((p) => !p.dests.length || p.dests.reduce((a, d) => a + num(d.al), 0) !== num(p.mc)).length;
 
   const totalPages = Math.max(1, Math.ceil(rowsSrc.length / pageSize));
   const pageClamped = Math.min(page, totalPages);
@@ -173,7 +172,7 @@ export function PartListTab({ parts, q, aq, onSearch, setQ, resetQ, ro, onOpenPa
           <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '10px 16px', borderBottom: '1px solid var(--color-divider)' }}>
             <span style={{ fontSize: 12.5, fontWeight: 600 }}>Registered parts</span>
             <span style={{ fontSize: 11.5, color: 'var(--color-neutral-600)', fontVariantNumeric: 'tabular-nums' }}>
-              {rowsSrc.length} {rowsSrc.length === 1 ? 'part' : 'parts'} · {incompleteCount} incomplete {incompleteCount === 1 ? 'mapping' : 'mappings'}
+              {rowsSrc.length} {rowsSrc.length === 1 ? 'part' : 'parts'}
             </span>
             <span style={{ marginLeft: 'auto' }}>
               <CalcRunBar label="DAD calculation" run={dadRun} ro={ro} onRun={onRunCalc} />
