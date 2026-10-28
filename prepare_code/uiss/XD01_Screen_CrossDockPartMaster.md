@@ -217,23 +217,30 @@ flowchart LR
 ```mermaid
 flowchart TB
   s(["START"])
-  e>"On Click of Save button"]
-  d1{"Total <= Max Case/Day and every row has a destination?"}
-  m1>"Save stays disabled, show banner"]
+  e1>"Change destination / Case/Day in edit mode"]
+  d1{"Mapping valid?"}
+  m1>"Save disabled, show banner (message no. 20 / 21)"]
+  m2>"Save enabled"]
+  e2>"On Click of Save button"]
   p1["Replace mapping of part and ongoing period"]
   db[("TB_M_PART_CANDIDATE_DEST")]
   p2["Sync Status = No Sync"]
   db2[("TB_M_PART_CANDIDATE")]
   x(["Back to view mode"])
-  s --> e
-  e --> d1
+  s --> e1
+  e1 --> d1
   d1 -->|No| m1
-  d1 -->|Yes| p1
+  m1 -->|correct the mapping| e1
+  d1 -->|Yes| m2
+  m2 --> e2
+  e2 --> p1
   p1 -.-> db
   p1 --> p2
   p2 -.-> db2
   p2 --> x
 ```
+- Mapping valid = all of: (1) total Case/Day of the part <= Max Case/Day (a lower total is allowed, shown as '{n} case/day left'); (2) the part has at least one destination row; (3) every row has a destination selected.
+- The check runs on every change in edit mode, so [Save] is already disabled before it can be clicked (see Operation Description 5.15 Save rules).
 
 ## 3. Screen layout
 
