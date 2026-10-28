@@ -2,7 +2,8 @@
 
 The TMAP template carries invalid / broken defined names (e.g. "???", #REF!, links to
 external workbooks [1]..[6]) and the external link parts they point to. Keeps only the
-print settings (_xlnm.Print_Area / _xlnm.Print_Titles). Usage: clean_uiss_xlsx.py FILE.xlsx ...
+print settings (_xlnm.Print_Area / _xlnm.Print_Titles). Gridlines are hidden on every sheet (view mode).
+Usage: clean_uiss_xlsx.py FILE.xlsx ...
 """
 import re, shutil, sys, tempfile, zipfile
 
@@ -23,6 +24,11 @@ def clean(path):
         elif name == 'xl/_rels/workbook.xml.rels':
             x = data.decode('utf-8')
             x = re.sub(r'<Relationship [^>]*Type="[^"]*/externalLink"[^>]*/>', '', x)
+            data = x.encode('utf-8')
+        elif re.match(r'xl/worksheets/sheet\d+\.xml$', name):
+            x = data.decode('utf-8')
+            x = re.sub(r'(<sheetView\b[^>]*?)\sshowGridLines="[^"]*"', r'\1', x)
+            x = re.sub(r'<sheetView\b', '<sheetView showGridLines="0"', x)
             data = x.encode('utf-8')
         elif name == '[Content_Types].xml':
             x = data.decode('utf-8')
