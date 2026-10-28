@@ -3911,7 +3911,7 @@
   {
    "type": "text",
    "level": 2,
-   "text": "Proposed retention: 24 months online by CREATED_DT; a monthly housekeeping job deletes older records (period configurable in system master). To be confirmed."
+   "text": "Retention: the history of a part is kept for the last 24 months. A record is deleted when it is older than 24 months, counted from the later of its CREATED_DT and the Effective Start Date of the part (records of the Candidate period are kept until 24 months after the Effective Start Date). A monthly housekeeping job deletes the records (retention period configurable in system master; housekeeping job TBC)."
   },
   {
    "type": "heading",
