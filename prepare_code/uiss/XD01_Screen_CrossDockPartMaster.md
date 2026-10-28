@@ -716,7 +716,7 @@ TB_H_PART_CANDIDATE (proposed) - one record per changed field, insert only:
 
 Events: ADD / EDIT (source SCREEN or UPLOAD, PERIOD NULL), MAPPING (source SCREEN or UPLOAD, PERIOD and DEST_CODE filled, FIELD_NAME CASE_DAY), SYNC (source IF, FIELD_NAME SYNC_STATUS, REMARK = SYNC_MESSAGE). CALC (source BATCH, FIELD_NAME PART_STATUS, status set by the DAD Volume Calculation) and MAPPING with source BATCH (XD05 process 2 (mapping destination)).
 
-Proposed retention: 24 months online by CREATED_DT; a monthly housekeeping job deletes older records (period configurable in system master). To be confirmed.
+Retention: the history of a part is kept for the last 24 months. A record is deleted when it is older than 24 months, counted from the later of its CREATED_DT and the Effective Start Date of the part (records of the Candidate period are kept until 24 months after the Effective Start Date). A monthly housekeeping job deletes the records (retention period configurable in system master; housekeeping job TBC).
 
 ### 5.7 Upload Excel
 

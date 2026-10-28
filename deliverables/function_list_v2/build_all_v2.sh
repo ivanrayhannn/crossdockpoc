@@ -11,9 +11,13 @@ from v2lib import FUNCS
 for fid, (_, _, out) in FUNCS.items():
     print(fid, out)
 PY
+# workbooks listed in uiss/MANUAL.txt were tidied by hand: build them to specs/generated/ (not committed) instead
+mkdir -p $V/specs/generated
 while read -r fid out; do
-  python3 deliverables/uiss_specs/uiss_build.py "$V/specs/${fid}_spec.json" -o "$V/uiss/$out" > "$V/specs/${fid}_build.log"
-  echo "built $V/uiss/$out"
+  dest="$V/uiss/$out"
+  if grep -qx "$out" $V/uiss/MANUAL.txt; then dest="$V/specs/generated/$out"; fi
+  python3 deliverables/uiss_specs/uiss_build.py "$V/specs/${fid}_spec.json" -o "$dest" > "$V/specs/${fid}_build.log"
+  echo "built $dest"
 done < $V/specs/outputs.txt
 
 # Markdown copy of the UISS for coding (prepare_code/)

@@ -1,4 +1,4 @@
-"""28-Oct (FB-024 / FB-025 / FB-051 / FB-062 / FB-063): Part List shows no incomplete-mapping counter or row marker (mapping completeness is followed
+"""28-Oct (FB-024 / FB-025 / FB-051 / FB-062 / FB-063 / FB-072): Part List shows no incomplete-mapping counter or row marker (mapping completeness is followed
 by D/S in Mapping per Destination); the Edit part data modal shows the Case/Day already mapped in the current period."""
 import json
 
@@ -61,5 +61,17 @@ for fl in s['screen_flow']:
                        "'{n} case/day left'); (2) the part has at least one destination row; (3) every row has a destination selected.",
                        'The check runs on every change in edit mode, so [Save] is already disabled before it can be clicked '
                        '(see Operation Description 5.15 Save rules).']
+with open('XD01_spec.json', 'w') as f:
+    json.dump(s, f, indent=1, ensure_ascii=False)
+
+# FB-072 / FB-073 (b): history retention = rolling 24 months, counted from the Effective Start Date of the part
+with open('XD01_spec.json') as f:
+    s = json.load(f)
+for b in s['operation']:
+    if str(b.get('text', '')).startswith(('Proposed retention', 'Retention:')):
+        b['text'] = ('Retention: the history of a part is kept for the last 24 months. A record is deleted when it is older than 24 months, '
+                         'counted from the later of its CREATED_DT and the Effective Start Date of the part (records of the Candidate period '
+                         'are kept until 24 months after the Effective Start Date). A monthly housekeeping job deletes the records '
+                         '(retention period configurable in system master; housekeeping job TBC).')
 with open('XD01_spec.json', 'w') as f:
     json.dump(s, f, indent=1, ensure_ascii=False)

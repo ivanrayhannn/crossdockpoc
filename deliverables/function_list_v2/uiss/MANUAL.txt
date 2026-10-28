@@ -1,0 +1,4 @@
+# UISS workbooks tidied by hand in Excel (layout edited by the user).
+# build_all_v2.sh does not overwrite them: it writes the generated version to specs/generated/ instead,
+# so text changes from the spec must be merged into the hand-tidied file by hand.
+XD01_UISS_Screen_CrossDockPartMaster.xlsx
