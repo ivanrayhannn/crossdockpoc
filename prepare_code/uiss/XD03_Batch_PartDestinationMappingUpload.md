@@ -27,7 +27,7 @@ flowchart TB
   b["Check file"]
   c["Check rows per part"]
   d{"All valid?"}
-  e["Replace mapping of changed parts"]
+  e["Update / insert / delete mapping of changed parts"]
   f["Reject, record in upload log"]
   g[/"Result report + upload log"/]
   a --> b
@@ -52,7 +52,7 @@ flowchart TB
 
 | Name | Type | Description |
 |---|---|---|
-| TB_M_PART_CANDIDATE_DEST | DB | if successful: mapping of each changed part replaced (ongoing period) |
+| TB_M_PART_CANDIDATE_DEST | DB | if successful: mapping of each changed part updated per destination (ongoing period) |
 | TB_M_PART_CANDIDATE | DB | if successful: Sync Status = No Sync for each changed part |
 | TB_H_PART_CANDIDATE | DB | if successful: history record per added, changed or removed destination |
 | Log | DB | Upload log: one record per upload with status (COMPLETED / REJECTED), counts and errors |
@@ -87,7 +87,7 @@ flowchart TB
   p4["4. Check rows, group by part (4.2)"]
   m[("TB_M_PART_CANDIDATE / TB_M_PART_CANDIDATE_DEST")]
   d{"5. Any error?"}
-  p6["6. Replace mapping of changed parts (4.3)"]
+  p6["6. Update / insert / delete mapping of changed parts (4.3)"]
   t[("TB_M_PART_CANDIDATE_DEST / TB_M_PART_CANDIDATE")]
   p7["7. Result report + upload log"]
   log[("Log")]
@@ -114,15 +114,41 @@ flowchart TB
   - Go to step 7.
 6. If all rows are valid, compare each part with its current mapping of the ongoing period (see 4.3).
   - Same destinations and Case/Day: skip the part (no change).
-  - Otherwise: replace the mapping of the part by the rows of the file and set Sync Status = No Sync.
+  - Otherwise: update / insert / delete the destinations of the part so that its mapping matches the rows of the file, and set Sync Status = No Sync.
   - A part whose rows are all blank is not changed.
 7. Create the result report and record the result (completed or rejected) in the upload log. The Mapping per Destination screen shows the result to the user. Exit.
 
 ## 3. Data edit mapping
 
-#### 1. Delete TB_M_PART_CANDIDATE_DEST – Changed part - old rows
-- Source: TB_M_PART_CANDIDATE_DEST (keys: PART_NO = Changed part, PERIOD = Ongoing period)
-- Destination keys: PART_NO = Changed part, PERIOD = Ongoing period
+#### 1. Update TB_M_PART_CANDIDATE_DEST – Changed part - Case/Day changed
+- Source: Excel file - sheet Upload (valid rows) (keys: part_no = Changed part, dest_code = Not blank)
+- Destination keys: PART_NO = Changed part, PERIOD = Ongoing period, DEST_CODE = In both, Case/Day differs
+
+| Source field | Destination field | Description |
+|---|---|---|
+| case_day | CASE_DAY |  |
+|  | CHANGED_BY | Login name of the user who uploaded |
+|  | CHANGED_DT | Server system date and time |
+|  | CREATED_BY | Not changed |
+|  | CREATED_DT | Not changed |
+
+#### 2. Insert TB_M_PART_CANDIDATE_DEST – Changed part - new destination
+- Source: Excel file - sheet Upload (valid rows) (keys: part_no = Changed part, dest_code = Not blank)
+
+| Source field | Destination field | Description |
+|---|---|---|
+| part_no | PART_NO |  |
+|  | PERIOD | Ongoing calculation period |
+| dest_code | DEST_CODE | Destination not yet in the table for the part and period |
+| case_day | CASE_DAY |  |
+|  | CREATED_BY | Login name of the user who uploaded |
+|  | CREATED_DT | Server system date and time |
+|  | CHANGED_BY | Same as CREATED_BY |
+|  | CHANGED_DT | Server system date and time |
+
+#### 3. Delete TB_M_PART_CANDIDATE_DEST – Changed part - removed destination
+- Source: TB_M_PART_CANDIDATE_DEST (keys: PART_NO = Changed part, PERIOD = Ongoing period, DEST_CODE = Not in the file)
+- Destination keys: PART_NO = Changed part, PERIOD = Ongoing period, DEST_CODE = Not in the file
 
 | Source field | Destination field | Description |
 |---|---|---|
@@ -130,26 +156,8 @@ flowchart TB
 |  | PERIOD | Row is deleted |
 |  | DEST_CODE | Row is deleted |
 |  | CASE_DAY | Row is deleted |
-|  | CREATED_BY | Row is deleted |
-|  | CREATED_DT | Row is deleted |
-|  | CHANGED_BY | Row is deleted |
-|  | CHANGED_DT | Row is deleted |
 
-#### 2. Insert TB_M_PART_CANDIDATE_DEST – Changed part - new rows
-- Source: Excel file - sheet Upload (valid rows) (keys: part_no = Changed part, dest_code = Not blank)
-
-| Source field | Destination field | Description |
-|---|---|---|
-| part_no | PART_NO |  |
-|  | PERIOD | Ongoing calculation period |
-| dest_code | DEST_CODE |  |
-| case_day | CASE_DAY |  |
-|  | CREATED_BY | Login name of the user who uploaded |
-|  | CREATED_DT | Server system date and time |
-|  | CHANGED_BY | Same as CREATED_BY |
-|  | CHANGED_DT | Server system date and time |
-
-#### 3. Update TB_M_PART_CANDIDATE – Changed part - Sync Status
+#### 4. Update TB_M_PART_CANDIDATE – Changed part - Sync Status
 - Source: Changed part of this upload
 - Destination keys: PART_NO = Changed part
 
@@ -173,7 +181,7 @@ flowchart TB
 |  | CHANGED_BY | Login name of the user who uploaded |
 |  | CHANGED_DT | Server system date and time |
 
-#### 4. Insert TB_H_PART_CANDIDATE – Changed part - history
+#### 5. Insert TB_H_PART_CANDIDATE – Changed part - history
 - Source: Changed parts of this upload
 
 | Source field | Destination field | Description |
@@ -192,7 +200,7 @@ flowchart TB
 |  | CREATED_BY | Login name of the user who uploaded |
 |  | CREATED_DT | Server system date and time |
 
-#### 5. Update Log – Result of the run
+#### 6. Update Log – Result of the run
 - Source: Result of this upload
 - Destination keys: UPLOAD_ID = UPLOAD_ID of this run
 
@@ -200,7 +208,7 @@ flowchart TB
 |---|---|---|
 |  | STATUS | COMPLETED if all parts saved or skipped, REJECTED if file check or any row failed |
 |  | TOTAL_ROWS | Number of rows in sheet Upload |
-|  | SAVED_ROWS | Parts whose mapping was replaced |
+|  | SAVED_ROWS | Parts whose mapping was changed |
 |  | NO_CHANGE_ROWS | Parts skipped because nothing changed |
 |  | ERROR_ROWS | Rows with error |
 |  | RESULT_FILE_PATH | Path of the result report .xlsx |
@@ -208,7 +216,7 @@ flowchart TB
 
 ## 4. Function description
 
-This batch starts when the user clicks [Validate file] in the Upload Excel modal of the Mapping per Destination screen. It checks the uploaded file and, if everything is valid, replaces the mapping of the changed parts for the ongoing calculation period. If not, the upload is rejected and recorded in the upload log.
+This batch starts when the user clicks [Validate file] in the Upload Excel modal of the Mapping per Destination screen. It checks the uploaded file and, if everything is valid, updates the mapping of the changed parts for the ongoing calculation period. If not, the upload is rejected and recorded in the upload log.
 
 - Only sheet "Upload" of the file is read. Parts that are not in the sheet are not changed.
 - Only the ongoing calculation period is changed; past periods are read only.
@@ -231,7 +239,7 @@ Every row is checked and all errors are collected, so the user can correct the f
 
 - If any row is rejected, nothing is saved. The upload status and the error of every row are recorded in the upload log (Log).
 - If all rows are valid, each part in the file is compared with its current mapping of the ongoing period. A part with the same destinations and Case/Day is skipped (no change); its Sync Status and last update stay.
-- For a changed part, all its rows of the ongoing period in TB_M_PART_CANDIDATE_DEST are replaced by the rows of the file: destinations in the file are inserted or updated, destinations not in the file are removed.
+- For a changed part, its rows of the ongoing period in TB_M_PART_CANDIDATE_DEST are compared with the rows of the file by destination code (key PART_NO + PERIOD + DEST_CODE): a destination in both with a different Case/Day is updated (CASE_DAY, CHANGED_BY, CHANGED_DT; CREATED_BY / CREATED_DT are kept), a destination only in the file is inserted, a destination only in the table is deleted, and a destination with the same Case/Day is not touched. All changes are saved in one transaction.
 - A part whose rows are all blank (placeholder) is not changed, so a mapping cannot be removed completely by upload (same as the screen: at least one destination).
 - Every changed part gets a history record per added, changed or removed destination in TB_H_PART_CANDIDATE (event MAPPING, source UPLOAD, DEST_CODE and FIELD_NAME CASE_DAY; refer Appendix).
 - Every changed part gets Sync Status = No Sync in TB_M_PART_CANDIDATE. It is sent to GTOPAS and AP POLE by the IF functions (XD06 / XD07) when D/S clicks [Sync] on the screen.
@@ -258,7 +266,7 @@ Every row is checked and all errors are collected, so the user can correct the f
 | LOG4 | File check | Extension, size, row count, sheet Upload or header is invalid | Error | File check failed: <REASON>. | system: Set STATUS = REJECTED. Create the result report.; user: Download the file from the screen again and upload it. |
 | LOG5 | Row validation | A validation rule in 4.2 fails | Error | Row <ROW_NO> <COLUMN> : <RULE_MESSAGE>. | system: Reject the whole file. Nothing is saved.; user: Correct the rows in sheet Re-upload of the result report, then upload again. |
 | LOG6 | Part skipped | Rows of the part equal the current mapping, or all rows are blank | Info | Part No <PART_NO> has no mapping change. Skipped. | system: Do not change the mapping or the part.; user: - |
-| LOG7 | Save mapping | Replace of TB_M_PART_CANDIDATE_DEST or update of TB_M_PART_CANDIDATE fails | Error | Cannot save the mapping of Part No <PART_NO>. | system: Roll back. Set STATUS = REJECTED.; user: User contact PIC |
+| LOG7 | Save mapping | Save (update / insert / delete) of TB_M_PART_CANDIDATE_DEST or update of TB_M_PART_CANDIDATE fails | Error | Cannot save the mapping of Part No <PART_NO>. | system: Roll back. Set STATUS = REJECTED.; user: User contact PIC |
 | LOG8 | Result report | Result report cannot be created | Warning | Result report of <UPLOAD_ID> cannot be created. | system: Continue. RESULT_FILE_PATH stays blank.; user: Contact system owner. |
 | LOG9 | Unexpected error | Any other system error | Critical | Unexpected error: <ERROR_DETAIL>. | system: Roll back. Set STATUS = REJECTED.; user: User contact PIC |
 
@@ -316,7 +324,7 @@ Destination mapping, one record per part, calculation period and destination (Ma
 | CHANGED_DT | DATETIME |  | N | Last changed date and time |
 
 #### TB_H_PART_CANDIDATE (history, proposed)
-History of every change of a crossdock part (Add / Edit by screen or upload, mapping changes, Sync results, status changes and mappings made by the calculation batches). Read by the History setting modal of Part List (index PART_NO, CREATED_DT). Proposed retention: 24 months online by CREATED_DT; a monthly housekeeping job deletes older records (period configurable in system master). To be confirmed.
+History of every change of a crossdock part (Add / Edit by screen or upload, mapping changes, Sync results, status changes and mappings made by the calculation batches). Read by the History setting modal of Part List (index PART_NO, CREATED_DT). Retention: 24 months, counted from the later of CREATED_DT and the Effective Start Date of the part; a monthly housekeeping job deletes older records (period configurable in system master; job TBC).
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
@@ -375,12 +383,12 @@ Destination Master (existing NSP table, read only). Only the listed columns are 
 
 | No | Scenario | part_no | dest_code | case_day | upload | total_case_day | Expected result |
 |---|---|---|---|---|---|---|---|
-| N1 | Change Case/Day | PART-A | 9722D10 | 10 | E | 24 | Replaced. Total 24 (equal to Max). Sync Status No Sync. |
+| N1 | Change Case/Day | PART-A | 9722D10 | 10 | E | 24 | Changed. Total 24 (equal to Max). Sync Status No Sync. |
 | N1 | Change Case/Day | PART-A | 9811110 | 8 | E | 24 |  |
 | N1 | Change Case/Day | PART-A | 9715310 | 6 | E | 24 |  |
-| N2 | Remove a destination | PART-A | 9722D10 | 12 | E | 24 | Replaced. 9715310 removed. Total 20, 4 case/day left (below Max is allowed). |
+| N2 | Remove a destination | PART-A | 9722D10 | 12 | E | 24 | Changed. 9715310 deleted. Total 20, 4 case/day left (below Max is allowed). |
 | N2 | Remove a destination | PART-A | 9811110 | 8 | E | 24 |  |
-| N3 | Add a destination | PART-C | 9715310 | 18 | E | 30 | Replaced. 9811110 added. Total 30 (equal to Max). |
+| N3 | Add a destination | PART-C | 9715310 | 18 | E | 30 | Changed. 9811110 inserted. Total 30 (equal to Max). |
 | N3 | Add a destination | PART-C | 9811110 | 12 | A | 30 |  |
 | N4 | First mapping from the placeholder row | PART-G | 9722D10 | 22 | A | 22 | Inserted. Total 22. Sync Status No Sync. |
 | N5 | Placeholder row left blank | PART-G |  |  | A | 22 | NO CHANGE. PART-G stays without mapping. |

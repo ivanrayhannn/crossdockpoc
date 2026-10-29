@@ -57,7 +57,7 @@
 | LOG1 | Click [Save] button | Database error on insert/update of TB_M_PART_CANDIDATE | Error | Failed to save part <PART_NO>: <DB error message>. | Show [Corresponding Screen Message] on screen (TBD) | Y |
 | LOG2 | Click [Export Excel] button | Excel file generation error | Error | Export Excel of Part List failed: <error message>. | Display Message no. 13 | Y |
 | - | Click [Validate file] button | Upload processing | Info | Logging is handled by the Part List Upload batch (refer UISS-Batch "XD02 Cross Dock Part Master Upload Batch"). | - | N |
-| LOG3 | Click [Save] button | Database error on replace of TB_M_PART_CANDIDATE_DEST | Error | Failed to save mapping of part <PART_NO>, period <PERIOD>: <DB error message>. | Show [Corresponding Screen Message] on screen (TBD) | Y |
+| LOG3 | Click [Save] button | Database error on save of TB_M_PART_CANDIDATE_DEST | Error | Failed to save mapping of part <PART_NO>, period <PERIOD>: <DB error message>. | Show [Corresponding Screen Message] on screen (TBD) | Y |
 | LOG4 | XD06 / XD07 | GTOPAS or AP POLE rejects a part | Error | Logging is done by XD06 / XD07 (refer UISS-Batch XD06 / XD07); the chip shows the result. | Status Failed; Display Message no. 28 on the chip | N |
 | LOG5 | Click [Export Excel] button | Excel file generation error | Error | Export Excel of Mapping per Destination failed: <error message>. | Display Message no. 26 | Y |
 | - | Click [Validate file] button | Upload processing | Info | Logging is handled by the Mapping per Destination Upload batch (refer UISS-Batch "XD03 Part and Destination Mapping Upload Batch"). | - | N |
@@ -90,7 +90,7 @@
 | LOG4 | File check | Extension, size, row count, sheet Upload or header is invalid | Error | File check failed: <REASON>. | system: Set STATUS = REJECTED. Create the result report.; user: Download the file from the screen again and upload it. |
 | LOG5 | Row validation | A validation rule in 4.2 fails | Error | Row <ROW_NO> <COLUMN> : <RULE_MESSAGE>. | system: Reject the whole file. Nothing is saved.; user: Correct the rows in sheet Re-upload of the result report, then upload again. |
 | LOG6 | Part skipped | Rows of the part equal the current mapping, or all rows are blank | Info | Part No <PART_NO> has no mapping change. Skipped. | system: Do not change the mapping or the part.; user: - |
-| LOG7 | Save mapping | Replace of TB_M_PART_CANDIDATE_DEST or update of TB_M_PART_CANDIDATE fails | Error | Cannot save the mapping of Part No <PART_NO>. | system: Roll back. Set STATUS = REJECTED.; user: User contact PIC |
+| LOG7 | Save mapping | Save (update / insert / delete) of TB_M_PART_CANDIDATE_DEST or update of TB_M_PART_CANDIDATE fails | Error | Cannot save the mapping of Part No <PART_NO>. | system: Roll back. Set STATUS = REJECTED.; user: User contact PIC |
 | LOG8 | Result report | Result report cannot be created | Warning | Result report of <UPLOAD_ID> cannot be created. | system: Continue. RESULT_FILE_PATH stays blank.; user: Contact system owner. |
 | LOG9 | Unexpected error | Any other system error | Critical | Unexpected error: <ERROR_DETAIL>. | system: Roll back. Set STATUS = REJECTED.; user: User contact PIC |
 

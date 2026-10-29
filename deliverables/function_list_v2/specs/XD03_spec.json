@@ -48,7 +48,7 @@
      },
      {
       "id": "e",
-      "label": "Replace mapping of changed parts",
+      "label": "Update / insert / delete mapping of changed parts",
       "type": "process"
      },
      {
@@ -122,7 +122,7 @@
    {
     "name": "TB_M_PART_CANDIDATE_DEST",
     "type": "DB",
-    "description": "if successful: mapping of each changed part replaced (ongoing period)"
+    "description": "if successful: mapping of each changed part updated per destination (ongoing period)"
    },
    {
     "name": "TB_M_PART_CANDIDATE",
@@ -244,7 +244,7 @@
     },
     {
      "id": "p6",
-     "label": "Replace mapping of changed parts (4.3)",
+     "label": "Update / insert / delete mapping of changed parts (4.3)",
      "type": "process",
      "step": 6
     },
@@ -343,7 +343,7 @@
     "text": "If all rows are valid, compare each part with its current mapping of the ongoing period (see 4.3).",
     "children": [
      "Same destinations and Case/Day: skip the part (no change).",
-     "Otherwise: replace the mapping of the part by the rows of the file and set Sync Status = No Sync.",
+     "Otherwise: update / insert / delete the destinations of the part so that its mapping matches the rows of the file, and set Sync Status = No Sync.",
      "A part whose rows are all blank is not changed."
     ]
    },
@@ -354,22 +354,22 @@
   "blocks": [
    {
     "source": {
-     "table": "TB_M_PART_CANDIDATE_DEST",
+     "table": "Excel file - sheet Upload (valid rows)",
      "keys": [
       {
-       "field": "PART_NO",
+       "field": "part_no",
        "value": "Changed part"
       },
       {
-       "field": "PERIOD",
-       "value": "Ongoing period"
+       "field": "dest_code",
+       "value": "Not blank"
       }
      ]
     },
     "destination": {
      "table": "TB_M_PART_CANDIDATE_DEST",
-     "operation": "Delete",
-     "description": "Changed part - old rows",
+     "operation": "Update",
+     "description": "Changed part - Case/Day changed",
      "keys": [
       {
        "field": "PART_NO",
@@ -378,41 +378,33 @@
       {
        "field": "PERIOD",
        "value": "Ongoing period"
+      },
+      {
+       "field": "DEST_CODE",
+       "value": "In both, Case/Day differs"
       }
      ]
     },
     "mappings": [
      {
-      "dest_field": "PART_NO",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "PERIOD",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "DEST_CODE",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "CASE_DAY",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "CREATED_BY",
-      "description": "Row is deleted"
-     },
-     {
-      "dest_field": "CREATED_DT",
-      "description": "Row is deleted"
+      "source_field": "case_day",
+      "dest_field": "CASE_DAY"
      },
      {
       "dest_field": "CHANGED_BY",
-      "description": "Row is deleted"
+      "description": "Login name of the user who uploaded"
      },
      {
       "dest_field": "CHANGED_DT",
-      "description": "Row is deleted"
+      "description": "Server system date and time"
+     },
+     {
+      "dest_field": "CREATED_BY",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "CREATED_DT",
+      "description": "Not changed"
      }
     ]
    },
@@ -433,7 +425,7 @@
     "destination": {
      "table": "TB_M_PART_CANDIDATE_DEST",
      "operation": "Insert",
-     "description": "Changed part - new rows"
+     "description": "Changed part - new destination"
     },
     "mappings": [
      {
@@ -446,7 +438,8 @@
      },
      {
       "source_field": "dest_code",
-      "dest_field": "DEST_CODE"
+      "dest_field": "DEST_CODE",
+      "description": "Destination not yet in the table for the part and period"
      },
      {
       "source_field": "case_day",
@@ -467,6 +460,62 @@
      {
       "dest_field": "CHANGED_DT",
       "description": "Server system date and time"
+     }
+    ]
+   },
+   {
+    "source": {
+     "table": "TB_M_PART_CANDIDATE_DEST",
+     "keys": [
+      {
+       "field": "PART_NO",
+       "value": "Changed part"
+      },
+      {
+       "field": "PERIOD",
+       "value": "Ongoing period"
+      },
+      {
+       "field": "DEST_CODE",
+       "value": "Not in the file"
+      }
+     ]
+    },
+    "destination": {
+     "table": "TB_M_PART_CANDIDATE_DEST",
+     "operation": "Delete",
+     "description": "Changed part - removed destination",
+     "keys": [
+      {
+       "field": "PART_NO",
+       "value": "Changed part"
+      },
+      {
+       "field": "PERIOD",
+       "value": "Ongoing period"
+      },
+      {
+       "field": "DEST_CODE",
+       "value": "Not in the file"
+      }
+     ]
+    },
+    "mappings": [
+     {
+      "dest_field": "PART_NO",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "PERIOD",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "DEST_CODE",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "CASE_DAY",
+      "description": "Row is deleted"
      }
     ]
    },
@@ -640,7 +689,7 @@
      },
      {
       "dest_field": "SAVED_ROWS",
-      "description": "Parts whose mapping was replaced"
+      "description": "Parts whose mapping was changed"
      },
      {
       "dest_field": "NO_CHANGE_ROWS",
@@ -667,7 +716,7 @@
   {
    "type": "text",
    "level": 0,
-   "text": "This batch starts when the user clicks [Validate file] in the Upload Excel modal of the Mapping per Destination screen. It checks the uploaded file and, if everything is valid, replaces the mapping of the changed parts for the ongoing calculation period. If not, the upload is rejected and recorded in the upload log."
+   "text": "This batch starts when the user clicks [Validate file] in the Upload Excel modal of the Mapping per Destination screen. It checks the uploaded file and, if everything is valid, updates the mapping of the changed parts for the ongoing calculation period. If not, the upload is rejected and recorded in the upload log."
   },
   {
    "type": "bullets",
@@ -716,7 +765,7 @@
    "items": [
     "If any row is rejected, nothing is saved. The upload status and the error of every row are recorded in the upload log (Log).",
     "If all rows are valid, each part in the file is compared with its current mapping of the ongoing period. A part with the same destinations and Case/Day is skipped (no change); its Sync Status and last update stay.",
-    "For a changed part, all its rows of the ongoing period in TB_M_PART_CANDIDATE_DEST are replaced by the rows of the file: destinations in the file are inserted or updated, destinations not in the file are removed.",
+    "For a changed part, its rows of the ongoing period in TB_M_PART_CANDIDATE_DEST are compared with the rows of the file by destination code (key PART_NO + PERIOD + DEST_CODE): a destination in both with a different Case/Day is updated (CASE_DAY, CHANGED_BY, CHANGED_DT; CREATED_BY / CREATED_DT are kept), a destination only in the file is inserted, a destination only in the table is deleted, and a destination with the same Case/Day is not touched. All changes are saved in one transaction.",
     "A part whose rows are all blank (placeholder) is not changed, so a mapping cannot be removed completely by upload (same as the screen: at least one destination).",
     "Every changed part gets a history record per added, changed or removed destination in TB_H_PART_CANDIDATE (event MAPPING, source UPLOAD, DEST_CODE and FIELD_NAME CASE_DAY; refer Appendix).",
     "Every changed part gets Sync Status = No Sync in TB_M_PART_CANDIDATE. It is sent to GTOPAS and AP POLE by the IF functions (XD06 / XD07) when D/S clicks [Sync] on the screen.",
@@ -858,7 +907,7 @@
   },
   {
    "event": "Save mapping",
-   "cause": "Replace of TB_M_PART_CANDIDATE_DEST or update of TB_M_PART_CANDIDATE fails",
+   "cause": "Save (update / insert / delete) of TB_M_PART_CANDIDATE_DEST or update of TB_M_PART_CANDIDATE fails",
    "type": "Error",
    "msg_id": "LOG7",
    "message": "Cannot save the mapping of Part No <PART_NO>.",
@@ -1043,7 +1092,7 @@
       10,
       "E",
       24,
-      "Replaced. Total 24 (equal to Max). Sync Status No Sync."
+      "Changed. Total 24 (equal to Max). Sync Status No Sync."
      ],
      [
       "N1",
@@ -1073,7 +1122,7 @@
       12,
       "E",
       24,
-      "Replaced. 9715310 removed. Total 20, 4 case/day left (below Max is allowed)."
+      "Changed. 9715310 deleted. Total 20, 4 case/day left (below Max is allowed)."
      ],
      [
       "N2",
@@ -1093,7 +1142,7 @@
       18,
       "E",
       30,
-      "Replaced. 9811110 added. Total 30 (equal to Max)."
+      "Changed. 9811110 inserted. Total 30 (equal to Max)."
      ],
      [
       "N3",
@@ -1555,7 +1604,7 @@
    "name": "TB_H_PART_CANDIDATE",
    "kind": "history",
    "proposed": true,
-   "description": "History of every change of a crossdock part (Add / Edit by screen or upload, mapping changes, Sync results, status changes and mappings made by the calculation batches). Read by the History setting modal of Part List (index PART_NO, CREATED_DT). Proposed retention: 24 months online by CREATED_DT; a monthly housekeeping job deletes older records (period configurable in system master). To be confirmed.",
+   "description": "History of every change of a crossdock part (Add / Edit by screen or upload, mapping changes, Sync results, status changes and mappings made by the calculation batches). Read by the History setting modal of Part List (index PART_NO, CREATED_DT). Retention: 24 months, counted from the later of CREATED_DT and the Effective Start Date of the part; a monthly housekeeping job deletes older records (period configurable in system master; job TBC).",
    "columns": [
     [
      "HIST_ID",
