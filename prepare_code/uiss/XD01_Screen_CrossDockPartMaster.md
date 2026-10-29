@@ -553,32 +553,44 @@ flowchart TB
 |  | CREATED_BY | Login user ID |
 |  | CREATED_DT | Server system date-time |
 
-#### 4. Delete TB_M_PART_CANDIDATE_DEST – Edit mapping - [Save]
-- Source: TB_M_PART_CANDIDATE_DEST (keys: PART_NO = Edited part, PERIOD = Ongoing period)
-- Destination keys: PART_NO = Edited part, PERIOD = Ongoing period
+#### 4. Update TB_M_PART_CANDIDATE_DEST – Edit mapping - [Save] - Case/Day changed
+- Source: Key-in from screen
+- Destination keys: PART_NO = Edited part, PERIOD = Ongoing period, DEST_CODE = In both, Case/Day differs
 
 | Source field | Destination field | Description |
 |---|---|---|
-|  | PART_NO | Current rows of the part are removed |
-|  | PERIOD | Ongoing period only |
-|  | DEST_CODE | Row is deleted |
-|  | CASE_DAY | Row is deleted |
+| Case/Day | CASE_DAY |  |
+|  | CHANGED_BY | Login user ID |
+|  | CHANGED_DT | Server system date and time |
+|  | CREATED_BY | Not changed |
+|  | CREATED_DT | Not changed |
 
-#### 5. Insert TB_M_PART_CANDIDATE_DEST – Edit mapping - [Save]
+#### 5. Insert TB_M_PART_CANDIDATE_DEST – Edit mapping - [Save] - new destination
 - Source: Key-in from screen
 
 | Source field | Destination field | Description |
 |---|---|---|
 | Part Number | PART_NO |  |
-| Calculation period | PERIOD | Ongoing calculation period |
-| Destination (CD) | DEST_CODE | One row per destination in the panel |
+|  | PERIOD | Ongoing calculation period |
+| Destination (CD) | DEST_CODE | Destination not yet in the table for the part and period |
 | Case/Day | CASE_DAY |  |
 |  | CREATED_BY | Login user ID |
-|  | CREATED_DT | Server system date-time |
-|  | CHANGED_BY | Login user ID |
-|  | CHANGED_DT | Server system date-time |
+|  | CREATED_DT | Server system date and time |
+|  | CHANGED_BY | Same as CREATED_BY |
+|  | CHANGED_DT | Server system date and time |
 
-#### 6. Update TB_M_PART_CANDIDATE – Edit mapping - [Save]
+#### 6. Delete TB_M_PART_CANDIDATE_DEST – Edit mapping - [Save] - removed destination
+- Source: TB_M_PART_CANDIDATE_DEST (keys: PART_NO = Edited part, PERIOD = Ongoing period, DEST_CODE = Not in the panel)
+- Destination keys: PART_NO = Edited part, PERIOD = Ongoing period, DEST_CODE = Not in the panel
+
+| Source field | Destination field | Description |
+|---|---|---|
+|  | PART_NO | Row is deleted |
+|  | PERIOD | Row is deleted |
+|  | DEST_CODE | Row is deleted |
+|  | CASE_DAY | Row is deleted |
+
+#### 7. Update TB_M_PART_CANDIDATE – Edit mapping - [Save]
 - Source: Key-in from screen
 - Destination keys: PART_NO = Edited part
 
@@ -589,7 +601,7 @@ flowchart TB
 |  | CHANGED_BY | Login user ID |
 |  | CHANGED_DT | Server system date-time |
 
-#### 7. Insert TB_H_PART_CANDIDATE – Edit mapping - [Save]
+#### 8. Insert TB_H_PART_CANDIDATE – Edit mapping - [Save]
 - Source: Key-in from screen
 
 | Source field | Destination field | Description |
@@ -608,7 +620,7 @@ flowchart TB
 |  | CREATED_BY | Login user ID |
 |  | CREATED_DT | Server system date and time |
 
-#### 8. Update TB_M_PART_CANDIDATE – [Sync]
+#### 9. Update TB_M_PART_CANDIDATE – [Sync]
 - Source: TB_M_PART_CANDIDATE (keys: PART_STATUS = 'Active', SYNC_STATUS = '0' or '2')
 - Destination keys: PART_NO = Each part to synchronise
 
@@ -616,7 +628,7 @@ flowchart TB
 |---|---|---|
 |  | SYNC_STATUS | '3' (Waiting); XD06 and XD07 are started |
 
-#### 9. Insert / Update TB_R_CROSSDOCK_IF_RESULT – [Sync]: one row per part and target system
+#### 10. Insert / Update TB_R_CROSSDOCK_IF_RESULT – [Sync]: one row per part and target system
 - Source: TB_M_PART_CANDIDATE (keys: SYNC_STATUS = '3' (set by this [Sync]))
 - Destination keys: PART_NO + TARGET_SYSTEM = Each part to synchronise x 'GTOPAS' / 'APPOLE'
 
@@ -801,7 +813,7 @@ c. A part without destination shows message no. 19.
 
 - c. User clicks [Save].
   1. If the mapping was changed by another user after edit mode started, display message no. 25. Stop.
-  2. Replace the rows of the part and the ongoing period in TB_M_PART_CANDIDATE_DEST by the rows of the draft (refer Data Edit Mapping).
+  2. Save the draft per destination in TB_M_PART_CANDIDATE_DEST: update the Case/Day of a kept one, insert a new one, delete a removed one (refer Data Edit Mapping).
   3. Set SYNC_STATUS = 0 (No Sync) in TB_M_PART_CANDIDATE, so the D/S user synchronises the part again.
   4. Insert a history record per added, changed or removed destination in TB_H_PART_CANDIDATE (event MAPPING, source SCREEN, DEST_CODE, FIELD_NAME CASE_DAY, old / new Case/Day).
   5. Leave edit mode and show the saved mapping.
@@ -828,7 +840,7 @@ c. A part without destination shows message no. 19.
 
 a. [Upload Excel] is enabled only when the ongoing calculation period is selected; otherwise it is disabled with message no. 23 as tooltip.
 b. The modal shows the template columns (part_no, dest_code, case_day, upload, total_case_day), the upload rules and the file area (.xlsx, max 5 MB, max 5,000 rows).
-c. Base file: sheet 'Upload' of Export Excel with the ongoing period selected. A part in the file gets its whole mapping replaced; parts not in the file are not changed.
+c. Base file: sheet 'Upload' of Export Excel with the ongoing period selected. A part in the file gets its mapping updated per destination (refer XD03); parts not in the file are not changed.
 d. User clicks [Validate file] (save button of the upload): the file is passed to the upload batch; validation, saving (all-or-nothing) and logging follow UISS-Batch "XD03 Part and Destination Mapping Upload Batch".
 e. When the upload is completed, close the modal and display message no. 24. When it is rejected, show the batch result (error list) - refer UISS-Batch.
 f. Changed parts show Sync Status No Sync.
@@ -918,7 +930,7 @@ Sync Status is kept per part in TB_M_PART_CANDIDATE because a part is sent as on
 | LOG1 | Click [Save] button | Database error on insert/update of TB_M_PART_CANDIDATE | Error | Failed to save part <PART_NO>: <DB error message>. | Show [Corresponding Screen Message] on screen (TBD) | Y |
 | LOG2 | Click [Export Excel] button | Excel file generation error | Error | Export Excel of Part List failed: <error message>. | Display Message no. 13 | Y |
 | - | Click [Validate file] button | Upload processing | Info | Logging is handled by the Part List Upload batch (refer UISS-Batch "XD02 Cross Dock Part Master Upload Batch"). | - | N |
-| LOG3 | Click [Save] button | Database error on replace of TB_M_PART_CANDIDATE_DEST | Error | Failed to save mapping of part <PART_NO>, period <PERIOD>: <DB error message>. | Show [Corresponding Screen Message] on screen (TBD) | Y |
+| LOG3 | Click [Save] button | Database error on save of TB_M_PART_CANDIDATE_DEST | Error | Failed to save mapping of part <PART_NO>, period <PERIOD>: <DB error message>. | Show [Corresponding Screen Message] on screen (TBD) | Y |
 | LOG4 | XD06 / XD07 | GTOPAS or AP POLE rejects a part | Error | Logging is done by XD06 / XD07 (refer UISS-Batch XD06 / XD07); the chip shows the result. | Status Failed; Display Message no. 28 on the chip | N |
 | LOG5 | Click [Export Excel] button | Excel file generation error | Error | Export Excel of Mapping per Destination failed: <error message>. | Display Message no. 26 | Y |
 | - | Click [Validate file] button | Upload processing | Info | Logging is handled by the Mapping per Destination Upload batch (refer UISS-Batch "XD03 Part and Destination Mapping Upload Batch"). | - | N |
@@ -926,7 +938,7 @@ Sync Status is kept per part in TB_M_PART_CANDIDATE because a part is sent as on
 ## 9. Tables
 
 #### TB_H_PART_CANDIDATE (history, proposed)
-History of every change of a crossdock part (Add / Edit by screen or upload, mapping changes, Sync results, status changes and mappings made by the calculation batches). Read by the History setting modal of Part List (index PART_NO, CREATED_DT). Proposed retention: 24 months online by CREATED_DT; a monthly housekeeping job deletes older records (period configurable in system master). To be confirmed.
+History of every change of a crossdock part (Add / Edit by screen or upload, mapping changes, Sync results, status changes and mappings made by the calculation batches). Read by the History setting modal of Part List (index PART_NO, CREATED_DT). Retention: 24 months, counted from the later of CREATED_DT and the Effective Start Date of the part; a monthly housekeeping job deletes older records (period configurable in system master; job TBC).
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|

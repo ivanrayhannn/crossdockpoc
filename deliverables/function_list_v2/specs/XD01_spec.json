@@ -3341,23 +3341,11 @@
     ]
    },
    {
-    "source": {
-     "table": "TB_M_PART_CANDIDATE_DEST",
-     "keys": [
-      {
-       "field": "PART_NO",
-       "value": "Edited part"
-      },
-      {
-       "field": "PERIOD",
-       "value": "Ongoing period"
-      }
-     ]
-    },
+    "source": "Key-in from screen",
     "destination": {
      "table": "TB_M_PART_CANDIDATE_DEST",
-     "operation": "Delete",
-     "description": "Edit mapping - [Save]",
+     "operation": "Update",
+     "description": "Edit mapping - [Save] - Case/Day changed",
      "keys": [
       {
        "field": "PART_NO",
@@ -3366,25 +3354,33 @@
       {
        "field": "PERIOD",
        "value": "Ongoing period"
+      },
+      {
+       "field": "DEST_CODE",
+       "value": "In both, Case/Day differs"
       }
      ]
     },
     "mappings": [
      {
-      "dest_field": "PART_NO",
-      "description": "Current rows of the part are removed"
+      "source_field": "Case/Day",
+      "dest_field": "CASE_DAY"
      },
      {
-      "dest_field": "PERIOD",
-      "description": "Ongoing period only"
+      "dest_field": "CHANGED_BY",
+      "description": "Login user ID"
      },
      {
-      "dest_field": "DEST_CODE",
-      "description": "Row is deleted"
+      "dest_field": "CHANGED_DT",
+      "description": "Server system date and time"
      },
      {
-      "dest_field": "CASE_DAY",
-      "description": "Row is deleted"
+      "dest_field": "CREATED_BY",
+      "description": "Not changed"
+     },
+     {
+      "dest_field": "CREATED_DT",
+      "description": "Not changed"
      }
     ]
    },
@@ -3393,7 +3389,7 @@
     "destination": {
      "table": "TB_M_PART_CANDIDATE_DEST",
      "operation": "Insert",
-     "description": "Edit mapping - [Save]"
+     "description": "Edit mapping - [Save] - new destination"
     },
     "mappings": [
      {
@@ -3401,14 +3397,13 @@
       "dest_field": "PART_NO"
      },
      {
-      "source_field": "Calculation period",
       "dest_field": "PERIOD",
       "description": "Ongoing calculation period"
      },
      {
       "source_field": "Destination (CD)",
       "dest_field": "DEST_CODE",
-      "description": "One row per destination in the panel"
+      "description": "Destination not yet in the table for the part and period"
      },
      {
       "source_field": "Case/Day",
@@ -3420,15 +3415,71 @@
      },
      {
       "dest_field": "CREATED_DT",
-      "description": "Server system date-time"
+      "description": "Server system date and time"
      },
      {
       "dest_field": "CHANGED_BY",
-      "description": "Login user ID"
+      "description": "Same as CREATED_BY"
      },
      {
       "dest_field": "CHANGED_DT",
-      "description": "Server system date-time"
+      "description": "Server system date and time"
+     }
+    ]
+   },
+   {
+    "source": {
+     "table": "TB_M_PART_CANDIDATE_DEST",
+     "keys": [
+      {
+       "field": "PART_NO",
+       "value": "Edited part"
+      },
+      {
+       "field": "PERIOD",
+       "value": "Ongoing period"
+      },
+      {
+       "field": "DEST_CODE",
+       "value": "Not in the panel"
+      }
+     ]
+    },
+    "destination": {
+     "table": "TB_M_PART_CANDIDATE_DEST",
+     "operation": "Delete",
+     "description": "Edit mapping - [Save] - removed destination",
+     "keys": [
+      {
+       "field": "PART_NO",
+       "value": "Edited part"
+      },
+      {
+       "field": "PERIOD",
+       "value": "Ongoing period"
+      },
+      {
+       "field": "DEST_CODE",
+       "value": "Not in the panel"
+      }
+     ]
+    },
+    "mappings": [
+     {
+      "dest_field": "PART_NO",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "PERIOD",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "DEST_CODE",
+      "description": "Row is deleted"
+     },
+     {
+      "dest_field": "CASE_DAY",
+      "description": "Row is deleted"
      }
     ]
    },
@@ -4137,7 +4188,7 @@
    "level": 3,
    "items": [
     "If the mapping was changed by another user after edit mode started, display message no. 25. Stop.",
-    "Replace the rows of the part and the ongoing period in TB_M_PART_CANDIDATE_DEST by the rows of the draft (refer Data Edit Mapping).",
+    "Save the draft per destination in TB_M_PART_CANDIDATE_DEST: update the Case/Day of a kept one, insert a new one, delete a removed one (refer Data Edit Mapping).",
     "Set SYNC_STATUS = 0 (No Sync) in TB_M_PART_CANDIDATE, so the D/S user synchronises the part again.",
     "Insert a history record per added, changed or removed destination in TB_H_PART_CANDIDATE (event MAPPING, source SCREEN, DEST_CODE, FIELD_NAME CASE_DAY, old / new Case/Day).",
     "Leave edit mode and show the saved mapping."
@@ -4209,7 +4260,7 @@
    "items": [
     "[Upload Excel] is enabled only when the ongoing calculation period is selected; otherwise it is disabled with message no. 23 as tooltip.",
     "The modal shows the template columns (part_no, dest_code, case_day, upload, total_case_day), the upload rules and the file area (.xlsx, max 5 MB, max 5,000 rows).",
-    "Base file: sheet 'Upload' of Export Excel with the ongoing period selected. A part in the file gets its whole mapping replaced; parts not in the file are not changed.",
+    "Base file: sheet 'Upload' of Export Excel with the ongoing period selected. A part in the file gets its mapping updated per destination (refer XD03); parts not in the file are not changed.",
     "User clicks [Validate file] (save button of the upload): the file is passed to the upload batch; validation, saving (all-or-nothing) and logging follow UISS-Batch \"XD03 Part and Destination Mapping Upload Batch\".",
     "When the upload is completed, close the modal and display message no. 24. When it is rejected, show the batch result (error list) - refer UISS-Batch.",
     "Changed parts show Sync Status No Sync."
@@ -4632,7 +4683,7 @@
   },
   {
    "event": "Click [Save] button",
-   "cause": "Database error on replace of TB_M_PART_CANDIDATE_DEST",
+   "cause": "Database error on save of TB_M_PART_CANDIDATE_DEST",
    "type": "Error",
    "msg_id": "LOG3",
    "message": "Failed to save mapping of part <PART_NO>, period <PERIOD>: <DB error message>.",
@@ -4672,7 +4723,7 @@
    "name": "TB_H_PART_CANDIDATE",
    "kind": "history",
    "proposed": true,
-   "description": "History of every change of a crossdock part (Add / Edit by screen or upload, mapping changes, Sync results, status changes and mappings made by the calculation batches). Read by the History setting modal of Part List (index PART_NO, CREATED_DT). Proposed retention: 24 months online by CREATED_DT; a monthly housekeeping job deletes older records (period configurable in system master). To be confirmed.",
+   "description": "History of every change of a crossdock part (Add / Edit by screen or upload, mapping changes, Sync results, status changes and mappings made by the calculation batches). Read by the History setting modal of Part List (index PART_NO, CREATED_DT). Retention: 24 months, counted from the later of CREATED_DT and the Effective Start Date of the part; a monthly housekeeping job deletes older records (period configurable in system master; job TBC).",
    "columns": [
     [
      "HIST_ID",
