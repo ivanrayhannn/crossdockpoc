@@ -370,7 +370,7 @@ One batch with two processes run in sequence: process 1 sets the part status fro
 
 - One record per calculated part is inserted into TB_R_PART_DAD_RESULT (also when the status does not change).
 - Only parts whose status changes are updated in TB_M_PART_CANDIDATE (PART_STATUS, LAST_SOURCE = CALC, CHANGED_BY / CHANGED_DT) and get a history record (event CALC, source BATCH).
-- SYNC_STATUS: a part that changes from Active to Inactive gets SYNC_STATUS = 0 (No Sync), so the next [Sync] deletes all its rows in GTOPAS (XD06); AP POLE is not changed for it (decided 30-Oct). Other status changes do not change SYNC_STATUS.
+- SYNC_STATUS: a part that changes from Active to Inactive gets SYNC_STATUS = 0 (No Sync), so the next [Sync] deletes it in GTOPAS (XD06, RPA, all rows) and in AP POLE (XD07, SFTP file, part level) (decided 30-Oct). Other status changes do not change SYNC_STATUS.
 - All-or-nothing: any error rolls back the whole run.
 
 ### 4.4 Process 1 - Retry and Manual Trigger
