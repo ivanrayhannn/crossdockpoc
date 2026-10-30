@@ -19,7 +19,7 @@
  "doc_type": "batch",
  "general": {
   "objective": [
-   "To send the cross dock master of the parts waiting for synchronisation to AP POLE: Active parts with Pcs/Case, Max Case/Day, Effective Start Date and all destinations with Case/Day of the ongoing period, and parts that became Inactive (CROSSDOCK_FLAG 'N', so AP POLE changes their status to inactive). Source: Part List (TB_M_PART_CANDIDATE) and Part Mapping per Destination (TB_M_PART_CANDIDATE_DEST).",
+   "To send the cross dock master of the parts waiting for synchronisation to AP POLE: Active parts with Pcs/Case, Max Case/Day, Effective Start Date and all destinations with Case/Day of the ongoing period. Parts that became Inactive are not sent: AP POLE is not changed for them (decided 30-Oct). Source: Part List (TB_M_PART_CANDIDATE) and Part Mapping per Destination (TB_M_PART_CANDIDATE_DEST).",
    "Interface method: interface file by SFTP, Option #3 of 'NSP Cross Dock Interfacing Data': NSP Send IF -> TMMIN SFTP -> TMA SFTP -> receive IF (TMA) -> AP POLE master. SFTP details, file format and the AP POLE tables are not detailed in this document.",
    "A part is sent as one complete set; AP POLE replaces the data of the part, so a change such as Philippines up and Thailand down, or a removed destination, arrives as one consistent update.",
    "The send status per part is kept in TB_R_CROSSDOCK_IF_RESULT (dummy table); together with XD06 (GTOPAS) it gives the overall Sync Status shown on the Cross Dock Part Master screen (XD01)."
@@ -198,14 +198,14 @@
       "TB_M_PART_CANDIDATE.PART_NO",
       "VARCHAR(TBD)",
       "Y",
-      "Cross dock part with Sync Status Waiting: Active parts, and parts that became Inactive since the last send"
+      "Active cross dock part with Sync Status Waiting"
      ],
      [
       "CROSSDOCK_FLAG",
       "TB_M_PART_CANDIDATE.PART_STATUS",
       "CHAR(1)",
       "Y",
-      "'Y' = Active (handled by crossdock) / 'N' = Inactive: the target changes the status of the part to inactive (decided 19-Oct)"
+      "'Y' = Active (handled by crossdock). Inactive parts are not sent to AP POLE (decided 30-Oct; GTOPAS deletes them, XD06)"
      ],
      [
       "PCS_CASE",
@@ -414,7 +414,14 @@
   },
   "steps": [
    "[Sync] on XD01 sets the parts to Waiting (SYNC_STATUS = '3' in TB_M_PART_CANDIDATE, IF_STATUS = '3' for 'APPOLE' and 'GTOPAS' in TB_R_CROSSDOCK_IF_RESULT) and starts XD07. Write LOG1.",
-   "Select the parts with TARGET_SYSTEM = 'APPOLE' and IF_STATUS = '3' in TB_R_CROSSDOCK_IF_RESULT whose PART_STATUS is still 'Active'. Keep CHANGED_DT of each part. No part: write LOG2 and exit.",
+   {
+    "text": "Select the parts with TARGET_SYSTEM = 'APPOLE' and IF_STATUS = '3' in TB_R_CROSSDOCK_IF_RESULT. Keep CHANGED_DT of each part.",
+    "children": [
+     "PART_STATUS Active: sent (step 3).",
+     "PART_STATUS Inactive: not sent; IF_STATUS = '1', IF_MESSAGE = 'Inactive part: AP POLE not changed' (step 6).",
+     "No Active part: go to step 6."
+    ]
+   },
    {
     "text": "Create the interface file XD_CDMASTER_APPOLE_<YYYYMMDDHHMMSS>.csv in the outbound folder (see Interface File / Interface Data):",
     "children": [
@@ -540,7 +547,7 @@
     "mappings": [
      {
       "dest_field": "IF_STATUS",
-      "description": "'1' transfer OK / '2' file or transfer error"
+      "description": "'1' transfer OK or Inactive part (not sent) / '2' file or transfer error"
      },
      {
       "dest_field": "IF_DT",
@@ -552,7 +559,7 @@
      },
      {
       "dest_field": "IF_MESSAGE",
-      "description": "Error when '2'; blank when '1'"
+      "description": "Error when '2'; 'Inactive part: AP POLE not changed' for an Inactive part; blank otherwise"
      },
      {
       "dest_field": "CHANGED_BY",
@@ -788,7 +795,7 @@
    "level": 0,
    "items": [
     "Interface method: interface file by SFTP, Option #3 of 'NSP Cross Dock Interfacing Data': NSP Send IF -> TMMIN SFTP -> TMA SFTP -> receive IF (TMA) -> AP POLE master. SFTP details, file format and the AP POLE tables are not detailed in this document.",
-    "Parts that became Inactive (XD05 process 1) are No Sync and are sent with CROSSDOCK_FLAG 'N' and without destinations; AP POLE changes the status of the part to inactive."
+    "Parts that became Inactive (XD05 process 1) are not sent to AP POLE (decided 30-Oct): their 'APPOLE' row is set to '1' (IF_MESSAGE 'Inactive part: AP POLE not changed'); GTOPAS deletes all their rows (XD06)."
    ]
   },
   {

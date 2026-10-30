@@ -823,12 +823,12 @@ c. A part without destination shows message no. 19.
 ### 5.16 Sync
 
 - a. User clicks [Sync (n)] (on demand).
-  1. Select every Active part of the ongoing period, and every part that became Inactive (set to No Sync by XD05), with Sync Status No Sync or Failed, whatever the search criteria show (n of the button). Inactive parts are sent to AP POLE with CROSSDOCK_FLAG 'N'; GTOPAS is not changed for them (refer XD06). Candidate parts are never synchronised.
+  1. Select every Active part of the ongoing period, and every part that became Inactive (set to No Sync by XD05), with Sync Status No Sync or Failed, whatever the search criteria show (n of the button). Inactive parts: all their rows are deleted in GTOPAS (XD06); AP POLE is not changed for them. Candidate parts are never synchronised.
   2. Set SYNC_STATUS = 3 (Waiting) for these parts in TB_M_PART_CANDIDATE, set one row per part and target system (GTOPAS, AP POLE) to IF_STATUS = 3 (Waiting) in TB_R_CROSSDOCK_IF_RESULT, and start XD06 and XD07. Display message no. 27.
   3. With the default filter No Sync the parts leave the list; select Sync Status = Waiting or All to follow them.
 
 - b. Interface functions (one per target system; refer UISS-Batch XD06 and XD07).
-  1. XD06 IF Cross Dock Master to GTOPAS registers / deletes, by RPA, the destinations of each Waiting Active part in GTOPAS (destination list only; no Case/Day). XD07 IF Cross Dock Master to AP POLE sends Pcs/Case, Max Case/Day and all destinations with Case/Day of the ongoing period as one complete set.
+  1. XD06 IF Cross Dock Master to GTOPAS registers / deletes, by RPA, the destinations of each Waiting part in GTOPAS (Inactive: all rows). XD07 IF Cross Dock Master to AP POLE sends, per Active part, Pcs/Case, Max Case/Day and all destinations with Case/Day of the ongoing period as one complete set.
   2. XD06 hands the part x destination list to the RPA bot; XD07 sends a file by SFTP. The result is written in the dummy table TB_R_CROSSDOCK_IF_RESULT (IF_STATUS 1 sent / 2 Failed, IF_DT, IF_FILE_NAME, IF_MESSAGE).
   3. Overall SYNC_STATUS of the part: stays 3 (Waiting) while one target is still Waiting; 1 (Success) when both targets are Success; 2 (Failed) when a target failed (SYNC_MESSAGE = target and reason); 0 (No Sync) when the part was changed after it was read.
   4. Every result is recorded in TB_H_PART_CANDIDATE (event SYNC, source IF, REMARK = target and message).
