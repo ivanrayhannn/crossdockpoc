@@ -18,18 +18,18 @@
 
 - To keep the cross dock destinations of each part in GTOPAS equal to NSP, by RPA: for every Active part waiting for synchronisation, the destinations of the ongoing period in Part Mapping per Destination (TB_M_PART_CANDIDATE_DEST) are compared with the destinations of the part in GTOPAS.
 - Per destination: in NSP and not in GTOPAS -> registered in GTOPAS; in both -> ignored (no change); in GTOPAS and not in NSP -> deleted in GTOPAS. Only the destination list is maintained: Pcs/Case, Max Case/Day, Effective Start Date and Case/Day are not sent (GTOPAS keeps no Case/Day per destination).
-- Parts that became Inactive are not sent: their destinations in GTOPAS are not changed.
-- Method: RPA bot on the GTOPAS screen. XD06 prepares the RPA input (part x destination) and receives the result per part; the status per part is kept in TB_R_CROSSDOCK_IF_RESULT (dummy table) and, together with XD07 (AP POLE), gives the overall Sync Status shown on the Cross Dock Part Master screen (XD01).
+- Parts that became Inactive: the bot deletes all rows of the part in GTOPAS (one row per part + destination, e.g. 10 destinations -> 10 rows deleted). AP POLE is not changed for them (XD07).
+- Method: RPA bot on GTOPAS (menu Supply > Master > Crossdock Master, search by Part No). XD06 prepares the RPA input (part x destination) and receives the result per part; the status per part is kept in TB_R_CROSSDOCK_IF_RESULT (dummy table) and, together with XD07 (AP POLE), gives the overall Sync Status shown on the Cross Dock Part Master screen (XD01).
 
 ### Operation flow
 
 ```mermaid
 flowchart TB
   a>"[Sync] on XD01 (Mapping per Destination tab)"]
-  b["Read Waiting Active parts for GTOPAS"]
+  b["Read Waiting parts for GTOPAS (Active / Inactive)"]
   c["Create RPA input (part x destination)"]
   e["RPA: compare with GTOPAS per part"]
-  t["GTOPAS: register / delete destinations"]
+  t["GTOPAS Crossdock Master: register / delete rows"]
   f["Result per part, overall Sync Status, history, Log"]
   a --> b
   b --> c
@@ -43,9 +43,9 @@ flowchart TB
 | Name | Type | Description |
 |---|---|---|
 | TB_R_CROSSDOCK_IF_RESULT | DB | Rows TARGET_SYSTEM = 'GTOPAS' with IF_STATUS = '3' (Waiting), set by [Sync] on XD01 |
-| TB_M_PART_CANDIDATE | DB | Part List: PART_NO, PART_STATUS (only Active parts are sent), CHANGED_DT |
+| TB_M_PART_CANDIDATE | DB | Part List: PART_NO, PART_STATUS (Active, or Inactive since the last send), CHANGED_DT |
 | TB_M_PART_CANDIDATE_DEST | DB | Part Mapping per Destination: PERIOD, DEST_CODE of the ongoing period |
-| GTOPAS: destinations of the part | System | Read by the RPA bot on the GTOPAS screen |
+| GTOPAS: destinations of the part | System | menu Supply > Master > Crossdock Master: rows of the part (one per part + destination), read by the bot after search by Part No |
 
 ### Output
 
@@ -64,16 +64,17 @@ flowchart TB
 |---|---|
 | Target system | 'GTOPAS' (GTOPAS) |
 | User | IF batch user ID (NSP); RPA bot user of GTOPAS |
-| Interface method | RPA bot on the GTOPAS screen; the screens and steps of the bot are detailed in the RPA design (not in this document). |
+| Interface method | RPA bot on GTOPAS (menu Supply > Master > Crossdock Master); the steps of the bot are detailed in the RPA design (not in this document). |
 
 ### RPA Input Data
 
 | Field | Source | Format | M | Business rule |
 |---|---|---|---|---|
 | SEND_ID | Generated | CHAR(14) | Y | Run of XD06 (YYYYMMDDHHMMSS); all records of one input have the same SEND_ID |
-| PART_NO | TB_M_PART_CANDIDATE.PART_NO | VARCHAR(TBD) | Y | Active part with Sync Status Waiting for GTOPAS |
+| PART_NO | TB_M_PART_CANDIDATE.PART_NO | VARCHAR(TBD) | Y | Part with Sync Status Waiting for GTOPAS: Active, or became Inactive since the last send |
+| CROSSDOCK_FLAG | TB_M_PART_CANDIDATE.PART_STATUS | CHAR(1) | Y | 'Y' = Active: make the destinations equal to NSP / 'N' = Inactive: delete all rows of the part in GTOPAS |
 | PERIOD | TB_M_PART_CANDIDATE_DEST.PERIOD | CHAR(6) | Y | Ongoing calculation period (YYYYMM) |
-| DEST_CODE | TB_M_PART_CANDIDATE_DEST.DEST_CODE | CHAR(7) | N | Destination code (buyer code + PD code); one record per destination. Blank when the part has no destination: the bot deletes all destinations of the part in GTOPAS (TBC) |
+| DEST_CODE | TB_M_PART_CANDIDATE_DEST.DEST_CODE | CHAR(7) | N | Destination code (buyer code + PD code); one record per destination. Blank for an Inactive part (one record) or an Active part without destination (TBC) |
 | SEND_DT | Generated | DATETIME | Y | Date-time the input is created |
 
 ### RPA Result Data
@@ -93,11 +94,11 @@ flowchart TB
 flowchart TB
   p1["1. Start ([Sync] on XD01)"]
   r[("TB_R_CROSSDOCK_IF_RESULT")]
-  p2["2. Select Waiting parts for GTOPAS (Inactive: not sent)"]
+  p2["2. Select Waiting parts for GTOPAS"]
   m[("TB_M_PART_CANDIDATE / TB_M_PART_CANDIDATE_DEST")]
   p3["3. Create RPA input"]
   x[/"RPA input"/]
-  p4["4. RPA: register / ignore / delete per destination in GTOPAS"]
+  p4["4. RPA (Crossdock Master): register / ignore / delete; Inactive: delete all rows"]
   d{"5. Result OK?"}
   p6["6. Status per part, overall Sync Status, history"]
   o[("TB_R_CROSSDOCK_IF_RESULT / TB_M_PART_CANDIDATE / TB_H_PART_CANDIDATE")]
@@ -118,17 +119,16 @@ flowchart TB
 
 1. [Sync] on XD01 sets the parts to Waiting (SYNC_STATUS = '3' in TB_M_PART_CANDIDATE, IF_STATUS = '3' for 'GTOPAS' and 'APPOLE' in TB_R_CROSSDOCK_IF_RESULT) and starts XD06. Write LOG1.
 2. Select the parts with TARGET_SYSTEM = 'GTOPAS' and IF_STATUS = '3' in TB_R_CROSSDOCK_IF_RESULT. Keep CHANGED_DT of each part.
-  - PART_STATUS Active: sent to the RPA (step 3).
-  - PART_STATUS Inactive: not sent; IF_STATUS = '1', IF_MESSAGE = 'Inactive part: GTOPAS not changed' (step 6).
-  - No Active part: go to step 6.
+  - PART_STATUS Active: sent with its destinations (CROSSDOCK_FLAG 'Y').
+  - PART_STATUS Inactive: sent with CROSSDOCK_FLAG 'N' to delete the part in GTOPAS.
+  - No part: write LOG2 and exit.
 3. Create the RPA input XD_CDMASTER_GTOPAS_<YYYYMMDDHHMMSS>.csv (see RPA Input Data):
-  - Per Active part, one record per destination of the ongoing period in TB_M_PART_CANDIDATE_DEST (PART_NO, PERIOD, DEST_CODE).
-  - A part without destination: one record with DEST_CODE blank.
+  - Active part: one record per destination of the ongoing period in TB_M_PART_CANDIDATE_DEST (PART_NO, CROSSDOCK_FLAG 'Y', PERIOD, DEST_CODE); without destination: one record with DEST_CODE blank.
+  - Inactive part: one record with CROSSDOCK_FLAG 'N' and DEST_CODE blank.
   - Same SEND_ID and SEND_DT on every record. Error: LOG3, all parts of the run Failed (step 6).
-4. Start the RPA bot with the input. Per part the bot opens the part in GTOPAS, reads its destinations and compares them with the input by DEST_CODE:
-  - In the input and not in GTOPAS: register the destination in GTOPAS.
-  - In the input and in GTOPAS: ignore (no change).
-  - In GTOPAS and not in the input: delete the destination in GTOPAS.
+4. Start the RPA bot with the input. Per part the bot opens GTOPAS menu Supply > Master > Crossdock Master, searches the Part No (one row per part + destination) and:
+  - CROSSDOCK_FLAG 'Y': compares the rows with the input by DEST_CODE - in the input and not in GTOPAS: register; in both: ignore; in GTOPAS and not in the input: delete.
+  - CROSSDOCK_FLAG 'N' (Inactive): deletes all rows of the part (e.g. 10 destinations -> 10 rows deleted).
   - The bot returns one result per part (see RPA Result Data). Part NG: LOG6. Bot not available or no result within the time limit: LOG4, all parts of the run Failed.
 5. Set the status of every part of the run in TB_R_CROSSDOCK_IF_RESULT:
   - RESULT 'OK': IF_STATUS = '1', IF_DT = now, IF_FILE_NAME = input file name, IF_MESSAGE = 'added <ADDED>; deleted <DELETED>' (blank when nothing changed).
@@ -143,17 +143,18 @@ flowchart TB
 ## 3. Data edit mapping
 
 #### 1. Insert RPA input – One record per part x destination
-- Source: TB_M_PART_CANDIDATE + TB_M_PART_CANDIDATE_DEST (keys: PART_NO = Waiting part, PART_STATUS = Active, PERIOD = Ongoing period)
+- Source: TB_M_PART_CANDIDATE + TB_M_PART_CANDIDATE_DEST (keys: PART_NO = Waiting part, PART_STATUS = Active / Inactive, PERIOD = Ongoing period)
 
 | Source field | Destination field | Description |
 |---|---|---|
 | - | SEND_ID | Run of XD06 (YYYYMMDDHHMMSS); same on every record |
 | PART_NO | PART_NO | Same value |
+| PART_STATUS | CROSSDOCK_FLAG | 'Y' Active / 'N' Inactive |
 | PERIOD | PERIOD | Same value |
-| DEST_CODE | DEST_CODE | Same value; blank when the part has no destination |
+| DEST_CODE | DEST_CODE | Same value; blank for an Inactive part or a part without destination |
 | - | SEND_DT | Date-time the input is created |
 
-#### 2. Insert / Delete GTOPAS - destinations of the part (by RPA) – Not in NSP scope; done by the RPA bot
+#### 2. Insert / Delete GTOPAS Crossdock Master (by RPA) – Not in NSP scope; done by the RPA bot
 - Source: RPA input (keys: PART_NO = Part of the input)
 - Destination keys: PART_NO + DEST_CODE = Part + destination
 
@@ -163,6 +164,7 @@ flowchart TB
 | DEST_CODE | DEST_CODE | Registered when in the input and not in GTOPAS |
 |  |  | No change when in the input and in GTOPAS |
 |  |  | Deleted when in GTOPAS and not in the input |
+|  |  | All rows of the part deleted when CROSSDOCK_FLAG 'N' (Inactive) |
 
 #### 3. Update TB_R_CROSSDOCK_IF_RESULT – Dummy table: rows of the parts of the file for 'GTOPAS'
 - Source: Result of the send
@@ -170,10 +172,10 @@ flowchart TB
 
 | Source field | Destination field | Description |
 |---|---|---|
-|  | IF_STATUS | '1' RPA OK or Inactive part (not sent) / '2' input, bot or part error |
+|  | IF_STATUS | '1' RPA OK / '2' input, bot or part error |
 |  | IF_DT | Date-time of the result |
 |  | IF_FILE_NAME | Name of the RPA input file |
-|  | IF_MESSAGE | 'added ...; deleted ...' when '1' ('Inactive part: GTOPAS not changed' for an Inactive part); reason when '2' |
+|  | IF_MESSAGE | 'added ...; deleted ...' when '1' (Inactive part: 'deleted all <n> rows'); reason when '2' |
 |  | CHANGED_BY | IF batch user ID |
 |  | CHANGED_DT | Server system date-time |
 |  | PART_NO | Not changed |
@@ -240,11 +242,11 @@ flowchart TB
 ### 4.1 Business Process
 
 - The D/S team maintains the destinations of each part on XD01 (Mapping per Destination of the ongoing period, created by XD05 process 2 and adjusted by screen or upload XD03).
-- Every change sets the part to No Sync. The D/S team clicks [Sync] when the changes are complete; only Active parts are sent to GTOPAS.
+- Every change sets the part to No Sync. The D/S team clicks [Sync] when the changes are complete; Active parts and parts that became Inactive are sent to GTOPAS.
 - GTOPAS keeps the list of cross dock destinations per part (no Case/Day). The RPA bot makes this list equal to NSP: register a missing destination, ignore an existing one, delete one that is no longer in NSP.
 
-- Method: RPA bot on the GTOPAS screen (decided 30-Oct); screens and steps of the bot are detailed in the RPA design.
-- Parts that became Inactive (XD05 process 1) are not sent to GTOPAS and their destinations in GTOPAS are not changed (decided 30-Oct); their 'GTOPAS' row is set to '1', so the overall Sync Status follows XD07 (AP POLE).
+- Method: RPA bot on GTOPAS menu Supply > Master > Crossdock Master (decided 30-Oct): search by Part No; the list has one row per part + destination. The steps of the bot are detailed in the RPA design.
+- Parts that became Inactive (XD05 process 1) are sent with CROSSDOCK_FLAG 'N': the bot deletes all rows of the part in GTOPAS (e.g. 10 destinations -> 10 rows deleted) (decided 30-Oct). AP POLE is not changed for them (XD07).
 
 ### 4.2 Comparison Rules
 
@@ -253,6 +255,7 @@ flowchart TB
 | Y | N | Register the destination in GTOPAS |
 | Y | Y | Ignore (no change) |
 | N | Y | Delete the destination in GTOPAS |
+| Inactive part | Y | Delete all rows of the part |
 
 - Compared per part by DEST_CODE; PERIOD is always the ongoing period, past periods are never sent.
 - Pcs/Case, Max Case/Day, Effective Start Date and Case/Day are not sent. A change of Case/Day only gives no change in GTOPAS; the part still gets RESULT 'OK' (Success).
@@ -266,7 +269,7 @@ flowchart TB
 
 ### 4.4 Open Points
 
-- RPA design: GTOPAS screens, start of the bot by XD06, time limit, and how the result is returned (file or table) - TBC.
+- RPA design: start of the bot by XD06, time limit, and how the result is returned (file or table) - TBC.
 - Active part without destination: delete all its destinations in GTOPAS - TBC.
 
 ## 5. Logging messages
