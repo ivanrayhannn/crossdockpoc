@@ -95,7 +95,7 @@ New history table (replaces TB_R_CROSSDOCK_CANCEL_RESULT): one record per moved 
 #### TB_H_PART_CANDIDATE (history, proposed)
 Used by: XD01, XD02, XD03, XD05, XD06, XD07
 
-History of every change of a crossdock part (Add / Edit by screen or upload, mapping changes, Sync results, status changes and mappings made by the calculation batches). Read by the History setting modal of Part List (index PART_NO, CREATED_DT). Retention: 24 months, counted from the later of CREATED_DT and the Effective Start Date of the part; a monthly housekeeping job deletes older records (period configurable in system master; job TBC).
+History of every change of a crossdock part (Add / Edit by screen or upload, mapping changes, Sync results, status changes and mappings made by the calculation batches). Read by the History setting modal of Part List (index PART_NO, CREATED_DT). No retention limit: the history is kept (no housekeeping job, decided 30-Oct).
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|

@@ -4,7 +4,7 @@
 set -euo pipefail
 V=deliverables/function_list_v2
 ( cd $V/specs && python3 build_simple.py && python3 build_xd01.py && python3 build_xd05.py && python3 build_if.py \
-  && python3 build_h.py && python3 build_xd11.py && python3 build_xd10.py && python3 apply_1910.py && python3 apply_2010.py && python3 apply_2110.py && python3 apply_2310.py && python3 apply_2710.py && python3 apply_2810.py && python3 apply_2910.py && python3 apply_3010.py && python3 apply_3010b.py && python3 apply_3010c.py ) > /dev/null
+  && python3 build_h.py && python3 build_xd11.py && python3 build_xd10.py && python3 apply_1910.py && python3 apply_2010.py && python3 apply_2110.py && python3 apply_2310.py && python3 apply_2710.py && python3 apply_2810.py && python3 apply_2910.py && python3 apply_3010.py && python3 apply_3010b.py && python3 apply_3010c.py && python3 apply_3010d.py ) > /dev/null
 python3 - <<'PY' > $V/specs/outputs.txt
 import sys; sys.path.insert(0, 'deliverables/function_list_v2/specs')
 from v2lib import FUNCS

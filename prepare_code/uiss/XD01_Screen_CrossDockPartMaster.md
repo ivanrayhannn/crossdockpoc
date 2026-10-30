@@ -172,23 +172,36 @@ flowchart LR
 ```mermaid
 flowchart TB
   s(["START"])
-  e>"On Click of Save button"]
-  d1{"Mandatory items valid and Max Case/Day >= mapped total?"}
-  m1>"Save stays disabled (tooltip / message no. 14)"]
-  p1["Insert / update part record"]
+  e1>"Enter / change part data in the Add Part or Edit part data modal"]
+  d1{"Part data valid?"}
+  m1>"Save disabled, show tooltip / message (no. 5 / 7 / 15 / 16; Edit: 10 / 14)"]
+  m2>"Save enabled"]
+  e2>"On Click of Save button"]
+  d2{"Registered / changed by another user meanwhile?"}
+  m3>"Show message no. 3 (Add) / 4 (Edit), stop"]
+  p1["Insert (Add) / update (Edit) part, Sync Status = No Sync"]
   db[("TB_M_PART_CANDIDATE")]
-  p2["Sync Status = No Sync, move part to top"]
-  m2>"Show Saved successfully"]
+  p2["Insert change history"]
+  db2[("TB_H_PART_CANDIDATE")]
+  m4>"Close modal, part on top, message no. 9"]
   x(["END"])
-  s --> e
-  e --> d1
+  s --> e1
+  e1 --> d1
   d1 -->|No| m1
-  d1 -->|Yes| p1
+  m1 -->|correct the data| e1
+  d1 -->|Yes| m2
+  m2 --> e2
+  e2 --> d2
+  d2 -->|Yes| m3
+  d2 -->|No| p1
   p1 -.-> db
   p1 --> p2
-  p2 --> m2
-  m2 --> x
+  p2 -.-> db2
+  p2 --> m4
+  m4 --> x
 ```
+- Part data valid = Add: Part No selected, Min MAD filled (whole number, 0 or more), Pcs/Case > 0 and Max Case/Day > 0 (otherwise the tooltip shows message no. 5, 15, 16 or 7 for the first missing item). Edit: the same items, Effective Start Date not before today while the part is Candidate (message no. 10), and Max Case/Day not below the Case/Day already mapped in the ongoing period (message no. 14).
+- The check runs on every change in the modal, so [Save] is already disabled before it can be clicked (see Operation Description 5.4 and 5.5).
 
 ### Screen Flow for Mapping per Destination
 
@@ -222,7 +235,7 @@ flowchart TB
   m1>"Save disabled, show banner (message no. 20 / 21)"]
   m2>"Save enabled"]
   e2>"On Click of Save button"]
-  p1["Replace mapping of part and ongoing period"]
+  p1["Update / insert / delete mapping per destination (ongoing period)"]
   db[("TB_M_PART_CANDIDATE_DEST")]
   p2["Sync Status = No Sync"]
   db2[("TB_M_PART_CANDIDATE")]
@@ -728,7 +741,7 @@ TB_H_PART_CANDIDATE (proposed) - one record per changed field, insert only:
 
 Events: ADD / EDIT (source SCREEN or UPLOAD, PERIOD NULL), MAPPING (source SCREEN or UPLOAD, PERIOD and DEST_CODE filled, FIELD_NAME CASE_DAY), SYNC (source IF, FIELD_NAME SYNC_STATUS, REMARK = SYNC_MESSAGE). CALC (source BATCH, FIELD_NAME PART_STATUS, status set by the DAD Volume Calculation) and MAPPING with source BATCH (XD05 process 2 (mapping destination)).
 
-Retention: the history of a part is kept for the last 24 months. A record is deleted when it is older than 24 months, counted from the later of its CREATED_DT and the Effective Start Date of the part (records of the Candidate period are kept until 24 months after the Effective Start Date). A monthly housekeeping job deletes the records (retention period configurable in system master; housekeeping job TBC).
+Retention: the history of a part is kept; there is no housekeeping job (decided 30-Oct).
 
 ### 5.7 Upload Excel
 
@@ -938,7 +951,7 @@ Sync Status is kept per part in TB_M_PART_CANDIDATE because a part is sent as on
 ## 9. Tables
 
 #### TB_H_PART_CANDIDATE (history, proposed)
-History of every change of a crossdock part (Add / Edit by screen or upload, mapping changes, Sync results, status changes and mappings made by the calculation batches). Read by the History setting modal of Part List (index PART_NO, CREATED_DT). Retention: 24 months, counted from the later of CREATED_DT and the Effective Start Date of the part; a monthly housekeeping job deletes older records (period configurable in system master; job TBC).
+History of every change of a crossdock part (Add / Edit by screen or upload, mapping changes, Sync results, status changes and mappings made by the calculation batches). Read by the History setting modal of Part List (index PART_NO, CREATED_DT). No retention limit: the history is kept (no housekeeping job, decided 30-Oct).
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|

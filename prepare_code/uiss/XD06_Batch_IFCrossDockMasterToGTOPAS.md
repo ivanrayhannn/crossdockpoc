@@ -74,7 +74,7 @@ flowchart TB
 | PART_NO | TB_M_PART_CANDIDATE.PART_NO | VARCHAR(TBD) | Y | Part with Sync Status Waiting for GTOPAS: Active, or became Inactive since the last send |
 | CROSSDOCK_FLAG | TB_M_PART_CANDIDATE.PART_STATUS | CHAR(1) | Y | 'Y' = Active: make the destinations equal to NSP / 'N' = Inactive: delete all rows of the part in GTOPAS |
 | PERIOD | TB_M_PART_CANDIDATE_DEST.PERIOD | CHAR(6) | Y | Ongoing calculation period (YYYYMM) |
-| DEST_CODE | TB_M_PART_CANDIDATE_DEST.DEST_CODE | CHAR(7) | N | Destination code (buyer code + PD code); one record per destination. Blank for an Inactive part (one record) or an Active part without destination (TBC) |
+| DEST_CODE | TB_M_PART_CANDIDATE_DEST.DEST_CODE | CHAR(7) | N | Destination code (buyer code + PD code); one record per destination. Blank for an Inactive part (one record) or an Active part without destination (all its destinations in GTOPAS are deleted) |
 | SEND_DT | Generated | DATETIME | Y | Date-time the input is created |
 
 ### RPA Result Data
@@ -259,7 +259,7 @@ flowchart TB
 
 - Compared per part by DEST_CODE; PERIOD is always the ongoing period, past periods are never sent.
 - Pcs/Case, Max Case/Day, Effective Start Date and Case/Day are not sent. A change of Case/Day only gives no change in GTOPAS; the part still gets RESULT 'OK' (Success).
-- An Active part without destination: all its destinations in GTOPAS are deleted (TBC).
+- An Active part without destination: all its destinations in GTOPAS are deleted (decided 30-Oct).
 
 ### 4.3 Status and Dummy Table
 
@@ -270,7 +270,6 @@ flowchart TB
 ### 4.4 Open Points
 
 - RPA design: start of the bot by XD06, time limit, and how the result is returned (file or table) - TBC.
-- Active part without destination: delete all its destinations in GTOPAS - TBC.
 
 ## 5. Logging messages
 
@@ -340,7 +339,7 @@ Destination mapping, one record per part, calculation period and destination (Ma
 | CHANGED_DT | DATETIME |  | N | Last changed date and time |
 
 #### TB_H_PART_CANDIDATE (history, proposed)
-History of every change of a crossdock part (Add / Edit by screen or upload, mapping changes, Sync results, status changes and mappings made by the calculation batches). Read by the History setting modal of Part List (index PART_NO, CREATED_DT). Proposed retention: 24 months online by CREATED_DT; a monthly housekeeping job deletes older records (period configurable in system master). To be confirmed.
+History of every change of a crossdock part (Add / Edit by screen or upload, mapping changes, Sync results, status changes and mappings made by the calculation batches). Read by the History setting modal of Part List (index PART_NO, CREATED_DT). No retention limit: the history is kept (no housekeeping job, decided 30-Oct).
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|

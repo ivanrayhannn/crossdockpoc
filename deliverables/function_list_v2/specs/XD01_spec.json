@@ -1063,23 +1063,43 @@
       "type": "start"
      },
      {
-      "id": "e",
-      "label": "On Click of Save button",
+      "id": "e1",
+      "label": "Enter / change part data in the Add Part or Edit part data modal",
       "type": "event"
      },
      {
       "id": "d1",
-      "label": "Mandatory items valid and Max Case/Day >= mapped total?",
+      "label": "Part data valid?",
       "type": "decision"
      },
      {
       "id": "m1",
-      "label": "Save stays disabled (tooltip / message no. 14)",
+      "label": "Save disabled, show tooltip / message (no. 5 / 7 / 15 / 16; Edit: 10 / 14)",
+      "type": "message"
+     },
+     {
+      "id": "m2",
+      "label": "Save enabled",
+      "type": "message"
+     },
+     {
+      "id": "e2",
+      "label": "On Click of Save button",
+      "type": "event"
+     },
+     {
+      "id": "d2",
+      "label": "Registered / changed by another user meanwhile?",
+      "type": "decision"
+     },
+     {
+      "id": "m3",
+      "label": "Show message no. 3 (Add) / 4 (Edit), stop",
       "type": "message"
      },
      {
       "id": "p1",
-      "label": "Insert / update part record",
+      "label": "Insert (Add) / update (Edit) part, Sync Status = No Sync",
       "type": "process"
      },
      {
@@ -1089,12 +1109,17 @@
      },
      {
       "id": "p2",
-      "label": "Sync Status = No Sync, move part to top",
+      "label": "Insert change history",
       "type": "process"
      },
      {
-      "id": "m2",
-      "label": "Show Saved successfully",
+      "id": "db2",
+      "label": "TB_H_PART_CANDIDATE",
+      "type": "db"
+     },
+     {
+      "id": "m4",
+      "label": "Close modal, part on top, message no. 9",
       "type": "message"
      },
      {
@@ -1106,10 +1131,10 @@
     "edges": [
      {
       "from": "s",
-      "to": "e"
+      "to": "e1"
      },
      {
-      "from": "e",
+      "from": "e1",
       "to": "d1"
      },
      {
@@ -1118,9 +1143,32 @@
       "label": "No"
      },
      {
+      "from": "m1",
+      "to": "e1",
+      "label": "correct the data"
+     },
+     {
       "from": "d1",
-      "to": "p1",
+      "to": "m2",
       "label": "Yes"
+     },
+     {
+      "from": "m2",
+      "to": "e2"
+     },
+     {
+      "from": "e2",
+      "to": "d2"
+     },
+     {
+      "from": "d2",
+      "to": "m3",
+      "label": "Yes"
+     },
+     {
+      "from": "d2",
+      "to": "p1",
+      "label": "No"
      },
      {
       "from": "p1",
@@ -1133,10 +1181,15 @@
      },
      {
       "from": "p2",
-      "to": "m2"
+      "to": "db2",
+      "style": "dashed"
      },
      {
-      "from": "m2",
+      "from": "p2",
+      "to": "m4"
+     },
+     {
+      "from": "m4",
       "to": "x"
      }
     ],
@@ -1144,9 +1197,17 @@
      [
       "p1",
       "db"
+     ],
+     [
+      "p2",
+      "db2"
      ]
     ]
-   }
+   },
+   "notes": [
+    "Part data valid = Add: Part No selected, Min MAD filled (whole number, 0 or more), Pcs/Case > 0 and Max Case/Day > 0 (otherwise the tooltip shows message no. 5, 15, 16 or 7 for the first missing item). Edit: the same items, Effective Start Date not before today while the part is Candidate (message no. 10), and Max Case/Day not below the Case/Day already mapped in the ongoing period (message no. 14).",
+    "The check runs on every change in the modal, so [Save] is already disabled before it can be clicked (see Operation Description 5.4 and 5.5)."
+   ]
   },
   {
    "title": "Screen Flow for Mapping per Destination",
@@ -1273,7 +1334,7 @@
      },
      {
       "id": "p1",
-      "label": "Replace mapping of part and ongoing period",
+      "label": "Update / insert / delete mapping per destination (ongoing period)",
       "type": "process"
      },
      {
@@ -3962,7 +4023,7 @@
   {
    "type": "text",
    "level": 2,
-   "text": "Retention: the history of a part is kept for the last 24 months. A record is deleted when it is older than 24 months, counted from the later of its CREATED_DT and the Effective Start Date of the part (records of the Candidate period are kept until 24 months after the Effective Start Date). A monthly housekeeping job deletes the records (retention period configurable in system master; housekeeping job TBC)."
+   "text": "Retention: the history of a part is kept; there is no housekeeping job (decided 30-Oct)."
   },
   {
    "type": "heading",
@@ -4723,7 +4784,7 @@
    "name": "TB_H_PART_CANDIDATE",
    "kind": "history",
    "proposed": true,
-   "description": "History of every change of a crossdock part (Add / Edit by screen or upload, mapping changes, Sync results, status changes and mappings made by the calculation batches). Read by the History setting modal of Part List (index PART_NO, CREATED_DT). Retention: 24 months, counted from the later of CREATED_DT and the Effective Start Date of the part; a monthly housekeeping job deletes older records (period configurable in system master; job TBC).",
+   "description": "History of every change of a crossdock part (Add / Edit by screen or upload, mapping changes, Sync results, status changes and mappings made by the calculation batches). Read by the History setting modal of Part List (index PART_NO, CREATED_DT). No retention limit: the history is kept (no housekeeping job, decided 30-Oct).",
    "columns": [
     [
      "HIST_ID",
