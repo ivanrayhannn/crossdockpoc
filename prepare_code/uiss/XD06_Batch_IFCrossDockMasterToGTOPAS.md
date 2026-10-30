@@ -18,7 +18,7 @@
 
 - To keep the cross dock destinations of each part in GTOPAS equal to NSP, by RPA: for every Active part waiting for synchronisation, the destinations of the ongoing period in Part Mapping per Destination (TB_M_PART_CANDIDATE_DEST) are compared with the destinations of the part in GTOPAS.
 - Per destination: in NSP and not in GTOPAS -> registered in GTOPAS; in both -> ignored (no change); in GTOPAS and not in NSP -> deleted in GTOPAS. Only the destination list is maintained: Pcs/Case, Max Case/Day, Effective Start Date and Case/Day are not sent (GTOPAS keeps no Case/Day per destination).
-- Parts that became Inactive: the bot deletes all rows of the part in GTOPAS (one row per part + destination, e.g. 10 destinations -> 10 rows deleted). AP POLE is not changed for them (XD07).
+- Parts that became Inactive: the bot deletes all rows of the part in GTOPAS (one row per part + destination, e.g. 10 destinations -> 10 rows deleted). In AP POLE they are deleted at part level by XD07 (SFTP file, CROSSDOCK_FLAG 'N').
 - Method: RPA bot on GTOPAS (menu Supply > Master > Crossdock Master, search by Part No). XD06 prepares the RPA input (part x destination) and receives the result per part; the status per part is kept in TB_R_CROSSDOCK_IF_RESULT (dummy table) and, together with XD07 (AP POLE), gives the overall Sync Status shown on the Cross Dock Part Master screen (XD01).
 
 ### Operation flow
@@ -246,7 +246,7 @@ flowchart TB
 - GTOPAS keeps the list of cross dock destinations per part (no Case/Day). The RPA bot makes this list equal to NSP: register a missing destination, ignore an existing one, delete one that is no longer in NSP.
 
 - Method: RPA bot on GTOPAS menu Supply > Master > Crossdock Master (decided 30-Oct): search by Part No; the list has one row per part + destination. The steps of the bot are detailed in the RPA design.
-- Parts that became Inactive (XD05 process 1) are sent with CROSSDOCK_FLAG 'N': the bot deletes all rows of the part in GTOPAS (e.g. 10 destinations -> 10 rows deleted) (decided 30-Oct). AP POLE is not changed for them (XD07).
+- Parts that became Inactive (XD05 process 1) are sent with CROSSDOCK_FLAG 'N': the bot deletes all rows of the part in GTOPAS (e.g. 10 destinations -> 10 rows deleted) (decided 30-Oct). In AP POLE they are deleted at part level by XD07 (SFTP file, CROSSDOCK_FLAG 'N').
 
 ### 4.2 Comparison Rules
 
