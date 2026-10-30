@@ -71,7 +71,7 @@ flowchart TB
 |---|---|---|---|---|
 | SEND_ID | Generated | CHAR(14) | Y | Run of the send (YYYYMMDDHHMMSS); all records of one file have the same SEND_ID and are processed as one set |
 | PART_NO | TB_M_PART_CANDIDATE.PART_NO | VARCHAR(TBD) | Y | Cross dock part with Sync Status Waiting: Active parts, and parts that became Inactive since the last send |
-| CROSSDOCK_FLAG | TB_M_PART_CANDIDATE.PART_STATUS | CHAR(1) | Y | 'Y' = Active / 'N' = Inactive: the receive IF deletes all rows of the part in Cross Dock Kanban Part Master (same as [Delete] on AP POLE screen WLM9Q890); only PART_NO, CROSSDOCK_FLAG, SEND_ID and SEND_DT are filled (decided 30-Oct) |
+| CROSSDOCK_FLAG | TB_M_PART_CANDIDATE.PART_STATUS | CHAR(1) | Y | 'Y' = Active / 'N' = Inactive: the receive IF deletes the part in Cross Dock Kanban Part Master (same as [Delete] on AP POLE screen WLM9Q890), which has one row per part number; only PART_NO, CROSSDOCK_FLAG, SEND_ID and SEND_DT are filled (decided 30-Oct) |
 | PCS_CASE | TB_M_PART_CANDIDATE.PCS_CASE | NUMBER(TBD) | Y | Pieces per crossdock case; used to convert pieces to cases |
 | MAX_CASE_DAY | TB_M_PART_CANDIDATE.MAX_CASE_DAY | NUMBER(TBD) | Y | Maximum cases per day of the part through crossdock (= total Case/Day of its destinations) |
 | EFFECTIVE_START_DATE | TB_M_PART_CANDIDATE.EFFECTIVE_START_DATE | DATE (YYYYMMDD) | Y | Date from which the cross dock setting of the part applies |
@@ -239,7 +239,7 @@ flowchart TB
 - AP POLE replaces the cross dock master of every part in the file with the content of the file (all destinations of the part).
 
 - Interface method: interface file by SFTP, Option #3 of 'NSP Cross Dock Interfacing Data': NSP Send IF -> TMMIN SFTP -> TMA SFTP -> receive IF (TMA) -> AP POLE master. SFTP details, file format and the AP POLE tables are not detailed in this document.
-- Parts that became Inactive (XD05 process 1) are sent with CROSSDOCK_FLAG 'N' and without destinations: the receive IF of the TMA deletes the part at part level in Cross Dock Kanban Part Master (same as [Delete] on AP POLE screen WLM9Q890) (decided 30-Oct). GTOPAS deletes all their rows too (XD06, RPA).
+- Parts that became Inactive (XD05 process 1) are sent with CROSSDOCK_FLAG 'N' and without destinations: the receive IF of the TMA deletes the part (one row per part number) in Cross Dock Kanban Part Master (same as [Delete] on AP POLE screen WLM9Q890) (decided 30-Oct). GTOPAS deletes all their rows too (XD06, RPA).
 
 ### 4.2 Field Rules
 
@@ -256,7 +256,6 @@ flowchart TB
 ### 4.4 Open Points
 
 - Field names on the side of the target follow the target layout (not detailed in this document).
-- Receive IF of the TMA for CROSSDOCK_FLAG 'N': delete all rows of the part, or only the rows from the ongoing effective month - to be confirmed with the TMA.
 
 ## 5. Logging messages
 
