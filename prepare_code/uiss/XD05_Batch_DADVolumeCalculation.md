@@ -504,7 +504,7 @@ Actual demand summary replicated from DB Surrounding to NSP (same columns). Key 
 | EM_MS_FLAG | CHAR(1) |  | Y | EM / MS flag (not used by Crossdock) |
 
 #### TB_H_PART_CANDIDATE (history, proposed)
-History of every change of a crossdock part (Add / Edit by screen or upload, mapping changes, Sync results, status changes and mappings made by the calculation batches). Read by the History setting modal of Part List (index PART_NO, CREATED_DT). Proposed retention: 24 months online by CREATED_DT; a monthly housekeeping job deletes older records (period configurable in system master). To be confirmed.
+History of every change of a crossdock part (Add / Edit by screen or upload, mapping changes, Sync results, status changes and mappings made by the calculation batches). Read by the History setting modal of Part List (index PART_NO, CREATED_DT). No retention limit: the history is kept (no housekeeping job, decided 30-Oct).
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
