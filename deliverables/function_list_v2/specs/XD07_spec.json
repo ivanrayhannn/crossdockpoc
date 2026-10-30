@@ -205,7 +205,7 @@
       "TB_M_PART_CANDIDATE.PART_STATUS",
       "CHAR(1)",
       "Y",
-      "'Y' = Active / 'N' = Inactive: the receive IF deletes all rows of the part in Cross Dock Kanban Part Master (same as [Delete] on AP POLE screen WLM9Q890); only PART_NO, CROSSDOCK_FLAG, SEND_ID and SEND_DT are filled (decided 30-Oct)"
+      "'Y' = Active / 'N' = Inactive: the receive IF deletes the part in Cross Dock Kanban Part Master (same as [Delete] on AP POLE screen WLM9Q890), which has one row per part number; only PART_NO, CROSSDOCK_FLAG, SEND_ID and SEND_DT are filled (decided 30-Oct)"
      ],
      [
       "PCS_CASE",
@@ -796,7 +796,7 @@
    "level": 0,
    "items": [
     "Interface method: interface file by SFTP, Option #3 of 'NSP Cross Dock Interfacing Data': NSP Send IF -> TMMIN SFTP -> TMA SFTP -> receive IF (TMA) -> AP POLE master. SFTP details, file format and the AP POLE tables are not detailed in this document.",
-    "Parts that became Inactive (XD05 process 1) are sent with CROSSDOCK_FLAG 'N' and without destinations: the receive IF of the TMA deletes the part at part level in Cross Dock Kanban Part Master (same as [Delete] on AP POLE screen WLM9Q890) (decided 30-Oct). GTOPAS deletes all their rows too (XD06, RPA)."
+    "Parts that became Inactive (XD05 process 1) are sent with CROSSDOCK_FLAG 'N' and without destinations: the receive IF of the TMA deletes the part (one row per part number) in Cross Dock Kanban Part Master (same as [Delete] on AP POLE screen WLM9Q890) (decided 30-Oct). GTOPAS deletes all their rows too (XD06, RPA)."
    ]
   },
   {
@@ -836,8 +836,7 @@
    "marker": "-",
    "level": 0,
    "items": [
-    "Field names on the side of the target follow the target layout (not detailed in this document).",
-    "Receive IF of the TMA for CROSSDOCK_FLAG 'N': delete all rows of the part, or only the rows from the ongoing effective month - to be confirmed with the TMA."
+    "Field names on the side of the target follow the target layout (not detailed in this document)."
    ]
   }
  ],

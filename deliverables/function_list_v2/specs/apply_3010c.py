@@ -39,7 +39,7 @@ for t in g['extra_tables']:
         if r[0] == 'PART_NO' and t['title'] != 'Parameters':
             r[-1] = 'Cross dock part with Sync Status Waiting: Active parts, and parts that became Inactive since the last send'
         if r[0] == 'CROSSDOCK_FLAG':
-            r[-1] = (f"'Y' = Active / 'N' = Inactive: the receive IF deletes all rows of the part in {SCREEN}; "
+            r[-1] = (f"'Y' = Active / 'N' = Inactive: the receive IF deletes the part in {SCREEN}, which has one row per part number; "
                      "only PART_NO, CROSSDOCK_FLAG, SEND_ID and SEND_DT are filled (decided 30-Oct)")
 st = s['func_flow']['steps']
 st[1] = {'text': "Select the parts with TARGET_SYSTEM = 'APPOLE' and IF_STATUS = '3' in TB_R_CROSSDOCK_IF_RESULT. Keep CHANGED_DT of each part.",
@@ -59,14 +59,12 @@ for b in s['data_map']['blocks']:
 s = replace_text(s, "Parts that became Inactive (XD05 process 1) are not sent to AP POLE (decided 30-Oct): their 'APPOLE' row is set to '1' "
                     "(IF_MESSAGE 'Inactive part: AP POLE not changed'); GTOPAS deletes all their rows (XD06).",
                  "Parts that became Inactive (XD05 process 1) are sent with CROSSDOCK_FLAG 'N' and without destinations: the receive IF of the "
-                 f"TMA deletes the part at part level in {SCREEN} (decided 30-Oct). GTOPAS deletes all their rows too (XD06, RPA).")
+                 f"TMA deletes the part (one row per part number) in {SCREEN} (decided 30-Oct). GTOPAS deletes all their rows too (XD06, RPA).")
 s = replace_text(s, 'only Active parts are sent, Candidate and Inactive parts are not.',
                  'Active parts and parts that became Inactive are sent; Candidate parts are not.')
 for b in s['func_desc']:
-    if b.get('type') == 'bullets' and b['items'][0].startswith('Field names on the side of the target'):
-        if not any('deletes the part' in x for x in b['items']):
-            b['items'].append("Receive IF of the TMA for CROSSDOCK_FLAG 'N': delete all rows of the part, or only the rows from the ongoing "
-                              'effective month - to be confirmed with the TMA.')
+    if b.get('type') == 'bullets':
+        b['items'] = [x for x in b['items'] if not x.startswith("Receive IF of the TMA for CROSSDOCK_FLAG 'N'")]
 save('XD07', s)
 
 # ---------- references
