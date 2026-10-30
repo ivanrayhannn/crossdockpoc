@@ -4062,7 +4062,7 @@
     [
      "Sync Status",
      "Success (1)",
-     "Both XD06 (GTOPAS) and XD07 (AP POLE) sent Pcs/Case, Max Case/Day and the destination mapping of the ongoing period."
+     "XD06 updated the destinations in GTOPAS and XD07 sent the cross dock master to AP POLE (ongoing period)."
     ],
     [
      "Sync Status",
@@ -4215,7 +4215,7 @@
    "marker": "1.",
    "level": 3,
    "items": [
-    "Select every Active part of the ongoing period, and every part that became Inactive (set to No Sync by XD05), with Sync Status No Sync or Failed, whatever the search criteria show (n of the button). Inactive parts are sent with CROSSDOCK_FLAG 'N' so GTOPAS and AP POLE change their status to inactive. Candidate parts are never synchronised.",
+    "Select every Active part of the ongoing period, and every part that became Inactive (set to No Sync by XD05), with Sync Status No Sync or Failed, whatever the search criteria show (n of the button). Inactive parts are sent to AP POLE with CROSSDOCK_FLAG 'N'; GTOPAS is not changed for them (refer XD06). Candidate parts are never synchronised.",
     "Set SYNC_STATUS = 3 (Waiting) for these parts in TB_M_PART_CANDIDATE, set one row per part and target system (GTOPAS, AP POLE) to IF_STATUS = 3 (Waiting) in TB_R_CROSSDOCK_IF_RESULT, and start XD06 and XD07. Display message no. 27.",
     "With the default filter No Sync the parts leave the list; select Sync Status = Waiting or All to follow them."
    ]
@@ -4231,8 +4231,8 @@
    "marker": "1.",
    "level": 3,
    "items": [
-    "XD06 IF Cross Dock Master to GTOPAS and XD07 IF Cross Dock Master to AP POLE each send, per Waiting part, Pcs/Case and Max Case/Day (TB_M_PART_CANDIDATE) and all destinations with Case/Day of the ongoing period (TB_M_PART_CANDIDATE_DEST) as one complete set.",
-    "Each function creates an interface file and sends it by SFTP to its target; the send status is written in the dummy table TB_R_CROSSDOCK_IF_RESULT (IF_STATUS 1 sent / 2 Failed, IF_DT, IF_FILE_NAME, IF_MESSAGE).",
+    "XD06 IF Cross Dock Master to GTOPAS registers / deletes, by RPA, the destinations of each Waiting Active part in GTOPAS (destination list only; no Case/Day). XD07 IF Cross Dock Master to AP POLE sends Pcs/Case, Max Case/Day and all destinations with Case/Day of the ongoing period as one complete set.",
+    "XD06 hands the part x destination list to the RPA bot; XD07 sends a file by SFTP. The result is written in the dummy table TB_R_CROSSDOCK_IF_RESULT (IF_STATUS 1 sent / 2 Failed, IF_DT, IF_FILE_NAME, IF_MESSAGE).",
     "Overall SYNC_STATUS of the part: stays 3 (Waiting) while one target is still Waiting; 1 (Success) when both targets are Success; 2 (Failed) when a target failed (SYNC_MESSAGE = target and reason); 0 (No Sync) when the part was changed after it was read.",
     "Every result is recorded in TB_H_PART_CANDIDATE (event SYNC, source IF, REMARK = target and message)."
    ]
@@ -4247,7 +4247,7 @@
    "type": "item",
    "marker": "d.",
    "level": 2,
-   "text": "Interface method: file by SFTP to GTOPAS (XD06) and AP POLE (XD07); fields and topology refer UISS-Batch XD06 / XD07 (topology TBC)."
+   "text": "Interface method: RPA to GTOPAS (XD06), file by SFTP to AP POLE (XD07); fields and topology refer UISS-Batch XD06 / XD07 (topology TBC)."
   },
   {
    "type": "heading",
@@ -4822,7 +4822,7 @@
    "name": "TB_R_CROSSDOCK_IF_RESULT",
    "kind": "transaction",
    "proposed": true,
-   "description": "Dummy table (proposed): send status of the cross dock master per part and target system (XD06 GTOPAS, XD07 AP POLE). The real output is the interface data sent to the target (AP POLE: file by SFTP; GTOPAS: existing interface). The overall Sync Status of the part stays in TB_M_PART_CANDIDATE.",
+   "description": "Dummy table (proposed): send status of the cross dock master per part and target system (XD06 GTOPAS, XD07 AP POLE). The real output is the interface data sent to the target (AP POLE: file by SFTP; GTOPAS: RPA). The overall Sync Status of the part stays in TB_M_PART_CANDIDATE.",
    "columns": [
     [
      "PART_NO",
@@ -4864,7 +4864,7 @@
      "VARCHAR(100)",
      "",
      "Y",
-     "Name of the interface file (AP POLE) or send ID (GTOPAS)"
+     "Name of the interface file (AP POLE) or RPA input file (GTOPAS)"
     ],
     [
      "IF_MESSAGE",

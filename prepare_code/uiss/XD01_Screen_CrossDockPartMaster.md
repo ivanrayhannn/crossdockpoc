@@ -763,7 +763,7 @@ e. A change from Active to Inactive made by the batch sets the part to No Sync (
 | Part Status | Inactive | Inactive part. Not mapped in the Mapping per Destination sub-menu. |
 | Sync Status | No Sync (0) | Not sent yet, or changed since the last synchronisation. Set on every Save. |
 | Sync Status | Waiting (3) | [Sync] clicked in the Mapping per Destination tab; waiting for XD06 (GTOPAS) and / or XD07 (AP POLE). |
-| Sync Status | Success (1) | Both XD06 (GTOPAS) and XD07 (AP POLE) sent Pcs/Case, Max Case/Day and the destination mapping of the ongoing period. |
+| Sync Status | Success (1) | XD06 updated the destinations in GTOPAS and XD07 sent the cross dock master to AP POLE (ongoing period). |
 | Sync Status | Failed (2) | XD06 or XD07 could not send the part (target and reason in SYNC_MESSAGE); sent again by the next [Sync]. |
 
 Only Active parts are synchronised. A Save while the part is Waiting returns it to No Sync, so the result of XD06 / XD07 for the old data is not kept as Success.
@@ -823,18 +823,18 @@ c. A part without destination shows message no. 19.
 ### 5.16 Sync
 
 - a. User clicks [Sync (n)] (on demand).
-  1. Select every Active part of the ongoing period, and every part that became Inactive (set to No Sync by XD05), with Sync Status No Sync or Failed, whatever the search criteria show (n of the button). Inactive parts are sent with CROSSDOCK_FLAG 'N' so GTOPAS and AP POLE change their status to inactive. Candidate parts are never synchronised.
+  1. Select every Active part of the ongoing period, and every part that became Inactive (set to No Sync by XD05), with Sync Status No Sync or Failed, whatever the search criteria show (n of the button). Inactive parts are sent to AP POLE with CROSSDOCK_FLAG 'N'; GTOPAS is not changed for them (refer XD06). Candidate parts are never synchronised.
   2. Set SYNC_STATUS = 3 (Waiting) for these parts in TB_M_PART_CANDIDATE, set one row per part and target system (GTOPAS, AP POLE) to IF_STATUS = 3 (Waiting) in TB_R_CROSSDOCK_IF_RESULT, and start XD06 and XD07. Display message no. 27.
   3. With the default filter No Sync the parts leave the list; select Sync Status = Waiting or All to follow them.
 
 - b. Interface functions (one per target system; refer UISS-Batch XD06 and XD07).
-  1. XD06 IF Cross Dock Master to GTOPAS and XD07 IF Cross Dock Master to AP POLE each send, per Waiting part, Pcs/Case and Max Case/Day (TB_M_PART_CANDIDATE) and all destinations with Case/Day of the ongoing period (TB_M_PART_CANDIDATE_DEST) as one complete set.
-  2. Each function creates an interface file and sends it by SFTP to its target; the send status is written in the dummy table TB_R_CROSSDOCK_IF_RESULT (IF_STATUS 1 sent / 2 Failed, IF_DT, IF_FILE_NAME, IF_MESSAGE).
+  1. XD06 IF Cross Dock Master to GTOPAS registers / deletes, by RPA, the destinations of each Waiting Active part in GTOPAS (destination list only; no Case/Day). XD07 IF Cross Dock Master to AP POLE sends Pcs/Case, Max Case/Day and all destinations with Case/Day of the ongoing period as one complete set.
+  2. XD06 hands the part x destination list to the RPA bot; XD07 sends a file by SFTP. The result is written in the dummy table TB_R_CROSSDOCK_IF_RESULT (IF_STATUS 1 sent / 2 Failed, IF_DT, IF_FILE_NAME, IF_MESSAGE).
   3. Overall SYNC_STATUS of the part: stays 3 (Waiting) while one target is still Waiting; 1 (Success) when both targets are Success; 2 (Failed) when a target failed (SYNC_MESSAGE = target and reason); 0 (No Sync) when the part was changed after it was read.
   4. Every result is recorded in TB_H_PART_CANDIDATE (event SYNC, source IF, REMARK = target and message).
 
 - c. A Failed part shows SYNC_MESSAGE (target and reason) as tooltip on its chip (message no. 28) and is sent again to both targets by the next [Sync] (replace is repeatable).
-- d. Interface method: file by SFTP to GTOPAS (XD06) and AP POLE (XD07); fields and topology refer UISS-Batch XD06 / XD07 (topology TBC).
+- d. Interface method: RPA to GTOPAS (XD06), file by SFTP to AP POLE (XD07); fields and topology refer UISS-Batch XD06 / XD07 (topology TBC).
 
 ### 5.17 Upload Excel
 
@@ -957,7 +957,7 @@ History of every change of a crossdock part (Add / Edit by screen or upload, map
 | CREATED_DT | DATETIME |  | N | Date and time of the change |
 
 #### TB_R_CROSSDOCK_IF_RESULT (transaction, proposed)
-Dummy table (proposed): send status of the cross dock master per part and target system (XD06 GTOPAS, XD07 AP POLE). The real output is the interface data sent to the target (AP POLE: file by SFTP; GTOPAS: existing interface). The overall Sync Status of the part stays in TB_M_PART_CANDIDATE.
+Dummy table (proposed): send status of the cross dock master per part and target system (XD06 GTOPAS, XD07 AP POLE). The real output is the interface data sent to the target (AP POLE: file by SFTP; GTOPAS: RPA). The overall Sync Status of the part stays in TB_M_PART_CANDIDATE.
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
@@ -966,7 +966,7 @@ Dummy table (proposed): send status of the cross dock master per part and target
 | PERIOD | CHAR(6) |  | N | Calculation period of the mapping sent (YYYYMM) |
 | IF_STATUS | VARCHAR(1) |  | N | '3' Waiting / '1' Success / '2' Failed |
 | IF_DT | DATETIME |  | Y | Date-time of the result of the target system |
-| IF_FILE_NAME | VARCHAR(100) |  | Y | Name of the interface file (AP POLE) or send ID (GTOPAS) |
+| IF_FILE_NAME | VARCHAR(100) |  | Y | Name of the interface file (AP POLE) or RPA input file (GTOPAS) |
 | IF_MESSAGE | VARCHAR(500) |  | Y | Reason when Failed; blank when Success |
 | CREATED_BY | VARCHAR(TBD) |  | N | User who created the record |
 | CREATED_DT | DATETIME |  | N | Created date and time |
