@@ -18,7 +18,7 @@
 
 - To send the cross dock master of the parts waiting for synchronisation to AP POLE: Active parts with Pcs/Case, Max Case/Day, Effective Start Date and all destinations with Case/Day of the ongoing period. Parts that became Inactive are sent with CROSSDOCK_FLAG 'N' (one record, no destination): AP POLE deletes the part at part level in Cross Dock Kanban Part Master (same as [Delete] on AP POLE screen WLM9Q890) (decided 30-Oct). Source: Part List (TB_M_PART_CANDIDATE) and Part Mapping per Destination (TB_M_PART_CANDIDATE_DEST).
 - Interface method: interface file by SFTP, Option #3 of 'NSP Cross Dock Interfacing Data': NSP Send IF -> TMMIN SFTP -> TMA SFTP -> receive IF (TMA) -> AP POLE master. SFTP details, file format and the AP POLE tables are not detailed in this document.
-- A part is sent as one complete set; AP POLE replaces the data of the part, so a change such as Philippines up and Thailand down, or a removed destination, arrives as one consistent update.
+- A part is sent as one complete set: AP POLE adds a new part, updates an existing part (Pcs/Case, Max Case/Day and destinations) and deletes an Inactive part (see 4.2), so a change such as Philippines up and Thailand down, or a removed destination, arrives as one consistent update.
 - The send status per part is kept in TB_R_CROSSDOCK_IF_RESULT (dummy table); together with XD06 (GTOPAS) it gives the overall Sync Status shown on the Cross Dock Part Master screen (XD01).
 
 ### Operation flow
@@ -236,15 +236,21 @@ flowchart TB
 
 - The D/S team maintains the cross dock master on XD01 (Part List: Pcs/Case, Max Case/Day, Effective Start Date; Mapping per Destination: Case/Day per destination of the ongoing period, created by XD05 process 2 and adjusted by screen or upload XD03).
 - Every change sets the part to No Sync. The D/S team clicks [Sync] when the changes are complete; Active parts and parts that became Inactive are sent; Candidate parts are not.
-- AP POLE replaces the cross dock master of every part in the file with the content of the file (all destinations of the part).
+- AP POLE adds a part that it does not have yet, updates an existing part (Pcs/Case, Max Case/Day and all destinations) and deletes an Inactive part (see 4.2).
 
 - Interface method: interface file by SFTP, Option #3 of 'NSP Cross Dock Interfacing Data': NSP Send IF -> TMMIN SFTP -> TMA SFTP -> receive IF (TMA) -> AP POLE master. SFTP details, file format and the AP POLE tables are not detailed in this document.
 - Parts that became Inactive (XD05 process 1) are sent with CROSSDOCK_FLAG 'N' and without destinations: the receive IF of the TMA deletes the part (one row per part number) in Cross Dock Kanban Part Master (same as [Delete] on AP POLE screen WLM9Q890) (decided 30-Oct). GTOPAS deletes all their rows too (XD06, RPA).
 
 ### 4.2 Field Rules
 
+| Part in the file | In AP POLE | Receive IF of the TMA (Cross Dock Kanban Part Master) |
+|---|---|---|
+| CROSSDOCK_FLAG 'Y' | N | Add the part (Part No, Pcs/Case, Max Case/Day), then add its destinations with Case/Day |
+| CROSSDOCK_FLAG 'Y' | Y | Edit the part: update Pcs/Case and Max Case/Day, and make its destinations and Case/Day equal to the file |
+| CROSSDOCK_FLAG 'N' (Inactive) | Y | Delete the part (one row per part number) |
+
 - Fields, source and business rule: see Interface Data (General Description). The field names on the side of the target follow the target layout.
-- Sum of CASE_DAY of the records of a part = MAX_CASE_DAY (guaranteed by XD05 and the save checks of XD01 / XD03).
+- Sum of CASE_DAY of the records of a part <= MAX_CASE_DAY (guaranteed by XD05 and the save checks of XD01 / XD03; a lower total is allowed).
 - PERIOD is always the ongoing period; past periods are never sent.
 
 ### 4.3 Status and Dummy Table
@@ -256,6 +262,7 @@ flowchart TB
 ### 4.4 Open Points
 
 - Field names on the side of the target follow the target layout (not detailed in this document).
+- Receive IF of the TMA: Add / Edit / Delete as in 4.2 - to be confirmed with the TMA.
 
 ## 5. Logging messages
 
