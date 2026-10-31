@@ -846,7 +846,7 @@ c. A part without destination shows message no. 19.
   3. Overall SYNC_STATUS of the part: stays 3 (Waiting) while one target is still Waiting; 1 (Success) when both targets are Success; 2 (Failed) when a target failed (SYNC_MESSAGE = target and reason); 0 (No Sync) when the part was changed after it was read.
   4. Every result is recorded in TB_H_PART_CANDIDATE (event SYNC, source IF, REMARK = target and message).
 
-- c. A Failed part shows SYNC_MESSAGE (target and reason) as tooltip on its chip (message no. 28) and is sent again to both targets by the next [Sync] (replace is repeatable).
+- c. A Failed part shows SYNC_MESSAGE (target and reason) as tooltip on its chip (message no. 28) and is sent again to both targets by the next [Sync] (repeatable: GTOPAS only gets the differences, AP POLE gets the complete set again).
 - d. Interface method: RPA to GTOPAS (XD06), file by SFTP to AP POLE (XD07); fields and topology refer UISS-Batch XD06 / XD07 (topology TBC).
 
 ### 5.17 Upload Excel

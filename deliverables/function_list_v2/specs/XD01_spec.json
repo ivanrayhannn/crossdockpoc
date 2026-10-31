@@ -4302,7 +4302,7 @@
    "type": "item",
    "marker": "c.",
    "level": 2,
-   "text": "A Failed part shows SYNC_MESSAGE (target and reason) as tooltip on its chip (message no. 28) and is sent again to both targets by the next [Sync] (replace is repeatable)."
+   "text": "A Failed part shows SYNC_MESSAGE (target and reason) as tooltip on its chip (message no. 28) and is sent again to both targets by the next [Sync] (repeatable: GTOPAS only gets the differences, AP POLE gets the complete set again)."
   },
   {
    "type": "item",
