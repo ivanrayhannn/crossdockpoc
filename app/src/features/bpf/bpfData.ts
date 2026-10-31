@@ -256,7 +256,7 @@ export const BPF: BpfData = {
      "band": "B4",
      "slot": 2,
      "fn": "XD06 · XD07",
-     "title": "Send crossdock master (CROSSDOCK_FLAG Y / N): GTOPAS existing IF, AP POLE file by SFTP",
+     "title": "Send crossdock master: GTOPAS by RPA, AP POLE file by SFTP (Inactive: delete)",
      "read": [
       "TB_M_PART_CANDIDATE",
       "TB_M_PART_CANDIDATE_DEST"
@@ -281,12 +281,12 @@ export const BPF: BpfData = {
      "band": "B5",
      "slot": 0,
      "fn": "RPA",
-     "title": "Modify part number and destination in Crossdock Master (Supply Menu)",
+     "title": "RPA: register / delete part + destination in Crossdock Master (Supply > Master); Inactive: delete all rows",
      "read": [
-      "Interface data from NSP"
+      "RPA input from NSP"
      ],
      "write": [
-      "GTOPAS master (not detailed)"
+      "GTOPAS Crossdock Master"
      ],
      "ab": [],
      "next": []
@@ -297,7 +297,7 @@ export const BPF: BpfData = {
      "band": "B5",
      "slot": 0,
      "fn": "",
-     "title": "TMMIN SFTP → TMA SFTP → receive IF by TMA AP POLE Crossdock Kanban Part Master",
+     "title": "TMMIN SFTP → TMA SFTP → receive IF by TMA AP POLE Crossdock Kanban Part Master (Inactive: delete part)",
      "read": [
       "Interface file (SFTP)"
      ],
@@ -1081,9 +1081,9 @@ export const BPF: BpfData = {
    "flow": "F1",
    "step": "M11",
    "fn": "XD06 / XD07",
-   "condition": "Interface file cannot be created, or GTOPAS / AP POLE SFTP not available after retry",
+   "condition": "Interface file / RPA input cannot be created, GTOPAS RPA bot fails, or AP POLE SFTP not available after retry",
    "detection": "IF_STATUS 2, SYNC_STATUS Failed, Log",
-   "system": "Keep the file in the outbound folder; parts stay Failed.",
+   "system": "Keep the file (outbound folder / RPA input); parts stay Failed.",
    "pic": "D/S Team",
    "action": "Click [Sync] again later (Failed parts are counted in n); contact PIC if it persists."
   },
