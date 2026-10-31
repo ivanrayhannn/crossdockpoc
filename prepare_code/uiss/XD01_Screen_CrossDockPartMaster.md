@@ -174,7 +174,7 @@ flowchart TB
   s(["START"])
   e1>"Enter / change part data in the Add Part or Edit part data modal"]
   d1{"Part data valid?"}
-  m1>"Save disabled, show tooltip / message (no. 5 / 7 / 15 / 16; Edit: 10 / 14)"]
+  m1>"Save disabled, show tooltip / message (no. 5 / 6 / 7 / 15; Edit: 10 / 14)"]
   m2>"Save enabled"]
   e2>"On Click of Save button"]
   d2{"Registered / changed by another user meanwhile?"}
@@ -200,7 +200,7 @@ flowchart TB
   p2 --> m4
   m4 --> x
 ```
-- Part data valid = Add: Part No selected, Min MAD filled (whole number, 0 or more), Pcs/Case > 0 and Max Case/Day > 0 (otherwise the tooltip shows message no. 5, 15, 16 or 7 for the first missing item). Edit: the same items, Effective Start Date not before today while the part is Candidate (message no. 10), and Max Case/Day not below the Case/Day already mapped in the ongoing period (message no. 14).
+- Part data valid = Add: Part No selected, Min MAD filled (whole number, 0 or more), Pcs/Case > 0 and Max Case/Day > 0 (otherwise the tooltip shows message no. 5, 15, 6 or 7 for the first missing item). Edit: the same items, Effective Start Date not before today while the part is Candidate (message no. 10), and Max Case/Day not below the Case/Day already mapped in the ongoing period (message no. 14).
 - The check runs on every change in the modal, so [Save] is already disabled before it can be clicked (see Operation Description 5.4 and 5.5).
 
 ### Screen Flow for Mapping per Destination
@@ -688,7 +688,7 @@ b. Total Pcs/Day = Pcs/Case x Max Case/Day.
   1. Open the 'Add Part Candidate Crossdock' modal. 'Status' = Candidate and locked (a new part is always Candidate); 'Effective Start Date' = system date + 1 day, minimum today.
   2. 'Part No' lists parts of TB_M_PART_MASTER that are not yet registered in TB_M_PART_CANDIDATE, so can not register part into Crossdock master
   3. Selecting a Part No autofills 'Part Name'. 'Max Case/Day' is locked until 'Pcs/Case' is filled.
-  4. [Save] is enabled only when Part No, Min MAD (whole number, 0 or more), Pcs/Case > 0 and Max Case/Day > 0 are filled; otherwise its tooltip shows message no. 5, 15, 6 or 7 for the first missing item. Effective Start Date
+  4. [Save] is enabled only when Part No, Min MAD (whole number, 0 or more), Pcs/Case > 0 and Max Case/Day > 0 are filled; otherwise its tooltip shows message no. 5, 15, 6 or 7 for the first missing item.
 
 - b. User clicks [Save].
   1. If the Part No was registered by another user in the meantime, display message no. 3. Stop.
@@ -779,7 +779,7 @@ e. A change from Active to Inactive made by the batch sets the part to No Sync (
 | Sync Status | Success (1) | XD06 updated the destinations in GTOPAS and XD07 sent the cross dock master to AP POLE (ongoing period). |
 | Sync Status | Failed (2) | XD06 or XD07 could not send the part (target and reason in SYNC_MESSAGE); sent again by the next [Sync]. |
 
-Only Active parts are synchronised. A Save while the part is Waiting returns it to No Sync, so the result of XD06 / XD07 for the old data is not kept as Success.
+Active and newly Inactive parts are synchronised (not Candidate). A Save while Waiting returns it to No Sync, so the result of XD06 / XD07 for the old data is not kept as Success.
 
 ### 5.11 Initial Display
 
@@ -841,7 +841,7 @@ c. A part without destination shows message no. 19.
   3. With the default filter No Sync the parts leave the list; select Sync Status = Waiting or All to follow them.
 
 - b. Interface functions (one per target system; refer UISS-Batch XD06 and XD07).
-  1. XD06 IF Cross Dock Master to GTOPAS registers / deletes, by RPA, the destinations of each Waiting part in GTOPAS (Inactive: all rows). XD07 IF Cross Dock Master to AP POLE sends, per Active part, Pcs/Case, Max Case/Day and all destinations with Case/Day of the ongoing period as one complete set (Inactive: part deleted).
+  1. XD06 IF Cross Dock Master to GTOPAS registers / deletes, by RPA, the destinations of each Waiting part in GTOPAS (Inactive: all rows). XD07 IF Cross Dock Master to AP POLE sends, per Active part, Pcs/Case, Max Case/Day and all destinations with Case/Day of the ongoing period (new part: added; existing: updated; Inactive: deleted).
   2. XD06 hands the part x destination list to the RPA bot; XD07 sends a file by SFTP. The result is written in the dummy table TB_R_CROSSDOCK_IF_RESULT (IF_STATUS 1 sent / 2 Failed, IF_DT, IF_FILE_NAME, IF_MESSAGE).
   3. Overall SYNC_STATUS of the part: stays 3 (Waiting) while one target is still Waiting; 1 (Success) when both targets are Success; 2 (Failed) when a target failed (SYNC_MESSAGE = target and reason); 0 (No Sync) when the part was changed after it was read.
   4. Every result is recorded in TB_H_PART_CANDIDATE (event SYNC, source IF, REMARK = target and message).
@@ -886,7 +886,7 @@ d. User clicks [Run calculation]: start the batch. When it completes, update 'La
 | Sync Status | Failed (2) | GTOPAS or AP POLE could not receive the part; target and reason in SYNC_MESSAGE; retried by the next [Sync]. |
 | Period | Ongoing / past | Created by the calculation batch. Ongoing (latest period): mapping can be edited and uploaded. Past: read only. |
 
-Sync Status is kept per part in TB_M_PART_CANDIDATE because a part is sent as one set (Pcs/Case, Max Case/Day and all destinations); the result per target system is in TB_R_CROSSDOCK_IF_RESULT. Every mapping change and every Sync result is recorded in TB_H_PART_CANDIDATE (with the period).
+Sync Status is kept per part in TB_M_PART_CANDIDATE because a part is synced as one unit (GTOPAS: destination list; AP POLE: Pcs/Case, Max Case/Day, destinations); the result per target system is in TB_R_CROSSDOCK_IF_RESULT. Every mapping change and every Sync result is recorded in TB_H_PART_CANDIDATE (with the period).
 
 ## 7. Display messages
 
