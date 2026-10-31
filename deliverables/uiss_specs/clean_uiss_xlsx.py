@@ -2,7 +2,8 @@
 
 The TMAP template carries invalid / broken defined names (e.g. "???", #REF!, links to
 external workbooks [1]..[6]) and the external link parts they point to. Keeps only the
-print settings (_xlnm.Print_Area / _xlnm.Print_Titles). Gridlines are hidden on every sheet (view mode).
+print settings (_xlnm.Print_Area / _xlnm.Print_Titles). Gridlines are hidden on every sheet (view mode) and the
+"Number Stored as Text" marker of Excel is switched off (numbering such as '1.' is text on purpose).
 Usage: clean_uiss_xlsx.py FILE.xlsx ...
 """
 import re, shutil, sys, tempfile, zipfile
@@ -29,6 +30,10 @@ def clean(path):
             x = data.decode('utf-8')
             x = re.sub(r'(<sheetView\b[^>]*?)\sshowGridLines="[^"]*"', r'\1', x)
             x = re.sub(r'<sheetView\b', '<sheetView showGridLines="0"', x)
+            if 'numberStoredAsText' not in x:
+                ign = '<ignoredErrors><ignoredError sqref="A1:XFD1048576" numberStoredAsText="1"/></ignoredErrors>'
+                m = re.search(r'<(smartTags|drawing|legacyDrawing|legacyDrawingHF|picture|oleObjects|controls|webPublishItems|tableParts|extLst)\b|</worksheet>', x)
+                x = x[:m.start()] + ign + x[m.start():]
             data = x.encode('utf-8')
         elif name == '[Content_Types].xml':
             x = data.decode('utf-8')
