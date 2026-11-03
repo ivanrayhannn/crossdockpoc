@@ -94,7 +94,9 @@ SCENARIOS = [
         'id': 'SIM-1', 'title': 'Master setup and monthly calculation', 'flow': 'BPF F1', 'functions': 'XD13, XD01 / XD02, XD04, XD05, XD01 [Sync], XD06 / XD07',
         'story': ['Destination master is synchronised weekly; Procurement registers PART-Y; the monthly run (Oct 2026) uses the actual demand of Jul – Sep.',
                   'XD05: PART-X stays Active (avg MAD 315 ≥ 300), PART-Y becomes Active (130 ≥ 100), PART-Z becomes Inactive (35 < 50) and is set to No Sync.',
-                  'Mapping: PART-X Max Case/Day 10 split by MAD share VN 60 % / TH 30 % / PH 10 % = 6 / 3 / 1. D/S clicks [Sync]: PART-Z is sent with CROSSDOCK_FLAG N.'],
+                  'Mapping: PART-X Max Case/Day 10 split by MAD share VN 60 % / TH 30 % / PH 10 % = 6 / 3 / 1. D/S clicks [Sync]: PART-Y (new Active part) is '
+                  'registered in GTOPAS by RPA (destination PH added) and added in AP POLE (SFTP: part, Pcs/Case, Max Case/Day, destinations); '
+                  'PART-Z (became Inactive) is deleted in GTOPAS (RPA, all rows) and in AP POLE (SFTP, CROSSDOCK_FLAG N, one row).'],
         'steps': [
             ('1. XD13 weekly destination sync (delete – insert)', 'TB_M_H0125_DESTINATION', [
                 ('new', [VN, '97153', 'DUMMY DESTINATION VIETNAM', 'VIETNAM']), ('new', [TH, '9722D', 'DUMMY DESTINATION THAILAND', 'THAILAND']),
@@ -125,13 +127,14 @@ SCENARIOS = [
                 ('new', [1002, 'PART-Y', '202610', 'CALC', 'BATCH', None, 'PART_STATUS', 'Candidate', 'Active', 'XD05']),
                 ('new', [1003, 'PART-Z', '202610', 'CALC', 'BATCH', None, 'PART_STATUS', 'Active', 'Inactive', 'XD05']),
                 ('new', [1004, 'PART-X', '202610', 'MAPPING', 'BATCH', VN, 'CASE_DAY', '5', '6', 'XD05'])]),
-            ('6. D/S [Sync] → XD06 (GTOPAS) / XD07 (AP POLE)', 'TB_R_CROSSDOCK_IF_RESULT', [
-                ('new', ['PART-Y', 'GTOPAS', '202610', '1', 'SEND-20261002-01', 'OK']), ('new', ['PART-Y', 'APPOLE', '202610', '1', 'XDOCK_MASTER_20261002.csv', 'OK']),
-                ('new', ['PART-Z', 'GTOPAS', '202610', '1', 'SEND-20261002-01', 'OK (CROSSDOCK_FLAG N)']),
-                ('new', ['PART-Z', 'APPOLE', '202610', '1', 'XDOCK_MASTER_20261002.csv', 'OK (CROSSDOCK_FLAG N)'])]),
+            ('6. D/S [Sync] → XD06 (GTOPAS, RPA) / XD07 (AP POLE, SFTP)', 'TB_R_CROSSDOCK_IF_RESULT', [
+                ('new', ['PART-Y', 'GTOPAS', '202610', '1', 'XD_CDMASTER_GTOPAS_20261002090000.csv', 'added 9811110']),
+                ('new', ['PART-Y', 'APPOLE', '202610', '1', 'XD_CDMASTER_APPOLE_20261002090000.csv', None]),
+                ('new', ['PART-Z', 'GTOPAS', '202610', '1', 'XD_CDMASTER_GTOPAS_20261002090000.csv', 'deleted all 1 rows']),
+                ('new', ['PART-Z', 'APPOLE', '202610', '1', 'XD_CDMASTER_APPOLE_20261002090000.csv', None])]),
             ('', 'TB_M_PART_CANDIDATE', [
-                ('upd', ['PART-Y', 'DUMMY PART Y', 100, 6, 2, 12, 'Active', '1', 'CALC'], ['SYNC_STATUS'], 'No Sync → Success'),
-                ('upd', ['PART-Z', 'DUMMY PART Z', 50, 6, 4, 24, 'Inactive', '1', 'CALC'], ['SYNC_STATUS'], 'No Sync → Success (inactive in GTOPAS / AP POLE)')]),
+                ('upd', ['PART-Y', 'DUMMY PART Y', 100, 6, 2, 12, 'Active', '1', 'CALC'], ['SYNC_STATUS'], 'No Sync → Success (new in GTOPAS and AP POLE)'),
+                ('upd', ['PART-Z', 'DUMMY PART Z', 50, 6, 4, 24, 'Inactive', '1', 'CALC'], ['SYNC_STATUS'], 'No Sync → Success (deleted in GTOPAS / AP POLE)')]),
         ]},
     {
         'id': 'SIM-2', 'title': 'Daily order to ASN (normal)', 'flow': 'BPF F2', 'functions': 'XD08, XD09, XD10 (Create ASN, Submit 5.7)',
@@ -430,5 +433,36 @@ SCENARIOS = [
                 ('upd', h('CO-14115', VN, '0000002', 'PART-X', 6, mapped='Y', od='2026-10-19'), ['PO_MAPPED_FLAG'], 'Fully in TB_R_INSTRUCTION: not taken by XD09')]),
             ('4. 22-Oct XD08: ASN0007 received', 'TB_R_H0253_ORDER_CONTROL_PRE', [
                 ('upd', h('CO-14115', VN, '0000002', 'PART-X', 6, mapped='Y', upd='6', od='2026-10-19'), ['UPD_STATUS'], 'Received')]),
+        ]},
+    {
+        'id': 'SIM-11', 'title': 'Edit mapping per destination (update / insert / delete) and Sync of the differences', 'flow': 'BPF F1',
+        'functions': 'XD01 (Edit mapping, [Sync]), XD06 / XD07',
+        'story': ['PART-X (Max Case/Day 10) is mapped VN 6 / TH 3 / PH 1 in Oct 2026. The D/S team changes it to VN 5 / TH 3 / ' + D4 + ' 2 and removes PH.',
+                  'Saved per destination (FB-085): VN updated (CREATED_DT kept), TH not touched, PH deleted, ' + D4 + ' inserted; one history record per changed '
+                  'destination; the part becomes No Sync.',
+                  '[Sync]: the RPA bot registers ' + D4 + ' and deletes PH in GTOPAS (VN and TH ignored, no Case/Day in GTOPAS); AP POLE gets the complete '
+                  'set (existing part: Pcs/Case, Max Case/Day and destinations updated).'],
+        'steps': [
+            ('1. Mapping before the change (ongoing period)', 'TB_M_PART_CANDIDATE_DEST', [
+                ('ref', ['PART-X', '202610', VN, 6]), ('ref', ['PART-X', '202610', TH, 3]), ('ref', ['PART-X', '202610', PH, 1])]),
+            ('2. D/S Edit mapping → [Save] (XD01 5.15)', 'TB_M_PART_CANDIDATE_DEST', [
+                ('upd', ['PART-X', '202610', VN, 5], ['CASE_DAY'], 'Kept destination, Case/Day 6 → 5 (update)'),
+                ('ref', ['PART-X', '202610', TH, 3], [], 'Same Case/Day: not touched'),
+                ('del', ['PART-X', '202610', PH, 1], [], 'Not in the draft: deleted'),
+                ('new', ['PART-X', '202610', D4, 2])]),
+            ('', 'TB_H_PART_CANDIDATE', [
+                ('new', [1101, 'PART-X', '202610', 'MAPPING', 'SCREEN', VN, 'CASE_DAY', '6', '5', 'DS-USER']),
+                ('new', [1102, 'PART-X', '202610', 'MAPPING', 'SCREEN', PH, 'CASE_DAY', '1', None, 'DS-USER']),
+                ('new', [1103, 'PART-X', '202610', 'MAPPING', 'SCREEN', D4, 'CASE_DAY', None, '2', 'DS-USER'])]),
+            ('', 'TB_M_PART_CANDIDATE', [
+                ('upd', ['PART-X', 'DUMMY PART X', 300, 6, 10, 60, 'Active', '0', 'SCREEN'], ['SYNC_STATUS', 'LAST_SOURCE'], 'Success → No Sync')]),
+            ('3. D/S [Sync] → XD06 (GTOPAS, RPA: differences) / XD07 (AP POLE, SFTP: complete set)', 'TB_R_CROSSDOCK_IF_RESULT', [
+                ('upd', ['PART-X', 'GTOPAS', '202610', '1', 'XD_CDMASTER_GTOPAS_20261005100000.csv', 'added ' + D4 + '; deleted ' + PH],
+                 ['IF_FILE_NAME', 'IF_MESSAGE'], 'VN / TH ignored'),
+                ('upd', ['PART-X', 'APPOLE', '202610', '1', 'XD_CDMASTER_APPOLE_20261005100000.csv', None], ['IF_FILE_NAME'], 'Existing part: updated')]),
+            ('', 'TB_M_PART_CANDIDATE', [
+                ('upd', ['PART-X', 'DUMMY PART X', 300, 6, 10, 60, 'Active', '1', 'SCREEN'], ['SYNC_STATUS'], 'No Sync → Waiting → Success')]),
+            ('', 'TB_H_PART_CANDIDATE', [
+                ('new', [1104, 'PART-X', '202610', 'SYNC', 'IF', None, 'SYNC_STATUS', 'Waiting', 'Success', 'IF batch'])]),
         ]},
 ]

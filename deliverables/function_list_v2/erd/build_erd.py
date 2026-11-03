@@ -57,6 +57,9 @@ def load_tables():
         tables[name] = (desc + f" Full structure: GTOPAS_SPS_DB_Structure_20240423 sheet {gt[name]['sheet']}.",
                         [tuple(c) for c in gt[name]['columns']])
     used['TB_M_PART_MASTER'] = sorted(set(used.get('TB_M_PART_MASTER', [])) | {'XD01', 'XD02'})
+    # the XD01 screen reads / writes these tables but its UISS lists only the tables it adds
+    for name in ('TB_M_PART_CANDIDATE', 'TB_M_PART_CANDIDATE_DEST', 'TB_M_H0125_DESTINATION'):
+        used[name] = sorted(set(used.get(name, [])) | {'XD01'})
     return tables, used
 
 
