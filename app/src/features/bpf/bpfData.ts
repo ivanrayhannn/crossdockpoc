@@ -217,7 +217,7 @@ export const BPF: BpfData = {
      "band": "B4",
      "slot": 0,
      "fn": "XD01 · XD03",
-     "title": "Review / adjust mapping per destination (screen or Excel upload). Check destination master? N → Log, stop, register the destination first",
+     "title": "Review / adjust mapping per destination (screen or Excel upload), saved per destination (update / insert / delete). Check destination master? N → Log, stop, register the destination first",
      "read": [
       "TB_M_PART_CANDIDATE_DEST",
       "TB_M_H0125_DESTINATION"
@@ -240,7 +240,7 @@ export const BPF: BpfData = {
      "band": "B4",
      "slot": 1,
      "fn": "XD01",
-     "title": "Sync parts with status No Sync & Failed",
+     "title": "Sync Active and newly Inactive parts with status No Sync & Failed",
      "read": [
       "TB_M_PART_CANDIDATE"
      ],
@@ -281,7 +281,7 @@ export const BPF: BpfData = {
      "band": "B5",
      "slot": 0,
      "fn": "RPA",
-     "title": "RPA: register / delete part + destination in Crossdock Master (Supply > Master); Inactive: delete all rows",
+     "title": "RPA: register / delete part + destination in Crossdock Master (Supply > Master); Inactive or no destination: delete all rows",
      "read": [
       "RPA input from NSP"
      ],
@@ -297,7 +297,7 @@ export const BPF: BpfData = {
      "band": "B5",
      "slot": 0,
      "fn": "",
-     "title": "TMMIN SFTP → TMA SFTP → receive IF by TMA AP POLE Crossdock Kanban Part Master (Inactive: delete part)",
+     "title": "TMMIN SFTP → TMA SFTP → receive IF by TMA AP POLE Crossdock Kanban Part Master: new part add, existing edit, Inactive delete",
      "read": [
       "Interface file (SFTP)"
      ],
