@@ -42,9 +42,13 @@ section.fn { background: var(--surface); border: 1px solid var(--line); border-r
 .trigger { color: var(--muted); font-size: 13px; margin: 2px 0 8px }
 h3 { font-size: 12px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); margin: 16px 0 4px }
 ol.points { list-style: none; margin: 0; padding: 0; display: grid }
-li.pt { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 4px 10px; padding: 8px 0; border-top: 1px dashed var(--line) }
+li.pt { display: grid; grid-template-columns: 78px minmax(0, 1fr) auto; gap: 4px 10px; padding: 8px 0; border-top: 1px dashed var(--line) }
 li.pt:first-child { border-top: 0 }
-.no { font-family: var(--font-mono); font-size: 11px; color: var(--muted); padding-top: 2px; font-variant-numeric: tabular-nums }
+.no { font-family: var(--font-mono); font-size: 11px; color: var(--muted); padding-top: 2px; font-variant-numeric: tabular-nums; display: flex; gap: 6px; align-items: flex-start; cursor: pointer }
+.no input { margin: 2px 0 0; accent-color: var(--ok); cursor: pointer }
+li.pt.checked .txt { opacity: .55 }
+nav a .prog { font-family: var(--font-mono); font-size: 11px; color: var(--muted) }
+.okc { color: var(--ok) !important }
 .txt { min-width: 0 }
 .txt .k { font-weight: 600 }
 .ab { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px 12px; margin-top: 4px; font-size: 13px; color: var(--muted) }
@@ -77,7 +81,7 @@ ul.sents li::marker { color: var(--muted) }
   nav { position: static; display: flex; flex-wrap: wrap; gap: 4px }
   nav .brand { width: 100% }
   nav a { padding: 4px 8px; background: var(--surface) }
-  li.pt { grid-template-columns: 40px minmax(0, 1fr) }
+  li.pt { grid-template-columns: 64px minmax(0, 1fr) }
   .cbtn { grid-column: 2 }
   .note { grid-column: 1 / -1 }
   .ab { grid-template-columns: minmax(0, 1fr) }
@@ -1463,9 +1467,10 @@ const fmtTime = (iso) => { try { return new Date(iso).toLocaleString('id-ID', { 
 function useRevisions() {
   const [db, setDb] = useState(null);
   const [notes, setNotes] = useState({});
+  const [checks, setChecks] = useState({});
   const [state, setState] = useState('loading'); // loading | live | offline | stale
   useEffect(() => {
-    let unsub = null, timer = null, alive = true;
+    let unsub = null, unsub2 = null, timer = null, alive = true;
     (async () => {
       const c = window.claude && (await window.claude.use('db'));
       if (!alive) return;
@@ -1478,13 +1483,18 @@ function useRevisions() {
         setNotes(m);
         if (!snap.metadata.fromCache) { clearTimeout(timer); setState('live'); }
       }, () => { clearTimeout(timer); setState('stale'); });
+      unsub2 = c.collection('checks').onSnapshot((snap) => {
+        const m = {};
+        snap.docs.forEach((d) => { if (d.exists) m[d.id] = d.data(); });
+        setChecks(m);
+      }, () => setState('stale'));
     })();
-    return () => { alive = false; if (unsub) unsub(); clearTimeout(timer); };
+    return () => { alive = false; if (unsub) unsub(); if (unsub2) unsub2(); clearTimeout(timer); };
   }, []);
-  return { db, notes, state };
+  return { db, notes, checks, state };
 }
 
-function Point({ id, seq, fn, point, note, db, open, onToggle }) {
+function Point({ id, seq, fn, point, note, db, open, onToggle, checked, onCheck }) {
   const [draft, setDraft] = useState(note ? note.comment : '');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
@@ -1503,8 +1513,11 @@ function Point({ id, seq, fn, point, note, db, open, onToggle }) {
   };
   const cls = note ? (note.status === 'done' ? 'cbtn done' : 'cbtn has') : 'cbtn';
   return (
-    <li className="pt">
-      <span className="no">{seq || id.split('-').slice(1).join('-')}</span>
+    <li className={'pt' + (checked ? ' checked' : '')}>
+      <label className="no" htmlFor={'c-' + id} title="Tandai sudah dicek">
+        <input id={'c-' + id} type="checkbox" checked={!!checked} disabled={!db} onChange={(e) => onCheck(id, e.target.checked)} />
+        <span>{seq || id.split('-').slice(1).join('-')}</span>
+      </label>
       <div className="txt">
         {typeof point === 'string' ? <Sentences text={point} fn={fn} /> : point.msg ? (
           <>
@@ -1556,7 +1569,25 @@ function Point({ id, seq, fn, point, note, db, open, onToggle }) {
 }
 
 function App() {
-  const { db, notes, state } = useRevisions();
+  const { db, notes, checks, state } = useRevisions();
+  const [hideChecked, setHideChecked] = useState(false);
+  const [checkErr, setCheckErr] = useState('');
+  const onCheck = async (id, val) => {
+    if (!db) return;
+    setCheckErr('');
+    try {
+      const ref = db.collection('checks').doc(id);
+      if (val) await ref.set({ fn: id.split('-')[0], checked: true, updatedAt: new Date().toISOString() });
+      else await ref.delete();
+    } catch (e) { setCheckErr('Checklist belum tersimpan (' + (e && e.code ? e.code : 'error') + '). Coba lagi.'); }
+  };
+  const perFn = useMemo(() => {
+    const m = {};
+    FUNCS.forEach((f) => { m[f.id] = { total: f.sections.reduce((b, s) => b + s.points.length, 0) + (MSGS[f.id] || []).length, done: 0 }; });
+    Object.keys(checks).forEach((k) => { const f = k.split('-')[0]; if (m[f]) m[f].done++; });
+    return m;
+  }, [checks]);
+  const checkedTotal = Object.values(perFn).reduce((a, x) => a + x.done, 0);
   const [openId, setOpenId] = useState(null);
   const [onlyNotes, setOnlyNotes] = useState(false);
   const counts = useMemo(() => {
@@ -1571,7 +1602,7 @@ function App() {
       <nav aria-label="Function">
         <span className="brand">Function list</span>
         {FUNCS.map((f) => (
-          <a key={f.id} href={'#' + f.id}><span><span className="id">{f.id}</span></span>{counts.m[f.id] ? <span className="n">{counts.m[f.id]}</span> : null}</a>
+          <a key={f.id} href={'#' + f.id}><span><span className="id">{f.id}</span> <span className="prog">{perFn[f.id].done}/{perFn[f.id].total}</span></span>{counts.m[f.id] ? <span className="n">{counts.m[f.id]}</span> : null}</a>
         ))}
       </nav>
       <main style={{ minWidth: 0 }}>
@@ -1582,14 +1613,17 @@ function App() {
             <span className="pill">{FUNCS.length} function · {total} poin</span>
             <span className="pill">Revisi terbuka <b>{counts.open}</b></span>
             <span className="pill">Selesai {counts.done}</span>
+            <span className="pill">Sudah dicek <b className="okc">{checkedTotal}</b> / {total}</span>
+            <label className="toggle" htmlFor="hidechk"><input id="hidechk" type="checkbox" checked={hideChecked} onChange={(e) => setHideChecked(e.target.checked)} /> Sembunyikan yang sudah dicek</label>
+            {checkErr && <span className="err">{checkErr}</span>}
             <label className="toggle" htmlFor="only"><input id="only" type="checkbox" checked={onlyNotes} onChange={(e) => setOnlyNotes(e.target.checked)} /> Hanya poin dengan komentar</label>
             <span className="state" role="status">{stateText}</span>
           </div>
         </header>
         {FUNCS.map((f) => {
           const all = (MSGS[f.id] || []).length ? f.sections.concat([{ key: 'MSG', title: 'Message (breakdown)', points: MSGS[f.id].map((m) => ({ msg: m })) }]) : f.sections;
-          const secs = all.map((s) => ({ s, items: s.points.map((p, i) => ({ p, id: p.msg ? f.id + '-MSG-' + p.msg.id : pid(f.id, s.key, i), seq: p.msg ? 'MSG-' + String(i + 1).padStart(2, '0') : '' })).filter((x) => !onlyNotes || notes[x.id]) })).filter((x) => x.items.length);
-          if (onlyNotes && !secs.length) return null;
+          const secs = all.map((s) => ({ s, items: s.points.map((p, i) => ({ p, id: p.msg ? f.id + '-MSG-' + p.msg.id : pid(f.id, s.key, i), seq: p.msg ? 'MSG-' + String(i + 1).padStart(2, '0') : '' })).filter((x) => (!onlyNotes || notes[x.id]) && (!hideChecked || !checks[x.id])) })).filter((x) => x.items.length);
+          if ((onlyNotes || hideChecked) && !secs.length) return null;
           return (
             <section className="fn" id={f.id} key={f.id}>
               <div className="fn-head"><span className="id">{f.id}</span><h2>{f.name}</h2><span className="type">{f.type}</span></div>
@@ -1599,7 +1633,7 @@ function App() {
                   <h3>{s.title}</h3>
                   <ol className="points">
                     {items.map(({ p, id, seq }) => (
-                      <Point key={id} id={id} seq={seq} fn={f.id} point={p} note={notes[id]} db={db} open={openId === id} onToggle={(v) => setOpenId(v ? id : null)} />
+                      <Point key={id} id={id} seq={seq} fn={f.id} point={p} note={notes[id]} checked={checks[id]} onCheck={onCheck} db={db} open={openId === id} onToggle={(v) => setOpenId(v ? id : null)} />
                     ))}
                   </ol>
                 </div>
