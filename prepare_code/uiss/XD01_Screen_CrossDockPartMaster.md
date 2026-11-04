@@ -404,7 +404,7 @@ flowchart TB
 | 17 | Min MAD | TB_M_PART_CANDIDATE | MIN_MAD | Number | TBD | O | Label | Right |  |  | ZZ,ZZ9 |  | Minimum MAD of the part, entered by the user. Reference value compared with the MAD result of the calculation. |
 | 18 | Pcs/Case | TB_M_PART_CANDIDATE | PCS_CASE | Number | TBD | O | Label | Right |  |  | ZZ,ZZ9 |  |  |
 | 19 | Max Case/Day | TB_M_PART_CANDIDATE | MAX_CASE_DAY | Number | TBD | O | Label | Right |  |  | ZZ,ZZ9 |  |  |
-| 20 | Total Pcs/Day | TB_M_PART_CANDIDATE | TOTAL_PCS_DAY | Number | TBD | O | Label | Right |  |  | ZZ,ZZ9 |  | = Pcs/Case x Max Case/Day. |
+| 20 | Total Pcs/Day | TB_M_PART_CANDIDATE | TOTAL_PCS_DAY | Number | TBD | O | Label | Right |  |  | ZZ,ZZ9 |  | Calculated: Pcs/Case x Max Case/Day. |
 | 21 | Status | TB_M_PART_CANDIDATE | PART_STATUS | Varchar | TBD | O | Chip | Left |  |  |  |  | Candidate (blue) / Active (green) / Inactive (grey). |
 | 22 | Last Update | TB_M_PART_CANDIDATE | CHANGED_DT, CHANGED_BY | Datetime |  | O | Label (2 lines) | Left |  |  | DD-Mon-YYYY HH:MI |  | Line 1 date-time, line 2 user name of the last change. |
 | 23 | Edit |  |  |  |  | I | Button | Center |  |  |  |  | Opens the Edit part data modal of the row. Shown as [View] for a read-only account (TBD: read-only accounts not defined). |
@@ -428,7 +428,7 @@ flowchart TB
 | 38 | Pcs/Case | TB_M_PART_CANDIDATE | PCS_CASE | Number | TBD | I | Text box | Right | Blank | Y | ZZ,ZZ9 | Whole number > 0 |  |
 | 39 | Max Case/Day | TB_M_PART_CANDIDATE | MAX_CASE_DAY | Number | TBD | I | Text box | Right | Blank | Y | ZZ,ZZ9 | Whole number > 0 | Locked until Pcs/Case is filled (tooltip 'Enter Pcs/Case first'). Edit: can not be less than the total Case/Day already mapped in the ongoing period (TB_M_PART_CANDIDATE_DEST); otherwise the field is marked red, message no. 14 is shown and [Save] is disabled. |
 | 40 | Mapped Case/Day (current period) | TB_M_PART_CANDIDATE_DEST | CASE_DAY | Number | TBD | O | Label | Left |  |  | ZZ,ZZ9 |  | Edit mode, Active parts only (Candidate / Inactive parts have no mapping). Total Case/Day of all destinations of the part in the ongoing period (' · no destination yet' when none); red when Max Case/Day is below it. Shows the lowest allowed Max Case/Day before Save. |
-| 41 | Total Pcs/Day |  |  | Number |  | O | Label | Right | '-' |  | ZZ,ZZ9 |  | = Pcs/Case x Max Case/Day, recalculated on every change. |
+| 41 | Total Pcs/Day |  |  | Number |  | O | Label | Right | '-' |  | ZZ,ZZ9 |  | Calculated: Pcs/Case x Max Case/Day, recalculated on every change. |
 | 42 | Cancel |  |  |  |  | I | Button | Center |  |  |  |  | Closes the modal without saving. |
 | 43 | Save |  |  |  |  | I | Button | Center |  |  |  |  | Enabled only when Part No, Min MAD, Pcs/Case > 0 and Max Case/Day > 0 are filled and, in Edit, Max Case/Day is not below the mapped total. Refer Operation Description 5.4 / 5.5. |
 | 44 | Close (X) |  |  |  |  | I | Button | Center |  |  |  |  | Same as [Cancel]. |
@@ -468,9 +468,9 @@ flowchart TB
 | 73 | Part Number | TB_M_PART_CANDIDATE | PART_NO | Varchar | TBD | O | Label | Left |  |  | X..TBD..X |  |  |
 | 74 | Part Name | TB_M_PART_CANDIDATE | PART_NAME | Varchar | TBD | O | Label | Left |  |  | X..TBD..X |  |  |
 | 75 | Pcs/Case | TB_M_PART_CANDIDATE | PCS_CASE | Number | TBD | O | Label | Right |  |  | ZZ,ZZ9 |  |  |
-| 76 | Total Case/Day | TB_M_PART_CANDIDATE_DEST | SUM(CASE_DAY) | Number |  | O | Label | Right |  |  | ZZ,ZZ9 |  | Sum of Case/Day of all destinations of the part and period. |
-| 77 | Pcs/Day |  |  | Number |  | O | Label | Right |  |  | ZZ,ZZ9 |  | = Pcs/Case x Total Case/Day. |
-| 78 | Percentage |  |  | Number |  | O | Label | Right |  |  | ZZ9% |  | = Total Case/Day / Max Case/Day (MAX_CASE_DAY). Never above 100%: Save, upload and the Max Case/Day edit in Part List are blocked above the limit. |
+| 76 | Total Case/Day (used / quota) | TB_M_PART_CANDIDATE_DEST / TB_M_PART_CANDIDATE | SUM(CASE_DAY) / MAX_CASE_DAY | Number |  | O | Label | Right |  |  | ZZ,ZZ9 / ZZ,ZZ9 |  | Used (bold) = sum of Case/Day of all destinations of the part and period; quota = Max Case/Day of the part in Part List. |
+| 77 | Pcs/Day |  |  | Number |  | O | Label | Right |  |  | ZZ,ZZ9 |  | Calculated: Pcs/Case x Total Case/Day. |
+| 78 | Percentage |  |  | Number |  | O | Label | Right |  |  | ZZ9% |  | Calculated: Total Case/Day / Max Case/Day (MAX_CASE_DAY). Never above 100%: Save, upload and the Max Case/Day edit in Part List are blocked above the limit. |
 | 79 | Sync Status | TB_M_PART_CANDIDATE | SYNC_STATUS | Char | 1 | O | Chip | Left |  |  |  |  | 0 = No Sync (grey), 3 = Waiting (amber), 1 = Success (green), 2 = Failed (red). The Failed chip shows SYNC_MESSAGE as tooltip (message no. 28). |
 | **<Mapping - Footer Section>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | 80 | Rows per page | Key-in |  | Number |  | I | Combo Box | Left | 25 | N |  |  | Options 25 / 50 / 100. Change returns to page 1. |
@@ -479,31 +479,30 @@ flowchart TB
 | **<Mapping - Empty State Section>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | 83 | Empty state message |  |  | Varchar |  | O | Label | Center |  |  |  |  | Display message no. 18. |
 | **<Mapping - Destination Mapping Panel>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| 84 | Allocation chip |  |  | Varchar |  | O | Chip | Left |  |  | {total} / {Max Case/Day} case/day used |  | Red when the total is above Max Case/Day, grey when below, green when equal. |
-| 85 | Allocation note |  |  | Varchar |  | O | Label | Left |  |  |  |  | 'no destination yet' / '{n} case/day over' / '{n} case/day left' / 'capacity fully allocated'. |
-| 86 | Past period badge |  |  | Varchar |  | O | Badge | Left |  |  |  |  | Display message no. 22; shown instead of [Edit mapping] for a period that is not ongoing. |
-| 87 | Split evenly |  |  |  |  | I | Button | Center |  |  |  |  | Refer Operation Description 5.15. |
-| 88 | Edit mapping |  |  |  |  | I | Button | Center |  |  |  |  | Shown only for the ongoing period. |
-| 89 | Cancel |  |  |  |  | I | Button | Center |  |  |  |  | Shown in edit mode; discards the changes. |
-| 90 | Save |  |  |  |  | I | Button | Center |  |  |  |  | Shown in edit mode. Disabled while the mapping cannot be saved (Operation Description 5.15). |
-| 91 | Destination (CD) | TB_M_PART_CANDIDATE_DEST | DEST_CODE | Varchar | TBD | I/O | Combo Box | Left | New row: 'Select destination' | Y | XXXXXXX - X..X | Once per part | List = DESTINATION_CD - DESTINATION_NAME of TB_M_H0125_DESTINATION (Destination Master) (e.g. 9722D10 - Thailand, 9811110 - Philippines, 9715310 - Vietnam). Destinations already used by another row of the same part are hidden. |
-| 92 | Case/Day | TB_M_PART_CANDIDATE_DEST | CASE_DAY | Number | TBD | I/O | Text box | Right | New row: 0 | Y | ZZ,ZZ9 | Whole number (TBD: upper limit) | Editable in edit mode only. |
-| 93 | Pcs/Day |  |  | Number |  | O | Label | Right |  |  | ZZ,ZZ9 |  | = Pcs/Case x Case/Day of the destination. |
-| 94 | Percentage |  |  | Number |  | O | Label | Right |  |  | ZZ9% |  | = Case/Day of the destination / total Case/Day of the part. |
-| 95 | Remove destination (trash icon) |  |  |  |  | I | Button | Center |  |  |  |  | Shown in edit mode on every row. |
-| 96 | Add destination |  |  |  |  | I | Button | Center |  |  |  |  | Shown in edit mode, with the hint 'New row - pick a destination from the destination master in the Destination (CD) column.' |
-| 97 | No destination message |  |  | Varchar |  | O | Label | Center |  |  |  |  | Display message no. 19; shown when the part has no destination. |
-| 98 | Validation banner |  |  | Varchar |  | O | Banner | Left |  |  |  |  | Display message no. 20 (over allocation) or no. 4 (row without destination). |
+| 84 | Allocation note |  |  | Varchar |  | O | Label | Left |  |  |  |  | 'no destination yet' / '{n} case/day over' / '{n} case/day left' / 'capacity fully allocated'. |
+| 85 | Past period badge |  |  | Varchar |  | O | Badge | Left |  |  |  |  | Display message no. 22; shown instead of [Edit mapping] for a period that is not ongoing. |
+| 86 | Split evenly |  |  |  |  | I | Button | Center |  |  |  |  | Refer Operation Description 5.15. |
+| 87 | Edit mapping |  |  |  |  | I | Button | Center |  |  |  |  | Shown only for the ongoing period. |
+| 88 | Cancel |  |  |  |  | I | Button | Center |  |  |  |  | Shown in edit mode; discards the changes. |
+| 89 | Save |  |  |  |  | I | Button | Center |  |  |  |  | Shown in edit mode. Disabled while the mapping cannot be saved (Operation Description 5.15). |
+| 90 | Destination (CD) | TB_M_PART_CANDIDATE_DEST | DEST_CODE | Varchar | TBD | I/O | Combo Box | Left | New row: 'Select destination' | Y | XXXXXXX - X..X | Once per part | List = DESTINATION_CD - DESTINATION_NAME of TB_M_H0125_DESTINATION (Destination Master) (e.g. 9722D10 - Thailand, 9811110 - Philippines, 9715310 - Vietnam). Destinations already used by another row of the same part are hidden. |
+| 91 | Case/Day | TB_M_PART_CANDIDATE_DEST | CASE_DAY | Number | TBD | I/O | Text box | Right | New row: 0 | Y | ZZ,ZZ9 | Whole number (TBD: upper limit) | Editable in edit mode only. |
+| 92 | Pcs/Day |  |  | Number |  | O | Label | Right |  |  | ZZ,ZZ9 |  | Calculated: Pcs/Case x Case/Day of the destination. |
+| 93 | Percentage |  |  | Number |  | O | Label | Right |  |  | ZZ9% |  | Calculated: Case/Day of the destination / total Case/Day of the part. |
+| 94 | Remove destination (trash icon) |  |  |  |  | I | Button | Center |  |  |  |  | Shown in edit mode on every row. |
+| 95 | Add destination |  |  |  |  | I | Button | Center |  |  |  |  | Shown in edit mode, with the hint 'New row - pick a destination from the destination master in the Destination (CD) column.' |
+| 96 | No destination message |  |  | Varchar |  | O | Label | Center |  |  |  |  | Display message no. 19; shown when the part has no destination. |
+| 97 | Validation banner |  |  | Varchar |  | O | Banner | Left |  |  |  |  | Display message no. 20 (over allocation) or no. 4 (row without destination). |
 | **<Mapping - Upload Excel Modal>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| 99 | Template columns |  |  | Varchar |  | O | Label (chips) | Left |  |  |  |  | part_no, dest_code, case_day, upload, total_case_day (same order as sheet 'Upload' of Export Excel). |
-| 100 | Upload rules |  |  | Varchar |  | O | Label | Left |  |  |  |  | Rows / Replace / Limits / Base rules. Refer Operation Description 5.17. |
-| 101 | Upload file | Key-in |  | File |  | I | Drag-and-drop area + [Choose file] | Center | Blank | Y | .xlsx | Max 5 MB, max 5,000 rows | File checks and row validation are done by the batch (UISS-Batch XD03 Part and Destination Mapping Upload). |
-| 102 | Download template .xlsx |  |  |  |  | I | Button | Center |  |  |  |  | Downloads the empty upload template. TBD: template file location. |
-| 103 | Close |  |  |  |  | I | Button | Center |  |  |  |  | Closes the modal without uploading. |
-| 104 | Validate file |  |  |  |  | I | Button | Center |  |  |  |  | Save button of the upload. Refer Operation Description 5.17. |
+| 98 | Template columns |  |  | Varchar |  | O | Label (chips) | Left |  |  |  |  | part_no, dest_code, case_day, upload, total_case_day (same order as sheet 'Upload' of Export Excel). |
+| 99 | Upload rules |  |  | Varchar |  | O | Label | Left |  |  |  |  | Rows / Replace / Limits / Base rules. Refer Operation Description 5.17. |
+| 100 | Upload file | Key-in |  | File |  | I | Drag-and-drop area + [Choose file] | Center | Blank | Y | .xlsx | Max 5 MB, max 5,000 rows | File checks and row validation are done by the batch (UISS-Batch XD03 Part and Destination Mapping Upload). |
+| 101 | Download template .xlsx |  |  |  |  | I | Button | Center |  |  |  |  | Downloads the empty upload template. TBD: template file location. |
+| 102 | Close |  |  |  |  | I | Button | Center |  |  |  |  | Closes the modal without uploading. |
+| 103 | Validate file |  |  |  |  | I | Button | Center |  |  |  |  | Save button of the upload. Refer Operation Description 5.17. |
 | **<Mapping - Saved Successfully Popup>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| 105 | Success message |  |  | Varchar |  | O | Label | Center |  |  |  |  | Display message no. 24. |
-| 106 | OK |  |  |  |  | I | Button | Center |  |  |  |  | Closes the popup. |
+| 104 | Success message |  |  | Varchar |  | O | Label | Center |  |  |  |  | Display message no. 24. |
+| 105 | OK |  |  |  |  | I | Button | Center |  |  |  |  | Closes the popup. |
 
 ## 5. Data edit mapping
 
@@ -799,13 +798,13 @@ e. With the default Sync Status = No Sync, parts that are Success or Failed are 
 
 ### 5.13 Result List
 
-a. Total Case/Day = sum of CASE_DAY of the part and period; Pcs/Day = Pcs/Case x Total Case/Day.
+a. Total Case/Day = used / quota (sum of CASE_DAY of the part and period / Max Case/Day); Pcs/Day = Pcs/Case x used.
 b. Percentage = Total Case/Day / Max Case/Day; it never exceeds 100% because the total can not go above Max Case/Day (Save, upload and the Max Case/Day edit in Part List are blocked).
 c. The list is paged: 25 rows per page by default (25 / 50 / 100), with paging information and [Prev] / [Next]. A part with its Destination Mapping panel counts as one row. [Search], Reset and a change of Rows per page return to page 1.
 
 ### 5.14 Destination Mapping Panel
 
-a. User clicks the arrow on a row: open the panel with the allocation chip, the note and the destination table (Destination, Case/Day, Pcs/Day, Percentage). All items are read only.
+a. User clicks the arrow on a row: open the panel with the allocation note and the destination table (Destination, Case/Day, Pcs/Day, Percentage). All items are read only.
 b. Ongoing period: show [Edit mapping]. Past period: show message no. 22 instead; the mapping cannot be changed.
 c. A part without destination shows message no. 19.
 
@@ -816,7 +815,7 @@ c. A part without destination shows message no. 19.
   2. The Destination list hides destinations already used by another row of the same part (one destination per part).
   3. [Add destination] adds a row with 'Select destination' and Case/Day 0.
   4. [Split evenly] (more than one row): Case/Day of each row = floor(Max Case/Day / number of rows); the remainder is added +1 per row from the first row. Example 24 / 3 = 8 / 8 / 8; 25 / 3 = 9 / 8 / 8.
-  5. The allocation chip and note are recalculated on every change.
+  5. The allocation note is recalculated on every change.
 
 - b. Save rules - [Save] is disabled while:
   - the total Case/Day is above Max Case/Day (show message no. 20);
