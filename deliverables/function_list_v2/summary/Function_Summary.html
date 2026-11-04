@@ -53,7 +53,9 @@ li.pt:first-child { border-top: 0 }
 .mtype { font-size: 10.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; padding: 1px 6px; border-radius: 4px; border: 1px solid var(--line); color: var(--muted) }
 .mtype.t-error, .mtype.t-critical { color: var(--accent); border-color: var(--accent) }
 .mtype.t-warning { color: var(--note-line); border-color: var(--note-line) }
-abbr.ref { text-decoration: underline dotted; cursor: help }
+.vals q.val { quotes: "\201C" "\201D"; font-style: italic; background: var(--bg); border-radius: 4px; padding: 0 4px }
+.vals q.val.t-error, .vals q.val.t-critical { color: var(--accent) }
+.vals .sep { color: var(--muted) }
 .cbtn { align-self: start; font: inherit; font-size: 12px; padding: 3px 10px; border-radius: 6px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; white-space: nowrap }
 .cbtn:hover, .cbtn:focus-visible { border-color: var(--accent); color: var(--accent); outline: none }
 .cbtn.has { background: var(--note); border-color: var(--note-line) }
@@ -1427,12 +1429,25 @@ const msgLookup = (fn, ref) => {
   const id = /^msg/i.test(ref) ? 'MSG' + ref.replace(/\D/g, '') : ref.replace(/\s/g, '');
   return (MSGS[fn] || []).find((m) => m.id === id);
 };
-// Show the text of a referenced message (msg 14, LOG4) as a tooltip on the reference.
+// Show the message text (value) in place of its reference: "msg 14", "msg 5 / 15 / 6 / 7", "LOG4", "LOG3 / LOG10".
 function Refs({ text, fn }) {
-  const parts = String(text).split(/(\bmsg \d+|\bLOG\d+)/g);
+  const re = /(\bmsg \d+(?:\s*\/\s*\d+)*|\bLOG\d+(?:\s*\/\s*LOG\d+)*)/g;
+  const parts = String(text).split(re);
   return parts.map((t, i) => {
-    const m = i % 2 ? msgLookup(fn, t) : null;
-    return m ? <abbr key={i} className="ref" title={m.id + ' (' + m.type + '): ' + m.message}>{t}</abbr> : t;
+    if (i % 2 === 0) return t;
+    const refs = /^msg/i.test(t) ? t.replace(/^msg\s*/i, '').split('/').map((n) => 'msg ' + n.trim()) : t.split('/').map((n) => n.trim());
+    const found = refs.map((r) => msgLookup(fn, r));
+    if (found.some((m) => !m)) return t;
+    return (
+      <span key={i} className="vals">
+        {found.map((m, k) => (
+          <React.Fragment key={k}>
+            {k > 0 && <span className="sep"> / </span>}
+            <q className={'val t-' + String(m.type).toLowerCase()} title={m.kind === 'Log' ? 'Logging message' : 'Screen message'}>{m.message}</q>
+          </React.Fragment>
+        ))}
+      </span>
+    );
   });
 }
 const fmtTime = (iso) => { try { return new Date(iso).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }); } catch (e) { return iso; } };
@@ -1461,12 +1476,12 @@ function useRevisions() {
   return { db, notes, state };
 }
 
-function Point({ id, fn, point, note, db, open, onToggle }) {
+function Point({ id, seq, fn, point, note, db, open, onToggle }) {
   const [draft, setDraft] = useState(note ? note.comment : '');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   useEffect(() => { if (!open) setDraft(note ? note.comment : ''); }, [note, open]);
-  const text = typeof point === 'string' ? point : point.msg ? point.msg.id + ': ' + point.msg.message : point.k;
+  const text = typeof point === 'string' ? point : point.msg ? point.msg.message : point.k;
   const save = async (status) => {
     if (!db) return;
     setBusy(true); setErr('');
@@ -1481,11 +1496,11 @@ function Point({ id, fn, point, note, db, open, onToggle }) {
   const cls = note ? (note.status === 'done' ? 'cbtn done' : 'cbtn has') : 'cbtn';
   return (
     <li className="pt">
-      <span className="no">{id.split('-').slice(1).join('-')}</span>
+      <span className="no">{seq || id.split('-').slice(1).join('-')}</span>
       <div className="txt">
         {typeof point === 'string' ? <Refs text={point} fn={fn} /> : point.msg ? (
           <>
-            <span className="k">{point.msg.id}</span> <span className={'mtype t-' + String(point.msg.type).toLowerCase()}>{point.msg.kind === 'Log' ? 'Log · ' : ''}{point.msg.type}</span>
+            <span className={'mtype t-' + String(point.msg.type).toLowerCase()}>{point.msg.kind === 'Log' ? 'Logging · ' : 'Screen · '}{point.msg.type}</span>
             <div className="mtext">{point.msg.message}</div>
             <div className="ab">
               <span><b>Event:</b> {point.msg.event || '–'}</span>
@@ -1565,7 +1580,7 @@ function App() {
         </header>
         {FUNCS.map((f) => {
           const all = (MSGS[f.id] || []).length ? f.sections.concat([{ key: 'MSG', title: 'Message (breakdown)', points: MSGS[f.id].map((m) => ({ msg: m })) }]) : f.sections;
-          const secs = all.map((s) => ({ s, items: s.points.map((p, i) => ({ p, id: p.msg ? f.id + '-MSG-' + p.msg.id : pid(f.id, s.key, i) })).filter((x) => !onlyNotes || notes[x.id]) })).filter((x) => x.items.length);
+          const secs = all.map((s) => ({ s, items: s.points.map((p, i) => ({ p, id: p.msg ? f.id + '-MSG-' + p.msg.id : pid(f.id, s.key, i), seq: p.msg ? 'MSG-' + String(i + 1).padStart(2, '0') : '' })).filter((x) => !onlyNotes || notes[x.id]) })).filter((x) => x.items.length);
           if (onlyNotes && !secs.length) return null;
           return (
             <section className="fn" id={f.id} key={f.id}>
@@ -1575,8 +1590,8 @@ function App() {
                 <div key={s.key}>
                   <h3>{s.title}</h3>
                   <ol className="points">
-                    {items.map(({ p, id }) => (
-                      <Point key={id} id={id} fn={f.id} point={p} note={notes[id]} db={db} open={openId === id} onToggle={(v) => setOpenId(v ? id : null)} />
+                    {items.map(({ p, id, seq }) => (
+                      <Point key={id} id={id} seq={seq} fn={f.id} point={p} note={notes[id]} db={db} open={openId === id} onToggle={(v) => setOpenId(v ? id : null)} />
                     ))}
                   </ol>
                 </div>
