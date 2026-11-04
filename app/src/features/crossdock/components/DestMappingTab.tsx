@@ -206,7 +206,7 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
                   <th style={{ ...th, width: 150 }}>Part Number</th>
                   <th style={th}>Part Name</th>
                   <th style={{ ...th, textAlign: 'right', width: 86 }}>Pcs/Case</th>
-                  <th style={{ ...th, textAlign: 'right', width: 128 }}>Total Case/Day</th>
+                  <th style={{ ...th, textAlign: 'right', width: 176 }} title="Case/Day mapped to destinations / Max Case/Day of the part in Part List">Total Case/Day (used / quota)</th>
                   <th style={{ ...th, textAlign: 'right', width: 110 }}>Pcs/Day</th>
                   <th style={{ ...th, textAlign: 'right', width: 110 }}>Percentage</th>
                   <th style={{ ...th, width: 120 }}>Sync Status</th>
@@ -330,7 +330,10 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
         </td>
         <td style={td}>{p.n}</td>
         <td style={{ ...td, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmt(p.pc)}</td>
-        <td style={{ ...td, textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: 600 }}>{fmt(a)}</td>
+        <td style={{ ...td, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+          <b>{fmt(a)}</b>
+          <span style={{ color: 'var(--color-neutral-700)' }}> / {fmt(m)}</span>
+        </td>
         <td style={{ ...td, textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--color-neutral-700)' }}>{fmt(num(p.pc) * a)}</td>
         <td style={{ ...td, textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: 600, color: 'var(--color-neutral-800)' }}>{share}</td>
         <td style={td}>
@@ -341,22 +344,6 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
         <td colSpan={8} style={{ padding: '0 16px 16px 46px', borderBottom: '1px solid var(--color-divider)', background: 'var(--color-surface)', position: 'relative' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '11px 0 10px' }}>
             <span style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--color-accent-2-800)' }}>Destination mapping</span>
-            <span
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 7,
-                fontSize: 12,
-                padding: '3px 11px',
-                borderRadius: 999,
-                background: dOver ? 'var(--color-danger-bg)' : dUnder ? 'var(--color-neutral-200)' : 'var(--color-accent-2-200)',
-                color: dOver ? 'var(--color-danger)' : dUnder ? 'var(--color-neutral-700)' : 'var(--color-accent-2-800)',
-                fontVariantNumeric: 'tabular-nums',
-              }}
-            >
-              <span style={{ width: 6, height: 6, borderRadius: 999, background: dOver ? 'var(--color-danger)' : dUnder ? 'var(--color-neutral-700)' : 'var(--color-accent-2-800)' }} />
-              {fmt(dAlloc)} / {fmt(m)} case/day used
-            </span>
             <span style={{ fontSize: 11.5, color: dOver ? 'var(--color-danger)' : 'var(--color-neutral-700)', fontVariantNumeric: 'tabular-nums' }}>
               {!dList.length ? 'no destination yet' : dOver ? `${fmt(dAlloc - m)} case/day over` : dUnder ? `${fmt(m - dAlloc)} case/day left` : 'capacity fully allocated'}
             </span>

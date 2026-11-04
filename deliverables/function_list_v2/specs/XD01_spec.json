@@ -1859,7 +1859,7 @@
    "required": "",
    "format": "ZZ,ZZ9",
    "validation": "",
-   "description": "= Pcs/Case x Max Case/Day."
+   "description": "Calculated: Pcs/Case x Max Case/Day."
   },
   {
    "name": "Status",
@@ -2183,7 +2183,7 @@
    "required": "",
    "format": "ZZ,ZZ9",
    "validation": "",
-   "description": "= Pcs/Case x Max Case/Day, recalculated on every change."
+   "description": "Calculated: Pcs/Case x Max Case/Day, recalculated on every change."
   },
   {
    "name": "Cancel",
@@ -2711,9 +2711,9 @@
    "description": ""
   },
   {
-   "name": "Total Case/Day",
-   "source": "TB_M_PART_CANDIDATE_DEST",
-   "field": "SUM(CASE_DAY)",
+   "name": "Total Case/Day (used / quota)",
+   "source": "TB_M_PART_CANDIDATE_DEST / TB_M_PART_CANDIDATE",
+   "field": "SUM(CASE_DAY) / MAX_CASE_DAY",
    "type": "Number",
    "len": "",
    "io": "O",
@@ -2721,9 +2721,9 @@
    "justified": "Right",
    "initial": "",
    "required": "",
-   "format": "ZZ,ZZ9",
+   "format": "ZZ,ZZ9 / ZZ,ZZ9",
    "validation": "",
-   "description": "Sum of Case/Day of all destinations of the part and period."
+   "description": "Used (bold) = sum of Case/Day of all destinations of the part and period; quota = Max Case/Day of the part in Part List."
   },
   {
    "name": "Pcs/Day",
@@ -2738,7 +2738,7 @@
    "required": "",
    "format": "ZZ,ZZ9",
    "validation": "",
-   "description": "= Pcs/Case x Total Case/Day."
+   "description": "Calculated: Pcs/Case x Total Case/Day."
   },
   {
    "name": "Percentage",
@@ -2753,7 +2753,7 @@
    "required": "",
    "format": "ZZ9%",
    "validation": "",
-   "description": "= Total Case/Day / Max Case/Day (MAX_CASE_DAY). Never above 100%: Save, upload and the Max Case/Day edit in Part List are blocked above the limit."
+   "description": "Calculated: Total Case/Day / Max Case/Day (MAX_CASE_DAY). Never above 100%: Save, upload and the Max Case/Day edit in Part List are blocked above the limit."
   },
   {
    "name": "Sync Status",
@@ -2838,21 +2838,6 @@
   },
   {
    "group": "<Mapping - Destination Mapping Panel>"
-  },
-  {
-   "name": "Allocation chip",
-   "source": "",
-   "field": "",
-   "type": "Varchar",
-   "len": "",
-   "io": "O",
-   "control": "Chip",
-   "justified": "Left",
-   "initial": "",
-   "required": "",
-   "format": "{total} / {Max Case/Day} case/day used",
-   "validation": "",
-   "description": "Red when the total is above Max Case/Day, grey when below, green when equal."
   },
   {
    "name": "Allocation note",
@@ -2987,7 +2972,7 @@
    "required": "",
    "format": "ZZ,ZZ9",
    "validation": "",
-   "description": "= Pcs/Case x Case/Day of the destination."
+   "description": "Calculated: Pcs/Case x Case/Day of the destination."
   },
   {
    "name": "Percentage",
@@ -3002,7 +2987,7 @@
    "required": "",
    "format": "ZZ9%",
    "validation": "",
-   "description": "= Case/Day of the destination / total Case/Day of the part."
+   "description": "Calculated: Case/Day of the destination / total Case/Day of the part."
   },
   {
    "name": "Remove destination (trash icon)",
@@ -4179,7 +4164,7 @@
    "marker": "a.",
    "level": 2,
    "items": [
-    "Total Case/Day = sum of CASE_DAY of the part and period; Pcs/Day = Pcs/Case x Total Case/Day.",
+    "Total Case/Day = used / quota (sum of CASE_DAY of the part and period / Max Case/Day); Pcs/Day = Pcs/Case x used.",
     "Percentage = Total Case/Day / Max Case/Day; it never exceeds 100% because the total can not go above Max Case/Day (Save, upload and the Max Case/Day edit in Part List are blocked).",
     "The list is paged: 25 rows per page by default (25 / 50 / 100), with paging information and [Prev] / [Next]. A part with its Destination Mapping panel counts as one row. [Search], Reset and a change of Rows per page return to page 1."
    ]
@@ -4193,7 +4178,7 @@
    "marker": "a.",
    "level": 2,
    "items": [
-    "User clicks the arrow on a row: open the panel with the allocation chip, the note and the destination table (Destination, Case/Day, Pcs/Day, Percentage). All items are read only.",
+    "User clicks the arrow on a row: open the panel with the allocation note and the destination table (Destination, Case/Day, Pcs/Day, Percentage). All items are read only.",
     "Ongoing period: show [Edit mapping]. Past period: show message no. 22 instead; the mapping cannot be changed.",
     "A part without destination shows message no. 19."
    ]
@@ -4217,7 +4202,7 @@
     "The Destination list hides destinations already used by another row of the same part (one destination per part).",
     "[Add destination] adds a row with 'Select destination' and Case/Day 0.",
     "[Split evenly] (more than one row): Case/Day of each row = floor(Max Case/Day / number of rows); the remainder is added +1 per row from the first row. Example 24 / 3 = 8 / 8 / 8; 25 / 3 = 9 / 8 / 8.",
-    "The allocation chip and note are recalculated on every change."
+    "The allocation note is recalculated on every change."
    ]
   },
   {
