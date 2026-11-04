@@ -49,6 +49,11 @@ li.pt:first-child { border-top: 0 }
 .txt .k { font-weight: 600 }
 .ab { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px 12px; margin-top: 4px; font-size: 13px; color: var(--muted) }
 .ab span b { color: var(--ink); font-weight: 600 }
+.mtext { margin-top: 2px; font-family: var(--font-mono); font-size: 12.5px; background: var(--bg); border-radius: 4px; padding: 3px 6px; overflow-wrap: anywhere }
+.mtype { font-size: 10.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; padding: 1px 6px; border-radius: 4px; border: 1px solid var(--line); color: var(--muted) }
+.mtype.t-error, .mtype.t-critical { color: var(--accent); border-color: var(--accent) }
+.mtype.t-warning { color: var(--note-line); border-color: var(--note-line) }
+abbr.ref { text-decoration: underline dotted; cursor: help }
 .cbtn { align-self: start; font: inherit; font-size: 12px; padding: 3px 10px; border-radius: 6px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; white-space: nowrap }
 .cbtn:hover, .cbtn:focus-visible { border-color: var(--accent); color: var(--accent); outline: none }
 .cbtn.has { background: var(--note); border-color: var(--note-line) }
@@ -323,9 +328,1113 @@ const FUNCS = [
         { k: 'Tidak ada ASN yang cocok', d: 'msg 1', s: 'Tabel kosong', u: 'Ubah filter' } ] } ] },
 ];
 
+// Display / logging messages per function, taken from the UISS specs (msg_id, type, event, cause, text, action).
+const MSGS = {
+"XD01": [
+{
+"id": "MSG1",
+"kind": "Display",
+"type": "Info",
+"event": "Change search criteria",
+"cause": "No part matches the criteria",
+"message": "No matching parts - Loosen the search criteria or reset all filters.",
+"action": "Change the criteria or click [Reset filter]"
+},
+{
+"id": "MSG2",
+"kind": "Display",
+"type": "Info",
+"event": "Open Part List",
+"cause": "No part registered yet",
+"message": "No crossdock parts registered yet",
+"action": "Click [Upload Excel] or [Add one part]"
+},
+{
+"id": "MSG3",
+"kind": "Display",
+"type": "Error",
+"event": "Click [Save] button",
+"cause": "Part No already registered (concurrent add)",
+"message": "Duplication found for {Part No}",
+"action": "Close the modal and search the part"
+},
+{
+"id": "MSG4",
+"kind": "Display",
+"type": "Error",
+"event": "Click [Save] button",
+"cause": "Record changed by another user",
+"message": "Error in Update because of concurrency check.",
+"action": "Close the modal, refresh and edit again"
+},
+{
+"id": "MSG5",
+"kind": "Display",
+"type": "Info",
+"event": "Hover disabled [Save]",
+"cause": "Part No not selected",
+"message": "Part No is required",
+"action": "Select a Part No"
+},
+{
+"id": "MSG6",
+"kind": "Display",
+"type": "Info",
+"event": "Hover disabled [Save]",
+"cause": "Pcs/Case not filled",
+"message": "Enter Pcs/Case first (step 2)",
+"action": "Fill Pcs/Case"
+},
+{
+"id": "MSG7",
+"kind": "Display",
+"type": "Info",
+"event": "Hover disabled [Save]",
+"cause": "Max Case/Day not filled",
+"message": "Enter Max Case/Day (step 2)",
+"action": "Fill Max Case/Day"
+},
+{
+"id": "MSG8",
+"kind": "Display",
+"type": "Info",
+"event": "Type in 'Part No'",
+"cause": "No unregistered part matches the text",
+"message": "Part not found",
+"action": "Check the Part No"
+},
+{
+"id": "MSG9",
+"kind": "Display",
+"type": "Info",
+"event": "Click [Save] button",
+"cause": "Part saved successfully",
+"message": "Saved successfully - {Part No} · {Part Name} has been added/updated. It is now at the top of the Part List.",
+"action": "Click [OK]"
+},
+{
+"id": "MSG10",
+"kind": "Display",
+"type": "Info",
+"event": "Hover 'Effective Start Date'",
+"cause": "Saved status is Active / Inactive",
+"message": "Can only be changed while the status is still Candidate",
+"action": "-"
+},
+{
+"id": "MSG11",
+"kind": "Display",
+"type": "Info",
+"event": "Click [Validate file] button",
+"cause": "Upload validated and saved",
+"message": "Saved successfully - Upload completed. The file has been validated and the part settings have been saved to the Part List.",
+"action": "Click [OK]"
+},
+{
+"id": "MSG12",
+"kind": "Display",
+"type": "Info",
+"event": "Click History icon",
+"cause": "Part has no history",
+"message": "No change history for this part yet.",
+"action": "Click [Close]"
+},
+{
+"id": "MSG13",
+"kind": "Display",
+"type": "Error",
+"event": "Click [Export Excel] button",
+"cause": "Excel file cannot be created",
+"message": "Export Excel failed. Please try again.",
+"action": "Click [Export Excel] again; contact administrator if it persists"
+},
+{
+"id": "MSG14",
+"kind": "Display",
+"type": "Error",
+"event": "Change 'Max Case/Day' in Edit / click [Save]",
+"cause": "Max Case/Day below the total Case/Day mapped in the ongoing period",
+"message": "Max Case/Day can not be less than the mapped total ({n} case/day) of the ongoing period. Reduce the mapping in Mapping per Destination first.",
+"action": "Reduce the mapping in Mapping per Destination first, or enter a higher Max Case/Day"
+},
+{
+"id": "MSG15",
+"kind": "Display",
+"type": "Info",
+"event": "Hover disabled [Save]",
+"cause": "Min MAD blank or not a whole number",
+"message": "Enter Min MAD (whole number, 0 or more)",
+"action": "Fill Min MAD"
+},
+{
+"id": "MSG16",
+"kind": "Display",
+"type": "Info",
+"event": "Click [Run calculation] button",
+"cause": "DAD Volume Calculation completed",
+"message": "Calculation completed - DAD volume calculation completed. Part statuses have been updated from the average MAD against Min MAD.",
+"action": "Click [OK]"
+},
+{
+"id": "MSG17",
+"kind": "Display",
+"type": "Info",
+"event": "Hover disabled [Run calculation]",
+"cause": "Scheduled run has not failed 3 times",
+"message": "Enabled only when the scheduled run has failed 3 times",
+"action": "-"
+},
+{
+"id": "MSG18",
+"kind": "Display",
+"type": "Info",
+"event": "Change search criteria",
+"cause": "No part matches the criteria",
+"message": "No parts match these filters - Change the period or sync status, or press Reset to show all parts.",
+"action": "Change the criteria or click [Reset]"
+},
+{
+"id": "MSG19",
+"kind": "Display",
+"type": "Info",
+"event": "Open Destination Mapping panel",
+"cause": "Part has no destination",
+"message": "No destination yet - Click Edit mapping and add at least one destination so the part is included in the volume calculation.",
+"action": "Click [Edit mapping] and add a destination"
+},
+{
+"id": "MSG20",
+"kind": "Display",
+"type": "Error",
+"event": "Change Case/Day in edit mode",
+"cause": "Total Case/Day above Max Case/Day",
+"message": "Allocation of {n} case/day exceeds Max Case/Day ({m}). Reduce one of the destinations.",
+"action": "Reduce Case/Day of a destination"
+},
+{
+"id": "MSG21",
+"kind": "Display",
+"type": "Error",
+"event": "Edit mode",
+"cause": "A row has no destination selected",
+"message": "Select a destination for every row, or remove the empty row, before saving.",
+"action": "Select a destination or remove the row"
+},
+{
+"id": "MSG22",
+"kind": "Display",
+"type": "Info",
+"event": "Open panel of a past period",
+"cause": "Period is not ongoing",
+"message": "Past period - read only",
+"action": "-"
+},
+{
+"id": "MSG23",
+"kind": "Display",
+"type": "Info",
+"event": "Hover disabled [Upload Excel]",
+"cause": "Past period or All periods selected",
+"message": "Past period - read only. Select the ongoing period to upload.",
+"action": "Select the ongoing period"
+},
+{
+"id": "MSG24",
+"kind": "Display",
+"type": "Info",
+"event": "Click [Validate file] button",
+"cause": "Upload validated and saved",
+"message": "Saved successfully - Upload completed. The file has been validated and the destination mapping has been saved to Mapping per Destination.",
+"action": "Click [OK]"
+},
+{
+"id": "MSG25",
+"kind": "Display",
+"type": "Error",
+"event": "Click [Save] button",
+"cause": "Mapping changed by another user",
+"message": "Error in Update because of concurrency check.",
+"action": "Cancel, refresh and edit again"
+},
+{
+"id": "MSG26",
+"kind": "Display",
+"type": "Error",
+"event": "Click [Export Excel] button",
+"cause": "Excel file cannot be created",
+"message": "Export Excel failed. Please try again.",
+"action": "Click [Export Excel] again; contact administrator if it persists"
+},
+{
+"id": "MSG27",
+"kind": "Display",
+"type": "Info",
+"event": "Click [Sync] button",
+"cause": "Parts handed to XD06 / XD07",
+"message": "Sync requested for {n} part(s). They stay Waiting until GTOPAS and AP POLE have received them.",
+"action": "-"
+},
+{
+"id": "MSG28",
+"kind": "Display",
+"type": "Info",
+"event": "Hover a Failed Sync Status chip",
+"cause": "GTOPAS or AP POLE could not receive the part",
+"message": "Sync failed: {SYNC_MESSAGE}. The part is sent again with the next Sync.",
+"action": "Correct the cause if needed and click [Sync]"
+},
+{
+"id": "MSG29",
+"kind": "Display",
+"type": "Info",
+"event": "Click [Run calculation] button",
+"cause": "Mapping calculation (XD05 process 2) completed",
+"message": "Calculation completed - Mapping destination calculation completed. The destination mapping of the new period has been created.",
+"action": "Click [OK]"
+},
+{
+"id": "MSG30",
+"kind": "Display",
+"type": "Info",
+"event": "Hover disabled [Run calculation]",
+"cause": "Scheduled run has not failed 3 times",
+"message": "Enabled only when the scheduled run has failed 3 times",
+"action": "-"
+},
+{
+"id": "LOG1",
+"kind": "Log",
+"type": "Error",
+"event": "Click [Save] button",
+"cause": "Database error on insert/update of TB_M_PART_CANDIDATE",
+"message": "Failed to save part <PART_NO>: <DB error message>.",
+"action": "Show [Corresponding Screen Message] on screen (TBD)"
+},
+{
+"id": "LOG2",
+"kind": "Log",
+"type": "Error",
+"event": "Click [Export Excel] button",
+"cause": "Excel file generation error",
+"message": "Export Excel of Part List failed: <error message>.",
+"action": "Display Message no. 13"
+},
+{
+"id": "LOG3",
+"kind": "Log",
+"type": "Error",
+"event": "Click [Save] button",
+"cause": "Database error on save of TB_M_PART_CANDIDATE_DEST",
+"message": "Failed to save mapping of part <PART_NO>, period <PERIOD>: <DB error message>.",
+"action": "Show [Corresponding Screen Message] on screen (TBD)"
+},
+{
+"id": "LOG4",
+"kind": "Log",
+"type": "Error",
+"event": "XD06 / XD07",
+"cause": "GTOPAS or AP POLE rejects a part",
+"message": "Logging is done by XD06 / XD07 (refer UISS-Batch XD06 / XD07); the chip shows the result.",
+"action": "Status Failed; Display Message no. 28 on the chip"
+},
+{
+"id": "LOG5",
+"kind": "Log",
+"type": "Error",
+"event": "Click [Export Excel] button",
+"cause": "Excel file generation error",
+"message": "Export Excel of Mapping per Destination failed: <error message>.",
+"action": "Display Message no. 26"
+}
+],
+"XD02": [
+{
+"id": "LOG1",
+"kind": "Log",
+"type": "Info",
+"event": "Batch start",
+"cause": "Batch is called",
+"message": "Upload batch <UPLOAD_ID> started.",
+"action": "system: Write the log."
+},
+{
+"id": "LOG2",
+"kind": "Log",
+"type": "Info",
+"event": "Batch end",
+"cause": "Batch finishes",
+"message": "Upload batch <UPLOAD_ID> ended. Status <STATUS>, total <TOTAL_ROWS>, saved <SAVED_ROWS>, no change <NO_CHANGE_ROWS>, error <ERROR_ROWS>.",
+"action": "system: Write the log."
+},
+{
+"id": "LOG3",
+"kind": "Log",
+"type": "Error",
+"event": "Receive file",
+"cause": "Uploaded file of <UPLOAD_ID> not found",
+"message": "Uploaded file of <UPLOAD_ID> not found.",
+"action": "system: Stop the batch.; user: Upload the file again."
+},
+{
+"id": "LOG4",
+"kind": "Log",
+"type": "Error",
+"event": "File check",
+"cause": "Extension, size, row count, sheet Upload or header is invalid",
+"message": "File check failed: <REASON>.",
+"action": "system: Set STATUS = REJECTED. Create the result report.; user: Download the file from the screen again and upload it."
+},
+{
+"id": "LOG5",
+"kind": "Log",
+"type": "Error",
+"event": "Row validation",
+"cause": "A validation rule in 4.2 fails",
+"message": "Row <ROW_NO> <COLUMN> : <RULE_MESSAGE>.",
+"action": "system: Reject the whole file. Nothing is saved.; user: Correct the rows in sheet Re-upload of the result report, then upload again."
+},
+{
+"id": "LOG6",
+"kind": "Log",
+"type": "Info",
+"event": "Row skipped",
+"cause": "Edit row has the same values as the master",
+"message": "Row <ROW_NO> Part No <PART_NO> has no change. Skipped.",
+"action": "system: Do not update the record."
+},
+{
+"id": "LOG7",
+"kind": "Log",
+"type": "Error",
+"event": "Save to master",
+"cause": "Insert or update TB_M_PART_CANDIDATE fails",
+"message": "Cannot save Part No <PART_NO> to TB_M_PART_CANDIDATE.",
+"action": "system: Roll back. Set STATUS = REJECTED.; user: User contact PIC"
+},
+{
+"id": "LOG8",
+"kind": "Log",
+"type": "Warning",
+"event": "Result report",
+"cause": "Result report cannot be created",
+"message": "Result report of <UPLOAD_ID> cannot be created.",
+"action": "system: Continue. RESULT_FILE_PATH stays blank.; user: Contact system owner."
+},
+{
+"id": "LOG9",
+"kind": "Log",
+"type": "Critical",
+"event": "Unexpected error",
+"cause": "Any other system error",
+"message": "Unexpected error: <ERROR_DETAIL>.",
+"action": "system: Roll back. Set STATUS = REJECTED.; user: User contact PIC"
+}
+],
+"XD03": [
+{
+"id": "LOG1",
+"kind": "Log",
+"type": "Info",
+"event": "Batch start",
+"cause": "Batch is called",
+"message": "Mapping upload batch <UPLOAD_ID> started.",
+"action": "system: Write the log."
+},
+{
+"id": "LOG2",
+"kind": "Log",
+"type": "Info",
+"event": "Batch end",
+"cause": "Batch finishes",
+"message": "Mapping upload batch <UPLOAD_ID> ended. Status <STATUS>, total <TOTAL_ROWS>, saved parts <SAVED_ROWS>, no change <NO_CHANGE_ROWS>, error <ERROR_ROWS>.",
+"action": "system: Write the log."
+},
+{
+"id": "LOG3",
+"kind": "Log",
+"type": "Error",
+"event": "Receive file",
+"cause": "Uploaded file of <UPLOAD_ID> not found",
+"message": "Uploaded file of <UPLOAD_ID> not found.",
+"action": "system: Stop the batch.; user: Upload the file again."
+},
+{
+"id": "LOG4",
+"kind": "Log",
+"type": "Error",
+"event": "File check",
+"cause": "Extension, size, row count, sheet Upload or header is invalid",
+"message": "File check failed: <REASON>.",
+"action": "system: Set STATUS = REJECTED. Create the result report.; user: Download the file from the screen again and upload it."
+},
+{
+"id": "LOG5",
+"kind": "Log",
+"type": "Error",
+"event": "Row validation",
+"cause": "A validation rule in 4.2 fails",
+"message": "Row <ROW_NO> <COLUMN> : <RULE_MESSAGE>.",
+"action": "system: Reject the whole file. Nothing is saved.; user: Correct the rows in sheet Re-upload of the result report, then upload again."
+},
+{
+"id": "LOG6",
+"kind": "Log",
+"type": "Info",
+"event": "Part skipped",
+"cause": "Rows of the part equal the current mapping, or all rows are blank",
+"message": "Part No <PART_NO> has no mapping change. Skipped.",
+"action": "system: Do not change the mapping or the part."
+},
+{
+"id": "LOG7",
+"kind": "Log",
+"type": "Error",
+"event": "Save mapping",
+"cause": "Save (update / insert / delete) of TB_M_PART_CANDIDATE_DEST or update of TB_M_PART_CANDIDATE fails",
+"message": "Cannot save the mapping of Part No <PART_NO>.",
+"action": "system: Roll back. Set STATUS = REJECTED.; user: User contact PIC"
+},
+{
+"id": "LOG8",
+"kind": "Log",
+"type": "Warning",
+"event": "Result report",
+"cause": "Result report cannot be created",
+"message": "Result report of <UPLOAD_ID> cannot be created.",
+"action": "system: Continue. RESULT_FILE_PATH stays blank.; user: Contact system owner."
+},
+{
+"id": "LOG9",
+"kind": "Log",
+"type": "Critical",
+"event": "Unexpected error",
+"cause": "Any other system error",
+"message": "Unexpected error: <ERROR_DETAIL>.",
+"action": "system: Roll back. Set STATUS = REJECTED.; user: User contact PIC"
+}
+],
+"XD04": [
+{
+"id": "LOG1",
+"kind": "Log",
+"type": "Info",
+"event": "Batch start",
+"cause": "Batch is called",
+"message": "Actual demand summary sync started.",
+"action": "system: Write the log."
+},
+{
+"id": "LOG2",
+"kind": "Log",
+"type": "Info",
+"event": "Batch end",
+"cause": "Batch finishes",
+"message": "Actual demand summary sync ended. Status <STATUS>, rows <ROW_COUNT>.",
+"action": "system: Write the log."
+},
+{
+"id": "LOG3",
+"kind": "Log",
+"type": "Error",
+"event": "Read source",
+"cause": "DB Surrounding cannot be reached or read",
+"message": "Cannot read TB_R_ACTUAL_DEMAND_SUMMARY from DB Surrounding: <ERROR_DETAIL>.",
+"action": "system: Roll back. STATUS = FAILED.; user: User contact PIC"
+},
+{
+"id": "LOG4",
+"kind": "Log",
+"type": "Error",
+"event": "Insert",
+"cause": "Insert into the NSP table fails",
+"message": "Cannot insert TB_R_ACTUAL_DEMAND_SUMMARY into NSP: <ERROR_DETAIL>.",
+"action": "system: Roll back. STATUS = FAILED.; user: User contact PIC"
+},
+{
+"id": "LOG5",
+"kind": "Log",
+"type": "Critical",
+"event": "Unexpected error",
+"cause": "Any other system error",
+"message": "Unexpected error: <ERROR_DETAIL>.",
+"action": "system: Roll back. STATUS = FAILED.; user: User contact PIC"
+}
+],
+"XD05": [
+{
+"id": "LOG1",
+"kind": "Log",
+"type": "Info",
+"event": "Process 1: Batch start",
+"cause": "Batch is called",
+"message": "DAD volume calculation started (<RUN_TYPE>, retry <RETRY_NO>). Range <MONTH_FROM> - <MONTH_TO>.",
+"action": "system: Write the log."
+},
+{
+"id": "LOG2",
+"kind": "Log",
+"type": "Info",
+"event": "Process 1: Batch end",
+"cause": "Batch finishes",
+"message": "DAD volume calculation ended. Status <STATUS>, calculated <COUNT>, status changed <CHANGED>.",
+"action": "system: Write the log."
+},
+{
+"id": "LOG3",
+"kind": "Log",
+"type": "Error",
+"event": "Process 1: Range of months",
+"cause": "Range is not set in the system master",
+"message": "Range of months for the DAD volume calculation is not set.",
+"action": "system: Stop. STATUS = FAILED.; user: User contact PIC"
+},
+{
+"id": "LOG4",
+"kind": "Log",
+"type": "Info",
+"event": "Process 1: Part skipped",
+"cause": "Effective Start Date after the run date",
+"message": "Part No <PART_NO> skipped: effective start date <DATE>.",
+"action": "system: Continue."
+},
+{
+"id": "LOG5",
+"kind": "Log",
+"type": "Error",
+"event": "Process 1: Save",
+"cause": "Insert / update fails",
+"message": "Cannot save the calculation of Part No <PART_NO>: <ERROR_DETAIL>.",
+"action": "system: Roll back. STATUS = FAILED. Retry.; user: User contact PIC"
+},
+{
+"id": "LOG6",
+"kind": "Log",
+"type": "Warning",
+"event": "Process 1: Retry exhausted",
+"cause": "Scheduled run and 3 retries failed",
+"message": "DAD volume calculation failed 3 times. Manual run is enabled on Part List.",
+"action": "system: Enable [Run calculation] on Part List.; user: Check the cause, then click [Run calculation]."
+},
+{
+"id": "LOG7",
+"kind": "Log",
+"type": "Critical",
+"event": "Process 1: Unexpected error",
+"cause": "Any other system error",
+"message": "Unexpected error: <ERROR_DETAIL>.",
+"action": "system: Roll back. STATUS = FAILED. Retry.; user: User contact PIC"
+},
+{
+"id": "LOG8",
+"kind": "Log",
+"type": "Info",
+"event": "Process 2: Batch start",
+"cause": "Batch is called",
+"message": "Mapping destination calculation started (<RUN_TYPE>, retry <RETRY_NO>). Period <PERIOD>, range <MONTH_FROM> - <MONTH_TO>.",
+"action": "system: Write the log."
+},
+{
+"id": "LOG9",
+"kind": "Log",
+"type": "Info",
+"event": "Process 2: Batch end",
+"cause": "Batch finishes",
+"message": "Mapping destination calculation ended. Status <STATUS>, parts <COUNT>, mapping changed <CHANGED>.",
+"action": "system: Write the log."
+},
+{
+"id": "LOG10",
+"kind": "Log",
+"type": "Error",
+"event": "Process 2: Range of months",
+"cause": "Range is not set in the system master",
+"message": "Range of months for the mapping destination calculation is not set.",
+"action": "system: Stop. STATUS = FAILED.; user: User contact PIC"
+},
+{
+"id": "LOG11",
+"kind": "Log",
+"type": "Error",
+"event": "Process 2: Destination check",
+"cause": "Destination code not in TB_M_H0125_DESTINATION",
+"message": "Destination code <DEST_CODE> of Part No <PART_NO> not found in TB_M_H0125_DESTINATION.",
+"action": "system: Roll back. STATUS = FAILED. Retry.; user: Register the destination in TB_M_H0125_DESTINATION, then run again."
+},
+{
+"id": "LOG12",
+"kind": "Log",
+"type": "Info",
+"event": "Process 2: Destinations limited",
+"cause": "More destinations than Max Case/Day",
+"message": "Part No <PART_NO>: <COUNT> destinations, limited to Max Case/Day <MAX>.",
+"action": "system: Continue."
+},
+{
+"id": "LOG13",
+"kind": "Log",
+"type": "Error",
+"event": "Process 2: Save",
+"cause": "Insert / update fails",
+"message": "Cannot save the mapping of Part No <PART_NO>, period <PERIOD>: <ERROR_DETAIL>.",
+"action": "system: Roll back. STATUS = FAILED. Retry.; user: User contact PIC"
+},
+{
+"id": "LOG14",
+"kind": "Log",
+"type": "Warning",
+"event": "Process 2: Retry exhausted",
+"cause": "Scheduled run and 3 retries failed",
+"message": "Mapping destination calculation failed 3 times. Manual run is enabled on Mapping per Destination.",
+"action": "system: Enable [Run calculation] on Mapping per Destination.; user: Check the cause, then click [Run calculation]."
+},
+{
+"id": "LOG15",
+"kind": "Log",
+"type": "Critical",
+"event": "Process 2: Unexpected error",
+"cause": "Any other system error",
+"message": "Unexpected error: <ERROR_DETAIL>.",
+"action": "system: Roll back. STATUS = FAILED. Retry.; user: User contact PIC"
+}
+],
+"XD06": [
+{
+"id": "LOG1",
+"kind": "Log",
+"type": "Info",
+"event": "Batch start",
+"cause": "[Sync] on XD01",
+"message": "RPA cross dock destinations to GTOPAS started. <n> part(s).",
+"action": "system: Write the log."
+},
+{
+"id": "LOG2",
+"kind": "Log",
+"type": "Info",
+"event": "Batch end",
+"cause": "Batch finishes",
+"message": "RPA cross dock destinations to GTOPAS ended. Input <FILE_NAME>, parts <n>, added <a>, deleted <d>, failed <f>, status <STATUS>.",
+"action": "system: Write the log."
+},
+{
+"id": "LOG3",
+"kind": "Log",
+"type": "Error",
+"event": "Create input",
+"cause": "RPA input cannot be created",
+"message": "Cannot create the RPA input to GTOPAS: <ERROR_DETAIL>.",
+"action": "system: All parts of the run IF_STATUS = 2. Stop.; user: Click [Sync] again; contact PIC if it persists."
+},
+{
+"id": "LOG4",
+"kind": "Log",
+"type": "Error",
+"event": "RPA run",
+"cause": "RPA bot not available / no result within the time limit",
+"message": "RPA run of <SEND_ID> to GTOPAS failed: <ERROR_DETAIL>.",
+"action": "system: All parts of the run IF_STATUS = 2. Keep the input file.; user: Click [Sync] again later; contact PIC if it persists."
+},
+{
+"id": "LOG5",
+"kind": "Log",
+"type": "Critical",
+"event": "Unexpected error",
+"cause": "Any other system error",
+"message": "Unexpected error: <ERROR_DETAIL>.",
+"action": "system: Stop. STATUS = ERROR.; user: User contact PIC"
+},
+{
+"id": "LOG6",
+"kind": "Log",
+"type": "Error",
+"event": "RPA result",
+"cause": "The bot returns RESULT 'NG' for a part",
+"message": "GTOPAS not updated for part <PART_NO>: <MESSAGE>.",
+"action": "system: IF_STATUS = 2 for the part; other parts continue.; user: Click [Sync] again; contact PIC if it persists"
+}
+],
+"XD07": [
+{
+"id": "LOG1",
+"kind": "Log",
+"type": "Info",
+"event": "Batch start",
+"cause": "[Sync] on XD01",
+"message": "IF cross dock master to AP POLE started. <n> part(s).",
+"action": "system: Write the log."
+},
+{
+"id": "LOG2",
+"kind": "Log",
+"type": "Info",
+"event": "Batch end",
+"cause": "Batch finishes",
+"message": "IF cross dock master to AP POLE ended. File <FILE_NAME>, parts <n>, records <r>, status <STATUS>.",
+"action": "system: Write the log."
+},
+{
+"id": "LOG3",
+"kind": "Log",
+"type": "Error",
+"event": "Create file",
+"cause": "Interface file cannot be created",
+"message": "Cannot create the interface file to AP POLE: <ERROR_DETAIL>.",
+"action": "system: All parts of the run IF_STATUS = 2. Stop.; user: Click [Sync] again; contact PIC if it persists."
+},
+{
+"id": "LOG4",
+"kind": "Log",
+"type": "Error",
+"event": "SFTP transfer",
+"cause": "AP POLE SFTP not available / transfer fails after retry",
+"message": "SFTP transfer of <FILE_NAME> to AP POLE failed: <ERROR_DETAIL>.",
+"action": "system: All parts of the file IF_STATUS = 2. Keep the file in the outbound folder.; user: Click [Sync] again later; contact PIC if it persists."
+},
+{
+"id": "LOG5",
+"kind": "Log",
+"type": "Critical",
+"event": "Unexpected error",
+"cause": "Any other system error",
+"message": "Unexpected error: <ERROR_DETAIL>.",
+"action": "system: Stop. STATUS = ERROR.; user: User contact PIC"
+}
+],
+"XD08": [
+{
+"id": "LOG1",
+"kind": "Log",
+"type": "Info",
+"event": "Batch start",
+"cause": "Batch is called",
+"message": "H0253 sync started. Watermark <WATERMARK>.",
+"action": "system: Write the log."
+},
+{
+"id": "LOG2",
+"kind": "Log",
+"type": "Info",
+"event": "Batch end",
+"cause": "Batch finishes",
+"message": "H0253 sync ended. Status <STATUS>, inserted <INS>, updated <UPD> (UPD_STATUS 6: <N6>, 2: <N2>), drafts released <DRAFTS>.",
+"action": "system: Write the log; save the new watermark when SUCCESS."
+},
+{
+"id": "LOG5",
+"kind": "Log",
+"type": "Warning",
+"event": "Cancel after ASN",
+"cause": "A line with UPD_STATUS '2' has qty in a submitted ASN",
+"message": "<CUSTOMER_ORDER_NO> <PART_NO>: <QTY> pcs cancelled in <ASN_NO>; listed in Change Order Number (XD11).",
+"action": "system: Write the log; nothing is changed in the ASN.; user: D/S team: Change Order Number (XD11)."
+},
+{
+"id": "LOG6",
+"kind": "Log",
+"type": "Error",
+"event": "Cancel qty check",
+"cause": "Cancelled qty of a line in a submitted ASN is not a multiple of pcs/case (should not happen in GTOPAS)",
+"message": "<CUSTOMER_ORDER_NO> <PART_NO>: cancelled qty <QTY> is not a multiple of pcs/case <PCS>.",
+"action": "system: Write the log (abnormality); the line is still listed in XD11.; user: D/S team checks with GTOPAS."
+},
+{
+"id": "LOG7",
+"kind": "Log",
+"type": "Info",
+"event": "Serial split",
+"cause": "A line in TB_R_INSTRUCTION is split into a new SERIAL_NO by GTOPAS",
+"message": "<CUSTOMER_ORDER_NO> item <DETAILED_ITEM_NO> split into serial <SERIAL_NO>: <QTY> pcs of <ASN_NO> moved to the new serial.",
+"action": "system: Write the log."
+},
+{
+"id": "LOG3",
+"kind": "Log",
+"type": "Error",
+"event": "Upsert",
+"cause": "Read from DB Surrounding, insert / update in NSP or draft release fails",
+"message": "Cannot replicate H0253 rows: <ERROR_DETAIL>.",
+"action": "system: Roll back; watermark not changed (rows taken again next run). STATUS = FAILED.; user: User contact PIC"
+},
+{
+"id": "LOG4",
+"kind": "Log",
+"type": "Critical",
+"event": "Unexpected error",
+"cause": "Any other system error",
+"message": "Unexpected error: <ERROR_DETAIL>.",
+"action": "system: Roll back. STATUS = FAILED.; user: User contact PIC"
+}
+],
+"XD09": [
+{
+"id": "LOG1",
+"kind": "Log",
+"type": "Error",
+"event": "Mapping Customer Order and PO",
+"cause": "Read or insert fails",
+"message": "Mapping Customer Order and PO failed for Delivery Date <DELIVERY_DT> <RIT>: <ERROR_DETAIL>.",
+"action": "system: Clear the temporary table.; user: Retry; contact PIC if it persists."
+},
+{
+"id": "LOG2",
+"kind": "Log",
+"type": "Critical",
+"event": "Unexpected error",
+"cause": "Any other system error",
+"message": "Unexpected error: <ERROR_DETAIL>.",
+"action": "system: Clear the temporary table.; user: User contact PIC"
+}
+],
+"XD10": [
+{
+"id": "MSG1",
+"kind": "Display",
+"type": "Info",
+"event": "Hover on disabled check box",
+"cause": "Unit is On Hold (D/S)",
+"message": "All destinations are on hold",
+"action": "Release a destination."
+},
+{
+"id": "MSG2",
+"kind": "Display",
+"type": "Info",
+"event": "Hover on disabled check box",
+"cause": "Unit is Not Ready",
+"message": "Not Ready: case {n} of {Part No} / {Customer Order Date} (or an earlier case) is not assigned to a PO yet ({k} of {c} cases assigned)",
+"action": "Wait for the next PO."
+},
+{
+"id": "MSG3",
+"kind": "Display",
+"type": "Info",
+"event": "Click [Search] / change filter",
+"cause": "No unit",
+"message": "No customer order matches this filter.",
+"action": "Change the Delivery Date, Rit or filter."
+},
+{
+"id": "MSG5",
+"kind": "Display",
+"type": "Info",
+"event": "Change [Delivery Date]",
+"cause": "No rit on the date (Sunday)",
+"message": "No rit cycle available for {Delivery Date}. Choose another delivery date.",
+"action": "Choose another Delivery Date."
+},
+{
+"id": "MSG7",
+"kind": "Display",
+"type": "Error",
+"event": "Click [Create ASN]",
+"cause": "A chosen block is no longer Ready",
+"message": "{Part No} / {Customer Order Date} is no longer Ready. The delivery plan is refreshed.",
+"action": "Select again."
+},
+{
+"id": "MSG4",
+"kind": "Display",
+"type": "Confirm",
+"event": "Click [Submit ASN] button",
+"cause": "Confirmation",
+"message": "Submit ASN? {n} cases ({q} pcs) will be created into {ASN No}, delivery {Delivery Date} · {Rit}.",
+"action": "Click [Yes, submit] or [No]."
+},
+{
+"id": "MSG6",
+"kind": "Display",
+"type": "Info",
+"event": "Click [Yes, submit]",
+"cause": "Submit handed to the submit process (5.7)",
+"message": "Submit ID {Submit ID} is sent to the ASN submit batch. The result is written to Log Monitoring.",
+"action": "Check Log Monitoring."
+},
+{
+"id": "MSG8",
+"kind": "Display",
+"type": "Error",
+"event": "Click [Create ASN]",
+"cause": "A ticked unit has an order put on hold by the D/S team after it was ticked",
+"message": "Some order has been already hold, please select other records. The delivery plan has been refreshed.",
+"action": "Click [OK]; the delivery plan is already refreshed and all units are unticked; select again."
+},
+{
+"id": "MSG9",
+"kind": "Display",
+"type": "Error",
+"event": "Click [Create ASN]",
+"cause": "Ticked units are of more than one Supplier Code + Supplier Plant (D/S team)",
+"message": "One ASN is for one Supplier Code and Supplier Plant. Please select units of one supplier.",
+"action": "Click [OK]; untick the units of the other supplier."
+},
+{
+"id": "MSG10",
+"kind": "Display",
+"type": "Info",
+"event": "Tick a case that belongs together with later cases",
+"cause": "Cases that belong together (Case Group) are sent together",
+"message": "Cases {a}-{b} are sent together. Cases 1-{b} of {Part No} / {Customer Order Date} are selected.",
+"action": "Keep the selection or untick."
+},
+{
+"id": "MSG11",
+"kind": "Display",
+"type": "Error",
+"event": "Click [Submit ASN] / [Yes]",
+"cause": "The draft was released by XD08 or a line changed in GTOPAS (UPD_STATUS, qty)",
+"message": "Some orders have changed. The draft is released; please Search and create the ASN again.",
+"action": "Click [OK]; back to the delivery plan."
+},
+{
+"id": "LOG1",
+"kind": "Log",
+"type": "Error",
+"event": "Click [Create ASN]",
+"cause": "Database error on mapping / draft",
+"message": "Failed to create the ASN (TB_R_INSTRUCTION): <DB error message>.",
+"action": "Roll back; show [Corresponding Screen Message] on screen (TBD)"
+},
+{
+"id": "LOG2",
+"kind": "Log",
+"type": "Info",
+"event": "Submit ASN (5.7): Batch start",
+"cause": "[Submit ASN] Yes",
+"message": "ASN submit started. Submit ID <SUBMIT_ID>, <n> cases.",
+"action": "System: Write the log. User: -"
+},
+{
+"id": "LOG3",
+"kind": "Log",
+"type": "Info",
+"event": "Submit ASN (5.7): Save",
+"cause": "ASN saved",
+"message": "<ASN_NO> submitted with status Created. <n> cases are saved. Delivery <DELIVERY_DT> · <RIT>. The ASN is shown in ASN Inquiry.",
+"action": "System: Write the log. User: -"
+},
+{
+"id": "LOG4",
+"kind": "Log",
+"type": "Info",
+"event": "Submit ASN (5.7): Batch end",
+"cause": "Batch finishes",
+"message": "ASN submit ended. Status <STATUS>.",
+"action": "System: Write the log. User: -"
+},
+{
+"id": "LOG5",
+"kind": "Log",
+"type": "Error",
+"event": "Submit ASN (5.7): Error",
+"cause": "Numbering or insert fails / any system error",
+"message": "Failed to submit ASN, Submit ID <SUBMIT_ID>: <ERROR_DETAIL>.",
+"action": "System: Roll back; release the mapping. STATUS = ERROR. User: Create the ASN again; contact PIC if it persists."
+}
+],
+"XD11": [
+{
+"id": "MSG1",
+"kind": "Display",
+"type": "Info",
+"event": "Open the screen",
+"cause": "No cancelled qty in a submitted ASN",
+"message": "No cancelled qty in a submitted ASN.",
+"action": "-"
+},
+{
+"id": "MSG2",
+"kind": "Display",
+"type": "Info",
+"event": "Tick candidates",
+"cause": "Ticked qty differs from the cancelled qty",
+"message": "Selected {n} of {q} pcs: the qty must add up to {q}.",
+"action": "Tick other candidates."
+},
+{
+"id": "MSG3",
+"kind": "Display",
+"type": "Confirmation",
+"event": "Click [Change Order Number]",
+"cause": "Confirmation",
+"message": "{q} pcs of {Customer Order} in {ASN No} ({cases}) will be moved to {replacement lines}.",
+"action": "Yes / No."
+},
+{
+"id": "MSG4",
+"kind": "Display",
+"type": "Error",
+"event": "Click [Yes]",
+"cause": "A candidate was taken in the meantime",
+"message": "{Customer Order} is no longer available. The candidates are refreshed.",
+"action": "Tick again."
+}
+],
+"XD13": [
+{
+"id": "LOG1",
+"kind": "Log",
+"type": "Info",
+"event": "Batch start",
+"cause": "Batch is called",
+"message": "H0125 sync started.",
+"action": "system: Write the log."
+},
+{
+"id": "LOG2",
+"kind": "Log",
+"type": "Info",
+"event": "Batch end",
+"cause": "Batch finishes",
+"message": "H0125 sync ended. Status <STATUS>, rows <ROW_COUNT>.",
+"action": "system: Write the log."
+},
+{
+"id": "LOG3",
+"kind": "Log",
+"type": "Error",
+"event": "Copy table",
+"cause": "Read from DB Surrounding or insert into NSP fails",
+"message": "Cannot replicate TB_M_H0125_DESTINATION: <ERROR_DETAIL>.",
+"action": "system: Roll back. STATUS = FAILED.; user: User contact PIC"
+},
+{
+"id": "LOG4",
+"kind": "Log",
+"type": "Critical",
+"event": "Unexpected error",
+"cause": "Any other system error",
+"message": "Unexpected error: <ERROR_DETAIL>.",
+"action": "system: Roll back. STATUS = FAILED.; user: User contact PIC"
+}
+],
+"XD15": [
+{
+"id": "MSG1",
+"kind": "Display",
+"type": "Info",
+"event": "Click [Search] button",
+"cause": "No ASN matches",
+"message": "No ASN matches this search.",
+"action": "Change the criteria."
+}
+]
+};
+
 // ---------- app ----------
 const { useState, useEffect, useMemo, useRef } = React;
 const pid = (f, s, i) => `${f}-${s}-${String(i + 1).padStart(2, '0')}`;
+const msgLookup = (fn, ref) => {
+  const id = /^msg/i.test(ref) ? 'MSG' + ref.replace(/\D/g, '') : ref.replace(/\s/g, '');
+  return (MSGS[fn] || []).find((m) => m.id === id);
+};
+// Show the text of a referenced message (msg 14, LOG4) as a tooltip on the reference.
+function Refs({ text, fn }) {
+  const parts = String(text).split(/(\bmsg \d+|\bLOG\d+)/g);
+  return parts.map((t, i) => {
+    const m = i % 2 ? msgLookup(fn, t) : null;
+    return m ? <abbr key={i} className="ref" title={m.id + ' (' + m.type + '): ' + m.message}>{t}</abbr> : t;
+  });
+}
 const fmtTime = (iso) => { try { return new Date(iso).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }); } catch (e) { return iso; } };
 
 function useRevisions() {
@@ -357,7 +1466,7 @@ function Point({ id, fn, point, note, db, open, onToggle }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   useEffect(() => { if (!open) setDraft(note ? note.comment : ''); }, [note, open]);
-  const text = typeof point === 'string' ? point : point.k;
+  const text = typeof point === 'string' ? point : point.msg ? point.msg.id + ': ' + point.msg.message : point.k;
   const save = async (status) => {
     if (!db) return;
     setBusy(true); setErr('');
@@ -374,11 +1483,21 @@ function Point({ id, fn, point, note, db, open, onToggle }) {
     <li className="pt">
       <span className="no">{id.split('-').slice(1).join('-')}</span>
       <div className="txt">
-        {typeof point === 'string' ? point : (
+        {typeof point === 'string' ? <Refs text={point} fn={fn} /> : point.msg ? (
+          <>
+            <span className="k">{point.msg.id}</span> <span className={'mtype t-' + String(point.msg.type).toLowerCase()}>{point.msg.kind === 'Log' ? 'Log · ' : ''}{point.msg.type}</span>
+            <div className="mtext">{point.msg.message}</div>
+            <div className="ab">
+              <span><b>Event:</b> {point.msg.event || '–'}</span>
+              <span><b>Cause:</b> {point.msg.cause || '–'}</span>
+              <span><b>Action:</b> {point.msg.action || '–'}</span>
+            </div>
+          </>
+        ) : (
           <>
             <span className="k">{point.k}</span>
             <div className="ab">
-              <span><b>Deteksi:</b> {point.d}</span>
+              <span><b>Deteksi:</b> <Refs text={point.d} fn={fn} /></span>
               <span><b>Sistem:</b> {point.s}</span>
               <span><b>User:</b> {point.u}</span>
             </div>
@@ -422,7 +1541,7 @@ function App() {
     Object.values(notes).forEach((n) => { m[n.fn] = (m[n.fn] || 0) + (n.status === 'done' ? 0 : 1); if (n.status === 'done') done++; else open++; });
     return { m, open, done };
   }, [notes]);
-  const total = FUNCS.reduce((a, f) => a + f.sections.reduce((b, s) => b + s.points.length, 0), 0);
+  const total = FUNCS.reduce((a, f) => a + f.sections.reduce((b, s) => b + s.points.length, 0) + (MSGS[f.id] || []).length, 0);
   const stateText = { loading: 'Memuat komentar…', live: 'Komentar tersimpan bersama', stale: 'Komentar belum bisa dimuat; data mungkin belum terbaru', offline: 'Mode baca: komentar tidak tersedia di tampilan ini' }[state];
   return (
     <div className="wrap">
@@ -445,7 +1564,8 @@ function App() {
           </div>
         </header>
         {FUNCS.map((f) => {
-          const secs = f.sections.map((s) => ({ s, items: s.points.map((p, i) => ({ p, id: pid(f.id, s.key, i) })).filter((x) => !onlyNotes || notes[x.id]) })).filter((x) => x.items.length);
+          const all = (MSGS[f.id] || []).length ? f.sections.concat([{ key: 'MSG', title: 'Message (breakdown)', points: MSGS[f.id].map((m) => ({ msg: m })) }]) : f.sections;
+          const secs = all.map((s) => ({ s, items: s.points.map((p, i) => ({ p, id: p.msg ? f.id + '-MSG-' + p.msg.id : pid(f.id, s.key, i) })).filter((x) => !onlyNotes || notes[x.id]) })).filter((x) => x.items.length);
           if (onlyNotes && !secs.length) return null;
           return (
             <section className="fn" id={f.id} key={f.id}>
