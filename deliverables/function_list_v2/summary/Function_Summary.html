@@ -56,6 +56,8 @@ li.pt:first-child { border-top: 0 }
 .vals q.val { quotes: "\201C" "\201D"; font-style: italic; background: var(--bg); border-radius: 4px; padding: 0 4px }
 .vals q.val.t-error, .vals q.val.t-critical { color: var(--accent) }
 .vals .sep { color: var(--muted) }
+ul.sents { margin: 0; padding-left: 18px; display: grid; gap: 2px }
+ul.sents li::marker { color: var(--muted) }
 .cbtn { align-self: start; font: inherit; font-size: 12px; padding: 3px 10px; border-radius: 6px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; white-space: nowrap }
 .cbtn:hover, .cbtn:focus-visible { border-color: var(--accent); color: var(--accent); outline: none }
 .cbtn.has { background: var(--note); border-color: var(--note-line) }
@@ -1450,6 +1452,12 @@ function Refs({ text, fn }) {
     );
   });
 }
+// One bullet per sentence (split after a full stop followed by a new sentence); a single sentence stays plain text.
+function Sentences({ text, fn }) {
+  const parts = String(text).split(/(?<=\.)\s+(?=[A-Z0-9\[\u201C"(])/);
+  if (parts.length < 2) return <Refs text={text} fn={fn} />;
+  return <ul className="sents">{parts.map((t, i) => <li key={i}><Refs text={t} fn={fn} /></li>)}</ul>;
+}
 const fmtTime = (iso) => { try { return new Date(iso).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }); } catch (e) { return iso; } };
 
 function useRevisions() {
@@ -1498,7 +1506,7 @@ function Point({ id, seq, fn, point, note, db, open, onToggle }) {
     <li className="pt">
       <span className="no">{seq || id.split('-').slice(1).join('-')}</span>
       <div className="txt">
-        {typeof point === 'string' ? <Refs text={point} fn={fn} /> : point.msg ? (
+        {typeof point === 'string' ? <Sentences text={point} fn={fn} /> : point.msg ? (
           <>
             <span className={'mtype t-' + String(point.msg.type).toLowerCase()}>{point.msg.kind === 'Log' ? 'Logging · ' : 'Screen · '}{point.msg.type}</span>
             <div className="mtext">{point.msg.message}</div>
