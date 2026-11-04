@@ -1,0 +1,473 @@
+<title>Crossdock Function Summary</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: sticky function index on the left (top bar on phones), one sheet per function; every point carries its own revision note. */
+:root {
+  --bg: #F3F4F6; --surface: #FFFFFF; --ink: #1B2430; --muted: #5B6675; --line: #DCE0E6;
+  --accent: #B42318; --accent-soft: #FDECEA; --note: #FFF6DB; --note-line: #E7C65A; --ok: #1F7A4D; --ok-soft: #E3F4EA;
+  --font-body: "IBM Plex Sans", "Segoe UI", Roboto, Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #12161C; --surface: #1A2028; --ink: #E7EAEE; --muted: #9AA4B2; --line: #2C3440;
+  --accent: #F97066; --accent-soft: #3A1E1C; --note: #3A3218; --note-line: #A88A2C; --ok: #6FCF97; --ok-soft: #173326; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #12161C; --surface: #1A2028; --ink: #E7EAEE; --muted: #9AA4B2; --line: #2C3440;
+  --accent: #F97066; --accent-soft: #3A1E1C; --note: #3A3218; --note-line: #A88A2C; --ok: #6FCF97; --ok-soft: #173326; color-scheme: dark }
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 14px; line-height: 1.55 }
+.wrap { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 28px; max-width: 1180px; margin: 0 auto;
+  padding-block: 24px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)) }
+nav { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); align-self: start; display: grid; gap: 4px }
+nav .brand { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px }
+nav a { display: flex; justify-content: space-between; gap: 8px; padding: 6px 10px; border-radius: 6px; color: var(--ink); text-decoration: none; font-size: 13px }
+nav a:hover, nav a:focus-visible { background: var(--surface); outline: none }
+nav a .id { font-family: var(--font-mono); font-weight: 600 }
+nav a .n { font-size: 11px; color: var(--accent); font-weight: 700 }
+header.top { display: grid; gap: 10px; margin-bottom: 18px }
+h1 { font-size: 26px; margin: 0; text-wrap: balance; letter-spacing: -.01em }
+.sub { color: var(--muted); margin: 0; max-width: 70ch }
+.bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center }
+.pill { font-size: 12px; padding: 3px 10px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line) }
+.pill b { color: var(--accent) }
+.toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer }
+.state { font-size: 12px; color: var(--muted) }
+section.fn { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; margin-bottom: 18px; scroll-margin-top: 16px }
+.fn-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 12px; border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-bottom: 6px }
+.fn-head .id { font-family: var(--font-mono); font-weight: 600; color: var(--accent); font-size: 15px }
+.fn-head h2 { font-size: 18px; margin: 0; text-wrap: balance }
+.fn-head .type { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 1px 6px }
+.trigger { color: var(--muted); font-size: 13px; margin: 2px 0 8px }
+h3 { font-size: 12px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); margin: 16px 0 4px }
+ol.points { list-style: none; margin: 0; padding: 0; display: grid }
+li.pt { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 4px 10px; padding: 8px 0; border-top: 1px dashed var(--line) }
+li.pt:first-child { border-top: 0 }
+.no { font-family: var(--font-mono); font-size: 11px; color: var(--muted); padding-top: 2px; font-variant-numeric: tabular-nums }
+.txt { min-width: 0 }
+.txt .k { font-weight: 600 }
+.ab { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px 12px; margin-top: 4px; font-size: 13px; color: var(--muted) }
+.ab span b { color: var(--ink); font-weight: 600 }
+.cbtn { align-self: start; font: inherit; font-size: 12px; padding: 3px 10px; border-radius: 6px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; white-space: nowrap }
+.cbtn:hover, .cbtn:focus-visible { border-color: var(--accent); color: var(--accent); outline: none }
+.cbtn.has { background: var(--note); border-color: var(--note-line) }
+.cbtn.done { background: var(--ok-soft); border-color: var(--ok); color: var(--ok) }
+.note { grid-column: 2 / 4; background: var(--note); border-left: 3px solid var(--note-line); border-radius: 6px; padding: 8px 10px; display: grid; gap: 6px }
+.note.done { background: var(--ok-soft); border-left-color: var(--ok) }
+.note .meta { font-size: 11px; color: var(--muted) }
+.note textarea { width: 100%; min-height: 64px; font: inherit; font-size: 13px; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); resize: vertical }
+.note .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center }
+.btn { font: inherit; font-size: 12px; padding: 4px 12px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--surface) }
+.btn:disabled { opacity: .5; cursor: default }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+.err { color: var(--accent); font-size: 12px }
+@media (max-width: 820px) {
+  .wrap { grid-template-columns: minmax(0, 1fr) }
+  nav { position: static; display: flex; flex-wrap: wrap; gap: 4px }
+  nav .brand { width: 100% }
+  nav a { padding: 4px 8px; background: var(--surface) }
+  li.pt { grid-template-columns: 40px minmax(0, 1fr) }
+  .cbtn { grid-column: 2 }
+  .note { grid-column: 1 / -1 }
+  .ab { grid-template-columns: minmax(0, 1fr) }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto } }
+</style>
+
+<div id="root"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.24.7/babel.min.js"></script>
+<script type="text/babel" data-presets="react">
+// ---------- content: summary per function (UISS XD01-XD15, main 4-Nov-26) ----------
+// A point is a string, or an abnormality {k: condition, d: detection, s: system, u: user}.
+const FUNCS = [
+  { id: 'XD01', name: 'Cross Dock Part Master Screen', type: 'Screen', trigger: 'Tab Part List: Procurement · Tab Mapping per Destination: D/S',
+    sections: [
+      { key: 'PL', title: 'Proses normal – Tab Part List (Procurement)', points: [
+        'Buka menu: hanya akun Procurement. Default filter Part Number / Part Name kosong, Status All, Sort Newer to Older, 25 baris per halaman. Belum ada part sama sekali: msg 2 dengan [Upload Excel] dan [Add one part].',
+        'Cari part: Part Number / Part Name (sebagian kata, tidak membedakan huruf besar kecil), Status Candidate / Active / Inactive, digabung AND; diterapkan saat [Search]. Tidak ada hasil: msg 1. Total Pcs/Day = Pcs/Case × Max Case/Day.',
+        'Add part baru: status otomatis Candidate (terkunci). Input Part No (dari Part Master, belum terdaftar), Part Name otomatis, Min MAD (≥ 0), Pcs/Case (> 0), Max Case/Day (> 0), Effective Start Date (default besok, minimal hari ini). [Save] aktif kalau isian wajib lengkap (tooltip msg 5 / 15 / 6 / 7). Setelah Save: Sync Status No Sync, history ADD, part paling atas, msg 9.',
+        'Edit part (Candidate / Active / Inactive): Min MAD, Pcs/Case, Max Case/Day, Status, dan Effective Start Date (hanya selama Candidate, selain itu tooltip msg 10). Part Active menampilkan "Mapped Case/Day (current period)"; Max Case/Day tidak boleh di bawahnya (msg 14). Setelah Save: No Sync, history per field, msg 9.',
+        'History (ikon jam): riwayat perubahan part terbaru di atas (Add / Edit, upload, mapping, hasil Sync, status oleh XD05), disimpan tanpa batas waktu. Tanpa history: msg 12.',
+        'Download (Export Excel): 2 sheet – "Part List" (hasil filter, informasi) dan "Upload" (semua part, upload = E) sebagai file dasar upload.',
+        'Upload part list (XD02): pakai sheet Upload; upload A = part baru, E = edit. Status Candidate tidak bisa diubah lewat upload, Active ↔ Inactive boleh, tidak ada yang bisa jadi Candidate. All-or-nothing; berhasil msg 11.',
+        'DAD Calculation (XD05 proses 1): scheduler bulanan, auto retry 3×; [Run calculation] aktif hanya setelah gagal 3× (badge "Scheduled run failed 3x"). Part Active yang jadi Inactive otomatis No Sync.',
+        'Setiap Add / Edit / Upload membuat part No Sync, supaya dikirim ulang ke GTOPAS dan AP POLE lewat [Sync].' ] },
+      { key: 'MP', title: 'Proses normal – Tab Mapping per Destination (D/S)', points: [
+        'Buka menu: hanya akun D/S. Default periode ongoing, Sync Status No Sync. Periode ongoing: semua part Active dengan destinasinya (tanpa destinasi: 0 / quota). Periode baru mulai kosong; periode lalu hanya bisa dilihat.',
+        'Kolom Total Case/Day (used / quota): used = jumlah Case/Day semua destinasi, quota = Max Case/Day dari Part List. Pcs/Day = Pcs/Case × used; Percentage = used / quota (maksimal 100%).',
+        'Detail (panah di baris): tabel destinasi read only dengan catatan "n case/day left / over". Periode lalu: msg 22. Part tanpa destinasi: msg 19.',
+        'Edit mapping (periode ongoing): tambah / ubah / hapus destinasi, satu destinasi sekali per part, [Split evenly]. Save diblok kalau total > Max (msg 20), tanpa destinasi, atau baris tanpa destinasi (msg 21). Disimpan per destinasi: update / insert / delete, yang sama tidak disentuh; history per destinasi; part No Sync.',
+        'Download: sheet "Mapping per Destination" (informasi) dan "Upload" (part Active periode ongoing, satu baris per destinasi; baris kosong upload = A untuk part tanpa mapping).',
+        'Upload mapping (XD03): hanya periode ongoing (selain itu msg 23). Disimpan per destinasi; part yang tidak ada di file tidak berubah. All-or-nothing; berhasil msg 24.',
+        'Mapping Calculation (XD05 proses 2): scheduler, auto retry 3×; [Run calculation] aktif hanya setelah gagal 3×; selesai msg 29.',
+        '[Sync (n)]: part Active periode ongoing dan part yang baru jadi Inactive dengan status No Sync / Failed, tanpa melihat filter. Part jadi Waiting, XD06 dan XD07 dijalankan (msg 27). Part Candidate tidak pernah di-sync.',
+        'Hasil Sync per part: Success kalau GTOPAS (RPA) dan AP POLE (SFTP) berhasil; Failed kalau salah satu gagal (tooltip msg 28, ikut Sync berikutnya); No Sync kalau part diubah saat proses kirim. Setiap hasil masuk history.' ] },
+      { key: 'AB', title: 'Abnormality', points: [
+        { k: 'Part sudah didaftarkan user lain saat Add', d: 'msg 3', s: 'Simpan dibatalkan', u: 'Tutup modal, cari part' },
+        { k: 'Data part diubah user lain saat Edit', d: 'msg 4', s: 'Simpan dibatalkan', u: 'Refresh, edit ulang' },
+        { k: 'Mapping diubah user lain saat Edit mapping', d: 'msg 25', s: 'Simpan dibatalkan', u: 'Cancel, refresh, edit ulang' },
+        { k: 'Max Case/Day di bawah total mapping periode ongoing', d: 'msg 14', s: 'Save diblok (dicek juga di server)', u: 'Kurangi mapping dulu' },
+        { k: 'Total Case/Day melebihi Max Case/Day', d: 'msg 20', s: 'Save diblok', u: 'Kurangi Case/Day destinasi' },
+        { k: 'Baris tanpa destinasi / part tanpa destinasi', d: 'msg 21', s: 'Save diblok', u: 'Pilih destinasi atau hapus baris' },
+        { k: 'Gagal simpan ke database', d: 'LOG1 (part), LOG3 (mapping)', s: 'Rollback, pesan error', u: 'Hubungi PIC' },
+        { k: 'Export Excel gagal', d: 'msg 13 / LOG2, msg 26 / LOG5', s: 'File tidak dibuat', u: 'Coba lagi; hubungi admin' },
+        { k: 'Upload ditolak', d: 'Daftar error XD02 / XD03', s: 'Tidak ada yang disimpan', u: 'Perbaiki sheet Re-upload' },
+        { k: 'Sync gagal di GTOPAS / AP POLE', d: 'Failed, msg 28 (LOG4)', s: 'Part tetap Failed, ikut n berikutnya', u: 'Perbaiki penyebab, [Sync] lagi' },
+        { k: 'Scheduler DAD / Mapping Calculation gagal 3×', d: 'Badge "Scheduled run failed 3x"', s: '[Run calculation] aktif', u: 'Cek penyebab, jalankan manual' } ] } ] },
+
+  { id: 'XD02', name: 'Cross Dock Part Master Upload Batch', type: 'Batch', trigger: '[Validate file] di Upload Excel tab Part List (XD01)',
+    sections: [
+      { key: 'N', title: 'Proses normal', points: [
+        'Cek file: .xlsx, maksimal 5 MB, 1–5.000 baris, sheet "Upload" ada (sheet lain diabaikan), 7 kolom template: part_no, min_mad, pcs_case, max_case_day, status, upload, effective_start_date.',
+        'Semua baris dicek dulu dan semua error dikumpulkan sekaligus, supaya file cukup diperbaiki satu kali.',
+        'Simpan hanya kalau semua baris valid (all-or-nothing). A: part baru sebagai Candidate, Part Name dari Part Master, Total Pcs/Day dihitung. E: nilai yang berubah di-update (termasuk Active ↔ Inactive); baris tanpa perubahan dilewati.',
+        'Part yang tersimpan jadi No Sync; history per field (ADD / EDIT, source UPLOAD); part yang tidak ada di file tidak berubah.',
+        'Result report (.xlsx: Summary, Result, Re-upload, Changes) dibuat untuk berhasil maupun ditolak; upload log COMPLETED / REJECTED.' ] },
+      { key: 'R', title: 'Aturan validasi per baris', points: [
+        'Kolom upload = A (Add) atau E (Edit).', 'Part No ada di Part Master.', 'A: part belum terdaftar · E: part sudah terdaftar.', 'Part No hanya sekali di file.',
+        'Min MAD bilangan bulat ≥ 0; Pcs/Case dan Max Case/Day bilangan bulat > 0; ketiganya wajib.',
+        'Status: A harus kosong; E: Candidate tetap Candidate, Active ↔ Inactive boleh, tidak boleh jadi Candidate.',
+        'Effective Start Date wajib untuk part Candidate (selalu untuk A), minimal hari ini kalau baru / berubah.',
+        'E: Effective Start Date hanya boleh berubah selama Candidate.',
+        'E: Max Case/Day tidak boleh di bawah total yang sudah di-mapping di periode ongoing (contoh mapping 100, Max baru 80 → ditolak).' ] },
+      { key: 'AB', title: 'Abnormality', points: [
+        { k: 'File upload tidak ditemukan', d: 'LOG3', s: 'Batch berhenti', u: 'Upload ulang' },
+        { k: 'File tidak valid (format, ukuran, baris, sheet, kolom)', d: 'LOG4', s: 'REJECTED, result report', u: 'Download ulang, upload lagi' },
+        { k: 'Baris tidak valid', d: 'LOG5', s: 'Seluruh file ditolak', u: 'Perbaiki sheet Re-upload' },
+        { k: 'Baris E tanpa perubahan', d: 'LOG6 (info)', s: 'Dilewati', u: '–' },
+        { k: 'Gagal simpan ke database', d: 'LOG7', s: 'Rollback, REJECTED', u: 'Hubungi PIC' },
+        { k: 'Result report gagal dibuat', d: 'LOG8 (warning)', s: 'Data tetap tersimpan', u: 'Hubungi system owner' },
+        { k: 'Error sistem lain', d: 'LOG9', s: 'Rollback, REJECTED', u: 'Hubungi PIC' } ] },
+      { key: 'C', title: 'Catatan terbuka', points: [ 'FB-119: judul 4.1 / 4.2 di UISS menyebut log no. 5 / 6; yang benar LOG4 (file check) dan LOG5 (row validation).' ] } ] },
+
+  { id: 'XD03', name: 'Part and Destination Mapping Upload Batch', type: 'Batch', trigger: '[Validate file] di Upload Excel tab Mapping per Destination (XD01)',
+    sections: [
+      { key: 'N', title: 'Proses normal', points: [
+        'Hanya untuk periode ongoing. Cek file: .xlsx, maksimal 5 MB, 1–5.000 baris, sheet "Upload", 5 kolom: part_no, dest_code, case_day, upload, total_case_day (referensi, tidak dibaca).',
+        'Satu baris per part × destinasi; semua baris satu part = mapping baru part itu. Semua error dikumpulkan sekaligus.',
+        'All-or-nothing. Part tanpa perubahan dilewati. Part yang berubah disimpan per destinasi: Case/Day berubah → update (CREATED tetap), destinasi baru → insert, tidak ada lagi di file → delete, sama → tidak disentuh.',
+        'Part yang semua barisnya kosong tidak diubah: mapping tidak bisa dihapus total lewat upload (minimal 1 destinasi).',
+        'Part yang berubah jadi No Sync; history per destinasi (MAPPING, source UPLOAD). Result report dan upload log seperti XD02.',
+        'Contoh: DB D01 = 10, D02 = 5; file D01 = 8, D03 = 7 → D01 update 8, D03 insert, D02 delete, history 3 record.' ] },
+      { key: 'R', title: 'Aturan validasi per baris', points: [
+        'Part terdaftar dan statusnya Active.', 'Kode destinasi ada di Destination Master.', 'case_day bilangan bulat > 0 kalau dest_code terisi.', 'Satu destinasi hanya sekali per part.',
+        'dest_code dan case_day terisi dua-duanya atau kosong dua-duanya (placeholder).', 'Total case_day per part ≤ Max Case/Day (di bawah boleh).', 'Hanya periode ongoing.',
+        'upload A untuk destinasi yang belum di-mapping, E untuk yang sudah; placeholder kosong dilewati.' ] },
+      { key: 'AB', title: 'Abnormality', points: [
+        { k: 'File upload tidak ditemukan', d: 'LOG3', s: 'Batch berhenti', u: 'Upload ulang' },
+        { k: 'File tidak valid', d: 'LOG4', s: 'REJECTED, result report', u: 'Download ulang, upload lagi' },
+        { k: 'Baris tidak valid', d: 'LOG5', s: 'Seluruh file ditolak', u: 'Perbaiki sheet Re-upload' },
+        { k: 'Part tanpa perubahan / semua baris kosong', d: 'LOG6 (info)', s: 'Dilewati', u: '–' },
+        { k: 'Gagal simpan mapping / status part', d: 'LOG7', s: 'Rollback, REJECTED', u: 'Hubungi PIC' },
+        { k: 'Result report gagal dibuat', d: 'LOG8 (warning)', s: 'Data tetap tersimpan', u: 'Hubungi system owner' },
+        { k: 'Error sistem lain', d: 'LOG9', s: 'Rollback, REJECTED', u: 'Hubungi PIC' } ] },
+      { key: 'C', title: 'Catatan terbuka', points: [
+        'FB-120: judul 4.1 / 4.2 menyebut log no. 5 / 6; yang benar LOG4 dan LOG5.',
+        'FB-128: bagian Tables menulis TB_M_PART_CANDIDATE dan TB_M_PART_CANDIDATE_DEST sebagai "existing"; seharusnya tabel baru Crossdock.' ] } ] },
+
+  { id: 'XD04', name: 'Actual Demand Summary Synch to NSP', type: 'Batch', trigger: 'Scheduler bulanan (system master), sebelum XD05',
+    sections: [
+      { key: 'N', title: 'Proses normal', points: [
+        'Baca semua baris TB_R_ACTUAL_DEMAND_SUMMARY di DB Surrounding.',
+        'Full replace: tabel NSP dikosongkan lalu diisi ulang dengan kolom dan nilai yang sama, tanpa konversi; DAD ikut disalin walau tidak dipakai (19-Oct).',
+        'Satu transaksi (all-or-nothing): error → rollback, NSP tetap pakai data run terakhir yang berhasil.',
+        'Kolom yang dipakai: GROUPING_BUYER_CD + GROUPING_PD_CD (kode destinasi 7 digit), ORDER_TYPE_GROUP N + S, DEMAND_MONTH_YEAR (range bulan), PART_NO, MAD.',
+        'Kalau XD04 gagal, XD05 tetap jalan dengan data yang sudah ada di NSP (19-Oct). Hasil dicatat di Log (SUCCESS / FAILED, jumlah baris).' ] },
+      { key: 'AB', title: 'Abnormality', points: [
+        { k: 'DB Surrounding tidak bisa dibaca', d: 'LOG3', s: 'Rollback, FAILED, data lama tetap', u: 'Hubungi PIC' },
+        { k: 'Insert ke tabel NSP gagal', d: 'LOG4', s: 'Rollback, FAILED', u: 'Hubungi PIC' },
+        { k: 'Error sistem lain', d: 'LOG5', s: 'Rollback, FAILED', u: 'Hubungi PIC' } ] },
+      { key: 'C', title: 'Catatan terbuka', points: [
+        'FB-121: XD04 belum punya auto retry (XD05, XD08, XD13 punya 3×). Usulan: auto retry 3×, lalu XD05 jalan setelah berhasil atau retry habis.',
+        'FB-122: halaman Confirmation web B3 masih menulis XD05 dibatalkan kalau XD04 gagal; keputusan 19-Oct XD05 tetap jalan.' ] } ] },
+
+  { id: 'XD05', name: 'DAD Volume Calculation Batch', type: 'Batch', trigger: 'Scheduler bulanan, auto retry 3×; manual [Run calculation] di XD01 setelah gagal 3×',
+    sections: [
+      { key: 'P1', title: 'Proses 1 – status part', points: [
+        'Range N bulan dari system master: bulan sebelum run mundur N bulan (contoh run Okt 2026, N = 6 → 202604–202609).',
+        'Semua part (Candidate, Active, Inactive); part dengan Effective Start Date setelah tanggal run dilewati (LOG4).',
+        'TOTAL_MAD = jumlah MAD semua buyer / PD / order type N + S dalam range; AVG_MAD = TOTAL_MAD / N (bulan tanpa data dihitung 0).',
+        'AVG_MAD ≥ Min MAD → Active; AVG_MAD < Min MAD → Inactive.',
+        'Simpan hasil di TB_R_PART_DAD_RESULT; kalau status berubah, update Part List dan history (CALC). Active → Inactive membuat part No Sync (supaya dihapus di GTOPAS / AP POLE).',
+        'Berhasil: commit, lanjut proses 2. Gagal: rollback, proses 2 tidak jalan, auto retry 3×; setelah itu [Run calculation (Part List)] aktif.' ] },
+      { key: 'P2', title: 'Proses 2 – mapping destinasi', points: [
+        'Jalan setelah proses 1 berhasil (atau retry / [Run calculation (Mapping)] untuk proses 2 saja). Periode baru = bulan run.',
+        'Part Active saja; actual demand dikelompokkan per kode destinasi (buyer 5 digit + PD 2 digit); grup dengan MAD 0 tidak dipakai; part tanpa MAD tidak mendapat destinasi.',
+        'Kode destinasi harus ada di Destination Master; kalau tidak ada → error, seluruh proses 2 rollback (LOG11).',
+        'Alokasi: destinasi diurutkan MAD terbesar, maksimal sejumlah Max Case/Day (LOG12); target = porsi MAD × Max Case/Day, dibulatkan ke bawah minimal 1, disesuaikan supaya total = Max Case/Day.',
+        'Simpan periode baru (re-run menghapus data periode itu dulu). Part yang mapping-nya beda dari periode lalu jadi No Sync dan history per destinasi (MAPPING, BATCH).',
+        'Berhasil: periode baru jadi ongoing, periode lama jadi past (read only). Gagal: rollback proses 2 saja, auto retry 3×, lalu [Run calculation (Mapping)] aktif.' ] },
+      { key: 'AB', title: 'Abnormality', points: [
+        { k: 'Range bulan belum di-set di system master', d: 'LOG3 / LOG10', s: 'Stop, FAILED', u: 'Hubungi PIC' },
+        { k: 'Insert / update gagal', d: 'LOG5 / LOG13', s: 'Rollback, FAILED, retry', u: 'Hubungi PIC' },
+        { k: 'Kode destinasi tidak ada di Destination Master', d: 'LOG11', s: 'Rollback proses 2, retry', u: 'Daftarkan destinasi (GTOPAS → XD13), jalankan ulang' },
+        { k: 'Jadwal dan 3 retry gagal', d: 'LOG6 / LOG14', s: '[Run calculation] aktif di XD01', u: 'Cek penyebab, klik [Run calculation]' },
+        { k: 'Error sistem lain', d: 'LOG7 / LOG15', s: 'Rollback, FAILED, retry', u: 'Hubungi PIC' } ] } ] },
+
+  { id: 'XD06', name: 'IF Cross Dock Master to GTOPAS', type: 'Batch', trigger: '[Sync] di XD01 (metode RPA)',
+    sections: [
+      { key: 'N', title: 'Proses normal', points: [
+        'Ambil part dengan status GTOPAS Waiting; part Active dikirim dengan destinasinya (CROSSDOCK_FLAG Y), part Inactive dikirim satu baris dengan CROSSDOCK_FLAG N.',
+        'Buat input RPA XD_CDMASTER_GTOPAS_<timestamp>.csv: satu baris per part × destinasi periode ongoing (SEND_ID, PART_NO, CROSSDOCK_FLAG, PERIOD, DEST_CODE, SEND_DT). Part tanpa destinasi: satu baris dengan DEST_CODE kosong.',
+        'Bot RPA membuka GTOPAS menu Supply > Master > Crossdock Master, search Part No (satu row per part + destinasi).',
+        'CROSSDOCK_FLAG Y: ada di NSP belum di GTOPAS → didaftarkan; ada di keduanya → dibiarkan (GTOPAS tidak menyimpan Case/Day); ada di GTOPAS tidak di NSP → dihapus. Part Active tanpa destinasi: semua row dihapus (30-Oct).',
+        'CROSSDOCK_FLAG N (Inactive): semua row part dihapus (contoh 10 destinasi → 10 row).',
+        'Pcs/Case, Max Case/Day, Effective Start Date dan Case/Day tidak dikirim; perubahan Case/Day saja tetap Success tanpa perubahan di GTOPAS.',
+        'Bot mengembalikan hasil per part (OK / NG, destinasi yang ditambah / dihapus, alasan) → status per part, Sync Status gabungan dengan XD07, history SYNC.' ] },
+      { key: 'AB', title: 'Abnormality', points: [
+        { k: 'Input RPA tidak bisa dibuat', d: 'LOG3', s: 'Semua part run ini Failed', u: '[Sync] lagi; hubungi PIC' },
+        { k: 'Bot tidak tersedia / tidak ada hasil dalam batas waktu', d: 'LOG4', s: 'Semua part run ini Failed, input disimpan', u: '[Sync] lagi; hubungi PIC' },
+        { k: 'Bot mengembalikan NG untuk satu part', d: 'LOG6', s: 'Part itu Failed, part lain lanjut', u: '[Sync] lagi; hubungi PIC' },
+        { k: 'Error sistem lain', d: 'LOG5', s: 'Stop, ERROR', u: 'Hubungi PIC' } ] },
+      { key: 'C', title: 'Catatan terbuka', points: [ 'Desain RPA: cara XD06 menjalankan bot, batas waktu, dan bentuk hasil (file atau tabel) – TBC.' ] } ] },
+
+  { id: 'XD07', name: 'IF Cross Dock Master to AP POLE', type: 'Batch', trigger: '[Sync] di XD01 (file SFTP)',
+    sections: [
+      { key: 'N', title: 'Proses normal', points: [
+        'Ambil part dengan status APPOLE Waiting: part Active dikirim lengkap (CROSSDOCK_FLAG Y), part Inactive satu baris CROSSDOCK_FLAG N (kolom lain kosong).',
+        'File XD_CDMASTER_APPOLE_<timestamp>.csv: per part PART_NO, CROSSDOCK_FLAG, PCS_CASE, MAX_CASE_DAY, EFFECTIVE_START_DATE; per destinasi PERIOD, DEST_CODE, CASE_DAY.',
+        'SFTP ke server TMMIN (verifikasi ukuran / jumlah record) → SFTP TMA → receive IF TMA → AP POLE Cross Dock Kanban Part Master (satu row per part number).',
+        'Receive IF: part belum ada → Add (Part No, Pcs/Case, Max Case/Day) lalu destinasi + Case/Day; part sudah ada → Edit (Pcs/Case, Max Case/Day, destinasi disamakan); CROSSDOCK_FLAG N → part dihapus.',
+        'Status per part = hasil transfer SFTP; Sync Status gabungan dengan XD06; history SYNC. Total Case/Day per part ≤ Max Case/Day.' ] },
+      { key: 'AB', title: 'Abnormality', points: [
+        { k: 'File interface tidak bisa dibuat', d: 'LOG3', s: 'Semua part run ini Failed', u: '[Sync] lagi; hubungi PIC' },
+        { k: 'Transfer SFTP gagal setelah retry', d: 'LOG4', s: 'Semua part file ini Failed, file di outbound', u: '[Sync] lagi; hubungi PIC' },
+        { k: 'Error sistem lain', d: 'LOG5', s: 'Stop, ERROR', u: 'Hubungi PIC' } ] },
+      { key: 'C', title: 'Catatan terbuka', points: [ 'Receive IF TMA: aturan Add / Edit / Delete – konfirmasi ke TMA. Detail SFTP (server, folder, user, acknowledge balik) – konfirmasi tim IT dan TMA.' ] } ] },
+
+  { id: 'XD08', name: 'Order Control Information to NSP Batch', type: 'Batch', trigger: 'Scheduler harian 27:30 setelah data GTOPAS tersedia, auto retry 3×',
+    sections: [
+      { key: 'N', title: 'Proses normal', points: [
+        'Baca H0253 di DB Surrounding yang berubah sejak run terakhir (INTF_UPDATE_DT > watermark), order status 7 / 6 / 2.',
+        'Upsert ke tabel H0253 NSP per key (termasuk SERIAL_NO). Key baru: insert, HOLD_FLAG N, PO_MAPPED_FLAG N, UPD_STATUS kosong kalau status 7. Key lama: update kolom sumber kecuali ORDER_STATUS; UPD_STATUS = 6 (diterima) atau 2 (cancel).',
+        'Serial split (line di lebih dari satu ASN dipecah GTOPAS): bagian yang diterima ditautkan ke ASN yang dikirim pertama, sisanya ke ASN berikutnya (LOG7).',
+        'Semua draft TB_R_INSTRUCTION (Create ASN tanpa Submit) dilepas: baris dihapus, MAPPED_QTY dikurangi, PO_MAPPED_FLAG N; case kembali ke delivery plan XD10.',
+        'Line status 2 yang qty-nya sudah di ASN yang di-submit: tidak diubah, dicatat LOG5 dan muncul di Change Order Number (XD11).',
+        'Berhasil: commit, watermark baru disimpan. Line dengan UPD_STATUS tidak diambil lagi oleh XD09.' ] },
+      { key: 'AB', title: 'Abnormality', points: [
+        { k: 'Cancel atas qty di ASN yang sudah di-submit', d: 'LOG5', s: 'ASN tidak diubah, line muncul di XD11', u: 'D/S: Change Order Number (XD11)' },
+        { k: 'Qty cancel bukan kelipatan pcs/case', d: 'LOG6', s: 'Dicatat (abnormality), tetap di XD11', u: 'D/S cek ke GTOPAS' },
+        { k: 'Baca / upsert / lepas draft gagal', d: 'LOG3', s: 'Rollback, watermark tetap (diambil lagi run berikutnya)', u: 'Hubungi PIC' },
+        { k: 'Error sistem lain', d: 'LOG4', s: 'Rollback, FAILED', u: 'Hubungi PIC' } ] } ] },
+
+  { id: 'XD09', name: 'Mapping Customer Order and PO Batch', type: 'Batch', trigger: '[Search] di XD10 (on demand, tanpa scheduler)',
+    sections: [
+      { key: 'N', title: 'Proses normal', points: [
+        'Temporary table session dikosongkan; Delivery Date dan Rit dari XD10 hanya dibawa ke ASN, tidak memfilter order.',
+        'Ambil customer order H0253: status 7, UPD_STATUS kosong, HOLD_FLAG N, PO_MAPPED_FLAG N; open qty = qty − qty yang sudah di TB_R_INSTRUCTION (> 0).',
+        'Ambil PO crossdock: manifest CROSS_DOCK_FLAG X + part-nya (key MANIFEST_NO + MANIFEST_ITEM); open PO qty = ORDER_QTY − MAPPED_QTY; urut PO date (FIFO).',
+        'Per unit (Part Number + Customer Order Date, tanggal tertua dulu): line diurut H0253 order (Allocation Priority, Customer Code, Customer Order No, Order Date, Order Time, Destination, Detailed Item No, Serial No); qty PO dialokasikan berurutan, satu line bisa terbagi ke beberapa PO.',
+        'Pcs dipotong per supplier case (PCS_CASE); cut valid hanya setelah case di mana setiap destinasi kelipatan PCS_CASE (1 case = 1 destinasi di gudang); case sampai cut valid = block (opsi ASN).',
+        'Block Ready kalau block itu dan semua block sebelumnya punya PO; status unit Ready / Partially Ready / Not Ready dikembalikan ke XD10.' ] },
+      { key: 'AB', title: 'Abnormality', points: [
+        { k: 'Baca / insert temporary table gagal', d: 'LOG1', s: 'Temporary table dikosongkan, error di layar', u: 'Ulangi; hubungi PIC' },
+        { k: 'Error sistem lain', d: 'LOG2', s: 'Temporary table dikosongkan', u: 'Hubungi PIC' } ] } ] },
+
+  { id: 'XD10', name: 'ASN Cross Dock Creation Screen', type: 'Screen', trigger: 'Supplier (unit sendiri) · D/S team (semua supplier, hold)',
+    sections: [
+      { key: 'N', title: 'Proses normal', points: [
+        'Tampilan awal: Delivery Date = hari ini, Rit pertama, Route (disabled); delivery plan kosong. Tanggal tanpa rit (Minggu): pesan pilih tanggal lain.',
+        '[Search] menjalankan XD09; delivery plan satu baris per Part Number + Customer Order Date, urut Ready, Partially Ready, Not Ready, lalu Part Number. Unit sudah Created atau tanpa case ter-map tidak ditampilkan.',
+        'Kolom: Case Qty, PO Readiness (case), opsi ASN, status. Per Part Number tanggal tertua dulu ("Wait: tanggal sebelumnya first").',
+        'D/S: expand unit → per destinasi (case, qty, Hold Flag) → per customer order line. Hold / Release per destinasi meng-update HOLD_FLAG semua line unit + destinasi; destinasi hold tidak diambil Search.',
+        'Pilih case: check box per case mulai case 1 sampai case dengan cut valid; case satu grup selalu terkirim bersama. Satu ASN = satu Supplier Code + Plant.',
+        '[Create ASN] (satu transaksi): re-check hold (row lock), insert TB_R_INSTRUCTION, MAPPED_QTY bertambah, PO_MAPPED_FLAG Y untuk line yang seluruhnya masuk ASN. [Back] / [Cancel] di Case List membatalkan (baris dihapus, flag dan qty dikembalikan).',
+        'Case List: ringkasan ASN, case (Case Number, Part, Qty, detail PO), [Download Case Label] mengikuti case label NSP existing.',
+        '[Submit ASN] (konfirmasi msg 4): re-check draft masih ada dan line tidak berubah; Submit ID ke proses submit batch (5.7) → ASN No dan Case No otomatis (last sequence), insert TB_R_DAILY_ORDER_MANIFEST / PART, ASN_NO / CASE_NO ditulis balik. Hasil di Log Monitoring.' ] },
+      { key: 'AB', title: 'Abnormality', points: [
+        { k: 'Unit Not Ready (case belum punya PO)', d: 'Pesan Not Ready, check box disabled', s: 'Case tidak bisa dipilih', u: 'Tunggu PO' },
+        { k: 'Block yang dipilih sudah tidak Ready', d: 'Error, delivery plan di-refresh', s: 'Create dibatalkan', u: 'Pilih ulang' },
+        { k: 'Order di-hold D/S setelah unit dicentang', d: 'Error "order already hold"', s: 'Create gagal, case dihitung ulang tanpa destinasi itu', u: 'Pilih case lain' },
+        { k: 'Unit dari lebih dari satu supplier dicentang (D/S)', d: 'Error satu ASN satu supplier', s: 'Tidak ada yang dibuat', u: 'Pilih unit satu supplier' },
+        { k: 'Draft dilepas XD08 atau line berubah di GTOPAS saat Submit', d: 'Error "orders have changed"', s: 'Draft dilepas, tidak disubmit', u: '[Search] dan buat ASN lagi' },
+        { k: 'Database error saat mapping / draft', d: 'LOG1', s: 'Rollback', u: 'Ulangi; hubungi PIC' },
+        { k: 'Numbering / insert submit gagal', d: 'LOG5', s: 'Rollback, mapping dilepas', u: 'Cek Log Monitoring, buat ulang' } ] } ] },
+
+  { id: 'XD11', name: 'Change Order Number Screen', type: 'Screen', trigger: 'D/S team, sub menu ASN',
+    sections: [
+      { key: 'N', title: 'Proses normal', points: [
+        'List: setiap line status 2 (UPD_STATUS 2 dari XD08) yang qty-nya ada di ASN yang sudah di-submit, satu baris per line dan ASN. Cancel tanpa ASN tidak ditampilkan. Kosong: msg 1.',
+        'Qty cancel = qty status 2 line itu di ASN; usulan case diambil dari case terakhir ASN mundur.',
+        'Status: Candidate available (ada kandidat) atau Waiting for a candidate (baris tetap sampai kandidat muncul).',
+        'Kandidat: line part yang sama dengan UPD_STATUS 6, PO_MAPPED_FLAG N, belum di TB_R_INSTRUCTION, tanggal tertua dulu; destinasi lain boleh.',
+        '[Change Order Number] aktif kalau qty yang dicentang = qty cancel (hint msg 2); konfirmasi msg 3.',
+        'Ya (satu transaksi): qty dipindah case per case dari case terakhir ke line yang dicentang; baris TB_R_INSTRUCTION di-update kalau pindah penuh, dipecah kalau sebagian; perpindahan dicatat di TB_H_CROSSDOCK_ORDER_CHANGE.' ] },
+      { key: 'AB', title: 'Abnormality', points: [
+        { k: 'Qty dicentang tidak sama dengan qty cancel', d: 'msg 2 (hint)', s: 'Tombol disabled', u: 'Sesuaikan pilihan' },
+        { k: 'Kandidat diambil proses lain di saat bersamaan', d: 'msg 4', s: 'Tidak ada yang disimpan, detail di-refresh', u: 'Pilih kandidat lain' },
+        { k: 'Belum ada kandidat (line belum diterima GTOPAS)', d: 'Status Waiting', s: 'Baris tetap di list', u: 'Tunggu kandidat; batas waktu dan eskalasi – to decide' } ] } ] },
+
+  { id: 'XD13', name: 'Destination Master Synch into NSP', type: 'Batch', trigger: 'Scheduler mingguan 21:30, auto retry 3×',
+    sections: [
+      { key: 'N', title: 'Proses normal', points: [
+        'Replikasi TB_M_H0125_DESTINATION (I/F H01-25) dari DB Surrounding ke NSP.',
+        'Full replace: delete semua baris NSP lalu insert semua baris sumber (kolom dan nilai sama), satu transaksi.',
+        'Error: rollback, NSP tetap pakai destination master run terakhir yang berhasil; hasil dicatat di Log. Destinasi baru di GTOPAS baru bisa dipakai mapping setelah XD13 jalan.' ] },
+      { key: 'AB', title: 'Abnormality', points: [
+        { k: 'Baca DB Surrounding / insert NSP gagal (setelah 3 retry)', d: 'LOG3', s: 'Rollback, FAILED', u: 'Hubungi PIC; run mingguan berikutnya mengambil data' },
+        { k: 'Error sistem lain', d: 'LOG4', s: 'Rollback, FAILED', u: 'Hubungi PIC' } ] } ] },
+
+  { id: 'XD15', name: 'ASN Crossdock Inquiry Screen (Buffer)', type: 'Screen', trigger: 'Supplier (ASN sendiri) · D/S team (semua supplier)',
+    sections: [
+      { key: 'N', title: 'Proses normal', points: [
+        'List: semua ASN crossdock dari TB_R_DAILY_ORDER_MANIFEST, terbaru di atas; supplier hanya melihat Supplier Code + Plant sendiri.',
+        '[Search]: ASN No (sebagian), range Delivery Date, Part Number (ASN yang case-nya berisi part itu); [Reset] mengosongkan. Kosong: msg 1.',
+        'Klik ASN No → Detail: ringkasan ASN dan case dari TB_R_DAILY_ORDER_PART per CASE_NO, read only. [Download Case Label] mengikuti case label NSP; [Back] kembali dengan filter yang sama.',
+        'Layar hanya menampilkan data; tidak ada Cancel ASN (cancel dari sumber H0253 status 2, ditangani XD08 / XD11).' ] },
+      { key: 'AB', title: 'Abnormality', points: [
+        { k: 'Tidak ada ASN yang cocok', d: 'msg 1', s: 'Tabel kosong', u: 'Ubah filter' } ] } ] },
+];
+
+// ---------- app ----------
+const { useState, useEffect, useMemo, useRef } = React;
+const pid = (f, s, i) => `${f}-${s}-${String(i + 1).padStart(2, '0')}`;
+const fmtTime = (iso) => { try { return new Date(iso).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }); } catch (e) { return iso; } };
+
+function useRevisions() {
+  const [db, setDb] = useState(null);
+  const [notes, setNotes] = useState({});
+  const [state, setState] = useState('loading'); // loading | live | offline | stale
+  useEffect(() => {
+    let unsub = null, timer = null, alive = true;
+    (async () => {
+      const c = window.claude && (await window.claude.use('db'));
+      if (!alive) return;
+      if (!c) { setState('offline'); return; }
+      setDb(c);
+      timer = setTimeout(() => setState((s) => (s === 'loading' ? 'stale' : s)), 10000);
+      unsub = c.collection('revisions').onSnapshot((snap) => {
+        const m = {};
+        snap.docs.forEach((d) => { if (d.exists) m[d.id] = d.data(); });
+        setNotes(m);
+        if (!snap.metadata.fromCache) { clearTimeout(timer); setState('live'); }
+      }, () => { clearTimeout(timer); setState('stale'); });
+    })();
+    return () => { alive = false; if (unsub) unsub(); clearTimeout(timer); };
+  }, []);
+  return { db, notes, state };
+}
+
+function Point({ id, fn, point, note, db, open, onToggle }) {
+  const [draft, setDraft] = useState(note ? note.comment : '');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  useEffect(() => { if (!open) setDraft(note ? note.comment : ''); }, [note, open]);
+  const text = typeof point === 'string' ? point : point.k;
+  const save = async (status) => {
+    if (!db) return;
+    setBusy(true); setErr('');
+    try {
+      const ref = db.collection('revisions').doc(id);
+      if (!draft.trim() && status === 'open') await ref.delete();
+      else await ref.set({ fn, point: text, comment: draft.trim(), status, updatedAt: new Date().toISOString() });
+      if (status === 'open') onToggle(false);
+    } catch (e) { setErr('Komentar belum tersimpan (' + (e && e.code ? e.code : 'error') + '). Coba lagi.'); }
+    setBusy(false);
+  };
+  const cls = note ? (note.status === 'done' ? 'cbtn done' : 'cbtn has') : 'cbtn';
+  return (
+    <li className="pt">
+      <span className="no">{id.split('-').slice(1).join('-')}</span>
+      <div className="txt">
+        {typeof point === 'string' ? point : (
+          <>
+            <span className="k">{point.k}</span>
+            <div className="ab">
+              <span><b>Deteksi:</b> {point.d}</span>
+              <span><b>Sistem:</b> {point.s}</span>
+              <span><b>User:</b> {point.u}</span>
+            </div>
+          </>
+        )}
+      </div>
+      <button type="button" className={cls} onClick={() => onToggle(!open)} aria-expanded={open} aria-controls={'n-' + id}>
+        {note ? (note.status === 'done' ? 'Selesai' : 'Ada revisi') : 'Komentar'}
+      </button>
+      {(open || note) && (
+        <div className={'note' + (note && note.status === 'done' ? ' done' : '')} id={'n-' + id}>
+          {open ? (
+            <>
+              <textarea id={'t-' + id} value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Tulis revisi atau pertanyaan untuk poin ini" disabled={!db} />
+              <div className="row">
+                <button type="button" className="btn primary" disabled={busy || !db} onClick={() => save('open')}>{draft.trim() ? 'Simpan' : 'Hapus komentar'}</button>
+                {note && <button type="button" className="btn" disabled={busy} onClick={() => save(note.status === 'done' ? 'open' : 'done')}>{note.status === 'done' ? 'Buka lagi' : 'Tandai selesai'}</button>}
+                <button type="button" className="btn" onClick={() => onToggle(false)}>Tutup</button>
+                {!db && <span className="err">Komentar hanya bisa disimpan saat halaman dibuka di claude.ai dan sudah login.</span>}
+                {err && <span className="err">{err}</span>}
+              </div>
+            </>
+          ) : (
+            <>
+              <div>{note.comment}</div>
+              <div className="meta">{note.status === 'done' ? 'Selesai · ' : 'Revisi · '}{fmtTime(note.updatedAt)}</div>
+            </>
+          )}
+        </div>
+      )}
+    </li>
+  );
+}
+
+function App() {
+  const { db, notes, state } = useRevisions();
+  const [openId, setOpenId] = useState(null);
+  const [onlyNotes, setOnlyNotes] = useState(false);
+  const counts = useMemo(() => {
+    const m = {}; let open = 0, done = 0;
+    Object.values(notes).forEach((n) => { m[n.fn] = (m[n.fn] || 0) + (n.status === 'done' ? 0 : 1); if (n.status === 'done') done++; else open++; });
+    return { m, open, done };
+  }, [notes]);
+  const total = FUNCS.reduce((a, f) => a + f.sections.reduce((b, s) => b + s.points.length, 0), 0);
+  const stateText = { loading: 'Memuat komentar…', live: 'Komentar tersimpan bersama', stale: 'Komentar belum bisa dimuat; data mungkin belum terbaru', offline: 'Mode baca: komentar tidak tersedia di tampilan ini' }[state];
+  return (
+    <div className="wrap">
+      <nav aria-label="Function">
+        <span className="brand">Function list</span>
+        {FUNCS.map((f) => (
+          <a key={f.id} href={'#' + f.id}><span><span className="id">{f.id}</span></span>{counts.m[f.id] ? <span className="n">{counts.m[f.id]}</span> : null}</a>
+        ))}
+      </nav>
+      <main style={{ minWidth: 0 }}>
+        <header className="top">
+          <h1>Crossdock Function Summary</h1>
+          <p className="sub">Ringkasan proses normal, aturan dan abnormality XD01–XD15 (GTOPAS / NSP), dari UISS terbaru. Setiap poin punya tombol Komentar untuk revisi; komentar tersimpan dan dibaca Claude untuk revisi dokumen.</p>
+          <div className="bar">
+            <span className="pill">{FUNCS.length} function · {total} poin</span>
+            <span className="pill">Revisi terbuka <b>{counts.open}</b></span>
+            <span className="pill">Selesai {counts.done}</span>
+            <label className="toggle" htmlFor="only"><input id="only" type="checkbox" checked={onlyNotes} onChange={(e) => setOnlyNotes(e.target.checked)} /> Hanya poin dengan komentar</label>
+            <span className="state" role="status">{stateText}</span>
+          </div>
+        </header>
+        {FUNCS.map((f) => {
+          const secs = f.sections.map((s) => ({ s, items: s.points.map((p, i) => ({ p, id: pid(f.id, s.key, i) })).filter((x) => !onlyNotes || notes[x.id]) })).filter((x) => x.items.length);
+          if (onlyNotes && !secs.length) return null;
+          return (
+            <section className="fn" id={f.id} key={f.id}>
+              <div className="fn-head"><span className="id">{f.id}</span><h2>{f.name}</h2><span className="type">{f.type}</span></div>
+              <p className="trigger">{f.trigger}</p>
+              {secs.map(({ s, items }) => (
+                <div key={s.key}>
+                  <h3>{s.title}</h3>
+                  <ol className="points">
+                    {items.map(({ p, id }) => (
+                      <Point key={id} id={id} fn={f.id} point={p} note={notes[id]} db={db} open={openId === id} onToggle={(v) => setOpenId(v ? id : null)} />
+                    ))}
+                  </ol>
+                </div>
+              ))}
+            </section>
+          );
+        })}
+      </main>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
