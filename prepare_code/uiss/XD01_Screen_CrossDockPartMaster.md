@@ -745,7 +745,7 @@ Retention: the history of a part is kept; there is no housekeeping job (decided 
 ### 5.7 Upload Excel
 
 a. User clicks [Upload Excel]: open the modal with the template columns, the rules and the file area (.xlsx, max 5 MB, max 5,000 rows).
-b. Edit rows use sheet 'Upload' of the Part List Export Excel as base file (pre-filled with flag E).
+b. Edit rows use sheet 'Upload' of the Part List Export Excel as base file (pre-filled with flag E). Sample: sheet 'Upload Part List'.
 c. Status rule: a Candidate part's status cannot be changed by upload; Active <-> Inactive can be changed; no part can be changed to Candidate.
 d. User clicks [Validate file] (save button of the upload): the file is passed to the upload batch; validation, saving (all-or-nothing) and logging follow UISS-Batch "XD02 Cross Dock Part Master Upload Batch".
 e. When the upload is completed, close the modal and display message no. 11. When it is rejected, show the batch result (error list) - refer UISS-Batch.
@@ -754,7 +754,7 @@ f. Changed parts show Sync Status No Sync.
 ### 5.8 Export Excel
 
 a. User clicks [Export Excel]: download Crossdock_Part_List_YYYYMMDD.xlsx.
-b. Sheet 'Part List': rows of the active filter and sort (all pages) with Part Number, Part Name, Min MAD, Pcs/Case, Max Case/Day, Total Pcs/Day, Status, Effective Start Date, Last Update. Information only.
+b. Sheet 'Part List': rows of the active filter and sort (all pages) with Part Number, Part Name, Min MAD, Pcs/Case, Max Case/Day, Total Pcs/Day, Status, Effective Start Date, Last Update. Information only. Sample: sheet 'Export Part List'.
 c. Sheet 'Upload': every registered part with part_no, min_mad, pcs_case, max_case_day, status, upload = E, effective_start_date (DD-Mon-YYYY). Base file for Edit uploads.
 d. If the file cannot be created, display message no. 13.
 
@@ -853,14 +853,14 @@ c. A part without destination shows message no. 19.
 a. [Upload Excel] is enabled only when the ongoing calculation period is selected; otherwise it is disabled with message no. 23 as tooltip.
 b. The modal shows the template columns (part_no, dest_code, case_day, upload, total_case_day), the upload rules and the file area (.xlsx, max 5 MB, max 5,000 rows).
 c. Base file: sheet 'Upload' of Export Excel with the ongoing period selected. A part in the file gets its mapping updated per destination (refer XD03); parts not in the file are not changed.
-d. User clicks [Validate file] (save button of the upload): the file is passed to the upload batch; validation, saving (all-or-nothing) and logging follow UISS-Batch "XD03 Part and Destination Mapping Upload Batch".
+d. User clicks [Validate file] (save button of the upload): the file is passed to the upload batch; validation, saving (all-or-nothing) and logging follow UISS-Batch "XD03 Part and Destination Mapping Upload Batch". Template sample: sheet 'Upload Mapping'.
 e. When the upload is completed, close the modal and display message no. 24. When it is rejected, show the batch result (error list) - refer UISS-Batch.
 f. Changed parts show Sync Status No Sync.
 
 ### 5.18 Export Excel
 
 a. User clicks [Export Excel]: download Crossdock_Mapping_per_Destination_<period>_YYYYMMDD.xlsx (<period> e.g. Sep_2026 or All_periods).
-b. Sheet 'Mapping per Destination': rows of the active filter, one row per destination (a part without destination gives one row with blank destination columns). Columns: Period, Part Number, Part Name, Pcs/Case, Total Case/Day, Pcs/Day, Percentage, Sync Status, Destination Code, Destination, Dest Case/Day, Dest Pcs/Day, Dest Percentage. Information only.
+b. Sheet 'Mapping per Destination': rows of the active filter, one row per destination (a part without destination gives one row with blank destination columns). Columns: Period, Part Number, Part Name, Pcs/Case, Total Case/Day, Pcs/Day, Percentage, Sync Status, Destination Code, Destination, Dest Case/Day, Dest Pcs/Day, Dest Percentage. Information only. Sample: sheet 'Export Mapping'.
 c. Sheet 'Upload': every Active part of the ongoing period with part_no, dest_code, case_day, upload, total_case_day (= Max Case/Day); one row per destination, and one row with dest_code and case_day blank for a part without mapping. Empty when a past period or All periods is selected. upload = E for a mapped destination, A for the blank row.
 d. If the file cannot be created, display message no. 26.
 
