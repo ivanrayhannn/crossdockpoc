@@ -860,7 +860,7 @@ f. Changed parts show Sync Status No Sync.
 ### 5.18 Export Excel
 
 a. User clicks [Export Excel]: download Crossdock_Mapping_per_Destination_<period>_YYYYMMDD.xlsx (<period> e.g. Sep_2026 or All_periods).
-b. Sheet 'Mapping per Destination': rows of the active filter, one row per destination (a part without destination gives one row with blank destination columns). Columns: Period, Part Number, Part Name, Pcs/Case, Destination Code, Destination, Dest Case/Day, Total Case/Day (used), Max Case/Day (quota), Pcs/Day, Percentage, Dest Pcs/Day, Dest Percentage, Sync Status. Information only. Sample: sheet 'Export Mapping'.
+b. Sheet 'Mapping per Destination': rows of the active filter, one row per destination (a part without destination gives one row with blank destination columns). Columns: Period, Part Number, Part Name, Destination Code, Pcs/Case, Dest Case/Day, Total Case/Day (used), Max Case/Day (quota), Dest Pcs/Day, Pcs/Day, Sync Status. Information only. Sample: sheet 'Export Mapping'.
 c. Sheet 'Upload': every Active part of the ongoing period, columns Part Number, Destination Code, Dest Case/Day, Total Case/Day (used), Max Case/Day (quota), Upload (A/E); one row per destination, and one blank row (Upload (A/E) = A) for a part without mapping. Empty for a past period or All periods. Upload (A/E) = E for a mapped destination.
 d. If the file cannot be created, display message no. 26.
 
