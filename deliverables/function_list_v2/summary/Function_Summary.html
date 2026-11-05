@@ -106,8 +106,8 @@ const FUNCS = [
         'Add part baru: status otomatis Candidate (terkunci). Input Part No (dari Part Master, belum terdaftar), Part Name otomatis, Min MAD (≥ 0), Pcs/Case (> 0), Max Case/Day (> 0), Effective Start Date (default besok, minimal hari ini). [Save] aktif kalau isian wajib lengkap (tooltip msg 5 / 15 / 6 / 7). Setelah Save: Sync Status No Sync, history ADD, part paling atas, msg 9.',
         'Edit part (Candidate / Active / Inactive): Min MAD, Pcs/Case, Max Case/Day, Status, dan Effective Start Date (hanya selama Candidate, selain itu tooltip msg 10). Part Active menampilkan "Mapped Case/Day (current period)"; Max Case/Day tidak boleh di bawahnya (msg 14). Setelah Save: No Sync, history per field, msg 9.',
         'History (ikon jam): riwayat perubahan part terbaru di atas (Add / Edit, upload, mapping, hasil Sync, status oleh XD05), disimpan tanpa batas waktu. Tanpa history: msg 12.',
-        'Download (Export Excel): 2 sheet – "Part List" (hasil filter, informasi) dan "Upload" (semua part, upload = E) sebagai file dasar upload.',
-        'Upload part list (XD02): pakai sheet Upload; upload A = part baru, E = edit. Status Candidate tidak bisa diubah lewat upload, Active ↔ Inactive boleh, tidak ada yang bisa jadi Candidate. All-or-nothing; berhasil msg 11.',
+        'Download (Export Excel): 2 sheet – "Part List" (hasil filter, informasi) dan "Upload" (semua part, Upload (A/E) = E) sebagai file dasar upload.',
+        'Upload part list (XD02): pakai sheet Upload; Upload (A/E) A = part baru, E = edit. Status Candidate tidak bisa diubah lewat upload, Active ↔ Inactive boleh, tidak ada yang bisa jadi Candidate. All-or-nothing; berhasil msg 11.',
         'DAD Calculation (XD05 proses 1): scheduler bulanan, auto retry 3×; [Run calculation] aktif hanya setelah gagal 3× (badge "Scheduled run failed 3x"). Part Active yang jadi Inactive otomatis No Sync.',
         'Setiap Add / Edit / Upload membuat part No Sync, supaya dikirim ulang ke GTOPAS dan AP POLE lewat [Sync].' ] },
       { key: 'MP', title: 'Proses normal – Tab Mapping per Destination (D/S)', points: [
@@ -115,7 +115,7 @@ const FUNCS = [
         'Kolom Total Case/Day (used / quota): used = jumlah Case/Day semua destinasi, quota = Max Case/Day dari Part List. Pcs/Day = Pcs/Case × used; Percentage = used / quota (maksimal 100%).',
         'Detail (panah di baris): tabel destinasi read only dengan catatan "n case/day left / over". Periode lalu: msg 22. Part tanpa destinasi: msg 19.',
         'Edit mapping (periode ongoing): tambah / ubah / hapus destinasi, satu destinasi sekali per part, [Split evenly]. Save diblok kalau total > Max (msg 20), tanpa destinasi, atau baris tanpa destinasi (msg 21). Disimpan per destinasi: update / insert / delete, yang sama tidak disentuh; history per destinasi; part No Sync.',
-        'Download: sheet "Mapping per Destination" (informasi) dan "Upload" (part Active periode ongoing, satu baris per destinasi; baris kosong upload = A untuk part tanpa mapping).',
+        'Download: sheet "Mapping per Destination" (informasi) dan "Upload" (part Active periode ongoing, satu baris per destinasi; baris kosong Upload (A/E) = A untuk part tanpa mapping).',
         'Upload mapping (XD03): hanya periode ongoing (selain itu msg 23). Disimpan per destinasi; part yang tidak ada di file tidak berubah. All-or-nothing; berhasil msg 24.',
         'Mapping Calculation (XD05 proses 2): scheduler, auto retry 3×; [Run calculation] aktif hanya setelah gagal 3×; selesai msg 29.',
         '[Sync (n)]: part Active periode ongoing dan part yang baru jadi Inactive dengan status No Sync / Failed, tanpa melihat filter. Part jadi Waiting, XD06 dan XD07 dijalankan (msg 27). Part Candidate tidak pernah di-sync.',
@@ -136,13 +136,13 @@ const FUNCS = [
   { id: 'XD02', name: 'Cross Dock Part Master Upload Batch', type: 'Batch', trigger: '[Validate file] di Upload Excel tab Part List (XD01)',
     sections: [
       { key: 'N', title: 'Proses normal', points: [
-        'Cek file: .xlsx, maksimal 5 MB, 1–5.000 baris, sheet "Upload" ada (sheet lain diabaikan), 7 kolom template: part_no, min_mad, pcs_case, max_case_day, status, upload, effective_start_date.',
+        'Cek file: .xlsx, maksimal 5 MB, 1–5.000 baris, sheet "Upload" ada (sheet lain diabaikan), 7 kolom template dengan nama sama seperti sheet export, dibaca berdasarkan nama kolom: Part Number, Min MAD, Pcs/Case, Max Case/Day, Status, Upload (A/E), Effective Start Date.',
         'Semua baris dicek dulu dan semua error dikumpulkan sekaligus, supaya file cukup diperbaiki satu kali.',
         'Simpan hanya kalau semua baris valid (all-or-nothing). A: part baru sebagai Candidate, Part Name dari Part Master, Total Pcs/Day dihitung. E: nilai yang berubah di-update (termasuk Active ↔ Inactive); baris tanpa perubahan dilewati.',
         'Part yang tersimpan jadi No Sync; history per field (ADD / EDIT, source UPLOAD); part yang tidak ada di file tidak berubah.',
         'Result report (.xlsx: Summary, Result, Re-upload, Changes) dibuat untuk berhasil maupun ditolak; upload log COMPLETED / REJECTED.' ] },
       { key: 'R', title: 'Aturan validasi per baris', points: [
-        'Kolom upload = A (Add) atau E (Edit).', 'Part No ada di Part Master.', 'A: part belum terdaftar · E: part sudah terdaftar.', 'Part No hanya sekali di file.',
+        'Kolom Upload (A/E) = A (Add) atau E (Edit).', 'Part No ada di Part Master.', 'A: part belum terdaftar · E: part sudah terdaftar.', 'Part No hanya sekali di file.',
         'Min MAD bilangan bulat ≥ 0; Pcs/Case dan Max Case/Day bilangan bulat > 0; ketiganya wajib.',
         'Status: A harus kosong; E: Candidate tetap Candidate, Active ↔ Inactive boleh, tidak boleh jadi Candidate.',
         'Effective Start Date wajib untuk part Candidate (selalu untuk A), minimal hari ini kalau baru / berubah.',
@@ -161,16 +161,16 @@ const FUNCS = [
   { id: 'XD03', name: 'Part and Destination Mapping Upload Batch', type: 'Batch', trigger: '[Validate file] di Upload Excel tab Mapping per Destination (XD01)',
     sections: [
       { key: 'N', title: 'Proses normal', points: [
-        'Hanya untuk periode ongoing. Cek file: .xlsx, maksimal 5 MB, 1–5.000 baris, sheet "Upload", 5 kolom: part_no, dest_code, case_day, upload, total_case_day (referensi, tidak dibaca).',
+        'Hanya untuk periode ongoing. Cek file: .xlsx, maksimal 5 MB, 1–5.000 baris, sheet "Upload", 6 kolom dengan nama sama seperti sheet export: Part Number, Destination Code, Dest Case/Day, Total Case/Day (used, rumus), Max Case/Day (quota), Upload (A/E); used dan quota hanya referensi (tidak dibaca).',
         'Satu baris per part × destinasi; semua baris satu part = mapping baru part itu. Semua error dikumpulkan sekaligus.',
         'All-or-nothing. Part tanpa perubahan dilewati. Part yang berubah disimpan per destinasi: Case/Day berubah → update (CREATED tetap), destinasi baru → insert, tidak ada lagi di file → delete, sama → tidak disentuh.',
         'Part yang semua barisnya kosong tidak diubah: mapping tidak bisa dihapus total lewat upload (minimal 1 destinasi).',
         'Part yang berubah jadi No Sync; history per destinasi (MAPPING, source UPLOAD). Result report dan upload log seperti XD02.',
         'Contoh: DB D01 = 10, D02 = 5; file D01 = 8, D03 = 7 → D01 update 8, D03 insert, D02 delete, history 3 record.' ] },
       { key: 'R', title: 'Aturan validasi per baris', points: [
-        'Part terdaftar dan statusnya Active.', 'Kode destinasi ada di Destination Master.', 'case_day bilangan bulat > 0 kalau dest_code terisi.', 'Satu destinasi hanya sekali per part.',
-        'dest_code dan case_day terisi dua-duanya atau kosong dua-duanya (placeholder).', 'Total case_day per part ≤ Max Case/Day (di bawah boleh).', 'Hanya periode ongoing.',
-        'upload A untuk destinasi yang belum di-mapping, E untuk yang sudah; placeholder kosong dilewati.' ] },
+        'Part terdaftar dan statusnya Active.', 'Kode destinasi ada di Destination Master.', 'Dest Case/Day bilangan bulat > 0 kalau Destination Code terisi.', 'Satu destinasi hanya sekali per part.',
+        'Destination Code dan Dest Case/Day terisi dua-duanya atau kosong dua-duanya (placeholder).', 'Total Dest Case/Day per part ≤ Max Case/Day (di bawah boleh).', 'Hanya periode ongoing.',
+        'Upload (A/E) A untuk destinasi yang belum di-mapping, E untuk yang sudah; placeholder kosong dilewati.' ] },
       { key: 'AB', title: 'Abnormality', points: [
         { k: 'File upload tidak ditemukan', d: 'LOG3', s: 'Batch berhenti', u: 'Upload ulang' },
         { k: 'File tidak valid', d: 'LOG4', s: 'REJECTED, result report', u: 'Download ulang, upload lagi' },

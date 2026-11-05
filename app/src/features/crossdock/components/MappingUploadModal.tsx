@@ -1,14 +1,14 @@
 import type { CrossdockState } from '../useCrossdockState';
 
 // Same columns and order as sheet "Upload" of the Mapping per Destination Export Excel.
-const UP_COLS = ['part_no', 'dest_code', 'case_day', 'upload', 'total_case_day'];
+const UP_COLS = ['Part Number', 'Destination Code', 'Dest Case/Day', 'Total Case/Day (used)', 'Max Case/Day (quota)', 'Upload (A/E)'];
 
 const UP_RULES: { label: string; cols: string }[] = [
   { label: 'Rows', cols: 'One row = one destination of a part in the ongoing calculation period. Only Active parts can be uploaded; past periods are read only.' },
-  { label: 'Upload', cols: 'upload = A (Add) for a destination that is new for the part, E (Edit) for a destination that is already mapped (case_day can be changed). Export Excel pre-fills E for the current destinations and A for the blank row of a part without mapping.' },
+  { label: 'Upload', cols: 'Upload (A/E) = A (Add) for a destination that is new for the part, E (Edit) for a destination that is already mapped (Dest Case/Day can be changed). Export Excel pre-fills E for the current destinations and A for the blank row of a part without mapping.' },
   { label: 'Save', cols: 'Per destination: a changed Case/Day is updated, a new destination is added, a destination not in the file is removed, the same Case/Day is not touched. Parts not in the file are not changed.' },
-  { label: 'Limits', cols: 'dest_code from the destination master, once per part. case_day is a whole number greater than 0. The total case_day of a part may not exceed its Max Case/Day (total_case_day is shown for reference and is not read).' },
-  { label: 'Base', cols: 'Download Export Excel first with the ongoing period selected: its sheet "Upload" is the base file. A part without mapping has one row with dest_code and case_day blank and upload A — fill both to map it, or leave both blank to skip it.' },
+  { label: 'Limits', cols: 'Destination Code from the destination master, once per part. Dest Case/Day is a whole number greater than 0. The total Dest Case/Day of a part may not exceed its Max Case/Day (Total Case/Day (used) and Max Case/Day (quota) are shown for reference and are not read).' },
+  { label: 'Base', cols: 'Download Export Excel first with the ongoing period selected: its sheet "Upload" is the base file. A part without mapping has one row with Destination Code and Dest Case/Day blank and Upload (A/E) = A — fill both to map it, or leave both blank to skip it.' },
 ];
 
 export function MappingUploadModal({ state }: { state: CrossdockState }) {

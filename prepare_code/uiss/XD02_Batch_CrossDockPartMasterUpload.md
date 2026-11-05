@@ -114,17 +114,17 @@ flowchart TB
 ## 3. Data edit mapping
 
 #### 1. Insert TB_M_PART_CANDIDATE – Flag A - new part
-- Source: Excel file - sheet Upload (valid rows) (keys: upload = 'A')
+- Source: Excel file - sheet Upload (valid rows) (keys: Upload (A/E) = 'A')
 
 | Source field | Destination field | Description |
 |---|---|---|
-| part_no | PART_NO |  |
+| Part Number | PART_NO |  |
 |  | PART_NAME | TB_M_PART_MASTER.PART_NAME by PART_NO |
-| min_mad | MIN_MAD | From the file (mandatory) |
-| pcs_case | PCS_CASE |  |
-| max_case_day | MAX_CASE_DAY |  |
+| Min MAD | MIN_MAD | From the file (mandatory) |
+| Pcs/Case | PCS_CASE |  |
+| Max Case/Day | MAX_CASE_DAY |  |
 |  | TOTAL_PCS_DAY | PCS_CASE x MAX_CASE_DAY |
-| effective_start_date | EFFECTIVE_START_DATE |  |
+| Effective Start Date | EFFECTIVE_START_DATE |  |
 |  | PART_STATUS | Default : 'Candidate' (status column must be blank) |
 |  | SYNC_STATUS | Default : '0' (No Sync) |
 |  | SYNC_DT | Default : NULL |
@@ -137,19 +137,19 @@ flowchart TB
 |  | CHANGED_DT | Server system date and time |
 
 #### 2. Update TB_M_PART_CANDIDATE – Flag E - only if changed
-- Source: Excel file - sheet Upload (valid rows) (keys: upload = 'E')
+- Source: Excel file - sheet Upload (valid rows) (keys: Upload (A/E) = 'E')
 - Destination keys: PART_NO = PART_NO of the row
 
 | Source field | Destination field | Description |
 |---|---|---|
-| part_no | PART_NO | Key, not changed |
+| Part Number | PART_NO | Key, not changed |
 |  | PART_NAME | Not changed |
-| min_mad | MIN_MAD | From the file (mandatory) |
-| pcs_case | PCS_CASE |  |
-| max_case_day | MAX_CASE_DAY |  |
+| Min MAD | MIN_MAD | From the file (mandatory) |
+| Pcs/Case | PCS_CASE |  |
+| Max Case/Day | MAX_CASE_DAY |  |
 |  | TOTAL_PCS_DAY | Recalculate : PCS_CASE x MAX_CASE_DAY |
-| effective_start_date | EFFECTIVE_START_DATE | Only while PART_STATUS = 'Candidate' |
-| status | PART_STATUS | Active <-> Inactive only; blank = not changed |
+| Effective Start Date | EFFECTIVE_START_DATE | Only while PART_STATUS = 'Candidate' |
+| Status | PART_STATUS | Active <-> Inactive only; blank = not changed |
 |  | SYNC_STATUS | Set '0' (No Sync) |
 |  | SYNC_DT | Not changed |
 |  | SYNC_MESSAGE | Not changed |
@@ -207,7 +207,7 @@ This batch starts when the user clicks [Validate file] in the Upload Excel modal
 2. File size is 5 MB or less.
 3. Sheet Upload has 1 to 5,000 data rows.
 4. Sheet "Upload" exists. Other sheets are ignored.
-5. Header has the 7 template columns (see Appendix). Extra columns are ignored.
+5. Header has the 7 template columns (see Appendix), found by column name (case and leading / trailing spaces ignored). Extra columns are ignored.
 
 ### 4.2 Row Validation (log message no. 6)
 
@@ -224,15 +224,15 @@ Every row is checked and all errors are collected, so the user can correct the f
 
 | No | Check | Column |
 |---|---|---|
-| 1 | Flag is A (Add) or E (Edit). | upload |
-| 2 | Part No exists in TB_M_PART_MASTER. | part_no |
-| 3 | Flag A: Part No is not yet in TB_M_PART_CANDIDATE. Flag E: it already is. | part_no |
-| 4 | Part No appears only once in the file. | part_no |
-| 5 | Min MAD is a whole number, 0 or more, and Pcs/Case and Max Case/Day are whole numbers greater than 0; all three are required on every row. | min_mad, pcs_case, max_case_day |
-| 6 | Status: flag A must be blank (a new part is always Candidate). Flag E: a Candidate part must stay Candidate (blank or Candidate); an Active part may be changed to Inactive and an Inactive part to Active; no part can be changed to Candidate. | status |
-| 7 | Effective Start Date is required when the part status is Candidate (always for flag A) and must be today or later when new or changed. | effective_start_date |
-| 8 | Flag E: Effective Start Date can only change while the part status is Candidate. | effective_start_date |
-| 9 | Flag E: Max Case/Day is not below the total Case/Day already mapped per destination in the ongoing calculation period of Mapping per Destination (TB_M_PART_CANDIDATE_DEST) (e.g. mapped 100, new Max Case/Day 80 is rejected). The user must first reduce the mapping in the Mapping per Destination sub-menu, then lower Max Case/Day in Part List. | max_case_day |
+| 1 | Flag is A (Add) or E (Edit). | Upload (A/E) |
+| 2 | Part No exists in TB_M_PART_MASTER. | Part Number |
+| 3 | Flag A: Part No is not yet in TB_M_PART_CANDIDATE. Flag E: it already is. | Part Number |
+| 4 | Part No appears only once in the file. | Part Number |
+| 5 | Min MAD is a whole number, 0 or more, and Pcs/Case and Max Case/Day are whole numbers greater than 0; all three are required on every row. | Min MAD, Pcs/Case, Max Case/Day |
+| 6 | Status: flag A must be blank (a new part is always Candidate). Flag E: a Candidate part must stay Candidate (blank or Candidate); an Active part may be changed to Inactive and an Inactive part to Active; no part can be changed to Candidate. | Status |
+| 7 | Effective Start Date is required when the part status is Candidate (always for flag A) and must be today or later when new or changed. | Effective Start Date |
+| 8 | Flag E: Effective Start Date can only change while the part status is Candidate. | Effective Start Date |
+| 9 | Flag E: Max Case/Day is not below the total Case/Day already mapped per destination in the ongoing calculation period of Mapping per Destination (TB_M_PART_CANDIDATE_DEST) (e.g. mapped 100, new Max Case/Day 80 is rejected). The user must first reduce the mapping in the Mapping per Destination sub-menu, then lower Max Case/Day in Part List. | Max Case/Day |
 
 ## 5. Logging messages
 
@@ -254,13 +254,13 @@ Every row is checked and all errors are collected, so the user can correct the f
 
 | Column | Content |
 |---|---|
-| part_no | Part Number |
-| min_mad | Min MAD (mandatory; whole number, 0 or more): reference compared with the MAD result of the calculation |
-| pcs_case | Pieces per case |
-| max_case_day | Max Case/Day |
-| status | Candidate / Active / Inactive. Flag A: blank. Flag E: a Candidate part stays Candidate (blank or Candidate); Active <-> Inactive allowed; never Candidate for an Active or Inactive part. |
-| upload | A = Add, E = Edit |
-| effective_start_date | DD-Mon-YYYY |
+| Part Number | Part Number |
+| Min MAD | Min MAD (mandatory; whole number, 0 or more): reference compared with the MAD result of the calculation |
+| Pcs/Case | Pieces per case |
+| Max Case/Day | Max Case/Day |
+| Status | Candidate / Active / Inactive. Flag A: blank. Flag E: a Candidate part stays Candidate (blank or Candidate); Active <-> Inactive allowed; never Candidate for an Active or Inactive part. |
+| Upload (A/E) | A = Add, E = Edit |
+| Effective Start Date | DD-Mon-YYYY |
 
 Sample upload scenarios (master data, accepted files, rejected files): see sheet Sample Input.
 
@@ -329,7 +329,7 @@ History of every change of a crossdock part (Add / Edit by screen or upload, map
 
 ### B. Normal scenarios (file accepted)
 
-| No | Scenario | part_no | min_mad | pcs_case | max_case_day | status | upload | effective_start_date | Expected result |
+| No | Scenario | Part Number | Min MAD | Pcs/Case | Max Case/Day | Status | Upload (A/E) | Effective Start Date | Expected result |
 |---|---|---|---|---|---|---|---|---|---|
 | N1 | Add a new part | PART-M01 | 300 | 20 | 15 |  | A | 14-Sep-2026 | Inserted. Status Candidate, Total Pcs/Day 300, Sync Status No Sync, Part Name from TB_M_PART_MASTER. |
 | N2 | Add another part, later date | PART-M02 | 500 | 12 | 40 |  | A | 16-Sep-2026 | Inserted. Total Pcs/Day 480. Both N1 and N2 can be in one file. |
@@ -342,7 +342,7 @@ History of every change of a crossdock part (Add / Edit by screen or upload, map
 
 ### C. Error scenarios (whole file rejected, nothing saved)
 
-| No | Scenario | part_no | min_mad | pcs_case | max_case_day | status | upload | effective_start_date | Error (4.2 check no.) |
+| No | Scenario | Part Number | Min MAD | Pcs/Case | Max Case/Day | Status | Upload (A/E) | Effective Start Date | Error (4.2 check no.) |
 |---|---|---|---|---|---|---|---|---|---|
 | E1 | Flag is not A or E | PART-I | 300 | 15 | 18 |  | X | 20-Sep-2026 | Check 1: upload must be A or E. |
 | E2 | Part not in part master | PART-Z99 | 100 | 10 | 10 |  | E |  | Check 2: Part No not found in TB_M_PART_MASTER. |
@@ -350,7 +350,7 @@ History of every change of a crossdock part (Add / Edit by screen or upload, map
 | E4 | Edit a part that is not registered | PART-M03 | 300 | 20 | 15 |  | E |  | Check 3: Part No not registered, use flag A. |
 | E5 | Same part twice in the file (row 1) | PART-I | 300 | 15 | 18 | Candidate | E | 20-Sep-2026 | Check 4: Part No appears more than once. |
 | E5 | Same part twice in the file (row 2) | PART-I | 300 | 15 | 19 | Candidate | E | 20-Sep-2026 | Check 4: Part No appears more than once. |
-| E6 | Invalid number | PART-M03 | 300 | 0 | 15 |  | A | 14-Sep-2026 | Check 5: pcs_case must be greater than 0. A blank min_mad, pcs_case or max_case_day is also an error. |
+| E6 | Invalid number | PART-M03 | 300 | 0 | 15 |  | A | 14-Sep-2026 | Check 5: Pcs/Case must be greater than 0. A blank Min MAD, Pcs/Case or Max Case/Day is also an error. |
 | E7 | Change the status of a Candidate part | PART-I | 300 | 15 | 20 | Active | E | 15-Sep-2026 | Check 6: the status of a Candidate part cannot be changed by upload. Change it in the Edit part data modal. |
 | E8 | Change an Active part to Candidate | PART-C | 200 | 10 | 30 | Candidate | E |  | Check 6: no part can be changed to Candidate. |
 | E9 | Add with a status | PART-M03 | 300 | 20 | 15 | Active | A | 14-Sep-2026 | Check 6: status of a new part is always Candidate, leave it blank. |
@@ -360,7 +360,7 @@ History of every change of a crossdock part (Add / Edit by screen or upload, map
 | E13 | Max Case/Day below existing mapping | PART-A | 800 | 60 | 20 |  | E |  | Check 9: Max Case/Day 20 is below mapped 24. Reduce the mapping first in Mapping per Destination. |
 | E14 | Valid row (= N1) mixed with an error row (= E2), row 1 | PART-M01 | 300 | 20 | 15 |  | A | 14-Sep-2026 | Whole file rejected. The valid row is NOT saved. |
 | E14 | Valid row mixed with an error row, row 2 | PART-Z99 | 100 | 10 | 10 |  | E |  | Check 2 on this row. Result report sheet Re-upload lists the rows to correct. |
-| E15 | Add a new part without Min MAD | PART-M03 |  | 25 | 10 |  | A | 15-Sep-2026 | Check 5: min_mad is required (whole number, 0 or more). |
+| E15 | Add a new part without Min MAD | PART-M03 |  | 25 | 10 |  | A | 15-Sep-2026 | Check 5: Min MAD is required (whole number, 0 or more). |
 
 ### D. File-level errors (file check 4.1)
 

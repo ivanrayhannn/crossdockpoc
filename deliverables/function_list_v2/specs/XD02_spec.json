@@ -340,7 +340,7 @@
      "table": "Excel file - sheet Upload (valid rows)",
      "keys": [
       {
-       "field": "upload",
+       "field": "Upload (A/E)",
        "value": "'A'"
       }
      ]
@@ -352,7 +352,7 @@
     },
     "mappings": [
      {
-      "source_field": "part_no",
+      "source_field": "Part Number",
       "dest_field": "PART_NO"
      },
      {
@@ -360,16 +360,16 @@
       "description": "TB_M_PART_MASTER.PART_NAME by PART_NO"
      },
      {
-      "source_field": "min_mad",
+      "source_field": "Min MAD",
       "dest_field": "MIN_MAD",
       "description": "From the file (mandatory)"
      },
      {
-      "source_field": "pcs_case",
+      "source_field": "Pcs/Case",
       "dest_field": "PCS_CASE"
      },
      {
-      "source_field": "max_case_day",
+      "source_field": "Max Case/Day",
       "dest_field": "MAX_CASE_DAY"
      },
      {
@@ -377,7 +377,7 @@
       "description": "PCS_CASE x MAX_CASE_DAY"
      },
      {
-      "source_field": "effective_start_date",
+      "source_field": "Effective Start Date",
       "dest_field": "EFFECTIVE_START_DATE"
      },
      {
@@ -427,7 +427,7 @@
      "table": "Excel file - sheet Upload (valid rows)",
      "keys": [
       {
-       "field": "upload",
+       "field": "Upload (A/E)",
        "value": "'E'"
       }
      ]
@@ -445,7 +445,7 @@
     },
     "mappings": [
      {
-      "source_field": "part_no",
+      "source_field": "Part Number",
       "dest_field": "PART_NO",
       "description": "Key, not changed"
      },
@@ -454,16 +454,16 @@
       "description": "Not changed"
      },
      {
-      "source_field": "min_mad",
+      "source_field": "Min MAD",
       "dest_field": "MIN_MAD",
       "description": "From the file (mandatory)"
      },
      {
-      "source_field": "pcs_case",
+      "source_field": "Pcs/Case",
       "dest_field": "PCS_CASE"
      },
      {
-      "source_field": "max_case_day",
+      "source_field": "Max Case/Day",
       "dest_field": "MAX_CASE_DAY"
      },
      {
@@ -471,12 +471,12 @@
       "description": "Recalculate : PCS_CASE x MAX_CASE_DAY"
      },
      {
-      "source_field": "effective_start_date",
+      "source_field": "Effective Start Date",
       "dest_field": "EFFECTIVE_START_DATE",
       "description": "Only while PART_STATUS = 'Candidate'"
      },
      {
-      "source_field": "status",
+      "source_field": "Status",
       "dest_field": "PART_STATUS",
       "description": "Active <-> Inactive only; blank = not changed"
      },
@@ -656,7 +656,7 @@
     "File size is 5 MB or less.",
     "Sheet Upload has 1 to 5,000 data rows.",
     "Sheet \"Upload\" exists. Other sheets are ignored.",
-    "Header has the 7 template columns (see Appendix). Extra columns are ignored."
+    "Header has the 7 template columns (see Appendix), found by column name (case and leading / trailing spaces ignored). Extra columns are ignored."
    ]
   },
   {
@@ -711,47 +711,47 @@
     [
      "1",
      "Flag is A (Add) or E (Edit).",
-     "upload"
+     "Upload (A/E)"
     ],
     [
      "2",
      "Part No exists in TB_M_PART_MASTER.",
-     "part_no"
+     "Part Number"
     ],
     [
      "3",
      "Flag A: Part No is not yet in TB_M_PART_CANDIDATE. Flag E: it already is.",
-     "part_no"
+     "Part Number"
     ],
     [
      "4",
      "Part No appears only once in the file.",
-     "part_no"
+     "Part Number"
     ],
     [
      "5",
      "Min MAD is a whole number, 0 or more, and Pcs/Case and Max Case/Day are whole numbers greater than 0; all three are required on every row.",
-     "min_mad, pcs_case, max_case_day"
+     "Min MAD, Pcs/Case, Max Case/Day"
     ],
     [
      "6",
      "Status: flag A must be blank (a new part is always Candidate). Flag E: a Candidate part must stay Candidate (blank or Candidate); an Active part may be changed to Inactive and an Inactive part to Active; no part can be changed to Candidate.",
-     "status"
+     "Status"
     ],
     [
      "7",
      "Effective Start Date is required when the part status is Candidate (always for flag A) and must be today or later when new or changed.",
-     "effective_start_date"
+     "Effective Start Date"
     ],
     [
      "8",
      "Flag E: Effective Start Date can only change while the part status is Candidate.",
-     "effective_start_date"
+     "Effective Start Date"
     ],
     [
      "9",
      "Flag E: Max Case/Day is not below the total Case/Day already mapped per destination in the ongoing calculation period of Mapping per Destination (TB_M_PART_CANDIDATE_DEST) (e.g. mapped 100, new Max Case/Day 80 is rejected). The user must first reduce the mapping in the Mapping per Destination sub-menu, then lower Max Case/Day in Part List.",
-     "max_case_day"
+     "Max Case/Day"
     ]
    ]
   }
@@ -879,31 +879,31 @@
    ],
    "rows": [
     [
-     "part_no",
+     "Part Number",
      "Part Number"
     ],
     [
-     "min_mad",
+     "Min MAD",
      "Min MAD (mandatory; whole number, 0 or more): reference compared with the MAD result of the calculation"
     ],
     [
-     "pcs_case",
+     "Pcs/Case",
      "Pieces per case"
     ],
     [
-     "max_case_day",
+     "Max Case/Day",
      "Max Case/Day"
     ],
     [
-     "status",
+     "Status",
      "Candidate / Active / Inactive. Flag A: blank. Flag E: a Candidate part stays Candidate (blank or Candidate); Active <-> Inactive allowed; never Candidate for an Active or Inactive part."
     ],
     [
-     "upload",
+     "Upload (A/E)",
      "A = Add, E = Edit"
     ],
     [
-     "effective_start_date",
+     "Effective Start Date",
      "DD-Mon-YYYY"
     ]
    ]
@@ -1040,13 +1040,13 @@
     "columns": [
      "No",
      "Scenario",
-     "part_no",
-     "min_mad",
-     "pcs_case",
-     "max_case_day",
-     "status",
-     "upload",
-     "effective_start_date",
+     "Part Number",
+     "Min MAD",
+     "Pcs/Case",
+     "Max Case/Day",
+     "Status",
+     "Upload (A/E)",
+     "Effective Start Date",
      "Expected result"
     ],
     "widths": [
@@ -1165,13 +1165,13 @@
     "columns": [
      "No",
      "Scenario",
-     "part_no",
-     "min_mad",
-     "pcs_case",
-     "max_case_day",
-     "status",
-     "upload",
-     "effective_start_date",
+     "Part Number",
+     "Min MAD",
+     "Pcs/Case",
+     "Max Case/Day",
+     "Status",
+     "Upload (A/E)",
+     "Effective Start Date",
      "Error (4.2 check no.)"
     ],
     "widths": [
@@ -1269,7 +1269,7 @@
       "",
       "A",
       "14-Sep-2026",
-      "Check 5: pcs_case must be greater than 0. A blank min_mad, pcs_case or max_case_day is also an error."
+      "Check 5: Pcs/Case must be greater than 0. A blank Min MAD, Pcs/Case or Max Case/Day is also an error."
      ],
      [
       "E7",
@@ -1389,7 +1389,7 @@
       "",
       "A",
       "15-Sep-2026",
-      "Check 5: min_mad is required (whole number, 0 or more)."
+      "Check 5: Min MAD is required (whole number, 0 or more)."
      ]
     ]
    },
