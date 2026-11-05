@@ -974,7 +974,7 @@
     ],
     [
      "Total Case/Day (used)",
-     "Sum of Dest Case/Day of the part (formula in the export file), for reference only (not read by the batch; the batch calculates it)."
+     "Sum of Dest Case/Day of the part when the file is exported, for reference only (not read by the batch; the batch calculates it from Dest Case/Day)."
     ],
     [
      "Max Case/Day (quota)",

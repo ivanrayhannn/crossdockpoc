@@ -161,7 +161,7 @@ const FUNCS = [
   { id: 'XD03', name: 'Part and Destination Mapping Upload Batch', type: 'Batch', trigger: '[Validate file] di Upload Excel tab Mapping per Destination (XD01)',
     sections: [
       { key: 'N', title: 'Proses normal', points: [
-        'Hanya untuk periode ongoing. Cek file: .xlsx, maksimal 5 MB, 1–5.000 baris, sheet "Upload", 6 kolom dengan nama sama seperti sheet export: Part Number, Destination Code, Dest Case/Day, Total Case/Day (used, rumus), Max Case/Day (quota), Upload (A/E); used dan quota hanya referensi (tidak dibaca).',
+        'Hanya untuk periode ongoing. Cek file: .xlsx, maksimal 5 MB, 1–5.000 baris, sheet "Upload", 6 kolom dengan nama sama seperti sheet export: Part Number, Destination Code, Dest Case/Day, Total Case/Day (used, angka saat export), Max Case/Day (quota), Upload (A/E); used dan quota hanya referensi (tidak dibaca).',
         'Satu baris per part × destinasi; semua baris satu part = mapping baru part itu. Semua error dikumpulkan sekaligus.',
         'All-or-nothing. Part tanpa perubahan dilewati. Part yang berubah disimpan per destinasi: Case/Day berubah → update (CREATED tetap), destinasi baru → insert, tidak ada lagi di file → delete, sama → tidak disentuh.',
         'Part yang semua barisnya kosong tidak diubah: mapping tidak bisa dihapus total lewat upload (minimal 1 destinasi).',

@@ -53,8 +53,8 @@ for b in s['func_desc']:
                              'the limit is Max Case/Day of the part in TB_M_PART_CANDIDATE and used is calculated from Dest Case/Day.')
 app = s['appendix'][1]
 rows = {r[0]: r for r in app['rows']}
-rows['Total Case/Day (used)'] = ['Total Case/Day (used)', 'Sum of Dest Case/Day of the part (formula in the export file), for reference only '
-                                 '(not read by the batch; the batch calculates it).']
+rows['Total Case/Day (used)'] = ['Total Case/Day (used)', 'Sum of Dest Case/Day of the part when the file is exported, for reference only '
+                                 '(not read by the batch; the batch calculates it from Dest Case/Day).']
 rows['Max Case/Day (quota)'][1] = 'Max Case/Day of the part in Part List, for reference only (not read by the batch).'
 app['rows'] = [rows[c] for c in MAPPING_COLS]
 for sec in s['sample_sheet']['sections']:
@@ -91,7 +91,7 @@ for b in s['operation']:
         "rules and the file area (.xlsx, max 5 MB, max 5,000 rows).")
     put(items, "Sheet 'Upload': every Active part of the ongoing period",
         "Sheet 'Upload': every Active part of the ongoing period, columns Part Number, Destination "
-        "Code, Dest Case/Day, Total Case/Day (used, formula), Max Case/Day (quota), Upload (A/E); "
+        "Code, Dest Case/Day, Total Case/Day (used), Max Case/Day (quota), Upload (A/E); "
         "one row per destination, and one blank row (Upload (A/E) = A) for a part without mapping. "
         "Empty for a past period or All periods. Upload (A/E) = E for a mapped destination.")
     for i, t in enumerate(items):
