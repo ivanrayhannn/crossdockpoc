@@ -1,5 +1,6 @@
 """05-Nov: FB-143 the Operation Description of XD01 points to the sample sheets added to the hand-tidied workbook
-(Export Part List, Upload Part List, Export Mapping, Upload Mapping)."""
+(Export Part List, Upload Part List, Export Mapping, Upload Mapping); the Mapping export shows Total Case/Day as
+used plus Max Case/Day (quota), as on the screen."""
 import json
 
 with open('XD01_spec.json') as f:
@@ -15,5 +16,9 @@ for b in s['operation']:
                 if t.endswith(end) and extra not in t:
                     t = t + extra
             b['items'][i] = t
+for b in s['operation']:
+    for i, t in enumerate(b.get('items', [])):
+        if isinstance(t, str) and t.startswith("Sheet 'Mapping per Destination'"):
+            b['items'][i] = t.replace('Pcs/Case, Total Case/Day, Pcs/Day', 'Pcs/Case, Total Case/Day (used), Max Case/Day (quota), Pcs/Day')
 with open('XD01_spec.json', 'w') as f:
     json.dump(s, f, indent=1, ensure_ascii=False)
