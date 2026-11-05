@@ -32,7 +32,9 @@ const LIST_COLUMNS: (Column<MappingLine> & { width: number })[] = [
   { header: { value: 'Part Number', ...HEADER }, cell: ({ part }) => cell(part.p), width: 18 },
   { header: { value: 'Part Name', ...HEADER }, cell: ({ part }) => cell(part.n), width: 30 },
   { header: { value: 'Pcs/Case', ...HEADER, align: 'right' }, cell: ({ part }) => cell(num(part.pc), NUMBER_FORMAT), width: 11 },
-  { header: { value: 'Total Case/Day', ...HEADER, align: 'right' }, cell: ({ allocated }) => cell(allocated, NUMBER_FORMAT), width: 16 },
+  // used / quota, as on the screen: Case/Day mapped to destinations and Max Case/Day of Part List
+  { header: { value: 'Total Case/Day (used)', ...HEADER, align: 'right' }, cell: ({ allocated }) => cell(allocated, NUMBER_FORMAT), width: 20 },
+  { header: { value: 'Max Case/Day (quota)', ...HEADER, align: 'right' }, cell: ({ part }) => cell(num(part.mc), NUMBER_FORMAT), width: 20 },
   { header: { value: 'Pcs/Day', ...HEADER, align: 'right' }, cell: ({ part, allocated }) => cell(num(part.pc) * allocated, NUMBER_FORMAT), width: 12 },
   { header: { value: 'Percentage', ...HEADER, align: 'right' }, cell: ({ part, allocated }) => cell(share(allocated, num(part.mc)), PERCENT_FORMAT), width: 12 },
   { header: { value: 'Sync Status', ...HEADER }, cell: ({ part }) => cell(syncBadge(part.syncStatus).t), width: 13 },
