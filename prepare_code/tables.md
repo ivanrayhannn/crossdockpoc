@@ -339,7 +339,7 @@ Existing ASN part (TR-02). Submit ASN: one row per manifest item and case (a cas
 #### TB_R_H0253_ORDER_CONTROL_PRE (transaction, existing)
 Used by: XD08
 
-Order control data, pre-order picking info (I/F H02-53, DVJO950) replicated from DB Surrounding by XD08. Structure from the GTOPAS I/F layout; physical names follow the existing table. Key (PK) = unique key of the I/F layout. Rows with UPD_STATUS 6 / 2 are kept for tracking (retention optional, TBC). UPD_STATUS is a new NSP column (proposed).
+Order control data, pre-order picking info (I/F H02-53, DVJO950) replicated from DB Surrounding by XD08. Structure from the GTOPAS I/F layout; physical names follow the existing table. Key (PK) = unique key of the I/F layout. Rows with UPD_STATUS 6 / 2 are kept for tracking, without retention limit (no housekeeping, decided 5-Nov). UPD_STATUS is a new NSP column (proposed).
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|

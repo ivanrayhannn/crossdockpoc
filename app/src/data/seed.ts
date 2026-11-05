@@ -263,15 +263,24 @@ function genHistoryFor(part: SeedPart): HistoryEvent[] {
 
 export const HIST_BY_PART: Record<string, HistoryEvent[]> = Object.fromEntries(ALL_SEED.map((p) => [p.p, genHistoryFor(p)]));
 
-/** Fresh copy of the seed data, as the mockup's clone() did. */
+const effDateOf = (p: SeedPart) => `2026-06-${String(1 + (hashStr(p.p) % 27)).padStart(2, '0')}`; // dummy day between 1 and 27 Jun 2026
+const withCodes = (p: SeedPart) => p.dests.map((d) => ({ ...d, cd: DCODE[d.d] || '' }));
+/** An Active part seeded in a past period only: it is also listed in the ongoing period (every Active part is, XD01 5.11 c). */
+const activeInPastOnly = (p: SeedPart) => p.st === 'Active' && p.per !== CUR_PER;
+
+/** Fresh copy of the seed data, as the mockup's clone() did. Every Active part belongs to the ongoing period; an Active part
+ *  that was seeded in a past period gets no destination yet in the ongoing period (0 / quota) and keeps its past mapping
+ *  in PAST_ROWS. */
 export function cloneSeedParts(): Part[] {
   return ALL_SEED.map((p) => ({
     ...p,
-    // Dummy Effective Start Date: a fixed day between 1 Jun and 27 Jun 2026, derived from the part number.
-    effDate: `2026-06-${String(1 + (hashStr(p.p) % 27)).padStart(2, '0')}`,
-    dests: p.dests.map((d) => ({ ...d, cd: DCODE[d.d] || '' })),
+    effDate: effDateOf(p),
+    ...(activeInPastOnly(p) ? { per: CUR_PER, dests: [] } : { dests: withCodes(p) }),
   }));
 }
+
+/** Read-only mapping rows of past periods for parts that are Active now (listed when a past period is selected). */
+export const PAST_ROWS: Part[] = ALL_SEED.filter(activeInPastOnly).map((p) => ({ ...p, effDate: effDateOf(p), dests: withCodes(p) }));
 
 export function blankPart(): Part {
   const tomorrow = new Date();

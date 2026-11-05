@@ -138,7 +138,7 @@
    },
    {
     "name": "Sync",
-    "function": "Start XD06 (GTOPAS) and XD07 (AP POLE) for every Active part of the ongoing period, and every part that became Inactive, with Sync Status No Sync or Failed, whatever the filter shows; the parts become Waiting. The label shows the number of parts, e.g. Sync (9)."
+    "function": "Start XD06 (GTOPAS) and XD07 (AP POLE) for every Active part of the ongoing period, and every part that became Inactive, with Sync Status No Sync or Failed, whatever the filter shows; the parts become Waiting. The label shows the number of parts, e.g. Sync (17)."
    },
    {
     "name": "Upload Excel (Mapping)",
@@ -1528,11 +1528,11 @@
    "image": "deliverables/uiss_screens/mapping/c_11_split_evenly.png"
   },
   {
-   "caption": "26. Before Sync - Sync (9): 4 No Sync + 5 Failed Active parts of the ongoing period",
+   "caption": "26. Before Sync - Sync (17): 11 No Sync + 6 Failed Active parts of the ongoing period",
    "image": "deliverables/uiss_screens/mapping/c_12_before_sync.png"
   },
   {
-   "caption": "27. After Sync - the 9 parts are Waiting for XD06 / XD07 (viewed with Sync Status = All)",
+   "caption": "27. After Sync - the 17 parts are Waiting for XD06 / XD07 (viewed with Sync Status = All)",
    "image": "deliverables/uiss_screens/mapping/c_13_after_sync.png"
   },
   {
