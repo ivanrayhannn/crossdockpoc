@@ -96,10 +96,11 @@ for b in s['operation']:
         "Empty for a past period or All periods. Upload (A/E) = E for a mapped destination.")
     for i, t in enumerate(items):
         if isinstance(t, str) and t.startswith("Sheet 'Mapping per Destination'"):
-            items[i] = t.replace('Pcs/Case, Total Case/Day (used), Max Case/Day (quota), Pcs/Day, Percentage, Sync Status, Destination Code, Destination, '
-                                 'Dest Case/Day, Dest Pcs/Day, Dest Percentage',
-                                 'Pcs/Case, Destination Code, Destination, Dest Case/Day, Total Case/Day (used), Max Case/Day (quota), Pcs/Day, Percentage, '
-                                 'Dest Pcs/Day, Dest Percentage, Sync Status')
+            # final layout of the export (5-Nov, edited by the user): Percentage, Destination and Dest Percentage removed
+            items[i] = t.replace('Part Name, Pcs/Case, Total Case/Day (used), Max Case/Day (quota), Pcs/Day, Percentage, Sync Status, Destination Code, '
+                                 'Destination, Dest Case/Day, Dest Pcs/Day, Dest Percentage',
+                                 'Part Name, Destination Code, Pcs/Case, Dest Case/Day, Total Case/Day (used), Max Case/Day (quota), Dest Pcs/Day, '
+                                 'Pcs/Day, Sync Status')
 s = json.loads(json.dumps(s, ensure_ascii=False).replace("Edit rows use sheet 'Upload' of the Part List Export Excel as base file (pre-filled with flag E).",
                                                          "Edit rows use sheet 'Upload' of the Part List Export Excel as base file (pre-filled with Upload (A/E) = E)."))
 save('XD01', s)
