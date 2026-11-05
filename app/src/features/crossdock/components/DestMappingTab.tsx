@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from 'react';
-import { CUR_PER, DOTS, MASTER_DESTS, PERIODS } from '../../../data/seed';
+import { CUR_PER, PAST_ROWS, DOTS, MASTER_DESTS, PERIODS } from '../../../data/seed';
 import { fmt, num, syncBadge } from '../../../lib/format';
 import type { DestAllocation, Part } from '../../../types';
 import { exportMappingXlsx } from '../mappingExport';
@@ -35,7 +35,7 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
 
   const destRowsSrc = useMemo(
     () =>
-      parts.filter(
+      parts.concat(PAST_ROWS).filter(
         (p) =>
           // The ongoing period only works with Active parts; past periods list every part.
           (p.st === 'Active' || p.per !== CUR_PER) &&

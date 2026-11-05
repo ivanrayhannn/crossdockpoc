@@ -85,7 +85,7 @@
 | Validate file | Save button of the upload: validate the uploaded file and save it (all-or-nothing), then show the success popup. |
 | OK | Close the success popup. |
 | Run calculation (Mapping) | Start process 2 (mapping destination) of the XD05 DAD Volume Calculation batch manually. Enabled only when the scheduled run and its 3 auto retries have failed. |
-| Sync | Start XD06 (GTOPAS) and XD07 (AP POLE) for every Active part of the ongoing period, and every part that became Inactive, with Sync Status No Sync or Failed, whatever the filter shows; the parts become Waiting. The label shows the number of parts, e.g. Sync (9). |
+| Sync | Start XD06 (GTOPAS) and XD07 (AP POLE) for every Active part of the ongoing period, and every part that became Inactive, with Sync Status No Sync or Failed, whatever the filter shows; the parts become Waiting. The label shows the number of parts, e.g. Sync (17). |
 | Upload Excel (Mapping) | Open the "Upload Excel - destination mapping" modal. Enabled only when the ongoing calculation period is selected. |
 | Export Excel (Mapping) | Download the mapping as .xlsx: sheet "Mapping per Destination" (active filter) and sheet "Upload" (base file for the upload). |
 | Expand (arrow) | Open / close the Destination Mapping panel of the part row. |
@@ -357,13 +357,13 @@ flowchart TB
 
 ![25. Edit Mapping Mode - after Split evenly](../../deliverables/uiss_screens/mapping/c_11_split_evenly.png)
 
-### 26. Before Sync - Sync (9): 4 No Sync + 5 Failed Active parts of the ongoing period
+### 26. Before Sync - Sync (17): 11 No Sync + 6 Failed Active parts of the ongoing period
 
-![26. Before Sync - Sync (9): 4 No Sync + 5 Failed Active parts of the ongoing period](../../deliverables/uiss_screens/mapping/c_12_before_sync.png)
+![26. Before Sync - Sync (17): 11 No Sync + 6 Failed Active parts of the ongoing period](../../deliverables/uiss_screens/mapping/c_12_before_sync.png)
 
-### 27. After Sync - the 9 parts are Waiting for XD06 / XD07 (viewed with Sync Status = All)
+### 27. After Sync - the 17 parts are Waiting for XD06 / XD07 (viewed with Sync Status = All)
 
-![27. After Sync - the 9 parts are Waiting for XD06 / XD07 (viewed with Sync Status = All)](../../deliverables/uiss_screens/mapping/c_13_after_sync.png)
+![27. After Sync - the 17 parts are Waiting for XD06 / XD07 (viewed with Sync Status = All)](../../deliverables/uiss_screens/mapping/c_13_after_sync.png)
 
 ### 28. Upload Mode - Upload Excel modal
 
