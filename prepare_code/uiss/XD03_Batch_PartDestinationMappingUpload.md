@@ -279,7 +279,7 @@ Every row is checked and all errors are collected, so the user can correct the f
 | Part Number | Part Number of an Active part. One row per destination; all rows of a part together form its new mapping. |
 | Destination Code | Destination code (9722D10 / 9811110 / 9715310). Once per part. Blank together with Dest Case/Day = placeholder row. |
 | Dest Case/Day | Case/Day of the destination, whole number greater than 0. |
-| Total Case/Day (used) | Sum of Dest Case/Day of the part (formula in the export file), for reference only (not read by the batch; the batch calculates it). |
+| Total Case/Day (used) | Sum of Dest Case/Day of the part when the file is exported, for reference only (not read by the batch; the batch calculates it from Dest Case/Day). |
 | Max Case/Day (quota) | Max Case/Day of the part in Part List, for reference only (not read by the batch). |
 | Upload (A/E) | A = Add (destination not yet mapped for the part in the ongoing period), E = Edit (destination already mapped; Dest Case/Day can be changed). Export Excel pre-fills E, and A for the blank row of a part without mapping. |
 
