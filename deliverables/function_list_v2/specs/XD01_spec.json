@@ -20,7 +20,7 @@
     "section": "Part List - Result List (Sort by = Newer to Older, default)",
     "fields": [
      {
-      "field": "Last Update (CHANGED_DT)",
+      "field": "Updated Date (CHANGED_DT)",
       "order": "Descending"
      }
     ]
@@ -29,7 +29,7 @@
     "section": "Part List - Result List (Sort by = Older to Newer)",
     "fields": [
      {
-      "field": "Last Update (CHANGED_DT)",
+      "field": "Updated Date (CHANGED_DT)",
       "order": "Ascending"
      }
     ]
@@ -1676,7 +1676,7 @@
    "required": "N",
    "format": "",
    "validation": "",
-   "description": "Options: Default (Part Number A-Z) / Newer to Older / Older to Newer (by Last Update)."
+   "description": "Options: Default (Part Number A-Z) / Newer to Older / Older to Newer (by Updated Date)."
   },
   {
    "name": "Reset",
@@ -1877,19 +1877,64 @@
    "description": "Candidate (blue) / Active (green) / Inactive (grey)."
   },
   {
-   "name": "Last Update",
+   "name": "Created Date",
    "source": "TB_M_PART_CANDIDATE",
-   "field": "CHANGED_DT, CHANGED_BY",
+   "field": "CREATED_DT",
    "type": "Datetime",
    "len": "",
    "io": "O",
-   "control": "Label (2 lines)",
+   "control": "Label",
    "justified": "Left",
    "initial": "",
    "required": "",
    "format": "DD-Mon-YYYY HH:MI",
    "validation": "",
-   "description": "Line 1 date-time, line 2 user name of the last change."
+   "description": "Date-time the part was registered."
+  },
+  {
+   "name": "Created By",
+   "source": "TB_M_PART_CANDIDATE",
+   "field": "CREATED_BY",
+   "type": "Varchar",
+   "len": "",
+   "io": "O",
+   "control": "Label",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "",
+   "validation": "",
+   "description": "User who registered the part."
+  },
+  {
+   "name": "Updated Date",
+   "source": "TB_M_PART_CANDIDATE",
+   "field": "CHANGED_DT",
+   "type": "Datetime",
+   "len": "",
+   "io": "O",
+   "control": "Label",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "DD-Mon-YYYY HH:MI",
+   "validation": "",
+   "description": "Date-time of the last change of the part."
+  },
+  {
+   "name": "Updated By",
+   "source": "TB_M_PART_CANDIDATE",
+   "field": "CHANGED_BY",
+   "type": "Varchar",
+   "len": "",
+   "io": "O",
+   "control": "Label",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "",
+   "validation": "",
+   "description": "User of the last change of the part."
   },
   {
    "name": "Edit",
@@ -4037,7 +4082,7 @@
    "level": 2,
    "items": [
     "User clicks [Export Excel]: download Crossdock_Part_List_YYYYMMDD.xlsx.",
-    "Sheet 'Part List': rows of the active filter and sort (all pages) with Part Number, Part Name, Min MAD, Pcs/Case, Max Case/Day, Total Pcs/Day, Status, Effective Start Date, Last Update. Information only. Sample: sheet 'Export Part List'.",
+    "Sheet 'Part List': rows of the active filter and sort (all pages) with Part Number, Part Name, Min MAD, Pcs/Case, Max Case/Day, Total Pcs/Day, Status, Effective Start Date, CREATED_DT, CREATED_BY, UPDATED_DT, UPDATED_BY. Information only. Sample: 'Export Part List'.",
     "Sheet 'Upload': every registered part, columns as sheet 1 (Part Number, Min MAD, Pcs/Case, Max Case/Day, Status, Upload (A/E) = E, Effective Start Date). Base file for Edit uploads.",
     "If the file cannot be created, display message no. 13."
    ]
