@@ -69,7 +69,7 @@ flowchart TB
 
 | Field Name |
 |---|
-| part_no |
+| Part Number |
 
 ### Execution Schedule
 
@@ -107,9 +107,9 @@ flowchart TB
 1. User clicks [Validate file] in the Upload Excel modal of the Mapping per Destination screen (ongoing period). The batch starts and receives the uploaded file.
 2. Check the file: format .xlsx, size, number of rows, sheet "Upload" and template columns (see 4.1).
   - If the file is not valid, reject the upload and go to step 7.
-3. Read all rows of sheet "Upload" and group them by part_no.
+3. Read all rows of sheet "Upload" and group them by Part Number.
 4. Check every row and every part against the business rules (see 4.2) and collect all errors.
-  - A placeholder row (dest_code and case_day both blank) is skipped.
+  - A placeholder row (Destination Code and Dest Case/Day both blank) is skipped.
 5. If any row has an error, reject the whole file. Nothing is saved and the errors are recorded in the upload log.
   - Go to step 7.
 6. If all rows are valid, compare each part with its current mapping of the ongoing period (see 4.3).
@@ -121,26 +121,26 @@ flowchart TB
 ## 3. Data edit mapping
 
 #### 1. Update TB_M_PART_CANDIDATE_DEST – Changed part - Case/Day changed
-- Source: Excel file - sheet Upload (valid rows) (keys: part_no = Changed part, dest_code = Not blank)
+- Source: Excel file - sheet Upload (valid rows) (keys: Part Number = Changed part, Destination Code = Not blank)
 - Destination keys: PART_NO = Changed part, PERIOD = Ongoing period, DEST_CODE = In both, Case/Day differs
 
 | Source field | Destination field | Description |
 |---|---|---|
-| case_day | CASE_DAY |  |
+| Dest Case/Day | CASE_DAY |  |
 |  | CHANGED_BY | Login name of the user who uploaded |
 |  | CHANGED_DT | Server system date and time |
 |  | CREATED_BY | Not changed |
 |  | CREATED_DT | Not changed |
 
 #### 2. Insert TB_M_PART_CANDIDATE_DEST – Changed part - new destination
-- Source: Excel file - sheet Upload (valid rows) (keys: part_no = Changed part, dest_code = Not blank)
+- Source: Excel file - sheet Upload (valid rows) (keys: Part Number = Changed part, Destination Code = Not blank)
 
 | Source field | Destination field | Description |
 |---|---|---|
-| part_no | PART_NO |  |
+| Part Number | PART_NO |  |
 |  | PERIOD | Ongoing calculation period |
-| dest_code | DEST_CODE | Destination not yet in the table for the part and period |
-| case_day | CASE_DAY |  |
+| Destination Code | DEST_CODE | Destination not yet in the table for the part and period |
+| Dest Case/Day | CASE_DAY |  |
 |  | CREATED_BY | Login name of the user who uploaded |
 |  | CREATED_DT | Server system date and time |
 |  | CHANGED_BY | Same as CREATED_BY |
@@ -221,7 +221,7 @@ This batch starts when the user clicks [Validate file] in the Upload Excel modal
 - Only sheet "Upload" of the file is read. Parts that are not in the sheet are not changed.
 - Only the ongoing calculation period is changed; past periods are read only.
 - One run saves all parts or none (all-or-nothing).
-- The column total_case_day is for reference only and is not read; the limit is Max Case/Day of the part in TB_M_PART_CANDIDATE.
+- The columns Total Case/Day (used) and Max Case/Day (quota) are for reference only and are not read; the limit is Max Case/Day of the part in TB_M_PART_CANDIDATE and used is calculated from Dest Case/Day.
 
 ### 4.1 File Check (log message no. 5)
 
@@ -229,11 +229,11 @@ This batch starts when the user clicks [Validate file] in the Upload Excel modal
 2. File size is 5 MB or less.
 3. Sheet Upload has 1 to 5,000 data rows.
 4. Sheet "Upload" exists. Other sheets are ignored.
-5. Header has the 5 template columns (see Appendix). Extra columns are ignored.
+5. Header has the 6 template columns (see Appendix), found by column name (case and leading / trailing spaces ignored). Extra columns are ignored.
 
 ### 4.2 Row Validation (log message no. 6)
 
-Every row is checked and all errors are collected, so the user can correct the file once. Checks 4 and 6 are done per part (all rows with the same part_no).
+Every row is checked and all errors are collected, so the user can correct the file once. Checks 4 and 6 are done per part (all rows with the same Part Number).
 
 ### 4.3 Saving
 
@@ -247,14 +247,14 @@ Every row is checked and all errors are collected, so the user can correct the f
 
 | No | Check | Column |
 |---|---|---|
-| 1 | Part No exists in TB_M_PART_CANDIDATE and its status is Active. | part_no |
-| 2 | Destination code exists in TB_M_H0125_DESTINATION (Destination Master, DESTINATION_CD). | dest_code |
-| 3 | case_day is a whole number greater than 0 when dest_code is filled. | case_day |
-| 4 | A destination code appears only once per part in the file. | dest_code |
-| 5 | dest_code and case_day are both filled, or both blank (placeholder row). Only one of the two filled is an error. | dest_code, case_day |
-| 6 | The total case_day of all rows of a part does not exceed the Max Case/Day of the part in TB_M_PART_CANDIDATE (total_case_day of the file is ignored). Below or equal is allowed. | case_day |
+| 1 | Part No exists in TB_M_PART_CANDIDATE and its status is Active. | Part Number |
+| 2 | Destination code exists in TB_M_H0125_DESTINATION (Destination Master, DESTINATION_CD). | Destination Code |
+| 3 | Dest Case/Day is a whole number greater than 0 when Destination Code is filled. | Dest Case/Day |
+| 4 | A destination code appears only once per part in the file. | Destination Code |
+| 5 | Destination Code and Dest Case/Day are both filled, or both blank (placeholder row). Only one of the two filled is an error. | Destination Code, Dest Case/Day |
+| 6 | The total Dest Case/Day of all rows of a part does not exceed the Max Case/Day of the part in TB_M_PART_CANDIDATE (Max Case/Day (quota) of the file is ignored). Below or equal is allowed. | Dest Case/Day |
 | 7 | The upload is for the ongoing calculation period only (the screen enables [Validate file] only for that period). | - |
-| 8 | upload is A or E. A only for a destination that is not yet mapped for the part, E only for a destination that is already mapped (ongoing period). A placeholder row left blank is skipped. | upload |
+| 8 | upload is A or E. A only for a destination that is not yet mapped for the part, E only for a destination that is already mapped (ongoing period). A placeholder row left blank is skipped. | Upload (A/E) |
 
 ## 5. Logging messages
 
@@ -276,11 +276,12 @@ Every row is checked and all errors are collected, so the user can correct the f
 
 | Column | Content |
 |---|---|
-| part_no | Part Number of an Active part. One row per destination; all rows of a part together form its new mapping. |
-| dest_code | Destination code (9722D10 / 9811110 / 9715310). Once per part. Blank together with case_day = placeholder row. |
-| case_day | Case/Day of the destination, whole number greater than 0. |
-| upload | A = Add (destination not yet mapped for the part in the ongoing period), E = Edit (destination already mapped; case_day can be changed). Export Excel pre-fills E, and A for the blank row of a part without mapping. |
-| total_case_day | Max Case/Day of the part, for reference only (not read by the batch). |
+| Part Number | Part Number of an Active part. One row per destination; all rows of a part together form its new mapping. |
+| Destination Code | Destination code (9722D10 / 9811110 / 9715310). Once per part. Blank together with Dest Case/Day = placeholder row. |
+| Dest Case/Day | Case/Day of the destination, whole number greater than 0. |
+| Total Case/Day (used) | Sum of Dest Case/Day of the part (formula in the export file), for reference only (not read by the batch; the batch calculates it). |
+| Max Case/Day (quota) | Max Case/Day of the part in Part List, for reference only (not read by the batch). |
+| Upload (A/E) | A = Add (destination not yet mapped for the part in the ongoing period), E = Edit (destination already mapped; Dest Case/Day can be changed). Export Excel pre-fills E, and A for the blank row of a part without mapping. |
 
 Sample upload scenarios (master data, accepted files, rejected files): see sheet Sample Input.
 
@@ -381,39 +382,39 @@ Destination Master (existing NSP table, read only). Only the listed columns are 
 
 ### B. Normal scenarios (file accepted)
 
-| No | Scenario | part_no | dest_code | case_day | upload | total_case_day | Expected result |
-|---|---|---|---|---|---|---|---|
-| N1 | Change Case/Day | PART-A | 9722D10 | 10 | E | 24 | Changed. Total 24 (equal to Max). Sync Status No Sync. |
-| N1 | Change Case/Day | PART-A | 9811110 | 8 | E | 24 |  |
-| N1 | Change Case/Day | PART-A | 9715310 | 6 | E | 24 |  |
-| N2 | Remove a destination | PART-A | 9722D10 | 12 | E | 24 | Changed. 9715310 deleted. Total 20, 4 case/day left (below Max is allowed). |
-| N2 | Remove a destination | PART-A | 9811110 | 8 | E | 24 |  |
-| N3 | Add a destination | PART-C | 9715310 | 18 | E | 30 | Changed. 9811110 inserted. Total 30 (equal to Max). |
-| N3 | Add a destination | PART-C | 9811110 | 12 | A | 30 |  |
-| N4 | First mapping from the placeholder row | PART-G | 9722D10 | 22 | A | 22 | Inserted. Total 22. Sync Status No Sync. |
-| N5 | Placeholder row left blank | PART-G |  |  | A | 22 | NO CHANGE. PART-G stays without mapping. |
-| N6 | Same values as the master | PART-A | 9722D10 | 12 | E | 24 | NO CHANGE. Sync Status and last update stay. |
-| N6 | Same values as the master | PART-A | 9811110 | 8 | E | 24 |  |
-| N6 | Same values as the master | PART-A | 9715310 | 4 | E | 24 |  |
-| N7 | File with only some parts (PART-C only) | PART-C | 9715310 | 18 | E | 30 | Only PART-C is processed (here NO CHANGE). PART-A and PART-G are not changed. |
+| No | Scenario | Part Number | Destination Code | Dest Case/Day | Total Case/Day (used) | Max Case/Day (quota) | Upload (A/E) | Expected result |
+|---|---|---|---|---|---|---|---|---|
+| N1 | Change Case/Day | PART-A | 9722D10 | 10 | 24 | 24 | E | Changed. Total 24 (equal to Max). Sync Status No Sync. |
+| N1 | Change Case/Day | PART-A | 9811110 | 8 | 24 | 24 | E |  |
+| N1 | Change Case/Day | PART-A | 9715310 | 6 | 24 | 24 | E |  |
+| N2 | Remove a destination | PART-A | 9722D10 | 12 | 20 | 24 | E | Changed. 9715310 deleted. Total 20, 4 case/day left (below Max is allowed). |
+| N2 | Remove a destination | PART-A | 9811110 | 8 | 20 | 24 | E |  |
+| N3 | Add a destination | PART-C | 9715310 | 18 | 30 | 30 | E | Changed. 9811110 inserted. Total 30 (equal to Max). |
+| N3 | Add a destination | PART-C | 9811110 | 12 | 30 | 30 | A |  |
+| N4 | First mapping from the placeholder row | PART-G | 9722D10 | 22 | 22 | 22 | A | Inserted. Total 22. Sync Status No Sync. |
+| N5 | Placeholder row left blank | PART-G |  |  |  | 22 | A | NO CHANGE. PART-G stays without mapping. |
+| N6 | Same values as the master | PART-A | 9722D10 | 12 | 24 | 24 | E | NO CHANGE. Sync Status and last update stay. |
+| N6 | Same values as the master | PART-A | 9811110 | 8 | 24 | 24 | E |  |
+| N6 | Same values as the master | PART-A | 9715310 | 4 | 24 | 24 | E |  |
+| N7 | File with only some parts (PART-C only) | PART-C | 9715310 | 18 | 18 | 30 | E | Only PART-C is processed (here NO CHANGE). PART-A and PART-G are not changed. |
 
 ### C. Error scenarios (whole file rejected, nothing saved)
 
-| No | Scenario | part_no | dest_code | case_day | upload | total_case_day | Error (4.2 check no.) |
-|---|---|---|---|---|---|---|---|
-| E1 | Part not registered | PART-Z99 | 9722D10 | 10 | A |  | Check 1: Part No is not registered or its status is not Active. |
-| E2 | Part is not Active | PART-I | 9722D10 | 10 | A | 20 | Check 1: Part No is not registered or its status is not Active. |
-| E3 | Unknown destination | PART-A | ZZZZZ99 | 10 | A | 24 | Check 2: Destination code ZZZZZ99 not found in the destination master (TB_M_H0125_DESTINATION). |
-| E4 | Invalid Case/Day | PART-A | 9722D10 | 0 | E | 24 | Check 3: case_day must be a whole number greater than 0. |
-| E5 | Same destination twice | PART-A | 9722D10 | 10 | E | 24 | Check 4: Destination 9722D10 appears more than once for this part. |
-| E5 | Same destination twice | PART-A | 9722D10 | 4 | E | 24 |  |
-| E6 | Only one of dest_code / case_day | PART-G | 9722D10 |  | A | 22 | Check 5: dest_code and case_day must both be filled or both blank. |
-| E7 | Total above Max Case/Day | PART-A | 9722D10 | 12 | E | 24 | Check 6: Total allocation of 30 case/day exceeds Max Case/Day (24). Reduce one of the destinations. |
-| E7 | Total above Max Case/Day | PART-A | 9811110 | 8 | E | 24 |  |
-| E7 | Total above Max Case/Day | PART-A | 9715310 | 10 | E | 24 |  |
-| E8 | Valid row (= N4) mixed with an error row (= E3) | PART-G | 9722D10 | 22 | A | 22 | Whole file rejected. The valid row is NOT saved. |
-| E8 | Valid row mixed with an error row | PART-A | ZZZZZ99 | 10 | A | 24 | Check 2 on this row. Result report sheet Re-upload lists the rows to correct. |
-| E9 | upload E for a destination that is not mapped yet | PART-C | 9811110 | 12 | E | 30 | Check 8: Destination 9811110 is not mapped for PART-C yet; use upload A. |
+| No | Scenario | Part Number | Destination Code | Dest Case/Day | Total Case/Day (used) | Max Case/Day (quota) | Upload (A/E) | Error (4.2 check no.) |
+|---|---|---|---|---|---|---|---|---|
+| E1 | Part not registered | PART-Z99 | 9722D10 | 10 | 10 |  | A | Check 1: Part No is not registered or its status is not Active. |
+| E2 | Part is not Active | PART-I | 9722D10 | 10 | 10 | 20 | A | Check 1: Part No is not registered or its status is not Active. |
+| E3 | Unknown destination | PART-A | ZZZZZ99 | 10 | 10 | 24 | A | Check 2: Destination code ZZZZZ99 not found in the destination master (TB_M_H0125_DESTINATION). |
+| E4 | Invalid Case/Day | PART-A | 9722D10 | 0 | 0 | 24 | E | Check 3: Dest Case/Day must be a whole number greater than 0. |
+| E5 | Same destination twice | PART-A | 9722D10 | 10 | 14 | 24 | E | Check 4: Destination 9722D10 appears more than once for this part. |
+| E5 | Same destination twice | PART-A | 9722D10 | 4 | 14 | 24 | E |  |
+| E6 | Only one of Destination Code / Dest Case/Day | PART-G | 9722D10 |  |  | 22 | A | Check 5: Destination Code and Dest Case/Day must both be filled or both blank. |
+| E7 | Total above Max Case/Day | PART-A | 9722D10 | 12 | 30 | 24 | E | Check 6: Total allocation of 30 case/day exceeds Max Case/Day (24). Reduce one of the destinations. |
+| E7 | Total above Max Case/Day | PART-A | 9811110 | 8 | 30 | 24 | E |  |
+| E7 | Total above Max Case/Day | PART-A | 9715310 | 10 | 30 | 24 | E |  |
+| E8 | Valid row (= N4) mixed with an error row (= E3) | PART-G | 9722D10 | 22 | 22 | 22 | A | Whole file rejected. The valid row is NOT saved. |
+| E8 | Valid row mixed with an error row | PART-A | ZZZZZ99 | 10 | 10 | 24 | A | Check 2 on this row. Result report sheet Re-upload lists the rows to correct. |
+| E9 | Upload (A/E) E for a destination that is not mapped yet | PART-C | 9811110 | 12 | 12 | 30 | E | Check 8: Destination 9811110 is not mapped for PART-C yet; use Upload (A/E) A. |
 
 ### D. File-level errors (file check 4.1)
 
@@ -423,4 +424,4 @@ Destination Master (existing NSP table, read only). Only the listed columns are 
 | F2 | File larger than 5 MB | Rejected: file size exceeds 5 MB. |
 | F3 | More than 5,000 data rows, or no data row | Rejected: row count out of range. |
 | F4 | No sheet named Upload (e.g. only sheet Mapping per Destination) | Rejected: sheet Upload not found. |
-| F5 | A template column is missing (e.g. case_day deleted) | Rejected: required column not found. |
+| F5 | A template column is missing (e.g. Dest Case/Day deleted) | Rejected: required column not found. |

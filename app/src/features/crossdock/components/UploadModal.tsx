@@ -1,11 +1,11 @@
 import type { CrossdockState } from '../useCrossdockState';
 
 // Same columns and order as sheet "Upload" of the Part List Export Excel.
-const UP_COLS = ['part_no', 'min_mad', 'pcs_case', 'max_case_day', 'status', 'upload', 'effective_start_date'];
+const UP_COLS = ['Part Number', 'Min MAD', 'Pcs/Case', 'Max Case/Day', 'Status', 'Upload (A/E)', 'Effective Start Date'];
 
 const UP_RULES: { label: string; cols: string }[] = [
-  { label: 'Add', cols: 'part_no, min_mad, pcs_case, max_case_day, upload = A and effective_start_date are required. Leave status blank — a new part is always Candidate.' },
-  { label: 'Edit', cols: 'upload = E. min_mad (required), pcs_case and max_case_day can be changed; effective_start_date only while the part status is still Candidate. Download Export Excel first: its sheet "Upload" is the base file (pre-filled with flag E) to edit and upload again.' },
+  { label: 'Add', cols: 'Part Number, Min MAD, Pcs/Case, Max Case/Day, Upload (A/E) = A and Effective Start Date are required. Leave Status blank — a new part is always Candidate.' },
+  { label: 'Edit', cols: 'Upload (A/E) = E. Min MAD (required), Pcs/Case and Max Case/Day can be changed; Effective Start Date only while the part status is still Candidate. Download Export Excel first: its sheet "Upload" is the base file (pre-filled with flag E) to edit and upload again.' },
   { label: 'Status', cols: 'The status of a Candidate part cannot be changed by upload (the row is rejected). An Active part can be changed to Inactive and an Inactive part to Active. No part can be changed to Candidate.' },
 ];
 

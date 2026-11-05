@@ -178,7 +178,7 @@
      }
     ],
     "rows": [
-     "part_no"
+     "Part Number"
     ]
    },
    {
@@ -326,11 +326,11 @@
      "If the file is not valid, reject the upload and go to step 7."
     ]
    },
-   "Read all rows of sheet \"Upload\" and group them by part_no.",
+   "Read all rows of sheet \"Upload\" and group them by Part Number.",
    {
     "text": "Check every row and every part against the business rules (see 4.2) and collect all errors.",
     "children": [
-     "A placeholder row (dest_code and case_day both blank) is skipped."
+     "A placeholder row (Destination Code and Dest Case/Day both blank) is skipped."
     ]
    },
    {
@@ -357,11 +357,11 @@
      "table": "Excel file - sheet Upload (valid rows)",
      "keys": [
       {
-       "field": "part_no",
+       "field": "Part Number",
        "value": "Changed part"
       },
       {
-       "field": "dest_code",
+       "field": "Destination Code",
        "value": "Not blank"
       }
      ]
@@ -387,7 +387,7 @@
     },
     "mappings": [
      {
-      "source_field": "case_day",
+      "source_field": "Dest Case/Day",
       "dest_field": "CASE_DAY"
      },
      {
@@ -413,11 +413,11 @@
      "table": "Excel file - sheet Upload (valid rows)",
      "keys": [
       {
-       "field": "part_no",
+       "field": "Part Number",
        "value": "Changed part"
       },
       {
-       "field": "dest_code",
+       "field": "Destination Code",
        "value": "Not blank"
       }
      ]
@@ -429,7 +429,7 @@
     },
     "mappings": [
      {
-      "source_field": "part_no",
+      "source_field": "Part Number",
       "dest_field": "PART_NO"
      },
      {
@@ -437,12 +437,12 @@
       "description": "Ongoing calculation period"
      },
      {
-      "source_field": "dest_code",
+      "source_field": "Destination Code",
       "dest_field": "DEST_CODE",
       "description": "Destination not yet in the table for the part and period"
      },
      {
-      "source_field": "case_day",
+      "source_field": "Dest Case/Day",
       "dest_field": "CASE_DAY"
      },
      {
@@ -726,7 +726,7 @@
     "Only sheet \"Upload\" of the file is read. Parts that are not in the sheet are not changed.",
     "Only the ongoing calculation period is changed; past periods are read only.",
     "One run saves all parts or none (all-or-nothing).",
-    "The column total_case_day is for reference only and is not read; the limit is Max Case/Day of the part in TB_M_PART_CANDIDATE."
+    "The columns Total Case/Day (used) and Max Case/Day (quota) are for reference only and are not read; the limit is Max Case/Day of the part in TB_M_PART_CANDIDATE and used is calculated from Dest Case/Day."
    ]
   },
   {
@@ -742,7 +742,7 @@
     "File size is 5 MB or less.",
     "Sheet Upload has 1 to 5,000 data rows.",
     "Sheet \"Upload\" exists. Other sheets are ignored.",
-    "Header has the 5 template columns (see Appendix). Extra columns are ignored."
+    "Header has the 6 template columns (see Appendix), found by column name (case and leading / trailing spaces ignored). Extra columns are ignored."
    ]
   },
   {
@@ -752,7 +752,7 @@
   {
    "type": "text",
    "level": 0,
-   "text": "Every row is checked and all errors are collected, so the user can correct the file once. Checks 4 and 6 are done per part (all rows with the same part_no)."
+   "text": "Every row is checked and all errors are collected, so the user can correct the file once. Checks 4 and 6 are done per part (all rows with the same Part Number)."
   },
   {
    "type": "heading",
@@ -798,32 +798,32 @@
     [
      "1",
      "Part No exists in TB_M_PART_CANDIDATE and its status is Active.",
-     "part_no"
+     "Part Number"
     ],
     [
      "2",
      "Destination code exists in TB_M_H0125_DESTINATION (Destination Master, DESTINATION_CD).",
-     "dest_code"
+     "Destination Code"
     ],
     [
      "3",
-     "case_day is a whole number greater than 0 when dest_code is filled.",
-     "case_day"
+     "Dest Case/Day is a whole number greater than 0 when Destination Code is filled.",
+     "Dest Case/Day"
     ],
     [
      "4",
      "A destination code appears only once per part in the file.",
-     "dest_code"
+     "Destination Code"
     ],
     [
      "5",
-     "dest_code and case_day are both filled, or both blank (placeholder row). Only one of the two filled is an error.",
-     "dest_code, case_day"
+     "Destination Code and Dest Case/Day are both filled, or both blank (placeholder row). Only one of the two filled is an error.",
+     "Destination Code, Dest Case/Day"
     ],
     [
      "6",
-     "The total case_day of all rows of a part does not exceed the Max Case/Day of the part in TB_M_PART_CANDIDATE (total_case_day of the file is ignored). Below or equal is allowed.",
-     "case_day"
+     "The total Dest Case/Day of all rows of a part does not exceed the Max Case/Day of the part in TB_M_PART_CANDIDATE (Max Case/Day (quota) of the file is ignored). Below or equal is allowed.",
+     "Dest Case/Day"
     ],
     [
      "7",
@@ -833,7 +833,7 @@
     [
      "8",
      "upload is A or E. A only for a destination that is not yet mapped for the part, E only for a destination that is already mapped (ongoing period). A placeholder row left blank is skipped.",
-     "upload"
+     "Upload (A/E)"
     ]
    ]
   }
@@ -961,24 +961,28 @@
    ],
    "rows": [
     [
-     "part_no",
+     "Part Number",
      "Part Number of an Active part. One row per destination; all rows of a part together form its new mapping."
     ],
     [
-     "dest_code",
-     "Destination code (9722D10 / 9811110 / 9715310). Once per part. Blank together with case_day = placeholder row."
+     "Destination Code",
+     "Destination code (9722D10 / 9811110 / 9715310). Once per part. Blank together with Dest Case/Day = placeholder row."
     ],
     [
-     "case_day",
+     "Dest Case/Day",
      "Case/Day of the destination, whole number greater than 0."
     ],
     [
-     "upload",
-     "A = Add (destination not yet mapped for the part in the ongoing period), E = Edit (destination already mapped; case_day can be changed). Export Excel pre-fills E, and A for the blank row of a part without mapping."
+     "Total Case/Day (used)",
+     "Sum of Dest Case/Day of the part (formula in the export file), for reference only (not read by the batch; the batch calculates it)."
     ],
     [
-     "total_case_day",
-     "Max Case/Day of the part, for reference only (not read by the batch)."
+     "Max Case/Day (quota)",
+     "Max Case/Day of the part in Part List, for reference only (not read by the batch)."
+    ],
+    [
+     "Upload (A/E)",
+     "A = Add (destination not yet mapped for the part in the ongoing period), E = Edit (destination already mapped; Dest Case/Day can be changed). Export Excel pre-fills E, and A for the blank row of a part without mapping."
     ]
    ]
   },
@@ -1066,11 +1070,12 @@
     "columns": [
      "No",
      "Scenario",
-     "part_no",
-     "dest_code",
-     "case_day",
-     "upload",
-     "total_case_day",
+     "Part Number",
+     "Destination Code",
+     "Dest Case/Day",
+     "Total Case/Day (used)",
+     "Max Case/Day (quota)",
+     "Upload (A/E)",
      "Expected result"
     ],
     "widths": [
@@ -1090,8 +1095,9 @@
       "PART-A",
       "9722D10",
       10,
-      "E",
       24,
+      24,
+      "E",
       "Changed. Total 24 (equal to Max). Sync Status No Sync."
      ],
      [
@@ -1100,8 +1106,9 @@
       "PART-A",
       "9811110",
       8,
-      "E",
       24,
+      24,
+      "E",
       ""
      ],
      [
@@ -1110,8 +1117,9 @@
       "PART-A",
       "9715310",
       6,
-      "E",
       24,
+      24,
+      "E",
       ""
      ],
      [
@@ -1120,8 +1128,9 @@
       "PART-A",
       "9722D10",
       12,
-      "E",
+      20,
       24,
+      "E",
       "Changed. 9715310 deleted. Total 20, 4 case/day left (below Max is allowed)."
      ],
      [
@@ -1130,8 +1139,9 @@
       "PART-A",
       "9811110",
       8,
-      "E",
+      20,
       24,
+      "E",
       ""
      ],
      [
@@ -1140,8 +1150,9 @@
       "PART-C",
       "9715310",
       18,
-      "E",
       30,
+      30,
+      "E",
       "Changed. 9811110 inserted. Total 30 (equal to Max)."
      ],
      [
@@ -1150,8 +1161,9 @@
       "PART-C",
       "9811110",
       12,
-      "A",
       30,
+      30,
+      "A",
       ""
      ],
      [
@@ -1160,8 +1172,9 @@
       "PART-G",
       "9722D10",
       22,
-      "A",
       22,
+      22,
+      "A",
       "Inserted. Total 22. Sync Status No Sync."
      ],
      [
@@ -1170,8 +1183,9 @@
       "PART-G",
       "",
       "",
-      "A",
+      "",
       22,
+      "A",
       "NO CHANGE. PART-G stays without mapping."
      ],
      [
@@ -1180,8 +1194,9 @@
       "PART-A",
       "9722D10",
       12,
-      "E",
       24,
+      24,
+      "E",
       "NO CHANGE. Sync Status and last update stay."
      ],
      [
@@ -1190,8 +1205,9 @@
       "PART-A",
       "9811110",
       8,
-      "E",
       24,
+      24,
+      "E",
       ""
      ],
      [
@@ -1200,8 +1216,9 @@
       "PART-A",
       "9715310",
       4,
-      "E",
       24,
+      24,
+      "E",
       ""
      ],
      [
@@ -1210,8 +1227,9 @@
       "PART-C",
       "9715310",
       18,
-      "E",
+      18,
       30,
+      "E",
       "Only PART-C is processed (here NO CHANGE). PART-A and PART-G are not changed."
      ]
     ]
@@ -1221,11 +1239,12 @@
     "columns": [
      "No",
      "Scenario",
-     "part_no",
-     "dest_code",
-     "case_day",
-     "upload",
-     "total_case_day",
+     "Part Number",
+     "Destination Code",
+     "Dest Case/Day",
+     "Total Case/Day (used)",
+     "Max Case/Day (quota)",
+     "Upload (A/E)",
      "Error (4.2 check no.)"
     ],
     "widths": [
@@ -1245,8 +1264,9 @@
       "PART-Z99",
       "9722D10",
       10,
-      "A",
+      10,
       "",
+      "A",
       "Check 1: Part No is not registered or its status is not Active."
      ],
      [
@@ -1255,8 +1275,9 @@
       "PART-I",
       "9722D10",
       10,
-      "A",
+      10,
       20,
+      "A",
       "Check 1: Part No is not registered or its status is not Active."
      ],
      [
@@ -1265,8 +1286,9 @@
       "PART-A",
       "ZZZZZ99",
       10,
-      "A",
+      10,
       24,
+      "A",
       "Check 2: Destination code ZZZZZ99 not found in the destination master (TB_M_H0125_DESTINATION)."
      ],
      [
@@ -1275,9 +1297,10 @@
       "PART-A",
       "9722D10",
       0,
-      "E",
+      0,
       24,
-      "Check 3: case_day must be a whole number greater than 0."
+      "E",
+      "Check 3: Dest Case/Day must be a whole number greater than 0."
      ],
      [
       "E5",
@@ -1285,8 +1308,9 @@
       "PART-A",
       "9722D10",
       10,
-      "E",
+      14,
       24,
+      "E",
       "Check 4: Destination 9722D10 appears more than once for this part."
      ],
      [
@@ -1295,19 +1319,21 @@
       "PART-A",
       "9722D10",
       4,
-      "E",
+      14,
       24,
+      "E",
       ""
      ],
      [
       "E6",
-      "Only one of dest_code / case_day",
+      "Only one of Destination Code / Dest Case/Day",
       "PART-G",
       "9722D10",
       "",
-      "A",
+      "",
       22,
-      "Check 5: dest_code and case_day must both be filled or both blank."
+      "A",
+      "Check 5: Destination Code and Dest Case/Day must both be filled or both blank."
      ],
      [
       "E7",
@@ -1315,8 +1341,9 @@
       "PART-A",
       "9722D10",
       12,
-      "E",
+      30,
       24,
+      "E",
       "Check 6: Total allocation of 30 case/day exceeds Max Case/Day (24). Reduce one of the destinations."
      ],
      [
@@ -1325,8 +1352,9 @@
       "PART-A",
       "9811110",
       8,
-      "E",
+      30,
       24,
+      "E",
       ""
      ],
      [
@@ -1335,8 +1363,9 @@
       "PART-A",
       "9715310",
       10,
-      "E",
+      30,
       24,
+      "E",
       ""
      ],
      [
@@ -1345,8 +1374,9 @@
       "PART-G",
       "9722D10",
       22,
-      "A",
       22,
+      22,
+      "A",
       "Whole file rejected. The valid row is NOT saved."
      ],
      [
@@ -1355,19 +1385,21 @@
       "PART-A",
       "ZZZZZ99",
       10,
-      "A",
+      10,
       24,
+      "A",
       "Check 2 on this row. Result report sheet Re-upload lists the rows to correct."
      ],
      [
       "E9",
-      "upload E for a destination that is not mapped yet",
+      "Upload (A/E) E for a destination that is not mapped yet",
       "PART-C",
       "9811110",
       12,
-      "E",
+      12,
       30,
-      "Check 8: Destination 9811110 is not mapped for PART-C yet; use upload A."
+      "E",
+      "Check 8: Destination 9811110 is not mapped for PART-C yet; use Upload (A/E) A."
      ]
     ]
    },
@@ -1401,7 +1433,7 @@
      ],
      [
       "F5",
-      "A template column is missing (e.g. case_day deleted)",
+      "A template column is missing (e.g. Dest Case/Day deleted)",
       "Rejected: required column not found."
      ]
     ]
