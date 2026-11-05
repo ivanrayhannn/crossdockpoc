@@ -100,7 +100,7 @@ for b in s['operation']:
             items[i] = t.replace('Part Name, Pcs/Case, Total Case/Day (used), Max Case/Day (quota), Pcs/Day, Percentage, Sync Status, Destination Code, '
                                  'Destination, Dest Case/Day, Dest Pcs/Day, Dest Percentage',
                                  'Part Name, Destination Code, Pcs/Case, Dest Case/Day, Total Case/Day (used), Max Case/Day (quota), Dest Pcs/Day, '
-                                 'Pcs/Day, Sync Status')
+                                 'Pcs/Day, Sync Status, CREATED_DT, CREATED_BY, UPDATED_DT, UPDATED_BY (audit of the mapping row)')
 s = json.loads(json.dumps(s, ensure_ascii=False).replace("Edit rows use sheet 'Upload' of the Part List Export Excel as base file (pre-filled with flag E).",
                                                          "Edit rows use sheet 'Upload' of the Part List Export Excel as base file (pre-filled with Upload (A/E) = E)."))
 save('XD01', s)
