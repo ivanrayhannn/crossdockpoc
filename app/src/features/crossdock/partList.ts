@@ -39,15 +39,15 @@ const LIST_COLUMNS: (Column<Part> & { width: number })[] = [
   { header: { value: 'Last Update', ...HEADER }, cell: (p) => ({ value: `${p.dt} · ${p.by}` }), width: 32 },
 ];
 
-/** Sheet 2 "Upload": the upload template (column order of FSD Crossdock Upload Batch) pre-filled with current values (flag E), the base file for Edit uploads. */
+/** Sheet 2 "Upload": the upload template (same column names as sheet 1; read by name by XD02) pre-filled with current values (flag E), the base file for Edit uploads. */
 const UPLOAD_COLUMNS: (Column<Part> & { width: number })[] = [
-  { header: { value: 'part_no', ...HEADER }, cell: (p) => ({ value: p.p }), width: 18 },
-  { header: { value: 'min_mad', ...HEADER }, cell: (p) => (p.minMad === '' ? null : { value: num(p.minMad) }), width: 10 },
-  { header: { value: 'pcs_case', ...HEADER }, cell: (p) => ({ value: num(p.pc) }), width: 11 },
-  { header: { value: 'max_case_day', ...HEADER }, cell: (p) => ({ value: num(p.mc) }), width: 14 },
-  { header: { value: 'status', ...HEADER }, cell: (p) => ({ value: p.st }), width: 12 },
-  { header: { value: 'upload', ...HEADER }, cell: () => ({ value: 'E' }), width: 10 },
-  { header: { value: 'effective_start_date', ...HEADER }, cell: (p) => ({ value: uploadDate(p.effDate) }), width: 20 },
+  { header: { value: 'Part Number', ...HEADER }, cell: (p) => ({ value: p.p }), width: 18 },
+  { header: { value: 'Min MAD', ...HEADER }, cell: (p) => (p.minMad === '' ? null : { value: num(p.minMad) }), width: 10 },
+  { header: { value: 'Pcs/Case', ...HEADER }, cell: (p) => ({ value: num(p.pc) }), width: 11 },
+  { header: { value: 'Max Case/Day', ...HEADER }, cell: (p) => ({ value: num(p.mc) }), width: 14 },
+  { header: { value: 'Status', ...HEADER }, cell: (p) => ({ value: p.st }), width: 12 },
+  { header: { value: 'Upload (A/E)', ...HEADER }, cell: () => ({ value: 'E' }), width: 10 },
+  { header: { value: 'Effective Start Date', ...HEADER }, cell: (p) => ({ value: uploadDate(p.effDate) }), width: 20 },
 ];
 
 /**

@@ -15,6 +15,8 @@ interface MappingLine {
 interface UploadLine {
   part: Part;
   dest: Part['dests'][number] | null;
+  /** Excel row of the line (header = row 1), used by the formula of Total Case/Day (used). */
+  row: number;
 }
 
 const HEADER = { fontWeight: 'bold', backgroundColor: '#e8ecf1' } as const;
@@ -47,11 +49,13 @@ const LIST_COLUMNS: (Column<MappingLine> & { width: number })[] = [
 
 /** Sheet "Upload": base file for the Mapping upload, pre-filled with the current mapping (upload E) and A for a part without mapping. */
 const UPLOAD_COLUMNS: (Column<UploadLine> & { width: number })[] = [
-  { header: { value: 'part_no', ...HEADER }, cell: ({ part }) => ({ value: part.p }), width: 18 },
-  { header: { value: 'dest_code', ...HEADER }, cell: ({ dest }) => cell(dest && (dest.cd || DCODE[dest.d])), width: 12 },
-  { header: { value: 'case_day', ...HEADER }, cell: ({ dest }) => cell(dest && num(dest.al)), width: 11 },
-  { header: { value: 'upload', ...HEADER }, cell: ({ dest }) => ({ value: dest ? 'E' : 'A' }), width: 10 },
-  { header: { value: 'total_case_day', ...HEADER }, cell: ({ part }) => ({ value: num(part.mc) }), width: 15 },
+  { header: { value: 'Part Number', ...HEADER }, cell: ({ part }) => ({ value: part.p }), width: 18 },
+  { header: { value: 'Destination Code', ...HEADER }, cell: ({ dest }) => cell(dest && (dest.cd || DCODE[dest.d])), width: 17 },
+  { header: { value: 'Dest Case/Day', ...HEADER, align: 'right' }, cell: ({ dest }) => cell(dest && num(dest.al)), width: 15 },
+  { header: { value: 'Upload (A/E)', ...HEADER }, cell: ({ dest }) => ({ value: dest ? 'E' : 'A' }), width: 13 },
+  // reference only (not read by XD03): used follows the Dest Case/Day typed in the file, quota is Max Case/Day of Part List
+  { header: { value: 'Total Case/Day (used)', ...HEADER, align: 'right' }, cell: ({ row }) => ({ type: 'Formula', value: `SUMIF($A$2:$A$5001,A${row},$C$2:$C$5001)` }), width: 21 },
+  { header: { value: 'Max Case/Day (quota)', ...HEADER, align: 'right' }, cell: ({ part }) => ({ value: num(part.mc) }), width: 21 },
 ];
 
 /**
@@ -69,7 +73,8 @@ export async function exportMappingXlsx(rows: Part[], period: string, allParts: 
       ? allParts
           .filter((p) => p.st === 'Active' && p.per === CUR_PER)
           .sort((a, b) => a.p.localeCompare(b.p))
-          .flatMap<UploadLine>((part) => (part.dests.length ? part.dests.map((dest) => ({ part, dest })) : [{ part, dest: null }]))
+          .flatMap<Omit<UploadLine, 'row'>>((part) => (part.dests.length ? part.dests.map((dest) => ({ part, dest })) : [{ part, dest: null }]))
+          .map((line, i) => ({ ...line, row: i + 2 }))
       : [];
 
   const d = new Date();
