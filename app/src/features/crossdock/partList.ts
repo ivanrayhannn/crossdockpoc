@@ -1,6 +1,7 @@
 import writeExcelFile, { getSheetData, type Column } from 'write-excel-file/browser';
 import { num, parseDt } from '../../lib/format';
 import type { Part, PartQuery } from '../../types';
+import { HIST_BY_PART } from '../../data/seed';
 
 /** Rows of the Part List table for a query: filtered, then sorted. Shared by the table and Export Excel. */
 export function selectParts(parts: Part[], q: PartQuery): Part[] {
@@ -26,6 +27,14 @@ function uploadDate(iso: string | undefined): string {
   return m ? `${m[3]}-${MONTHS[Number(m[2]) - 1]}-${m[1]}` : '';
 }
 
+/** Audit of a part: created = its registration (oldest history event; the part's own time when added in this session),
+ *  updated = its last change. */
+export function partAudit(p: Part): { createdDt: string; createdBy: string; updatedDt: string; updatedBy: string } {
+  const hist = HIST_BY_PART[p.p];
+  const first = hist && hist.length ? hist[hist.length - 1] : null;
+  return { createdDt: first ? first.w : p.dt, createdBy: first ? first.by : p.by, updatedDt: p.dt, updatedBy: p.by };
+}
+
 /** Sheet 1: the Part List as shown on the screen, plus Effective Start Date. Information only. */
 const LIST_COLUMNS: (Column<Part> & { width: number })[] = [
   { header: { value: 'Part Number', ...HEADER }, cell: (p) => ({ value: p.p }), width: 18 },
@@ -36,7 +45,11 @@ const LIST_COLUMNS: (Column<Part> & { width: number })[] = [
   { header: { value: 'Total Pcs/Day', ...HEADER, align: 'right' }, cell: (p) => ({ value: num(p.pc) * num(p.mc), format: NUMBER_FORMAT }), width: 15 },
   { header: { value: 'Status', ...HEADER }, cell: (p) => ({ value: p.st }), width: 12 },
   { header: { value: 'Effective Start Date', ...HEADER }, cell: (p) => ({ value: uploadDate(p.effDate) }), width: 20 },
-  { header: { value: 'Last Update', ...HEADER }, cell: (p) => ({ value: `${p.dt} · ${p.by}` }), width: 32 },
+  // audit log of the part (TB_M_PART_CANDIDATE CREATED_* / CHANGED_*); technical names in the file, labels on the screen
+  { header: { value: 'CREATED_DT', ...HEADER }, cell: (p) => ({ value: partAudit(p).createdDt }), width: 18 },
+  { header: { value: 'CREATED_BY', ...HEADER }, cell: (p) => ({ value: partAudit(p).createdBy }), width: 16 },
+  { header: { value: 'UPDATED_DT', ...HEADER }, cell: (p) => ({ value: partAudit(p).updatedDt }), width: 18 },
+  { header: { value: 'UPDATED_BY', ...HEADER }, cell: (p) => ({ value: partAudit(p).updatedBy }), width: 16 },
 ];
 
 /** Sheet 2 "Upload": the upload template (same column names as sheet 1; read by name by XD02) pre-filled with current values (flag E), the base file for Edit uploads. */

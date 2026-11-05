@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { fmt, num, parseDt } from '../../../lib/format';
 import type { Part, PartQuery, PartStatus } from '../../../types';
-import { selectParts } from '../partList';
+import { partAudit, selectParts } from '../partList';
 import { CalcRunBar, type CalcRun } from './CalcRunBar';
 
 const STATUS_STYLE: Record<PartStatus, { bg: string; fg: string }> = {
@@ -202,18 +202,21 @@ export function PartListTab({ parts, q, aq, onSearch, setQ, resetQ, ro, onOpenPa
 
           {!empty && !noResult && (
             <div style={{ overflowX: 'auto', overflowY: 'auto', maxHeight: 560 }}>
-            <table style={{ width: '100%', minWidth: 1060, borderCollapse: 'separate', borderSpacing: 0, fontSize: 12.5, tableLayout: 'fixed' }}>
+            <table style={{ width: '100%', minWidth: 1124, borderCollapse: 'separate', borderSpacing: 0, fontSize: 12.5, tableLayout: 'fixed' }}>
               <thead>
                 <tr>
-                  <th style={{ ...th, padding: '0 10px 0 16px', width: 130 }}>Part Number</th>
-                  <th style={{ ...th, width: 220 }}>Part Name</th>
-                  <th style={{ ...th, textAlign: 'right', width: 90 }}>Min MAD</th>
-                  <th style={{ ...th, textAlign: 'right', width: 86 }}>Pcs/Case</th>
-                  <th style={{ ...th, textAlign: 'right', width: 104 }}>Max Case/Day</th>
-                  <th style={{ ...th, textAlign: 'right', width: 104 }}>Total Pcs/Day</th>
-                  <th style={{ ...th, width: 84 }}>Status</th>
-                  <th style={{ ...th, width: 128 }}>Last Update</th>
-                  <th style={{ width: 112, background: 'var(--color-surface)', borderBottom: '1px solid var(--color-neutral-400)', position: 'sticky', top: 0, zIndex: 1 }} />
+                  <th style={{ ...th, padding: '0 10px 0 16px', width: 112 }}>Part Number</th>
+                  <th style={{ ...th, width: 130 }}>Part Name</th>
+                  <th style={{ ...th, textAlign: 'right', width: 70 }}>Min MAD</th>
+                  <th style={{ ...th, textAlign: 'right', width: 66 }}>Pcs/Case</th>
+                  <th style={{ ...th, textAlign: 'right', width: 88 }}>Max Case/Day</th>
+                  <th style={{ ...th, textAlign: 'right', width: 92 }}>Total Pcs/Day</th>
+                  <th style={{ ...th, width: 82 }}>Status</th>
+                  <th style={{ ...th, width: 108 }}>Created Date</th>
+                  <th style={{ ...th, width: 86 }}>Created By</th>
+                  <th style={{ ...th, width: 108 }}>Updated Date</th>
+                  <th style={{ ...th, width: 86 }}>Updated By</th>
+                  <th style={{ width: 96, background: 'var(--color-surface)', borderBottom: '1px solid var(--color-neutral-400)', position: 'sticky', top: 0, zIndex: 1 }} />
                 </tr>
               </thead>
               <tbody>
@@ -240,10 +243,18 @@ export function PartListTab({ parts, q, aq, onSearch, setQ, resetQ, ro, onOpenPa
                           {p.st}
                         </span>
                       </td>
-                      <td style={{ ...td, fontSize: 11.5, color: 'var(--color-neutral-700)', overflow: 'hidden' }}>
-                        <div style={{ fontVariantNumeric: 'tabular-nums' }}>{p.dt}</div>
-                        <div style={{ fontSize: 10.5, overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.by}</div>
-                      </td>
+                      {(() => {
+                        const a = partAudit(p);
+                        const cell = { ...td, fontSize: 11.5, color: 'var(--color-neutral-700)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } as const;
+                        return (
+                          <>
+                            <td style={{ ...cell, fontVariantNumeric: 'tabular-nums' }}>{a.createdDt}</td>
+                            <td style={cell} title={a.createdBy}>{a.createdBy}</td>
+                            <td style={{ ...cell, fontVariantNumeric: 'tabular-nums' }}>{a.updatedDt}</td>
+                            <td style={cell} title={a.updatedBy}>{a.updatedBy}</td>
+                          </>
+                        );
+                      })()}
                       <td style={{ ...td, padding: '0 10px' }}>
                         <span style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
                           <button className="btn btn-secondary" onClick={() => onOpenPart(p.p)} style={{ fontSize: 12, padding: '4px 12px', whiteSpace: 'nowrap' }}>
