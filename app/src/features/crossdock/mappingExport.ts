@@ -24,6 +24,21 @@ const NUMBER_FORMAT = '#,##0';
 const cell = (value: string | number | null | undefined, format?: string) => (value == null || value === '' ? null : { value, format });
 
 
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+/** "24-Sep-2026 11:49" -> sortable number, or null when the text is not a date-time (e.g. "now"). */
+const stamp = (t: string) => {
+  const m = /^(\d{2})-([A-Za-z]{3})-(\d{4}) (\d{2}):(\d{2})$/.exec(t);
+  return m ? Number(m[3]) * 1e8 + (MONTHS.indexOf(m[2]) + 1) * 1e6 + Number(m[1]) * 1e4 + Number(m[4]) * 100 + Number(m[5]) : null;
+};
+/** Audit of a mapping row (prototype data has none): created by the mapping calculation (XD05 process 2) at the start of the
+ *  period, last updated by the last change of the part when that is later. */
+const audit = (part: Part) => {
+  const created = `01-${part.per.replace(' ', '-')} 03:00`;
+  const by = 'XD05 (batch)';
+  const later = (stamp(part.dt) ?? 0) > (stamp(created) ?? 0);
+  return { createdDt: created, createdBy: by, updatedDt: later ? part.dt : created, updatedBy: later ? part.by : by };
+};
+
 /** Sheet 1: the table columns, then the destination mapping of each part. Information only. */
 const LIST_COLUMNS: (Column<MappingLine> & { width: number })[] = [
   { header: { value: 'Period', ...HEADER }, cell: ({ part }) => cell(part.per), width: 12 },
@@ -38,6 +53,11 @@ const LIST_COLUMNS: (Column<MappingLine> & { width: number })[] = [
   { header: { value: 'Dest Pcs/Day', ...HEADER, align: 'right' }, cell: ({ part, dest }) => cell(dest && num(part.pc) * num(dest.al), NUMBER_FORMAT), width: 14 },
   { header: { value: 'Pcs/Day', ...HEADER, align: 'right' }, cell: ({ part, allocated }) => cell(num(part.pc) * allocated, NUMBER_FORMAT), width: 12 },
   { header: { value: 'Sync Status', ...HEADER }, cell: ({ part }) => cell(syncBadge(part.syncStatus).t), width: 13 },
+  // audit log of the mapping row (TB_M_PART_CANDIDATE_DEST CREATED_* / CHANGED_*); blank for a part without destination
+  { header: { value: 'CREATED_DT', ...HEADER }, cell: ({ part, dest }) => cell(dest && audit(part).createdDt), width: 18 },
+  { header: { value: 'CREATED_BY', ...HEADER }, cell: ({ part, dest }) => cell(dest && audit(part).createdBy), width: 16 },
+  { header: { value: 'UPDATED_DT', ...HEADER }, cell: ({ part, dest }) => cell(dest && audit(part).updatedDt), width: 18 },
+  { header: { value: 'UPDATED_BY', ...HEADER }, cell: ({ part, dest }) => cell(dest && audit(part).updatedBy), width: 16 },
 ];
 
 /** Sheet "Upload": base file for the Mapping upload, pre-filled with the current mapping (upload E) and A for a part without mapping. */
