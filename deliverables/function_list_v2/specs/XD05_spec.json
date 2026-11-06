@@ -178,7 +178,7 @@
      ],
      [
       "Order",
-      "Runs after XD04. If XD04 failed, XD05 still runs (with the actual demand data available in NSP) (decided 19-Oct)."
+      "Runs after XD04 has succeeded and calculates with the actual demand data just synced. When XD04 still fails after its 3 retries, XD05 is not started (decided 6-Nov)."
      ]
     ]
    }
@@ -2206,6 +2206,13 @@
      "",
      "Y",
      "EM / MS flag (not used by Crossdock)"
+    ],
+    [
+     "INTERFACE_UPDATE_DT",
+     "TIMESTAMP",
+     "",
+     "N",
+     "Interface update date and time of the row in DB Surrounding; XD04 reads only rows changed since the last successful run (watermark)"
     ]
    ]
   },

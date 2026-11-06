@@ -61,7 +61,7 @@ Konsep lama (sebelum 23-Oct, XD12) sudah tidak berlaku. Konsep sekarang: XD08 UP
 | A9–A11 | IF Cross Dock Master to AP POLE (XD07) | Tabel tujuan AP POLE dan detail SFTP **tidak didetailkan**; format CSV XD_CDMASTER_<target>_<timestamp>.csv. Part Active tanpa destinasi: semua destinasinya di GTOPAS dihapus |
 | B1 | XD08, XD13 | Jadwal setelah data GTOPAS tersedia (27:30), retry 3x |
 | B2 | XD04, XD05 | Jadwal bulanan tidak didetailkan |
-| B3 | XD04, XD05 | Kalau XD04 gagal, XD05 tetap jalan dengan data yang ada di NSP; XD04 tanpa auto retry (dijalankan ulang manual, 5-Nov) |
+| B3 | XD04, XD05 | **Direvisi 6-Nov**: XD04 auto retry 3×; masih gagal → ditangani manual di luar NSP dan XD05 **tidak** dijalankan. XD05 hanya jalan setelah XD04 sukses (data baru). XD04 baca delta INTERFACE_UPDATE_DT > watermark, upsert; gagal → watermark tidak diupdate |
 | B4 | XD08 | SERIAL_NO ditambahkan tim DB Surrounding |
 | B5, B6 | – | H0202 Sync, Menu Settings (dokumen) dan XD14 tidak dipakai |
 | C1 | XD04 | Kolom DAD tetap ikut di-replicate (tidak dipakai kalkulasi) |

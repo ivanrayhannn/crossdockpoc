@@ -131,7 +131,7 @@ export const BPF: BpfData = {
      "band": "B3",
      "slot": 0,
      "fn": "XD04",
-     "title": "Actual Demand Summary Sync: delete – insert",
+     "title": "Actual Demand Summary Sync: delta upsert, retry 3x",
      "read": [
       "TB_R_ACTUAL_DEMAND_SUMMARY (DB Surrounding)"
      ],
@@ -1048,11 +1048,11 @@ export const BPF: BpfData = {
    "flow": "F1",
    "step": "M5",
    "fn": "XD04",
-   "condition": "DB Surrounding cannot be read or the insert fails (after retries)",
+   "condition": "DB Surrounding cannot be read or the upsert fails (after 3 retries)",
    "detection": "Log FAILED",
-   "system": "Roll back; XD05 still runs with the actual demand data already in NSP (decided 19-Oct).",
+   "system": "Roll back, watermark not changed; XD05 is not started (decided 6-Nov).",
    "pic": "System admin",
-   "action": "Contact PIC."
+   "action": "Handle the run manually outside NSP, then run XD05."
   },
   {
    "id": "AB04",

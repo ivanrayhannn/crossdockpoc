@@ -108,7 +108,7 @@ SCENARIOS = [
                 ('ref', ['PART-X', 'DUMMY PART X', 300, 6, 10, 60, 'Active', '1', 'CALC']),
                 ('new', ['PART-Y', 'DUMMY PART Y', 100, 6, 2, 12, 'Candidate', '0', 'SCREEN']),
                 ('ref', ['PART-Z', 'DUMMY PART Z', 50, 6, 4, 24, 'Active', '1', 'CALC'])]),
-            ('3. XD04 monthly actual demand (delete – insert)', 'TB_R_ACTUAL_DEMAND_SUMMARY', [
+            ('3. XD04 monthly actual demand (delta upsert)', 'TB_R_ACTUAL_DEMAND_SUMMARY', [
                 ('new', [b, p, 'N', m, part, q]) for part, b, p, qs in (('PART-X', '97153', '10', (180, 190, 200)), ('PART-X', '9722D', '10', (90, 95, 100)),
                                                                         ('PART-X', '98111', '10', (30, 30, 30)), ('PART-Y', '98111', '10', (120, 130, 140)),
                                                                         ('PART-Z', '97153', '10', (40, 35, 30)))
