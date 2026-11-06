@@ -103,8 +103,8 @@ DETAIL = [
  ('XD03', BL, 'All-or-nothing', '1 error = file ditolak, result report + Re-upload.', '', ''),
  # XD04
  ('XD04', UR, 'Data demand untuk kalkulasi', 'Actual Demand Summary harus tersedia di NSP sebelum XD05.', '', 'TB_R_ACTUAL_DEMAND_SUMMARY'),
- ('XD04', BL, 'Replicate', 'Delta: hanya baris dengan INTERFACE_UPDATE_DT > watermark (run sukses terakhir), upsert per key (semua kolom, termasuk DAD yang tidak dipakai kalkulasi). All-or-nothing; gagal → watermark tidak diupdate.', '', ''),
- ('XD04', ABN, 'Gagal', 'Auto retry 3×; masih gagal → ditangani manual di luar NSP dan XD05 tidak dijalankan (6-Nov). XD05 hanya jalan setelah XD04 sukses. Jadwal tidak didetailkan.', '', ''),
+ ('XD04', BL, 'Replicate', 'Delta: hanya baris dengan CREATE_DT > watermark (run sukses terakhir), upsert per key (semua kolom, termasuk DAD yang tidak dipakai kalkulasi). All-or-nothing; gagal → watermark tidak diupdate.', '', ''),
+ ('XD04', ABN, 'Gagal', 'Auto retry 3×; masih gagal → ditangani manual di luar NSP (6-Nov). XD05 jalan otomatis lewat trigger kalau ada data baru di tabel replicate; tanpa data baru XD05 tidak jalan. Jadwal tidak didetailkan.', '', ''),
  # XD05
  ('XD05', UR, 'Status part otomatis', 'Part crossdock ditentukan Active / Inactive dari demand historis, bukan manual.', '', ''),
  ('XD05', BL, 'Proses 1 – rata-rata MAD', 'Ambil demand range bulan historis sebelum bulan berjalan (jumlah bulan di system master, mis. 6). Semua part terdaftar yang Effective Start Date-nya sudah tiba. Rata-rata = total MAD ÷ jumlah bulan master (pembagi tetap, bulan tanpa data = 0), 2 desimal.', 'Part 52119BZV60, 202604–202609: Min MAD 500 → Active, 600 → Inactive.', 'TB_R_ACTUAL_DEMAND_SUMMARY, TB_R_PART_DAD_RESULT'),

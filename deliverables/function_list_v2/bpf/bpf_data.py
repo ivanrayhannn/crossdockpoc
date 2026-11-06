@@ -157,7 +157,7 @@ ABNORMALITY = [
     ('AB02', 'F1', 'M3 / M9', 'XD02 / XD03', 'Upload file invalid (extension, header, row count) or a validation rule fails', 'Upload result REJECTED, result report',
      'Reject the whole file; nothing is saved.', 'Procurement / D/S Team', 'Correct the rows in sheet Re-upload of the result report and upload again.'),
     ('AB03', 'F1', 'M5', 'XD04', 'DB Surrounding cannot be read or the upsert fails (after 3 retries)', 'Log FAILED',
-     'Roll back, watermark not changed; XD05 is not started (decided 6-Nov).', 'System admin', 'Handle the run manually outside NSP, then run XD05.'),
+     'Roll back, watermark not changed; no new data, so the XD05 trigger does not start XD05 (decided 6-Nov).', 'System admin', 'Handle the run manually outside NSP; XD05 then starts by its trigger.'),
     ('AB04', 'F1', 'M6 / M7', 'XD05', 'Scheduled run and 3 retries failed (insert / update fails, range not set)', 'Log FAILED; [Run calculation] enabled',
      'Roll back the process; process 2 starts only after process 1 succeeded.', 'Procurement / D/S Team',
      'Check the cause; Procurement clicks [Run calculation (Part List)] (process 1 + 2), D/S clicks [Run calculation (Mapping)] (process 2).'),

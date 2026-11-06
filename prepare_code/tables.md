@@ -243,7 +243,6 @@ Actual demand summary replicated from DB Surrounding to NSP (same columns). Key 
 | NUM_OF_OLD_PART_NO | NUMBER |  | Y | Number of old part numbers (not used by Crossdock) |
 | NUM_OF_WORKINGDAY_6M | NUMBER |  | Y | Working days in 6 months (not used by Crossdock) |
 | EM_MS_FLAG | CHAR(1) |  | Y | EM / MS flag (not used by Crossdock) |
-| INTERFACE_UPDATE_DT | TIMESTAMP |  | N | Interface update date and time of the row in DB Surrounding; XD04 reads only rows changed since the last successful run (watermark) |
 
 #### TB_R_CASE_LABEL_LAST_SEQ (transaction, existing)
 Used by: XD10

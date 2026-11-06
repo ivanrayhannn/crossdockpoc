@@ -105,7 +105,7 @@
 | LOG3 | Read source | DB Surrounding cannot be reached or read | Error | Cannot read TB_R_ACTUAL_DEMAND_SUMMARY from DB Surrounding: <ERROR_DETAIL>. | system: Roll back. STATUS = FAILED. Watermark not changed. Retry.; user: - |
 | LOG4 | Upsert | Insert / update of the NSP table fails | Error | Cannot save TB_R_ACTUAL_DEMAND_SUMMARY into NSP: <ERROR_DETAIL>. | system: Roll back. STATUS = FAILED. Watermark not changed. Retry.; user: - |
 | LOG5 | Unexpected error | Any other system error | Critical | Unexpected error: <ERROR_DETAIL>. | system: Roll back. STATUS = FAILED. Watermark not changed. Retry.; user: - |
-| LOG6 | Retry exhausted | Scheduled run and 3 retries failed | Warning | Actual demand summary sync failed 3 times. DAD volume calculation is not started. | system: Do not start XD05.; user: PIC handles the run manually outside NSP, then XD05 is run. |
+| LOG6 | Retry exhausted | Scheduled run and 3 retries failed | Warning | Actual demand summary sync failed 3 times. Handle the run manually outside NSP. | system: Write the log. No new data for XD05.; user: PIC handles the run manually outside NSP; XD05 then starts by its trigger. |
 
 ## XD05 – DAD Volume Calculation Batch
 
