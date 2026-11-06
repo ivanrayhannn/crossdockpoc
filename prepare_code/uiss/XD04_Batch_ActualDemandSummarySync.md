@@ -16,20 +16,21 @@
 
 ### Objective
 
-- To replicate TB_R_ACTUAL_DEMAND_SUMMARY from DB Surrounding to the table with the same name in NSP, so the XD05 DAD Volume Calculation (process 1 and 2) read the actual demand inside NSP.
-- The NSP table is fully replaced every run (delete - insert). In case any error occurs, the run is rolled back and NSP keeps the data of the last successful run.
+- To replicate TB_R_ACTUAL_DEMAND_SUMMARY from DB Surrounding to the table with the same name in NSP, so the XD05 DAD Volume Calculation (process 1 and 2) reads the actual demand inside NSP.
+- Only the rows changed since the last successful run are read (INTERFACE_UPDATE_DT > watermark) and upserted per key; the whole table is not read every run (decided 6-Nov).
+- In case any error occurs, the run is rolled back and the watermark is not changed, so the next run reads the same rows again. A failed run is retried automatically up to 3 times.
 - All columns are replicated as they are, including DAD (not used by the calculation) (decided 19-Oct).
 
 ### Operation flow
 
 ```mermaid
 flowchart TB
-  a>"Scheduler (monthly)"]
-  b["Read source table"]
-  c["Delete NSP table + insert all rows"]
+  a>"Scheduler (monthly) / auto retry"]
+  b["Read changed rows (INTERFACE_UPDATE_DT > watermark)"]
+  c["Upsert per key"]
   d{"Success?"}
-  e["Commit, Log SUCCESS"]
-  f["Roll back, Log FAILED"]
+  e["Commit, new watermark, Log SUCCESS, start XD05"]
+  f["Roll back, watermark not changed, Log FAILED, retry"]
   a --> b
   b --> c
   c --> d
@@ -41,46 +42,50 @@ flowchart TB
 
 | Name | Type | Description |
 |---|---|---|
-| TB_R_ACTUAL_DEMAND_SUMMARY (DB Surrounding) | DB | All rows of the actual demand summary |
+| TB_R_ACTUAL_DEMAND_SUMMARY (DB Surrounding) | DB | Rows with INTERFACE_UPDATE_DT > watermark |
+| Log | DB | Watermark of the last successful run |
 
 ### Output
 
 | Name | Type | Description |
 |---|---|---|
-| TB_R_ACTUAL_DEMAND_SUMMARY (NSP) | DB | if successful: same rows as the source (delete - insert) |
-| Log | DB | One record per run with status SUCCESS / FAILED |
+| TB_R_ACTUAL_DEMAND_SUMMARY (NSP) | DB | if successful: changed rows inserted (new key) or updated (existing key) |
+| Log | DB | One record per run attempt (SUCCESS / FAILED); new watermark only when SUCCESS |
 
 ### Parameters
 
 | Name | Description |
 |---|---|
-| - | No parameter. All rows of the source table are copied. |
+| Watermark | Last INTERFACE_UPDATE_DT taken by the previous successful run of this batch (kept in the Log); first run: all rows |
 
 ### Execution Schedule
 
 | Item | Description |
 |---|---|
 | Trigger | Monthly scheduler (set in the system master; not detailed in this document). |
-| Order | Runs before XD05. A failure of XD04 does not stop XD05 (decided 19-Oct). |
+| Auto retry | A failed run is retried automatically up to 3 times. After the 3rd failed retry the run is handled manually outside NSP (no screen in NSP, not part of this function) (decided 6-Nov). |
+| Order | Runs before XD05. XD05 starts only after XD04 has succeeded (scheduled run or retry) and uses the data just synced. When XD04 still fails after 3 retries, XD05 is not started (decided 6-Nov). |
 
 ## 2. Function flow
 
 ```mermaid
 flowchart TB
-  p1["1. Start (scheduler)"]
+  p1["1. Start (scheduler / retry)"]
+  p2["2. Get watermark"]
+  logi[("Log")]
   src[("TB_R_ACTUAL_DEMAND_SUMMARY (DB Surrounding)")]
-  p2["2. Read all source rows"]
-  p3["3. Delete all rows of NSP table"]
-  p4["4. Insert all rows"]
+  p3["3. Read changed rows"]
+  p4["4. Upsert per key"]
   dst[("TB_R_ACTUAL_DEMAND_SUMMARY (NSP)")]
   d{"5. Any error?"}
-  p6["6. Commit"]
-  p7["6. Roll back"]
-  p8["7. Record result in Log"]
+  p6["6. Commit, new watermark"]
+  p7["7. Roll back, retry"]
+  p8["8. Record result in Log"]
   log[("Log")]
   p1 --> p2
-  src --> p2
+  logi --> p2
   p2 --> p3
+  src --> p3
   p3 --> p4
   p4 --> dst
   p4 --> d
@@ -91,89 +96,75 @@ flowchart TB
   p8 --> log
 ```
 
-1. The scheduler starts the batch (monthly, set in the system master).
-2. Read all rows of TB_R_ACTUAL_DEMAND_SUMMARY (DB Surrounding).
-3. Delete all rows of TB_R_ACTUAL_DEMAND_SUMMARY (NSP).
-4. Insert every source row with the same column values (see Data Map).
+1. The scheduler starts the batch (monthly, set in the system master) or an automatic retry starts it. Write LOG1.
+2. Get the watermark: WATERMARK of the latest SUCCESS record of this batch in the Log.
+  - No SUCCESS record yet (first run): all rows are read.
+3. Read the rows of TB_R_ACTUAL_DEMAND_SUMMARY (DB Surrounding) with INTERFACE_UPDATE_DT > watermark.
+  - No row: nothing to upsert; the run ends with SUCCESS, 0 rows, and the watermark stays the same.
+4. Upsert into TB_R_ACTUAL_DEMAND_SUMMARY (NSP) per key (GROUPING_BUYER_CD + GROUPING_PD_CD + ORDER_TYPE_GROUP + DEMAND_MONTH_YEAR + PART_NO):
+  - New key: insert the row with all source columns.
+  - Existing key: update all other columns with the source values.
 5. Check whether any error occurred during steps 2 to 4.
-6. No error: commit. Error: roll back steps 3 and 4.
-  - Delete and insert run in one transaction, so a failed run never leaves the NSP table empty or half filled.
-7. Record the result (SUCCESS / FAILED, row count, error message) in the Log. Exit.
+6. No error: commit. The new watermark = max INTERFACE_UPDATE_DT of the rows read. Start XD05 DAD Volume Calculation.
+7. Error: roll back step 4; the watermark is not changed, so the next run reads the same rows again.
+  - The scheduler retries automatically up to 3 times (RUN_TYPE = RETRY, RETRY_NO 1-3).
+  - After the 3rd failed retry: LOG6, XD05 is not started; the run is handled manually outside NSP.
+8. Record the result (SUCCESS / FAILED, inserted / updated rows, watermark, error message) in the Log. Exit.
 
 ## 3. Data edit mapping
 
-#### 1. Delete TB_R_ACTUAL_DEMAND_SUMMARY (NSP) – All rows (full replace)
-- Source: TB_R_ACTUAL_DEMAND_SUMMARY (NSP)
+#### 1. Insert / Update TB_R_ACTUAL_DEMAND_SUMMARY (NSP) – Upsert per key (insert when the key is new, else update)
+- Source: TB_R_ACTUAL_DEMAND_SUMMARY (DB Surrounding) (keys: INTERFACE_UPDATE_DT = > watermark)
+- Destination keys: GROUPING_BUYER_CD + GROUPING_PD_CD + ORDER_TYPE_GROUP + DEMAND_MONTH_YEAR + PART_NO = Key of the source row
 
 | Source field | Destination field | Description |
 |---|---|---|
-|  | GROUPING_BUYER_CD | Row is deleted |
-|  | GROUPING_PD_CD | Row is deleted |
-|  | ORDER_TYPE_GROUP | Row is deleted |
-|  | DEMAND_MONTH_YEAR | Row is deleted |
-|  | PART_NO | Row is deleted |
-|  | MAD | Row is deleted |
-|  | DAD | Row is deleted |
-|  | CREATE_DT | Row is deleted |
-|  | CREATE_BY | Row is deleted |
-|  | UPDATE_DT | Row is deleted |
-|  | UPDATE_BY | Row is deleted |
-|  | N01_QTY | Row is deleted |
-|  | N02_QTY | Row is deleted |
-|  | N03_QTY | Row is deleted |
-|  | N04_QTY | Row is deleted |
-|  | N05_QTY | Row is deleted |
-|  | N06_QTY | Row is deleted |
-|  | NUM_OF_OLD_PART_NO | Row is deleted |
-|  | NUM_OF_WORKINGDAY_6M | Row is deleted |
-|  | EM_MS_FLAG | Row is deleted |
+| GROUPING_BUYER_CD | GROUPING_BUYER_CD | Same value as the source (key: insert only) |
+| GROUPING_PD_CD | GROUPING_PD_CD | Same value as the source (key: insert only) |
+| ORDER_TYPE_GROUP | ORDER_TYPE_GROUP | Same value as the source (key: insert only) |
+| DEMAND_MONTH_YEAR | DEMAND_MONTH_YEAR | Same value as the source (key: insert only) |
+| PART_NO | PART_NO | Same value as the source (key: insert only) |
+| MAD | MAD | Same value as the source (insert and update) |
+| DAD | DAD | Same value as the source (insert and update) |
+| CREATE_DT | CREATE_DT | Same value as the source (insert and update) |
+| CREATE_BY | CREATE_BY | Same value as the source (insert and update) |
+| UPDATE_DT | UPDATE_DT | Same value as the source (insert and update) |
+| UPDATE_BY | UPDATE_BY | Same value as the source (insert and update) |
+| N01_QTY | N01_QTY | Same value as the source (insert and update) |
+| N02_QTY | N02_QTY | Same value as the source (insert and update) |
+| N03_QTY | N03_QTY | Same value as the source (insert and update) |
+| N04_QTY | N04_QTY | Same value as the source (insert and update) |
+| N05_QTY | N05_QTY | Same value as the source (insert and update) |
+| N06_QTY | N06_QTY | Same value as the source (insert and update) |
+| NUM_OF_OLD_PART_NO | NUM_OF_OLD_PART_NO | Same value as the source (insert and update) |
+| NUM_OF_WORKINGDAY_6M | NUM_OF_WORKINGDAY_6M | Same value as the source (insert and update) |
+| EM_MS_FLAG | EM_MS_FLAG | Same value as the source (insert and update) |
+| INTERFACE_UPDATE_DT | INTERFACE_UPDATE_DT | Same value as the source (insert and update) |
 
-#### 2. Insert TB_R_ACTUAL_DEMAND_SUMMARY (NSP) – Every source row
-- Source: TB_R_ACTUAL_DEMAND_SUMMARY (DB Surrounding)
-
-| Source field | Destination field | Description |
-|---|---|---|
-| GROUPING_BUYER_CD | GROUPING_BUYER_CD | Same value as the source |
-| GROUPING_PD_CD | GROUPING_PD_CD | Same value as the source |
-| ORDER_TYPE_GROUP | ORDER_TYPE_GROUP | Same value as the source |
-| DEMAND_MONTH_YEAR | DEMAND_MONTH_YEAR | Same value as the source |
-| PART_NO | PART_NO | Same value as the source |
-| MAD | MAD | Same value as the source |
-| DAD | DAD | Same value as the source |
-| CREATE_DT | CREATE_DT | Same value as the source |
-| CREATE_BY | CREATE_BY | Same value as the source |
-| UPDATE_DT | UPDATE_DT | Same value as the source |
-| UPDATE_BY | UPDATE_BY | Same value as the source |
-| N01_QTY | N01_QTY | Same value as the source |
-| N02_QTY | N02_QTY | Same value as the source |
-| N03_QTY | N03_QTY | Same value as the source |
-| N04_QTY | N04_QTY | Same value as the source |
-| N05_QTY | N05_QTY | Same value as the source |
-| N06_QTY | N06_QTY | Same value as the source |
-| NUM_OF_OLD_PART_NO | NUM_OF_OLD_PART_NO | Same value as the source |
-| NUM_OF_WORKINGDAY_6M | NUM_OF_WORKINGDAY_6M | Same value as the source |
-| EM_MS_FLAG | EM_MS_FLAG | Same value as the source |
-
-#### 3. Insert Log – One record per run
+#### 2. Insert Log – One record per run attempt
 - Source: Result of this run
 
 | Source field | Destination field | Description |
 |---|---|---|
 |  | BATCH_ID | 'ADS_SYNC' |
+|  | RUN_TYPE | SCHEDULE / RETRY |
+|  | RETRY_NO | 0 for the scheduled run, 1-3 for the auto retries |
 |  | STATUS | SUCCESS / FAILED |
-|  | ROW_COUNT | Rows inserted (0 when FAILED) |
+|  | ROW_COUNT | Rows inserted / updated (0 when FAILED) |
+|  | WATERMARK | Max INTERFACE_UPDATE_DT read in this run (next watermark; only when SUCCESS, else NULL) |
 |  | MESSAGE | Error message when FAILED |
-|  | START_DT | Start date and time |
-|  | END_DT | End date and time |
+|  | START_DT / END_DT | Start and end date-time |
 
 ## 4. Function description
 
-This batch copies the actual demand summary from DB Surrounding into NSP once a month. Range of months and schedule are set in the system master (not explained in this document).
+This batch copies the actual demand summary from DB Surrounding into NSP once a month. The schedule is set in the system master (not explained in this document).
 
-- Full replace: all rows of the NSP table are deleted and all source rows are inserted (delete - insert). No row is compared or merged.
-- All columns are copied with the same names and values; no conversion is done.
-- Delete and insert run in one transaction (all-or-nothing). When the run fails, NSP keeps the data of the last successful run.
-- The batch must finish before the DAD Volume Calculation starts.
+- Delta: only the rows with INTERFACE_UPDATE_DT later than the watermark (max INTERFACE_UPDATE_DT taken by the last successful run) are read; the whole table is not read.
+- Upsert per key (GROUPING_BUYER_CD + GROUPING_PD_CD + ORDER_TYPE_GROUP + DEMAND_MONTH_YEAR + PART_NO): a new key is inserted, an existing key is updated. All columns are copied with the same names and values; no conversion is done.
+- Upsert runs in one transaction (all-or-nothing). When the run fails it is rolled back and the watermark is not changed, so no changed row is skipped.
+- Auto retry up to 3 times. After that the run is handled manually outside NSP (no NSP screen).
+- XD05 DAD Volume Calculation starts only after XD04 has succeeded and calculates with the data just synced. XD04 failed after the retries: XD05 is not started.
+- A row deleted in DB Surrounding is not deleted in NSP (delta read; to be confirmed).
 
 ### Columns used by Crossdock
 
@@ -189,11 +180,12 @@ This batch copies the actual demand summary from DB Surrounding into NSP once a 
 
 | ID | Event | Cause | Type | Message | Action |
 |---|---|---|---|---|---|
-| LOG1 | Batch start | Batch is called | Info | Actual demand summary sync started. | system: Write the log.; user: - |
-| LOG2 | Batch end | Batch finishes | Info | Actual demand summary sync ended. Status <STATUS>, rows <ROW_COUNT>. | system: Write the log.; user: - |
-| LOG3 | Read source | DB Surrounding cannot be reached or read | Error | Cannot read TB_R_ACTUAL_DEMAND_SUMMARY from DB Surrounding: <ERROR_DETAIL>. | system: Roll back. STATUS = FAILED.; user: User contact PIC |
-| LOG4 | Insert | Insert into the NSP table fails | Error | Cannot insert TB_R_ACTUAL_DEMAND_SUMMARY into NSP: <ERROR_DETAIL>. | system: Roll back. STATUS = FAILED.; user: User contact PIC |
-| LOG5 | Unexpected error | Any other system error | Critical | Unexpected error: <ERROR_DETAIL>. | system: Roll back. STATUS = FAILED.; user: User contact PIC |
+| LOG1 | Batch start | Batch is called | Info | Actual demand summary sync started (<RUN_TYPE>, retry <RETRY_NO>). Watermark <WATERMARK>. | system: Write the log.; user: - |
+| LOG2 | Batch end | Batch finishes | Info | Actual demand summary sync ended. Status <STATUS>, inserted <INS>, updated <UPD>, new watermark <WATERMARK>. | system: Write the log.; user: - |
+| LOG3 | Read source | DB Surrounding cannot be reached or read | Error | Cannot read TB_R_ACTUAL_DEMAND_SUMMARY from DB Surrounding: <ERROR_DETAIL>. | system: Roll back. STATUS = FAILED. Watermark not changed. Retry.; user: - |
+| LOG4 | Upsert | Insert / update of the NSP table fails | Error | Cannot save TB_R_ACTUAL_DEMAND_SUMMARY into NSP: <ERROR_DETAIL>. | system: Roll back. STATUS = FAILED. Watermark not changed. Retry.; user: - |
+| LOG5 | Unexpected error | Any other system error | Critical | Unexpected error: <ERROR_DETAIL>. | system: Roll back. STATUS = FAILED. Watermark not changed. Retry.; user: - |
+| LOG6 | Retry exhausted | Scheduled run and 3 retries failed | Warning | Actual demand summary sync failed 3 times. DAD volume calculation is not started. | system: Do not start XD05.; user: PIC handles the run manually outside NSP, then XD05 is run. |
 
 ## 6. Appendix
 
@@ -226,30 +218,33 @@ Actual demand summary replicated from DB Surrounding to NSP (same columns). Key 
 | NUM_OF_OLD_PART_NO | NUMBER |  | Y | Number of old part numbers (not used by Crossdock) |
 | NUM_OF_WORKINGDAY_6M | NUMBER |  | Y | Working days in 6 months (not used by Crossdock) |
 | EM_MS_FLAG | CHAR(1) |  | Y | EM / MS flag (not used by Crossdock) |
+| INTERFACE_UPDATE_DT | TIMESTAMP |  | N | Interface update date and time of the row in DB Surrounding; XD04 reads only rows changed since the last successful run (watermark) |
 
 ## Sample Input
 
 **Sample data - Actual Demand Summary Sync to NSP**
 
-- Rows taken from the reference file 20261013_tb_r_actual_demand_summary_since_january-2026.xlsx (part 52119BZV60).
-- The batch copies every row of the source table; the NSP table is emptied first (delete - insert).
+- Rows taken from the reference file 20261013_tb_r_actual_demand_summary_since_january-2026.xlsx (part 52119BZV60); INTERFACE_UPDATE_DT is an example value.
+- Watermark of the last successful run = 2026-09-01 02:15:00: only rows with a later INTERFACE_UPDATE_DT are read and upserted.
 
 ### A. Source rows in DB Surrounding (excerpt)
 
-| GROUPING_BUYER_CD | GROUPING_PD_CD | ORDER_TYPE_GROUP | DEMAND_MONTH_YEAR | PART_NO | MAD | DAD |
-|---|---|---|---|---|---|---|
-| 9722D | 10 | N | 202604 | 52119BZV60 | 239 | - |
-| 98111 | 10 | N | 202604 | 52119BZV60 | 156.17 | - |
-| 96182 | 01 | N | 202604 | 52119BZV60 | 77.33 | - |
-| 97153 | 10 | N | 202604 | 52119BZV60 | 23.17 | - |
-| 98111 | 10 | S | 202604 | 52119BZV60 | 2 | - |
-| 9722D | 10 | S | 202604 | 52119BZV60 | 1 | - |
+| GROUPING_BUYER_CD | GROUPING_PD_CD | ORDER_TYPE_GROUP | DEMAND_MONTH_YEAR | PART_NO | MAD | DAD | INTERFACE_UPDATE_DT | Read? |
+|---|---|---|---|---|---|---|---|---|
+| 9722D | 10 | N | 202604 | 52119BZV60 | 239 | - | 2026-10-01 01:10:00 | Yes: new key -> insert |
+| 98111 | 10 | N | 202604 | 52119BZV60 | 156.17 | - | 2026-10-01 01:10:00 | Yes: new key -> insert |
+| 96182 | 01 | N | 202604 | 52119BZV60 | 77.33 | - | 2026-10-01 01:10:00 | Yes: new key -> insert |
+| 97153 | 10 | N | 202604 | 52119BZV60 | 23.17 | - | 2026-10-01 01:10:00 | Yes: MAD changed -> update |
+| 98111 | 10 | S | 202604 | 52119BZV60 | 2 | - | 2026-08-01 01:05:00 | No (not changed since watermark) |
+| 9722D | 10 | S | 202604 | 52119BZV60 | 1 | - | 2026-08-01 01:05:00 | No (not changed since watermark) |
 
 ### B. Scenarios
 
 | No | Scenario | Expected result |
 |---|---|---|
-| N1 | Monthly run, source has 349,225 rows | NSP table emptied, 349,225 rows inserted. Log STATUS = SUCCESS. |
-| N2 | A row was deleted in the source since the last run | The row no longer exists in NSP (full replace). |
-| E1 | DB Surrounding cannot be reached | Rolled back: NSP keeps the data of the last successful run. Log STATUS = FAILED. |
-| E2 | Insert fails in the middle of the run | Rolled back (delete and insert in one transaction). Log STATUS = FAILED. |
+| N1 | Monthly run, 4 rows changed since the watermark 2026-09-01 02:15:00 | 4 rows read: 3 inserted, 1 updated. Log SUCCESS, new watermark 2026-10-01 01:10:00. XD05 starts. |
+| N2 | First run (no SUCCESS record in the Log) | All rows of the source are read and inserted. Log SUCCESS with the max INTERFACE_UPDATE_DT as watermark. |
+| N3 | No row changed since the watermark | 0 rows. Log SUCCESS, watermark unchanged. XD05 starts. |
+| E1 | DB Surrounding cannot be reached | Rolled back, watermark unchanged. Log FAILED, auto retry (max 3). |
+| E2 | Upsert fails in the middle of the run | Rolled back (one transaction), watermark unchanged; the retry reads the same rows again. |
+| E3 | Scheduled run and 3 retries failed | LOG6: XD05 is not started; PIC handles the run manually outside NSP. |

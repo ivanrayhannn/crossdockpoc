@@ -183,21 +183,24 @@ const FUNCS = [
         'FB-120: judul 4.1 / 4.2 menyebut log no. 5 / 6; yang benar LOG4 dan LOG5.',
         'FB-128: bagian Tables menulis TB_M_PART_CANDIDATE dan TB_M_PART_CANDIDATE_DEST sebagai "existing"; seharusnya tabel baru Crossdock.' ] } ] },
 
-  { id: 'XD04', name: 'Actual Demand Summary Synch to NSP', type: 'Batch', trigger: 'Scheduler bulanan (system master), sebelum XD05',
+  { id: 'XD04', name: 'Actual Demand Summary Synch to NSP', type: 'Batch', trigger: 'Scheduler bulanan (system master), auto retry 3×, sebelum XD05',
     sections: [
       { key: 'N', title: 'Proses normal', points: [
-        'Baca semua baris TB_R_ACTUAL_DEMAND_SUMMARY di DB Surrounding.',
-        'Full replace: tabel NSP dikosongkan lalu diisi ulang dengan kolom dan nilai yang sama, tanpa konversi; DAD ikut disalin walau tidak dipakai (19-Oct).',
-        'Satu transaksi (all-or-nothing): error → rollback, NSP tetap pakai data run terakhir yang berhasil.',
+        'Baca hanya baris TB_R_ACTUAL_DEMAND_SUMMARY di DB Surrounding yang berubah sejak run sukses terakhir: INTERFACE_UPDATE_DT > watermark (INTERFACE_UPDATE_DT terbesar dari run sukses terakhir, disimpan di Log). Run pertama: semua baris.',
+        'Upsert per key (buyer code + PD code + order type + bulan + Part No): key baru di-insert, key lama di-update. Kolom dan nilai sama, tanpa konversi; DAD ikut disalin walau tidak dipakai (19-Oct).',
+        'Satu transaksi (all-or-nothing): error → rollback dan watermark tidak diupdate, jadi run berikutnya membaca baris yang sama lagi.',
         'Kolom yang dipakai: GROUPING_BUYER_CD + GROUPING_PD_CD (kode destinasi 7 digit), ORDER_TYPE_GROUP N + S, DEMAND_MONTH_YEAR (range bulan), PART_NO, MAD.',
-        'Kalau XD04 gagal, XD05 tetap jalan dengan data yang sudah ada di NSP (19-Oct). Hasil dicatat di Log (SUCCESS / FAILED, jumlah baris).' ] },
+        'XD05 hanya jalan setelah XD04 sukses dan menghitung dengan data yang baru di-sync. Kalau XD04 masih gagal setelah retry, XD05 tidak dijalankan (6-Nov). Hasil dicatat di Log (SUCCESS / FAILED, jumlah baris, watermark).' ] },
       { key: 'AB', title: 'Abnormality', points: [
-        { k: 'DB Surrounding tidak bisa dibaca', d: 'LOG3', s: 'Rollback, FAILED, data lama tetap', u: 'Hubungi PIC' },
-        { k: 'Insert ke tabel NSP gagal', d: 'LOG4', s: 'Rollback, FAILED', u: 'Hubungi PIC' },
-        { k: 'Error sistem lain', d: 'LOG5', s: 'Rollback, FAILED', u: 'Hubungi PIC' } ] },
+        { k: 'DB Surrounding tidak bisa dibaca', d: 'LOG3', s: 'Rollback, FAILED, watermark tetap, auto retry', u: '–' },
+        { k: 'Upsert ke tabel NSP gagal', d: 'LOG4', s: 'Rollback, FAILED, watermark tetap, auto retry', u: '–' },
+        { k: 'Error sistem lain', d: 'LOG5', s: 'Rollback, FAILED, watermark tetap, auto retry', u: '–' },
+        { k: 'Gagal 3× retry', d: 'LOG6 (warning)', s: 'XD05 tidak dijalankan', u: 'PIC menangani run secara manual di luar NSP' } ] },
       { key: 'C', title: 'Catatan terbuka', points: [
-        'FB-121: XD04 belum punya auto retry (XD05, XD08, XD13 punya 3×). Usulan: auto retry 3×, lalu XD05 jalan setelah berhasil atau retry habis.',
-        'FB-122: halaman Confirmation web B3 masih menulis XD05 dibatalkan kalau XD04 gagal; keputusan 19-Oct XD05 tetap jalan.' ] } ] },
+        'FB-121 (selesai 6-Nov): auto retry 3×; kalau masih gagal, ditangani manual di luar NSP (bukan fungsi ini) dan XD05 tidak dijalankan.',
+        'FB-161: baris yang dihapus di DB Surrounding tidak ikut terhapus di NSP (baca delta). Apakah sumber pernah menghapus baris?',
+        'FB-162: kolom INTERFACE_UPDATE_DT ditambahkan ke TB_R_ACTUAL_DEMAND_SUMMARY (belum ada di file referensi 13-Oct). Nama dan isinya perlu dikonfirmasi ke tim DB Surrounding.',
+        'FB-163: setelah XD04 ditangani manual di luar NSP, XD05 dijalankan bagaimana? Usulan: XD05 otomatis mulai setelah run XD04 manual itu sukses.' ] } ] },
 
   { id: 'XD05', name: 'DAD Volume Calculation Batch', type: 'Batch', trigger: 'Scheduler bulanan, auto retry 3×; manual [Run calculation] di XD01 setelah gagal 3×',
     sections: [
@@ -828,7 +831,7 @@ const MSGS = {
 "type": "Info",
 "event": "Batch start",
 "cause": "Batch is called",
-"message": "Actual demand summary sync started.",
+"message": "Actual demand summary sync started (<RUN_TYPE>, retry <RETRY_NO>). Watermark <WATERMARK>.",
 "action": "system: Write the log."
 },
 {
@@ -837,7 +840,7 @@ const MSGS = {
 "type": "Info",
 "event": "Batch end",
 "cause": "Batch finishes",
-"message": "Actual demand summary sync ended. Status <STATUS>, rows <ROW_COUNT>.",
+"message": "Actual demand summary sync ended. Status <STATUS>, inserted <INS>, updated <UPD>, new watermark <WATERMARK>.",
 "action": "system: Write the log."
 },
 {
@@ -847,16 +850,16 @@ const MSGS = {
 "event": "Read source",
 "cause": "DB Surrounding cannot be reached or read",
 "message": "Cannot read TB_R_ACTUAL_DEMAND_SUMMARY from DB Surrounding: <ERROR_DETAIL>.",
-"action": "system: Roll back. STATUS = FAILED.; user: User contact PIC"
+"action": "system: Roll back. STATUS = FAILED. Watermark not changed. Retry."
 },
 {
 "id": "LOG4",
 "kind": "Log",
 "type": "Error",
-"event": "Insert",
-"cause": "Insert into the NSP table fails",
-"message": "Cannot insert TB_R_ACTUAL_DEMAND_SUMMARY into NSP: <ERROR_DETAIL>.",
-"action": "system: Roll back. STATUS = FAILED.; user: User contact PIC"
+"event": "Upsert",
+"cause": "Insert / update of the NSP table fails",
+"message": "Cannot save TB_R_ACTUAL_DEMAND_SUMMARY into NSP: <ERROR_DETAIL>.",
+"action": "system: Roll back. STATUS = FAILED. Watermark not changed. Retry."
 },
 {
 "id": "LOG5",
@@ -865,7 +868,16 @@ const MSGS = {
 "event": "Unexpected error",
 "cause": "Any other system error",
 "message": "Unexpected error: <ERROR_DETAIL>.",
-"action": "system: Roll back. STATUS = FAILED.; user: User contact PIC"
+"action": "system: Roll back. STATUS = FAILED. Watermark not changed. Retry."
+},
+{
+"id": "LOG6",
+"kind": "Log",
+"type": "Warning",
+"event": "Retry exhausted",
+"cause": "Scheduled run and 3 retries failed",
+"message": "Actual demand summary sync failed 3 times. DAD volume calculation is not started.",
+"action": "system: Do not start XD05.; user: PIC handles the run manually outside NSP, then XD05 is run."
 }
 ],
 "XD05": [

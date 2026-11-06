@@ -77,7 +77,7 @@ flowchart TB
 | Auto retry | A failed process is retried automatically up to 3 times; process 2 starts only after process 1 has succeeded. |
 | Manual trigger | [Run calculation (Part List)] on XD01 runs process 1 and then process 2; [Run calculation (Mapping)] on XD01 runs process 2 only. Each button is enabled only when its process and the 3 retries have failed. |
 | Last success date | One date per process in the Log; process 1 shown on the Part List tab, process 2 on the Mapping per Destination tab. |
-| Order | Runs after XD04. If XD04 failed, XD05 still runs (with the actual demand data available in NSP) (decided 19-Oct). |
+| Order | Runs after XD04 has succeeded and calculates with the actual demand data just synced. When XD04 still fails after its 3 retries, XD05 is not started (decided 6-Nov). |
 
 ## 2. Function flow
 
@@ -502,6 +502,7 @@ Actual demand summary replicated from DB Surrounding to NSP (same columns). Key 
 | NUM_OF_OLD_PART_NO | NUMBER |  | Y | Number of old part numbers (not used by Crossdock) |
 | NUM_OF_WORKINGDAY_6M | NUMBER |  | Y | Working days in 6 months (not used by Crossdock) |
 | EM_MS_FLAG | CHAR(1) |  | Y | EM / MS flag (not used by Crossdock) |
+| INTERFACE_UPDATE_DT | TIMESTAMP |  | N | Interface update date and time of the row in DB Surrounding; XD04 reads only rows changed since the last successful run (watermark) |
 
 #### TB_H_PART_CANDIDATE (history, proposed)
 History of every change of a crossdock part (Add / Edit by screen or upload, mapping changes, Sync results, status changes and mappings made by the calculation batches). Read by the History setting modal of Part List (index PART_NO, CREATED_DT). No retention limit: the history is kept (no housekeeping job, decided 30-Oct).
