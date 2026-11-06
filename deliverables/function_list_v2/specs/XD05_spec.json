@@ -12,7 +12,7 @@
     "nodes": [
      {
       "id": "a",
-      "label": "Scheduler / retry / XD01 [Run calculation]",
+      "label": "Trigger: new data in TB_R_ACTUAL_DEMAND_SUMMARY / retry / XD01 [Run calculation]",
       "type": "event"
      },
      {
@@ -52,7 +52,7 @@
    {
     "name": "TB_R_ACTUAL_DEMAND_SUMMARY (NSP)",
     "type": "DB",
-    "description": "MAD per part, buyer code, PD code, order type and month (replicated by the Actual Demand Summary Sync)"
+    "description": "MAD per part, buyer code, PD code, order type and month (replicated by the Actual Demand Summary Sync); CREATE_DT later than DATA_DT of the last successful run = new data (trigger)"
    },
    {
     "name": "TB_M_PART_CANDIDATE",
@@ -162,7 +162,7 @@
     "rows": [
      [
       "Trigger",
-      "Monthly scheduler (set in the system master; not detailed in this document). One run = process 1, then process 2."
+      "The scheduler checks TB_R_ACTUAL_DEMAND_SUMMARY (NSP): XD05 starts when the table has rows with CREATE_DT later than DATA_DT of the last successful XD05 run (new data from XD04). No new data: XD05 is not started (decided 6-Nov). One run = process 1, then process 2. Check frequency set in the system master."
      ],
      [
       "Auto retry",
@@ -178,7 +178,7 @@
      ],
      [
       "Order",
-      "Runs after XD04 has succeeded and calculates with the actual demand data just synced. When XD04 still fails after its 3 retries, XD05 is not started (decided 6-Nov)."
+      "Runs after XD04 has brought new data (scheduled run, retry or manual run outside NSP). When XD04 still fails, there is no new data and XD05 is not started (decided 6-Nov)."
      ]
     ]
    }
@@ -482,7 +482,7 @@
    ]
   },
   "steps": [
-   "Process 1 (part status) starts from the scheduler, an automatic retry, or [Run calculation (Part List)] on XD01.",
+   "Process 1 (part status) starts when the trigger finds new data in TB_R_ACTUAL_DEMAND_SUMMARY (NSP) (CREATE_DT later than DATA_DT of the last successful run), from an automatic retry, or [Run calculation (Part List)] on XD01.",
    {
     "text": "Get the range of months N from the system master.",
     "children": [
@@ -832,6 +832,10 @@
       "description": "SUCCESS / FAILED"
      },
      {
+      "dest_field": "DATA_DT",
+      "description": "Max CREATE_DT of TB_R_ACTUAL_DEMAND_SUMMARY (NSP) used by this run (only when SUCCESS); the trigger compares new data with it"
+     },
+     {
       "dest_field": "MESSAGE",
       "description": "Error message when FAILED"
      },
@@ -1126,6 +1130,10 @@
      {
       "dest_field": "STATUS",
       "description": "SUCCESS / FAILED"
+     },
+     {
+      "dest_field": "DATA_DT",
+      "description": "Max CREATE_DT of TB_R_ACTUAL_DEMAND_SUMMARY (NSP) used by this run (only when SUCCESS); the trigger compares new data with it"
      },
      {
       "dest_field": "MESSAGE",
@@ -2206,13 +2214,6 @@
      "",
      "Y",
      "EM / MS flag (not used by Crossdock)"
-    ],
-    [
-     "INTERFACE_UPDATE_DT",
-     "TIMESTAMP",
-     "",
-     "N",
-     "Interface update date and time of the row in DB Surrounding; XD04 reads only rows changed since the last successful run (watermark)"
     ]
    ]
   },

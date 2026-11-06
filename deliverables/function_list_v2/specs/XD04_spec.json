@@ -20,7 +20,7 @@
  "general": {
   "objective": [
    "To replicate TB_R_ACTUAL_DEMAND_SUMMARY from DB Surrounding to the table with the same name in NSP, so the XD05 DAD Volume Calculation (process 1 and 2) reads the actual demand inside NSP.",
-   "Only the rows changed since the last successful run are read (INTERFACE_UPDATE_DT > watermark) and upserted per key; the whole table is not read every run (decided 6-Nov).",
+   "Only the new rows since the last successful run are read (CREATE_DT > watermark) and upserted per key; the whole table is not read every run. The source never deletes rows: new data always comes as new rows (decided 6-Nov).",
    "In case any error occurs, the run is rolled back and the watermark is not changed, so the next run reads the same rows again. A failed run is retried automatically up to 3 times.",
    "All columns are replicated as they are, including DAD (not used by the calculation) (decided 19-Oct)."
   ],
@@ -35,7 +35,7 @@
      },
      {
       "id": "b",
-      "label": "Read changed rows (INTERFACE_UPDATE_DT > watermark)",
+      "label": "Read new rows (CREATE_DT > watermark)",
       "type": "process"
      },
      {
@@ -50,7 +50,7 @@
      },
      {
       "id": "e",
-      "label": "Commit, new watermark, Log SUCCESS, start XD05",
+      "label": "Commit, new watermark, Log SUCCESS",
       "type": "process"
      },
      {
@@ -89,7 +89,7 @@
    {
     "name": "TB_R_ACTUAL_DEMAND_SUMMARY (DB Surrounding)",
     "type": "DB",
-    "description": "Rows with INTERFACE_UPDATE_DT > watermark"
+    "description": "Rows with CREATE_DT > watermark"
    },
    {
     "name": "Log",
@@ -125,7 +125,7 @@
     "rows": [
      [
       "Watermark",
-      "Last INTERFACE_UPDATE_DT taken by the previous successful run of this batch (kept in the Log); first run: all rows"
+      "Last CREATE_DT taken by the previous successful run of this batch (kept in the Log); first run: all rows"
      ]
     ]
    },
@@ -152,7 +152,7 @@
      ],
      [
       "Order",
-      "Runs before XD05. XD05 starts only after XD04 has succeeded (scheduled run or retry) and uses the data just synced. When XD04 still fails after 3 retries, XD05 is not started (decided 6-Nov)."
+      "Runs before XD05. XD05 is started by its trigger when the NSP table has new rows (CREATE_DT later than the last XD05 run), also after a manual run outside NSP. When XD04 still fails, there is no new data and XD05 is not started (decided 6-Nov)."
      ]
     ]
    }
@@ -188,7 +188,7 @@
     },
     {
      "id": "p3",
-     "label": "Read changed rows",
+     "label": "Read new rows",
      "type": "process",
      "step": 3
     },
@@ -297,7 +297,7 @@
     ]
    },
    {
-    "text": "Read the rows of TB_R_ACTUAL_DEMAND_SUMMARY (DB Surrounding) with INTERFACE_UPDATE_DT > watermark.",
+    "text": "Read the rows of TB_R_ACTUAL_DEMAND_SUMMARY (DB Surrounding) with CREATE_DT > watermark.",
     "children": [
      "No row: nothing to upsert; the run ends with SUCCESS, 0 rows, and the watermark stays the same."
     ]
@@ -310,12 +310,12 @@
     ]
    },
    "Check whether any error occurred during steps 2 to 4.",
-   "No error: commit. The new watermark = max INTERFACE_UPDATE_DT of the rows read. Start XD05 DAD Volume Calculation.",
+   "No error: commit. The new watermark = max CREATE_DT of the rows read. The new rows are picked up by the trigger of XD05.",
    {
     "text": "Error: roll back step 4; the watermark is not changed, so the next run reads the same rows again.",
     "children": [
      "The scheduler retries automatically up to 3 times (RUN_TYPE = RETRY, RETRY_NO 1-3).",
-     "After the 3rd failed retry: LOG6, XD05 is not started; the run is handled manually outside NSP."
+     "After the 3rd failed retry: LOG6; the run is handled manually outside NSP. Without new rows XD05 is not started."
     ]
    },
    "Record the result (SUCCESS / FAILED, inserted / updated rows, watermark, error message) in the Log. Exit."
@@ -328,7 +328,7 @@
      "table": "TB_R_ACTUAL_DEMAND_SUMMARY (DB Surrounding)",
      "keys": [
       {
-       "field": "INTERFACE_UPDATE_DT",
+       "field": "CREATE_DT",
        "value": "> watermark"
       }
      ]
@@ -444,11 +444,6 @@
       "source_field": "EM_MS_FLAG",
       "dest_field": "EM_MS_FLAG",
       "description": "Same value as the source (insert and update)"
-     },
-     {
-      "source_field": "INTERFACE_UPDATE_DT",
-      "dest_field": "INTERFACE_UPDATE_DT",
-      "description": "Same value as the source (insert and update)"
      }
     ]
    },
@@ -482,7 +477,7 @@
      },
      {
       "dest_field": "WATERMARK",
-      "description": "Max INTERFACE_UPDATE_DT read in this run (next watermark; only when SUCCESS, else NULL)"
+      "description": "Max CREATE_DT read in this run (next watermark; only when SUCCESS, else NULL)"
      },
      {
       "dest_field": "MESSAGE",
@@ -508,12 +503,12 @@
    "marker": "-",
    "level": 0,
    "items": [
-    "Delta: only the rows with INTERFACE_UPDATE_DT later than the watermark (max INTERFACE_UPDATE_DT taken by the last successful run) are read; the whole table is not read.",
+    "Delta: only the rows with CREATE_DT later than the watermark (max CREATE_DT taken by the last successful run) are read; the whole table is not read.",
     "Upsert per key (GROUPING_BUYER_CD + GROUPING_PD_CD + ORDER_TYPE_GROUP + DEMAND_MONTH_YEAR + PART_NO): a new key is inserted, an existing key is updated. All columns are copied with the same names and values; no conversion is done.",
     "Upsert runs in one transaction (all-or-nothing). When the run fails it is rolled back and the watermark is not changed, so no changed row is skipped.",
     "Auto retry up to 3 times. After that the run is handled manually outside NSP (no NSP screen).",
-    "XD05 DAD Volume Calculation starts only after XD04 has succeeded and calculates with the data just synced. XD04 failed after the retries: XD05 is not started.",
-    "A row deleted in DB Surrounding is not deleted in NSP (delta read; to be confirmed)."
+    "XD05 DAD Volume Calculation is started by its own trigger when the NSP table has new data (CREATE_DT later than the last XD05 run). XD04 failed after the retries: no new data, so XD05 is not started.",
+    "The source never deletes rows; its data is updated daily / weekly by adding new rows, so only rows not taken before are read (decided 6-Nov)."
    ]
   },
   {
@@ -622,10 +617,10 @@
    "cause": "Scheduled run and 3 retries failed",
    "type": "Warning",
    "msg_id": "LOG6",
-   "message": "Actual demand summary sync failed 3 times. DAD volume calculation is not started.",
+   "message": "Actual demand summary sync failed 3 times. Handle the run manually outside NSP.",
    "action": {
-    "system": "Do not start XD05.",
-    "user": "PIC handles the run manually outside NSP, then XD05 is run."
+    "system": "Write the log. No new data for XD05.",
+    "user": "PIC handles the run manually outside NSP; XD05 then starts by its trigger."
    }
   }
  ],
@@ -641,8 +636,8 @@
   "title": "Sample Input",
   "heading": "Sample data - Actual Demand Summary Sync to NSP",
   "intro": [
-   "Rows taken from the reference file 20261013_tb_r_actual_demand_summary_since_january-2026.xlsx (part 52119BZV60); INTERFACE_UPDATE_DT is an example value.",
-   "Watermark of the last successful run = 2026-09-01 02:15:00: only rows with a later INTERFACE_UPDATE_DT are read and upserted."
+   "Rows taken from the reference file 20261013_tb_r_actual_demand_summary_since_january-2026.xlsx (part 52119BZV60); CREATE_DT shown as example values.",
+   "Watermark of the last successful run = 2026-09-01 02:15:00: only rows with a later CREATE_DT are read and upserted."
   ],
   "sections": [
    {
@@ -655,7 +650,7 @@
      "PART_NO",
      "MAD",
      "DAD",
-     "INTERFACE_UPDATE_DT",
+     "CREATE_DT",
      "Read?"
     ],
     "widths": [
@@ -712,7 +707,7 @@
       23.17,
       "-",
       "2026-10-01 01:10:00",
-      "Yes: MAD changed -> update"
+      "Yes: key exists -> update"
      ],
      [
       "98111",
@@ -753,18 +748,18 @@
     "rows": [
      [
       "N1",
-      "Monthly run, 4 rows changed since the watermark 2026-09-01 02:15:00",
-      "4 rows read: 3 inserted, 1 updated. Log SUCCESS, new watermark 2026-10-01 01:10:00. XD05 starts."
+      "Monthly run, 4 new rows since the watermark 2026-09-01 02:15:00",
+      "4 rows read: 3 inserted, 1 updated. Log SUCCESS, new watermark 2026-10-01 01:10:00. XD05 trigger finds new data."
      ],
      [
       "N2",
       "First run (no SUCCESS record in the Log)",
-      "All rows of the source are read and inserted. Log SUCCESS with the max INTERFACE_UPDATE_DT as watermark."
+      "All rows of the source are read and inserted. Log SUCCESS with the max CREATE_DT as watermark."
      ],
      [
       "N3",
-      "No row changed since the watermark",
-      "0 rows. Log SUCCESS, watermark unchanged. XD05 starts."
+      "No new row since the watermark",
+      "0 rows. Log SUCCESS, watermark unchanged. XD05 trigger finds no new data: XD05 is not started."
      ],
      [
       "E1",
@@ -779,7 +774,7 @@
      [
       "E3",
       "Scheduled run and 3 retries failed",
-      "LOG6: XD05 is not started; PIC handles the run manually outside NSP."
+      "LOG6: PIC handles the run manually outside NSP; when it succeeds, the XD05 trigger finds the new rows and starts XD05."
      ]
     ]
    }
@@ -931,13 +926,6 @@
      "",
      "Y",
      "EM / MS flag (not used by Crossdock)"
-    ],
-    [
-     "INTERFACE_UPDATE_DT",
-     "TIMESTAMP",
-     "",
-     "N",
-     "Interface update date and time of the row in DB Surrounding; XD04 reads only rows changed since the last successful run (watermark)"
     ]
    ]
   }

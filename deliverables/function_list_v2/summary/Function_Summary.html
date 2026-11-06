@@ -186,23 +186,23 @@ const FUNCS = [
   { id: 'XD04', name: 'Actual Demand Summary Synch to NSP', type: 'Batch', trigger: 'Scheduler bulanan (system master), auto retry 3×, sebelum XD05',
     sections: [
       { key: 'N', title: 'Proses normal', points: [
-        'Baca hanya baris TB_R_ACTUAL_DEMAND_SUMMARY di DB Surrounding yang berubah sejak run sukses terakhir: INTERFACE_UPDATE_DT > watermark (INTERFACE_UPDATE_DT terbesar dari run sukses terakhir, disimpan di Log). Run pertama: semua baris.',
+        'Baca hanya baris baru TB_R_ACTUAL_DEMAND_SUMMARY di DB Surrounding yang belum pernah diambil: CREATE_DT > watermark (CREATE_DT terbesar dari run sukses terakhir, disimpan di Log). Run pertama: semua baris. Sumber tidak pernah menghapus baris; data diupdate harian / mingguan dengan baris baru (6-Nov).',
         'Upsert per key (buyer code + PD code + order type + bulan + Part No): key baru di-insert, key lama di-update. Kolom dan nilai sama, tanpa konversi; DAD ikut disalin walau tidak dipakai (19-Oct).',
         'Satu transaksi (all-or-nothing): error → rollback dan watermark tidak diupdate, jadi run berikutnya membaca baris yang sama lagi.',
         'Kolom yang dipakai: GROUPING_BUYER_CD + GROUPING_PD_CD (kode destinasi 7 digit), ORDER_TYPE_GROUP N + S, DEMAND_MONTH_YEAR (range bulan), PART_NO, MAD.',
-        'XD05 hanya jalan setelah XD04 sukses dan menghitung dengan data yang baru di-sync. Kalau XD04 masih gagal setelah retry, XD05 tidak dijalankan (6-Nov). Hasil dicatat di Log (SUCCESS / FAILED, jumlah baris, watermark).' ] },
+        'XD05 jalan otomatis lewat trigger yang mengecek ada data baru di tabel replicate (CREATE_DT > data run XD05 terakhir). Kalau XD04 masih gagal, tidak ada data baru dan XD05 tidak jalan (6-Nov). Hasil dicatat di Log (SUCCESS / FAILED, jumlah baris, watermark).' ] },
       { key: 'AB', title: 'Abnormality', points: [
         { k: 'DB Surrounding tidak bisa dibaca', d: 'LOG3', s: 'Rollback, FAILED, watermark tetap, auto retry', u: '–' },
         { k: 'Upsert ke tabel NSP gagal', d: 'LOG4', s: 'Rollback, FAILED, watermark tetap, auto retry', u: '–' },
         { k: 'Error sistem lain', d: 'LOG5', s: 'Rollback, FAILED, watermark tetap, auto retry', u: '–' },
-        { k: 'Gagal 3× retry', d: 'LOG6 (warning)', s: 'XD05 tidak dijalankan', u: 'PIC menangani run secara manual di luar NSP' } ] },
+        { k: 'Gagal 3× retry', d: 'LOG6 (warning)', s: 'Tidak ada data baru, XD05 tidak jalan', u: 'PIC menangani run secara manual di luar NSP; XD05 lalu jalan lewat trigger' } ] },
       { key: 'C', title: 'Catatan terbuka', points: [
         'FB-121 (selesai 6-Nov): auto retry 3×; kalau masih gagal, ditangani manual di luar NSP (bukan fungsi ini) dan XD05 tidak dijalankan.',
-        'FB-161: baris yang dihapus di DB Surrounding tidak ikut terhapus di NSP (baca delta). Apakah sumber pernah menghapus baris?',
-        'FB-162: kolom INTERFACE_UPDATE_DT ditambahkan ke TB_R_ACTUAL_DEMAND_SUMMARY (belum ada di file referensi 13-Oct). Nama dan isinya perlu dikonfirmasi ke tim DB Surrounding.',
-        'FB-163: setelah XD04 ditangani manual di luar NSP, XD05 dijalankan bagaimana? Usulan: XD05 otomatis mulai setelah run XD04 manual itu sukses.' ] } ] },
+        'FB-161 (selesai 6-Nov): sumber tidak pernah menghapus baris; hanya baris baru yang diambil.',
+        'FB-162 (selesai 6-Nov): kolom delta = CREATE_DT (tanpa kolom INTERFACE_UPDATE_DT).',
+        'FB-163 (selesai 6-Nov): XD05 jalan otomatis lewat trigger yang mengecek data baru di tabel replicate.' ] } ] },
 
-  { id: 'XD05', name: 'DAD Volume Calculation Batch', type: 'Batch', trigger: 'Scheduler bulanan, auto retry 3×; manual [Run calculation] di XD01 setelah gagal 3×',
+  { id: 'XD05', name: 'DAD Volume Calculation Batch', type: 'Batch', trigger: 'Trigger: ada data baru di TB_R_ACTUAL_DEMAND_SUMMARY NSP (CREATE_DT > data run terakhir), auto retry 3×; manual [Run calculation] di XD01 setelah gagal 3×',
     sections: [
       { key: 'P1', title: 'Proses 1 – status part', points: [
         'Range N bulan dari system master: bulan sebelum run mundur N bulan (contoh run Okt 2026, N = 6 → 202604–202609).',
@@ -876,64 +876,10 @@ const MSGS = {
 "type": "Warning",
 "event": "Retry exhausted",
 "cause": "Scheduled run and 3 retries failed",
-"message": "Actual demand summary sync failed 3 times. DAD volume calculation is not started.",
-"action": "system: Do not start XD05.; user: PIC handles the run manually outside NSP, then XD05 is run."
+"message": "Actual demand summary sync failed 3 times. Handle the run manually outside NSP.",
+"action": "system: Write the log. No new data for XD05.; user: PIC handles the run manually outside NSP; XD05 then starts by its trigger."
 }
-],
-"XD05": [
-{
-"id": "LOG1",
-"kind": "Log",
-"type": "Info",
-"event": "Process 1: Batch start",
-"cause": "Batch is called",
-"message": "DAD volume calculation started (<RUN_TYPE>, retry <RETRY_NO>). Range <MONTH_FROM> - <MONTH_TO>.",
-"action": "system: Write the log."
-},
-{
-"id": "LOG2",
-"kind": "Log",
-"type": "Info",
-"event": "Process 1: Batch end",
-"cause": "Batch finishes",
-"message": "DAD volume calculation ended. Status <STATUS>, calculated <COUNT>, status changed <CHANGED>.",
-"action": "system: Write the log."
-},
-{
-"id": "LOG3",
-"kind": "Log",
-"type": "Error",
-"event": "Process 1: Range of months",
-"cause": "Range is not set in the system master",
-"message": "Range of months for the DAD volume calculation is not set.",
-"action": "system: Stop. STATUS = FAILED.; user: User contact PIC"
-},
-{
-"id": "LOG4",
-"kind": "Log",
-"type": "Info",
-"event": "Process 1: Part skipped",
-"cause": "Effective Start Date after the run date",
-"message": "Part No <PART_NO> skipped: effective start date <DATE>.",
-"action": "system: Continue."
-},
-{
-"id": "LOG5",
-"kind": "Log",
-"type": "Error",
-"event": "Process 1: Save",
-"cause": "Insert / update fails",
-"message": "Cannot save the calculation of Part No <PART_NO>: <ERROR_DETAIL>.",
-"action": "system: Roll back. STATUS = FAILED. Retry.; user: User contact PIC"
-},
-{
-"id": "LOG6",
-"kind": "Log",
-"type": "Warning",
-"event": "Process 1: Retry exhausted",
-"cause": "Scheduled run and 3 retries failed",
-"message": "DAD volume calculation failed 3 times. Manual run is enabled on Part List.",
-"action": "system: Enable [Run calculation] on Part List.; user: Check the cause, then click [Run calculation]."
+] on Part List.; user: Check the cause, then click [Run calculation]."
 },
 {
 "id": "LOG7",

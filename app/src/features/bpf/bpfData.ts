@@ -1050,9 +1050,9 @@ export const BPF: BpfData = {
    "fn": "XD04",
    "condition": "DB Surrounding cannot be read or the upsert fails (after 3 retries)",
    "detection": "Log FAILED",
-   "system": "Roll back, watermark not changed; XD05 is not started (decided 6-Nov).",
+   "system": "Roll back, watermark not changed; no new data, so the XD05 trigger does not start XD05 (decided 6-Nov).",
    "pic": "System admin",
-   "action": "Handle the run manually outside NSP, then run XD05."
+   "action": "Handle the run manually outside NSP; XD05 then starts by its trigger."
   },
   {
    "id": "AB04",

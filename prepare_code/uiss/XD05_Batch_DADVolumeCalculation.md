@@ -24,7 +24,7 @@
 
 ```mermaid
 flowchart TB
-  a>"Scheduler / retry / XD01 [Run calculation]"]
+  a>"Trigger: new data in TB_R_ACTUAL_DEMAND_SUMMARY / retry / XD01 [Run calculation]"]
   b["Process 1: average MAD vs Min MAD -> Active / Inactive"]
   c["Process 2: result MAD per destination -> Case/Day of the new period"]
   d["Save, Log"]
@@ -37,7 +37,7 @@ flowchart TB
 
 | Name | Type | Description |
 |---|---|---|
-| TB_R_ACTUAL_DEMAND_SUMMARY (NSP) | DB | MAD per part, buyer code, PD code, order type and month (replicated by the Actual Demand Summary Sync) |
+| TB_R_ACTUAL_DEMAND_SUMMARY (NSP) | DB | MAD per part, buyer code, PD code, order type and month (replicated by the Actual Demand Summary Sync); CREATE_DT later than DATA_DT of the last successful run = new data (trigger) |
 | TB_M_PART_CANDIDATE | DB | Registered parts: Min MAD, Effective Start Date and current status |
 | System master | DB | Range of months and schedule (not explained in this document) |
 | TB_M_H0125_DESTINATION (Destination Master) | DB | Valid 7-digit destination codes |
@@ -73,11 +73,11 @@ flowchart TB
 
 | Item | Description |
 |---|---|
-| Trigger | Monthly scheduler (set in the system master; not detailed in this document). One run = process 1, then process 2. |
+| Trigger | The scheduler checks TB_R_ACTUAL_DEMAND_SUMMARY (NSP): XD05 starts when the table has rows with CREATE_DT later than DATA_DT of the last successful XD05 run (new data from XD04). No new data: XD05 is not started (decided 6-Nov). One run = process 1, then process 2. Check frequency set in the system master. |
 | Auto retry | A failed process is retried automatically up to 3 times; process 2 starts only after process 1 has succeeded. |
 | Manual trigger | [Run calculation (Part List)] on XD01 runs process 1 and then process 2; [Run calculation (Mapping)] on XD01 runs process 2 only. Each button is enabled only when its process and the 3 retries have failed. |
 | Last success date | One date per process in the Log; process 1 shown on the Part List tab, process 2 on the Mapping per Destination tab. |
-| Order | Runs after XD04 has succeeded and calculates with the actual demand data just synced. When XD04 still fails after its 3 retries, XD05 is not started (decided 6-Nov). |
+| Order | Runs after XD04 has brought new data (scheduled run, retry or manual run outside NSP). When XD04 still fails, there is no new data and XD05 is not started (decided 6-Nov). |
 
 ## 2. Function flow
 
@@ -142,7 +142,7 @@ flowchart TB
   b_p10 --> b_log
 ```
 
-1. Process 1 (part status) starts from the scheduler, an automatic retry, or [Run calculation (Part List)] on XD01.
+1. Process 1 (part status) starts when the trigger finds new data in TB_R_ACTUAL_DEMAND_SUMMARY (NSP) (CREATE_DT later than DATA_DT of the last successful run), from an automatic retry, or [Run calculation (Part List)] on XD01.
 2. Get the range of months N from the system master.
   - MONTH_TO = month before the run month; MONTH_FROM = N months back. Example: run in Oct 2026, N = 6 -> 202604 to 202609.
 3. Select every part of TB_M_PART_CANDIDATE (Candidate, Active and Inactive).
@@ -254,6 +254,7 @@ flowchart TB
 |  | RUN_TYPE | SCHEDULE / RETRY / MANUAL |
 |  | RETRY_NO | 0 for the scheduled run, 1-3 for the auto retries |
 |  | STATUS | SUCCESS / FAILED |
+|  | DATA_DT | Max CREATE_DT of TB_R_ACTUAL_DEMAND_SUMMARY (NSP) used by this run (only when SUCCESS); the trigger compares new data with it |
 |  | MESSAGE | Error message when FAILED |
 |  | START_DT | Start date and time |
 |  | END_DT | End date and time; END_DT of the latest SUCCESS = last success date |
@@ -339,6 +340,7 @@ flowchart TB
 |  | RUN_TYPE | SCHEDULE / RETRY / MANUAL |
 |  | RETRY_NO | 0 for the scheduled run, 1-3 for the auto retries |
 |  | STATUS | SUCCESS / FAILED |
+|  | DATA_DT | Max CREATE_DT of TB_R_ACTUAL_DEMAND_SUMMARY (NSP) used by this run (only when SUCCESS); the trigger compares new data with it |
 |  | MESSAGE | Error message when FAILED |
 |  | START_DT | Start date and time |
 |  | END_DT | End date and time; END_DT of the latest SUCCESS = last success date |
@@ -502,7 +504,6 @@ Actual demand summary replicated from DB Surrounding to NSP (same columns). Key 
 | NUM_OF_OLD_PART_NO | NUMBER |  | Y | Number of old part numbers (not used by Crossdock) |
 | NUM_OF_WORKINGDAY_6M | NUMBER |  | Y | Working days in 6 months (not used by Crossdock) |
 | EM_MS_FLAG | CHAR(1) |  | Y | EM / MS flag (not used by Crossdock) |
-| INTERFACE_UPDATE_DT | TIMESTAMP |  | N | Interface update date and time of the row in DB Surrounding; XD04 reads only rows changed since the last successful run (watermark) |
 
 #### TB_H_PART_CANDIDATE (history, proposed)
 History of every change of a crossdock part (Add / Edit by screen or upload, mapping changes, Sync results, status changes and mappings made by the calculation batches). Read by the History setting modal of Part List (index PART_NO, CREATED_DT). No retention limit: the history is kept (no housekeeping job, decided 30-Oct).
