@@ -27,9 +27,8 @@ Nama sistem di dokumen (UISS, BPF, ERD, md) **GTOPAS** dan **NSP**; di simulasi 
 | XD10 | ASN Cross Dock Creation Screen | Screen | X8 + X14 ASN Submit | **Digabung**: proses Submit ASN jadi section 5.7 |
 | XD11 | Change Order Number Screen | Screen | – | **Baru 23-Oct** (menggantikan Cancel Crossdock Customer Order Batch): layar D/S ganti order number untuk qty cancel di ASN |
 | XD13 | Destination Master Synch into NSP | Batch | X11 H0125 Sync | Ganti ID / nama |
-| XD15 | ASN Crossdock Inquiry Screen (Buffer) | Screen | X13 | Ganti ID / nama |
 
-Tidak dipakai (dikonfirmasi 19-Oct): **X9** H0202 Demand History Sync, **X15** Menu Settings (hanya admin panel prototype), **XD14**.
+Tidak dipakai (dikonfirmasi 19-Oct): **X9** H0202 Demand History Sync, **X15** Menu Settings (hanya admin panel prototype), **XD14**; **XD15** ASN Crossdock Inquiry Screen tidak perlu (9-Nov).
 
 ## Keputusan (konfirmasi 18-Oct)
 | No | Topik | Keputusan |
