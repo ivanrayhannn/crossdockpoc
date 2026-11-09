@@ -4,7 +4,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from ur_data import FUNCS, DETAIL, BL_ASN, OPEN
 
-OUT = os.path.join(os.path.dirname(__file__), '..', 'XD01-XD15_UR_Business_Logic_Summary.xlsx')
+OUT = os.path.join(os.path.dirname(__file__), '..', 'XD01-XD13_UR_Business_Logic_Summary.xlsx')
 HDR = PatternFill('solid', fgColor='1F3864')
 GREY = PatternFill('solid', fgColor='D9D9D9')
 CAT_FILL = {'User Requirement': 'DDEBF7', 'Business Logic': 'E2EFDA', 'Validation': 'FFF2CC',
@@ -40,10 +40,10 @@ ws = wb.active
 ws.title = 'Cover'
 ws.column_dimensions['A'].width = 24
 ws.column_dimensions['B'].width = 90
-title(ws, 'Crossdock Optimization – XD01–XD15 User Requirement & Business Logic Summary', 'GTOPAS / NSP')
+title(ws, 'Crossdock Optimization – XD01–XD13 User Requirement & Business Logic Summary', 'GTOPAS / NSP')
 info = [('Project', 'Crossdock Optimization (NSP)'), ('Document', 'Summary User Requirement & Business Logic per function'),
         ('Author', 'FID Rayhan'), ('Revision', '0.1 Initial Draft'), ('Date', '27-Oct-2026'),
-        ('Source', 'UISS XD01–XD15 (0.1), function_list_v2 md, simulasi_asn_rev.xlsx (16–22 Oct), BPF Level 2'),
+        ('Source', 'UISS XD01–XD13 (0.1), function_list_v2 md, simulasi_asn_rev.xlsx (16–22 Oct), BPF Level 2'),
         ('Sheets', '1. Summary – 1 baris per function\n2. Detail UR & BL – rincian per function (filter Func ID / Category)\n'
                    '3. Business Logic ASN – rule 1–6\n4. Open Points')]
 for i, (k, v) in enumerate(info, 4):
@@ -62,7 +62,15 @@ ws = wb.create_sheet('Summary')
 title(ws, 'Summary per Function', 'User Requirement (tujuan) dan Business Logic utama setiap function')
 hd = ['No', 'Func ID', 'Function Name', 'Type', 'User / PIC', 'Trigger / Schedule', 'User Requirement (Objective)',
       'Key Business Logic', 'Input', 'Output', 'Related Function', 'Status']
-ACTIVE = [f for f in FUNCS if f[-1] not in ('Removed', 'Not used')]
+HIDDEN = {'XD12', 'XD14', 'XD15'}  # removed / not used (XD15 not needed, 9-Nov)
+
+
+def strip_hidden(v):
+    return ', '.join(x for x in v.split(', ') if x not in HIDDEN) or '–'
+
+
+ACTIVE = [f[:9] + (strip_hidden(f[9]),) + f[10:] for f in FUNCS if f[0] not in HIDDEN]
+DETAIL = [d for d in DETAIL if d[0] not in HIDDEN]
 rows = [(i,) + f for i, f in enumerate(ACTIVE, 1)]
 last = table(ws, 4, hd, rows, [5, 8, 26, 11, 22, 22, 45, 60, 32, 32, 16, 14])
 for rr in range(5, last + 1):

@@ -33,7 +33,7 @@ python3 prepare_code/build_md.py   # also run by deliverables/function_list_v2/b
 - Business process flow: `deliverables/function_list_v2/bpf/Crossdock_BPF_Level2.xlsx` (F1 master, F2 daily order to ASN, F4 hold & cancel).
 - ERD / DB structure: `deliverables/function_list_v2/erd/`.
 - Simulation data (16–22 Oct, PART-X): `deliverables/simulasi_asn_rev.xlsx`; prototype: `app/` (menu ASN Simulation / ASN Creation).
-- UR / business logic summary: `deliverables/function_list_v2/XD01-XD15_UR_Business_Logic_Summary.xlsx`.
+- UR / business logic summary: `deliverables/function_list_v2/XD01-XD13_UR_Business_Logic_Summary.xlsx`.
 
 ## Business Logic ASN
 
