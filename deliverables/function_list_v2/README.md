@@ -18,7 +18,7 @@ Nama sistem di dokumen (UISS, BPF, ERD, md) **GTOPAS** dan **NSP**; di simulasi 
 | XD01 | Cross Dock Part Master Screen | Screen | X1 Part List + X3 Mapping per Destination | **Digabung** jadi 1 screen dengan 2 tab. Sync sekarang menjalankan XD06 + XD07 |
 | XD02 | Cross Dock Part Master Upload Batch | Batch | X2 Part List Upload | Ganti ID / nama, referensi ke XD01 / XD05 |
 | XD03 | Part and Destination Mapping Upload Batch | Batch | X4 Mapping per Destination Upload | Ganti ID / nama |
-| XD04 | Actual Demand Summary Synch to NSP | Batch | X5 | Tetap replicate tabel Actual Demand Summary ke NSP (delete – insert) |
+| XD04 | Actual Demand Summary Synch to NSP | Batch | X5 | Replicate Actual Demand Summary ke NSP: **delta CREATE_DT > watermark, upsert**, retry 3× (6-Nov) |
 | XD05 | DAD Volume Calculation Batch | Batch | X6 DAD Volume Calc + X7 Mapping Destination Calc | **Digabung**: proses 1 (status part) lalu proses 2 (mapping destinasi) |
 | XD06 | IF Cross Dock Master to GTOPAS | Batch | bagian RPA dari X3 (Sync) | **Baru / dipisah**: **RPA** ke GTOPAS (Supply > Master > Crossdock Master): hanya daftar destinasi per part, tanpa Case/Day; part Inactive / tanpa destinasi → semua row part dihapus (30-Oct) |
 | XD07 | IF Cross Dock Master to AP POLE | Batch | bagian RPA dari X3 (Sync) | **Baru / dipisah**: **file SFTP** ke AP POLE, 1 row per part: part baru = Add, sudah ada = Edit, Inactive = Delete (CROSSDOCK_FLAG N) |
