@@ -26,9 +26,7 @@ Nama sistem di dokumen (UISS, BPF, ERD, md) **GTOPAS** dan **NSP**; di simulasi 
 | XD09 | Mapping Customer Order and PO Batch | Batch | X12 Get Order (pre-mapping) | Ganti ID / nama (tetap on demand dari [Search] di XD10) |
 | XD10 | ASN Cross Dock Creation Screen | Screen | X8 + X14 ASN Submit | **Digabung**: proses Submit ASN jadi section 5.7 |
 | XD11 | Change Order Number Screen | Screen | – | **Baru 23-Oct** (menggantikan Cancel Crossdock Customer Order Batch): layar D/S ganti order number untuk qty cancel di ASN |
-| ~~XD12~~ | ~~Order Control Information to NSP Batch (Cancel)~~ | – | – | **Dihapus 23-Oct**, digabung ke XD08 |
 | XD13 | Destination Master Synch into NSP | Batch | X11 H0125 Sync | Ganti ID / nama |
-| XD14 | DAD Volume Calculation Result Screen (Buffer) | Screen | – | **Tidak dipakai** (keputusan 19-Oct) |
 | XD15 | ASN Crossdock Inquiry Screen (Buffer) | Screen | X13 | Ganti ID / nama |
 
 Tidak dipakai (dikonfirmasi 19-Oct): **X9** H0202 Demand History Sync, **X15** Menu Settings (hanya admin panel prototype), **XD14**.
@@ -40,7 +38,6 @@ Tidak dipakai (dikonfirmasi 19-Oct): **X9** H0202 Demand History Sync, **X15** M
 | 2 | XD10 | **Disetujui**: X14 (Submit ASN) masuk ke XD10 (section 5.7) |
 | 3 | XD06 / XD07 | XD06 ke GTOPAS lewat **RPA** (diputuskan 30-Oct); XD07 ke AP POLE lewat **file SFTP – Option #3** (NSP Send IF → SFTP TMMIN → SFTP TMA → receive IF → AP POLE Crossdock Kanban Part Master / Crossdock Export Part Master). **TB_R_CROSSDOCK_IF_RESULT = tabel dummy** untuk status kirim. Field dan proses bisnis sudah didetailkan (Interface Data di UISS dan md). Sync Status gabungan **disetujui** |
 | 4 | XD08 / XD12 / tabel H0253 | **Satu tabel replicate upsert** (delta INTF_UPDATE_DT, partial cancel = serial baru, status 6 / 2 disimpan untuk tracking); kolom baru UPD_STATUS; tabel cancel terpisah dihapus |
-| 5 | Urutan job | ~~XD12 → XD11 → XD08~~ — tidak berlaku sejak 23-Oct (XD08 satu batch) |
 | 6 | XD11 | Cancel bisa **dengan atau tanpa Hold Flag Y**. Perhitungan **per line (semua serial)**. Qty yang sudah ASN dicegah oleh feedback ASN existing ke GTOPAS + SOP; kalau tetap terjadi → **CONFLICT** (abnormality, lihat simulasi skenario 4) |
 | 7 | ID | Prefix **XD** (XD01–XD15) |
 
