@@ -45,8 +45,7 @@ info = [('Project', 'Crossdock Optimization (NSP)'), ('Document', 'Summary User 
         ('Author', 'FID Rayhan'), ('Revision', '0.1 Initial Draft'), ('Date', '27-Oct-2026'),
         ('Source', 'UISS XD01–XD15 (0.1), function_list_v2 md, simulasi_asn_rev.xlsx (16–22 Oct), BPF Level 2'),
         ('Sheets', '1. Summary – 1 baris per function\n2. Detail UR & BL – rincian per function (filter Func ID / Category)\n'
-                   '3. Business Logic ASN – rule 1–6\n4. Open Points'),
-        ('Catatan', 'XD12 dihapus (digabung ke XD08 + XD11); XD14 tidak dipakai.')]
+                   '3. Business Logic ASN – rule 1–6\n4. Open Points')]
 for i, (k, v) in enumerate(info, 4):
     ws.cell(i, 1, k).font = Font(bold=True)
     ws.cell(i, 1).fill = GREY
@@ -63,7 +62,8 @@ ws = wb.create_sheet('Summary')
 title(ws, 'Summary per Function', 'User Requirement (tujuan) dan Business Logic utama setiap function')
 hd = ['No', 'Func ID', 'Function Name', 'Type', 'User / PIC', 'Trigger / Schedule', 'User Requirement (Objective)',
       'Key Business Logic', 'Input', 'Output', 'Related Function', 'Status']
-rows = [(i,) + f for i, f in enumerate(FUNCS, 1)]
+ACTIVE = [f for f in FUNCS if f[-1] not in ('Removed', 'Not used')]
+rows = [(i,) + f for i, f in enumerate(ACTIVE, 1)]
 last = table(ws, 4, hd, rows, [5, 8, 26, 11, 22, 22, 45, 60, 32, 32, 16, 14])
 for rr in range(5, last + 1):
     if ws.cell(rr, 12).value in ('Removed', 'Not used'):
@@ -96,4 +96,4 @@ table(ws, 4, ['ID', 'Function', 'Point', 'PIC', 'Status'], OPEN, [8, 14, 80, 18,
 for s in wb.worksheets:
     s.sheet_view.showGridLines = False
 wb.save(OUT)
-print('saved', os.path.abspath(OUT), len(FUNCS), 'functions', len(DETAIL), 'details')
+print('saved', os.path.abspath(OUT), len(ACTIVE), 'functions', len(DETAIL), 'details')
