@@ -879,7 +879,61 @@ const MSGS = {
 "message": "Actual demand summary sync failed 3 times. Handle the run manually outside NSP.",
 "action": "system: Write the log. No new data for XD05.; user: PIC handles the run manually outside NSP; XD05 then starts by its trigger."
 }
-] on Part List.; user: Check the cause, then click [Run calculation]."
+],
+"XD05": [
+{
+"id": "LOG1",
+"kind": "Log",
+"type": "Info",
+"event": "Process 1: Batch start",
+"cause": "Batch is called",
+"message": "DAD volume calculation started (<RUN_TYPE>, retry <RETRY_NO>). Range <MONTH_FROM> - <MONTH_TO>.",
+"action": "system: Write the log."
+},
+{
+"id": "LOG2",
+"kind": "Log",
+"type": "Info",
+"event": "Process 1: Batch end",
+"cause": "Batch finishes",
+"message": "DAD volume calculation ended. Status <STATUS>, calculated <COUNT>, status changed <CHANGED>.",
+"action": "system: Write the log."
+},
+{
+"id": "LOG3",
+"kind": "Log",
+"type": "Error",
+"event": "Process 1: Range of months",
+"cause": "Range is not set in the system master",
+"message": "Range of months for the DAD volume calculation is not set.",
+"action": "system: Stop. STATUS = FAILED.; user: User contact PIC"
+},
+{
+"id": "LOG4",
+"kind": "Log",
+"type": "Info",
+"event": "Process 1: Part skipped",
+"cause": "Effective Start Date after the run date",
+"message": "Part No <PART_NO> skipped: effective start date <DATE>.",
+"action": "system: Continue."
+},
+{
+"id": "LOG5",
+"kind": "Log",
+"type": "Error",
+"event": "Process 1: Save",
+"cause": "Insert / update fails",
+"message": "Cannot save the calculation of Part No <PART_NO>: <ERROR_DETAIL>.",
+"action": "system: Roll back. STATUS = FAILED. Retry.; user: User contact PIC"
+},
+{
+"id": "LOG6",
+"kind": "Log",
+"type": "Warning",
+"event": "Process 1: Retry exhausted",
+"cause": "Scheduled run and 3 retries failed",
+"message": "DAD volume calculation failed 3 times. Manual run is enabled on Part List.",
+"action": "system: Enable [Run calculation] on Part List.; user: Check the cause, then click [Run calculation]."
 },
 {
 "id": "LOG7",
