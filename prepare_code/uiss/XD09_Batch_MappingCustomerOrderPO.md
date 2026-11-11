@@ -107,7 +107,7 @@ flowchart TB
   - Get: PO Number, Manifest Number, Supplier Code / Plant, Sub Supplier Code / Plant, Order Type, Dock Code, PO Order Qty, Order Date, ETD Ori, Manifest Item, Part Number.
 4. Per unit (Part Number + Customer Order Date, oldest date first), pre-map in H0253 order (see 4.1 and 4.2) and insert the result in #TEMP_INSTRUCTION.
   - Lines in H0253 order: 1) Allocation Priority (= Customer Order Date), 2) Customer Code, 3) Customer Order No, 4) Customer Order Date, 5) Customer Order Time, 6) Destination Code, 7) Detailed Item No, 8) Serial No.
-  - Each PO qty (PO_DT ascending) goes to the open qty in this order; a line may be split over several POs.
+  - Pour the open PO qty of the part (PO_DT, then PO No) over the lines from the top down: each line takes from the oldest PO with qty left; PO left < line qty -> the line is split per PO; no PO left -> the rest of the line gets PO_NO NULL (see 4.2).
   - The pcs are cut into supplier cases of PCS_CASE pcs in this order (a case can hold several lines and destinations); each slice line x PO x case is one row.
 5. Mark the valid cuts, number the blocks, set the status of each block and return the delivery plan to XD10 (see 4.3).
   - Error: clear the temporary table, show the error on the screen and record the Log (FAILED).
@@ -167,8 +167,27 @@ XD09 runs on [Search] of XD10 and builds the delivery plan in #TEMP_INSTRUCTION.
 ### 4.2 PO Assignment
 
 - One PO per Part Number per Customer Order Date: PO date = order date + 1, PO qty = total order qty of all destinations of that date. Open PO qty = ORDER_QTY - MAPPED_QTY.
-- The open PO qty is given in PO date order (then PO No) to the lines in the order of 4.1, oldest unit first. A PO qty left by an order that is not sent goes to the next lines: T0409011 (CO-14102 on hold, then cancelled) covers CO-14103; T0409012 then covers CO-14105.
-- PO qty lower than the order qty of the date (Short PO) is an abnormality: order date 17-Oct = 30 pcs, T0409013 = 18 pcs; the last 6 pcs (CO-14110) have no PO (PO_NO NULL) and wait for the split PO T0409014 of 19-Oct.
+- Pouring (Part Number level): the open PO qty of the part is poured over the customer order lines from the top of the list (order of 4.1, oldest unit first) down, like filling holes one after the other.
+- Each line takes its qty from the oldest PO that still has qty left (PO_DT, then PO No). The PO is used up before the next PO is taken; what is left of a PO goes on to the next line, also of the next Customer Order Date.
+- PO left < qty of the line: the line is split. The first part gets the rest of this PO; the rest goes on to the next PO (one row per PO). Example: line 6 pcs, PO A has 2 left, PO B has 10 -> 2 rows: PO A 2, PO B 4.
+- No PO left: the rest of the line is still written, with PO_NO NULL (not skipped). Example: line 6 pcs, PO A has 2 left, no other PO -> 2 rows: PO A 2, PO_NO NULL 4. The lines below also get PO_NO NULL.
+- The qty written in each row is ASSIGNED_QTY; the sum of ASSIGNED_QTY of a line = its open qty. A PO qty left by an order that is not sent goes to the next lines: T0409011 (CO-14102 on hold, then cancelled) covers CO-14103; T0409012 then covers CO-14105.
+- PO qty lower than the order qty of the date (Short PO) is an abnormality: order date 17-Oct = 30 pcs, PO left 24 (T0409012 6 + T0409013 18); the last 6 pcs (CO-14110) have no PO (PO_NO NULL) and wait for the split PO T0409014 of 19-Oct.
+
+### 4.2 PO Assignment - example of the pouring
+
+18-Oct [Search], order date 17-Oct, PART-X: PO left of the part (T0409012 6 + T0409013 18 = 24) poured from the top line down; 30 pcs ordered.
+
+| Line (order of 4.1) | Qty | PO (ASSIGNED_QTY) | T0409012 left | T0409013 left |
+|---|---|---|---|---|
+| Start |  |  | 6 | 18 |
+| 1 CO-14105 (9715310) | 6 | T0409012 6 | 0 | 18 |
+| 2 CO-14106 (9715310) | 3 | T0409013 3 | 0 | 15 |
+| 3 CO-14107 (9715310) | 3 | T0409013 3 | 0 | 12 |
+| 4 CO-14104 (9722D10) | 6 | T0409013 6 | 0 | 6 |
+| 5 CO-14109 (9811110) | 6 | T0409013 6 | 0 | 0 |
+| 6 CO-14110 (982220) | 6 | PO_NO NULL 6 | 0 | 0 |
+| Total | 30 | 24 with PO + 6 without |  |  |
 
 ### 4.3 Supplier Cases and Cut
 
@@ -322,6 +341,19 @@ New table: mapped qty per Pra Daily Order PO part (instead of a new column in th
 | 4 | 17-Oct | 9722D10 | CO-14104 | TH | 6 | T0409013 | 6 | 3 | 6 | 6 | Y | Ready |
 | 5 | 17-Oct | 9811100 | CO-14109 | PH | 6 | T0409013 | 6 | 4 | 6 | 6 | Y | Ready |
 | 6 | 17-Oct | 982200 | CO-14110 | 982220 | 6 | — | 6 | 5 | 6 | 6 | Y | Not Ready |
+
+### C1. 18-Oct: pouring the PO qty of PART-X over the lines of order date 17-Oct (top line first)
+
+| Step | Customer Order No | Destination | Qty | PO taken | ASSIGNED_QTY | T0409012 left (PO date 17-Oct) | T0409013 left (PO date 18-Oct) |
+|---|---|---|---|---|---|---|---|
+| Start |  |  |  |  |  | 6 | 18 |
+| 1 | CO-14105 | 9715310 | 6 | T0409012 | 6 | 0 | 18 |
+| 2 | CO-14106 | 9715310 | 3 | T0409013 | 3 | 0 | 15 |
+| 3 | CO-14107 | 9715310 | 3 | T0409013 | 3 | 0 | 12 |
+| 4 | CO-14104 | 9722D10 | 6 | T0409013 | 6 | 0 | 6 |
+| 5 | CO-14109 | 9811110 | 6 | T0409013 | 6 | 0 | 0 |
+| 6 | CO-14110 | 982220 | 6 | - (no PO left) | 6 | 0 | 0 |
+| Total |  |  | 30 |  | 24 with PO, 6 PO_NO NULL |  |  |
 
 ### D. 19-Oct: rest of 17-Oct (CO-14104 cancelled, cases 1-4 in ASN0003) with the split PO T0409014, then order date 18-Oct
 
