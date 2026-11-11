@@ -230,7 +230,8 @@ const FUNCS = [
       { key: 'N', title: 'Proses normal', points: [
         'Bot RPA membaca langsung DB NSP: semua part Active dan destinasinya di periode berjalan (TB_M_PART_CANDIDATE + TB_M_PART_CANDIDATE_DEST). Tidak ada file input / interface.',
         'Bot membuka GTOPAS menu Supply > Master > Crossdock Master (WVJA5204), isi Depot Code 01, [Search], dan membaca semua halaman ([NextPage]).',
-        'Bandingkan per P/No. + Destination Code (GTOPAS menampilkan P/No. dengan "-", contoh 52119-BZV60).',
+        'Bandingkan per P/No. + Destination Code (GTOPAS menampilkan P/No. dengan "-", contoh 52119-BZV60). Destination Code = buyer code + PD code, harus sama persis di NSP dan GTOPAS, tanpa konversi (11-Nov).',
+        'Register dengan nilai tetap: Depot Code 01, Maker Code A, Dom/Os 2, TOPAS Order Type 3, Trans Code 2 (11-Nov).',
         'Ada di NSP dan ada di GTOPAS → skip. Ada di NSP, belum di GTOPAS → didaftarkan. Ada di GTOPAS, tidak ada di NSP → dihapus (MT = DEL). Pesan sukses GTOPAS: MZD34006FEI Registration completed.',
         'Part yang jadi Inactive atau Active tanpa destinasi tidak ada di daftar NSP, jadi semua row-nya di GTOPAS terhapus.',
         'Pcs/Case, Max Case/Day, Effective Start Date dan Case/Day tidak dikirim.',
@@ -239,9 +240,7 @@ const FUNCS = [
         { k: 'Error apa pun di bot (login, layar, timeout, pesan error GTOPAS, DB NSP)', d: 'LOG4', s: 'Try-catch: bot berhenti, semua part Waiting Failed (1 gagal, gagal semua); row yang sudah diproses tetap di GTOPAS', u: '[Sync] lagi; run berikutnya membandingkan ulang dan melanjutkan' },
         { k: 'Error sistem lain', d: 'LOG5', s: 'Stop, ERROR, semua part Failed', u: 'Hubungi PIC' } ] },
       { key: 'C', title: 'Catatan terbuka', points: [
-        'FB-173: Destination Code di GTOPAS 9618274 vs DEST_CODE NSP buyer + PD (9618201): sistem kode sama atau perlu konversi?',
-        'FB-174: nilai Maker Code, Dom/Os, TOPAS Order Type, Order Transportation Code saat register (row existing: A, 2, *, 2): tetap atau dari master?',
-        'FB-175: nama function masih "IF Cross Dock Master to GTOPAS"; ganti jadi "RPA Cross Dock Master to GTOPAS"?',
+        'FB-173 / 174 / 175 (selesai 11-Nov): kode destinasi sama persis tanpa konversi; nilai register A / 2 / 3 / 2; nama function tetap.',
         'FB-176: semua row GTOPAS (Depot 01) yang tidak ada di NSP dihapus: saat go-live semua part crossdock GTOPAS harus sudah ada di NSP.' ] } ] },
 
   { id: 'XD07', name: 'IF Cross Dock Master to AP POLE', type: 'Batch', trigger: '[Sync] di XD01 (file SFTP)',
