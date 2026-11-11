@@ -59,7 +59,7 @@ g['extra_tables'] = [
               ['Search: P/No., Destination Code, Maker Code, Dom/Os, TOPAS Order Type, Trans Code', 'Blank to read all rows; P/No. + Destination Code to find one row'],
               ['[Search] / [NextPage]', 'Read all pages of the list'],
               ['List columns', 'No, MT, R, Depot Code, Maker Code, P/No. (e.g. 52119-BZV60), Domestic/Overseas, Destination Code, TOPAS Order Type, Order Transportation Code'],
-              ['MT (maintenance type)', "'DEL' on a row = delete; register = new row (values TBC, see 4.4)"],
+              ['MT (maintenance type)', "'DEL' on a row = delete; register = new row: Depot Code 01, Maker Code A, P/No., Dom/Os 2, Destination Code, TOPAS Order Type 3, Trans Code 2"],
               ['Message', "MZD34006FEI: Registration completed. Any other error message = error (try-catch)"]]}]
 
 s['func_flow'] = {'flow': {'direction': 'TB', 'nodes': [
@@ -88,7 +88,7 @@ s['func_flow'] = {'flow': {'direction': 'TB', 'nodes': [
          'children': ['GTOPAS list = one row per P/No. + Destination Code. P/No. is shown with "-" (52119-BZV60): the bot removes "-" before comparing (52119BZV60).']},
         {'text': 'Compare per ' + KEY + ':',
          'children': ['In NSP and in GTOPAS: skip (no change).',
-                      'In NSP and not in GTOPAS: register the row on the screen (Depot Code 01, P/No., Destination Code and the other values of 4.4); message MZD34006FEI = done.']},
+                      'In NSP and not in GTOPAS: register the row on the screen: Depot Code 01, Maker Code A, P/No., Dom/Os 2, Destination Code, TOPAS Order Type 3, Trans Code 2; message MZD34006FEI = done.']},
         {'text': 'In GTOPAS and not in NSP: delete the row (MT = DEL); message MZD34006FEI = done.',
          'children': ['This covers destinations removed in NSP, parts that became Inactive (all their rows) and Active parts without destination.']},
         {'text': 'Try-catch: any error (login, screen not available, timeout, error message instead of MZD34006FEI, NSP database not available) stops the bot at once.',
@@ -107,11 +107,11 @@ reg = {'source': {'table': 'TB_M_PART_CANDIDATE + TB_M_PART_CANDIDATE_DEST (read
                        'keys': [{'field': 'P/No. + Destination Code', 'value': 'Not found in GTOPAS'}]},
        'mappings': [{'source_field': '-', 'dest_field': 'Depot Code', 'description': "'01'"},
                     {'source_field': 'PART_NO', 'dest_field': 'P/No.', 'description': 'Part number (GTOPAS shows it with "-")'},
-                    {'source_field': 'DEST_CODE', 'dest_field': 'Destination Code', 'description': '7-digit destination code (code system TBC, see 4.4)'},
-                    {'source_field': '-', 'dest_field': 'Maker Code', 'description': 'TBC (existing rows: A)'},
-                    {'source_field': '-', 'dest_field': 'Domestic/Overseas', 'description': 'TBC (existing rows: 2)'},
-                    {'source_field': '-', 'dest_field': 'TOPAS Order Type', 'description': 'TBC (existing rows: *)'},
-                    {'source_field': '-', 'dest_field': 'Order Transportation Code', 'description': 'TBC (existing rows: 2)'}]}
+                    {'source_field': 'DEST_CODE', 'dest_field': 'Destination Code', 'description': '7-digit destination code = buyer code + PD code, exactly the same in NSP and GTOPAS (no conversion, decided 11-Nov)'},
+                    {'source_field': '-', 'dest_field': 'Maker Code', 'description': "Always 'A' (decided 11-Nov)"},
+                    {'source_field': '-', 'dest_field': 'Domestic/Overseas', 'description': "Always '2' (decided 11-Nov)"},
+                    {'source_field': '-', 'dest_field': 'TOPAS Order Type', 'description': "Always '3' (decided 11-Nov)"},
+                    {'source_field': '-', 'dest_field': 'Order Transportation Code', 'description': "Always '2' (decided 11-Nov)"}]}
 dele = {'source': {'table': 'GTOPAS Crossdock Master (read by the bot)', 'keys': [{'field': 'Depot Code', 'value': "'01'"}]},
         'destination': {'table': 'GTOPAS Crossdock Master (WVJA5204, by RPA)', 'operation': 'Delete',
                         'description': 'Row in GTOPAS and not in the NSP list (not in NSP scope; MT = DEL on the screen)',
@@ -150,11 +150,12 @@ s['func_desc'] = [
     {'type': 'heading', 'text': '4.2 Comparison Rules'},
     {'type': 'table', 'level': 0, 'row_lines': 'all',
      'columns': [{'title': 'In NSP (Active part + destination, ongoing period)', 'width': 30}, {'title': 'In GTOPAS', 'width': 12}, {'title': 'Action of the bot', 'width': 40}],
-     'rows': [['Y', 'Y', 'Skip (no change)'], ['Y', 'N', 'Register the row (Depot 01, P/No., Destination Code, values of 4.4)'],
+     'rows': [['Y', 'Y', 'Skip (no change)'], ['Y', 'N', 'Register the row (Depot 01, Maker Code A, P/No., Dom/Os 2, Destination Code, TOPAS Order Type 3, Trans Code 2)'],
               ['N', 'Y', 'Delete the row (MT = DEL)'], ['Part Inactive (not in the list)', 'Y', 'All rows of the part are deleted'],
               ['Active part without destination', 'Y', 'All rows of the part are deleted']]},
     {'type': 'bullets', 'marker': '-', 'level': 0, 'items': [
-        'Compare key: ' + KEY + '. GTOPAS shows P/No. with "-" (52119-BZV60), NSP without (52119BZV60).',
+        'Compare key: ' + KEY + '. GTOPAS shows P/No. with "-" (52119-BZV60), NSP without (52119BZV60). Destination Code = buyer code + PD code and must be exactly the same in NSP and GTOPAS: no conversion; equal code = match (decided 11-Nov).',
+        'Fixed values to register (decided 11-Nov): Depot Code 01, Maker Code A, Domestic/Overseas 2, TOPAS Order Type 3, Order Transportation Code 2.',
         'Pcs/Case, Max Case/Day, Effective Start Date and Case/Day are not sent. A change of Case/Day only gives no change in GTOPAS; the part still gets Success.',
         'Example: part 52119BZV60 in NSP with 9722D10, 9811110; in GTOPAS with 9811110, 9618274 -> register 9722D10, skip 9811110, delete 9618274.']},
     {'type': 'heading', 'text': '4.3 Try-Catch and Status'},
@@ -166,8 +167,6 @@ s['func_desc'] = [
         'TB_R_CROSSDOCK_IF_RESULT keeps the result per part and target (GTOPAS by XD06, AP POLE by XD07); the overall Sync Status needs both.']},
     {'type': 'heading', 'text': '4.4 Open Points'},
     {'type': 'bullets', 'marker': '-', 'level': 0, 'items': [
-        'FB-173: GTOPAS shows Destination Code 9618274; NSP DEST_CODE is buyer code + PD code (e.g. 9618201). Same code system, or a conversion is needed? - TBC.',
-        'FB-174: values to register Maker Code, Domestic/Overseas, TOPAS Order Type and Order Transportation Code (existing row: A, 2, *, 2) - fixed values or from a master? - TBC.',
         'FB-176: every GTOPAS row (Depot 01) not in NSP is deleted: at go-live all crossdock parts of GTOPAS must exist in NSP, else they are deleted by the first run - TBC.',
         'RPA design: login user, time limit and screen handling of the bot - detailed in the RPA design.']}]
 

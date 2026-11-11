@@ -214,7 +214,7 @@
      ],
      [
       "MT (maintenance type)",
-      "'DEL' on a row = delete; register = new row (values TBC, see 4.4)"
+      "'DEL' on a row = delete; register = new row: Depot Code 01, Maker Code A, P/No., Dom/Os 2, Destination Code, TOPAS Order Type 3, Trans Code 2"
      ],
      [
       "Message",
@@ -381,7 +381,7 @@
     "text": "Compare per P/No. (without \"-\") + Destination Code:",
     "children": [
      "In NSP and in GTOPAS: skip (no change).",
-     "In NSP and not in GTOPAS: register the row on the screen (Depot Code 01, P/No., Destination Code and the other values of 4.4); message MZD34006FEI = done."
+     "In NSP and not in GTOPAS: register the row on the screen: Depot Code 01, Maker Code A, P/No., Dom/Os 2, Destination Code, TOPAS Order Type 3, Trans Code 2; message MZD34006FEI = done."
     ]
    },
    {
@@ -448,27 +448,27 @@
      {
       "source_field": "DEST_CODE",
       "dest_field": "Destination Code",
-      "description": "7-digit destination code (code system TBC, see 4.4)"
+      "description": "7-digit destination code = buyer code + PD code, exactly the same in NSP and GTOPAS (no conversion, decided 11-Nov)"
      },
      {
       "source_field": "-",
       "dest_field": "Maker Code",
-      "description": "TBC (existing rows: A)"
+      "description": "Always 'A' (decided 11-Nov)"
      },
      {
       "source_field": "-",
       "dest_field": "Domestic/Overseas",
-      "description": "TBC (existing rows: 2)"
+      "description": "Always '2' (decided 11-Nov)"
      },
      {
       "source_field": "-",
       "dest_field": "TOPAS Order Type",
-      "description": "TBC (existing rows: *)"
+      "description": "Always '3' (decided 11-Nov)"
      },
      {
       "source_field": "-",
       "dest_field": "Order Transportation Code",
-      "description": "TBC (existing rows: 2)"
+      "description": "Always '2' (decided 11-Nov)"
      }
     ]
    },
@@ -794,7 +794,7 @@
     [
      "Y",
      "N",
-     "Register the row (Depot 01, P/No., Destination Code, values of 4.4)"
+     "Register the row (Depot 01, Maker Code A, P/No., Dom/Os 2, Destination Code, TOPAS Order Type 3, Trans Code 2)"
     ],
     [
      "N",
@@ -818,7 +818,8 @@
    "marker": "-",
    "level": 0,
    "items": [
-    "Compare key: P/No. (without \"-\") + Destination Code. GTOPAS shows P/No. with \"-\" (52119-BZV60), NSP without (52119BZV60).",
+    "Compare key: P/No. (without \"-\") + Destination Code. GTOPAS shows P/No. with \"-\" (52119-BZV60), NSP without (52119BZV60). Destination Code = buyer code + PD code and must be exactly the same in NSP and GTOPAS: no conversion; equal code = match (decided 11-Nov).",
+    "Fixed values to register (decided 11-Nov): Depot Code 01, Maker Code A, Domestic/Overseas 2, TOPAS Order Type 3, Order Transportation Code 2.",
     "Pcs/Case, Max Case/Day, Effective Start Date and Case/Day are not sent. A change of Case/Day only gives no change in GTOPAS; the part still gets Success.",
     "Example: part 52119BZV60 in NSP with 9722D10, 9811110; in GTOPAS with 9811110, 9618274 -> register 9722D10, skip 9811110, delete 9618274."
    ]
@@ -848,8 +849,6 @@
    "marker": "-",
    "level": 0,
    "items": [
-    "FB-173: GTOPAS shows Destination Code 9618274; NSP DEST_CODE is buyer code + PD code (e.g. 9618201). Same code system, or a conversion is needed? - TBC.",
-    "FB-174: values to register Maker Code, Domestic/Overseas, TOPAS Order Type and Order Transportation Code (existing row: A, 2, *, 2) - fixed values or from a master? - TBC.",
     "FB-176: every GTOPAS row (Depot 01) not in NSP is deleted: at go-live all crossdock parts of GTOPAS must exist in NSP, else they are deleted by the first run - TBC.",
     "RPA design: login user, time limit and screen handling of the bot - detailed in the RPA design."
    ]
