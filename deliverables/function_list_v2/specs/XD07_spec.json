@@ -984,7 +984,7 @@
      "VARCHAR(100)",
      "",
      "Y",
-     "Name of the interface file (AP POLE) or RPA input file (GTOPAS)"
+     "Name of the interface file (AP POLE) or RPA run ID (GTOPAS)"
     ],
     [
      "IF_MESSAGE",
@@ -1253,7 +1253,7 @@
      "VARCHAR(10)",
      "",
      "N",
-     "SCREEN / UPLOAD / IF / BATCH"
+     "SCREEN / UPLOAD / IF / RPA / BATCH"
     ],
     [
      "UPLOAD_ID",

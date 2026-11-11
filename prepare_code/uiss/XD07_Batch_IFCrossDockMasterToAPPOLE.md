@@ -286,7 +286,7 @@ Dummy table (proposed): send status of the cross dock master per part and target
 | PERIOD | CHAR(6) |  | N | Calculation period of the mapping sent (YYYYMM) |
 | IF_STATUS | VARCHAR(1) |  | N | '3' Waiting / '1' Success / '2' Failed |
 | IF_DT | DATETIME |  | Y | Date-time of the result of the target system |
-| IF_FILE_NAME | VARCHAR(100) |  | Y | Name of the interface file (AP POLE) or RPA input file (GTOPAS) |
+| IF_FILE_NAME | VARCHAR(100) |  | Y | Name of the interface file (AP POLE) or RPA run ID (GTOPAS) |
 | IF_MESSAGE | VARCHAR(500) |  | Y | Reason when Failed; blank when Success |
 | CREATED_BY | VARCHAR(TBD) |  | N | User who created the record |
 | CREATED_DT | DATETIME |  | N | Created date and time |
@@ -339,7 +339,7 @@ History of every change of a crossdock part (Add / Edit by screen or upload, map
 | PART_NO | VARCHAR(TBD) |  | N | Part number; length follows TB_M_PART_MASTER |
 | PERIOD | CHAR(6) |  | Y | Calculation period YYYYMM for MAPPING / SYNC / CALC; NULL for ADD / EDIT (Part List has no period) |
 | EVENT_TYPE | VARCHAR(10) |  | N | ADD / EDIT / MAPPING / SYNC / CALC |
-| SOURCE | VARCHAR(10) |  | N | SCREEN / UPLOAD / IF / BATCH |
+| SOURCE | VARCHAR(10) |  | N | SCREEN / UPLOAD / IF / RPA / BATCH |
 | UPLOAD_ID | VARCHAR(TBD) |  | Y | Upload of the change (Log); NULL when not from an upload |
 | DEST_CODE | CHAR(7) |  | Y | Destination code (7 digits) for MAPPING; NULL for other events |
 | FIELD_NAME | VARCHAR(30) |  | N | Changed field: PCS_CASE, MAX_CASE_DAY, MIN_MAD, PART_STATUS, EFFECTIVE_START_DATE, CASE_DAY, SYNC_STATUS |

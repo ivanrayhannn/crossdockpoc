@@ -19,10 +19,10 @@
  "doc_type": "batch",
  "general": {
   "objective": [
-   "To keep the cross dock destinations of each part in GTOPAS equal to NSP, by RPA: for every Active part waiting for synchronisation, the destinations of the ongoing period in Part Mapping per Destination (TB_M_PART_CANDIDATE_DEST) are compared with the destinations of the part in GTOPAS.",
-   "Per destination: in NSP and not in GTOPAS -> registered in GTOPAS; in both -> ignored (no change); in GTOPAS and not in NSP -> deleted in GTOPAS. Only the destination list is maintained: Pcs/Case, Max Case/Day, Effective Start Date and Case/Day are not sent (GTOPAS keeps no Case/Day per destination).",
-   "Parts that became Inactive: the bot deletes all rows of the part in GTOPAS (one row per part + destination, e.g. 10 destinations -> 10 rows deleted). In AP POLE they are deleted at part level by XD07 (SFTP file, CROSSDOCK_FLAG 'N').",
-   "Method: RPA bot on GTOPAS (menu Supply > Master > Crossdock Master, search by Part No). XD06 prepares the RPA input (part x destination) and receives the result per part; the status per part is kept in TB_R_CROSSDOCK_IF_RESULT (dummy table) and, together with XD07 (AP POLE), gives the overall Sync Status shown on the Cross Dock Part Master screen (XD01)."
+   "To keep the Crossdock Master of GTOPAS equal to NSP by an RPA process (no interface file, decided 11-Nov): the bot reads the Active parts and their destinations of the ongoing period directly from the NSP database and maintains GTOPAS screen Crossdock Master (WVJA5204, menu Supply > Master > Crossdock Master).",
+   "Per part + destination: in NSP (Active) and not in GTOPAS -> registered; in both -> skipped (no change); in GTOPAS and not in NSP -> deleted. Parts that became Inactive are no longer in the NSP list, so their rows in GTOPAS are deleted.",
+   "Only the part + destination list is maintained; Pcs/Case, Max Case/Day, Effective Start Date and Case/Day are not sent (GTOPAS keeps no Case/Day).",
+   "The bot runs with try-catch: any error stops the run and the whole run is Failed (one fails, all fail). The result is kept per part in TB_R_CROSSDOCK_IF_RESULT and, together with XD07 (AP POLE), gives the overall Sync Status on XD01."
   ],
   "operation_flow": {
    "flow": {
@@ -30,32 +30,37 @@
     "nodes": [
      {
       "id": "a",
-      "label": "[Sync] on XD01 (Mapping per Destination tab)",
+      "label": "[Sync] on XD01",
       "type": "event"
      },
      {
       "id": "b",
-      "label": "Read Waiting parts for GTOPAS (Active / Inactive)",
+      "label": "RPA: read Active part + destination list from NSP DB",
       "type": "process"
      },
      {
       "id": "c",
-      "label": "Create RPA input (part x destination)",
+      "label": "RPA: open GTOPAS Crossdock Master, read all rows",
+      "type": "process"
+     },
+     {
+      "id": "d",
+      "label": "Compare: register missing / skip existing / delete not in NSP",
       "type": "process"
      },
      {
       "id": "e",
-      "label": "RPA: compare with GTOPAS per part",
-      "type": "process"
-     },
-     {
-      "id": "t",
-      "label": "GTOPAS Crossdock Master: register / delete rows",
-      "type": "process"
+      "label": "Any error?",
+      "type": "decision"
      },
      {
       "id": "f",
-      "label": "Result per part, overall Sync Status, history, Log",
+      "label": "Success: all Waiting parts GTOPAS OK, Log",
+      "type": "process"
+     },
+     {
+      "id": "h",
+      "label": "Failed (try-catch): all Waiting parts GTOPAS Failed, Log",
       "type": "process"
      }
     ],
@@ -70,57 +75,57 @@
      },
      {
       "from": "c",
+      "to": "d"
+     },
+     {
+      "from": "d",
       "to": "e"
      },
      {
       "from": "e",
-      "to": "t",
-      "label": "RPA"
+      "to": "f",
+      "label": "No"
      },
      {
       "from": "e",
-      "to": "f"
+      "to": "h",
+      "label": "Yes"
      }
     ]
    }
   },
   "inputs": [
    {
-    "name": "TB_R_CROSSDOCK_IF_RESULT",
-    "type": "DB",
-    "description": "Rows TARGET_SYSTEM = 'GTOPAS' with IF_STATUS = '3' (Waiting), set by [Sync] on XD01"
-   },
-   {
     "name": "TB_M_PART_CANDIDATE",
     "type": "DB",
-    "description": "Part List: PART_NO, PART_STATUS (Active, or Inactive since the last send), CHANGED_DT"
+    "description": "Read by the bot: parts with PART_STATUS = Active; CHANGED_DT"
    },
    {
     "name": "TB_M_PART_CANDIDATE_DEST",
     "type": "DB",
-    "description": "Part Mapping per Destination: PERIOD, DEST_CODE of the ongoing period"
-   },
-   {
-    "name": "GTOPAS: destinations of the part",
-    "type": "System",
-    "description": "menu Supply > Master > Crossdock Master: rows of the part (one per part + destination), read by the bot after search by Part No"
-   }
-  ],
-  "outputs": [
-   {
-    "name": "RPA input",
-    "type": "File",
-    "description": "XD_CDMASTER_GTOPAS_<YYYYMMDDHHMMSS>.csv: one record per part x destination (see RPA Input Data)"
-   },
-   {
-    "name": "GTOPAS: destinations of the part",
-    "type": "System",
-    "description": "Registered / deleted by the RPA bot (not in NSP scope)"
+    "description": "Read by the bot: DEST_CODE of the ongoing period of the Active parts"
    },
    {
     "name": "TB_R_CROSSDOCK_IF_RESULT",
     "type": "DB",
-    "description": "Dummy table: result of 'GTOPAS' per part (1 / 2), input file name, message"
+    "description": "Parts Waiting for 'GTOPAS' (IF_STATUS = '3'), set by [Sync] on XD01"
+   },
+   {
+    "name": "GTOPAS Crossdock Master (WVJA5204)",
+    "type": "System",
+    "description": "All rows of Depot Code 01 (one row per part + destination), read by the bot page by page"
+   }
+  ],
+  "outputs": [
+   {
+    "name": "GTOPAS Crossdock Master (WVJA5204)",
+    "type": "System",
+    "description": "Rows registered / deleted by the bot (not in NSP scope)"
+   },
+   {
+    "name": "TB_R_CROSSDOCK_IF_RESULT",
+    "type": "DB",
+    "description": "Result of 'GTOPAS' per Waiting part (1 / 2), run ID, message"
    },
    {
     "name": "TB_M_PART_CANDIDATE",
@@ -130,12 +135,12 @@
    {
     "name": "TB_H_PART_CANDIDATE",
     "type": "DB",
-    "description": "History record per part (event SYNC, source IF)"
+    "description": "History record per part (event SYNC, source RPA)"
    },
    {
     "name": "Log",
     "type": "DB",
-    "description": "Start, RPA, result and end messages"
+    "description": "Start, counts (registered / skipped / deleted), error and end messages"
    }
   ],
   "extra_tables": [
@@ -154,133 +159,66 @@
     "rows": [
      [
       "Target system",
-      "'GTOPAS' (GTOPAS)"
+      "'GTOPAS'"
+     ],
+     [
+      "Method",
+      "RPA bot only (no interface file); reads the NSP database and works on GTOPAS screen Crossdock Master (decided 11-Nov)"
      ],
      [
       "User",
-      "IF batch user ID (NSP); RPA bot user of GTOPAS"
+      "RPA bot user (NSP database read, GTOPAS login)"
      ],
      [
-      "Interface method",
-      "RPA bot on GTOPAS (menu Supply > Master > Crossdock Master); the steps of the bot are detailed in the RPA design (not in this document)."
+      "Depot Code",
+      "'01' (mandatory search condition of the GTOPAS screen)"
+     ],
+     [
+      "Compare key",
+      "P/No. (without \"-\") + Destination Code"
      ]
     ]
    },
    {
-    "title": "RPA Input Data",
+    "title": "GTOPAS Screen Crossdock Master (WVJA5204)",
     "columns": [
      {
-      "title": "Field",
-      "width": 10
-     },
-     {
-      "title": "Source",
-      "width": 13
-     },
-     {
-      "title": "Format",
-      "width": 7
-     },
-     {
-      "title": "M",
-      "width": 2
-     },
-     {
-      "title": "Business rule",
+      "title": "Item",
       "width": 16
+     },
+     {
+      "title": "Use by the bot",
+      "width": 32
      }
     ],
     "rows": [
      [
-      "SEND_ID",
-      "Generated",
-      "CHAR(14)",
-      "Y",
-      "Run of XD06 (YYYYMMDDHHMMSS); all records of one input have the same SEND_ID"
+      "Menu",
+      "Supply > Master > Crossdock Master"
      ],
      [
-      "PART_NO",
-      "TB_M_PART_CANDIDATE.PART_NO",
-      "VARCHAR(TBD)",
-      "Y",
-      "Part with Sync Status Waiting for GTOPAS: Active, or became Inactive since the last send"
+      "Search: Depot Code (*)",
+      "'01'"
      ],
      [
-      "CROSSDOCK_FLAG",
-      "TB_M_PART_CANDIDATE.PART_STATUS",
-      "CHAR(1)",
-      "Y",
-      "'Y' = Active: make the destinations equal to NSP / 'N' = Inactive: delete all rows of the part in GTOPAS"
+      "Search: P/No., Destination Code, Maker Code, Dom/Os, TOPAS Order Type, Trans Code",
+      "Blank to read all rows; P/No. + Destination Code to find one row"
      ],
      [
-      "PERIOD",
-      "TB_M_PART_CANDIDATE_DEST.PERIOD",
-      "CHAR(6)",
-      "Y",
-      "Ongoing calculation period (YYYYMM)"
+      "[Search] / [NextPage]",
+      "Read all pages of the list"
      ],
      [
-      "DEST_CODE",
-      "TB_M_PART_CANDIDATE_DEST.DEST_CODE",
-      "CHAR(7)",
-      "N",
-      "Destination code (buyer code + PD code); one record per destination. Blank for an Inactive part (one record) or an Active part without destination (all its destinations in GTOPAS are deleted)"
+      "List columns",
+      "No, MT, R, Depot Code, Maker Code, P/No. (e.g. 52119-BZV60), Domestic/Overseas, Destination Code, TOPAS Order Type, Order Transportation Code"
      ],
      [
-      "SEND_DT",
-      "Generated",
-      "DATETIME",
-      "Y",
-      "Date-time the input is created"
-     ]
-    ]
-   },
-   {
-    "title": "RPA Result Data",
-    "columns": [
-     {
-      "title": "Field",
-      "width": 10
-     },
-     {
-      "title": "Format",
-      "width": 7
-     },
-     {
-      "title": "Business rule",
-      "width": 31
-     }
-    ],
-    "rows": [
-     [
-      "SEND_ID",
-      "CHAR(14)",
-      "SEND_ID of the input"
+      "MT (maintenance type)",
+      "'DEL' on a row = delete; register = new row (values TBC, see 4.4)"
      ],
      [
-      "PART_NO",
-      "VARCHAR(TBD)",
-      "One result per part of the input"
-     ],
-     [
-      "RESULT",
-      "CHAR(2)",
-      "'OK' = GTOPAS equal to NSP after the run / 'NG' = not done"
-     ],
-     [
-      "ADDED",
-      "VARCHAR(TBD)",
-      "Destination codes registered in GTOPAS (comma separated; blank when none)"
-     ],
-     [
-      "DELETED",
-      "VARCHAR(TBD)",
-      "Destination codes deleted in GTOPAS (comma separated; blank when none)"
-     ],
-     [
-      "MESSAGE",
-      "VARCHAR(255)",
-      "Reason when 'NG' (e.g. part not found in GTOPAS, screen error)"
+      "Message",
+      "MZD34006FEI: Registration completed. Any other error message = error (try-catch)"
      ]
     ]
    }
@@ -297,52 +235,58 @@
      "step": 1
     },
     {
-     "id": "r",
-     "label": "TB_R_CROSSDOCK_IF_RESULT",
-     "type": "db",
-     "lane": "input"
-    },
-    {
-     "id": "p2",
-     "label": "Select Waiting parts for GTOPAS",
-     "type": "process",
-     "step": 2
-    },
-    {
      "id": "m",
      "label": "TB_M_PART_CANDIDATE / TB_M_PART_CANDIDATE_DEST",
      "type": "db",
      "lane": "input"
     },
     {
+     "id": "p2",
+     "label": "RPA: read NSP list (Active part + destination)",
+     "type": "process",
+     "step": 2
+    },
+    {
+     "id": "gi",
+     "label": "GTOPAS Crossdock Master",
+     "type": "db",
+     "lane": "input"
+    },
+    {
      "id": "p3",
-     "label": "Create RPA input",
+     "label": "RPA: read all GTOPAS rows",
      "type": "process",
      "step": 3
     },
     {
-     "id": "x",
-     "label": "RPA input",
-     "type": "file",
-     "lane": "output"
-    },
-    {
      "id": "p4",
-     "label": "RPA (Crossdock Master): register / ignore / delete; Inactive: delete all rows",
+     "label": "Compare: register / skip",
      "type": "process",
      "step": 4
     },
     {
-     "id": "d",
-     "label": "Result OK?",
-     "type": "decision",
+     "id": "p5",
+     "label": "Delete GTOPAS rows not in NSP",
+     "type": "process",
      "step": 5
     },
     {
-     "id": "p6",
+     "id": "go",
+     "label": "GTOPAS Crossdock Master",
+     "type": "db",
+     "lane": "output"
+    },
+    {
+     "id": "d",
+     "label": "Any error (try-catch)?",
+     "type": "decision",
+     "step": 6
+    },
+    {
+     "id": "p7",
      "label": "Status per part, overall Sync Status, history",
      "type": "process",
-     "step": 6
+     "step": 7
     },
     {
      "id": "o",
@@ -351,10 +295,10 @@
      "lane": "output"
     },
     {
-     "id": "p7",
+     "id": "p8",
      "label": "Log end, exit",
      "type": "process",
-     "step": 7
+     "step": 8
     },
     {
      "id": "log",
@@ -369,7 +313,7 @@
      "to": "p2"
     },
     {
-     "from": "r",
+     "from": "m",
      "to": "p2"
     },
     {
@@ -377,12 +321,8 @@
      "to": "p3"
     },
     {
-     "from": "m",
+     "from": "gi",
      "to": "p3"
-    },
-    {
-     "from": "p3",
-     "to": "x"
     },
     {
      "from": "p3",
@@ -390,85 +330,92 @@
     },
     {
      "from": "p4",
+     "to": "p5"
+    },
+    {
+     "from": "p4",
+     "to": "go"
+    },
+    {
+     "from": "p5",
+     "to": "go"
+    },
+    {
+     "from": "p5",
      "to": "d"
     },
     {
      "from": "d",
-     "to": "p6",
-     "label": "Yes / No"
-    },
-    {
-     "from": "p6",
-     "to": "o"
-    },
-    {
-     "from": "p6",
-     "to": "p7"
+     "to": "p7",
+     "label": "No / Yes"
     },
     {
      "from": "p7",
+     "to": "o"
+    },
+    {
+     "from": "p7",
+     "to": "p8"
+    },
+    {
+     "from": "p8",
      "to": "log"
     }
    ]
   },
   "steps": [
-   "[Sync] on XD01 sets the parts to Waiting (SYNC_STATUS = '3' in TB_M_PART_CANDIDATE, IF_STATUS = '3' for 'GTOPAS' and 'APPOLE' in TB_R_CROSSDOCK_IF_RESULT) and starts XD06. Write LOG1.",
+   "[Sync] on XD01 sets the parts to Waiting (SYNC_STATUS = '3', IF_STATUS = '3' for 'GTOPAS' and 'APPOLE' in TB_R_CROSSDOCK_IF_RESULT) and starts the RPA bot. Write LOG1. The whole bot run is inside one try-catch (step 6).",
    {
-    "text": "Select the parts with TARGET_SYSTEM = 'GTOPAS' and IF_STATUS = '3' in TB_R_CROSSDOCK_IF_RESULT. Keep CHANGED_DT of each part.",
+    "text": "The bot reads the NSP list from the database: every part with PART_STATUS = Active and its DEST_CODE of the ongoing period (TB_M_PART_CANDIDATE_DEST).",
     "children": [
-     "PART_STATUS Active: sent with its destinations (CROSSDOCK_FLAG 'Y').",
-     "PART_STATUS Inactive: sent with CROSSDOCK_FLAG 'N' to delete the part in GTOPAS.",
-     "No part: write LOG2 and exit."
+     "One record per part + destination. Candidate and Inactive parts are not in the list. Keep CHANGED_DT of the Waiting parts."
     ]
    },
    {
-    "text": "Create the RPA input XD_CDMASTER_GTOPAS_<YYYYMMDDHHMMSS>.csv (see RPA Input Data):",
+    "text": "The bot opens GTOPAS menu Supply > Master > Crossdock Master (WVJA5204), enters Depot Code 01 (other conditions blank), clicks [Search] and reads every page ([NextPage]).",
     "children": [
-     "Active part: one record per destination of the ongoing period in TB_M_PART_CANDIDATE_DEST (PART_NO, CROSSDOCK_FLAG 'Y', PERIOD, DEST_CODE); without destination: one record with DEST_CODE blank.",
-     "Inactive part: one record with CROSSDOCK_FLAG 'N' and DEST_CODE blank.",
-     "Same SEND_ID and SEND_DT on every record. Error: LOG3, all parts of the run Failed (step 6)."
+     "GTOPAS list = one row per P/No. + Destination Code. P/No. is shown with \"-\" (52119-BZV60): the bot removes \"-\" before comparing (52119BZV60)."
     ]
    },
    {
-    "text": "Start the RPA bot with the input. Per part the bot opens GTOPAS menu Supply > Master > Crossdock Master, searches the Part No (one row per part + destination) and:",
+    "text": "Compare per P/No. (without \"-\") + Destination Code:",
     "children": [
-     "CROSSDOCK_FLAG 'Y': compares the rows with the input by DEST_CODE - in the input and not in GTOPAS: register; in both: ignore; in GTOPAS and not in the input: delete.",
-     "CROSSDOCK_FLAG 'N' (Inactive): deletes all rows of the part (e.g. 10 destinations -> 10 rows deleted).",
-     "The bot returns one result per part (see RPA Result Data). Part NG: LOG6. Bot not available or no result within the time limit: LOG4, all parts of the run Failed."
+     "In NSP and in GTOPAS: skip (no change).",
+     "In NSP and not in GTOPAS: register the row on the screen (Depot Code 01, P/No., Destination Code and the other values of 4.4); message MZD34006FEI = done."
     ]
    },
    {
-    "text": "Set the status of every part of the run in TB_R_CROSSDOCK_IF_RESULT:",
+    "text": "In GTOPAS and not in NSP: delete the row (MT = DEL); message MZD34006FEI = done.",
     "children": [
-     "RESULT 'OK': IF_STATUS = '1', IF_DT = now, IF_FILE_NAME = input file name, IF_MESSAGE = 'added <ADDED>; deleted <DELETED>' (blank when nothing changed).",
-     "RESULT 'NG', input or bot error: IF_STATUS = '2', IF_DT = now, IF_MESSAGE = reason (LOG3 / LOG4 / LOG6)."
+     "This covers destinations removed in NSP, parts that became Inactive (all their rows) and Active parts without destination."
     ]
    },
    {
-    "text": "Update the overall Sync Status of each part in TB_M_PART_CANDIDATE and record the history:",
+    "text": "Try-catch: any error (login, screen not available, timeout, error message instead of MZD34006FEI, NSP database not available) stops the bot at once.",
     "children": [
-     "CHANGED_DT differs from step 2 (part changed while sending): SYNC_STATUS = '0' (No Sync).",
-     "Else, status of 'GTOPAS' and of 'APPOLE' in TB_R_CROSSDOCK_IF_RESULT: one still '3' -> SYNC_STATUS stays '3'; both '1' -> '1' (Success); one '2' -> '2' (Failed, SYNC_MESSAGE = target + reason).",
-     "SYNC_DT = now when SYNC_STATUS becomes 1 or 2.",
-     "Insert TB_H_PART_CANDIDATE: event SYNC, source IF, FIELD_NAME SYNC_STATUS, REMARK = 'GTOPAS: ' + IF_MESSAGE."
+     "The whole run is Failed (one fails, all fail): LOG4 with the step and the row of the error. The rows already registered / deleted before the error stay in GTOPAS (no rollback on the screen); the next [Sync] compares again and completes them."
     ]
    },
-   "Write LOG2 with the input file name and the number of parts sent, destinations added / deleted and parts failed. Exit."
+   {
+    "text": "Set the result of every Waiting part for 'GTOPAS' in TB_R_CROSSDOCK_IF_RESULT and the overall Sync Status:",
+    "children": [
+     "No error: IF_STATUS = '1', IF_MESSAGE = 'registered <n>, deleted <n>' of the part. Error: IF_STATUS = '2' for every Waiting part, IF_MESSAGE = error of LOG4.",
+     "TB_M_PART_CANDIDATE: CHANGED_DT changed since step 2 -> '0' (No Sync); else 'GTOPAS' and 'APPOLE' both '1' -> '1' (Success), one '2' -> '2' (Failed), one still '3' -> stays '3'. SYNC_DT = now when 1 or 2.",
+     "Insert TB_H_PART_CANDIDATE: event SYNC, source RPA, FIELD_NAME SYNC_STATUS, REMARK = 'GTOPAS: ' + IF_MESSAGE."
+    ]
+   },
+   "Write LOG2 with the counts (NSP rows, GTOPAS rows, registered, skipped, deleted) and the status. Exit."
   ]
  },
  "data_map": {
   "blocks": [
    {
     "source": {
-     "table": "TB_M_PART_CANDIDATE + TB_M_PART_CANDIDATE_DEST",
+     "table": "TB_M_PART_CANDIDATE + TB_M_PART_CANDIDATE_DEST (read by the bot)",
      "keys": [
       {
-       "field": "PART_NO",
-       "value": "Waiting part"
-      },
-      {
        "field": "PART_STATUS",
-       "value": "Active / Inactive"
+       "value": "Active"
       },
       {
        "field": "PERIOD",
@@ -477,86 +424,83 @@
      ]
     },
     "destination": {
-     "table": "RPA input",
+     "table": "GTOPAS Crossdock Master (WVJA5204, by RPA)",
      "operation": "Insert",
-     "description": "One record per part x destination"
+     "description": "Part + destination in NSP and not in GTOPAS (not in NSP scope; done on the screen)",
+     "keys": [
+      {
+       "field": "P/No. + Destination Code",
+       "value": "Not found in GTOPAS"
+      }
+     ]
     },
     "mappings": [
      {
       "source_field": "-",
-      "dest_field": "SEND_ID",
-      "description": "Run of XD06 (YYYYMMDDHHMMSS); same on every record"
+      "dest_field": "Depot Code",
+      "description": "'01'"
      },
      {
       "source_field": "PART_NO",
-      "dest_field": "PART_NO",
-      "description": "Same value"
-     },
-     {
-      "source_field": "PART_STATUS",
-      "dest_field": "CROSSDOCK_FLAG",
-      "description": "'Y' Active / 'N' Inactive"
-     },
-     {
-      "source_field": "PERIOD",
-      "dest_field": "PERIOD",
-      "description": "Same value"
+      "dest_field": "P/No.",
+      "description": "Part number (GTOPAS shows it with \"-\")"
      },
      {
       "source_field": "DEST_CODE",
-      "dest_field": "DEST_CODE",
-      "description": "Same value; blank for an Inactive part or a part without destination"
+      "dest_field": "Destination Code",
+      "description": "7-digit destination code (code system TBC, see 4.4)"
      },
      {
       "source_field": "-",
-      "dest_field": "SEND_DT",
-      "description": "Date-time the input is created"
+      "dest_field": "Maker Code",
+      "description": "TBC (existing rows: A)"
+     },
+     {
+      "source_field": "-",
+      "dest_field": "Domestic/Overseas",
+      "description": "TBC (existing rows: 2)"
+     },
+     {
+      "source_field": "-",
+      "dest_field": "TOPAS Order Type",
+      "description": "TBC (existing rows: *)"
+     },
+     {
+      "source_field": "-",
+      "dest_field": "Order Transportation Code",
+      "description": "TBC (existing rows: 2)"
      }
     ]
    },
    {
     "source": {
-     "table": "RPA input",
+     "table": "GTOPAS Crossdock Master (read by the bot)",
      "keys": [
       {
-       "field": "PART_NO",
-       "value": "Part of the input"
+       "field": "Depot Code",
+       "value": "'01'"
       }
      ]
     },
     "destination": {
-     "table": "GTOPAS Crossdock Master (by RPA)",
-     "operation": "Insert / Delete",
-     "description": "Not in NSP scope; done by the RPA bot",
+     "table": "GTOPAS Crossdock Master (WVJA5204, by RPA)",
+     "operation": "Delete",
+     "description": "Row in GTOPAS and not in the NSP list (not in NSP scope; MT = DEL on the screen)",
      "keys": [
       {
-       "field": "PART_NO + DEST_CODE",
-       "value": "Part + destination"
+       "field": "P/No. + Destination Code",
+       "value": "Not in the NSP list (Active part + destination)"
       }
      ]
     },
     "mappings": [
      {
-      "source_field": "PART_NO",
-      "dest_field": "PART_NO",
-      "description": "Part of the input"
+      "dest_field": "MT",
+      "description": "'DEL'"
      },
      {
-      "source_field": "DEST_CODE",
-      "dest_field": "DEST_CODE",
-      "description": "Registered when in the input and not in GTOPAS"
-     },
-     {
-      "dest_field": "",
-      "description": "No change when in the input and in GTOPAS"
-     },
-     {
-      "dest_field": "",
-      "description": "Deleted when in GTOPAS and not in the input"
-     },
-     {
-      "dest_field": "",
-      "description": "All rows of the part deleted when CROSSDOCK_FLAG 'N' (Inactive)"
+      "dest_field": "Row",
+      "description": "Deleted: destination removed in NSP, part Inactive (all its rows), Active part without destination, part not in NSP"
      }
     ]
    },
@@ -565,18 +509,18 @@
     "destination": {
      "table": "TB_R_CROSSDOCK_IF_RESULT",
      "operation": "Update",
-     "description": "Dummy table: rows of the parts of the file for 'GTOPAS'",
+     "description": "Rows of the Waiting parts for 'GTOPAS'",
      "keys": [
       {
        "field": "PART_NO + TARGET_SYSTEM",
-       "value": "Part of the file + 'GTOPAS'"
+       "value": "Waiting part + 'GTOPAS'"
       }
      ]
     },
     "mappings": [
      {
       "dest_field": "IF_STATUS",
-      "description": "'1' RPA OK / '2' input, bot or part error"
+      "description": "'1' run without error / '2' run stopped by an error (try-catch, all parts)"
      },
      {
       "dest_field": "IF_DT",
@@ -584,11 +528,11 @@
      },
      {
       "dest_field": "IF_FILE_NAME",
-      "description": "Name of the RPA input file"
+      "description": "RPA run ID (YYYYMMDDHHMMSS); file name only for AP POLE"
      },
      {
       "dest_field": "IF_MESSAGE",
-      "description": "'added ...; deleted ...' when '1' (Inactive part: 'deleted all <n> rows'); reason when '2'"
+      "description": "'registered <n>, deleted <n>' when '1'; error of the run when '2'"
      },
      {
       "dest_field": "CHANGED_BY",
@@ -626,7 +570,7 @@
      "keys": [
       {
        "field": "PART_NO",
-       "value": "Part of the file (both target rows)"
+       "value": "Waiting part (both target rows)"
       }
      ]
     },
@@ -637,7 +581,7 @@
      "keys": [
       {
        "field": "PART_NO",
-       "value": "Part of the file"
+       "value": "Waiting part"
       }
      ]
     },
@@ -717,7 +661,7 @@
     "destination": {
      "table": "TB_H_PART_CANDIDATE",
      "operation": "Insert",
-     "description": "One record per part of the file"
+     "description": "One record per Waiting part"
     },
     "mappings": [
      {
@@ -738,7 +682,7 @@
      },
      {
       "dest_field": "SOURCE",
-      "description": "'IF'"
+      "description": "'RPA'"
      },
      {
       "dest_field": "UPLOAD_ID",
@@ -784,7 +728,7 @@
     "mappings": [
      {
       "dest_field": "BATCH_ID",
-      "description": "'XD06_IF_GTOPAS'"
+      "description": "'XD06_RPA_GTOPAS'"
      },
      {
       "dest_field": "STATUS",
@@ -813,18 +757,10 @@
    "marker": "-",
    "level": 0,
    "items": [
-    "The D/S team maintains the destinations of each part on XD01 (Mapping per Destination of the ongoing period, created by XD05 process 2 and adjusted by screen or upload XD03).",
-    "Every change sets the part to No Sync. The D/S team clicks [Sync] when the changes are complete; Active parts and parts that became Inactive are sent to GTOPAS.",
-    "GTOPAS keeps the list of cross dock destinations per part (no Case/Day). The RPA bot makes this list equal to NSP: register a missing destination, ignore an existing one, delete one that is no longer in NSP."
-   ]
-  },
-  {
-   "type": "bullets",
-   "marker": "-",
-   "level": 0,
-   "items": [
-    "Method: RPA bot on GTOPAS menu Supply > Master > Crossdock Master (decided 30-Oct): search by Part No; the list has one row per part + destination. The steps of the bot are detailed in the RPA design.",
-    "Parts that became Inactive (XD05 process 1) are sent with CROSSDOCK_FLAG 'N': the bot deletes all rows of the part in GTOPAS (e.g. 10 destinations -> 10 rows deleted) (decided 30-Oct). In AP POLE they are deleted at part level by XD07 (SFTP file, CROSSDOCK_FLAG 'N')."
+    "The D/S team maintains the destinations of each part on XD01 (Mapping per Destination of the ongoing period, created by XD05 process 2 and adjusted by screen or upload XD03). Every change sets the part to No Sync.",
+    "The D/S team clicks [Sync] when the changes are complete; the RPA bot makes the Crossdock Master of GTOPAS equal to NSP, and XD07 sends the file to AP POLE.",
+    "RPA only (decided 11-Nov): the bot reads the NSP database directly and works on GTOPAS screen Crossdock Master (WVJA5204); no interface or input file is created by NSP.",
+    "The bot always compares the whole list (all Active parts of NSP with all rows of GTOPAS Depot 01), not only the Waiting parts, so a run that stopped earlier is completed by the next run."
    ]
   },
   {
@@ -837,40 +773,43 @@
    "row_lines": "all",
    "columns": [
     {
-     "title": "In NSP",
-     "width": 6,
-     "align": "center"
+     "title": "In NSP (Active part + destination, ongoing period)",
+     "width": 30
     },
     {
      "title": "In GTOPAS",
-     "width": 6,
-     "align": "center"
+     "width": 12
     },
     {
      "title": "Action of the bot",
-     "width": 30
+     "width": 40
     }
    ],
    "rows": [
     [
      "Y",
+     "Y",
+     "Skip (no change)"
+    ],
+    [
+     "Y",
      "N",
-     "Register the destination in GTOPAS"
-    ],
-    [
-     "Y",
-     "Y",
-     "Ignore (no change)"
+     "Register the row (Depot 01, P/No., Destination Code, values of 4.4)"
     ],
     [
      "N",
      "Y",
-     "Delete the destination in GTOPAS"
+     "Delete the row (MT = DEL)"
     ],
     [
-     "Inactive part",
+     "Part Inactive (not in the list)",
      "Y",
-     "Delete all rows of the part"
+     "All rows of the part are deleted"
+    ],
+    [
+     "Active part without destination",
+     "Y",
+     "All rows of the part are deleted"
     ]
    ]
   },
@@ -879,23 +818,25 @@
    "marker": "-",
    "level": 0,
    "items": [
-    "Compared per part by DEST_CODE; PERIOD is always the ongoing period, past periods are never sent.",
-    "Pcs/Case, Max Case/Day, Effective Start Date and Case/Day are not sent. A change of Case/Day only gives no change in GTOPAS; the part still gets RESULT 'OK' (Success).",
-    "An Active part without destination: all its destinations in GTOPAS are deleted (decided 30-Oct)."
+    "Compare key: P/No. (without \"-\") + Destination Code. GTOPAS shows P/No. with \"-\" (52119-BZV60), NSP without (52119BZV60).",
+    "Pcs/Case, Max Case/Day, Effective Start Date and Case/Day are not sent. A change of Case/Day only gives no change in GTOPAS; the part still gets Success.",
+    "Example: part 52119BZV60 in NSP with 9722D10, 9811110; in GTOPAS with 9811110, 9618274 -> register 9722D10, skip 9811110, delete 9618274."
    ]
   },
   {
    "type": "heading",
-   "text": "4.3 Status and Dummy Table"
+   "text": "4.3 Try-Catch and Status"
   },
   {
    "type": "bullets",
    "marker": "-",
    "level": 0,
    "items": [
-    "TB_R_CROSSDOCK_IF_RESULT is a dummy table that keeps the result per part and target; the real output of XD06 is the change made by the bot in GTOPAS.",
-    "Overall SYNC_STATUS: Waiting while a target is Waiting, Success when both targets are done, Failed when one target failed (the next [Sync] sends the part again; the comparison is repeatable, a part without difference gives no change).",
-    "A part changed on XD01 or by upload while it is being sent gets SYNC_STATUS = No Sync, so the newer data is sent by the next [Sync]."
+    "The whole bot run is in one try-catch. Any error stops the run: login failed, screen not available, timeout, an error message instead of MZD34006FEI, NSP database not available.",
+    "One fails, all fail: every Waiting part gets 'GTOPAS' IF_STATUS = '2' (Failed) with the error, and the overall Sync Status Failed; the D/S team clicks [Sync] again.",
+    "Rows registered / deleted before the error stay in GTOPAS (the screen has no rollback). The next run compares again, skips them and completes the rest.",
+    "A part changed on XD01 or by upload while the bot runs gets SYNC_STATUS = No Sync, so the newer data is sent by the next [Sync].",
+    "TB_R_CROSSDOCK_IF_RESULT keeps the result per part and target (GTOPAS by XD06, AP POLE by XD07); the overall Sync Status needs both."
    ]
   },
   {
@@ -907,7 +848,10 @@
    "marker": "-",
    "level": 0,
    "items": [
-    "RPA design: start of the bot by XD06, time limit, and how the result is returned (file or table) - TBC."
+    "FB-173: GTOPAS shows Destination Code 9618274; NSP DEST_CODE is buyer code + PD code (e.g. 9618201). Same code system, or a conversion is needed? - TBC.",
+    "FB-174: values to register Maker Code, Domestic/Overseas, TOPAS Order Type and Order Transportation Code (existing row: A, 2, *, 2) - fixed values or from a master? - TBC.",
+    "FB-176: every GTOPAS row (Depot 01) not in NSP is deleted: at go-live all crossdock parts of GTOPAS must exist in NSP, else they are deleted by the first run - TBC.",
+    "RPA design: login user, time limit and screen handling of the bot - detailed in the RPA design."
    ]
   }
  ],
@@ -917,7 +861,7 @@
    "cause": "[Sync] on XD01",
    "type": "Info",
    "msg_id": "LOG1",
-   "message": "RPA cross dock destinations to GTOPAS started. <n> part(s).",
+   "message": "RPA cross dock master to GTOPAS started. <n> Waiting part(s).",
    "action": {
     "system": "Write the log.",
     "user": "-"
@@ -925,35 +869,35 @@
   },
   {
    "event": "Batch end",
-   "cause": "Batch finishes",
+   "cause": "Bot finishes",
    "type": "Info",
    "msg_id": "LOG2",
-   "message": "RPA cross dock destinations to GTOPAS ended. Input <FILE_NAME>, parts <n>, added <a>, deleted <d>, failed <f>, status <STATUS>.",
+   "message": "RPA cross dock master to GTOPAS ended. NSP rows <n>, GTOPAS rows <g>, registered <a>, skipped <k>, deleted <d>, status <STATUS>.",
    "action": {
     "system": "Write the log.",
     "user": "-"
    }
   },
   {
-   "event": "Create input",
-   "cause": "RPA input cannot be created",
-   "type": "Error",
+   "event": "Register / delete",
+   "cause": "Row registered or deleted on the screen",
+   "type": "Info",
    "msg_id": "LOG3",
-   "message": "Cannot create the RPA input to GTOPAS: <ERROR_DETAIL>.",
+   "message": "<REGISTER / DELETE> <PART_NO> <DEST_CODE>: <GTOPAS message>.",
    "action": {
-    "system": "All parts of the run IF_STATUS = 2. Stop.",
-    "user": "Click [Sync] again; contact PIC if it persists."
+    "system": "Write the log.",
+    "user": "-"
    }
   },
   {
-   "event": "RPA run",
-   "cause": "RPA bot not available / no result within the time limit",
+   "event": "Error (try-catch)",
+   "cause": "Login, screen, timeout, GTOPAS error message or NSP database error",
    "type": "Error",
    "msg_id": "LOG4",
-   "message": "RPA run of <SEND_ID> to GTOPAS failed: <ERROR_DETAIL>.",
+   "message": "RPA to GTOPAS stopped at <STEP> <PART_NO> <DEST_CODE>: <ERROR_DETAIL>. All Waiting parts Failed.",
    "action": {
-    "system": "All parts of the run IF_STATUS = 2. Keep the input file.",
-    "user": "Click [Sync] again later; contact PIC if it persists."
+    "system": "Stop the bot. IF_STATUS = 2 for every Waiting part.",
+    "user": "Click [Sync] again; contact PIC if it persists."
    }
   },
   {
@@ -963,19 +907,8 @@
    "msg_id": "LOG5",
    "message": "Unexpected error: <ERROR_DETAIL>.",
    "action": {
-    "system": "Stop. STATUS = ERROR.",
+    "system": "Stop. STATUS = ERROR. All Waiting parts Failed.",
     "user": "User contact PIC"
-   }
-  },
-  {
-   "event": "RPA result",
-   "cause": "The bot returns RESULT 'NG' for a part",
-   "type": "Error",
-   "msg_id": "LOG6",
-   "message": "GTOPAS not updated for part <PART_NO>: <MESSAGE>.",
-   "action": {
-    "system": "IF_STATUS = 2 for the part; other parts continue.",
-    "user": "Click [Sync] again; contact PIC if it persists"
    }
   }
  ],
@@ -1028,7 +961,7 @@
      "VARCHAR(100)",
      "",
      "Y",
-     "Name of the interface file (AP POLE) or RPA input file (GTOPAS)"
+     "Name of the interface file (AP POLE) or RPA run ID (GTOPAS)"
     ],
     [
      "IF_MESSAGE",
@@ -1297,7 +1230,7 @@
      "VARCHAR(10)",
      "",
      "N",
-     "SCREEN / UPLOAD / IF / BATCH"
+     "SCREEN / UPLOAD / IF / RPA / BATCH"
     ],
     [
      "UPLOAD_ID",

@@ -128,9 +128,9 @@ SCENARIOS = [
                 ('new', [1003, 'PART-Z', '202610', 'CALC', 'BATCH', None, 'PART_STATUS', 'Active', 'Inactive', 'XD05']),
                 ('new', [1004, 'PART-X', '202610', 'MAPPING', 'BATCH', VN, 'CASE_DAY', '5', '6', 'XD05'])]),
             ('6. D/S [Sync] → XD06 (GTOPAS, RPA) / XD07 (AP POLE, SFTP)', 'TB_R_CROSSDOCK_IF_RESULT', [
-                ('new', ['PART-Y', 'GTOPAS', '202610', '1', 'XD_CDMASTER_GTOPAS_20261002090000.csv', 'added 9811110']),
+                ('new', ['PART-Y', 'GTOPAS', '202610', '1', 'RPA 20261002090000', 'registered 1, deleted 0']),
                 ('new', ['PART-Y', 'APPOLE', '202610', '1', 'XD_CDMASTER_APPOLE_20261002090000.csv', None]),
-                ('new', ['PART-Z', 'GTOPAS', '202610', '1', 'XD_CDMASTER_GTOPAS_20261002090000.csv', 'deleted all 1 rows']),
+                ('new', ['PART-Z', 'GTOPAS', '202610', '1', 'RPA 20261002090000', 'registered 0, deleted 1']),
                 ('new', ['PART-Z', 'APPOLE', '202610', '1', 'XD_CDMASTER_APPOLE_20261002090000.csv', None])]),
             ('', 'TB_M_PART_CANDIDATE', [
                 ('upd', ['PART-Y', 'DUMMY PART Y', 100, 6, 2, 12, 'Active', '1', 'CALC'], ['SYNC_STATUS'], 'No Sync → Success (new in GTOPAS and AP POLE)'),
@@ -457,7 +457,7 @@ SCENARIOS = [
             ('', 'TB_M_PART_CANDIDATE', [
                 ('upd', ['PART-X', 'DUMMY PART X', 300, 6, 10, 60, 'Active', '0', 'SCREEN'], ['SYNC_STATUS', 'LAST_SOURCE'], 'Success → No Sync')]),
             ('3. D/S [Sync] → XD06 (GTOPAS, RPA: differences) / XD07 (AP POLE, SFTP: complete set)', 'TB_R_CROSSDOCK_IF_RESULT', [
-                ('upd', ['PART-X', 'GTOPAS', '202610', '1', 'XD_CDMASTER_GTOPAS_20261005100000.csv', 'added ' + D4 + '; deleted ' + PH],
+                ('upd', ['PART-X', 'GTOPAS', '202610', '1', 'RPA 20261005100000', 'registered 1, deleted 1'],
                  ['IF_FILE_NAME', 'IF_MESSAGE'], 'VN / TH ignored'),
                 ('upd', ['PART-X', 'APPOLE', '202610', '1', 'XD_CDMASTER_APPOLE_20261005100000.csv', None], ['IF_FILE_NAME'], 'Existing part: updated')]),
             ('', 'TB_M_PART_CANDIDATE', [
