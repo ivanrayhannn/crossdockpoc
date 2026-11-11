@@ -2256,7 +2256,7 @@
      "VARCHAR(10)",
      "",
      "N",
-     "SCREEN / UPLOAD / IF / BATCH"
+     "SCREEN / UPLOAD / IF / RPA / BATCH"
     ],
     [
      "UPLOAD_ID",

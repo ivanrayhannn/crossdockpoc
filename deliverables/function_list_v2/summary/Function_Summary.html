@@ -225,22 +225,24 @@ const FUNCS = [
         { k: 'Jadwal dan 3 retry gagal', d: 'LOG6 / LOG14', s: '[Run calculation] aktif di XD01', u: 'Cek penyebab, klik [Run calculation]' },
         { k: 'Error sistem lain', d: 'LOG7 / LOG15', s: 'Rollback, FAILED, retry', u: 'Hubungi PIC' } ] } ] },
 
-  { id: 'XD06', name: 'IF Cross Dock Master to GTOPAS', type: 'Batch', trigger: '[Sync] di XD01 (metode RPA)',
+  { id: 'XD06', name: 'IF Cross Dock Master to GTOPAS', type: 'Batch (RPA)', trigger: '[Sync] di XD01 (RPA saja, tanpa IF, 11-Nov)',
     sections: [
       { key: 'N', title: 'Proses normal', points: [
-        'Ambil part dengan status GTOPAS Waiting; part Active dikirim dengan destinasinya (CROSSDOCK_FLAG Y), part Inactive dikirim satu baris dengan CROSSDOCK_FLAG N.',
-        'Buat input RPA XD_CDMASTER_GTOPAS_<timestamp>.csv: satu baris per part × destinasi periode ongoing (SEND_ID, PART_NO, CROSSDOCK_FLAG, PERIOD, DEST_CODE, SEND_DT). Part tanpa destinasi: satu baris dengan DEST_CODE kosong.',
-        'Bot RPA membuka GTOPAS menu Supply > Master > Crossdock Master, search Part No (satu row per part + destinasi).',
-        'CROSSDOCK_FLAG Y: ada di NSP belum di GTOPAS → didaftarkan; ada di keduanya → dibiarkan (GTOPAS tidak menyimpan Case/Day); ada di GTOPAS tidak di NSP → dihapus. Part Active tanpa destinasi: semua row dihapus (30-Oct).',
-        'CROSSDOCK_FLAG N (Inactive): semua row part dihapus (contoh 10 destinasi → 10 row).',
-        'Pcs/Case, Max Case/Day, Effective Start Date dan Case/Day tidak dikirim; perubahan Case/Day saja tetap Success tanpa perubahan di GTOPAS.',
-        'Bot mengembalikan hasil per part (OK / NG, destinasi yang ditambah / dihapus, alasan) → status per part, Sync Status gabungan dengan XD07, history SYNC.' ] },
+        'Bot RPA membaca langsung DB NSP: semua part Active dan destinasinya di periode berjalan (TB_M_PART_CANDIDATE + TB_M_PART_CANDIDATE_DEST). Tidak ada file input / interface.',
+        'Bot membuka GTOPAS menu Supply > Master > Crossdock Master (WVJA5204), isi Depot Code 01, [Search], dan membaca semua halaman ([NextPage]).',
+        'Bandingkan per P/No. + Destination Code (GTOPAS menampilkan P/No. dengan "-", contoh 52119-BZV60).',
+        'Ada di NSP dan ada di GTOPAS → skip. Ada di NSP, belum di GTOPAS → didaftarkan. Ada di GTOPAS, tidak ada di NSP → dihapus (MT = DEL). Pesan sukses GTOPAS: MZD34006FEI Registration completed.',
+        'Part yang jadi Inactive atau Active tanpa destinasi tidak ada di daftar NSP, jadi semua row-nya di GTOPAS terhapus.',
+        'Pcs/Case, Max Case/Day, Effective Start Date dan Case/Day tidak dikirim.',
+        'Selesai tanpa error: semua part Waiting GTOPAS = Success; Sync Status gabungan dengan XD07, history SYNC (source RPA), Log jumlah register / skip / delete.' ] },
       { key: 'AB', title: 'Abnormality', points: [
-        { k: 'Input RPA tidak bisa dibuat', d: 'LOG3', s: 'Semua part run ini Failed', u: '[Sync] lagi; hubungi PIC' },
-        { k: 'Bot tidak tersedia / tidak ada hasil dalam batas waktu', d: 'LOG4', s: 'Semua part run ini Failed, input disimpan', u: '[Sync] lagi; hubungi PIC' },
-        { k: 'Bot mengembalikan NG untuk satu part', d: 'LOG6', s: 'Part itu Failed, part lain lanjut', u: '[Sync] lagi; hubungi PIC' },
-        { k: 'Error sistem lain', d: 'LOG5', s: 'Stop, ERROR', u: 'Hubungi PIC' } ] },
-      { key: 'C', title: 'Catatan terbuka', points: [ 'Desain RPA: cara XD06 menjalankan bot, batas waktu, dan bentuk hasil (file atau tabel) – TBC.' ] } ] },
+        { k: 'Error apa pun di bot (login, layar, timeout, pesan error GTOPAS, DB NSP)', d: 'LOG4', s: 'Try-catch: bot berhenti, semua part Waiting Failed (1 gagal, gagal semua); row yang sudah diproses tetap di GTOPAS', u: '[Sync] lagi; run berikutnya membandingkan ulang dan melanjutkan' },
+        { k: 'Error sistem lain', d: 'LOG5', s: 'Stop, ERROR, semua part Failed', u: 'Hubungi PIC' } ] },
+      { key: 'C', title: 'Catatan terbuka', points: [
+        'FB-173: Destination Code di GTOPAS 9618274 vs DEST_CODE NSP buyer + PD (9618201): sistem kode sama atau perlu konversi?',
+        'FB-174: nilai Maker Code, Dom/Os, TOPAS Order Type, Order Transportation Code saat register (row existing: A, 2, *, 2): tetap atau dari master?',
+        'FB-175: nama function masih "IF Cross Dock Master to GTOPAS"; ganti jadi "RPA Cross Dock Master to GTOPAS"?',
+        'FB-176: semua row GTOPAS (Depot 01) yang tidak ada di NSP dihapus: saat go-live semua part crossdock GTOPAS harus sudah ada di NSP.' ] } ] },
 
   { id: 'XD07', name: 'IF Cross Dock Master to AP POLE', type: 'Batch', trigger: '[Sync] di XD01 (file SFTP)',
     sections: [
@@ -1024,7 +1026,7 @@ const MSGS = {
 "type": "Info",
 "event": "Batch start",
 "cause": "[Sync] on XD01",
-"message": "RPA cross dock destinations to GTOPAS started. <n> part(s).",
+"message": "RPA cross dock master to GTOPAS started. <n> Waiting part(s).",
 "action": "system: Write the log."
 },
 {
@@ -1032,27 +1034,27 @@ const MSGS = {
 "kind": "Log",
 "type": "Info",
 "event": "Batch end",
-"cause": "Batch finishes",
-"message": "RPA cross dock destinations to GTOPAS ended. Input <FILE_NAME>, parts <n>, added <a>, deleted <d>, failed <f>, status <STATUS>.",
+"cause": "Bot finishes",
+"message": "RPA cross dock master to GTOPAS ended. NSP rows <n>, GTOPAS rows <g>, registered <a>, skipped <k>, deleted <d>, status <STATUS>.",
 "action": "system: Write the log."
 },
 {
 "id": "LOG3",
 "kind": "Log",
-"type": "Error",
-"event": "Create input",
-"cause": "RPA input cannot be created",
-"message": "Cannot create the RPA input to GTOPAS: <ERROR_DETAIL>.",
-"action": "system: All parts of the run IF_STATUS = 2. Stop.; user: Click [Sync] again; contact PIC if it persists."
+"type": "Info",
+"event": "Register / delete",
+"cause": "Row registered or deleted on the screen",
+"message": "<REGISTER / DELETE> <PART_NO> <DEST_CODE>: <GTOPAS message>.",
+"action": "system: Write the log."
 },
 {
 "id": "LOG4",
 "kind": "Log",
 "type": "Error",
-"event": "RPA run",
-"cause": "RPA bot not available / no result within the time limit",
-"message": "RPA run of <SEND_ID> to GTOPAS failed: <ERROR_DETAIL>.",
-"action": "system: All parts of the run IF_STATUS = 2. Keep the input file.; user: Click [Sync] again later; contact PIC if it persists."
+"event": "Error (try-catch)",
+"cause": "Login, screen, timeout, GTOPAS error message or NSP database error",
+"message": "RPA to GTOPAS stopped at <STEP> <PART_NO> <DEST_CODE>: <ERROR_DETAIL>. All Waiting parts Failed.",
+"action": "system: Stop the bot. IF_STATUS = 2 for every Waiting part.; user: Click [Sync] again; contact PIC if it persists."
 },
 {
 "id": "LOG5",
@@ -1061,16 +1063,7 @@ const MSGS = {
 "event": "Unexpected error",
 "cause": "Any other system error",
 "message": "Unexpected error: <ERROR_DETAIL>.",
-"action": "system: Stop. STATUS = ERROR.; user: User contact PIC"
-},
-{
-"id": "LOG6",
-"kind": "Log",
-"type": "Error",
-"event": "RPA result",
-"cause": "The bot returns RESULT 'NG' for a part",
-"message": "GTOPAS not updated for part <PART_NO>: <MESSAGE>.",
-"action": "system: IF_STATUS = 2 for the part; other parts continue.; user: Click [Sync] again; contact PIC if it persists"
+"action": "system: Stop. STATUS = ERROR. All Waiting parts Failed.; user: User contact PIC"
 }
 ],
 "XD07": [

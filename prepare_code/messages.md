@@ -135,12 +135,11 @@
 
 | ID | Event | Cause | Type | Message | Action |
 |---|---|---|---|---|---|
-| LOG1 | Batch start | [Sync] on XD01 | Info | RPA cross dock destinations to GTOPAS started. <n> part(s). | system: Write the log.; user: - |
-| LOG2 | Batch end | Batch finishes | Info | RPA cross dock destinations to GTOPAS ended. Input <FILE_NAME>, parts <n>, added <a>, deleted <d>, failed <f>, status <STATUS>. | system: Write the log.; user: - |
-| LOG3 | Create input | RPA input cannot be created | Error | Cannot create the RPA input to GTOPAS: <ERROR_DETAIL>. | system: All parts of the run IF_STATUS = 2. Stop.; user: Click [Sync] again; contact PIC if it persists. |
-| LOG4 | RPA run | RPA bot not available / no result within the time limit | Error | RPA run of <SEND_ID> to GTOPAS failed: <ERROR_DETAIL>. | system: All parts of the run IF_STATUS = 2. Keep the input file.; user: Click [Sync] again later; contact PIC if it persists. |
-| LOG5 | Unexpected error | Any other system error | Critical | Unexpected error: <ERROR_DETAIL>. | system: Stop. STATUS = ERROR.; user: User contact PIC |
-| LOG6 | RPA result | The bot returns RESULT 'NG' for a part | Error | GTOPAS not updated for part <PART_NO>: <MESSAGE>. | system: IF_STATUS = 2 for the part; other parts continue.; user: Click [Sync] again; contact PIC if it persists |
+| LOG1 | Batch start | [Sync] on XD01 | Info | RPA cross dock master to GTOPAS started. <n> Waiting part(s). | system: Write the log.; user: - |
+| LOG2 | Batch end | Bot finishes | Info | RPA cross dock master to GTOPAS ended. NSP rows <n>, GTOPAS rows <g>, registered <a>, skipped <k>, deleted <d>, status <STATUS>. | system: Write the log.; user: - |
+| LOG3 | Register / delete | Row registered or deleted on the screen | Info | <REGISTER / DELETE> <PART_NO> <DEST_CODE>: <GTOPAS message>. | system: Write the log.; user: - |
+| LOG4 | Error (try-catch) | Login, screen, timeout, GTOPAS error message or NSP database error | Error | RPA to GTOPAS stopped at <STEP> <PART_NO> <DEST_CODE>: <ERROR_DETAIL>. All Waiting parts Failed. | system: Stop the bot. IF_STATUS = 2 for every Waiting part.; user: Click [Sync] again; contact PIC if it persists. |
+| LOG5 | Unexpected error | Any other system error | Critical | Unexpected error: <ERROR_DETAIL>. | system: Stop. STATUS = ERROR. All Waiting parts Failed.; user: User contact PIC |
 
 ## XD07 – IF Cross Dock Master to AP POLE
 

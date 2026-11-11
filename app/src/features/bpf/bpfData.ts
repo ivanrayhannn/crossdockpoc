@@ -1081,9 +1081,9 @@ export const BPF: BpfData = {
    "flow": "F1",
    "step": "M11",
    "fn": "XD06 / XD07",
-   "condition": "Interface file / RPA input cannot be created, GTOPAS RPA bot fails, or AP POLE SFTP not available after retry",
+   "condition": "GTOPAS RPA bot stops on any error (try-catch: one fails, all fail), interface file cannot be created, or AP POLE SFTP not available after retry",
    "detection": "IF_STATUS 2, SYNC_STATUS Failed, Log",
-   "system": "Keep the file (outbound folder / RPA input); parts stay Failed.",
+   "system": "Keep the AP POLE file in the outbound folder; GTOPAS rows done before the error stay (next run compares again); parts stay Failed.",
    "pic": "D/S Team",
    "action": "Click [Sync] again later (Failed parts are counted in n); contact PIC if it persists."
   },
