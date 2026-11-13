@@ -63,7 +63,7 @@ Temporary table of one Search run (session): the open qty of the customer order 
 | SEQ_QTY | NUMBER(4) |  | N | Fill of the warehouse case (1 case = 1 destination) of the destination after this slice: 1..PCS_CASE, starts again after PCS_CASE |
 | CUT_FLAG | VARCHAR(1) |  | N | 'Y' on the last slice of a case after which the ASN may stop (every destination a multiple of PCS_CASE) |
 | GROUP_SEQ | NUMBER(4) |  | N | Case Group (block) of the slice: the cases up to and including a valid cut; the cases of a group are sent together |
-| CROSSDOCK_STATUS | VARCHAR(1) |  | N | Status of the block: '6' Ready (the block and every earlier block have a PO) / '7' Not Ready / '8' On Hold (D/S: supplier + plant hold or Reduce PO Readiness) |
+| CROSSDOCK_STATUS | VARCHAR(1) |  | N | Status of the block: '6' Ready (the block and every earlier block have a PO) / '7' Not Ready / '8' On Hold (D/S: supplier + plant on hold) |
 
 #### TB_H_CROSSDOCK_ORDER_CHANGE (history, proposed)
 Used by: XD11
@@ -278,15 +278,16 @@ Existing last sequence per supplier + plant (TR-06): the case number (case label
 #### TB_R_CROSSDOCK_CASE_HOLD (transaction, proposed)
 Used by: XD09, XD10
 
-New table: Reduce PO Readiness (case) of a unit (Part Number + Customer Order Date + Supplier Code + Plant) set by the D/S team: the last REDUCE_CASE Ready cases are held. Kept until the D/S team releases it (row deleted). Name and columns proposed.
+New table: Reduce PO Readiness (case) per destination of a unit (Part Number + Customer Order Date + Destination + Supplier Code + Plant) set by the D/S team: the last REDUCE_CASE warehouse cases (REDUCE_CASE x pcs/case) of the destination are held. Kept until the D/S team releases it (row deleted). Name and columns proposed.
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
 | PART_NO | VARCHAR(15) | Y | N | Part number (H0253.SHIPPING_PART_NO) |
 | ORDER_DT | DATE | Y | N | Customer Order Date of the unit |
+| DESTINATION_CD | VARCHAR(7) | Y | N | Destination of the unit whose warehouse cases are held |
 | SUPPLIER_CD | VARCHAR(TBD) | Y | N | Supplier code of the unit |
 | SUPPLIER_PLANT | VARCHAR(TBD) | Y | N | Supplier plant of the unit |
-| REDUCE_CASE | INT |  | N | Number of Ready cases held (1 .. PO Readiness); the Ready part is rounded down to the last valid cut |
+| REDUCE_CASE | INT |  | N | Warehouse cases of the destination held (1 .. warehouse cases of the destination); held pcs = REDUCE_CASE x pcs/case, taken from the last lines of the destination in H0253 order |
 | CREATED_BY | VARCHAR(20) |  | N | Login user (D/S team) who created the record |
 | CREATED_DT | DATETIME |  | N | Created date and time |
 | CHANGED_BY | VARCHAR(20) |  | N | Login user (D/S team) who last changed the record |
