@@ -203,7 +203,7 @@ export interface Unit {
   rawReadyCases: number;
   /** Cases held by the D/S team (Hold check box per case, incl. the later cases of the same block onwards). */
   reduce: number;
-  /** The unit (Part Number + Customer Order Date) is on hold by the D/S team. */
+  /** The Part Number of the unit is on hold by the D/S team (every Customer Order Date). */
   unitHold: boolean;
   /** Cases the user may end the selection on (CUT_FLAG Y and Ready). */
   validEnds: number[];
@@ -273,7 +273,7 @@ function cutCases(ls: InstrLine[], pos: { po: Po; open: number }[]): UnitCase[] 
 /** XD09 [Search]: open qty (order qty - qty in submitted ASNs) of the lines not on hold, in H0253 order, pre-mapped to the POs released
  * by the business date (open PO qty = PO qty - qty in submitted ASNs), cut into supplier cases. Units of a part take the POs oldest date first. */
 export function buildUnits(today: string, sentByLine: Record<string, number>, sentByPo: Record<string, number>, hold: Record<string, boolean> = {},
-  noAsn = false, opts: { unitHold?: Record<string, boolean>; caseHold?: Record<string, boolean> } = {}): Unit[] {
+  noAsn = false, opts: { partHold?: Record<string, boolean>; caseHold?: Record<string, boolean> } = {}): Unit[] {
   const units: Unit[] = [];
   for (const partNo of [...new Set(H0253.map((l) => l.partNo))]) {
     const released = POS.filter((p) => p.partNo === partNo && p.poDate <= today);
@@ -300,7 +300,7 @@ export function buildUnits(today: string, sentByLine: Record<string, number>, se
       }
       const reduce = cases.filter((c) => c.heldByReduce).length;
       const readyCases = cases.filter((c) => c.ready).length;
-      const unitHold = !!opts.unitHold?.[key];
+      const unitHold = !!opts.partHold?.[partNo];
       const sent = all.some((l) => (sentByLine[l.id] ?? 0) > 0);
       const status: UnitStatus = !open.length ? 'created' : !ls.length || unitHold ? 'hold' : readyCases === cases.length ? 'ready'
         : cases.some((c) => c.ready && c.cut) ? 'partial' : 'notReady';

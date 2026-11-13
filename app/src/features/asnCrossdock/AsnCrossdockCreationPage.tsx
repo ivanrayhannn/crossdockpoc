@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { setBusinessDate, setStartState, submitAsnBatch, useAsns, useBusinessDate, useStartState, type StartState } from './asnStore';
 import {
   asnNoFor, BUSINESS_DATES, buildCases, buildUnits, contentOf, DESTS, endBefore, endFor, groupCases, HOLD_INIT, niceDate, PCS_PER_CASE, poQtyOf,
-  LOGIN_SUPPLIER, POS, ritCyclesFor, sentQty, SUPPLIERS, type AsnCase, type InstrLine, type Unit, type UnitCase, type UnitStatus,
+  LOGIN_SUPPLIER, ritCyclesFor, sentQty, SUPPLIERS, type AsnCase, type InstrLine, type Unit, type UnitCase, type UnitStatus,
 } from './data';
 import { Chip, Modal } from './ui';
 import { card, th, td } from './styles';
@@ -100,8 +100,20 @@ export function AsnCrossdockCreationPage() {
   const [stFilter, setStFilter] = useState<StatusFilter>('all');
   const [hold, setHold] = useState<Record<string, boolean>>(HOLD_INIT);
   /** D/S team: Supplier Code + Plant on hold (TB_M_CROSSDOCK_SUPPLIER_HOLD) and Reduce PO Readiness (case) per unit (TB_R_CROSSDOCK_CASE_HOLD). */
-  const [unitHold, setUnitHold] = useState<Record<string, boolean>>({});
+  /** D/S holds (saved): Part Number on hold, and held cases (unit key | case no). */
+  const [partHold, setPartHold] = useState<Record<string, boolean>>({});
+  const [partEdit, setPartEdit] = useState<Record<string, boolean | undefined>>({});
   const [caseHold, setCaseHold] = useState<Record<string, boolean>>({});
+  /** Hold per case in edit mode: unit key -> draft of its held cases (Edit / Save like Part List and Mapping). */
+  const [caseDraft, setCaseDraft] = useState<Record<string, Record<number, boolean>>>({});
+  const startCaseEdit = (u: Unit) => setCaseDraft({ ...caseDraft, [u.key]: Object.fromEntries(u.cases.map((c) => [c.seq, !!caseHold[`${u.key}|${c.seq}`]])) });
+  const endCaseEdit = (u: Unit) => { const d = { ...caseDraft }; delete d[u.key]; setCaseDraft(d); };
+  const saveCaseEdit = (u: Unit) => {
+    const n = { ...caseHold };
+    u.cases.forEach((c) => { const k = `${u.key}|${c.seq}`; if (caseDraft[u.key]?.[c.seq]) n[k] = true; else delete n[k]; });
+    setCaseHold(n);
+    endCaseEdit(u);
+  };
   // Each view is its own session (supplier / D/S team).
   const [selByView, setSelByView] = useState<Record<ViewAs, Record<string, Sel>>>({ sup: {}, ds: {} });
   const sel = selByView[viewAs];
@@ -120,8 +132,8 @@ export function AsnCrossdockCreationPage() {
 
   const rits = ritCyclesFor(deliveryDate);
   const rit = rits.find((r) => r.no === ritNo) ?? rits[0];
-  const units = useMemo(() => { const s = sentQty(asns); return buildUnits(today, s.byLine, s.byPo, hold, startState === 'none', { unitHold, caseHold }); },
-    [today, asns, hold, startState, unitHold, caseHold]);
+  const units = useMemo(() => { const s = sentQty(asns); return buildUnits(today, s.byLine, s.byPo, hold, startState === 'none', { partHold, caseHold }); },
+    [today, asns, hold, startState, partHold, caseHold]);
   // Units fully in an ASN and units without any pre-mapped case are not listed; a fully held unit only for the D/S team.
   // The supplier sees only its own Supplier Code + Plant; the D/S team (super admin) sees every supplier.
   const visible = units.filter((u) => (isDs || u.supplier === LOGIN_SUPPLIER) && u.status !== 'created'
@@ -239,10 +251,10 @@ export function AsnCrossdockCreationPage() {
       <div style={{ padding: '18px 24px 24px', display: 'flex', flexDirection: 'column', gap: 14, maxWidth: 1180 }}>
         <div><button className="btn btn-secondary" onClick={() => setPage('list')} style={{ fontSize: 12, padding: '4px 12px' }}>← Back to ASN Crossdock Creation</button></div>
         <div>
-          <h1 style={{ fontSize: 20, margin: '0 0 4px' }}>Hold per Part Number + Customer Order Date</h1>
+          <h1 style={{ fontSize: 20, margin: '0 0 4px' }}>Hold per Part Number</h1>
           <p style={{ fontSize: 13, color: 'var(--color-neutral-700)', margin: 0, maxWidth: 760 }}>
-            One row per Part Number; expand it to see its customer orders (Search of {niceDate(today)}). A hold applies to one Customer Order Date of the part:
-            those orders stay in the delivery plan as On Hold and no ASN can be created for them.
+            Click Edit on a Part Number, tick Hold and Save. A held part stays in the delivery plan as On Hold for every Customer Order Date and no ASN can be created for it.
+            Expand a part to see its customer orders (Search of {niceDate(today)}).
           </p>
         </div>
         {Object.entries(SUPPLIERS).map(([k, sp]) => {
@@ -260,57 +272,52 @@ export function AsnCrossdockCreationPage() {
                 const rows = pu.flatMap((u) => u.cases.flatMap((c) => c.lines.map((l) => ({ u, c, l }))));
                 const orders = new Set(rows.map((r) => r.l.custOrderNo)).size;
                 const pcs = rows.reduce((a, r) => a + r.l.qty, 0);
-                const heldDates = pu.filter((u) => unitHold[u.key]).length;
-                const firstOfDate = new Map<string, number>();
-                rows.forEach((r, i) => { if (!firstOfDate.has(r.u.key)) firstOfDate.set(r.u.key, i); });
+                const held = !!partHold[partNo];
+                const editing = partEdit[partNo] !== undefined;
+                const shown = editing ? !!partEdit[partNo] : held;
                 return (
                   <div key={partNo} style={{ borderBottom: '1px solid var(--color-divider)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', flexWrap: 'wrap', background: heldDates ? 'var(--color-warn-bg, #fff8e6)' : undefined }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', flexWrap: 'wrap', background: held ? 'var(--color-warn-bg, #fff8e6)' : undefined }}>
                       <button className="btn btn-secondary" aria-expanded={!!openSup[partNo]} aria-label={`${openSup[partNo] ? 'Hide' : 'Show'} customer orders of ${partNo}`}
                         style={{ padding: '2px 8px', fontSize: 11 }} onClick={() => setOpenSup({ ...openSup, [partNo]: !openSup[partNo] })}>{openSup[partNo] ? '▾' : '▸'}</button>
                       <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, minWidth: 120 }}>{partNo}</span>
                       <span style={{ fontSize: 12.5, color: 'var(--color-neutral-800)' }}>
                         {orders} customer order{orders === 1 ? '' : 's'} · {pu.length} Customer Order Date{pu.length === 1 ? '' : 's'} · {pcs} pcs
                       </span>
-                      <span style={{ marginLeft: 'auto' }}><Chip tone={heldDates ? 'neutral' : 'ok'}>{heldDates ? `${heldDates} date${heldDates === 1 ? '' : 's'} on hold` : 'Not on hold'}</Chip></span>
+                      <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <Chip tone={held ? 'neutral' : 'ok'}>{held ? 'On Hold' : 'Not on hold'}</Chip>
+                        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, cursor: editing ? 'pointer' : 'not-allowed' }}>
+                          <input type="checkbox" aria-label={`Hold ${partNo}`} checked={shown} disabled={!editing}
+                            onChange={(e) => setPartEdit({ ...partEdit, [partNo]: e.target.checked })} />
+                          Hold
+                        </label>
+                        {editing ? (
+                          <>
+                            <button className="btn btn-secondary" style={{ padding: '4px 12px', fontSize: 12 }} onClick={() => { const n = { ...partEdit }; delete n[partNo]; setPartEdit(n); }}>Cancel</button>
+                            <button className="btn btn-primary" style={{ padding: '4px 12px', fontSize: 12 }} aria-label={`Save hold of ${partNo}`}
+                              onClick={() => { setPartHold({ ...partHold, [partNo]: !!partEdit[partNo] }); const n = { ...partEdit }; delete n[partNo]; setPartEdit(n); }}>Save</button>
+                          </>
+                        ) : (
+                          <button className="btn btn-secondary" style={{ padding: '4px 12px', fontSize: 12 }} aria-label={`Edit hold of ${partNo}`} onClick={() => setPartEdit({ ...partEdit, [partNo]: held })}>Edit</button>
+                        )}
+                      </span>
                     </div>
                     {openSup[partNo] && (
                       <div style={{ overflowX: 'auto', borderTop: '1px solid var(--color-divider)' }}>
-                        <table style={{ width: '100%', minWidth: 920, borderCollapse: 'separate', borderSpacing: 0, fontSize: 12.5 }}>
+                        <table style={{ width: '100%', minWidth: 640, borderCollapse: 'separate', borderSpacing: 0, fontSize: 12.5 }}>
                           <thead>
-                            <tr>
-                              <th style={th}>Customer Order Date</th><th style={th}>Customer Order No</th><th style={th}>Destination</th><th style={thR}>Qty</th><th style={th}>Case</th>
-                              <th style={th}>PO No</th><th style={th}>Manifest / Item</th><th style={th}>PO Date</th><th style={{ ...th, textAlign: 'center' }}>Hold (D/S)</th>
-                            </tr>
+                            <tr><th style={th}>Customer Order Date</th><th style={th}>Customer Order No</th><th style={th}>Destination</th><th style={thR}>Qty</th><th style={th}>Case</th></tr>
                           </thead>
                           <tbody>
-                            {rows.map(({ u, c, l }, i) => {
-                              const po = l.poNo ? POS.find((p) => p.poNo === l.poNo) : null;
-                              const held = !!unitHold[u.key];
-                              const span = rows.filter((r) => r.u.key === u.key).length;
-                              return (
-                                <tr key={i} style={{ background: held ? 'var(--color-warn-bg, #fff8e6)' : undefined }}>
-                                  <td style={{ ...td, whiteSpace: 'nowrap' }}>{niceDate(u.orderDt)}</td>
-                                  <td style={{ ...td, whiteSpace: 'nowrap' }}>{l.custOrderNo}</td>
-                                  <td style={{ ...td, whiteSpace: 'nowrap' }}>{DESTS[l.destCd].code} · {DESTS[l.destCd].name}</td>
-                                  <td style={{ ...td, textAlign: 'right' }}>{l.qty}</td>
-                                  <td style={{ ...td, whiteSpace: 'nowrap' }}>Case {c.seq}</td>
-                                  <td style={{ ...td, fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>{po ? po.poNo : 'No PO yet'}</td>
-                                  <td style={{ ...td, whiteSpace: 'nowrap' }}>{po ? `${po.manifestNo} / ${po.manifestItemNo}` : '—'}</td>
-                                  <td style={{ ...td, whiteSpace: 'nowrap' }}>{po ? niceDate(po.poDate) : '—'}</td>
-                                  {firstOfDate.get(u.key) === i && (
-                                    <td rowSpan={span} style={{ ...td, textAlign: 'center', verticalAlign: 'middle', borderLeft: '1px solid var(--color-divider)' }}>
-                                      <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                                        <input type="checkbox" checked={held} aria-label={`Hold ${partNo} ${niceDate(u.orderDt)}`}
-                                          onChange={(e) => setUnitHold({ ...unitHold, [u.key]: e.target.checked })} />
-                                        {held ? 'On Hold' : 'Hold'}
-                                      </label>
-                                      <div className="ax-muted">{niceDate(u.orderDt).slice(0, 6)}</div>
-                                    </td>
-                                  )}
-                                </tr>
-                              );
-                            })}
+                            {rows.map(({ u, c, l }, i) => (
+                              <tr key={i}>
+                                <td style={{ ...td, whiteSpace: 'nowrap' }}>{niceDate(u.orderDt)}</td>
+                                <td style={{ ...td, whiteSpace: 'nowrap' }}>{l.custOrderNo}</td>
+                                <td style={{ ...td, whiteSpace: 'nowrap' }}>{DESTS[l.destCd].code} · {DESTS[l.destCd].name}</td>
+                                <td style={{ ...td, textAlign: 'right' }}>{l.qty}</td>
+                                <td style={{ ...td, whiteSpace: 'nowrap' }}>Case {c.seq}</td>
+                              </tr>
+                            ))}
                           </tbody>
                         </table>
                       </div>
@@ -529,7 +536,7 @@ export function AsnCrossdockCreationPage() {
                 const enabled = u.validEnds.length > 0 && !wait;
                 const tip = wait ? `Send ${u.partNo} / ${niceDate(wait.orderDt)} first: the oldest Customer Order Date first (all its cases in an ASN or ticked)`
                   : u.status === 'notReady' ? `Not Ready: case 1 of ${u.partNo} / ${niceDate(u.orderDt)} is not assigned to a PO yet (${u.readyCases} of ${u.caseCount} cases assigned)`
-                  : u.unitHold ? `${u.partNo} / ${niceDate(u.orderDt)} is on hold by the D/S team`
+                  : u.unitHold ? `${u.partNo} is on hold by the D/S team`
                   : u.status === 'hold' ? 'All destinations are on hold' : 'Tick all Ready cases of the unit';
                 return [
                   <tr key={u.key} style={{ background: u.status === 'notReady' ? 'var(--color-warn-bg, #fff8e6)' : undefined }}>
@@ -540,13 +547,23 @@ export function AsnCrossdockCreationPage() {
                     <td style={{ ...td, textAlign: 'right', fontWeight: 600 }}>{u.caseCount}</td>
                     <td style={{ ...td, textAlign: 'right', color: u.readyCases < u.caseCount ? 'var(--color-danger)' : undefined }}>{u.readyCases}{u.reduce > 0 && <div className="ax-muted">{u.rawReadyCases} − {u.reduce} on hold</div>}</td>
                     <td style={{ ...td, textAlign: 'right' }}>{s ? `${s.end} case${s.end > 1 ? 's' : ''}` : '—'}</td>
-                    <td style={td} title={tip}><StatusChip s={u.status} />{wait && <span title={tip} style={{ marginLeft: 4 }}><Chip tone="neutral">{`Wait: ${niceDate(wait.orderDt).slice(0, 6)} first`}</Chip></span>}{u.poCheck.short && <span title={poCheckText(u)} style={{ marginLeft: 4 }}><Chip tone="warn">Short PO</Chip></span>}{u.sent && <div className="ax-muted">rest of an earlier ASN</div>}{u.heldLines.length > 0 && isDs && <div className="ax-muted">{new Set(u.heldLines.map((l) => l.destCd)).size} destination(s) on hold</div>}{u.unitHold && <div className="ax-muted">Part + date on hold (D/S)</div>}{u.reduce > 0 && <div className="ax-muted">{u.reduce} case(s) on hold (D/S)</div>}</td>
+                    <td style={td} title={tip}><StatusChip s={u.status} />{wait && <span title={tip} style={{ marginLeft: 4 }}><Chip tone="neutral">{`Wait: ${niceDate(wait.orderDt).slice(0, 6)} first`}</Chip></span>}{u.poCheck.short && <span title={poCheckText(u)} style={{ marginLeft: 4 }}><Chip tone="warn">Short PO</Chip></span>}{u.sent && <div className="ax-muted">rest of an earlier ASN</div>}{u.heldLines.length > 0 && isDs && <div className="ax-muted">{new Set(u.heldLines.map((l) => l.destCd)).size} destination(s) on hold</div>}{u.unitHold && <div className="ax-muted">Part Number on hold (D/S)</div>}{u.reduce > 0 && <div className="ax-muted">{u.reduce} case(s) on hold (D/S)</div>}</td>
                     <td style={td}>{isDs && <button className="btn btn-secondary" title="Destination detail (D/S team)" style={{ padding: '2px 8px', fontSize: 11 }} onClick={() => setOpen({ ...open, [u.key]: !open[u.key] })}>{open[u.key] ? '▾' : '▸'}</button>}</td>
                   </tr>,
                   u.cases.length > 0 && (
                     <tr key={`${u.key}-c`}>
                       <td colSpan={colCount} style={{ padding: '4px 16px 10px 50px', borderBottom: '1px solid var(--color-divider)' }}>
-                        <div className="ax-muted" style={{ margin: '2px 0 4px', color: u.poCheck.short || u.poCheck.missing ? 'var(--color-danger)' : undefined }}>{poCheckText(u)}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '2px 0 4px' }}>
+                          <span className="ax-muted" style={{ color: u.poCheck.short || u.poCheck.missing ? 'var(--color-danger)' : undefined }}>{poCheckText(u)}</span>
+                          {isDs && !u.unitHold && (caseDraft[u.key] ? (
+                            <span style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
+                              <button className="btn btn-secondary" style={{ padding: '2px 10px', fontSize: 11.5 }} onClick={() => endCaseEdit(u)}>Cancel</button>
+                              <button className="btn btn-primary" style={{ padding: '2px 10px', fontSize: 11.5 }} onClick={() => saveCaseEdit(u)}>Save</button>
+                            </span>
+                          ) : (
+                            <button className="btn btn-secondary" style={{ marginLeft: 'auto', padding: '2px 10px', fontSize: 11.5 }} aria-label={`Edit hold of ${u.partNo} ${niceDate(u.orderDt)}`} onClick={() => startCaseEdit(u)}>Edit hold</button>
+                          ))}
+                        </div>
                         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
                           <thead><tr><th style={{ ...th, background: 'transparent', width: 30 }} />{['Case', 'Qty', 'Remaining Qty (not assigned)', ...(isDs ? ['Destination', 'Customer Order No', 'Order Qty'] : []), 'PO', 'PO Status', ...(isDs ? ['Hold (D/S)'] : [])].map((h) => <th key={h} style={{ ...th, background: 'transparent', height: 28 }}>{h}</th>)}</tr></thead>
                           <tbody>
@@ -570,9 +587,11 @@ export function AsnCrossdockCreationPage() {
                                   <td style={td} title={ctip}><Chip tone={c.ready && !u.unitHold ? 'ok' : c.heldByReduce || (u.unitHold && c.ready) ? 'neutral' : 'warn'}>{c.ready && !u.unitHold ? 'Ready' : c.heldByReduce || u.unitHold && c.ready ? 'On Hold (D/S)' : 'Not Ready'}</Chip></td>
                                   {isDs && (
                                     <td style={{ ...td, textAlign: 'center' }}>
-                                      <input type="checkbox" aria-label={`Hold case ${c.seq} of ${u.partNo} ${niceDate(u.orderDt)}`} checked={!!caseHold[`${u.key}|${c.seq}`]}
-                                        disabled={u.unitHold || !c.lines.every((l) => l.poNo)} title={c.lines.every((l) => l.poNo) ? 'Hold this case (it and the later cases of the unit are not Ready)' : 'No PO yet: nothing to hold'}
-                                        onChange={(e) => { const n = { ...caseHold }; if (e.target.checked) n[`${u.key}|${c.seq}`] = true; else delete n[`${u.key}|${c.seq}`]; setCaseHold(n); }} />
+                                      <input type="checkbox" aria-label={`Hold case ${c.seq} of ${u.partNo} ${niceDate(u.orderDt)}`}
+                                        checked={caseDraft[u.key] ? !!caseDraft[u.key][c.seq] : !!caseHold[`${u.key}|${c.seq}`]}
+                                        disabled={!caseDraft[u.key] || !c.lines.every((l) => l.poNo)}
+                                        title={!caseDraft[u.key] ? 'Click Edit hold first' : c.lines.every((l) => l.poNo) ? 'Hold this case (it and the later cases of the unit are not Ready)' : 'No PO yet: nothing to hold'}
+                                        onChange={(e) => setCaseDraft({ ...caseDraft, [u.key]: { ...caseDraft[u.key], [c.seq]: e.target.checked } })} />
                                     </td>
                                   )}
                                 </tr>

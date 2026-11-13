@@ -15,7 +15,7 @@ One definition per table (the most complete one among the UISS); "Used by" = fun
 | TB_R_CASE_LABEL_LAST_SEQ | transaction | existing | XD10 |
 | TB_R_CROSSDOCK_CASE_HOLD | transaction | proposed | XD09, XD10 |
 | TB_R_CROSSDOCK_IF_RESULT | transaction | proposed | XD01, XD06, XD07 |
-| TB_R_CROSSDOCK_UNIT_HOLD | transaction | proposed | XD09, XD10 |
+| TB_R_CROSSDOCK_PART_HOLD | transaction | proposed | XD09, XD10 |
 | TB_R_DAILY_ORDER_MANIFEST | transaction | existing | XD10, XD15 |
 | TB_R_DAILY_ORDER_PART | transaction | existing | XD10, XD15 |
 | TB_R_H0253_ORDER_CONTROL_PRE | transaction | existing | XD08 |
@@ -63,7 +63,7 @@ Temporary table of one Search run (session): the open qty of the customer order 
 | SEQ_QTY | NUMBER(4) |  | N | Fill of the warehouse case (1 case = 1 destination) of the destination after this slice: 1..PCS_CASE, starts again after PCS_CASE |
 | CUT_FLAG | VARCHAR(1) |  | N | 'Y' on the last slice of a case after which the ASN may stop (every destination a multiple of PCS_CASE) |
 | GROUP_SEQ | NUMBER(4) |  | N | Case Group (block) of the slice: the cases up to and including a valid cut; the cases of a group are sent together |
-| CROSSDOCK_STATUS | VARCHAR(1) |  | N | Status of the block: '6' Ready (the block and every earlier block have a PO) / '7' Not Ready / '8' On Hold (D/S: part + date on hold or case held) |
+| CROSSDOCK_STATUS | VARCHAR(1) |  | N | Status of the block: '6' Ready (the block and every earlier block have a PO) / '7' Not Ready / '8' On Hold (D/S: part on hold or case held) |
 
 #### TB_H_CROSSDOCK_ORDER_CHANGE (history, proposed)
 Used by: XD11
@@ -296,15 +296,14 @@ Dummy table (proposed): send status of the cross dock master per part and target
 | CHANGED_BY | VARCHAR(TBD) |  | N | User who last changed the record |
 | CHANGED_DT | DATETIME |  | N | Last changed date and time |
 
-#### TB_R_CROSSDOCK_UNIT_HOLD (transaction, proposed)
+#### TB_R_CROSSDOCK_PART_HOLD (transaction, proposed)
 Used by: XD09, XD10
 
-New table: Part Number + Customer Order Date (unit) put on hold by the D/S team on ASN Crossdock Creation. HOLD_FLAG Y = no ASN can be created for the unit. Name and columns proposed.
+New table: Part Number put on hold by the D/S team on ASN Crossdock Creation (sub screen Hold per Part). HOLD_FLAG Y = no ASN can be created for the part, whatever the Customer Order Date. Name and columns proposed.
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
 | PART_NO | VARCHAR(15) | Y | N | Part number (H0253.SHIPPING_PART_NO) |
-| ORDER_DT | DATE | Y | N | Customer Order Date of the unit |
 | SUPPLIER_CD | VARCHAR(TBD) | Y | N | Supplier code of the unit |
 | SUPPLIER_PLANT | VARCHAR(TBD) | Y | N | Supplier plant of the unit |
 | HOLD_FLAG | CHAR(1) |  | N | 'Y' on hold / 'N' released (no row = 'N') |
