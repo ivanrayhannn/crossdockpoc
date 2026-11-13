@@ -185,6 +185,8 @@
 | **Delivery Plan (tooltip of disabled check box)** |  |  |  |  |  |
 | MSG1 | Hover on disabled check box | Unit is On Hold (D/S) | Info | All destinations are on hold | Release a destination. |
 | MSG2 | Hover on disabled check box | Unit is Not Ready | Info | Not Ready: case {n} of {Part No} / {Customer Order Date} (or an earlier case) is not assigned to a PO yet ({k} of {c} cases assigned) | Wait for the next PO. |
+| MSG12 | Hover on disabled check box | Supplier Code + Plant on hold (D/S) | Info | Supplier {Supplier Code} · Plant {Plant} is on hold by the D/S team | Contact the D/S team. |
+| MSG14 | Hover on disabled case check box | Case held by Reduce PO Readiness (case) | Info | On hold by the D/S team: Reduce PO Readiness (case) {n} of {Part No} / {Customer Order Date} | Contact the D/S team. |
 | **Search** |  |  |  |  |  |
 | MSG3 | Click [Search] / change filter | No unit | Info | No customer order matches this filter. | Change the Delivery Date, Rit or filter. |
 | MSG5 | Change [Delivery Date] | No rit on the date (Sunday) | Info | No rit cycle available for {Delivery Date}. Choose another delivery date. | Choose another Delivery Date. |
@@ -196,6 +198,7 @@
 | MSG9 | Click [Create ASN] | Ticked units are of more than one Supplier Code + Supplier Plant (D/S team) | Error | One ASN is for one Supplier Code and Supplier Plant. Please select units of one supplier. | Click [OK]; untick the units of the other supplier. |
 | MSG10 | Tick a case that belongs together with later cases | Cases that belong together (Case Group) are sent together | Info | Cases {a}-{b} are sent together. Cases 1-{b} of {Part No} / {Customer Order Date} are selected. | Keep the selection or untick. |
 | MSG11 | Click [Submit ASN] / [Yes] | The draft was released by XD08 or a line changed in GTOPAS (UPD_STATUS, qty) | Error | Some orders have changed. The draft is released; please Search and create the ASN again. | Click [OK]; back to the delivery plan. |
+| MSG13 | Click [Save] (Reduce PO Readiness) | Not a whole number or more than PO Readiness | Error | Reduce PO Readiness (case) must be a whole number from 0 to {PO Readiness} (PO Readiness). | Correct the value. |
 
 ### Logging
 

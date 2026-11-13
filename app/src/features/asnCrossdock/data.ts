@@ -176,6 +176,8 @@ export interface UnitCase {
   ready: boolean;
   /** Destinations that would not close their warehouse case if the ASN stopped here. */
   openDests: string[];
+  /** Has a PO but is held by the D/S team through Reduce PO Readiness (case). */
+  heldByReduce: boolean;
 }
 
 export type UnitStatus = 'ready' | 'partial' | 'notReady' | 'created' | 'hold';
@@ -195,8 +197,14 @@ export interface Unit {
   qty: number;
   cases: UnitCase[];
   caseCount: number;
-  /** PO Readiness: Ready cases. */
+  /** PO Readiness: Ready cases (after Reduce PO Readiness). */
   readyCases: number;
+  /** Ready cases before the reduction (cases 1..n with a PO). */
+  rawReadyCases: number;
+  /** Reduce PO Readiness (case) set by the D/S team for the unit (0 = none). */
+  reduce: number;
+  /** Supplier Code + Plant of the unit is on hold by the D/S team. */
+  supplierHold: boolean;
   /** Cases the user may end the selection on (CUT_FLAG Y and Ready). */
   validEnds: number[];
   /** Some qty of the unit is already in a submitted ASN. */
@@ -256,7 +264,7 @@ function cutCases(ls: InstrLine[], pos: { po: Po; open: number }[]): UnitCase[] 
     c.forEach((s) => (cum[s.destCd] = (cum[s.destCd] ?? 0) + s.qty));
     ready = ready && c.every((s) => !!s.poNo);
     const openDests = Object.keys(cum).filter((d) => cum[d] % PCS_PER_CASE !== 0);
-    const out = { seq: i + 1, lines: c, qty: c.reduce((a, s) => a + s.qty, 0), cut: openDests.length === 0, group, ready, openDests };
+    const out = { seq: i + 1, lines: c, qty: c.reduce((a, s) => a + s.qty, 0), cut: openDests.length === 0, group, ready, openDests, heldByReduce: false };
     if (out.cut) group += 1;
     return out;
   });
@@ -265,7 +273,7 @@ function cutCases(ls: InstrLine[], pos: { po: Po; open: number }[]): UnitCase[] 
 /** XD09 [Search]: open qty (order qty - qty in submitted ASNs) of the lines not on hold, in H0253 order, pre-mapped to the POs released
  * by the business date (open PO qty = PO qty - qty in submitted ASNs), cut into supplier cases. Units of a part take the POs oldest date first. */
 export function buildUnits(today: string, sentByLine: Record<string, number>, sentByPo: Record<string, number>, hold: Record<string, boolean> = {},
-  noAsn = false): Unit[] {
+  noAsn = false, opts: { supplierHold?: Record<string, boolean>; reduce?: Record<string, number> } = {}): Unit[] {
   const units: Unit[] = [];
   for (const partNo of [...new Set(H0253.map((l) => l.partNo))]) {
     const released = POS.filter((p) => p.partNo === partNo && p.poDate <= today);
@@ -280,9 +288,19 @@ export function buildUnits(today: string, sentByLine: Record<string, number>, se
       const open = all.filter((l) => !(l.upd && l.upd.date <= today && (!noAsn || l.upd.status === '2'))).map((l) => ({ ...l, qty: l.qty - (sentByLine[l.id] ?? 0) })).filter((l) => l.qty > 0);
       const ls = open.filter((l) => !hold[l.id]);
       const cases = cutCases(ls, pos);
+      const key = unitKey(partNo, orderDt);
+      const rawReadyCases = cases.filter((c) => c.ready).length;
+      // Reduce PO Readiness (case): the last n Ready cases are held; the Ready part ends on a valid cut (rounded down).
+      const reduce = Math.min(opts.reduce?.[key] ?? 0, rawReadyCases);
+      if (reduce > 0) {
+        const target = rawReadyCases - reduce;
+        const readyEnd = Math.max(0, ...cases.filter((c) => c.cut && c.seq <= target).map((c) => c.seq));
+        cases.forEach((c) => { if (c.ready && c.seq > readyEnd) { c.ready = false; c.heldByReduce = true; } });
+      }
       const readyCases = cases.filter((c) => c.ready).length;
+      const supplierHold = !!opts.supplierHold?.[all[0].supplier];
       const sent = all.some((l) => (sentByLine[l.id] ?? 0) > 0);
-      const status: UnitStatus = !open.length ? 'created' : !ls.length ? 'hold' : readyCases === cases.length ? 'ready'
+      const status: UnitStatus = !open.length ? 'created' : !ls.length || supplierHold ? 'hold' : readyCases === cases.length ? 'ready'
         : cases.some((c) => c.ready && c.cut) ? 'partial' : 'notReady';
       const orderQty = all.reduce((a, l) => a + l.qty, 0);
       const forDate = released.filter((p) => p.orderDt === orderDt);
@@ -293,9 +311,9 @@ export function buildUnits(today: string, sentByLine: Record<string, number>, se
         missing: Math.max(0, orderQty - forDate.reduce((a, p) => a + p.qty, 0)),
       };
       units.push({
-        key: unitKey(partNo, orderDt), partNo, supplier: all[0].supplier, orderDt, lines: ls, heldLines: open.filter((l) => hold[l.id]),
-        qty: ls.reduce((a, l) => a + l.qty, 0), cases, caseCount: cases.length, readyCases,
-        validEnds: cases.filter((c) => c.ready && c.cut).map((c) => c.seq), sent, status, poCheck,
+        key, partNo, supplier: all[0].supplier, orderDt, lines: ls, heldLines: open.filter((l) => hold[l.id]),
+        qty: ls.reduce((a, l) => a + l.qty, 0), cases, caseCount: cases.length, readyCases, rawReadyCases, reduce, supplierHold,
+        validEnds: supplierHold ? [] : cases.filter((c) => c.ready && c.cut).map((c) => c.seq), sent, status, poCheck,
       });
     }
   }

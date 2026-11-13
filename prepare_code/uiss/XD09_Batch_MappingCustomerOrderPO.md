@@ -46,6 +46,8 @@ flowchart TB
 | TB_R_PRA_DAILY_ORDER_MAPPED | DB | New table: MAPPED_QTY per PO part; open PO qty = ORDER_QTY - MAPPED_QTY |
 | TB_R_INSTRUCTION | DB | Qty of each line already mapped (open Case List or submitted ASN) |
 | TB_M_PART_CANDIDATE | DB | PCS_CASE of the part |
+| TB_M_CROSSDOCK_SUPPLIER_HOLD | DB | Supplier Code + Plant on hold (HOLD_FLAG Y): every case of their units On Hold |
+| TB_R_CROSSDOCK_CASE_HOLD | DB | Reduce PO Readiness (case) per unit: the last Ready cases On Hold |
 
 ### Output
 
@@ -194,6 +196,8 @@ XD09 runs on [Search] of XD10 and builds the delivery plan in #TEMP_INSTRUCTION.
 - The pcs of a unit are cut into supplier cases of PCS_CASE pcs in the order of 4.1 (CASE_SEQ from 1 per unit). A case can hold several lines: case 2 of 17-Oct = CO-14106 3 + CO-14107 3. A line can be in several cases: CO-14115 12 pcs = cases 1 and 2.
 - CUT_FLAG = Y after a case where the cumulative qty of every destination of the unit is a multiple of PCS_CASE (the warehouse packs 1 case = 1 destination); the ASN may stop only there. SEQ_QTY = fill of the warehouse case of the destination (1..PCS_CASE).
 - A case is Ready (CROSSDOCK_STATUS 6) when it and every earlier case of the unit have a PO, else Not Ready (7). 18-Oct: cases 1-4 Ready, case 5 Not Ready → unit Partially Ready, Short PO.
+- Holds of the D/S team (XD10 5.3, decided 13-Nov): supplier + plant with HOLD_FLAG Y in TB_M_CROSSDOCK_SUPPLIER_HOLD -> every case of its units CROSSDOCK_STATUS '8' (On Hold).
+- Reduce PO Readiness (case) of the unit in TB_R_CROSSDOCK_CASE_HOLD: Ready end = last valid cut <= (Ready cases - REDUCE_CASE); the Ready cases after it get CROSSDOCK_STATUS '8' (On Hold). Example: Ready 4, reduce 1 -> cases 1-3 Ready, case 4 On Hold; if cases 3-4 belong together -> cases 1-2 Ready, cases 3-4 On Hold.
 
 ### 4.4 Delivery Plan on XD10
 
@@ -292,7 +296,7 @@ Temporary table of one Search run (session): the open qty of the customer order 
 | SEQ_QTY | NUMBER(4) |  | N | Fill of the warehouse case (1 case = 1 destination) of the destination after this slice: 1..PCS_CASE, starts again after PCS_CASE |
 | CUT_FLAG | VARCHAR(1) |  | N | 'Y' on the last slice of a case after which the ASN may stop (every destination a multiple of PCS_CASE) |
 | GROUP_SEQ | NUMBER(4) |  | N | Case Group (block) of the slice: the cases up to and including a valid cut; the cases of a group are sent together |
-| CROSSDOCK_STATUS | VARCHAR(1) |  | N | Status of the block: '6' Ready (the block and every earlier block have a PO) / '7' Not Ready |
+| CROSSDOCK_STATUS | VARCHAR(1) |  | N | Status of the block: '6' Ready (the block and every earlier block have a PO) / '7' Not Ready / '8' On Hold (D/S: supplier + plant hold or Reduce PO Readiness) |
 
 #### TB_R_PRA_DAILY_ORDER_MAPPED (transaction, proposed)
 New table: mapped qty per Pra Daily Order PO part (instead of a new column in the Pra Daily Order). Name and columns proposed.
@@ -310,6 +314,34 @@ New table: mapped qty per Pra Daily Order PO part (instead of a new column in th
 | CREATED_BY | VARCHAR(TBD) |  | N | User who created the record |
 | CREATED_DT | DATETIME |  | N | Created date and time |
 | CHANGED_BY | VARCHAR(TBD) |  | N | User who last changed the record |
+| CHANGED_DT | DATETIME |  | N | Last changed date and time |
+
+#### TB_M_CROSSDOCK_SUPPLIER_HOLD (master, proposed)
+New table: Supplier Code + Plant put on hold by the D/S team on ASN Crossdock Creation. HOLD_FLAG Y = no ASN can be created for the supplier + plant. Name and columns proposed.
+
+| Column | Type | PK | Null | Description |
+|---|---|---|---|---|
+| SUPPLIER_CD | VARCHAR(TBD) | Y | N | Supplier code (as in the Pra Daily Order / supplier master) |
+| SUPPLIER_PLANT | VARCHAR(TBD) | Y | N | Supplier plant |
+| HOLD_FLAG | CHAR(1) |  | N | 'Y' on hold / 'N' released (no row = 'N') |
+| CREATED_BY | VARCHAR(20) |  | N | Login user (D/S team) who created the record |
+| CREATED_DT | DATETIME |  | N | Created date and time |
+| CHANGED_BY | VARCHAR(20) |  | N | Login user (D/S team) who last changed the record |
+| CHANGED_DT | DATETIME |  | N | Last changed date and time |
+
+#### TB_R_CROSSDOCK_CASE_HOLD (transaction, proposed)
+New table: Reduce PO Readiness (case) of a unit (Part Number + Customer Order Date + Supplier Code + Plant) set by the D/S team: the last REDUCE_CASE Ready cases are held. Kept until the D/S team releases it (row deleted). Name and columns proposed.
+
+| Column | Type | PK | Null | Description |
+|---|---|---|---|---|
+| PART_NO | VARCHAR(15) | Y | N | Part number (H0253.SHIPPING_PART_NO) |
+| ORDER_DT | DATE | Y | N | Customer Order Date of the unit |
+| SUPPLIER_CD | VARCHAR(TBD) | Y | N | Supplier code of the unit |
+| SUPPLIER_PLANT | VARCHAR(TBD) | Y | N | Supplier plant of the unit |
+| REDUCE_CASE | INT |  | N | Number of Ready cases held (1 .. PO Readiness); the Ready part is rounded down to the last valid cut |
+| CREATED_BY | VARCHAR(20) |  | N | Login user (D/S team) who created the record |
+| CREATED_DT | DATETIME |  | N | Created date and time |
+| CHANGED_BY | VARCHAR(20) |  | N | Login user (D/S team) who last changed the record |
 | CHANGED_DT | DATETIME |  | N | Last changed date and time |
 
 ## Sample Input
