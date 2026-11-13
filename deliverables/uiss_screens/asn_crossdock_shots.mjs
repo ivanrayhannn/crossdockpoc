@@ -29,11 +29,11 @@ await view('D/S team'); await search();
 await pg.getByRole('checkbox', { name: 'Hold case 4 of PART-X 17-Oct-2026' }).uncheck();
 // D/S team: sub screen Hold per Part Number + Customer Order Date: POs and customer orders of each part + date; hold PART-X 17-Oct
 await pg.getByRole('button', { name: 'Hold per Part', exact: true }).click(); await shot('c_04d_ds_supplier_hold');
-await pg.getByRole('button', { name: 'Hold PART-X 17-Oct-2026' }).click(); await shot('c_04f_ds_supplier_hold_on');
+await pg.getByRole('checkbox', { name: 'Hold PART-X 17-Oct-2026' }).check(); await shot('c_04f_ds_supplier_hold_on');
 await pg.getByRole('button', { name: /Back to ASN Crossdock Creation/ }).click();
 await view('Supplier'); await search(); await shot('c_04e_supplier_on_hold');
 await view('D/S team'); await pg.getByRole('button', { name: 'Hold per Part', exact: true }).click();
-await pg.getByRole('button', { name: 'Release hold of PART-X 17-Oct-2026' }).click(); await pg.getByRole('button', { name: /Back to ASN Crossdock Creation/ }).click();
+await pg.getByRole('checkbox', { name: 'Hold PART-X 17-Oct-2026' }).uncheck(); await pg.getByRole('button', { name: /Back to ASN Crossdock Creation/ }).click();
 if (await pg.getByTitle('Destination detail (D/S team)').count()) { const r = unitRow('PART-X', '17-Oct'); if (await r.getByRole('button', { name: '▾' }).count()) await r.getByRole('button', { name: '▾' }).click(); }
 // supplier: tick case 3 of PART-X 17-Oct → cases 1-3 selected
 await view('Supplier'); await search();

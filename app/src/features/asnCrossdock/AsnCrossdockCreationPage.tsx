@@ -113,7 +113,7 @@ export function AsnCrossdockCreationPage() {
   const [openDest, setOpenDest] = useState<Record<string, boolean>>({});
   const [openCase, setOpenCase] = useState<Record<number, boolean>>({});
   const [page, setPage] = useState<'list' | 'cases' | 'supHold'>('list');
-  const [openSup, setOpenSup] = useState<Record<string, boolean>>({ 'PART-X|2026-10-17': true });
+  const [openSup, setOpenSup] = useState<Record<string, boolean>>({ 'PART-X': true });
   const [confirm, setConfirm] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [labelNote, setLabelNote] = useState(false);
@@ -234,7 +234,6 @@ export function AsnCrossdockCreationPage() {
   };
 
   if (page === 'supHold') {
-    const byPo = sentQty(asns).byPo;
     const thR = { ...th, textAlign: 'right' as const };
     return (
       <div style={{ padding: '18px 24px 24px', display: 'flex', flexDirection: 'column', gap: 14, maxWidth: 1180 }}>
@@ -242,81 +241,76 @@ export function AsnCrossdockCreationPage() {
         <div>
           <h1 style={{ fontSize: 20, margin: '0 0 4px' }}>Hold per Part Number + Customer Order Date</h1>
           <p style={{ fontSize: 13, color: 'var(--color-neutral-700)', margin: 0, maxWidth: 760 }}>
-            A hold stops ASN creation for one Part Number + Customer Order Date; it stays in the delivery plan as On Hold.
-            Each row shows the open POs and the customer orders they cover in the Search of {niceDate(today)}.
+            One row per Part Number; expand it to see its customer orders (Search of {niceDate(today)}). A hold applies to one Customer Order Date of the part:
+            those orders stay in the delivery plan as On Hold and no ASN can be created for them.
           </p>
         </div>
         {Object.entries(SUPPLIERS).map(([k, sp]) => {
           const su = units.filter((u) => u.supplier === k && u.status !== 'created' && (u.lines.length > 0 || u.unitHold));
+          const parts = [...new Set(su.map((u) => u.partNo))].sort();
           return (
             <section key={k} aria-label={`Supplier ${sp.code} plant ${sp.plant}`} style={{ ...card, overflow: 'hidden' }}>
               <div style={{ padding: '10px 16px', borderBottom: '1px solid var(--color-divider)' }}>
                 <span style={{ fontSize: 15, fontWeight: 700 }}>{sp.code} · Plant {sp.plant}</span>{' '}
-                <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{sp.name} · {su.length} part + date{su.length === 1 ? '' : 's'}</span>
+                <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{sp.name} · {parts.length} part number{parts.length === 1 ? '' : 's'}</span>
               </div>
-              {su.length === 0 && <p style={{ margin: 0, padding: '12px 16px', fontSize: 12.5, color: 'var(--color-neutral-700)' }}>No open customer order on {niceDate(today)}.</p>}
-              {su.map((u) => {
-                const held = !!unitHold[u.key];
-                const poNos = [...new Set(u.cases.flatMap((c) => c.lines.map((l) => l.poNo).filter((x): x is string => !!x)))];
-                const rows = poNos.map((no) => {
-                  const po = POS.find((p) => p.poNo === no)!;
-                  return { po, open: po.qty - (byPo[no] ?? 0), mapped: u.cases.flatMap((c) => c.lines.filter((l) => l.poNo === no).map((l) => ({ c, l }))) };
-                });
-                const noPo = u.cases.flatMap((c) => c.lines.filter((l) => !l.poNo).map((l) => ({ c, l })));
-                const label = `${u.partNo} ${niceDate(u.orderDt)}`;
+              {parts.length === 0 && <p style={{ margin: 0, padding: '12px 16px', fontSize: 12.5, color: 'var(--color-neutral-700)' }}>No open customer order on {niceDate(today)}.</p>}
+              {parts.map((partNo) => {
+                const pu = su.filter((u) => u.partNo === partNo).sort((a, b) => a.orderDt.localeCompare(b.orderDt));
+                const rows = pu.flatMap((u) => u.cases.flatMap((c) => c.lines.map((l) => ({ u, c, l }))));
+                const orders = new Set(rows.map((r) => r.l.custOrderNo)).size;
+                const pcs = rows.reduce((a, r) => a + r.l.qty, 0);
+                const heldDates = pu.filter((u) => unitHold[u.key]).length;
+                const firstOfDate = new Map<string, number>();
+                rows.forEach((r, i) => { if (!firstOfDate.has(r.u.key)) firstOfDate.set(r.u.key, i); });
                 return (
-                  <div key={u.key} style={{ borderBottom: '1px solid var(--color-divider)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', flexWrap: 'wrap', background: held ? 'var(--color-warn-bg, #fff8e6)' : undefined }}>
-                      <button className="btn btn-secondary" aria-expanded={!!openSup[u.key]} aria-label={`${openSup[u.key] ? 'Hide' : 'Show'} POs of ${label}`}
-                        style={{ padding: '2px 8px', fontSize: 11 }} onClick={() => setOpenSup({ ...openSup, [u.key]: !openSup[u.key] })}>{openSup[u.key] ? '▾' : '▸'}</button>
-                      <div style={{ minWidth: 200 }}>
-                        <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 700 }}>{u.partNo}</div>
-                        <div style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>Customer Order Date {niceDate(u.orderDt)}</div>
-                      </div>
-                      <div style={{ fontSize: 12.5, color: 'var(--color-neutral-800)' }}>
-                        {u.caseCount} case{u.caseCount === 1 ? '' : 's'} · {u.rawReadyCases} with PO · {poNos.length} PO{poNos.length === 1 ? '' : 's'} · {u.qty} pcs
-                      </div>
-                      <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <Chip tone={held ? 'neutral' : 'ok'}>{held ? 'On Hold' : 'Not on hold'}</Chip>
-                        <button className={held ? 'btn btn-primary' : 'btn btn-secondary'} style={{ padding: '4px 12px', fontSize: 12 }}
-                          aria-label={`${held ? 'Release hold of' : 'Hold'} ${label}`}
-                          onClick={() => setUnitHold({ ...unitHold, [u.key]: !held })}>{held ? 'Release hold' : 'Hold'}</button>
+                  <div key={partNo} style={{ borderBottom: '1px solid var(--color-divider)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', flexWrap: 'wrap', background: heldDates ? 'var(--color-warn-bg, #fff8e6)' : undefined }}>
+                      <button className="btn btn-secondary" aria-expanded={!!openSup[partNo]} aria-label={`${openSup[partNo] ? 'Hide' : 'Show'} customer orders of ${partNo}`}
+                        style={{ padding: '2px 8px', fontSize: 11 }} onClick={() => setOpenSup({ ...openSup, [partNo]: !openSup[partNo] })}>{openSup[partNo] ? '▾' : '▸'}</button>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, minWidth: 120 }}>{partNo}</span>
+                      <span style={{ fontSize: 12.5, color: 'var(--color-neutral-800)' }}>
+                        {orders} customer order{orders === 1 ? '' : 's'} · {pu.length} Customer Order Date{pu.length === 1 ? '' : 's'} · {pcs} pcs
                       </span>
+                      <span style={{ marginLeft: 'auto' }}><Chip tone={heldDates ? 'neutral' : 'ok'}>{heldDates ? `${heldDates} date${heldDates === 1 ? '' : 's'} on hold` : 'Not on hold'}</Chip></span>
                     </div>
-                    {openSup[u.key] && (
+                    {openSup[partNo] && (
                       <div style={{ overflowX: 'auto', borderTop: '1px solid var(--color-divider)' }}>
-                        <table style={{ width: '100%', minWidth: 860, borderCollapse: 'separate', borderSpacing: 0, fontSize: 12.5 }}>
+                        <table style={{ width: '100%', minWidth: 920, borderCollapse: 'separate', borderSpacing: 0, fontSize: 12.5 }}>
                           <thead>
                             <tr>
-                              <th style={th}>PO No</th><th style={th}>Manifest / Item</th><th style={th}>PO Date</th><th style={thR}>PO Qty</th><th style={thR}>Open Qty</th>
-                              <th style={{ ...th, borderLeft: '1px solid var(--color-divider)' }}>Customer Order No</th><th style={th}>Destination</th><th style={thR}>Qty</th><th style={th}>Case</th>
+                              <th style={th}>Customer Order Date</th><th style={th}>Customer Order No</th><th style={th}>Destination</th><th style={thR}>Qty</th><th style={th}>Case</th>
+                              <th style={th}>PO No</th><th style={th}>Manifest / Item</th><th style={th}>PO Date</th><th style={{ ...th, textAlign: 'center' }}>Hold (D/S)</th>
                             </tr>
                           </thead>
                           <tbody>
-                            {rows.map(({ po, open: o, mapped }) => mapped.map(({ c, l }, i) => (
-                              <tr key={`${po.poNo}-${i}`}>
-                                {i === 0 && [
-                                  <td key="po" rowSpan={mapped.length} style={{ ...td, fontFamily: 'var(--font-mono)', fontWeight: 600, whiteSpace: 'nowrap' }}>{po.poNo}</td>,
-                                  <td key="mf" rowSpan={mapped.length} style={{ ...td, whiteSpace: 'nowrap' }}>{po.manifestNo} / {po.manifestItemNo}</td>,
-                                  <td key="dt" rowSpan={mapped.length} style={{ ...td, whiteSpace: 'nowrap' }}>{niceDate(po.poDate)}</td>,
-                                  <td key="q" rowSpan={mapped.length} style={{ ...td, textAlign: 'right' }}>{po.qty}</td>,
-                                  <td key="o" rowSpan={mapped.length} style={{ ...td, textAlign: 'right', fontWeight: 600 }}>{o}</td>,
-                                ]}
-                                <td style={{ ...td, whiteSpace: 'nowrap', borderLeft: '1px solid var(--color-divider)' }}>{l.custOrderNo}</td>
-                                <td style={{ ...td, whiteSpace: 'nowrap' }}>{DESTS[l.destCd].code} · {DESTS[l.destCd].name}</td>
-                                <td style={{ ...td, textAlign: 'right' }}>{l.qty}</td>
-                                <td style={{ ...td, whiteSpace: 'nowrap' }}>Case {c.seq}</td>
-                              </tr>
-                            )))}
-                            {noPo.length > 0 && noPo.map(({ c, l }, i) => (
-                              <tr key={`nopo-${i}`}>
-                                {i === 0 && <td colSpan={5} rowSpan={noPo.length} style={{ ...td, color: 'var(--color-neutral-700)' }}>No PO yet (waiting for a PO)</td>}
-                                <td style={{ ...td, whiteSpace: 'nowrap', borderLeft: '1px solid var(--color-divider)' }}>{l.custOrderNo}</td>
-                                <td style={{ ...td, whiteSpace: 'nowrap' }}>{DESTS[l.destCd].code} · {DESTS[l.destCd].name}</td>
-                                <td style={{ ...td, textAlign: 'right' }}>{l.qty}</td>
-                                <td style={{ ...td, whiteSpace: 'nowrap' }}>Case {c.seq}</td>
-                              </tr>
-                            ))}
+                            {rows.map(({ u, c, l }, i) => {
+                              const po = l.poNo ? POS.find((p) => p.poNo === l.poNo) : null;
+                              const held = !!unitHold[u.key];
+                              const span = rows.filter((r) => r.u.key === u.key).length;
+                              return (
+                                <tr key={i} style={{ background: held ? 'var(--color-warn-bg, #fff8e6)' : undefined }}>
+                                  <td style={{ ...td, whiteSpace: 'nowrap' }}>{niceDate(u.orderDt)}</td>
+                                  <td style={{ ...td, whiteSpace: 'nowrap' }}>{l.custOrderNo}</td>
+                                  <td style={{ ...td, whiteSpace: 'nowrap' }}>{DESTS[l.destCd].code} · {DESTS[l.destCd].name}</td>
+                                  <td style={{ ...td, textAlign: 'right' }}>{l.qty}</td>
+                                  <td style={{ ...td, whiteSpace: 'nowrap' }}>Case {c.seq}</td>
+                                  <td style={{ ...td, fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>{po ? po.poNo : 'No PO yet'}</td>
+                                  <td style={{ ...td, whiteSpace: 'nowrap' }}>{po ? `${po.manifestNo} / ${po.manifestItemNo}` : '—'}</td>
+                                  <td style={{ ...td, whiteSpace: 'nowrap' }}>{po ? niceDate(po.poDate) : '—'}</td>
+                                  {firstOfDate.get(u.key) === i && (
+                                    <td rowSpan={span} style={{ ...td, textAlign: 'center', verticalAlign: 'middle', borderLeft: '1px solid var(--color-divider)' }}>
+                                      <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                                        <input type="checkbox" checked={held} aria-label={`Hold ${partNo} ${niceDate(u.orderDt)}`}
+                                          onChange={(e) => setUnitHold({ ...unitHold, [u.key]: e.target.checked })} />
+                                        {held ? 'On Hold' : 'Hold'}
+                                      </label>
+                                      <div className="ax-muted">{niceDate(u.orderDt).slice(0, 6)}</div>
+                                    </td>
+                                  )}
+                                </tr>
+                              );
+                            })}
                           </tbody>
                         </table>
                       </div>
