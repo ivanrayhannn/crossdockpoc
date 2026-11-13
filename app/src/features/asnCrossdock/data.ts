@@ -133,15 +133,15 @@ export interface Po {
   split?: boolean;
 }
 
-/** PO of simulasi_asn_rev.xlsx: one PO per Customer Order Date, PO date = order date + 1; T0409014 = split PO of 17-Oct (T0409013 18 < 30). */
+/** PO of simulasi_asn_rev.xlsx: one PO per Customer Order Date, PO date = order date + 1; PO-0004 = split PO of 17-Oct (PO-0003 18 < 30). */
 export const POS: Po[] = [
-  { poNo: 'T0409011', manifestNo: '3126035911', manifestItemNo: '0001', partNo: 'PART-X', qty: 12, poDate: '2026-10-16', orderDt: '2026-10-15' },
-  { poNo: 'T0409012', manifestNo: '3126035912', manifestItemNo: '0001', partNo: 'PART-X', qty: 6, poDate: '2026-10-17', orderDt: '2026-10-16' },
-  { poNo: 'T0409013', manifestNo: '3126035913', manifestItemNo: '0001', partNo: 'PART-X', qty: 18, poDate: '2026-10-18', orderDt: '2026-10-17' },
-  { poNo: 'T0409014', manifestNo: '3126035914', manifestItemNo: '0001', partNo: 'PART-X', qty: 12, poDate: '2026-10-19', orderDt: '2026-10-17', split: true },
-  { poNo: 'T0409015', manifestNo: '3126035915', manifestItemNo: '0001', partNo: 'PART-X', qty: 18, poDate: '2026-10-19', orderDt: '2026-10-18' },
-  { poNo: 'T0409016', manifestNo: '3126035916', manifestItemNo: '0001', partNo: 'PART-X', qty: 18, poDate: '2026-10-20', orderDt: '2026-10-19' },
-  { poNo: 'T0409041', manifestNo: '3126009041', manifestItemNo: '0001', partNo: 'PART-D', qty: 12, poDate: '2026-10-18', orderDt: '2026-10-17' },
+  { poNo: 'PO-0001', manifestNo: 'MF-0001', manifestItemNo: '0001', partNo: 'PART-X', qty: 12, poDate: '2026-10-16', orderDt: '2026-10-15' },
+  { poNo: 'PO-0002', manifestNo: 'MF-0002', manifestItemNo: '0001', partNo: 'PART-X', qty: 6, poDate: '2026-10-17', orderDt: '2026-10-16' },
+  { poNo: 'PO-0003', manifestNo: 'MF-0003', manifestItemNo: '0001', partNo: 'PART-X', qty: 18, poDate: '2026-10-18', orderDt: '2026-10-17' },
+  { poNo: 'PO-0004', manifestNo: 'MF-0004', manifestItemNo: '0001', partNo: 'PART-X', qty: 12, poDate: '2026-10-19', orderDt: '2026-10-17', split: true },
+  { poNo: 'PO-0005', manifestNo: 'MF-0005', manifestItemNo: '0001', partNo: 'PART-X', qty: 18, poDate: '2026-10-19', orderDt: '2026-10-18' },
+  { poNo: 'PO-0006', manifestNo: 'MF-0006', manifestItemNo: '0001', partNo: 'PART-X', qty: 18, poDate: '2026-10-20', orderDt: '2026-10-19' },
+  { poNo: 'PO-0007', manifestNo: 'MF-0007', manifestItemNo: '0001', partNo: 'PART-D', qty: 12, poDate: '2026-10-18', orderDt: '2026-10-17' },
 ];
 
 export const BUSINESS_DATES = ['2026-10-16', '2026-10-17', '2026-10-18', '2026-10-19', '2026-10-20', '2026-10-21', '2026-10-22'];

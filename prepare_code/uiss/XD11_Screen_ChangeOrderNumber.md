@@ -302,7 +302,7 @@ New table: mapped qty per Pra Daily Order PO part (instead of a new column in th
 
 | INSTRUCTION_ID | CASE_NO | Customer Order before | Customer Order after | Destination | Qty | PO | ASN_NO |
 |---|---|---|---|---|---|---|---|
-| 6 | C-0003-03 | CO-14104 | CO-14111 | 9722D10 | 6 | T0409013 | ASN0003 |
+| 6 | C-0003-03 | CO-14104 | CO-14111 | 9722D10 | 6 | PO-0003 | ASN0003 |
 
 ### C. Other tables
 

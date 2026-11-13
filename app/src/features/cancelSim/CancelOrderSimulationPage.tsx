@@ -27,7 +27,7 @@ const O = 'ID1H4571';
 const O2 = 'ID1H4580';
 const A = '0000001';
 const B = '0000002 (new)';
-const PO = 'T0409001';
+const PO = 'PO-0008';
 const C5 = 'CO-14115';
 
 // 14-Oct: the line arrives with status 7 and is inserted by XD08
@@ -150,11 +150,11 @@ const SCENARIOS: { key: string; name: string; tag: Level; summary: string; steps
   },
   {
     key: '5', name: '5 · One line in 2 ASNs → partial receipt splits the serial (simulasi_asn CO-14115)', tag: 'warn',
-    summary: 'Same data as simulasi_asn_rev.xlsx: CO-14115 VN 12 pcs (order date 19-Oct) goes in ASN0006 (case 1, T0409015) and ASN0007 (case 2, T0409016). On 21-Oct ASN0006 is received: G-System splits the line into serial 0000001 6 pcs status 6 and serial 0000002 6 pcs status 7. XD08 keeps each part linked to its ASN.',
+    summary: 'Same data as simulasi_asn_rev.xlsx: CO-14115 VN 12 pcs (order date 19-Oct) goes in ASN0006 (case 1, PO-0005) and ASN0007 (case 2, PO-0006). On 21-Oct ASN0006 is received: G-System splits the line into serial 0000001 6 pcs status 6 and serial 0000002 6 pcs status 7. XD08 keeps each part linked to its ASN.',
     steps: [
       {
         lane: 'sys', date: '20-Oct', title: 'XD08 inserts CO-14115 (status 7, 12 pcs)',
-        text: 'Order date 19-Oct: CO-14111 TH 6 + CO-14115 VN 12 = 18 pcs → PO T0409016 (PO date 20-Oct, 18). The 20-Oct Search cuts CO-14115 into case 1 (rest of T0409015) and case 2 (T0409016).',
+        text: 'Order date 19-Oct: CO-14111 TH 6 + CO-14115 VN 12 = 18 pcs → PO PO-0006 (PO date 20-Oct, 18). The 20-Oct Search cuts CO-14115 into case 1 (rest of PO-0005) and case 2 (PO-0006).',
         src: [{ order: C5, serial: A, status: '7', qty: 12, upd: '20-Oct 03:30', changed: true }],
         rep: [{ order: C5, serial: A, status: '7', qty: 12, hold: 'N', mapped: 'N', upd: '-', changed: true }], instr: [],
         flags: [['ok', 'One line of 12 pcs = 2 supplier cases.']],
@@ -164,7 +164,7 @@ const SCENARIOS: { key: string; name: string; tag: Level; summary: string; steps
         text: 'Create ASN + Submit for case 1. The line is not complete yet: PO_MAPPED_FLAG stays N, open qty 6.',
         src: [{ order: C5, serial: A, status: '7', qty: 12, upd: '20-Oct 03:30' }],
         rep: [{ order: C5, serial: A, status: '7', qty: 12, hold: 'N', mapped: 'N', upd: '-' }],
-        instr: [{ order: C5, serial: A, qty: 6, po: 'T0409015', asn: 'ASN0006', added: true }],
+        instr: [{ order: C5, serial: A, qty: 6, po: 'PO-0005', asn: 'ASN0006', added: true }],
         flags: [['ok', 'One line may be sent in several ASNs.']],
       },
       {
@@ -172,7 +172,7 @@ const SCENARIOS: { key: string; name: string; tag: Level; summary: string; steps
         text: 'Create ASN + Submit for case 2. The whole line is in TB_R_INSTRUCTION: PO_MAPPED_FLAG = Y. The replicate row now has 2 ASNs (ASN0006, ASN0007).',
         src: [{ order: C5, serial: A, status: '7', qty: 12, upd: '20-Oct 03:30' }],
         rep: [{ order: C5, serial: A, status: '7', qty: 12, hold: 'N', mapped: 'Y', upd: '-', changed: true }],
-        instr: [{ order: C5, serial: A, qty: 6, po: 'T0409015', asn: 'ASN0006' }, { order: C5, serial: A, qty: 6, po: 'T0409016', asn: 'ASN0007', added: true }],
+        instr: [{ order: C5, serial: A, qty: 6, po: 'PO-0005', asn: 'ASN0006' }, { order: C5, serial: A, qty: 6, po: 'PO-0006', asn: 'ASN0007', added: true }],
         flags: [['ok', 'One H0253 row, two TB_R_INSTRUCTION rows (two ASNs).']],
       },
       {
@@ -180,15 +180,15 @@ const SCENARIOS: { key: string; name: string; tag: Level; summary: string; steps
         text: 'Only ASN0006 (6 pcs) is received. G-System keeps serial 0000001 with 6 pcs status 6 and creates serial 0000002 with the remaining 6 pcs status 7.',
         src: [{ order: C5, serial: A, status: '6', qty: 6, upd: '21-Oct 03:30', changed: true }, { order: C5, serial: B, status: '7', qty: 6, upd: '21-Oct 03:30', changed: true }],
         rep: [{ order: C5, serial: A, status: '7', qty: 12, hold: 'N', mapped: 'Y', upd: '-' }],
-        instr: [{ order: C5, serial: A, qty: 6, po: 'T0409015', asn: 'ASN0006' }, { order: C5, serial: A, qty: 6, po: 'T0409016', asn: 'ASN0007' }],
+        instr: [{ order: C5, serial: A, qty: 6, po: 'PO-0005', asn: 'ASN0006' }, { order: C5, serial: A, qty: 6, po: 'PO-0006', asn: 'ASN0007' }],
         flags: [['warn', 'H0253 does not carry the received ASN No: NSP assumes the ASNs are received in the order they were sent (TBC with G-System).']],
       },
       {
         lane: 'sys', date: '21-Oct', title: 'Wrong: upsert only (no re-assignment)',
-        text: 'If XD08 only upserted the rows: serial 0000001 has 12 pcs in TB_R_INSTRUCTION for qty 6, and serial 0000002 looks open (6 pcs, PO_MAPPED_FLAG N) → the 21-Oct Search would map the 6 pcs again with T0409016 although they are already in ASN0007.',
+        text: 'If XD08 only upserted the rows: serial 0000001 has 12 pcs in TB_R_INSTRUCTION for qty 6, and serial 0000002 looks open (6 pcs, PO_MAPPED_FLAG N) → the 21-Oct Search would map the 6 pcs again with PO-0006 although they are already in ASN0007.',
         src: [{ order: C5, serial: A, status: '6', qty: 6, upd: '21-Oct 03:30' }, { order: C5, serial: B, status: '7', qty: 6, upd: '21-Oct 03:30' }],
         rep: [{ order: C5, serial: A, status: '7', qty: 6, hold: 'N', mapped: 'Y', upd: '6', changed: true }, { order: C5, serial: B, status: '7', qty: 6, hold: 'N', mapped: 'N', upd: '-', changed: true }],
-        instr: [{ order: C5, serial: A, qty: 6, po: 'T0409015', asn: 'ASN0006' }, { order: C5, serial: A, qty: 6, po: 'T0409016', asn: 'ASN0007' }],
+        instr: [{ order: C5, serial: A, qty: 6, po: 'PO-0005', asn: 'ASN0006' }, { order: C5, serial: A, qty: 6, po: 'PO-0006', asn: 'ASN0007' }],
         flags: [['err', 'Double mapping: the 6 pcs of ASN0007 would be mapped again.']],
       },
       {
@@ -196,8 +196,8 @@ const SCENARIOS: { key: string; name: string; tag: Level; summary: string; steps
         text: 'XD08 links the received part (serial 0000001, status 6) to the ASN sent first (ASN0006) and the remaining part (serial 0000002, status 7) to ASN0007. Only SERIAL_NO of the ASN0007 row changes; case, PO and ASN stay. Both serials are fully in TB_R_INSTRUCTION → PO_MAPPED_FLAG Y, the Search takes nothing. LOG7.',
         src: [{ order: C5, serial: A, status: '6', qty: 6, upd: '21-Oct 03:30' }, { order: C5, serial: B, status: '7', qty: 6, upd: '21-Oct 03:30' }],
         rep: [{ order: C5, serial: A, status: '7', qty: 6, hold: 'N', mapped: 'Y', upd: '6', changed: true }, { order: C5, serial: B, status: '7', qty: 6, hold: 'N', mapped: 'Y', upd: '-', changed: true }],
-        instr: [{ order: C5, serial: A, qty: 6, po: 'T0409015', asn: 'ASN0006' }, { order: C5, serial: A, qty: 6, po: 'T0409016', asn: 'ASN0007', deleted: true },
-          { order: C5, serial: B, qty: 6, po: 'T0409016', asn: 'ASN0007', added: true }],
+        instr: [{ order: C5, serial: A, qty: 6, po: 'PO-0005', asn: 'ASN0006' }, { order: C5, serial: A, qty: 6, po: 'PO-0006', asn: 'ASN0007', deleted: true },
+          { order: C5, serial: B, qty: 6, po: 'PO-0006', asn: 'ASN0007', added: true }],
         flags: [['ok', 'Each part of the line stays linked to its ASN.']],
       },
       {
@@ -205,7 +205,7 @@ const SCENARIOS: { key: string; name: string; tag: Level; summary: string; steps
         text: 'G-System sets serial 0000002 to status 6; XD08 writes UPD_STATUS 6. The whole line is received.',
         src: [{ order: C5, serial: A, status: '6', qty: 6, upd: '21-Oct 03:30' }, { order: C5, serial: '0000002', status: '6', qty: 6, upd: '22-Oct 03:30', changed: true }],
         rep: [{ order: C5, serial: A, status: '7', qty: 6, hold: 'N', mapped: 'Y', upd: '6' }, { order: C5, serial: '0000002', status: '7', qty: 6, hold: 'N', mapped: 'Y', upd: '6', changed: true }],
-        instr: [{ order: C5, serial: A, qty: 6, po: 'T0409015', asn: 'ASN0006' }, { order: C5, serial: '0000002', qty: 6, po: 'T0409016', asn: 'ASN0007' }],
+        instr: [{ order: C5, serial: A, qty: 6, po: 'PO-0005', asn: 'ASN0006' }, { order: C5, serial: '0000002', qty: 6, po: 'PO-0006', asn: 'ASN0007' }],
         flags: [['ok', 'Normal end (see ASN Simulation 20–22 Oct for the full data).']],
       },
     ],

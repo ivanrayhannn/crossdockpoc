@@ -361,5 +361,5 @@ New table: mapped qty per Pra Daily Order PO part (instead of a new column in th
 
 | INSTRUCTION_ID | Customer Order | Serial No before | Serial No after | Qty | PO | ASN_NO |
 |---|---|---|---|---|---|---|
-| 12 | CO-14115 | 0000001 | 0000001 | 6 | T0409015 | ASN0006 |
-| 13 | CO-14115 | 0000001 | 0000002 | 6 | T0409016 | ASN0007 |
+| 12 | CO-14115 | 0000001 | 0000001 | 6 | PO-0005 | ASN0006 |
+| 13 | CO-14115 | 0000001 | 0000002 | 6 | PO-0006 | ASN0007 |

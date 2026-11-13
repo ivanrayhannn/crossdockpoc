@@ -8,7 +8,7 @@ export const SIM: SimData = {
    "date": "16/10/2026",
    "blocks": [
     {
-     "title": "Condition Data di Surrounding DB (order date 15/10 → 1 PO T0409011 PO_DT 16/10, qty 12)",
+     "title": "Condition Data di Surrounding DB (order date 15/10 → 1 PO PO-0001 PO_DT 16/10, qty 12)",
      "table": "TB_R_H0253_ORDER_CONTROL_PRE",
      "kind": "gsys",
      "headers": [
@@ -205,7 +205,7 @@ export const SIM: SimData = {
         "N",
         "Y",
         "ASN0001",
-        "Disubmit ASN (T0409011)"
+        "Disubmit ASN (PO-0001)"
        ],
        "mark": [
         null,
@@ -239,7 +239,7 @@ export const SIM: SimData = {
         "Y",
         "N",
         "NULL",
-        "Di Hold oleh D/S by screen; 6 pcs T0409011 tetap open"
+        "Di Hold oleh D/S by screen; 6 pcs PO-0001 tetap open"
        ],
        "mark": [
         null,
@@ -266,7 +266,7 @@ export const SIM: SimData = {
    "date": "17/10/2026",
    "blocks": [
     {
-     "title": "Condition Data di Surrounding DB (order date 16/10 → 1 PO T0409012 PO_DT 17/10, qty 6)",
+     "title": "Condition Data di Surrounding DB (order date 16/10 → 1 PO PO-0002 PO_DT 17/10, qty 6)",
      "table": "TB_R_H0253_ORDER_CONTROL_PRE",
      "kind": "gsys",
      "headers": [
@@ -591,7 +591,7 @@ export const SIM: SimData = {
         "N",
         "Y",
         "ASN0002",
-        "ASN dengan sisa 6 pcs T0409011 (PO_DT lebih tua); T0409012 jadi open"
+        "ASN dengan sisa 6 pcs PO-0001 (PO_DT lebih tua); PO-0002 jadi open"
        ],
        "mark": [
         null,
@@ -618,7 +618,7 @@ export const SIM: SimData = {
    "date": "18/10/2026",
    "blocks": [
     {
-     "title": "Condition Data di Surrounding DB (order date 17/10: 4 destinasi, total 30 pcs → T0409013 PO_DT 18/10 hanya 18 pcs = ABNORMAL)",
+     "title": "Condition Data di Surrounding DB (order date 17/10: 4 destinasi, total 30 pcs → PO-0003 PO_DT 18/10 hanya 18 pcs = ABNORMAL)",
      "table": "TB_R_H0253_ORDER_CONTROL_PRE",
      "kind": "gsys",
      "headers": [
@@ -1008,7 +1008,7 @@ export const SIM: SimData = {
         "N",
         "N",
         "NULL",
-        "Urutan ke-1 → Case 1 (T0409012)"
+        "Urutan ke-1 → Case 1 (PO-0002)"
        ],
        "mark": [
         null,
@@ -1042,7 +1042,7 @@ export const SIM: SimData = {
         "N",
         "N",
         "NULL",
-        "Urutan ke-2 → Case 2 (T0409013)"
+        "Urutan ke-2 → Case 2 (PO-0003)"
        ],
        "mark": [
         null,
@@ -1076,7 +1076,7 @@ export const SIM: SimData = {
         "N",
         "N",
         "NULL",
-        "Urutan ke-3 → Case 2 (T0409013)"
+        "Urutan ke-3 → Case 2 (PO-0003)"
        ],
        "mark": [
         null,
@@ -1110,7 +1110,7 @@ export const SIM: SimData = {
         "N",
         "N",
         "NULL",
-        "Urutan ke-4 → Case 3 (T0409013), baris tengah"
+        "Urutan ke-4 → Case 3 (PO-0003), baris tengah"
        ],
        "mark": [
         null,
@@ -1144,7 +1144,7 @@ export const SIM: SimData = {
         "N",
         "N",
         "NULL",
-        "Urutan ke-5 → Case 4 (T0409013)"
+        "Urutan ke-5 → Case 4 (PO-0003)"
        ],
        "mark": [
         null,
@@ -1534,7 +1534,7 @@ export const SIM: SimData = {
    "date": "19/10/2026",
    "blocks": [
     {
-     "title": "Condition Data di Surrounding DB (ASN0003 received; CO-14104 di baris tengah di-cancel; split PO T0409014 PO_DT 19/10 qty 12; order date 18/10: 3 destinasi → T0409015 PO_DT 19/10 qty 18)",
+     "title": "Condition Data di Surrounding DB (ASN0003 received; CO-14104 di baris tengah di-cancel; split PO PO-0004 PO_DT 19/10 qty 12; order date 18/10: 3 destinasi → PO-0005 PO_DT 19/10 qty 18)",
      "table": "TB_R_H0253_ORDER_CONTROL_PRE",
      "kind": "gsys",
      "headers": [
@@ -2172,7 +2172,7 @@ export const SIM: SimData = {
         "N",
         "N",
         "NULL",
-        "Sekarang Ready (split PO T0409014)"
+        "Sekarang Ready (split PO PO-0004)"
        ],
        "mark": [
         null,
@@ -2206,7 +2206,7 @@ export const SIM: SimData = {
         "N",
         "N",
         "NULL",
-        "Order date 18/10 Case 1 (sisa T0409014)"
+        "Order date 18/10 Case 1 (sisa PO-0004)"
        ],
        "mark": [
         null,
@@ -2240,7 +2240,7 @@ export const SIM: SimData = {
         "N",
         "N",
         "NULL",
-        "Order date 18/10 Case 2 (T0409015)"
+        "Order date 18/10 Case 2 (PO-0005)"
        ],
        "mark": [
         null,
@@ -2274,7 +2274,7 @@ export const SIM: SimData = {
         "N",
         "N",
         "NULL",
-        "Order date 18/10 Case 3 (T0409015)"
+        "Order date 18/10 Case 3 (PO-0005)"
        ],
        "mark": [
         null,
@@ -2603,7 +2603,7 @@ export const SIM: SimData = {
         "N",
         "Y",
         "ASN0004",
-        "Udah ASN (split PO T0409014)"
+        "Udah ASN (split PO PO-0004)"
        ],
        "mark": [
         null,
@@ -2637,7 +2637,7 @@ export const SIM: SimData = {
         "N",
         "Y",
         "ASN0005",
-        "Udah ASN (Case 1, T0409014)"
+        "Udah ASN (Case 1, PO-0004)"
        ],
        "mark": [
         null,
@@ -2671,7 +2671,7 @@ export const SIM: SimData = {
         "N",
         "Y",
         "ASN0005",
-        "Udah ASN (Case 2, T0409015)"
+        "Udah ASN (Case 2, PO-0005)"
        ],
        "mark": [
         null,
@@ -2705,7 +2705,7 @@ export const SIM: SimData = {
         "N",
         "Y",
         "ASN0005",
-        "Udah ASN (Case 3, T0409015); sisa T0409015 6 pcs open"
+        "Udah ASN (Case 3, PO-0005); sisa PO-0005 6 pcs open"
        ],
        "mark": [
         null,
@@ -2732,7 +2732,7 @@ export const SIM: SimData = {
    "date": "20/10/2026",
    "blocks": [
     {
-     "title": "Condition Data di Surrounding DB (ASN0004 & ASN0005 received; order date 19/10: CO-14111 TH 6 + CO-14115 VN 12 → T0409016 PO_DT 20/10 qty 18)",
+     "title": "Condition Data di Surrounding DB (ASN0004 & ASN0005 received; order date 19/10: CO-14111 TH 6 + CO-14115 VN 12 → PO-0006 PO_DT 20/10 qty 18)",
      "table": "TB_R_H0253_ORDER_CONTROL_PRE",
      "kind": "gsys",
      "headers": [
@@ -3558,7 +3558,7 @@ export const SIM: SimData = {
         "N",
         "N",
         "NULL",
-        "Urutan ke-1: Case 1 (sisa T0409015) + Case 2 (T0409016)"
+        "Urutan ke-1: Case 1 (sisa PO-0005) + Case 2 (PO-0006)"
        ],
        "mark": [
         null,
@@ -3592,7 +3592,7 @@ export const SIM: SimData = {
         "N",
         "N",
         "NULL",
-        "Urutan ke-2: Case 3 (T0409016), belum dikirim supplier"
+        "Urutan ke-2: Case 3 (PO-0006), belum dikirim supplier"
        ],
        "mark": [
         null,
@@ -4091,7 +4091,7 @@ export const SIM: SimData = {
         "N",
         "N",
         "NULL",
-        "Urutan ke-2: Case 3 (T0409016), belum dikirim supplier"
+        "Urutan ke-2: Case 3 (PO-0006), belum dikirim supplier"
        ],
        "mark": [
         null,
@@ -4590,7 +4590,7 @@ export const SIM: SimData = {
         "N",
         "N",
         "NULL",
-        "Urutan ke-2: Case 3 (T0409016), belum dikirim supplier"
+        "Urutan ke-2: Case 3 (PO-0006), belum dikirim supplier"
        ],
        "mark": [
         null,
@@ -7608,15 +7608,15 @@ export const SIM: SimData = {
       "9715310",
       "6",
       "6",
-      "T0409011",
-      "3126035911",
+      "PO-0001",
+      "MF-0001",
       "1",
       "6",
       "6",
       "Y",
       "1",
       "6",
-      "Dipilih → ASN0001; T0409011 sisa 6 open"
+      "Dipilih → ASN0001; PO-0001 sisa 6 open"
      ],
      "mark": [
       null,
@@ -7673,15 +7673,15 @@ export const SIM: SimData = {
       "9722D10",
       "6",
       "6",
-      "T0409011",
-      "3126035911",
+      "PO-0001",
+      "MF-0001",
       "1",
       "6",
       "6",
       "Y",
       "1",
       "6",
-      "Dapat sisa T0409011 (PO_DT 16/10 duluan) → ASN0002; T0409012 open"
+      "Dapat sisa PO-0001 (PO_DT 16/10 duluan) → ASN0002; PO-0002 open"
      ],
      "mark": [
       null,
@@ -7738,8 +7738,8 @@ export const SIM: SimData = {
       "9715310",
       "6",
       "6",
-      "T0409012",
-      "3126035912",
+      "PO-0002",
+      "MF-0002",
       "1",
       "6",
       "6",
@@ -7778,8 +7778,8 @@ export const SIM: SimData = {
       "9715310",
       "3",
       "3",
-      "T0409013",
-      "3126035913",
+      "PO-0003",
+      "MF-0003",
       "2",
       "9",
       "3",
@@ -7818,8 +7818,8 @@ export const SIM: SimData = {
       "9715310",
       "3",
       "3",
-      "T0409013",
-      "3126035913",
+      "PO-0003",
+      "MF-0003",
       "2",
       "12",
       "6",
@@ -7858,8 +7858,8 @@ export const SIM: SimData = {
       "9722D10",
       "6",
       "6",
-      "T0409013",
-      "3126035913",
+      "PO-0003",
+      "MF-0003",
       "3",
       "6",
       "6",
@@ -7898,8 +7898,8 @@ export const SIM: SimData = {
       "9811110",
       "6",
       "6",
-      "T0409013",
-      "3126035913",
+      "PO-0003",
+      "MF-0003",
       "4",
       "6",
       "6",
@@ -8003,8 +8003,8 @@ export const SIM: SimData = {
       "982220",
       "6",
       "6",
-      "T0409014",
-      "3126035914",
+      "PO-0004",
+      "MF-0004",
       "1",
       "6",
       "6",
@@ -8043,15 +8043,15 @@ export const SIM: SimData = {
       "9715310",
       "6",
       "6",
-      "T0409014",
-      "3126035914",
+      "PO-0004",
+      "MF-0004",
       "1",
       "6",
       "6",
       "Y",
       "1",
       "6",
-      "Sisa T0409014 (PO_DT 19/10, PO no lebih kecil) → ASN0005 Case 1-3"
+      "Sisa PO-0004 (PO_DT 19/10, PO no lebih kecil) → ASN0005 Case 1-3"
      ],
      "mark": [
       null,
@@ -8083,8 +8083,8 @@ export const SIM: SimData = {
       "9811110",
       "6",
       "6",
-      "T0409015",
-      "3126035915",
+      "PO-0005",
+      "MF-0005",
       "2",
       "6",
       "6",
@@ -8123,15 +8123,15 @@ export const SIM: SimData = {
       "982220",
       "6",
       "6",
-      "T0409015",
-      "3126035915",
+      "PO-0005",
+      "MF-0005",
       "3",
       "6",
       "6",
       "Y",
       "3",
       "6",
-      "T0409015 sisa 6 open"
+      "PO-0005 sisa 6 open"
      ],
      "mark": [
       null,
@@ -8188,8 +8188,8 @@ export const SIM: SimData = {
       "9715310",
       "12",
       "6",
-      "T0409015",
-      "3126035915",
+      "PO-0005",
+      "MF-0005",
       "1",
       "6",
       "6",
@@ -8228,8 +8228,8 @@ export const SIM: SimData = {
       "9715310",
       "12",
       "6",
-      "T0409016",
-      "3126035916",
+      "PO-0006",
+      "MF-0006",
       "2",
       "12",
       "6",
@@ -8268,8 +8268,8 @@ export const SIM: SimData = {
       "9722D10",
       "6",
       "6",
-      "T0409016",
-      "3126035916",
+      "PO-0006",
+      "MF-0006",
       "3",
       "6",
       "6",
@@ -8333,8 +8333,8 @@ export const SIM: SimData = {
       "9715310",
       "6",
       "6",
-      "T0409016",
-      "3126035916",
+      "PO-0006",
+      "MF-0006",
       "1",
       "6",
       "6",
@@ -8385,7 +8385,7 @@ export const SIM: SimData = {
       "2026-10-15",
       "2",
       "12",
-      "T0409011",
+      "PO-0001",
       "2026-10-16",
       "12",
       "OK",
@@ -8407,7 +8407,7 @@ export const SIM: SimData = {
       "2026-10-16",
       "1",
       "6",
-      "T0409012",
+      "PO-0002",
       "2026-10-17",
       "6",
       "OK",
@@ -8429,11 +8429,11 @@ export const SIM: SimData = {
       "2026-10-17",
       "4",
       "30",
-      "T0409013",
+      "PO-0003",
       "2026-10-18",
       "18",
       "ABNORMAL (kurang 12)",
-      "T0409014 (12)"
+      "PO-0004 (12)"
      ],
      "mark": [
       null,
@@ -8451,7 +8451,7 @@ export const SIM: SimData = {
       "2026-10-18",
       "3",
       "18",
-      "T0409015",
+      "PO-0005",
       "2026-10-19",
       "18",
       "OK",
@@ -8473,7 +8473,7 @@ export const SIM: SimData = {
       "2026-10-19",
       "2",
       "18",
-      "T0409016",
+      "PO-0006",
       "2026-10-20",
       "18",
       "OK",
@@ -8509,9 +8509,9 @@ export const SIM: SimData = {
     {
      "cells": [
       "16/10/2026",
-      "3126035911",
+      "MF-0001",
       "0001",
-      "T0409011",
+      "PO-0001",
       "0001",
       "PART-X",
       "12",
@@ -8533,14 +8533,14 @@ export const SIM: SimData = {
     {
      "cells": [
       "17/10/2026",
-      "3126035912",
+      "MF-0002",
       "0001",
-      "T0409012",
+      "PO-0002",
       "0001",
       "PART-X",
       "6",
       "2026-10-17",
-      "Untuk CO-14103, tapi CO-14103 sudah dapat sisa T0409011 → 18/10 dipakai CO-14105 (Case 1 ASN0003)"
+      "Untuk CO-14103, tapi CO-14103 sudah dapat sisa PO-0001 → 18/10 dipakai CO-14105 (Case 1 ASN0003)"
      ],
      "mark": [
       null,
@@ -8557,9 +8557,9 @@ export const SIM: SimData = {
     {
      "cells": [
       "18/10/2026",
-      "3126035913",
+      "MF-0003",
       "0001",
-      "T0409013",
+      "PO-0003",
       "0001",
       "PART-X",
       "18",
@@ -8581,9 +8581,9 @@ export const SIM: SimData = {
     {
      "cells": [
       "19/10/2026",
-      "3126035914",
+      "MF-0004",
       "0001",
-      "T0409014",
+      "PO-0004",
       "0001",
       "PART-X",
       "12",
@@ -8605,9 +8605,9 @@ export const SIM: SimData = {
     {
      "cells": [
       "19/10/2026",
-      "3126035915",
+      "MF-0005",
       "0001",
-      "T0409015",
+      "PO-0005",
       "0001",
       "PART-X",
       "18",
@@ -8629,9 +8629,9 @@ export const SIM: SimData = {
     {
      "cells": [
       "20/10/2026",
-      "3126035916",
+      "MF-0006",
       "0001",
-      "T0409016",
+      "PO-0006",
       "0001",
       "PART-X",
       "18",
@@ -8668,8 +8668,8 @@ export const SIM: SimData = {
     {
      "cells": [
       "17/10/2026",
-      "T0409011",
-      "3126035911",
+      "PO-0001",
+      "MF-0001",
       "0001",
       "PART-X",
       "12",
@@ -8690,8 +8690,8 @@ export const SIM: SimData = {
     {
      "cells": [
       "18/10/2026",
-      "T0409012",
-      "3126035912",
+      "PO-0002",
+      "MF-0002",
       "0001",
       "PART-X",
       "6",
@@ -8712,8 +8712,8 @@ export const SIM: SimData = {
     {
      "cells": [
       "18/10/2026",
-      "T0409013",
-      "3126035913",
+      "PO-0003",
+      "MF-0003",
       "0001",
       "PART-X",
       "18",
@@ -8734,8 +8734,8 @@ export const SIM: SimData = {
     {
      "cells": [
       "19/10/2026",
-      "T0409014",
-      "3126035914",
+      "PO-0004",
+      "MF-0004",
       "0001",
       "PART-X",
       "12",
@@ -8756,8 +8756,8 @@ export const SIM: SimData = {
     {
      "cells": [
       "20/10/2026",
-      "T0409015",
-      "3126035915",
+      "PO-0005",
+      "MF-0005",
       "0001",
       "PART-X",
       "18",
@@ -8778,8 +8778,8 @@ export const SIM: SimData = {
     {
      "cells": [
       "20/10/2026",
-      "T0409016",
-      "3126035916",
+      "PO-0006",
+      "MF-0006",
       "0001",
       "PART-X",
       "18",
@@ -8838,8 +8838,8 @@ export const SIM: SimData = {
       "001",
       "0000001",
       "6",
-      "T0409011",
-      "3126035911",
+      "PO-0001",
+      "MF-0001",
       "0001",
       "ASN0001",
       "Case 1",
@@ -8882,12 +8882,12 @@ export const SIM: SimData = {
       "001",
       "0000001",
       "6",
-      "T0409011",
-      "3126035911",
+      "PO-0001",
+      "MF-0001",
       "0001",
       "ASN0002",
       "Case 1",
-      "Sisa T0409011 (PO_DT 16/10 lebih tua dari T0409012)"
+      "Sisa PO-0001 (PO_DT 16/10 lebih tua dari PO-0002)"
      ],
      "mark": [
       null,
@@ -8926,8 +8926,8 @@ export const SIM: SimData = {
       "001",
       "0000001",
       "6",
-      "T0409012",
-      "3126035912",
+      "PO-0002",
+      "MF-0002",
       "0001",
       "ASN0003",
       "Case 1",
@@ -8970,8 +8970,8 @@ export const SIM: SimData = {
       "001",
       "0000001",
       "3",
-      "T0409013",
-      "3126035913",
+      "PO-0003",
+      "MF-0003",
       "0001",
       "ASN0003",
       "Case 2",
@@ -9014,8 +9014,8 @@ export const SIM: SimData = {
       "001",
       "0000001",
       "3",
-      "T0409013",
-      "3126035913",
+      "PO-0003",
+      "MF-0003",
       "0001",
       "ASN0003",
       "Case 2",
@@ -9058,8 +9058,8 @@ export const SIM: SimData = {
       "001",
       "0000001",
       "6",
-      "T0409013",
-      "3126035913",
+      "PO-0003",
+      "MF-0003",
       "0001",
       "ASN0003",
       "Case 3",
@@ -9102,8 +9102,8 @@ export const SIM: SimData = {
       "001",
       "0000001",
       "6",
-      "T0409013",
-      "3126035913",
+      "PO-0003",
+      "MF-0003",
       "0001",
       "ASN0003",
       "Case 4",
@@ -9146,8 +9146,8 @@ export const SIM: SimData = {
       "001",
       "0000001",
       "6",
-      "T0409014",
-      "3126035914",
+      "PO-0004",
+      "MF-0004",
       "0001",
       "ASN0004",
       "Case 1",
@@ -9190,8 +9190,8 @@ export const SIM: SimData = {
       "001",
       "0000001",
       "6",
-      "T0409014",
-      "3126035914",
+      "PO-0004",
+      "MF-0004",
       "0001",
       "ASN0005",
       "Case 1",
@@ -9234,8 +9234,8 @@ export const SIM: SimData = {
       "001",
       "0000001",
       "6",
-      "T0409015",
-      "3126035915",
+      "PO-0005",
+      "MF-0005",
       "0001",
       "ASN0005",
       "Case 2",
@@ -9278,8 +9278,8 @@ export const SIM: SimData = {
       "001",
       "0000001",
       "6",
-      "T0409015",
-      "3126035915",
+      "PO-0005",
+      "MF-0005",
       "0001",
       "ASN0005",
       "Case 3",
@@ -9322,8 +9322,8 @@ export const SIM: SimData = {
       "001",
       "0000001",
       "6",
-      "T0409015",
-      "3126035915",
+      "PO-0005",
+      "MF-0005",
       "0001",
       "ASN0006",
       "Case 1",
@@ -9366,8 +9366,8 @@ export const SIM: SimData = {
       "001",
       "0000001",
       "6",
-      "T0409016",
-      "3126035916",
+      "PO-0006",
+      "MF-0006",
       "0001",
       "ASN0007",
       "Case 1",
@@ -9410,8 +9410,8 @@ export const SIM: SimData = {
       "001",
       "0000002",
       "6",
-      "T0409016",
-      "3126035916",
+      "PO-0006",
+      "MF-0006",
       "0001",
       "ASN0007",
       "Case 1",
@@ -9454,8 +9454,8 @@ export const SIM: SimData = {
       "001",
       "0000001",
       "6",
-      "T0409013",
-      "3126035913",
+      "PO-0003",
+      "MF-0003",
       "0001",
       "ASN0003",
       "Case 3",
@@ -9540,6 +9540,6 @@ export const SIM: SimData = {
  ],
  "notes": [
   "21/10/2026 [Search] BENAR (dengan tata ulang XD08): serial 0000001 = ASN0006, serial 0000002 = ASN0007 → open qty 0, tidak ada line diambil. CO-14111 UPDT 6 → tidak diambil; dapat Case 3 ASN0003 lewat Change Order Number.",
-  "Sisa PO open di akhir: T0409016 12 pcs = qty cancel CO-14102 + CO-14104."
+  "Sisa PO open di akhir: PO-0006 12 pcs = qty cancel CO-14102 + CO-14104."
  ]
 };

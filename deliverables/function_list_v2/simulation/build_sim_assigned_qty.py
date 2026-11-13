@@ -68,7 +68,7 @@ def main():
         ['1 baris = ?', '1 baris #TEMP_INSTRUCTION = 1 potongan: line customer order x PO x case supplier. Bukan 1 line customer order.'],
         ['OPEN_ORDER_QTY', 'Sisa qty SELURUH line customer order (H0253 ORDER_STATUS_QTY - qty line yang sudah di TB_R_INSTRUCTION). Sama di setiap potongan line itu.'],
         ['ASSIGNED_QTY', 'Qty POTONGAN INI saja: berapa pcs dari line itu yang masuk ke PO dan case di baris ini.'],
-        ['Kenapa perlu', '1 case bisa berisi beberapa line (case 2 tgl 17-Oct = CO-14106 3 + CO-14107 3); 1 line bisa di beberapa case / PO (CO-14115 12 = case 1 T0409015 6 + case 2 T0409016 6); '
+        ['Kenapa perlu', '1 case bisa berisi beberapa line (case 2 tgl 17-Oct = CO-14106 3 + CO-14107 3); 1 line bisa di beberapa case / PO (CO-14115 12 = case 1 PO-0005 6 + case 2 PO-0006 6); '
                          'qty tanpa PO tetap jadi baris dengan PO_NO kosong (CO-14110 6). OPEN_ORDER_QTY saja tidak bisa menunjukkan pembagian ini.'],
         ['Aturan cek', 'Jumlah ASSIGNED_QTY per line = OPEN_ORDER_QTY line itu; jumlah ASSIGNED_QTY per case = PCS_CASE (case penuh).'],
         ['Dipakai di', 'XD10: Qty per case, Remaining Qty (not assigned), kolom PO dan Content, status Ready / Not Ready. Create ASN: MAPPED_QTY per PO, QTY di TB_R_INSTRUCTION.'],
@@ -84,25 +84,25 @@ def main():
         ['20-Oct', 1, 'CO-14115', '9715310', 12], ['20-Oct', 2, 'CO-14111', '9722D10', 6]], [10, 10, 18, 15, 16])
     ws.cell(r - 1, 1, 'B. PO crossdock yang masih ada sisa (open PO qty = ORDER_QTY - MAPPED_QTY)').font = FB
     put(ws, r, ['Search', 'PO_NO', 'PO_DT', 'ORDER_QTY', 'MAPPED_QTY', 'Open PO qty', 'Catatan'], [
-        ['18-Oct', 'T0409012', '17-Oct', 6, 0, 6, 'PO order date 16-Oct; masih open karena CO-14103 dibayar sisa T0409011 (PO lebih lama)'],
-        ['18-Oct', 'T0409013', '18-Oct', 18, 0, 18, 'PO order date 17-Oct (18 pcs); total order 30 > PO tersedia 24 (6 + 18) = Short PO'],
-        ['20-Oct', 'T0409015', '19-Oct', 18, 12, 6, 'PO order date 18-Oct; 12 sudah dipakai CO-14113 + CO-14114, sisa 6'],
-        ['20-Oct', 'T0409016', '20-Oct', 18, 0, 18, 'PO order date 19-Oct']], [10, 12, 10, 11, 12, 12, 70])
+        ['18-Oct', 'PO-0002', '17-Oct', 6, 0, 6, 'PO order date 16-Oct; masih open karena CO-14103 dibayar sisa PO-0001 (PO lebih lama)'],
+        ['18-Oct', 'PO-0003', '18-Oct', 18, 0, 18, 'PO order date 17-Oct (18 pcs); total order 30 > PO tersedia 24 (6 + 18) = Short PO'],
+        ['20-Oct', 'PO-0005', '19-Oct', 18, 12, 6, 'PO order date 18-Oct; 12 sudah dipakai CO-14113 + CO-14114, sisa 6'],
+        ['20-Oct', 'PO-0006', '20-Oct', 18, 0, 18, 'PO order date 19-Oct']], [10, 12, 10, 11, 12, 12, 70])
 
     # ---------- 3. #TEMP_INSTRUCTION ----------
     ws, r = new_sheet(wb, '3. #TEMP_INSTRUCTION', 'Hasil XD09: line dipotong per PO dan per case 6 pcs', [
         'Qty line diberikan ke PO (urut PO date) lalu dipotong per case 6 pcs. Setiap potongan = 1 baris dengan ASSIGNED_QTY-nya sendiri.'])
     cols = ['Search', 'SORT_SEQ', 'CUSTOMER_ORDER_NO', 'DESTINATION_CD', 'OPEN_ORDER_QTY', 'ASSIGNED_QTY', 'PO_NO', 'CASE_SEQ', 'CUT_FLAG', 'CROSSDOCK_STATUS', 'Kenapa begini']
     rows = [
-        ['18-Oct', 1, 'CO-14105', '9715310', 6, 6, 'T0409012', 1, 'Y', 'Ready', 'Line 6 = 1 potongan: sisa T0409012 6, case 1 penuh'],
-        ['18-Oct', 2, 'CO-14106', '9715310', 3, 3, 'T0409013', 2, 'N', 'Ready', 'Case 2 baru terisi 3 dari 6 -> belum boleh dipotong (CUT N)'],
-        ['18-Oct', 3, 'CO-14107', '9715310', 3, 3, 'T0409013', 2, 'Y', 'Ready', 'Case 2 = CO-14106 3 + CO-14107 3: 2 baris, 1 case'],
-        ['18-Oct', 4, 'CO-14104', '9722D10', 6, 6, 'T0409013', 3, 'Y', 'Ready', 'Case 3'],
-        ['18-Oct', 5, 'CO-14109', '9811110', 6, 6, 'T0409013', 4, 'Y', 'Ready', 'Case 4; T0409013 habis (3+3+6+6 = 18)'],
+        ['18-Oct', 1, 'CO-14105', '9715310', 6, 6, 'PO-0002', 1, 'Y', 'Ready', 'Line 6 = 1 potongan: sisa PO-0002 6, case 1 penuh'],
+        ['18-Oct', 2, 'CO-14106', '9715310', 3, 3, 'PO-0003', 2, 'N', 'Ready', 'Case 2 baru terisi 3 dari 6 -> belum boleh dipotong (CUT N)'],
+        ['18-Oct', 3, 'CO-14107', '9715310', 3, 3, 'PO-0003', 2, 'Y', 'Ready', 'Case 2 = CO-14106 3 + CO-14107 3: 2 baris, 1 case'],
+        ['18-Oct', 4, 'CO-14104', '9722D10', 6, 6, 'PO-0003', 3, 'Y', 'Ready', 'Case 3'],
+        ['18-Oct', 5, 'CO-14109', '9811110', 6, 6, 'PO-0003', 4, 'Y', 'Ready', 'Case 4; PO-0003 habis (3+3+6+6 = 18)'],
         ['18-Oct', 6, 'CO-14110', '982220', 6, 6, None, 5, 'Y', 'Not Ready', 'PO tidak cukup (Short PO): baris tetap dibuat, PO_NO kosong'],
-        ['20-Oct', 1, 'CO-14115', '9715310', 12, 6, 'T0409015', 1, 'Y', 'Ready', '1 line 12 pcs -> potongan 1: sisa T0409015 6 = case 1'],
-        ['20-Oct', 1, 'CO-14115', '9715310', 12, 6, 'T0409016', 2, 'Y', 'Ready', 'Potongan 2: T0409016 6 = case 2 (OPEN 12 tetap sama di kedua baris)'],
-        ['20-Oct', 2, 'CO-14111', '9722D10', 6, 6, 'T0409016', 3, 'Y', 'Ready', 'Case 3'],
+        ['20-Oct', 1, 'CO-14115', '9715310', 12, 6, 'PO-0005', 1, 'Y', 'Ready', '1 line 12 pcs -> potongan 1: sisa PO-0005 6 = case 1'],
+        ['20-Oct', 1, 'CO-14115', '9715310', 12, 6, 'PO-0006', 2, 'Y', 'Ready', 'Potongan 2: PO-0006 6 = case 2 (OPEN 12 tetap sama di kedua baris)'],
+        ['20-Oct', 2, 'CO-14111', '9722D10', 6, 6, 'PO-0006', 3, 'Y', 'Ready', 'Case 3'],
     ]
     fills = {i: (BAD if row[9] == 'Not Ready' else None) for i, row in enumerate(rows, 1)}
     t0 = r
@@ -127,9 +127,9 @@ def main():
     # ---------- 5. XD10 per case ----------
     ws, r = new_sheet(wb, '5. XD10 per case', 'Tampilan XD10 per case dihitung dari ASSIGNED_QTY', [
         'Qty = SUM ASSIGNED_QTY case itu; Remaining Qty (not assigned) = SUM ASSIGNED_QTY yang PO_NO kosong; Ready kalau Remaining 0.'])
-    cases = [('18-Oct', 1, 'T0409012 6', 'CO-14105 9715310 6'), ('18-Oct', 2, 'T0409013 6', 'CO-14106 9715310 3, CO-14107 9715310 3'),
-             ('18-Oct', 3, 'T0409013 6', 'CO-14104 9722D10 6'), ('18-Oct', 4, 'T0409013 6', 'CO-14109 9811110 6'), ('18-Oct', 5, '-', 'CO-14110 982220 6'),
-             ('20-Oct', 1, 'T0409015 6', 'CO-14115 9715310 6'), ('20-Oct', 2, 'T0409016 6', 'CO-14115 9715310 6'), ('20-Oct', 3, 'T0409016 6', 'CO-14111 9722D10 6')]
+    cases = [('18-Oct', 1, 'PO-0002 6', 'CO-14105 9715310 6'), ('18-Oct', 2, 'PO-0003 6', 'CO-14106 9715310 3, CO-14107 9715310 3'),
+             ('18-Oct', 3, 'PO-0003 6', 'CO-14104 9722D10 6'), ('18-Oct', 4, 'PO-0003 6', 'CO-14109 9811110 6'), ('18-Oct', 5, '-', 'CO-14110 982220 6'),
+             ('20-Oct', 1, 'PO-0005 6', 'CO-14115 9715310 6'), ('20-Oct', 2, 'PO-0006 6', 'CO-14115 9715310 6'), ('20-Oct', 3, 'PO-0006 6', 'CO-14111 9722D10 6')]
     rows = []
     for i, (s, c, po, content) in enumerate(cases):
         rr = r + 1 + i
@@ -142,7 +142,7 @@ def main():
     ws, r = new_sheet(wb, '6. Create ASN', 'Create ASN 18-Oct (case 1-4 dipilih, ASN0003): ASSIGNED_QTY dipakai untuk MAPPED_QTY dan TB_R_INSTRUCTION', [
         'Case 5 Not Ready (tanpa PO) tidak bisa dipilih.'])
     ws.cell(r - 1, 1, 'A. TB_R_PRA_DAILY_ORDER_MAPPED: MAPPED_QTY ditambah ASSIGNED_QTY per PO').font = FB
-    pos = [('T0409012', 6, 0), ('T0409013', 18, 0)]
+    pos = [('PO-0002', 6, 0), ('PO-0003', 18, 0)]
     rows = []
     for i, (po, oq, before) in enumerate(pos):
         rr = r + 1 + i
@@ -150,16 +150,16 @@ def main():
     r = put(ws, r, ['PO_NO', 'ORDER_QTY', 'MAPPED_QTY sebelum', '+ ASSIGNED_QTY case 1-4', 'MAPPED_QTY sesudah', 'Open PO qty sesudah'], rows,
             [12, 11, 16, 20, 17, 17], key_cols=('+ ASSIGNED_QTY case 1-4',))
     ws.cell(r - 1, 1, 'B. TB_R_INSTRUCTION: 1 baris per potongan, QTY = ASSIGNED_QTY').font = FB
-    rows = [['ASN0003', 1, 'CO-14105', '9715310', 'T0409012', 6], ['ASN0003', 2, 'CO-14106', '9715310', 'T0409013', 3],
-            ['ASN0003', 2, 'CO-14107', '9715310', 'T0409013', 3], ['ASN0003', 3, 'CO-14104', '9722D10', 'T0409013', 6],
-            ['ASN0003', 4, 'CO-14109', '9811110', 'T0409013', 6]]
+    rows = [['ASN0003', 1, 'CO-14105', '9715310', 'PO-0002', 6], ['ASN0003', 2, 'CO-14106', '9715310', 'PO-0003', 3],
+            ['ASN0003', 2, 'CO-14107', '9715310', 'PO-0003', 3], ['ASN0003', 3, 'CO-14104', '9722D10', 'PO-0003', 6],
+            ['ASN0003', 4, 'CO-14109', '9811110', 'PO-0003', 6]]
     r = put(ws, r, ['ASN_NO', 'CASE_NO', 'CUSTOMER_ORDER_NO', 'DESTINATION_CD', 'PO_NO', 'QTY (= ASSIGNED_QTY)'], rows, [10, 9, 18, 15, 12, 18],
             key_cols=('QTY (= ASSIGNED_QTY)',))
     ws.cell(r - 1, 1, 'C. Search berikutnya (19-Oct)').font = FB
     put(ws, r, ['Akibat', 'Penjelasan'], [
         ['Open qty line', 'Open qty = ORDER_STATUS_QTY - SUM(QTY TB_R_INSTRUCTION): CO-14105..CO-14109 jadi 0, tidak diambil lagi; CO-14110 tetap 6.'],
-        ['Open PO', 'T0409012 dan T0409013 sisa 0 (lihat tabel A) -> tidak diambil lagi; CO-14110 menunggu split PO T0409014.'],
-        ['Kalau tanpa ASSIGNED_QTY', 'Tidak bisa tahu PO mana dapat berapa pcs (case 2 dibayar T0409013 dari 2 line) dan bagian line mana yang sudah ada di ASN (CO-14115 case 1 di ASN0006, case 2 di ASN0007).'],
+        ['Open PO', 'PO-0002 dan PO-0003 sisa 0 (lihat tabel A) -> tidak diambil lagi; CO-14110 menunggu split PO PO-0004.'],
+        ['Kalau tanpa ASSIGNED_QTY', 'Tidak bisa tahu PO mana dapat berapa pcs (case 2 dibayar PO-0003 dari 2 line) dan bagian line mana yang sudah ada di ASN (CO-14115 case 1 di ASN0006, case 2 di ASN0007).'],
     ], [24, 120])
 
     tmp = tempfile.mkdtemp()

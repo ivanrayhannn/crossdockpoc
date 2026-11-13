@@ -140,9 +140,9 @@ flowchart TB
 
 ![1. Initial Mode: choose Delivery Date and Rit, then Search](../../deliverables/uiss_screens/asn_crossdock/c_01_initial.png)
 
-### 2. Delivery plan after Search (supplier view, 18-Oct, simulasi_asn_rev.xlsx): PART-X 17-Oct, cases 1-4 Ready, case 5 Not Ready (Short PO: T0409013 18 of 30 pcs)
+### 2. Delivery plan after Search (supplier view, 18-Oct, simulasi_asn_rev.xlsx): PART-X 17-Oct, cases 1-4 Ready, case 5 Not Ready (Short PO: PO-0003 18 of 30 pcs)
 
-![2. Delivery plan after Search (supplier view, 18-Oct, simulasi_asn_rev.xlsx): PART-X 17-Oct, cases 1-4 Ready, case 5 Not Ready (Short PO: T0409013 18 of 30 pcs)](../../deliverables/uiss_screens/asn_crossdock/c_02_delivery_plan.png)
+![2. Delivery plan after Search (supplier view, 18-Oct, simulasi_asn_rev.xlsx): PART-X 17-Oct, cases 1-4 Ready, case 5 Not Ready (Short PO: PO-0003 18 of 30 pcs)](../../deliverables/uiss_screens/asn_crossdock/c_02_delivery_plan.png)
 
 ### 3. D/S team: destination detail (warehouse cases, Hold Flag) and customer orders of a destination (open qty, cases, PO)
 
@@ -208,9 +208,9 @@ flowchart TB
 
 ![9. Submit ID banner (result in Log Monitoring)](../../deliverables/uiss_screens/asn_crossdock/c_09_submit_id.png)
 
-### 10. Delivery plan after submit: only case 5 (CO-14110) is left, Not Ready until the split PO T0409014
+### 10. Delivery plan after submit: only case 5 (CO-14110) is left, Not Ready until the split PO PO-0004
 
-![10. Delivery plan after submit: only case 5 (CO-14110) is left, Not Ready until the split PO T0409014](../../deliverables/uiss_screens/asn_crossdock/c_10_list_after.png)
+![10. Delivery plan after submit: only case 5 (CO-14110) is left, Not Ready until the split PO PO-0004](../../deliverables/uiss_screens/asn_crossdock/c_10_list_after.png)
 
 ## 4. Item description
 
@@ -239,7 +239,7 @@ flowchart TB
 | 18 | Qty (pcs) | #TEMP_INSTRUCTION | ASSIGNED_QTY | Number | - | O | Label | Right | - | N | ZZZ9 | - | Pcs of the case (= PCS_CASE). |
 | 19 | Remaining Qty (not assigned) | #TEMP_INSTRUCTION | ASSIGNED_QTY (PO_NO NULL) | Number | - | O | Label | Right | - | N | ZZZ9 | - | Pcs of the case without a PO yet (sum of the slices with PO_NO NULL); 0 when the whole case is assigned; red when > 0. |
 | 20 | Content (D/S team) | #TEMP_INSTRUCTION | DESTINATION_CD / CUSTOMER_ORDER_NO / ASSIGNED_QTY | Char | - | O | Label | Left | - | N | - | - | D/S team only (not shown to the supplier): slices of the case in H0253 order, e.g. VN 3 (CO-14106) + VN 3 (CO-14107). |
-| 21 | PO | #TEMP_INSTRUCTION | PO_NO / ASSIGNED_QTY | Char | - | O | Label | Left | - | N | {PO No} {qty} | - | POs of the case with the assigned qty, e.g. T0409013 6. |
+| 21 | PO | #TEMP_INSTRUCTION | PO_NO / ASSIGNED_QTY | Char | - | O | Label | Left | - | N | {PO No} {qty} | - | POs of the case with the assigned qty, e.g. PO-0003 6. |
 | 22 | PO Status | #TEMP_INSTRUCTION | CROSSDOCK_STATUS | Char | - | O | Label | Left | - | N | - | - | '6' Ready (green) / '7' Not Ready (amber): the case or an earlier case has no PO yet. 'On Hold (D/S)' (grey) when the supplier + plant is on hold; check box disabled (message no. 12). |
 | **<Destination Detail (D/S team only)>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | 23 | Destination | #TEMP_INSTRUCTION | DESTINATION_CD | Char | 7 | O | Grid | Left | - | N | {code} · {name} | - | One row per destination with its number of cases (qty / pcs/case); name from TB_M_H0125_DESTINATION. |
@@ -592,9 +592,9 @@ flowchart TB
 
 ### 5.0 Behaviour shown by the simulation (simulasi_asn_rev.xlsx)
 
-- 18-Oct, delivery plan PART-X 17-Oct: 5 cases; PO check order 30 pcs vs PO T0409013 18 pcs → Short PO; cases 1-4 Ready (T0409012 rest 6 + T0409013), case 5 (CO-14110) Not Ready with Remaining Qty 6.
+- 18-Oct, delivery plan PART-X 17-Oct: 5 cases; PO check order 30 pcs vs PO PO-0003 18 pcs → Short PO; cases 1-4 Ready (PO-0002 rest 6 + PO-0003), case 5 (CO-14110) Not Ready with Remaining Qty 6.
 - The selection starts at case 1 and ends on a case with CUT_FLAG Y: ticking case 3 selects cases 1-3; case 5 is disabled. Per Part Number the oldest Customer Order Date first: on 19-Oct the cases of 18-Oct show "Wait: 17-Oct first" until case 1 of 17-Oct (CO-14110) is ticked.
-- [Create ASN] with cases 1-4: 5 rows in TB_R_INSTRUCTION, PO_MAPPED_FLAG Y on the 5 lines that are complete (CO-14110 stays N), MAPPED_QTY T0409012 6, T0409013 18. [Submit ASN] gives ASN0003 with case numbers C-0003-01 … 04; only case 5 stays in the delivery plan.
+- [Create ASN] with cases 1-4: 5 rows in TB_R_INSTRUCTION, PO_MAPPED_FLAG Y on the 5 lines that are complete (CO-14110 stays N), MAPPED_QTY PO-0002 6, PO-0003 18. [Submit ASN] gives ASN0003 with case numbers C-0003-01 … 04; only case 5 stays in the delivery plan.
 - One line in two ASNs: CO-14115 12 pcs = case 1 (ASN0006, PO_MAPPED_FLAG N, open 6) and case 2 (ASN0007, PO_MAPPED_FLAG Y).
 - D/S hold of Thailand (CO-14104) after the supplier ticked the unit: [Create ASN] fails (MSG8); the cases are computed again without Thailand. A draft not submitted is released by the next XD08 run ([Submit ASN] of the old draft: MSG11). A cancel after the ASN goes to XD11 (CO-14104 in ASN0003 case 3 → CO-14111).
 
@@ -901,46 +901,46 @@ New table: Reduce PO Readiness (case) per destination of a unit (Part Number + C
 **Sample Create ASN - ASN Cross Dock Creation (simulasi_asn_rev.xlsx, 18-Oct-2026)**
 
 - Data of simulasi_asn_rev.xlsx (also in the prototype, business date 18-Oct). Supplier 5001 plant 1, Delivery Date 18-Oct-2026, Rit 1, Route SD01. PART-X, Pcs/Case = 6. ASN0001 (CO-14101) and ASN0002 (CO-14103) are already submitted, so the oldest open Customer Order Date is 17-Oct.
-- Order date 17-Oct: 4 destinations, 30 pcs; PO T0409013 (PO date 18-Oct) has only 18 pcs (Short PO, abnormality); the rest of T0409012 (6) is taken first (older PO date). The split PO T0409014 (12) comes on 19-Oct.
+- Order date 17-Oct: 4 destinations, 30 pcs; PO PO-0003 (PO date 18-Oct) has only 18 pcs (Short PO, abnormality); the rest of PO-0002 (6) is taken first (older PO date). The split PO PO-0004 (12) comes on 19-Oct.
 - The supplier ticks the unit PART-X 17-Oct (cases 1-4, case 5 is Not Ready) and clicks [Create ASN]; the submit gives ASN0003.
 
 ### A. Input: pre-mapping of XD09 (#TEMP_INSTRUCTION) in H0253 order: Customer Order Date, Customer Code, Customer Order No, …
 
 | Sort Seq | Customer Order No | Detailed Item No | Serial No | Destination | Open Qty | PO No | Assigned Qty | Case | Cut | Status |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 1 | CO-14105 | 001 | 0000001 | 9715310 (Vietnam) | 6 | T0409012 | 6 | 1 | Y | 6 |
-| 2 | CO-14106 | 001 | 0000001 | 9715310 (Vietnam) | 3 | T0409013 | 3 | 2 | N | 6 |
-| 3 | CO-14107 | 001 | 0000001 | 9715310 (Vietnam) | 3 | T0409013 | 3 | 2 | Y | 6 |
-| 4 | CO-14104 | 001 | 0000001 | 9722D10 (Thailand) | 6 | T0409013 | 6 | 3 | Y | 6 |
-| 5 | CO-14109 | 001 | 0000001 | 9811110 (Philippines) | 6 | T0409013 | 6 | 4 | Y | 6 |
+| 1 | CO-14105 | 001 | 0000001 | 9715310 (Vietnam) | 6 | PO-0002 | 6 | 1 | Y | 6 |
+| 2 | CO-14106 | 001 | 0000001 | 9715310 (Vietnam) | 3 | PO-0003 | 3 | 2 | N | 6 |
+| 3 | CO-14107 | 001 | 0000001 | 9715310 (Vietnam) | 3 | PO-0003 | 3 | 2 | Y | 6 |
+| 4 | CO-14104 | 001 | 0000001 | 9722D10 (Thailand) | 6 | PO-0003 | 6 | 3 | Y | 6 |
+| 5 | CO-14109 | 001 | 0000001 | 9811110 (Philippines) | 6 | PO-0003 | 6 | 4 | Y | 6 |
 | 6 | CO-14110 | 001 | 0000001 | 982220 | 6 | — | 6 | 5 | Y | 7 |
 
 ### B. Input: PO parts before [Create ASN] (Pra Daily Order: manifest with CROSS_DOCK_FLAG = 'X')
 
 | PO No | Manifest No | Manifest Item | Part No | PO Qty (ORDER_QTY) | Mapped Qty (TB_R_PRA_DAILY_ORDER_MAPPED) | Open Qty |
 |---|---|---|---|---|---|---|
-| T0409012 | 3126035912 | 0001 | PART-X | 6 | 0 | 6 |
-| T0409013 | 3126035913 | 0001 | PART-X | 18 | 0 | 18 |
+| PO-0002 | MF-0002 | 0001 | PART-X | 6 | 0 | 6 |
+| PO-0003 | MF-0003 | 0001 | PART-X | 18 | 0 | 18 |
 
 ### C. Supplier cases (6 pcs in H0253 order; CUT_FLAG Y = the ASN may stop after the case)
 
 | Case | Qty | Content (customer order qty (PO)) | CUT_FLAG | Status |
 |---|---|---|---|---|
-| Case 1 | 6 | CO-14105 6 (T0409012) | Y | Ready |
-| Case 2 | 6 | CO-14106 3 (T0409013) + CO-14107 3 (T0409013) | Y | Ready |
-| Case 3 | 6 | CO-14104 6 (T0409013) | Y | Ready |
-| Case 4 | 6 | CO-14109 6 (T0409013) | Y | Ready |
+| Case 1 | 6 | CO-14105 6 (PO-0002) | Y | Ready |
+| Case 2 | 6 | CO-14106 3 (PO-0003) + CO-14107 3 (PO-0003) | Y | Ready |
+| Case 3 | 6 | CO-14104 6 (PO-0003) | Y | Ready |
+| Case 4 | 6 | CO-14109 6 (PO-0003) | Y | Ready |
 | Case 5 | 6 | CO-14110 6 (no PO) | Y | Not Ready |
 
 ### D. Result: rows inserted into TB_R_INSTRUCTION (cases 1-4; ASN_NO / CASE_NO filled on submit)
 
 | INSTRUCTION_ID | CASE_SEQ | LINE_SEQ | PART_NO | ORDER_DT | DESTINATION_CD | CUSTOMER_ORDER_NO | DETAILED_ITEM_NO | SERIAL_NO | QTY | PO_NO | MANIFEST_NO | MANIFEST_ITEM | DELIVERY_DT | RIT_CYCLE | ROUTE | ASN_NO | CASE_NO |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 3 | 1 | 1 | PART-X | 17-Oct-2026 | 9715310 | CO-14105 | 001 | 0000001 | 6 | T0409012 | 3126035912 | 0001 | 18-Oct-2026 | 1 | SD01 | (NULL) | (NULL) |
-| 4 | 2 | 1 | PART-X | 17-Oct-2026 | 9715310 | CO-14106 | 001 | 0000001 | 3 | T0409013 | 3126035913 | 0001 | 18-Oct-2026 | 1 | SD01 | (NULL) | (NULL) |
-| 5 | 2 | 2 | PART-X | 17-Oct-2026 | 9715310 | CO-14107 | 001 | 0000001 | 3 | T0409013 | 3126035913 | 0001 | 18-Oct-2026 | 1 | SD01 | (NULL) | (NULL) |
-| 6 | 3 | 1 | PART-X | 17-Oct-2026 | 9722D10 | CO-14104 | 001 | 0000001 | 6 | T0409013 | 3126035913 | 0001 | 18-Oct-2026 | 1 | SD01 | (NULL) | (NULL) |
-| 7 | 4 | 1 | PART-X | 17-Oct-2026 | 9811110 | CO-14109 | 001 | 0000001 | 6 | T0409013 | 3126035913 | 0001 | 18-Oct-2026 | 1 | SD01 | (NULL) | (NULL) |
+| 3 | 1 | 1 | PART-X | 17-Oct-2026 | 9715310 | CO-14105 | 001 | 0000001 | 6 | PO-0002 | MF-0002 | 0001 | 18-Oct-2026 | 1 | SD01 | (NULL) | (NULL) |
+| 4 | 2 | 1 | PART-X | 17-Oct-2026 | 9715310 | CO-14106 | 001 | 0000001 | 3 | PO-0003 | MF-0003 | 0001 | 18-Oct-2026 | 1 | SD01 | (NULL) | (NULL) |
+| 5 | 2 | 2 | PART-X | 17-Oct-2026 | 9715310 | CO-14107 | 001 | 0000001 | 3 | PO-0003 | MF-0003 | 0001 | 18-Oct-2026 | 1 | SD01 | (NULL) | (NULL) |
+| 6 | 3 | 1 | PART-X | 17-Oct-2026 | 9722D10 | CO-14104 | 001 | 0000001 | 6 | PO-0003 | MF-0003 | 0001 | 18-Oct-2026 | 1 | SD01 | (NULL) | (NULL) |
+| 7 | 4 | 1 | PART-X | 17-Oct-2026 | 9811110 | CO-14109 | 001 | 0000001 | 6 | PO-0003 | MF-0003 | 0001 | 18-Oct-2026 | 1 | SD01 | (NULL) | (NULL) |
 
 ### E. Result: other tables changed in the same transaction
 
@@ -948,8 +948,8 @@ New table: Reduce PO Readiness (case) per destination of a unit (Part Number + C
 |---|---|---|---|---|
 | TB_R_H0253_ORDER_CONTROL_PRE | CO-14104, CO-14105, CO-14106, CO-14107, CO-14109 (whole line in the ASN) | PO_MAPPED_FLAG | N | Y |
 | TB_R_H0253_ORDER_CONTROL_PRE | CO-14110 (case 5, not sent) | PO_MAPPED_FLAG | N | N |
-| TB_R_PRA_DAILY_ORDER_MAPPED | T0409012 / 3126035912 / 0001 / PART-X | MAPPED_QTY | 0 | 6 |
-| TB_R_PRA_DAILY_ORDER_MAPPED | T0409013 / 3126035913 / 0001 / PART-X | MAPPED_QTY | 0 | 18 |
+| TB_R_PRA_DAILY_ORDER_MAPPED | PO-0002 / MF-0002 / 0001 / PART-X | MAPPED_QTY | 0 | 6 |
+| TB_R_PRA_DAILY_ORDER_MAPPED | PO-0003 / MF-0003 / 0001 / PART-X | MAPPED_QTY | 0 | 18 |
 
 ### F. Result on the screen: Case List (Draft)
 
@@ -960,7 +960,7 @@ New table: Reduce PO Readiness (case) per destination of a unit (Part Number + C
 | Delivery Date · Rit · Route | 18-Oct-2026 · Rit 1 · SD01 |
 | Delivery Qty | 24 pcs |
 | Cases | 4 cases |
-| Case 1 .. Case 4 | Case Number, Part Number, Customer Order Date, Qty (6 each); the expand button shows the PO No, Manifest No, Manifest Item and PO Qty (Case 1: T0409012; Cases 2-4: T0409013) |
+| Case 1 .. Case 4 | Case Number, Part Number, Customer Order Date, Qty (6 each); the expand button shows the PO No, Manifest No, Manifest Item and PO Qty (Case 1: PO-0002; Cases 2-4: PO-0003) |
 | [Submit ASN] | Confirmation: Submit ASN? 4 cases (24 pcs) will be created into ASN0003, delivery 18-Oct-2026 · Rit 1. |
 
 ### G. Scenarios
@@ -970,7 +970,7 @@ New table: Reduce PO Readiness (case) per destination of a unit (Part Number + C
 | N1 | Create ASN with the unit PART-X 17-Oct ticked (cases 1-4) | Sections C to F: 4 cases, 5 rows in TB_R_INSTRUCTION, PO_MAPPED_FLAG Y on 5 lines, mapped qty added; Case List opens. |
 | N2 | [Submit ASN] and [Yes, submit] | Submit ID handed to the submit process (5.7); ASN0003 and CASE_NO are written back to the 5 rows; only case 5 (CO-14110, Not Ready) stays in the delivery plan. |
 | N3 | [Back] / [Cancel] on the Case List | The 5 rows are deleted from TB_R_INSTRUCTION, PO_MAPPED_FLAG back to N, MAPPED_QTY back to 0; the unit is listed again. |
-| N4 | 19-Oct: split PO T0409014 released | Case 5 (CO-14110) is Ready → ASN0004; order date 18-Oct (3 destinations) → ASN0005. |
+| N4 | 19-Oct: split PO PO-0004 released | Case 5 (CO-14110) is Ready → ASN0004; order date 18-Oct (3 destinations) → ASN0005. |
 | E1 | The D/S team holds Thailand (CO-14104) after the supplier ticked the unit | MSG8; the whole create fails, nothing is inserted, the delivery plan is refreshed and all units are unticked. |
 | E2 | The unit is no longer Ready when [Create ASN] is clicked | MSG7; nothing is inserted; the delivery plan is refreshed. |
 | E3 | D/S team ticks PART-X (supplier 5001-1) and a unit of supplier 5002-1 | MSG9; nothing is inserted. |
@@ -981,10 +981,10 @@ New table: Reduce PO Readiness (case) per destination of a unit (Part Number + C
 
 | Case | Qty | Remaining Qty (not assigned) | Content (D/S team only) | PO | CUT_FLAG | PO Status |
 |---|---|---|---|---|---|---|
-| Case 1 | 6 | 0 | VN 6 (CO-14105) | T0409012 6 | Y | Ready |
-| Case 2 | 6 | 0 | VN 3 (CO-14106) + VN 3 (CO-14107) | T0409013 6 | Y | Ready |
-| Case 3 | 6 | 0 | TH 6 (CO-14104) | T0409013 6 | Y | Ready |
-| Case 4 | 6 | 0 | PH 6 (CO-14109) | T0409013 6 | Y | Ready |
+| Case 1 | 6 | 0 | VN 6 (CO-14105) | PO-0002 6 | Y | Ready |
+| Case 2 | 6 | 0 | VN 3 (CO-14106) + VN 3 (CO-14107) | PO-0003 6 | Y | Ready |
+| Case 3 | 6 | 0 | TH 6 (CO-14104) | PO-0003 6 | Y | Ready |
+| Case 4 | 6 | 0 | PH 6 (CO-14109) | PO-0003 6 | Y | Ready |
 | Case 5 | 6 | 6 | 982220 6 (CO-14110) | — | Y | Not Ready |
 
 ### I. Check box scenarios (simulation)
@@ -995,6 +995,6 @@ New table: Reduce PO Readiness (case) per destination of a unit (Part Number + C
 | C2 | 18-Oct: tick case 3 | 1-3 | Cases 1-2 are ticked too (the selection starts at case 1); ASN 18 pcs. |
 | C3 | 18-Oct: tick the unit check box | 1-4 | All Ready cases; case 5 (Not Ready) is not ticked; ASN 24 pcs = ASN0003. |
 | C4 | From 1-4, untick case 2 | 1 | Cases 2-4 are unticked; back to case 1. |
-| C5 | Case 5 (no PO) | - | Disabled; tooltip message no. 2; Ready on 19-Oct with the split PO T0409014. |
+| C5 | Case 5 (no PO) | - | Disabled; tooltip message no. 2; Ready on 19-Oct with the split PO PO-0004. |
 | C6 | 19-Oct: tick case 1 of 18-Oct first | - | Disabled (Wait: 17-Oct first); after case 1 of 17-Oct is ticked the cases of 18-Oct can be ticked. |
 | C7 | Cases without a cut in between (message no. 10) | - | Not in this data: every case of PART-X ends on a cut. When a case does not end on a cut, the next cases up to the cut are ticked together (MSG10). |

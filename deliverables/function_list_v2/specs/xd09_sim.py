@@ -4,7 +4,7 @@ from scan_pack import pack
 VN, TH, PH, D4 = '9715310', '9722D10', '9811110', '982220'
 CU = {VN: '9715300', TH: '9722D10', PH: '9811100', D4: '982200'}
 SH = {VN: 'VN', TH: 'TH', PH: 'PH', D4: '982220'}
-MF = {f'T04090{n}': f'31260359{n}' for n in range(11, 17)}
+MF = {f'PO-000{n}': f'MF-000{n}' for n in range(1, 7)}
 
 
 def line(co, od, d, q):
@@ -18,14 +18,14 @@ O18 = [line('CO-14112', '2026-10-18', VN, 6), line('CO-14113', '2026-10-18', PH,
 O19 = [line('CO-14111', '2026-10-19', TH, 6), line('CO-14115', '2026-10-19', VN, 12)]
 # [Search] of each day: (title, units, open PO qty in PO_DT order)
 SEARCHES = [
-    ('16-Oct: CO-14102 is on hold, only CO-14101 is taken; T0409011 keeps 6 pcs open', [[line('CO-14101', '2026-10-15', VN, 6)]], [('T0409011', 12)]),
-    ('17-Oct: CO-14102 cancelled (UPD_STATUS 2); CO-14103 takes the rest of T0409011 (older PO date); T0409012 stays open', [[line('CO-14103', '2026-10-16', TH, 6)]],
-     [('T0409011', 6), ('T0409012', 6)]),
-    ('18-Oct: order date 17-Oct, 4 destinations, 30 pcs; PO 24 pcs (T0409012 rest 6 + T0409013 18): Short PO, case 5 Not Ready', [O17],
-     [('T0409012', 6), ('T0409013', 18)]),
-    ('19-Oct: rest of 17-Oct (CO-14104 cancelled, cases 1-4 in ASN0003) with the split PO T0409014, then order date 18-Oct', [[O17[-1]], O18],
-     [('T0409014', 12), ('T0409015', 18)]),
-    ('20-Oct: order date 19-Oct: CO-14115 12 pcs = 2 cases (one line in 2 ASNs), CO-14111', [O19], [('T0409015', 6), ('T0409016', 18)]),
+    ('16-Oct: CO-14102 is on hold, only CO-14101 is taken; PO-0001 keeps 6 pcs open', [[line('CO-14101', '2026-10-15', VN, 6)]], [('PO-0001', 12)]),
+    ('17-Oct: CO-14102 cancelled (UPD_STATUS 2); CO-14103 takes the rest of PO-0001 (older PO date); PO-0002 stays open', [[line('CO-14103', '2026-10-16', TH, 6)]],
+     [('PO-0001', 6), ('PO-0002', 6)]),
+    ('18-Oct: order date 17-Oct, 4 destinations, 30 pcs; PO 24 pcs (PO-0002 rest 6 + PO-0003 18): Short PO, case 5 Not Ready', [O17],
+     [('PO-0002', 6), ('PO-0003', 18)]),
+    ('19-Oct: rest of 17-Oct (CO-14104 cancelled, cases 1-4 in ASN0003) with the split PO PO-0004, then order date 18-Oct', [[O17[-1]], O18],
+     [('PO-0004', 12), ('PO-0005', 18)]),
+    ('20-Oct: order date 19-Oct: CO-14115 12 pcs = 2 cases (one line in 2 ASNs), CO-14111', [O19], [('PO-0005', 6), ('PO-0006', 18)]),
 ]
 COLS = ['Sort Seq', 'Order Date', 'Customer Code', 'Cust Order No', 'Dest', 'Open Qty', 'PO No', 'Assigned Qty', 'Case', 'Cum Dest Qty', 'Seq Qty', 'Cut', 'Status']
 WIDTHS = [7, 10, 11, 12, 8, 8, 10, 10, 6, 10, 7, 5, 7]
@@ -52,9 +52,9 @@ SAMPLE = {
     'sections': [{'title': f'{chr(65 + i)}. {t}', 'columns': COLS, 'widths': WIDTHS, 'rows': rows(u, p)} for i, (t, u, p) in enumerate(SEARCHES)] + [
         {'title': 'F. PO per Customer Order Date (PO date = order date + 1, qty = total order qty of all destinations)',
          'columns': ['Customer Order Date', 'Destinations', 'Total Order Qty', 'PO No', 'PO Date', 'PO Qty', 'Check', 'Split PO'], 'widths': [14, 10, 12, 10, 10, 8, 18, 18],
-         'rows': [['15-Oct', 2, 12, 'T0409011', '16-Oct', 12, 'OK', '-'], ['16-Oct', 1, 6, 'T0409012', '17-Oct', 6, 'OK', '-'],
-                  ['17-Oct', 4, 30, 'T0409013', '18-Oct', 18, 'Short PO (12 pcs)', 'T0409014 12 (19-Oct)'], ['18-Oct', 3, 18, 'T0409015', '19-Oct', 18, 'OK', '-'],
-                  ['19-Oct', 2, 18, 'T0409016', '20-Oct', 18, 'OK', '-']]},
+         'rows': [['15-Oct', 2, 12, 'PO-0001', '16-Oct', 12, 'OK', '-'], ['16-Oct', 1, 6, 'PO-0002', '17-Oct', 6, 'OK', '-'],
+                  ['17-Oct', 4, 30, 'PO-0003', '18-Oct', 18, 'Short PO (12 pcs)', 'PO-0004 12 (19-Oct)'], ['18-Oct', 3, 18, 'PO-0005', '19-Oct', 18, 'OK', '-'],
+                  ['19-Oct', 2, 18, 'PO-0006', '20-Oct', 18, 'OK', '-']]},
     ],
 }
 
@@ -75,9 +75,9 @@ FUNC_DESC = [
         'One PO per Part Number per Customer Order Date: PO date = order date + 1, PO qty = total order qty of all destinations of that date. '
         'Open PO qty = ORDER_QTY - MAPPED_QTY.',
         'The open PO qty is given in PO date order (then PO No) to the lines in the order of 4.1, oldest unit first. A PO qty left by an order that is '
-        'not sent goes to the next lines: T0409011 (CO-14102 on hold, then cancelled) covers CO-14103; T0409012 then covers CO-14105.',
-        'PO qty lower than the order qty of the date (Short PO) is an abnormality: order date 17-Oct = 30 pcs, T0409013 = 18 pcs; the last 6 pcs '
-        '(CO-14110) have no PO (PO_NO NULL) and wait for the split PO T0409014 of 19-Oct.']},
+        'not sent goes to the next lines: PO-0001 (CO-14102 on hold, then cancelled) covers CO-14103; PO-0002 then covers CO-14105.',
+        'PO qty lower than the order qty of the date (Short PO) is an abnormality: order date 17-Oct = 30 pcs, PO-0003 = 18 pcs; the last 6 pcs '
+        '(CO-14110) have no PO (PO_NO NULL) and wait for the split PO PO-0004 of 19-Oct.']},
     {'type': 'column_break'},
     {'type': 'heading', 'text': '4.3 Supplier Cases and Cut'},
     {'type': 'bullets', 'marker': '-', 'level': 0, 'items': [
