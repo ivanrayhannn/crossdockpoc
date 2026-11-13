@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { setBusinessDate, setStartState, submitAsnBatch, useAsns, useBusinessDate, useStartState, type StartState } from './asnStore';
 import {
   asnNoFor, BUSINESS_DATES, buildCases, buildUnits, contentOf, DESTS, endBefore, endFor, groupCases, HOLD_INIT, niceDate, PCS_PER_CASE, poQtyOf,
-  LOGIN_SUPPLIER, ritCyclesFor, sentQty, SUPPLIERS, type AsnCase, type InstrLine, type Unit, type UnitCase, type UnitStatus,
+  LOGIN_SUPPLIER, PART_SUPPLIER, POS, ritCyclesFor, sentQty, SUPPLIERS, type AsnCase, type InstrLine, type Unit, type UnitCase, type UnitStatus,
 } from './data';
 import { Chip, Modal } from './ui';
 import { card, th, td } from './styles';
@@ -63,6 +63,8 @@ function destRows(u: Unit): DestRow[] {
     if (!u.heldLines.includes(l)) r.qty += l.qty;
     m.set(l.destCd, r);
   }
+  // a destination whose whole qty is held by Reduce PO Readiness is still listed (qty 0)
+  for (const l of u.reducedLines) if (!m.has(l.destCd)) m.set(l.destCd, { destCd: l.destCd, qty: 0, lines: [l] });
   return [...m.values()];
 }
 
@@ -114,7 +116,8 @@ export function AsnCrossdockCreationPage() {
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const [openDest, setOpenDest] = useState<Record<string, boolean>>({});
   const [openCase, setOpenCase] = useState<Record<number, boolean>>({});
-  const [page, setPage] = useState<'list' | 'cases'>('list');
+  const [page, setPage] = useState<'list' | 'cases' | 'supHold'>('list');
+  const [openSup, setOpenSup] = useState<Record<string, boolean>>({ '50221-1': true });
   const [confirm, setConfirm] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [labelNote, setLabelNote] = useState(false);
@@ -173,19 +176,20 @@ export function AsnCrossdockCreationPage() {
     setHold(next);
   };
 
-  /** Reduce PO Readiness (case) of a unit (D/S team): the last n Ready cases are held until the D/S team releases them (0 = release). */
-  const saveReduce = (u: Unit) => {
-    const raw = (reduceDraft[u.key] ?? String(u.reduce || '')).trim();
+  /** Reduce PO Readiness (case) per destination (D/S team): the last n warehouse cases of the destination are held until released (0 = release). */
+  const saveReduce = (u: Unit, destCd: string, max: number) => {
+    const k = `${u.key}|${destCd}`;
+    const raw = (reduceDraft[k] ?? String(reduce[k] || '')).trim();
     const n = raw === '' ? 0 : Number(raw);
-    if (!Number.isInteger(n) || n < 0 || n > u.rawReadyCases) {
-      setReduceErr({ ...reduceErr, [u.key]: `Reduce PO Readiness (case) must be a whole number from 0 to ${u.rawReadyCases} (PO Readiness).` });
+    if (!Number.isInteger(n) || n < 0 || n > max) {
+      setReduceErr({ ...reduceErr, [k]: `Reduce PO Readiness (case) must be a whole number from 0 to ${max} (warehouse cases of the destination).` });
       return;
     }
-    setReduceErr({ ...reduceErr, [u.key]: '' });
+    setReduceErr({ ...reduceErr, [k]: '' });
     const next = { ...reduce };
-    if (n) next[u.key] = n; else delete next[u.key];
+    if (n) next[k] = n; else delete next[k];
     setReduce(next);
-    setReduceDraft({ ...reduceDraft, [u.key]: n ? String(n) : '' });
+    setReduceDraft({ ...reduceDraft, [k]: n ? String(n) : '' });
   };
 
   /** Case check box: the selection starts at case 1 and ends on a case with CUT_FLAG Y (MSG10 when the end moves on). */
@@ -248,6 +252,57 @@ export function AsnCrossdockCreationPage() {
     setSel({});
     setPage('list');
   };
+
+  if (page === 'supHold') {
+    const byPo = sentQty(asns).byPo;
+    return (
+      <div style={{ padding: '18px 24px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div><button className="btn btn-secondary" onClick={() => setPage('list')} style={{ fontSize: 12, padding: '4px 12px' }}>← Back to ASN Crossdock Creation</button></div>
+        <h1 style={{ fontSize: 22, margin: 0 }}>Hold per Supplier Code + Plant</h1>
+        <div style={{ ...card, padding: '10px 16px', fontSize: 12.5, background: 'var(--color-accent-100, #eef4fb)' }}>
+          D/S team only. The open POs of each supplier + plant and the customer orders pre-mapped to them (Search of {niceDate(today)}) are what is held:
+          while Hold Flag = Y the units of the supplier + plant stay visible as On Hold and no ASN can be created.
+        </div>
+        {Object.entries(SUPPLIERS).map(([k, sp]) => {
+          const parts = Object.keys(PART_SUPPLIER).filter((p) => PART_SUPPLIER[p] === k);
+          const pos = POS.filter((p) => parts.includes(p.partNo) && p.poDate <= today).map((p) => ({ po: p, open: p.qty - (byPo[p.poNo] ?? 0) })).filter((x) => x.open > 0);
+          const su = units.filter((u) => u.supplier === k);
+          return (
+            <div key={k} style={{ ...card, overflow: 'hidden' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', borderBottom: '1px solid var(--color-divider)' }}>
+                <button className="btn btn-secondary" title="Open POs" style={{ padding: '2px 8px', fontSize: 11 }} onClick={() => setOpenSup({ ...openSup, [k]: !openSup[k] })}>{openSup[k] ? '▾' : '▸'}</button>
+                <b>{sp.code} · Plant {sp.plant}</b><span className="ax-muted">{sp.name} · {pos.length} open PO(s)</span>
+                <span style={{ marginLeft: 'auto' }}>Hold Flag{' '}
+                  <button className="btn btn-secondary" style={{ padding: '1px 8px', fontSize: 11 }} onClick={() => setSupplierHold({ ...supplierHold, [k]: !supplierHold[k] })}>{supplierHold[k] ? 'Y · Release' : 'N · Hold'}</button>
+                </span>
+              </div>
+              {openSup[k] && (
+                <div style={{ padding: '8px 16px 12px' }}>
+                  {pos.length === 0 ? <div className="ax-muted">No open PO.</div> : (
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                      <thead><tr>{['PO No', 'Manifest No', 'Item', 'Part Number', 'PO Date', 'PO Qty', 'Open Qty', 'Customer orders pre-mapped (Customer Order Date · Customer Order No · Destination · Qty · Case)'].map((h) => <th key={h} style={{ ...th, background: 'transparent', height: 28 }}>{h}</th>)}</tr></thead>
+                      <tbody>
+                        {pos.map(({ po, open: o }) => {
+                          const mapped = su.flatMap((u) => u.cases.flatMap((c) => c.lines.filter((l) => l.poNo === po.poNo).map((l) => ({ u, c, l }))));
+                          return (
+                            <tr key={po.poNo} style={{ verticalAlign: 'top' }}>
+                              <td style={{ ...td, fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{po.poNo}</td><td style={td}>{po.manifestNo}</td><td style={td}>{po.manifestItemNo}</td>
+                              <td style={td}>{po.partNo}</td><td style={td}>{niceDate(po.poDate)}</td><td style={td}>{po.qty}</td><td style={td}>{o}</td>
+                              <td style={td}>{mapped.length ? mapped.map(({ u, c, l }, i) => <div key={i}>{niceDate(u.orderDt)} · {l.custOrderNo} · {DESTS[l.destCd].short} {l.destCd} · {l.qty} · Case {c.seq}</div>) : <span className="ax-muted">Not pre-mapped yet</span>}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
 
   if (page === 'cases' && loaded) {
     return (
@@ -385,32 +440,12 @@ export function AsnCrossdockCreationPage() {
             <input className="input" value={rit?.route ?? '—'} disabled />
           </div>
           {!rits.length && <span style={{ color: 'var(--color-danger)', fontSize: 12, alignSelf: 'center' }}>No rit cycle available for {niceDate(deliveryDate)}. Choose another delivery date.</span>}
-          <span style={{ marginLeft: 'auto' }}>
+          <span style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+            {isDs && <button className="btn btn-secondary" onClick={() => setPage('supHold')}>Hold per Supplier</button>}
             <button className="btn btn-primary" disabled={!deliveryDate || !rit} onClick={getOrder}>Search</button>
           </span>
         </div>
       </div>
-
-      {isDs && (
-        <div style={{ ...card, padding: '12px 16px 14px' }}>
-          <div style={{ fontSize: 10.5, fontWeight: 600, letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: 8 }}>Hold per Supplier Code + Plant (D/S team)</div>
-          <table style={{ borderCollapse: 'collapse', fontSize: 12 }}>
-            <thead><tr>{['Supplier Code', 'Plant', 'Supplier Name', 'Hold Flag'].map((h) => <th key={h} style={{ ...th, background: 'transparent', height: 28 }}>{h}</th>)}</tr></thead>
-            <tbody>
-              {Object.entries(SUPPLIERS).map(([k, sp]) => (
-                <tr key={k}>
-                  <td style={td}>{sp.code}</td><td style={td}>{sp.plant}</td><td style={td}>{sp.name}</td>
-                  <td style={td}>
-                    <button className="btn btn-secondary" style={{ padding: '1px 8px', fontSize: 11 }} onClick={() => setSupplierHold({ ...supplierHold, [k]: !supplierHold[k] })}>
-                      {supplierHold[k] ? 'Y · Release' : 'N · Hold'}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
 
       <div style={{ ...card, overflow: 'hidden' }}>
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 13, padding: '10px 16px', borderBottom: '1px solid var(--color-divider)' }}>
@@ -482,11 +517,9 @@ export function AsnCrossdockCreationPage() {
                     {isDs && <td style={td}>{SUPPLIERS[u.supplier].code} · {SUPPLIERS[u.supplier].plant}</td>}
                     <td style={{ ...td, fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{u.partNo}</td>
                     <td style={{ ...td, textAlign: 'right', fontWeight: 600 }}>{u.caseCount}</td>
-                    <td style={{ ...td, textAlign: 'right', color: u.readyCases < u.caseCount ? 'var(--color-danger)' : undefined }} title={u.reduce ? `PO Readiness ${u.rawReadyCases} − reduce ${u.reduce} (held by the D/S team, rounded down to a valid cut)` : undefined}>
-                      {u.readyCases}{u.reduce > 0 && <div className="ax-muted">{u.rawReadyCases} − {u.reduce} on hold</div>}
-                    </td>
+                    <td style={{ ...td, textAlign: 'right', color: u.readyCases < u.caseCount ? 'var(--color-danger)' : undefined }}>{u.readyCases}</td>
                     <td style={{ ...td, textAlign: 'right' }}>{s ? `${s.end} case${s.end > 1 ? 's' : ''}` : '—'}</td>
-                    <td style={td} title={tip}><StatusChip s={u.status} />{wait && <span title={tip} style={{ marginLeft: 4 }}><Chip tone="neutral">{`Wait: ${niceDate(wait.orderDt).slice(0, 6)} first`}</Chip></span>}{u.poCheck.short && <span title={poCheckText(u)} style={{ marginLeft: 4 }}><Chip tone="warn">Short PO</Chip></span>}{u.sent && <div className="ax-muted">rest of an earlier ASN</div>}{u.heldLines.length > 0 && isDs && <div className="ax-muted">{new Set(u.heldLines.map((l) => l.destCd)).size} destination(s) on hold</div>}{u.supplierHold && <div className="ax-muted">Supplier · Plant on hold (D/S)</div>}{u.reduce > 0 && <div className="ax-muted">{u.cases.filter((c) => c.heldByReduce).length} case(s) on hold (reduce)</div>}</td>
+                    <td style={td} title={tip}><StatusChip s={u.status} />{wait && <span title={tip} style={{ marginLeft: 4 }}><Chip tone="neutral">{`Wait: ${niceDate(wait.orderDt).slice(0, 6)} first`}</Chip></span>}{u.poCheck.short && <span title={poCheckText(u)} style={{ marginLeft: 4 }}><Chip tone="warn">Short PO</Chip></span>}{u.sent && <div className="ax-muted">rest of an earlier ASN</div>}{u.heldLines.length > 0 && isDs && <div className="ax-muted">{new Set(u.heldLines.map((l) => l.destCd)).size} destination(s) on hold</div>}{u.supplierHold && <div className="ax-muted">Supplier · Plant on hold (D/S)</div>}{u.reduce > 0 && <div className="ax-muted">{u.reduce} warehouse case(s) on hold (reduce: {Object.entries(u.destReduce).map(([d, n]) => `${DESTS[d].short} ${n}`).join(', ')})</div>}</td>
                     <td style={td}>{isDs && <button className="btn btn-secondary" title="Destination detail (D/S team)" style={{ padding: '2px 8px', fontSize: 11 }} onClick={() => setOpen({ ...open, [u.key]: !open[u.key] })}>{open[u.key] ? '▾' : '▸'}</button>}</td>
                   </tr>,
                   u.cases.length > 0 && (
@@ -523,43 +556,44 @@ export function AsnCrossdockCreationPage() {
                   isDs && open[u.key] && (
                     <tr key={`${u.key}-d`}>
                       <td colSpan={colCount} style={{ padding: '8px 16px 12px 50px', background: 'var(--color-surface)', borderBottom: '1px solid var(--color-divider)' }}>
-                        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
-                          <div className="field" style={{ width: 190 }}>
-                            <label>Reduce PO Readiness (case)</label>
-                            <input className="input" inputMode="numeric" placeholder="0" value={reduceDraft[u.key] ?? (u.reduce ? String(u.reduce) : '')}
-                              onChange={(e) => setReduceDraft({ ...reduceDraft, [u.key]: e.target.value })} />
-                          </div>
-                          <button className="btn btn-secondary" style={{ padding: '4px 12px', fontSize: 12 }} onClick={() => saveReduce(u)}>Save</button>
-                          {u.reduce > 0 && <button className="btn btn-secondary" style={{ padding: '4px 12px', fontSize: 12 }} onClick={() => { setReduceDraft({ ...reduceDraft, [u.key]: '' }); const n = { ...reduce }; delete n[u.key]; setReduce(n); }}>Release</button>}
-                          <span className="ax-muted" style={{ alignSelf: 'center' }}>
-                            PO Readiness {u.rawReadyCases}{u.reduce > 0 ? ` − ${u.reduce} → Ready ${u.readyCases}${u.readyCases < u.rawReadyCases - u.reduce ? ' (rounded down to the last valid cut)' : ''}` : ''}. The last cases are held until the D/S team releases them.
-                          </span>
-                          {reduceErr[u.key] && <span style={{ color: 'var(--color-danger)', fontSize: 12, width: '100%' }}>{reduceErr[u.key]}</span>}
-                        </div>
                         <div className="ax-lbl" style={{ marginBottom: 4 }}>Destination · {u.qty} pcs</div>
                         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-                          <thead><tr><th style={{ ...th, background: 'transparent', width: 30 }} />{['Destination', 'Warehouse cases', 'Qty (pcs)', 'Pcs/Case', 'Hold Flag'].map((h) => <th key={h} style={{ ...th, background: 'transparent' }}>{h}</th>)}</tr></thead>
+                          <thead><tr><th style={{ ...th, background: 'transparent', width: 30 }} />{['Destination', 'Warehouse cases', 'Qty (pcs)', 'Pcs/Case', 'Hold Flag', 'Reduce PO Readiness (case)'].map((h) => <th key={h} style={{ ...th, background: 'transparent' }}>{h}</th>)}</tr></thead>
                           <tbody>
                             {destRows(u).map((r) => {
                               const held = r.lines.every((l) => hold[l.id]);
                               const dk = `${u.key}|${r.destCd}`;
+                              const redQty = u.reducedQty[r.destCd] ?? 0;
+                              const whMax = Math.ceil((r.qty + redQty) / PCS_PER_CASE);
                               return [
                                 <tr key={dk} style={{ color: held ? 'var(--color-neutral-600)' : undefined }}>
                                   <td style={td}><button className="btn btn-secondary" title="Customer orders" style={{ padding: '1px 7px', fontSize: 10.5 }} onClick={() => setOpenDest({ ...openDest, [dk]: !openDest[dk] })}>{openDest[dk] ? '▾' : '▸'}</button></td>
                                   <td style={td}>{DESTS[r.destCd].code} · {DESTS[r.destCd].name}</td>
-                                  <td style={td}>{held ? 0 : Math.ceil(r.qty / PCS_PER_CASE)}</td>
-                                  <td style={td}>{held ? `${r.lines.reduce((a, l) => a + l.qty, 0)} (on hold)` : r.qty}</td>
+                                  <td style={td}>{held ? 0 : Math.ceil(r.qty / PCS_PER_CASE)}{redQty > 0 && <span className="ax-muted"> (+{u.destReduce[r.destCd]} on hold)</span>}</td>
+                                  <td style={td}>{held ? `${r.lines.reduce((a, l) => a + l.qty, 0)} (on hold)` : r.qty}{redQty > 0 && <span className="ax-muted"> (+{redQty} on hold)</span>}</td>
                                   <td style={td}>{PCS_PER_CASE}</td>
                                   <td style={td}>
                                     <button className="btn btn-secondary" style={{ padding: '1px 8px', fontSize: 11 }} onClick={() => toggleHoldDest(r.lines, held)}>
                                       {held ? 'Y · Release' : 'N · Hold'}
                                     </button>
                                   </td>
+                                  <td style={td}>
+                                    {held ? '—' : (
+                                      <span style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
+                                        <input className="input" aria-label={`Reduce PO Readiness (case) ${r.destCd}`} inputMode="numeric" placeholder="0" style={{ width: 56, height: 26, padding: '2px 6px' }}
+                                          value={reduceDraft[dk] ?? (reduce[dk] ? String(reduce[dk]) : '')} onChange={(e) => setReduceDraft({ ...reduceDraft, [dk]: e.target.value })} />
+                                        <span className="ax-muted">/ {whMax}</span>
+                                        <button className="btn btn-secondary" style={{ padding: '1px 8px', fontSize: 11 }} onClick={() => saveReduce(u, r.destCd, whMax)}>Save</button>
+                                        {reduce[dk] ? <button className="btn btn-secondary" style={{ padding: '1px 8px', fontSize: 11 }} onClick={() => { setReduceDraft({ ...reduceDraft, [dk]: '' }); const n = { ...reduce }; delete n[dk]; setReduce(n); }}>Release</button> : null}
+                                      </span>
+                                    )}
+                                    {reduceErr[dk] && <div style={{ color: 'var(--color-danger)', fontSize: 11 }}>{reduceErr[dk]}</div>}
+                                  </td>
                                 </tr>,
                                 openDest[dk] && (
                                   <tr key={`${dk}-l`}>
                                     <td />
-                                    <td colSpan={5} style={{ padding: '4px 0 10px' }}>
+                                    <td colSpan={6} style={{ padding: '4px 0 10px' }}>
                                       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11.5, background: 'var(--color-neutral-100)' }}>
                                         <thead><tr>{['Customer Code', 'Customer Order No', 'Detailed Item No', 'Open Qty', 'Cases', 'PO No'].map((h) => <th key={h} style={{ ...th, height: 28 }}>{h}</th>)}</tr></thead>
                                         <tbody>

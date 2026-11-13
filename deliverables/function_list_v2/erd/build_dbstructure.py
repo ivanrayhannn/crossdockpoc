@@ -22,7 +22,7 @@ TABLES = [
     ('TR-02', 'TB_R_CROSSDOCK_IF_RESULT', 'Crossdock IF Result', 'Transaction', 'Send status of the crossdock master per part and target (dummy table).'),
     ('TR-03', 'TB_R_INSTRUCTION', 'Crossdock Instruction', 'Transaction', 'Real mapping of Create ASN: case x customer order line x PO.'),
     ('TR-04', 'TB_R_PRA_DAILY_ORDER_MAPPED', 'Pra Daily Order Mapped Qty', 'Transaction', 'Qty of a crossdock PO line mapped to customer orders.'),
-    ('TR-05', 'TB_R_CROSSDOCK_CASE_HOLD', 'Crossdock Case Hold', 'Transaction', 'Reduce PO Readiness (case) per unit set by the D/S team on XD10 (kept until released).'),
+    ('TR-05', 'TB_R_CROSSDOCK_CASE_HOLD', 'Crossdock Case Hold', 'Transaction', 'Reduce PO Readiness (case) per unit and destination set by the D/S team on XD10: warehouse cases not taken by Search (kept until released).'),
     ('TMP-01', '#TEMP_INSTRUCTION', 'Crossdock Pre-mapping Temporary', 'Temporary', 'Pre-mapping of one [Search] (session).'),
     ('REP-01', 'TB_M_H0125_DESTINATION', 'Destination Master (H0125)', 'Replicated', 'Destination master replicated from DB Surrounding by XD13.'),
     ('REP-02', 'TB_R_ACTUAL_DEMAND_SUMMARY', 'Actual Demand Summary', 'Replicated', 'Actual demand replicated from DB Surrounding by XD04.'),

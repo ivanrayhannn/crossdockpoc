@@ -22,17 +22,20 @@ await pg.getByTitle('Customer orders').first().click(); await shot('c_03_ds_deta
 // hold Thailand (CO-14104) of PART-X 17-Oct: scan order and cases are computed again without TH
 await destHold('9722D10').click(); await shot('c_04_ds_hold');
 await destHold('9722D10').click();
-// D/S team: Reduce PO Readiness (case) 1 on PART-X 17-Oct → Ready 4 - 1 = 3, case 4 on hold (stored until released)
-await pg.getByPlaceholder('0').first().fill('1'); await pg.getByRole('button', { name: 'Save', exact: true }).first().click(); await shot('c_04b_ds_reduce');
+// D/S team: Reduce PO Readiness (case) per destination: Philippines 1 warehouse case held -> the unit is cut again without its 6 pcs
+await pg.getByLabel('Reduce PO Readiness (case) 9811110').fill('1');
+await pg.locator('tr').filter({ has: pg.getByLabel('Reduce PO Readiness (case) 9811110') }).last().getByRole('button', { name: 'Save', exact: true }).click(); await shot('c_04b_ds_reduce');
 await view('Supplier'); await search(); await shot('c_04c_supplier_reduce');
 await view('D/S team'); await search();
 if (!(await pg.getByRole('button', { name: 'Release', exact: true }).count())) await unitRow('PART-X', '17-Oct').getByTitle('Destination detail (D/S team)').click();
 await pg.getByRole('button', { name: 'Release', exact: true }).first().click();
-// D/S team: hold Supplier Code 50221 Plant 1 → the supplier sees its units On Hold, check boxes disabled
-const supHold = (code) => pg.locator('tr').filter({ has: pg.locator('td', { hasText: new RegExp(`^${code}$`) }) }).getByRole('button', { name: /Hold|Release/ });
-await supHold('50221').click(); await shot('c_04d_ds_supplier_hold');
+// D/S team: sub screen Hold per Supplier Code + Plant: open POs and the customer orders pre-mapped to them; hold 50221 plant 1
+await pg.getByRole('button', { name: 'Hold per Supplier', exact: true }).click(); await shot('c_04d_ds_supplier_hold');
+await pg.getByRole('button', { name: 'N · Hold' }).first().click(); await shot('c_04f_ds_supplier_hold_on');
+await pg.getByRole('button', { name: /Back to ASN Crossdock Creation/ }).click();
 await view('Supplier'); await search(); await shot('c_04e_supplier_on_hold');
-await view('D/S team'); await supHold('50221').click();
+await view('D/S team'); await pg.getByRole('button', { name: 'Hold per Supplier', exact: true }).click();
+await pg.getByRole('button', { name: 'Y · Release' }).first().click(); await pg.getByRole('button', { name: /Back to ASN Crossdock Creation/ }).click();
 if (await pg.getByTitle('Destination detail (D/S team)').count()) { const r = unitRow('PART-X', '17-Oct'); if (await r.getByRole('button', { name: '▾' }).count()) await r.getByRole('button', { name: '▾' }).click(); }
 // supplier: tick case 3 of PART-X 17-Oct → cases 1-3 selected
 await view('Supplier'); await search();

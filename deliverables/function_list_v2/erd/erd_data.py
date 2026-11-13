@@ -104,8 +104,8 @@ RELATIONS = [
     ('TB_M_PART_MASTER', 'PART_NO', 'TB_M_PART_CANDIDATE', 'PART_NO', '1 : 0..1', 'Part name and existence check (logical)'),
     ('TB_M_CROSSDOCK_SUPPLIER_HOLD', 'SUPPLIER_CD + SUPPLIER_PLANT', 'TB_R_PRA_DAILY_ORDER_MANIFEST', 'SUPPLIER_CD + SUPPLIER_PLANT', '0..1 : N',
      'Supplier + plant on hold by the D/S team: no ASN for its crossdock units (logical)'),
-    ('TB_R_H0253_ORDER_CONTROL_PRE', 'SHIPPING_PART_NO + ORDER_DT', 'TB_R_CROSSDOCK_CASE_HOLD', 'PART_NO + ORDER_DT', '1 : 0..1',
-     'Reduce PO Readiness (case) of a unit (Part + Customer Order Date + supplier) (logical)'),
+    ('TB_R_H0253_ORDER_CONTROL_PRE', 'SHIPPING_PART_NO + ORDER_DT + DESTINATION_CD', 'TB_R_CROSSDOCK_CASE_HOLD', 'PART_NO + ORDER_DT + DESTINATION_CD', '1 : 0..1',
+     'Reduce PO Readiness (case) of a destination of a unit (warehouse cases held) (logical)'),
     ('TB_R_CASE_LABEL_LAST_SEQ', 'SUPPLIER_CD + SUPPLIER_PLANT_CD', 'TB_R_DAILY_ORDER_MANIFEST', 'SUPPLIER_CD + SUPPLIER_PLANT', '1 : N',
      'Last sequence of the ASN number and the case numbers per supplier + plant (logical)'),
 ]
