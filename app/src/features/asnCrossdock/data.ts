@@ -199,18 +199,12 @@ export interface Unit {
   caseCount: number;
   /** PO Readiness: Ready cases (after Reduce PO Readiness). */
   readyCases: number;
-  /** Ready cases before the reduction (same as readyCases: the reduction is applied per destination before the cut). */
+  /** Ready cases before the reduction (cases 1..n with a PO). */
   rawReadyCases: number;
-  /** Reduce PO Readiness (case) per destination set by the D/S team: warehouse cases held (destCd -> n). */
-  destReduce: Record<string, number>;
-  /** Pcs held per destination by the reduction (destCd -> pcs). */
-  reducedQty: Record<string, number>;
-  /** Total warehouse cases held by the reduction. */
+  /** Reduce PO Readiness (case) of the unit set by the D/S team (0 = none). */
   reduce: number;
-  /** Held parts of the lines (qty = pcs held), D/S detail only. */
-  reducedLines: InstrLine[];
-  /** Supplier Code + Plant of the unit is on hold by the D/S team. */
-  supplierHold: boolean;
+  /** The unit (Part Number + Customer Order Date) is on hold by the D/S team. */
+  unitHold: boolean;
   /** Cases the user may end the selection on (CUT_FLAG Y and Ready). */
   validEnds: number[];
   /** Some qty of the unit is already in a submitted ASN. */
@@ -279,7 +273,7 @@ function cutCases(ls: InstrLine[], pos: { po: Po; open: number }[]): UnitCase[] 
 /** XD09 [Search]: open qty (order qty - qty in submitted ASNs) of the lines not on hold, in H0253 order, pre-mapped to the POs released
  * by the business date (open PO qty = PO qty - qty in submitted ASNs), cut into supplier cases. Units of a part take the POs oldest date first. */
 export function buildUnits(today: string, sentByLine: Record<string, number>, sentByPo: Record<string, number>, hold: Record<string, boolean> = {},
-  noAsn = false, opts: { supplierHold?: Record<string, boolean>; reduce?: Record<string, number> } = {}): Unit[] {
+  noAsn = false, opts: { unitHold?: Record<string, boolean>; reduce?: Record<string, number> } = {}): Unit[] {
   const units: Unit[] = [];
   for (const partNo of [...new Set(H0253.map((l) => l.partNo))]) {
     const released = POS.filter((p) => p.partNo === partNo && p.poDate <= today);
@@ -292,35 +286,21 @@ export function buildUnits(today: string, sentByLine: Record<string, number>, se
       // lines with UPD_STATUS (changed in G-System) are not taken
       // without any ASN nothing can be received in G-System: only the cancels (status 2) apply
       const open = all.filter((l) => !(l.upd && l.upd.date <= today && (!noAsn || l.upd.status === '2'))).map((l) => ({ ...l, qty: l.qty - (sentByLine[l.id] ?? 0) })).filter((l) => l.qty > 0);
-      const key = unitKey(partNo, orderDt);
-      // Reduce PO Readiness (case) per destination (D/S team): the last n warehouse cases (n x pcs/case) of the destination are held,
-      // taken from the last lines of the destination in H0253 order; the held pcs are not taken by Search and the unit is cut again without them.
-      const destReduce: Record<string, number> = {};
-      const reducedQty: Record<string, number> = {};
-      const reducedLines: InstrLine[] = [];
-      let ls = open.filter((l) => !hold[l.id]).map((l) => ({ ...l }));
-      for (const d of [...new Set(ls.map((l) => l.destCd))]) {
-        const n = opts.reduce?.[`${key}|${d}`] ?? 0;
-        if (!n) continue;
-        destReduce[d] = n;
-        let left = n * PCS_PER_CASE;
-        for (const l of [...ls].reverse()) {
-          if (l.destCd !== d || left <= 0) continue;
-          const q = Math.min(l.qty, left);
-          l.qty -= q;
-          left -= q;
-          if (q > 0) reducedLines.push({ ...l, qty: q });
-          reducedQty[d] = (reducedQty[d] ?? 0) + q;
-        }
-      }
-      ls = ls.filter((l) => l.qty > 0);
+      const ls = open.filter((l) => !hold[l.id]);
       const cases = cutCases(ls, pos);
+      const key = unitKey(partNo, orderDt);
       const rawReadyCases = cases.filter((c) => c.ready).length;
-      const reduce = Object.values(destReduce).reduce((a, n) => a + n, 0);
-      const readyCases = rawReadyCases;
-      const supplierHold = !!opts.supplierHold?.[all[0].supplier];
+      // Reduce PO Readiness (case): the last n Ready cases are held; the Ready part ends on a valid cut (rounded down).
+      const reduce = Math.min(opts.reduce?.[key] ?? 0, rawReadyCases);
+      if (reduce > 0) {
+        const target = rawReadyCases - reduce;
+        const readyEnd = Math.max(0, ...cases.filter((c) => c.cut && c.seq <= target).map((c) => c.seq));
+        cases.forEach((c) => { if (c.ready && c.seq > readyEnd) { c.ready = false; c.heldByReduce = true; } });
+      }
+      const readyCases = cases.filter((c) => c.ready).length;
+      const unitHold = !!opts.unitHold?.[key];
       const sent = all.some((l) => (sentByLine[l.id] ?? 0) > 0);
-      const status: UnitStatus = !open.length ? 'created' : !ls.length || supplierHold ? 'hold' : readyCases === cases.length ? 'ready'
+      const status: UnitStatus = !open.length ? 'created' : !ls.length || unitHold ? 'hold' : readyCases === cases.length ? 'ready'
         : cases.some((c) => c.ready && c.cut) ? 'partial' : 'notReady';
       const orderQty = all.reduce((a, l) => a + l.qty, 0);
       const forDate = released.filter((p) => p.orderDt === orderDt);
@@ -332,8 +312,8 @@ export function buildUnits(today: string, sentByLine: Record<string, number>, se
       };
       units.push({
         key, partNo, supplier: all[0].supplier, orderDt, lines: ls, heldLines: open.filter((l) => hold[l.id]),
-        qty: ls.reduce((a, l) => a + l.qty, 0), cases, caseCount: cases.length, readyCases, rawReadyCases, destReduce, reducedQty, reduce, reducedLines, supplierHold,
-        validEnds: supplierHold ? [] : cases.filter((c) => c.ready && c.cut).map((c) => c.seq), sent, status, poCheck,
+        qty: ls.reduce((a, l) => a + l.qty, 0), cases, caseCount: cases.length, readyCases, rawReadyCases, reduce, unitHold,
+        validEnds: unitHold ? [] : cases.filter((c) => c.ready && c.cut).map((c) => c.seq), sent, status, poCheck,
       });
     }
   }
