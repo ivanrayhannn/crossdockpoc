@@ -41,7 +41,7 @@ sl[k + 1:k + 1] = [
     {'caption': '4a. D/S team: Reduce PO Readiness (case) per destination: Philippines 1 warehouse case held; its 6 pcs are not taken and the unit is cut again (4 cases, all Ready with the PO 24)', 'image': f'{IMG}/c_04b_ds_reduce.png'},
     {'caption': '4b. Supplier view of the reduced unit: 4 cases without the held Philippines pcs', 'image': f'{IMG}/c_04c_supplier_reduce.png'},
     {'caption': '4c. D/S team: sub screen Hold per Supplier Code + Plant: open POs of each supplier + plant and the customer orders pre-mapped to them', 'image': f'{IMG}/c_04d_ds_supplier_hold.png'},
-    {'caption': '4d. Sub screen: supplier 50221 plant 1 put on hold (On Hold, [Release hold])', 'image': f'{IMG}/c_04f_ds_supplier_hold_on.png'},
+    {'caption': '4d. Sub screen: supplier 5001 plant 1 put on hold (On Hold, [Release hold])', 'image': f'{IMG}/c_04f_ds_supplier_hold_on.png'},
     {'caption': '4e. Supplier view: its units stay visible, On Hold, check boxes disabled (message no. 12)', 'image': f'{IMG}/c_04e_supplier_on_hold.png'}]
 
 # ---------- buttons ----------

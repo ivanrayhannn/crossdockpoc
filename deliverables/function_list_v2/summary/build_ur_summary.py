@@ -82,7 +82,7 @@ ws.freeze_panes = 'D5'
 ws.auto_filter.ref = f'A4:L{last}'
 
 ws = wb.create_sheet('Detail UR & BL')
-title(ws, 'Detail User Requirement & Business Logic', 'Contoh dari simulasi_asn_rev.xlsx (PART-X, 6 pcs/case, supplier 50221-1)')
+title(ws, 'Detail User Requirement & Business Logic', 'Contoh dari simulasi_asn_rev.xlsx (PART-X, 6 pcs/case, supplier 5001-1)')
 names = {f[0]: f[1] for f in FUNCS}
 rows = [(i, d[0], names[d[0]]) + d[1:] for i, d in enumerate(DETAIL, 1)]
 last = table(ws, 4, ['No', 'Func ID', 'Function Name', 'Category', 'Item', 'Description', 'Example (Simulation)', 'Related Table'],

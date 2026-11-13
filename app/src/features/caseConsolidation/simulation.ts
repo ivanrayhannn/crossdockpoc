@@ -46,9 +46,9 @@ export const addDay = (iso: string) => {
   t.setUTCDate(t.getUTCDate() + 1);
   return t.toISOString().slice(0, 10);
 };
-export const caseNo = (n: number) => `50221X${String(n).padStart(2, '0')}`;
-/** ASN number for a delivery date (ISO), e.g. "2026-09-18" -> "ASN-50221-260918-001". */
-export const asnNoFor = (deliveryDate: string) => `ASN-50221-${deliveryDate.replaceAll('-', '').slice(2)}-001`;
+export const caseNo = (n: number) => `5001X${String(n).padStart(2, '0')}`;
+/** ASN number for a delivery date (ISO), e.g. "2026-09-18" -> "ASN-5001-260918-001". */
+export const asnNoFor = (deliveryDate: string) => `ASN-5001-${deliveryDate.replaceAll('-', '').slice(2)}-001`;
 export const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? '' : 's'}`;
 /** "Order 12" -> "O12" */
 export const shortOrder = (o: { no: string }) => `O${o.no.replace(/\D/g, '')}`;

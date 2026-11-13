@@ -186,7 +186,7 @@ Existing ASN part (TR-02). Submit ASN: one row per manifest item and case (a cas
 
 ## Sample Input
 
-**Sample ASN Crossdock Inquiry - simulasi_asn_rev.xlsx (supplier 50221-1)**
+**Sample ASN Crossdock Inquiry - simulasi_asn_rev.xlsx (supplier 5001-1)**
 
 - ASNs of the simulation after 22-Oct (the prototype shows the ASNs created before the business date). Case numbers as in the prototype; the real format follows the existing numbering.
 

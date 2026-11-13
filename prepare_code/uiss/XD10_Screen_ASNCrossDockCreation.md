@@ -164,9 +164,9 @@ flowchart TB
 
 ![4c. D/S team: sub screen Hold per Supplier Code + Plant: open POs of each supplier + plant and the customer orders pre-mapped to them](../../deliverables/uiss_screens/asn_crossdock/c_04d_ds_supplier_hold.png)
 
-### 4d. Sub screen: supplier 50221 plant 1 put on hold (On Hold, [Release hold])
+### 4d. Sub screen: supplier 5001 plant 1 put on hold (On Hold, [Release hold])
 
-![4d. Sub screen: supplier 50221 plant 1 put on hold (On Hold, [Release hold])](../../deliverables/uiss_screens/asn_crossdock/c_04f_ds_supplier_hold_on.png)
+![4d. Sub screen: supplier 5001 plant 1 put on hold (On Hold, [Release hold])](../../deliverables/uiss_screens/asn_crossdock/c_04f_ds_supplier_hold_on.png)
 
 ### 4e. Supplier view: its units stay visible, On Hold, check boxes disabled (message no. 12)
 
@@ -188,9 +188,9 @@ flowchart TB
 
 ![5c. Delivery plan refreshed automatically, all cases unticked](../../deliverables/uiss_screens/asn_crossdock/c_05d_after_refresh.png)
 
-### 5d. D/S team: units of two suppliers ticked (PART-D of supplier 50330, prototype only), Create ASN: one supplier per ASN
+### 5d. D/S team: units of two suppliers ticked (PART-D of supplier 5002, prototype only), Create ASN: one supplier per ASN
 
-![5d. D/S team: units of two suppliers ticked (PART-D of supplier 50330, prototype only), Create ASN: one supplier per ASN](../../deliverables/uiss_screens/asn_crossdock/c_05e_supplier_conflict.png)
+![5d. D/S team: units of two suppliers ticked (PART-D of supplier 5002, prototype only), Create ASN: one supplier per ASN](../../deliverables/uiss_screens/asn_crossdock/c_05e_supplier_conflict.png)
 
 ### 6. Case List sub screen: cases 1-4 of PART-X 17-Oct = ASN0003
 
@@ -900,7 +900,7 @@ New table: Reduce PO Readiness (case) per destination of a unit (Part Number + C
 
 **Sample Create ASN - ASN Cross Dock Creation (simulasi_asn_rev.xlsx, 18-Oct-2026)**
 
-- Data of simulasi_asn_rev.xlsx (also in the prototype, business date 18-Oct). Supplier 50221 plant 1, Delivery Date 18-Oct-2026, Rit 1, Route SD01. PART-X, Pcs/Case = 6. ASN0001 (CO-14101) and ASN0002 (CO-14103) are already submitted, so the oldest open Customer Order Date is 17-Oct.
+- Data of simulasi_asn_rev.xlsx (also in the prototype, business date 18-Oct). Supplier 5001 plant 1, Delivery Date 18-Oct-2026, Rit 1, Route SD01. PART-X, Pcs/Case = 6. ASN0001 (CO-14101) and ASN0002 (CO-14103) are already submitted, so the oldest open Customer Order Date is 17-Oct.
 - Order date 17-Oct: 4 destinations, 30 pcs; PO T0409013 (PO date 18-Oct) has only 18 pcs (Short PO, abnormality); the rest of T0409012 (6) is taken first (older PO date). The split PO T0409014 (12) comes on 19-Oct.
 - The supplier ticks the unit PART-X 17-Oct (cases 1-4, case 5 is Not Ready) and clicks [Create ASN]; the submit gives ASN0003.
 
@@ -956,7 +956,7 @@ New table: Reduce PO Readiness (case) per destination of a unit (Part Number + C
 | Item | Value |
 |---|---|
 | ASN No | ASN0003 (auto, assigned on submit) |
-| Supplier · Plant | 50221 · 1 |
+| Supplier · Plant | 5001 · 1 |
 | Delivery Date · Rit · Route | 18-Oct-2026 · Rit 1 · SD01 |
 | Delivery Qty | 24 pcs |
 | Cases | 4 cases |
@@ -973,7 +973,7 @@ New table: Reduce PO Readiness (case) per destination of a unit (Part Number + C
 | N4 | 19-Oct: split PO T0409014 released | Case 5 (CO-14110) is Ready → ASN0004; order date 18-Oct (3 destinations) → ASN0005. |
 | E1 | The D/S team holds Thailand (CO-14104) after the supplier ticked the unit | MSG8; the whole create fails, nothing is inserted, the delivery plan is refreshed and all units are unticked. |
 | E2 | The unit is no longer Ready when [Create ASN] is clicked | MSG7; nothing is inserted; the delivery plan is refreshed. |
-| E3 | D/S team ticks PART-X (supplier 50221-1) and a unit of supplier 50330-2 | MSG9; nothing is inserted. |
+| E3 | D/S team ticks PART-X (supplier 5001-1) and a unit of supplier 5002-1 | MSG9; nothing is inserted. |
 | E4 | No ASN yet on 22-Oct: the supplier wants order date 18-Oct first | Not possible: per Part Number the oldest Customer Order Date first (15-Oct, then 16-Oct, 17-Oct …); later dates are disabled (Wait: dd-Mon first). |
 | E5 | Database error during the insert | Roll back: nothing is kept; error message on the screen and Log FAILED. |
 

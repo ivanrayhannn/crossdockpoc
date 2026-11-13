@@ -22,7 +22,7 @@ function seed(): SubmittedAsn[] {
     if (sel.length !== picks.length) console.warn(`seed ${asnNo}: unit or case not available`);
     const ok = sel as { unit: NonNullable<(typeof sel)[number]['unit']>; end: number }[];
     out.push({
-      asnNo, supplier: '50221-1', deliveryDate: date, rit: { no: rit, route: rit === 'Rit 2' ? 'SD02' : 'SD01' }, unitKeys: ok.map((x) => x.unit.key),
+      asnNo, supplier: '5001-1', deliveryDate: date, rit: { no: rit, route: rit === 'Rit 2' ? 'SD02' : 'SD01' }, unitKeys: ok.map((x) => x.unit.key),
       cases: buildCases(ok), createdBy: 'D. Anggraini', createdAt: `${date.slice(8)}-Oct-2026 08:${rit === 'Rit 2' ? '40' : '14'}`, businessDate: date, seed: true,
     });
   }

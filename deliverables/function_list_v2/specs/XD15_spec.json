@@ -822,7 +822,7 @@
  ],
  "sample_sheet": {
   "title": "Sample Input",
-  "heading": "Sample ASN Crossdock Inquiry - simulasi_asn_rev.xlsx (supplier 50221-1)",
+  "heading": "Sample ASN Crossdock Inquiry - simulasi_asn_rev.xlsx (supplier 5001-1)",
   "intro": [
    "ASNs of the simulation after 22-Oct (the prototype shows the ASNs created before the business date). Case numbers as in the prototype; the real format follows the existing numbering."
   ],

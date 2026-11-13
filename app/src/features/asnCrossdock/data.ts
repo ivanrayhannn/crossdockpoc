@@ -15,12 +15,12 @@ export interface Supplier {
 
 /** Supplier Code + Supplier Plant; one ASN is always for one of them (existing rule). */
 export const SUPPLIERS: Record<string, Supplier> = {
-  '50221-1': { code: '50221', plant: '1', name: 'PT Dummy Supplier Indonesia' },
-  '50330-2': { code: '50330', plant: '2', name: 'PT Contoh Komponen' },
+  '5001-1': { code: '5001', plant: '1', name: 'PT Dummy Supplier Indonesia' },
+  '5002-1': { code: '5002', plant: '1', name: 'PT Contoh Komponen' },
 };
 
 /** Supplier of the login user in the supplier view (the D/S team sees every supplier). */
-export const LOGIN_SUPPLIER = '50221-1';
+export const LOGIN_SUPPLIER = '5001-1';
 
 export interface Dest {
   code: string;
@@ -67,7 +67,7 @@ export const PART_NAME: Record<string, string> = {
 };
 
 /** Supplier of each part (PO supplier of the Pra Daily Order). */
-export const PART_SUPPLIER: Record<string, string> = { 'PART-X': '50221-1', 'PART-D': '50330-2' };
+export const PART_SUPPLIER: Record<string, string> = { 'PART-X': '5001-1', 'PART-D': '5002-1' };
 
 const VN = '9715310';
 const PH = '9811110';
@@ -141,7 +141,7 @@ export const POS: Po[] = [
   { poNo: 'T0409014', manifestNo: '3126035914', manifestItemNo: '0001', partNo: 'PART-X', qty: 12, poDate: '2026-10-19', orderDt: '2026-10-17', split: true },
   { poNo: 'T0409015', manifestNo: '3126035915', manifestItemNo: '0001', partNo: 'PART-X', qty: 18, poDate: '2026-10-19', orderDt: '2026-10-18' },
   { poNo: 'T0409016', manifestNo: '3126035916', manifestItemNo: '0001', partNo: 'PART-X', qty: 18, poDate: '2026-10-20', orderDt: '2026-10-19' },
-  { poNo: 'PO-DMY-09041', manifestNo: 'MF-DMY-09041', manifestItemNo: '0001', partNo: 'PART-D', qty: 12, poDate: '2026-10-18', orderDt: '2026-10-17' },
+  { poNo: 'T0409041', manifestNo: '3126009041', manifestItemNo: '0001', partNo: 'PART-D', qty: 12, poDate: '2026-10-18', orderDt: '2026-10-17' },
 ];
 
 export const BUSINESS_DATES = ['2026-10-16', '2026-10-17', '2026-10-18', '2026-10-19', '2026-10-20', '2026-10-21', '2026-10-22'];

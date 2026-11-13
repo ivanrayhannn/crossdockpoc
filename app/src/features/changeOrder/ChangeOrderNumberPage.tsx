@@ -76,16 +76,16 @@ const LINES: Line[] = [
 ];
 
 const SLICES: Slice[] = [
-  { id: 3, asnNo: 'ASN0003', caseNo: 'C-0003-01', caseSeq: 1, partNo: 'PART-X', custOrderNo: 'CO-14105', serialNo: '0000001', destCd: VN, qty: 6, poNo: 'PO-DMY-09012' },
-  { id: 4, asnNo: 'ASN0003', caseNo: 'C-0003-02', caseSeq: 2, partNo: 'PART-X', custOrderNo: 'CO-14106', serialNo: '0000001', destCd: VN, qty: 3, poNo: 'PO-DMY-09013' },
-  { id: 5, asnNo: 'ASN0003', caseNo: 'C-0003-02', caseSeq: 2, partNo: 'PART-X', custOrderNo: 'CO-14107', serialNo: '0000001', destCd: VN, qty: 3, poNo: 'PO-DMY-09013' },
-  { id: 6, asnNo: 'ASN0003', caseNo: 'C-0003-03', caseSeq: 3, partNo: 'PART-X', custOrderNo: 'CO-14104', serialNo: '0000001', destCd: TH, qty: 6, poNo: 'PO-DMY-09013' },
-  { id: 7, asnNo: 'ASN0003', caseNo: 'C-0003-04', caseSeq: 4, partNo: 'PART-X', custOrderNo: 'CO-14109', serialNo: '0000001', destCd: PH, qty: 6, poNo: 'PO-DMY-09013' },
-  { id: 41, asnNo: 'ASN00020', caseNo: 'C-00020-01', caseSeq: 1, partNo: 'PART-Y', custOrderNo: 'CO-A', serialNo: '0000001', destCd: VN, qty: 2, poNo: 'PO-DMY-10041' },
-  { id: 42, asnNo: 'ASN00020', caseNo: 'C-00020-01', caseSeq: 1, partNo: 'PART-Y', custOrderNo: 'CO-B', serialNo: '0000001', destCd: VN, qty: 4, poNo: 'PO-DMY-10041' },
-  { id: 43, asnNo: 'ASN00020', caseNo: 'C-00020-02', caseSeq: 2, partNo: 'PART-Y', custOrderNo: 'CO-B', serialNo: '0000001', destCd: VN, qty: 4, poNo: 'PO-DMY-10041' },
-  { id: 44, asnNo: 'ASN00020', caseNo: 'C-00020-02', caseSeq: 2, partNo: 'PART-Y', custOrderNo: 'CO-C', serialNo: '0000001', destCd: VN, qty: 2, poNo: 'PO-DMY-10041' },
-  { id: 51, asnNo: 'ASN00031', caseNo: 'C-00031-01', caseSeq: 1, partNo: 'PART-Z', custOrderNo: 'CO-14120', serialNo: '0000001', destCd: PH, qty: 6, poNo: 'PO-DMY-10051' },
+  { id: 3, asnNo: 'ASN0003', caseNo: 'C-0003-01', caseSeq: 1, partNo: 'PART-X', custOrderNo: 'CO-14105', serialNo: '0000001', destCd: VN, qty: 6, poNo: 'T0409012' },
+  { id: 4, asnNo: 'ASN0003', caseNo: 'C-0003-02', caseSeq: 2, partNo: 'PART-X', custOrderNo: 'CO-14106', serialNo: '0000001', destCd: VN, qty: 3, poNo: 'T0409013' },
+  { id: 5, asnNo: 'ASN0003', caseNo: 'C-0003-02', caseSeq: 2, partNo: 'PART-X', custOrderNo: 'CO-14107', serialNo: '0000001', destCd: VN, qty: 3, poNo: 'T0409013' },
+  { id: 6, asnNo: 'ASN0003', caseNo: 'C-0003-03', caseSeq: 3, partNo: 'PART-X', custOrderNo: 'CO-14104', serialNo: '0000001', destCd: TH, qty: 6, poNo: 'T0409013' },
+  { id: 7, asnNo: 'ASN0003', caseNo: 'C-0003-04', caseSeq: 4, partNo: 'PART-X', custOrderNo: 'CO-14109', serialNo: '0000001', destCd: PH, qty: 6, poNo: 'T0409013' },
+  { id: 41, asnNo: 'ASN00020', caseNo: 'C-00020-01', caseSeq: 1, partNo: 'PART-Y', custOrderNo: 'CO-A', serialNo: '0000001', destCd: VN, qty: 2, poNo: 'T0410041' },
+  { id: 42, asnNo: 'ASN00020', caseNo: 'C-00020-01', caseSeq: 1, partNo: 'PART-Y', custOrderNo: 'CO-B', serialNo: '0000001', destCd: VN, qty: 4, poNo: 'T0410041' },
+  { id: 43, asnNo: 'ASN00020', caseNo: 'C-00020-02', caseSeq: 2, partNo: 'PART-Y', custOrderNo: 'CO-B', serialNo: '0000001', destCd: VN, qty: 4, poNo: 'T0410041' },
+  { id: 44, asnNo: 'ASN00020', caseNo: 'C-00020-02', caseSeq: 2, partNo: 'PART-Y', custOrderNo: 'CO-C', serialNo: '0000001', destCd: VN, qty: 2, poNo: 'T0410041' },
+  { id: 51, asnNo: 'ASN00031', caseNo: 'C-00031-01', caseSeq: 1, partNo: 'PART-Z', custOrderNo: 'CO-14120', serialNo: '0000001', destCd: PH, qty: 6, poNo: 'T0410051' },
 ];
 
 const OPEN: Open[] = [

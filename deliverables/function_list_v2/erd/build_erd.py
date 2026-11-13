@@ -242,7 +242,7 @@ def sim_sheets(wb, tables):
     ws.sheet_view.showGridLines = False
     ws['A1'] = 'Simulation scenarios'
     ws['A1'].font = F(14, True, '1F3864')
-    ws['A2'] = 'One sheet per scenario. Dummy data: supplier 50221 plant 1, pcs/case 6, destinations Vietnam 9715310 / Thailand 9722D10 / Philippines 9811110.'
+    ws['A2'] = 'One sheet per scenario. Dummy data: supplier 5001 plant 1, pcs/case 6, destinations Vietnam 9715310 / Thailand 9722D10 / Philippines 9811110.'
     ws['A2'].font = F(9, False, '595959')
     table(ws, 4, ['Sheet', 'Scenario', 'BPF / abnormality', 'Functions', 'Tables', 'Story'], [9, 34, 16, 34, 50, 90],
           [[sc['id'], sc['title'], sc['flow'], sc['functions'], ', '.join(dict.fromkeys(n for _, n, _ in sc['steps'])), ' '.join(sc['story'])] for sc in SCENARIOS])

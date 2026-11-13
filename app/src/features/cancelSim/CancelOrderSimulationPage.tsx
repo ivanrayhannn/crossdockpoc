@@ -27,7 +27,7 @@ const O = 'ID1H4571';
 const O2 = 'ID1H4580';
 const A = '0000001';
 const B = '0000002 (new)';
-const PO = 'PO-DMY-09001';
+const PO = 'T0409001';
 const C5 = 'CO-14115';
 
 // 14-Oct: the line arrives with status 7 and is inserted by XD08

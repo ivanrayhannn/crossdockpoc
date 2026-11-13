@@ -19,7 +19,7 @@ Dari `NSP_INSERT_TB_R_PRA_DAILY_ORDER_MANIFEST.sql` (54 kolom, 391 baris) dan `N
 | Part: `MANIFEST_ITEM`, `ORDER_QTY`, `PO_ITEM`; manifest: `PO_DT` | Kolom tabel baru disamakan di ERD: `MANIFEST_ITEM_NO` → `MANIFEST_ITEM`, `PO_ORDER_QTY` → `ORDER_QTY`, `PO_ORDER_DT` → `PO_DT` (UISS XD09 / XD10 / XD11 masih nama lama) |
 | `MANIFEST_NO` unik; 1 `PO_NO` bisa beberapa manifest; `PO_ITEM` bisa beda dengan `MANIFEST_ITEM` | Key PO line untuk mapping = `MANIFEST_NO + MANIFEST_ITEM` |
 | Rute / rit: `DELIVERY_DT`, `SUB_ROUTE_CD`, `SUB_ROUTE_SEQ`, `SUB_ROUTE_DT` | Kandidat sumber Delivery Date / Rit di XD10 (TBC) |
-| `SUPPLIER_CD` 4 karakter, `SUPPLIER_PLANT` bisa `X` | Data dummy `50221` di prototype / simulasi tetap dipakai (tidak sesuai panjang asli) |
+| `SUPPLIER_CD` 4 karakter, `SUPPLIER_PLANT` bisa `X` | Data dummy `5001` di prototype / simulasi tetap dipakai (tidak sesuai panjang asli) |
 
 ## Struktur tabel existing dari GTOPAS_SPS_DB_Structure_20240423 (20-Oct)
 `gsystem_structure.json` (hanya struktur): TR-03 / TR-04 Pra Daily Order (tipe data dipakai untuk kolom export SQL), TR-01 / TR-02 Daily Order Manifest / Part (submit ASN), MST-03 `TB_M_PART_MASTER` (hanya `PART_NAME`), TR-06 `TB_R_CASE_LABEL_LAST_SEQ` (last sequence ASN No dan case label per supplier + plant).

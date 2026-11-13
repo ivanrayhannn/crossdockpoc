@@ -1,5 +1,5 @@
 """UISS content of the ASN functions (XD08, XD10, XD11, XD15) written from the results of simulasi_asn_rev.xlsx (decided 27-Oct).
-PART-X, 6 pcs/case, supplier 50221-1, 16-22 Oct; same data as the prototype (ASN Creation, ASN Simulation)."""
+PART-X, 6 pcs/case, supplier 5001-1, 16-22 Oct; same data as the prototype (ASN Creation, ASN Simulation)."""
 
 SRC = 'simulasi_asn_rev.xlsx'
 
@@ -56,7 +56,7 @@ XD10_OP_FIX = {
         'Example (18-Oct, PART-X 17-Oct): ticking case 3 gives cases 1-3; case 5 (no PO) cannot be ticked. When a case does not end on a cut '
         '(e.g. a case with VN 4 + TH 2), the cases up to the next cut are ticked with it.',
 }
-XD10_ITEM_FIX = {'e.g. VN 4 (V01) + TH 2 (T01).': 'e.g. VN 3 (CO-14106) + VN 3 (CO-14107).', 'e.g. PO-DMY-09021 2.': 'e.g. T0409013 6.'}
+XD10_ITEM_FIX = {'e.g. VN 4 (V01) + TH 2 (T01).': 'e.g. VN 3 (CO-14106) + VN 3 (CO-14107).', 'e.g. T0409021 2.': 'e.g. T0409013 6.'}
 XD10_CASE_SECTIONS = [
     {'title': 'H. Case selection on 18-Oct (supplier view, PART-X 17-Oct): one check box per supplier case; Content shown to the D/S team only',
      'columns': ['Case', 'Qty', 'Remaining Qty (not assigned)', 'Content (D/S team only)', 'PO', 'CUT_FLAG', 'PO Status'], 'widths': [6, 6, 14, 30, 16, 8, 10],
@@ -104,7 +104,7 @@ XD11_SAMPLE = {
 # ---------------- XD15 ----------------
 XD15_SAMPLE = {
     'title': 'Sample Input',
-    'heading': f'Sample ASN Crossdock Inquiry - {SRC} (supplier 50221-1)',
+    'heading': f'Sample ASN Crossdock Inquiry - {SRC} (supplier 5001-1)',
     'intro': ['ASNs of the simulation after 22-Oct (the prototype shows the ASNs created before the business date). Case numbers as in the prototype; '
               'the real format follows the existing numbering.'],
     'sections': [
