@@ -255,49 +255,94 @@ export function AsnCrossdockCreationPage() {
 
   if (page === 'supHold') {
     const byPo = sentQty(asns).byPo;
+    const thR = { ...th, textAlign: 'right' as const };
     return (
-      <div style={{ padding: '18px 24px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div style={{ padding: '18px 24px 24px', display: 'flex', flexDirection: 'column', gap: 14, maxWidth: 1180 }}>
         <div><button className="btn btn-secondary" onClick={() => setPage('list')} style={{ fontSize: 12, padding: '4px 12px' }}>← Back to ASN Crossdock Creation</button></div>
-        <h1 style={{ fontSize: 22, margin: 0 }}>Hold per Supplier Code + Plant</h1>
-        <div style={{ ...card, padding: '10px 16px', fontSize: 12.5, background: 'var(--color-accent-100, #eef4fb)' }}>
-          D/S team only. The open POs of each supplier + plant and the customer orders pre-mapped to them (Search of {niceDate(today)}) are what is held:
-          while Hold Flag = Y the units of the supplier + plant stay visible as On Hold and no ASN can be created.
+        <div>
+          <h1 style={{ fontSize: 20, margin: '0 0 4px' }}>Hold per Supplier Code + Plant</h1>
+          <p style={{ fontSize: 13, color: 'var(--color-neutral-700)', margin: 0, maxWidth: 760 }}>
+            A hold stops ASN creation for every unit of the supplier + plant; the units stay in the delivery plan as On Hold.
+            Each block lists the open POs and the customer orders they cover in the Search of {niceDate(today)}.
+          </p>
         </div>
         {Object.entries(SUPPLIERS).map(([k, sp]) => {
           const parts = Object.keys(PART_SUPPLIER).filter((p) => PART_SUPPLIER[p] === k);
           const pos = POS.filter((p) => parts.includes(p.partNo) && p.poDate <= today).map((p) => ({ po: p, open: p.qty - (byPo[p.poNo] ?? 0) })).filter((x) => x.open > 0);
           const su = units.filter((u) => u.supplier === k);
+          const rows = pos.map(({ po, open: o }) => ({
+            po, open: o,
+            mapped: su.flatMap((u) => u.cases.flatMap((c) => c.lines.filter((l) => l.poNo === po.poNo).map((l) => ({ u, c, l })))),
+          }));
+          const orders = new Set(rows.flatMap((r) => r.mapped.map((m) => m.l.custOrderNo))).size;
+          const openQty = pos.reduce((a, x) => a + x.open, 0);
+          const held = !!supplierHold[k];
+          const label = `${sp.code} plant ${sp.plant}`;
           return (
-            <div key={k} style={{ ...card, overflow: 'hidden' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', borderBottom: '1px solid var(--color-divider)' }}>
-                <button className="btn btn-secondary" title="Open POs" style={{ padding: '2px 8px', fontSize: 11 }} onClick={() => setOpenSup({ ...openSup, [k]: !openSup[k] })}>{openSup[k] ? '▾' : '▸'}</button>
-                <b>{sp.code} · Plant {sp.plant}</b><span className="ax-muted">{sp.name} · {pos.length} open PO(s)</span>
-                <span style={{ marginLeft: 'auto' }}>Hold Flag{' '}
-                  <button className="btn btn-secondary" style={{ padding: '1px 8px', fontSize: 11 }} onClick={() => setSupplierHold({ ...supplierHold, [k]: !supplierHold[k] })}>{supplierHold[k] ? 'Y · Release' : 'N · Hold'}</button>
+            <section key={k} aria-label={`Supplier ${label}`} style={{ ...card, overflow: 'hidden', borderColor: held ? 'var(--color-warn-fg, #7a5300)' : 'var(--color-divider)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', flexWrap: 'wrap', background: held ? 'var(--color-warn-bg, #fff8e6)' : undefined }}>
+                <button className="btn btn-secondary" aria-expanded={!!openSup[k]} aria-label={`${openSup[k] ? 'Hide' : 'Show'} open POs of ${label}`}
+                  style={{ padding: '2px 8px', fontSize: 11 }} onClick={() => setOpenSup({ ...openSup, [k]: !openSup[k] })}>{openSup[k] ? '▾' : '▸'}</button>
+                <div style={{ minWidth: 220 }}>
+                  <div style={{ fontSize: 15, fontWeight: 700 }}>{sp.code} · Plant {sp.plant}</div>
+                  <div style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{sp.name}</div>
+                </div>
+                <div style={{ fontSize: 12.5, color: 'var(--color-neutral-800)' }}>
+                  {pos.length} open PO{pos.length === 1 ? '' : 's'} · {openQty} pcs open · {orders} customer order{orders === 1 ? '' : 's'} pre-mapped
+                </div>
+                <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <Chip tone={held ? 'neutral' : 'ok'}>{held ? 'On Hold' : 'Not on hold'}</Chip>
+                  <button className={held ? 'btn btn-primary' : 'btn btn-secondary'} style={{ padding: '4px 12px', fontSize: 12 }}
+                    onClick={() => setSupplierHold({ ...supplierHold, [k]: !held })}>{held ? 'Release hold' : 'Hold supplier'}</button>
                 </span>
               </div>
               {openSup[k] && (
-                <div style={{ padding: '8px 16px 12px' }}>
-                  {pos.length === 0 ? <div className="ax-muted">No open PO.</div> : (
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-                      <thead><tr>{['PO No', 'Manifest No', 'Item', 'Part Number', 'PO Date', 'PO Qty', 'Open Qty', 'Customer orders pre-mapped (Customer Order Date · Customer Order No · Destination · Qty · Case)'].map((h) => <th key={h} style={{ ...th, background: 'transparent', height: 28 }}>{h}</th>)}</tr></thead>
+                <div style={{ borderTop: '1px solid var(--color-divider)', overflowX: 'auto' }}>
+                  {rows.length === 0 ? (
+                    <p style={{ margin: 0, padding: '12px 16px', fontSize: 12.5, color: 'var(--color-neutral-700)' }}>No open PO on {niceDate(today)}: a hold has nothing to stop yet.</p>
+                  ) : (
+                    <table style={{ width: '100%', minWidth: 900, borderCollapse: 'separate', borderSpacing: 0, fontSize: 12.5 }}>
+                      <thead>
+                        <tr>
+                          <th style={th}>PO No</th><th style={th}>Manifest / Item</th><th style={th}>Part Number</th><th style={th}>PO Date</th>
+                          <th style={thR}>PO Qty</th><th style={thR}>Open Qty</th>
+                          <th style={{ ...th, borderLeft: '1px solid var(--color-divider)' }}>Customer Order Date</th><th style={th}>Customer Order No</th>
+                          <th style={th}>Destination</th><th style={thR}>Qty</th><th style={th}>Case</th>
+                        </tr>
+                      </thead>
                       <tbody>
-                        {pos.map(({ po, open: o }) => {
-                          const mapped = su.flatMap((u) => u.cases.flatMap((c) => c.lines.filter((l) => l.poNo === po.poNo).map((l) => ({ u, c, l }))));
-                          return (
-                            <tr key={po.poNo} style={{ verticalAlign: 'top' }}>
-                              <td style={{ ...td, fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{po.poNo}</td><td style={td}>{po.manifestNo}</td><td style={td}>{po.manifestItemNo}</td>
-                              <td style={td}>{po.partNo}</td><td style={td}>{niceDate(po.poDate)}</td><td style={td}>{po.qty}</td><td style={td}>{o}</td>
-                              <td style={td}>{mapped.length ? mapped.map(({ u, c, l }, i) => <div key={i}>{niceDate(u.orderDt)} · {l.custOrderNo} · {DESTS[l.destCd].short} {l.destCd} · {l.qty} · Case {c.seq}</div>) : <span className="ax-muted">Not pre-mapped yet</span>}</td>
+                        {rows.map(({ po, open: o, mapped }) => {
+                          const span = Math.max(1, mapped.length);
+                          const head = [
+                            <td key="po" rowSpan={span} style={{ ...td, fontFamily: 'var(--font-mono)', fontWeight: 600, whiteSpace: 'nowrap' }}>{po.poNo}</td>,
+                            <td key="mf" rowSpan={span} style={{ ...td, whiteSpace: 'nowrap' }}>{po.manifestNo} / {po.manifestItemNo}</td>,
+                            <td key="pt" rowSpan={span} style={{ ...td, fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>{po.partNo}</td>,
+                            <td key="dt" rowSpan={span} style={{ ...td, whiteSpace: 'nowrap' }}>{niceDate(po.poDate)}</td>,
+                            <td key="q" rowSpan={span} style={{ ...td, textAlign: 'right' }}>{po.qty}</td>,
+                            <td key="o" rowSpan={span} style={{ ...td, textAlign: 'right', fontWeight: 600 }}>{o}</td>,
+                          ];
+                          if (!mapped.length) {
+                            return (
+                              <tr key={po.poNo}>{head}<td colSpan={5} style={{ ...td, borderLeft: '1px solid var(--color-divider)', color: 'var(--color-neutral-700)' }}>No customer order pre-mapped in this Search</td></tr>
+                            );
+                          }
+                          return mapped.map(({ u, c, l }, i) => (
+                            <tr key={`${po.poNo}-${i}`}>
+                              {i === 0 && head}
+                              <td style={{ ...td, whiteSpace: 'nowrap', borderLeft: '1px solid var(--color-divider)' }}>{niceDate(u.orderDt)}</td>
+                              <td style={{ ...td, whiteSpace: 'nowrap' }}>{l.custOrderNo}</td>
+                              <td style={{ ...td, whiteSpace: 'nowrap' }}>{DESTS[l.destCd].code} · {DESTS[l.destCd].name}</td>
+                              <td style={{ ...td, textAlign: 'right' }}>{l.qty}</td>
+                              <td style={{ ...td, whiteSpace: 'nowrap' }}>Case {c.seq}</td>
                             </tr>
-                          );
+                          ));
                         })}
                       </tbody>
                     </table>
                   )}
                 </div>
               )}
-            </div>
+            </section>
           );
         })}
       </div>
