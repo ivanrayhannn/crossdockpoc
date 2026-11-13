@@ -1,6 +1,6 @@
 """Simulation scenarios of the Crossdock tables (one sheet per scenario in Crossdock_ERD.xlsx).
 Each step shows the rows of a table with their state: ref (read, not changed), new (insert), upd (update; changed columns highlighted),
-del (delete), temp (temporary table). Dummy data: supplier 50221 plant 1, pcs/case 6."""
+del (delete), temp (temporary table). Dummy data: supplier 5001 plant 1, pcs/case 6."""
 
 import os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'specs'))
@@ -49,11 +49,11 @@ VALUE_FILL = {
     ('RESULT', 'CONFLICT'): 'FF7C80', ('RESULT', 'CANCELLED'): 'F4B084', ('CROSS_DOCK_FLAG', 'X'): 'FFE699',
 }
 
-PRA_MAN = {'1': ['MF-DMY-09001', 'PO-DMY-09001', '50221', '1', '2026-10-15', 'X', 12, '2026-10-16', 'SD01'],
-           '2': ['MF-DMY-09002', 'PO-DMY-09002', '50221', '1', '2026-10-15', 'X', 12, '2026-10-16', 'SD01'],
-           '3': ['MF-DMY-09003', 'PO-DMY-09003', '50221', '1', '2026-10-15', 'X', 6, '2026-10-16', 'SD01']}
-PRA_PART = {'1': ['MF-DMY-09001', '0001', 'PO-DMY-09001', '0001', 'PART-X', 12], '2': ['MF-DMY-09002', '0001', 'PO-DMY-09002', '0001', 'PART-X', 12],
-            '3': ['MF-DMY-09003', '0001', 'PO-DMY-09003', '0001', 'PART-Y', 6]}
+PRA_MAN = {'1': ['3126009001', 'T0409001', '5001', '1', '2026-10-15', 'X', 12, '2026-10-16', 'SD01'],
+           '2': ['3126009002', 'T0409002', '5001', '1', '2026-10-15', 'X', 12, '2026-10-16', 'SD01'],
+           '3': ['3126009003', 'T0409003', '5001', '1', '2026-10-15', 'X', 6, '2026-10-16', 'SD01']}
+PRA_PART = {'1': ['3126009001', '0001', 'T0409001', '0001', 'PART-X', 12], '2': ['3126009002', '0001', 'T0409002', '0001', 'PART-X', 12],
+            '3': ['3126009003', '0001', 'T0409003', '0001', 'PART-Y', 6]}
 
 
 def h(co, d, serial, part, qty, st='7', hold='N', mapped='N', upd=None, od=OD, item='001', cust=None):
@@ -86,7 +86,7 @@ SB = [line('A-0101', VN, 'PART-B', 8, item='001', time='080000'), line('A-0101',
       line('B-0102', TH, 'PART-B', 6, time='090000'), line('C-0103', VN, 'PART-B', 14, cust=VN2, time='070000')]
 SB2 = [line('A-0201', VN, 'PART-B', 6, od='2026-10-15')]
 SA = [line('V01', VN, 'PART-A', 10, 'CUST-A'), line('T01', TH, 'PART-A', 6, 'CUST-B'), line('V02', VN, 'PART-A', 14, 'CUST-C')]
-P1, P2, P3 = ['PO-DMY-09001', 'MF-DMY-09001', '0001', 12], ['PO-DMY-09002', 'MF-DMY-09002', '0001', 12], ['PO-DMY-09003', 'MF-DMY-09003', '0001', 6]
+P1, P2, P3 = ['T0409001', '3126009001', '0001', 12], ['T0409002', '3126009002', '0001', 12], ['T0409003', '3126009003', '0001', 6]
 
 
 SCENARIOS = [
@@ -102,8 +102,8 @@ SCENARIOS = [
                 ('new', [VN, '97153', 'DUMMY DESTINATION VIETNAM', 'VIETNAM']), ('new', [TH, '9722D', 'DUMMY DESTINATION THAILAND', 'THAILAND']),
                 ('new', [PH, '98111', 'DUMMY DESTINATION PHILIPPINES', 'PHILIPPINES'])]),
             ('2. Procurement adds PART-Y (XD01); part name from the part master', 'TB_M_PART_MASTER', [
-                ('ref', ['PART-X', '50221', '1', 'S1', '2026-01-01', 'DUMMY PART X']), ('ref', ['PART-Y', '50221', '1', 'S1', '2026-01-01', 'DUMMY PART Y']),
-                ('ref', ['PART-Z', '50221', '1', 'S1', '2026-01-01', 'DUMMY PART Z'])]),
+                ('ref', ['PART-X', '5001', '1', 'S1', '2026-01-01', 'DUMMY PART X']), ('ref', ['PART-Y', '5001', '1', 'S1', '2026-01-01', 'DUMMY PART Y']),
+                ('ref', ['PART-Z', '5001', '1', 'S1', '2026-01-01', 'DUMMY PART Z'])]),
             ('', 'TB_M_PART_CANDIDATE', [
                 ('ref', ['PART-X', 'DUMMY PART X', 300, 6, 10, 60, 'Active', '1', 'CALC']),
                 ('new', ['PART-Y', 'DUMMY PART Y', 100, 6, 2, 12, 'Candidate', '0', 'SCREEN']),
@@ -152,50 +152,50 @@ SCENARIOS = [
              tmp([PX], [P1, P2]) + tmp([PY], [P3])),
             ('4. [Create ASN]: real mapping, flags, mapped qty', 'TB_R_INSTRUCTION', [
                 ('new', [i + 1, c, l, p, d, co, '0000001', q, po, m, '0001', None, None]) for i, (c, l, p, d, co, q, po, m) in enumerate((
-                    (1, 1, 'PART-X', VN, 'CO-14101', 6, 'PO-DMY-09001', 'MF-DMY-09001'), (2, 1, 'PART-X', VN, 'CO-14101', 4, 'PO-DMY-09001', 'MF-DMY-09001'),
-                    (2, 2, 'PART-X', VN, 'CO-14102', 2, 'PO-DMY-09001', 'MF-DMY-09001'), (3, 1, 'PART-X', VN, 'CO-14102', 2, 'PO-DMY-09002', 'MF-DMY-09002'),
-                    (3, 2, 'PART-X', VN, 'CO-14103', 4, 'PO-DMY-09002', 'MF-DMY-09002'), (4, 1, 'PART-X', TH, 'CO-14104', 6, 'PO-DMY-09002', 'MF-DMY-09002'),
-                    (5, 1, 'PART-Y', PH, 'CO-14105', 6, 'PO-DMY-09003', 'MF-DMY-09003')))]),
+                    (1, 1, 'PART-X', VN, 'CO-14101', 6, 'T0409001', '3126009001'), (2, 1, 'PART-X', VN, 'CO-14101', 4, 'T0409001', '3126009001'),
+                    (2, 2, 'PART-X', VN, 'CO-14102', 2, 'T0409001', '3126009001'), (3, 1, 'PART-X', VN, 'CO-14102', 2, 'T0409002', '3126009002'),
+                    (3, 2, 'PART-X', VN, 'CO-14103', 4, 'T0409002', '3126009002'), (4, 1, 'PART-X', TH, 'CO-14104', 6, 'T0409002', '3126009002'),
+                    (5, 1, 'PART-Y', PH, 'CO-14105', 6, 'T0409003', '3126009003')))]),
             ('', 'TB_R_PRA_DAILY_ORDER_MAPPED', [
-                ('new', ['PO-DMY-09001', 'MF-DMY-09001', '0001', 'PART-X', 12, 12]), ('new', ['PO-DMY-09002', 'MF-DMY-09002', '0001', 'PART-X', 12, 12]),
-                ('new', ['PO-DMY-09003', 'MF-DMY-09003', '0001', 'PART-Y', 6, 6])]),
+                ('new', ['T0409001', '3126009001', '0001', 'PART-X', 12, 12]), ('new', ['T0409002', '3126009002', '0001', 'PART-X', 12, 12]),
+                ('new', ['T0409003', '3126009003', '0001', 'PART-Y', 6, 6])]),
             ('', 'TB_R_H0253_ORDER_CONTROL_PRE', [
                 ('upd', h(co, d, '0000001', p, q, mapped='Y'), ['PO_MAPPED_FLAG']) for co, d, p, q in (
                     ('CO-14101', VN, 'PART-X', 10), ('CO-14102', VN, 'PART-X', 4), ('CO-14103', VN, 'PART-X', 4), ('CO-14104', TH, 'PART-X', 6),
                     ('CO-14105', PH, 'PART-Y', 6))]),
             ('5. [Submit ASN] (5.7): ASN tables, last sequence, write back', 'TB_R_DAILY_ORDER_MANIFEST', [
-                ('new', [f'{m}A1', m, ASN, '50221', '1', po, 'X', 1, q, '2026-10-16', 'SD01', 'Created'])
-                for m, po, q in (('MF-DMY-09001', 'PO-DMY-09001', 12), ('MF-DMY-09002', 'PO-DMY-09002', 12), ('MF-DMY-09003', 'PO-DMY-09003', 6))]),
+                ('new', [f'{m}A1', m, ASN, '5001', '1', po, 'X', 1, q, '2026-10-16', 'SD01', 'Created'])
+                for m, po, q in (('3126009001', 'T0409001', 12), ('3126009002', 'T0409002', 12), ('3126009003', 'T0409003', 6))]),
             ('', 'TB_R_DAILY_ORDER_PART', [
                 ('new', [f'{m}A1', m, '0001', c, po, '0001', ASN, p, f'DUMMY {p.replace("-", " ")}', pq, 6]) for m, c, po, p, pq in (
-                    ('MF-DMY-09001', 'C-0001', 'PO-DMY-09001', 'PART-X', 12), ('MF-DMY-09001', 'C-0002', 'PO-DMY-09001', 'PART-X', 12),
-                    ('MF-DMY-09002', 'C-0003', 'PO-DMY-09002', 'PART-X', 12), ('MF-DMY-09002', 'C-0004', 'PO-DMY-09002', 'PART-X', 12),
-                    ('MF-DMY-09003', 'C-0005', 'PO-DMY-09003', 'PART-Y', 6))]),
-            ('', 'TB_R_CASE_LABEL_LAST_SEQ', [('upd', ['50221', '1', '005', '001'], ['CASE_LABEL_LAST_SEQ', 'ASN_LAST_SEQ'], '000 / 000 → 005 / 001')]),
+                    ('3126009001', 'C-0001', 'T0409001', 'PART-X', 12), ('3126009001', 'C-0002', 'T0409001', 'PART-X', 12),
+                    ('3126009002', 'C-0003', 'T0409002', 'PART-X', 12), ('3126009002', 'C-0004', 'T0409002', 'PART-X', 12),
+                    ('3126009003', 'C-0005', 'T0409003', 'PART-Y', 6))]),
+            ('', 'TB_R_CASE_LABEL_LAST_SEQ', [('upd', ['5001', '1', '005', '001'], ['CASE_LABEL_LAST_SEQ', 'ASN_LAST_SEQ'], '000 / 000 → 005 / 001')]),
             ('', 'TB_R_INSTRUCTION', [
                 ('upd', [i + 1, c, l, p, d, co, '0000001', q, po, m, '0001', ASN, f'C-{c:04d}'], ['ASN_NO', 'CASE_NO']) for i, (c, l, p, d, co, q, po, m) in enumerate((
-                    (1, 1, 'PART-X', VN, 'CO-14101', 6, 'PO-DMY-09001', 'MF-DMY-09001'), (2, 1, 'PART-X', VN, 'CO-14101', 4, 'PO-DMY-09001', 'MF-DMY-09001'),
-                    (2, 2, 'PART-X', VN, 'CO-14102', 2, 'PO-DMY-09001', 'MF-DMY-09001'), (3, 1, 'PART-X', VN, 'CO-14102', 2, 'PO-DMY-09002', 'MF-DMY-09002'),
-                    (3, 2, 'PART-X', VN, 'CO-14103', 4, 'PO-DMY-09002', 'MF-DMY-09002'), (4, 1, 'PART-X', TH, 'CO-14104', 6, 'PO-DMY-09002', 'MF-DMY-09002'),
-                    (5, 1, 'PART-Y', PH, 'CO-14105', 6, 'PO-DMY-09003', 'MF-DMY-09003')))]),
+                    (1, 1, 'PART-X', VN, 'CO-14101', 6, 'T0409001', '3126009001'), (2, 1, 'PART-X', VN, 'CO-14101', 4, 'T0409001', '3126009001'),
+                    (2, 2, 'PART-X', VN, 'CO-14102', 2, 'T0409001', '3126009001'), (3, 1, 'PART-X', VN, 'CO-14102', 2, 'T0409002', '3126009002'),
+                    (3, 2, 'PART-X', VN, 'CO-14103', 4, 'T0409002', '3126009002'), (4, 1, 'PART-X', TH, 'CO-14104', 6, 'T0409002', '3126009002'),
+                    (5, 1, 'PART-Y', PH, 'CO-14105', 6, 'T0409003', '3126009003')))]),
         ]},
     {
         'id': 'SIM-3', 'title': 'Unit Partially Ready (PO short), Ready the next day', 'flow': 'BPF F2 / AB08', 'functions': 'XD09, XD10',
-        'story': ['PART-X 14-Oct needs 24 pcs (VN 18, TH 6) but only 18 pcs of crossdock PO are released on 15-Oct (PO-DMY-09001 12 + PO-DMY-09002 6).',
+        'story': ['PART-X 14-Oct needs 24 pcs (VN 18, TH 6) but only 18 pcs of crossdock PO are released on 15-Oct (T0409001 12 + T0409002 6).',
                   'H0253 order VN (CO-14101..14103) then TH (CO-14104): cases 1-3 (VN) have a PO, case 4 (TH) has none. Every case ends a valid cut, so '
                   'blocks 1-3 are Ready and block 4 Not Ready: the unit is Partially Ready (ASN options 1 / 2 / 3 cases).',
-                  'In this simulation the supplier waits: on 16-Oct a new crossdock manifest (PO-DMY-10001, 6 pcs) is released → [Search] again → block 4 Ready.'],
+                  'In this simulation the supplier waits: on 16-Oct a new crossdock manifest (T0410001, 6 pcs) is released → [Search] again → block 4 Ready.'],
         'steps': [
             ('1. Crossdock PO of 15-Oct (only 18 pcs)', 'TB_R_PRA_DAILY_ORDER_PART', [
-                ('ref', PRA_PART['1']), ('ref', ['MF-DMY-09002', '0001', 'PO-DMY-09002', '0001', 'PART-X', 6])]),
+                ('ref', PRA_PART['1']), ('ref', ['3126009002', '0001', 'T0409002', '0001', 'PART-X', 6])]),
             ('2. [Search] 15-Oct → XD09: block 4 (TH) without PO', '#TEMP_INSTRUCTION',
-             tmp([PX], [P1, ['PO-DMY-09002', 'MF-DMY-09002', '0001', 6]], notes={('CO-14104', 4): 'No PO left: block 4 Not Ready, blocks 1-3 Ready'})),
+             tmp([PX], [P1, ['T0409002', '3126009002', '0001', 6]], notes={('CO-14104', 4): 'No PO left: block 4 Not Ready, blocks 1-3 Ready'})),
             ('3. New crossdock manifest released 16-Oct', 'TB_R_PRA_DAILY_ORDER_MANIFEST', [
-                ('new', ['MF-DMY-10001', 'PO-DMY-10001', '50221', '1', '2026-10-16', 'X', 6, '2026-10-17', 'SD01'])]),
-            ('', 'TB_R_PRA_DAILY_ORDER_PART', [('new', ['MF-DMY-10001', '0001', 'PO-DMY-10001', '0001', 'PART-X', 6])]),
+                ('new', ['3126010001', 'T0410001', '5001', '1', '2026-10-16', 'X', 6, '2026-10-17', 'SD01'])]),
+            ('', 'TB_R_PRA_DAILY_ORDER_PART', [('new', ['3126010001', '0001', 'T0410001', '0001', 'PART-X', 6])]),
             ('4. [Search] 16-Oct → XD09: all blocks Ready', '#TEMP_INSTRUCTION',
-             tmp([PX], [P1, ['PO-DMY-09002', 'MF-DMY-09002', '0001', 6], ['PO-DMY-10001', 'MF-DMY-10001', '0001', 6]],
-                 changed={('CO-14104', 4): ['PO_NO', 'CROSSDOCK_STATUS']}, notes={('CO-14104', 4): 'PO PO-DMY-10001: unit Ready'})),
+             tmp([PX], [P1, ['T0409002', '3126009002', '0001', 6], ['T0410001', '3126010001', '0001', 6]],
+                 changed={('CO-14104', 4): ['PO_NO', 'CROSSDOCK_STATUS']}, notes={('CO-14104', 4): 'PO T0410001: unit Ready'})),
         ]},
     {
         'id': 'SIM-4', 'title': 'Hold a destination (D/S team)', 'flow': 'BPF F4 / AB09', 'functions': 'XD10 (D/S view), XD09, XD10 Create ASN',
@@ -218,27 +218,27 @@ SCENARIOS = [
         'flow': 'BPF F2 / F4', 'functions': 'XD08, XD09, XD10, XD11 (Change Order Number)',
         'story': ['PART-X, 6 pcs/case. One PO per customer order date: PO_DT = order date + 1, qty = total order qty of the date (all destinations). '
                   'PO qty < order qty is an abnormality: the rest comes in a split PO. ORDER_STATUS of the replicate keeps 7; changes go to UPD_STATUS.',
-                  'Order date 15-Oct (12) → PO-DMY-09011; CO-14102 on hold then cancelled, so its 6 pcs of PO-DMY-09011 go to CO-14103 (older PO_DT first).',
-                  'Order date 17-Oct: 4 destinations, 30 pcs, PO-DMY-09013 only 18 (abnormal) → case 5 Not Ready until the split PO-DMY-09014 (12, 19-Oct). '
-                  'Cases 1-4 → ASN0003; CO-14104 (middle row, case 3) is cancelled after the ASN. Order date 18-Oct: 3 destinations, 18 pcs, PO-DMY-09015 18 (OK) → ASN0005.',
+                  'Order date 15-Oct (12) → T0409011; CO-14102 on hold then cancelled, so its 6 pcs of T0409011 go to CO-14103 (older PO_DT first).',
+                  'Order date 17-Oct: 4 destinations, 30 pcs, T0409013 only 18 (abnormal) → case 5 Not Ready until the split T0409014 (12, 19-Oct). '
+                  'Cases 1-4 → ASN0003; CO-14104 (middle row, case 3) is cancelled after the ASN. Order date 18-Oct: 3 destinations, 18 pcs, T0409015 18 (OK) → ASN0005.',
                   '21-Oct GTOPAS allocates the pcs of case 3 to CO-14111 (UPD_STATUS 6, no ASN): the D/S team moves case 3 to CO-14111 (XD11). '
                   'Open PO qty at the end (12) = cancelled qty (CO-14102 + CO-14104).'],
         'steps': [
-            ('1. 16-Oct XD08 (order date 15-Oct; PO-DMY-09011 PO_DT 16-Oct, 12)', 'TB_R_H0253_ORDER_CONTROL_PRE', [
+            ('1. 16-Oct XD08 (order date 15-Oct; T0409011 PO_DT 16-Oct, 12)', 'TB_R_H0253_ORDER_CONTROL_PRE', [
                 ('new', h('CO-14101', VN, '0000001', 'PART-X', 6, od='2026-10-15')),
                 ('new', h('CO-14102', TH, '0000001', 'PART-X', 6, od='2026-10-15', cust=TH))]),
             ('2. 16-Oct D/S holds CO-14102; CO-14101 → ASN0001', 'TB_R_INSTRUCTION', [
-                ('new', [1, 1, 1, 'PART-X', VN, 'CO-14101', '0000001', 6, 'PO-DMY-09011', 'MF-DMY-09011', '0001', 'ASN0001', 'C-0001-01'])]),
+                ('new', [1, 1, 1, 'PART-X', VN, 'CO-14101', '0000001', 6, 'T0409011', '3126009011', '0001', 'ASN0001', 'C-0001-01'])]),
             ('', 'TB_R_H0253_ORDER_CONTROL_PRE', [
                 ('upd', h('CO-14101', VN, '0000001', 'PART-X', 6, mapped='Y', od='2026-10-15'), ['PO_MAPPED_FLAG']),
-                ('upd', h('CO-14102', TH, '0000001', 'PART-X', 6, hold='Y', od='2026-10-15', cust=TH), ['HOLD_FLAG'], '6 pcs of PO-DMY-09011 stay open')]),
-            ('3. 17-Oct XD08: CO-14101 → 6, CO-14102 → 2, CO-14103 new (PO-DMY-09012 PO_DT 17-Oct, 6)', 'TB_R_H0253_ORDER_CONTROL_PRE', [
+                ('upd', h('CO-14102', TH, '0000001', 'PART-X', 6, hold='Y', od='2026-10-15', cust=TH), ['HOLD_FLAG'], '6 pcs of T0409011 stay open')]),
+            ('3. 17-Oct XD08: CO-14101 → 6, CO-14102 → 2, CO-14103 new (T0409012 PO_DT 17-Oct, 6)', 'TB_R_H0253_ORDER_CONTROL_PRE', [
                 ('upd', h('CO-14101', VN, '0000001', 'PART-X', 6, mapped='Y', upd='6', od='2026-10-15'), ['UPD_STATUS'], 'Received'),
                 ('upd', h('CO-14102', TH, '0000001', 'PART-X', 6, hold='Y', upd='2', od='2026-10-15', cust=TH), ['UPD_STATUS'], 'Cancelled, no ASN (PO_MAPPED_FLAG stays N)'),
                 ('new', h('CO-14103', TH, '0000001', 'PART-X', 6, od='2026-10-16', cust=TH))]),
-            ('4. 17-Oct CO-14103 → ASN0002 with the rest of PO-DMY-09011 (older PO_DT)', 'TB_R_INSTRUCTION', [
-                ('new', [2, 1, 1, 'PART-X', TH, 'CO-14103', '0000001', 6, 'PO-DMY-09011', 'MF-DMY-09011', '0001', 'ASN0002', 'C-0002-01'], [], 'PO-DMY-09012 stays open')]),
-            ('5. 18-Oct XD08: order date 17-Oct, 4 destinations, 30 pcs; PO-DMY-09013 only 18 (abnormal)', 'TB_R_H0253_ORDER_CONTROL_PRE', [
+            ('4. 17-Oct CO-14103 → ASN0002 with the rest of T0409011 (older PO_DT)', 'TB_R_INSTRUCTION', [
+                ('new', [2, 1, 1, 'PART-X', TH, 'CO-14103', '0000001', 6, 'T0409011', '3126009011', '0001', 'ASN0002', 'C-0002-01'], [], 'T0409012 stays open')]),
+            ('5. 18-Oct XD08: order date 17-Oct, 4 destinations, 30 pcs; T0409013 only 18 (abnormal)', 'TB_R_H0253_ORDER_CONTROL_PRE', [
                 ('upd', h('CO-14103', TH, '0000001', 'PART-X', 6, mapped='Y', upd='6', od='2026-10-16', cust=TH), ['UPD_STATUS'], 'Received'),
                 ('new', h('CO-14105', VN, '0000001', 'PART-X', 6, od='2026-10-17')),
                 ('new', h('CO-14106', VN, '0000001', 'PART-X', 3, od='2026-10-17')),
@@ -250,36 +250,36 @@ SCENARIOS = [
                 [[line('CO-14104', TH, 'PART-X', 6, cust=TH, od='2026-10-17'), line('CO-14105', VN, 'PART-X', 6, od='2026-10-17'),
                   line('CO-14106', VN, 'PART-X', 3, od='2026-10-17'), line('CO-14107', VN, 'PART-X', 3, od='2026-10-17'),
                   line('CO-14109', PH, 'PART-X', 6, od='2026-10-17'), line('CO-14110', D4, 'PART-X', 6, od='2026-10-17')]],
-                [['PO-DMY-09012', 'MF-DMY-09012', '0001', 6], ['PO-DMY-09013', 'MF-DMY-09013', '0001', 18]],
+                [['T0409012', '3126009012', '0001', 6], ['T0409013', '3126009013', '0001', 18]],
                 notes={('CO-14105', 1): 'Cases 1-4 ticked → ASN0003', ('CO-14104', 3): 'Middle row', ('CO-14110', 5): 'Not Ready (PO short)'})),
             ('7. 18-Oct ASN0003 = cases 1-4', 'TB_R_INSTRUCTION', [
-                ('new', [3, 1, 1, 'PART-X', VN, 'CO-14105', '0000001', 6, 'PO-DMY-09012', 'MF-DMY-09012', '0001', 'ASN0003', 'C-0003-01']),
-                ('new', [4, 2, 1, 'PART-X', VN, 'CO-14106', '0000001', 3, 'PO-DMY-09013', 'MF-DMY-09013', '0001', 'ASN0003', 'C-0003-02']),
-                ('new', [5, 2, 2, 'PART-X', VN, 'CO-14107', '0000001', 3, 'PO-DMY-09013', 'MF-DMY-09013', '0001', 'ASN0003', 'C-0003-02']),
-                ('new', [6, 3, 1, 'PART-X', TH, 'CO-14104', '0000001', 6, 'PO-DMY-09013', 'MF-DMY-09013', '0001', 'ASN0003', 'C-0003-03']),
-                ('new', [7, 4, 1, 'PART-X', PH, 'CO-14109', '0000001', 6, 'PO-DMY-09013', 'MF-DMY-09013', '0001', 'ASN0003', 'C-0003-04'])]),
-            ('8. 19-Oct XD08: ASN0003 received, CO-14104 → 2 (middle row, in case 3); split PO-DMY-09014 (PO_DT 19-Oct, 12); order date 18-Oct new', 'TB_R_H0253_ORDER_CONTROL_PRE', [
+                ('new', [3, 1, 1, 'PART-X', VN, 'CO-14105', '0000001', 6, 'T0409012', '3126009012', '0001', 'ASN0003', 'C-0003-01']),
+                ('new', [4, 2, 1, 'PART-X', VN, 'CO-14106', '0000001', 3, 'T0409013', '3126009013', '0001', 'ASN0003', 'C-0003-02']),
+                ('new', [5, 2, 2, 'PART-X', VN, 'CO-14107', '0000001', 3, 'T0409013', '3126009013', '0001', 'ASN0003', 'C-0003-02']),
+                ('new', [6, 3, 1, 'PART-X', TH, 'CO-14104', '0000001', 6, 'T0409013', '3126009013', '0001', 'ASN0003', 'C-0003-03']),
+                ('new', [7, 4, 1, 'PART-X', PH, 'CO-14109', '0000001', 6, 'T0409013', '3126009013', '0001', 'ASN0003', 'C-0003-04'])]),
+            ('8. 19-Oct XD08: ASN0003 received, CO-14104 → 2 (middle row, in case 3); split T0409014 (PO_DT 19-Oct, 12); order date 18-Oct new', 'TB_R_H0253_ORDER_CONTROL_PRE', [
                 ('upd', h('CO-14104', TH, '0000001', 'PART-X', 6, mapped='Y', upd='2', od='2026-10-17', cust=TH), ['UPD_STATUS'],
                  'Cancel after ASN: LOG5, listed in XD11 (waiting for a candidate)')]),
             ('', 'TB_R_H0253_ORDER_CONTROL_PRE', [
-                ('new', h('CO-14112', VN, '0000001', 'PART-X', 6, od='2026-10-18'), [], 'Order date 18-Oct, 3 destinations (PO-DMY-09015, PO_DT 19-Oct, 18)'),
+                ('new', h('CO-14112', VN, '0000001', 'PART-X', 6, od='2026-10-18'), [], 'Order date 18-Oct, 3 destinations (T0409015, PO_DT 19-Oct, 18)'),
                 ('new', h('CO-14113', PH, '0000001', 'PART-X', 6, od='2026-10-18')),
                 ('new', h('CO-14114', D4, '0000001', 'PART-X', 6, od='2026-10-18'))]),
             ('9. 19-Oct [Search] → XD09: rest of 17-Oct with the split PO, then 18-Oct', '#TEMP_INSTRUCTION', tmp(
                 [[line('CO-14110', D4, 'PART-X', 6, od='2026-10-17')],
                  [line('CO-14112', VN, 'PART-X', 6, od='2026-10-18'), line('CO-14113', PH, 'PART-X', 6, od='2026-10-18'),
                   line('CO-14114', D4, 'PART-X', 6, od='2026-10-18')]],
-                [['PO-DMY-09014', 'MF-DMY-09014', '0001', 12], ['PO-DMY-09015', 'MF-DMY-09015', '0001', 18]],
+                [['T0409014', '3126009014', '0001', 12], ['T0409015', '3126009015', '0001', 18]],
                 notes={('CO-14110', 1): '→ ASN0004', ('CO-14112', 1): 'Rest of the split PO; cases 1-3 → ASN0005'})),
             ('10. 19-Oct ASN0004 (CO-14110) and ASN0005 (order date 18-Oct, cases 1-3)', 'TB_R_INSTRUCTION', [
-                ('new', [8, 1, 1, 'PART-X', D4, 'CO-14110', '0000001', 6, 'PO-DMY-09014', 'MF-DMY-09014', '0001', 'ASN0004', 'C-0004-01'], [], 'Split PO'),
-                ('new', [9, 1, 1, 'PART-X', VN, 'CO-14112', '0000001', 6, 'PO-DMY-09014', 'MF-DMY-09014', '0001', 'ASN0005', 'C-0005-01']),
-                ('new', [10, 2, 1, 'PART-X', PH, 'CO-14113', '0000001', 6, 'PO-DMY-09015', 'MF-DMY-09015', '0001', 'ASN0005', 'C-0005-02']),
-                ('new', [11, 3, 1, 'PART-X', D4, 'CO-14114', '0000001', 6, 'PO-DMY-09015', 'MF-DMY-09015', '0001', 'ASN0005', 'C-0005-03'], [], '6 pcs of PO-DMY-09015 stay open')]),
-            ('11. 20-Oct XD08: CO-14111 new (order date 19-Oct, PO-DMY-09016); 21-Oct → 6 (pcs of case 3 allocated by GTOPAS)', 'TB_R_H0253_ORDER_CONTROL_PRE', [
+                ('new', [8, 1, 1, 'PART-X', D4, 'CO-14110', '0000001', 6, 'T0409014', '3126009014', '0001', 'ASN0004', 'C-0004-01'], [], 'Split PO'),
+                ('new', [9, 1, 1, 'PART-X', VN, 'CO-14112', '0000001', 6, 'T0409014', '3126009014', '0001', 'ASN0005', 'C-0005-01']),
+                ('new', [10, 2, 1, 'PART-X', PH, 'CO-14113', '0000001', 6, 'T0409015', '3126009015', '0001', 'ASN0005', 'C-0005-02']),
+                ('new', [11, 3, 1, 'PART-X', D4, 'CO-14114', '0000001', 6, 'T0409015', '3126009015', '0001', 'ASN0005', 'C-0005-03'], [], '6 pcs of T0409015 stay open')]),
+            ('11. 20-Oct XD08: CO-14111 new (order date 19-Oct, T0409016); 21-Oct → 6 (pcs of case 3 allocated by GTOPAS)', 'TB_R_H0253_ORDER_CONTROL_PRE', [
                 ('upd', h('CO-14111', TH, '0000001', 'PART-X', 6, upd='6', od='2026-10-19', cust=TH), ['UPD_STATUS'], 'Received without ASN: candidate')]),
             ('12. 21-Oct XD11 Change Order Number: ASN0003 case 3 → CO-14111', 'TB_R_INSTRUCTION', [
-                ('upd', [6, 3, 1, 'PART-X', TH, 'CO-14111', '0000001', 6, 'PO-DMY-09013', 'MF-DMY-09013', '0001', 'ASN0003', 'C-0003-03'],
+                ('upd', [6, 3, 1, 'PART-X', TH, 'CO-14111', '0000001', 6, 'T0409013', '3126009013', '0001', 'ASN0003', 'C-0003-03'],
                  ['CUSTOMER_ORDER_NO'], 'Whole row moved; case, PO and ASN not changed')]),
             ('', 'TB_R_H0253_ORDER_CONTROL_PRE', [
                 ('ref', h('CO-14104', TH, '0000001', 'PART-X', 6, mapped='Y', upd='2', od='2026-10-17', cust=TH), [], 'Not changed (PO_MAPPED_FLAG stays Y)'),
@@ -296,32 +296,32 @@ SCENARIOS = [
                   '2 of the 4 pcs → CO-F (row split), 2 pcs stay with CO-B.'],
         'steps': [
             ('A1. 17-Oct draft of CO-14110 (no ASN_NO)', 'TB_R_INSTRUCTION', [
-                ('new', [21, 1, 1, 'PART-Y', PH, 'CO-14110', '0000001', 6, 'PO-DMY-09004', 'MF-DMY-09004', '0001', None, None]),
-                ('new', [22, 2, 1, 'PART-Y', PH, 'CO-14110', '0000001', 6, 'PO-DMY-09004', 'MF-DMY-09004', '0001', None, None])]),
-            ('', 'TB_R_PRA_DAILY_ORDER_MAPPED', [('new', ['PO-DMY-09004', 'MF-DMY-09004', '0001', 'PART-Y', 12, 12])]),
+                ('new', [21, 1, 1, 'PART-Y', PH, 'CO-14110', '0000001', 6, 'T0409004', '3126009004', '0001', None, None]),
+                ('new', [22, 2, 1, 'PART-Y', PH, 'CO-14110', '0000001', 6, 'T0409004', '3126009004', '0001', None, None])]),
+            ('', 'TB_R_PRA_DAILY_ORDER_MAPPED', [('new', ['T0409004', '3126009004', '0001', 'PART-Y', 12, 12])]),
             ('A2. 18-Oct XD08: all drafts released', 'TB_R_INSTRUCTION', [
-                ('del', [21, 1, 1, 'PART-Y', PH, 'CO-14110', '0000001', 6, 'PO-DMY-09004', 'MF-DMY-09004', '0001', None, None], [], 'Draft deleted'),
-                ('del', [22, 2, 1, 'PART-Y', PH, 'CO-14110', '0000001', 6, 'PO-DMY-09004', 'MF-DMY-09004', '0001', None, None], [], 'Draft deleted')]),
-            ('', 'TB_R_PRA_DAILY_ORDER_MAPPED', [('upd', ['PO-DMY-09004', 'MF-DMY-09004', '0001', 'PART-Y', 12, 0], ['MAPPED_QTY'], '12 → 0')]),
+                ('del', [21, 1, 1, 'PART-Y', PH, 'CO-14110', '0000001', 6, 'T0409004', '3126009004', '0001', None, None], [], 'Draft deleted'),
+                ('del', [22, 2, 1, 'PART-Y', PH, 'CO-14110', '0000001', 6, 'T0409004', '3126009004', '0001', None, None], [], 'Draft deleted')]),
+            ('', 'TB_R_PRA_DAILY_ORDER_MAPPED', [('upd', ['T0409004', '3126009004', '0001', 'PART-Y', 12, 0], ['MAPPED_QTY'], '12 → 0')]),
             ('', 'TB_R_H0253_ORDER_CONTROL_PRE', [
                 ('upd', h('CO-14110', PH, '0000001', 'PART-Y', 12, od='2026-10-15'), ['PO_MAPPED_FLAG'], 'Y → N: back in the delivery plan')]),
             ('B1. ASN00020 before the cancel', 'TB_R_INSTRUCTION', [
-                ('ref', [41, 1, 1, 'PART-Y', VN, 'CO-A', '0000001', 2, 'PO-DMY-10041', 'MF-DMY-10041', '0001', 'ASN00020', 'C-0020-01']),
-                ('ref', [42, 1, 2, 'PART-Y', VN, 'CO-B', '0000001', 4, 'PO-DMY-10041', 'MF-DMY-10041', '0001', 'ASN00020', 'C-0020-01']),
-                ('ref', [43, 2, 1, 'PART-Y', VN, 'CO-B', '0000001', 4, 'PO-DMY-10041', 'MF-DMY-10041', '0001', 'ASN00020', 'C-0020-02']),
-                ('ref', [44, 2, 2, 'PART-Y', VN, 'CO-C', '0000001', 2, 'PO-DMY-10041', 'MF-DMY-10041', '0001', 'ASN00020', 'C-0020-02'])]),
+                ('ref', [41, 1, 1, 'PART-Y', VN, 'CO-A', '0000001', 2, 'T0410041', '3126010041', '0001', 'ASN00020', 'C-0020-01']),
+                ('ref', [42, 1, 2, 'PART-Y', VN, 'CO-B', '0000001', 4, 'T0410041', '3126010041', '0001', 'ASN00020', 'C-0020-01']),
+                ('ref', [43, 2, 1, 'PART-Y', VN, 'CO-B', '0000001', 4, 'T0410041', '3126010041', '0001', 'ASN00020', 'C-0020-02']),
+                ('ref', [44, 2, 2, 'PART-Y', VN, 'CO-C', '0000001', 2, 'T0410041', '3126010041', '0001', 'ASN00020', 'C-0020-02'])]),
             ('B2. XD08: CO-B partial cancel 6 (split serial), CO-E / CO-F received', 'TB_R_H0253_ORDER_CONTROL_PRE', [
                 ('upd', h('CO-B', VN, '0000001', 'PART-Y', 2, mapped='Y', od='2026-10-16'), ['ORDER_STATUS_QTY'], '8 → 2 (still valid)'),
                 ('new', h('CO-B', VN, '0000002', 'PART-Y', 6, st='2', mapped='N', upd='2', od='2026-10-16'), [], 'Cancelled 6 pcs in ASN00020 → XD11'),
                 ('upd', h('CO-E', PH, '0000001', 'PART-Y', 4, upd='6', od='2026-10-16'), ['UPD_STATUS'], 'Candidate 1 (oldest)'),
                 ('upd', h('CO-F', VN, '0000001', 'PART-Y', 2, upd='6', od='2026-10-17'), ['UPD_STATUS'], 'Candidate 2')]),
             ('B3. XD11: 6 pcs → CO-E 4 + CO-F 2 (from the last case)', 'TB_R_INSTRUCTION', [
-                ('ref', [41, 1, 1, 'PART-Y', VN, 'CO-A', '0000001', 2, 'PO-DMY-10041', 'MF-DMY-10041', '0001', 'ASN00020', 'C-0020-01']),
-                ('upd', [42, 1, 2, 'PART-Y', VN, 'CO-B', '0000001', 2, 'PO-DMY-10041', 'MF-DMY-10041', '0001', 'ASN00020', 'C-0020-01'], ['QTY'], '4 → 2 (row split)'),
-                ('new', [45, 1, 3, 'PART-Y', VN, 'CO-F', '0000001', 2, 'PO-DMY-10041', 'MF-DMY-10041', '0001', 'ASN00020', 'C-0020-01'], [], 'Split part → CO-F'),
-                ('upd', [43, 2, 1, 'PART-Y', PH, 'CO-E', '0000001', 4, 'PO-DMY-10041', 'MF-DMY-10041', '0001', 'ASN00020', 'C-0020-02'],
+                ('ref', [41, 1, 1, 'PART-Y', VN, 'CO-A', '0000001', 2, 'T0410041', '3126010041', '0001', 'ASN00020', 'C-0020-01']),
+                ('upd', [42, 1, 2, 'PART-Y', VN, 'CO-B', '0000001', 2, 'T0410041', '3126010041', '0001', 'ASN00020', 'C-0020-01'], ['QTY'], '4 → 2 (row split)'),
+                ('new', [45, 1, 3, 'PART-Y', VN, 'CO-F', '0000001', 2, 'T0410041', '3126010041', '0001', 'ASN00020', 'C-0020-01'], [], 'Split part → CO-F'),
+                ('upd', [43, 2, 1, 'PART-Y', PH, 'CO-E', '0000001', 4, 'T0410041', '3126010041', '0001', 'ASN00020', 'C-0020-02'],
                  ['DESTINATION_CD', 'CUSTOMER_ORDER_NO'], 'Whole row → CO-E (another destination)'),
-                ('ref', [44, 2, 2, 'PART-Y', VN, 'CO-C', '0000001', 2, 'PO-DMY-10041', 'MF-DMY-10041', '0001', 'ASN00020', 'C-0020-02'])]),
+                ('ref', [44, 2, 2, 'PART-Y', VN, 'CO-C', '0000001', 2, 'T0410041', '3126010041', '0001', 'ASN00020', 'C-0020-02'])]),
             ('', 'TB_R_H0253_ORDER_CONTROL_PRE', [
                 ('upd', h('CO-E', PH, '0000001', 'PART-Y', 4, mapped='Y', upd='6', od='2026-10-16'), ['PO_MAPPED_FLAG']),
                 ('upd', h('CO-F', VN, '0000001', 'PART-Y', 2, mapped='Y', upd='6', od='2026-10-17'), ['PO_MAPPED_FLAG'])]),
@@ -338,24 +338,24 @@ SCENARIOS = [
             ('1. Customer order lines of the unit (XD08)', 'TB_R_H0253_ORDER_CONTROL_PRE', [
                 ('ref', h('V01', VN, '0000001', 'PART-A', 10, cust='CUST-A')), ('ref', h('T01', TH, '0000001', 'PART-A', 6, cust='CUST-B')),
                 ('ref', h('V02', VN, '0000001', 'PART-A', 14, cust='CUST-C'))]),
-            ('', 'TB_R_PRA_DAILY_ORDER_PART', [('ref', ['MF-DMY-09011', '0001', 'PO-DMY-09011', '0001', 'PART-A', 24], [], 'p1, released 15-Oct')]),
+            ('', 'TB_R_PRA_DAILY_ORDER_PART', [('ref', ['3126009011', '0001', 'T0409011', '0001', 'PART-A', 24], [], 'p1, released 15-Oct')]),
             ('2. [Search] 15-Oct → XD09: 5 cases, 4 blocks; block 4 without PO', '#TEMP_INSTRUCTION',
-             tmp([SA], [['PO-DMY-09011', 'MF-DMY-09011', '0001', 24]], notes={('V01', 2): 'Case 2 = VN 4 + TH 2: no cut (VN 10, TH 2)',
+             tmp([SA], [['T0409011', '3126009011', '0001', 24]], notes={('V01', 2): 'Case 2 = VN 4 + TH 2: no cut (VN 10, TH 2)',
                                                                         ('V02', 3): 'Cut: VN 12, TH 6', ('V02', 5): 'No PO yet: block 4 Not Ready'})),
             ('3. Supplier chooses option 4 cases (blocks 1-3) → [Create ASN]', 'TB_R_INSTRUCTION', [
-                ('new', [i + 1, c, l, 'PART-A', d, co, '0000001', q, 'PO-DMY-09011', 'MF-DMY-09011', '0001', None, None]) for i, (c, l, d, co, q) in enumerate((
+                ('new', [i + 1, c, l, 'PART-A', d, co, '0000001', q, 'T0409011', '3126009011', '0001', None, None]) for i, (c, l, d, co, q) in enumerate((
                     (1, 1, VN, 'V01', 6), (2, 1, VN, 'V01', 4), (2, 2, TH, 'T01', 2), (3, 1, TH, 'T01', 4), (3, 2, VN, 'V02', 2), (4, 1, VN, 'V02', 6)))]),
-            ('', 'TB_R_PRA_DAILY_ORDER_MAPPED', [('new', ['PO-DMY-09011', 'MF-DMY-09011', '0001', 'PART-A', 24, 24])]),
+            ('', 'TB_R_PRA_DAILY_ORDER_MAPPED', [('new', ['T0409011', '3126009011', '0001', 'PART-A', 24, 24])]),
             ('', 'TB_R_H0253_ORDER_CONTROL_PRE', [
                 ('upd', h('V01', VN, '0000001', 'PART-A', 10, mapped='Y', cust='CUST-A'), ['PO_MAPPED_FLAG'], 'Whole line mapped (10)'),
                 ('upd', h('T01', TH, '0000001', 'PART-A', 6, mapped='Y', cust='CUST-B'), ['PO_MAPPED_FLAG'], 'Whole line mapped (6)'),
                 ('ref', h('V02', VN, '0000001', 'PART-A', 14, cust='CUST-C'), [], '8 of 14 mapped: stays N, open qty 6')]),
-            ('4. p2 released 16-Oct', 'TB_R_PRA_DAILY_ORDER_PART', [('new', ['MF-DMY-10011', '0001', 'PO-DMY-10011', '0001', 'PART-A', 6])]),
+            ('4. p2 released 16-Oct', 'TB_R_PRA_DAILY_ORDER_PART', [('new', ['3126010011', '0001', 'T0410011', '0001', 'PART-A', 6])]),
             ('5. [Search] 16-Oct → XD09: open qty of V02 (6) cut again from case 1', '#TEMP_INSTRUCTION',
-             tmp([[dict(SA[2], QTY=6)]], [['PO-DMY-10011', 'MF-DMY-10011', '0001', 6]], notes={('V02', 1): 'OPEN_ORDER_QTY = 14 - 8 in TB_R_INSTRUCTION'})),
+             tmp([[dict(SA[2], QTY=6)]], [['T0410011', '3126010011', '0001', 6]], notes={('V02', 1): 'OPEN_ORDER_QTY = 14 - 8 in TB_R_INSTRUCTION'})),
             ('6. [Create ASN] (second ASN)', 'TB_R_INSTRUCTION', [
-                ('new', [7, 1, 1, 'PART-A', VN, 'V02', '0000001', 6, 'PO-DMY-10011', 'MF-DMY-10011', '0001', None, None])]),
-            ('', 'TB_R_PRA_DAILY_ORDER_MAPPED', [('new', ['PO-DMY-10011', 'MF-DMY-10011', '0001', 'PART-A', 6, 6])]),
+                ('new', [7, 1, 1, 'PART-A', VN, 'V02', '0000001', 6, 'T0410011', '3126010011', '0001', None, None])]),
+            ('', 'TB_R_PRA_DAILY_ORDER_MAPPED', [('new', ['T0410011', '3126010011', '0001', 'PART-A', 6, 6])]),
             ('', 'TB_R_H0253_ORDER_CONTROL_PRE', [
                 ('upd', h('V02', VN, '0000001', 'PART-A', 14, mapped='Y', cust='CUST-C'), ['PO_MAPPED_FLAG'], 'Whole line mapped (8 + 6)')]),
         ]},
@@ -378,14 +378,14 @@ SCENARIOS = [
                 ('ref', h('C-0103', VN, '0000001', 'PART-B', 14, cust=VN2), [], 'Priority 14-Oct · SORT_SEQ 4'),
                 ('ref', h('A-0201', VN, '0000001', 'PART-B', 6, od='2026-10-15'), [], 'Priority 15-Oct: after all 14-Oct lines (unit 15-Oct, SORT_SEQ 1)')]),
             ('2. [Search] 15-Oct (PO1 20 pcs) → XD09: SORT_SEQ, cases, blocks', '#TEMP_INSTRUCTION',
-             tmp([SB], [['PO-DMY-09021', 'MF-DMY-09021', '0001', 20]],
+             tmp([SB], [['T0409021', '3126009021', '0001', 20]],
                  notes={('A-0101', 1): 'SORT_SEQ 1 = 9715300 / A-0101 / item 001', ('B-0102', 2): 'Case 2 = VN 2 + VN 2 + TH 2: no cut (VN 10, TH 2)',
                         ('C-0103', 3): 'Cut: VN 12, TH 6', ('C-0103', 4): 'Case 4: only 2 of 6 pcs with PO1 → block 3 Not Ready, block 4 too'})),
             ('3. Supplier chooses option 1 case → [Create ASN]', 'TB_R_INSTRUCTION', [
-                ('new', [1, 1, 1, 'PART-B', VN, 'A-0101', '0000001', 6, 'PO-DMY-09021', 'MF-DMY-09021', '0001', None, None], [], 'Item 001: 6 of 8, open 2')]),
-            ('', 'TB_R_PRA_DAILY_ORDER_MAPPED', [('new', ['PO-DMY-09021', 'MF-DMY-09021', '0001', 'PART-B', 20, 6])]),
+                ('new', [1, 1, 1, 'PART-B', VN, 'A-0101', '0000001', 6, 'T0409021', '3126009021', '0001', None, None], [], 'Item 001: 6 of 8, open 2')]),
+            ('', 'TB_R_PRA_DAILY_ORDER_MAPPED', [('new', ['T0409021', '3126009021', '0001', 'PART-B', 20, 6])]),
             ('4. [Search] 16-Oct (PO1 open 14 + PO2 10) → open qty cut again from case 1', '#TEMP_INSTRUCTION',
-             tmp([[dict(SB[0], QTY=2)] + SB[1:], SB2], [['PO-DMY-09021', 'MF-DMY-09021', '0001', 14], ['PO-DMY-10021', 'MF-DMY-10021', '0001', 10]],
+             tmp([[dict(SB[0], QTY=2)] + SB[1:], SB2], [['T0409021', '3126009021', '0001', 14], ['T0410021', '3126010021', '0001', 10]],
                  notes={('A-0101', 1): 'Open qty 8 - 6 = 2; case 1 = the same physical case as case 2 on 15-Oct', ('C-0103', 4): 'Unit 14-Oct: all 3 blocks Ready (options 2 / 3 / 4 cases)',
                         ('A-0201', 1): 'Unit 15-Oct after unit 14-Oct (way B): no PO left'})),
         ]},
@@ -397,13 +397,13 @@ SCENARIOS = [
                   '[Create ASN] inserts the slices of cases 1-3; V01 and T01 are complete (PO_MAPPED_FLAG Y), V02 keeps 12 pcs open for a later ASN.'],
         'steps': [
             ('1. [Search] → XD09: all cases with PO; CUT_FLAG Y after cases 1, 3, 4, 5', '#TEMP_INSTRUCTION',
-             tmp([SA], [['PO-DMY-09011', 'MF-DMY-09011', '0001', 24], ['PO-DMY-10011', 'MF-DMY-10011', '0001', 6]],
+             tmp([SA], [['T0409011', '3126009011', '0001', 24], ['T0410011', '3126010011', '0001', 6]],
                  notes={('V01', 2): 'Case 2 = VN 4 + TH 2: CUT N (VN 10, TH 2) → cannot be the last case',
                         ('V02', 3): 'Case 3: CUT Y (VN 12, TH 6) → ticked together with case 2'})),
             ('2. Supplier ticks cases 1-2 → XD10 ticks case 3 too (MSG10) → [Create ASN] cases 1-3', 'TB_R_INSTRUCTION', [
-                ('new', [i + 1, c, l, 'PART-A', d, co, '0000001', q, 'PO-DMY-09011', 'MF-DMY-09011', '0001', None, None]) for i, (c, l, d, co, q) in enumerate((
+                ('new', [i + 1, c, l, 'PART-A', d, co, '0000001', q, 'T0409011', '3126009011', '0001', None, None]) for i, (c, l, d, co, q) in enumerate((
                     (1, 1, VN, 'V01', 6), (2, 1, VN, 'V01', 4), (2, 2, TH, 'T01', 2), (3, 1, TH, 'T01', 4), (3, 2, VN, 'V02', 2)))]),
-            ('', 'TB_R_PRA_DAILY_ORDER_MAPPED', [('new', ['PO-DMY-09011', 'MF-DMY-09011', '0001', 'PART-A', 24, 18], [], '18 of 24 used; 6 left for case 4')]),
+            ('', 'TB_R_PRA_DAILY_ORDER_MAPPED', [('new', ['T0409011', '3126009011', '0001', 'PART-A', 24, 18], [], '18 of 24 used; 6 left for case 4')]),
             ('', 'TB_R_H0253_ORDER_CONTROL_PRE', [
                 ('upd', h('V01', VN, '0000001', 'PART-A', 10, mapped='Y', cust='CUST-A'), ['PO_MAPPED_FLAG'], 'Whole line in cases 1-2'),
                 ('upd', h('T01', TH, '0000001', 'PART-A', 6, mapped='Y', cust='CUST-B'), ['PO_MAPPED_FLAG'], 'Whole line in cases 2-3'),
@@ -418,16 +418,16 @@ SCENARIOS = [
                   'XD08 re-assigns the rows: serial 0000001 = ASN0006 (oldest ASN = received), serial 0000002 = ASN0007; both PO_MAPPED_FLAG Y.'],
         'steps': [
             ('1. 20-Oct ASN0006 (case 1) and ASN0007 (case 2): one line in 2 ASNs', 'TB_R_INSTRUCTION', [
-                ('new', [12, 1, 1, 'PART-X', VN, 'CO-14115', '0000001', 6, 'PO-DMY-09015', 'MF-DMY-09015', '0001', 'ASN0006', 'C-0006-01']),
-                ('new', [13, 1, 1, 'PART-X', VN, 'CO-14115', '0000001', 6, 'PO-DMY-09016', 'MF-DMY-09016', '0001', 'ASN0007', 'C-0007-01'])]),
+                ('new', [12, 1, 1, 'PART-X', VN, 'CO-14115', '0000001', 6, 'T0409015', '3126009015', '0001', 'ASN0006', 'C-0006-01']),
+                ('new', [13, 1, 1, 'PART-X', VN, 'CO-14115', '0000001', 6, 'T0409016', '3126009016', '0001', 'ASN0007', 'C-0007-01'])]),
             ('', 'TB_R_H0253_ORDER_CONTROL_PRE', [
                 ('upd', h('CO-14115', VN, '0000001', 'PART-X', 12, mapped='Y', od='2026-10-19'), ['PO_MAPPED_FLAG'], 'N after ASN0006 (6 of 12), Y after ASN0007')]),
             ('2. 21-Oct XD08 upsert: ASN0006 received, GTOPAS split the line', 'TB_R_H0253_ORDER_CONTROL_PRE', [
                 ('upd', h('CO-14115', VN, '0000001', 'PART-X', 6, mapped='Y', upd='6', od='2026-10-19'), ['ORDER_STATUS_QTY', 'UPD_STATUS'], '12 → 6, received'),
                 ('new', h('CO-14115', VN, '0000002', 'PART-X', 6, od='2026-10-19'), [], 'New serial, status 7: without step 3 open qty 6 = double mapping')]),
             ('3. 21-Oct XD08 serial split: rows re-assigned (LOG7)', 'TB_R_INSTRUCTION', [
-                ('ref', [12, 1, 1, 'PART-X', VN, 'CO-14115', '0000001', 6, 'PO-DMY-09015', 'MF-DMY-09015', '0001', 'ASN0006', 'C-0006-01'], [], 'Oldest ASN → serial with status 6'),
-                ('upd', [13, 1, 1, 'PART-X', VN, 'CO-14115', '0000002', 6, 'PO-DMY-09016', 'MF-DMY-09016', '0001', 'ASN0007', 'C-0007-01'], ['SERIAL_NO'],
+                ('ref', [12, 1, 1, 'PART-X', VN, 'CO-14115', '0000001', 6, 'T0409015', '3126009015', '0001', 'ASN0006', 'C-0006-01'], [], 'Oldest ASN → serial with status 6'),
+                ('upd', [13, 1, 1, 'PART-X', VN, 'CO-14115', '0000002', 6, 'T0409016', '3126009016', '0001', 'ASN0007', 'C-0007-01'], ['SERIAL_NO'],
                  'Next ASN → serial with status 7; case, PO, ASN not changed')]),
             ('', 'TB_R_H0253_ORDER_CONTROL_PRE', [
                 ('upd', h('CO-14115', VN, '0000002', 'PART-X', 6, mapped='Y', od='2026-10-19'), ['PO_MAPPED_FLAG'], 'Fully in TB_R_INSTRUCTION: not taken by XD09')]),

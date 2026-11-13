@@ -655,7 +655,7 @@
    "image": "deliverables/uiss_screens/asn_crossdock/c_04d_ds_supplier_hold.png"
   },
   {
-   "caption": "4d. Sub screen: supplier 50221 plant 1 put on hold (On Hold, [Release hold])",
+   "caption": "4d. Sub screen: supplier 5001 plant 1 put on hold (On Hold, [Release hold])",
    "image": "deliverables/uiss_screens/asn_crossdock/c_04f_ds_supplier_hold_on.png"
   },
   {
@@ -679,7 +679,7 @@
    "image": "deliverables/uiss_screens/asn_crossdock/c_05d_after_refresh.png"
   },
   {
-   "caption": "5d. D/S team: units of two suppliers ticked (PART-D of supplier 50330, prototype only), Create ASN: one supplier per ASN",
+   "caption": "5d. D/S team: units of two suppliers ticked (PART-D of supplier 5002, prototype only), Create ASN: one supplier per ASN",
    "image": "deliverables/uiss_screens/asn_crossdock/c_05e_supplier_conflict.png"
   },
   {
@@ -4121,7 +4121,7 @@
   "title": "Sample Input",
   "heading": "Sample Create ASN - ASN Cross Dock Creation (simulasi_asn_rev.xlsx, 18-Oct-2026)",
   "intro": [
-   "Data of simulasi_asn_rev.xlsx (also in the prototype, business date 18-Oct). Supplier 50221 plant 1, Delivery Date 18-Oct-2026, Rit 1, Route SD01. PART-X, Pcs/Case = 6. ASN0001 (CO-14101) and ASN0002 (CO-14103) are already submitted, so the oldest open Customer Order Date is 17-Oct.",
+   "Data of simulasi_asn_rev.xlsx (also in the prototype, business date 18-Oct). Supplier 5001 plant 1, Delivery Date 18-Oct-2026, Rit 1, Route SD01. PART-X, Pcs/Case = 6. ASN0001 (CO-14101) and ASN0002 (CO-14103) are already submitted, so the oldest open Customer Order Date is 17-Oct.",
    "Order date 17-Oct: 4 destinations, 30 pcs; PO T0409013 (PO date 18-Oct) has only 18 pcs (Short PO, abnormality); the rest of T0409012 (6) is taken first (older PO date). The split PO T0409014 (12) comes on 19-Oct.",
    "The supplier ticks the unit PART-X 17-Oct (cases 1-4, case 5 is Not Ready) and clicks [Create ASN]; the submit gives ASN0003."
   ],
@@ -4539,7 +4539,7 @@
      ],
      [
       "Supplier · Plant",
-      "50221 · 1"
+      "5001 · 1"
      ],
      [
       "Delivery Date · Rit · Route",
@@ -4608,7 +4608,7 @@
      ],
      [
       "E3",
-      "D/S team ticks PART-X (supplier 50221-1) and a unit of supplier 50330-2",
+      "D/S team ticks PART-X (supplier 5001-1) and a unit of supplier 5002-1",
       "MSG9; nothing is inserted."
      ],
      [

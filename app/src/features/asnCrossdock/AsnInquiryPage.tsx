@@ -73,7 +73,7 @@ export function AsnInquiryPage() {
       <div style={{ ...card, padding: '14px 16px 16px' }}>
         <div style={{ fontSize: 10.5, fontWeight: 600, letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: 11 }}>Search criteria</div>
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 13 }}>
-          <div className="field" style={{ width: 220 }}><label>ASN No</label><input className="input" value={filter.asn} placeholder="e.g. ASN-50221" onChange={(e) => setFilter({ ...filter, asn: e.target.value })} onKeyDown={(e) => e.key === 'Enter' && setQuery(filter)} /></div>
+          <div className="field" style={{ width: 220 }}><label>ASN No</label><input className="input" value={filter.asn} placeholder="e.g. ASN-5001" onChange={(e) => setFilter({ ...filter, asn: e.target.value })} onKeyDown={(e) => e.key === 'Enter' && setQuery(filter)} /></div>
           <div className="field" style={{ width: 160 }}><label>Delivery Date - From</label><input className="input" type="date" value={filter.from} onChange={(e) => setFilter({ ...filter, from: e.target.value })} /></div>
           <div className="field" style={{ width: 160 }}><label>To</label><input className="input" type="date" value={filter.to} onChange={(e) => setFilter({ ...filter, to: e.target.value })} /></div>
           <div className="field" style={{ width: 150 }}>

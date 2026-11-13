@@ -41,7 +41,7 @@ SAMPLE = {
     "title": "Sample Input",
     "heading": "Sample Create ASN - ASN Cross Dock Creation (simulasi_asn_rev.xlsx, 18-Oct-2026)",
     "intro": [
-        "Data of simulasi_asn_rev.xlsx (also in the prototype, business date 18-Oct). Supplier 50221 plant 1, Delivery Date 18-Oct-2026, Rit 1, Route SD01. "
+        "Data of simulasi_asn_rev.xlsx (also in the prototype, business date 18-Oct). Supplier 5001 plant 1, Delivery Date 18-Oct-2026, Rit 1, Route SD01. "
         "PART-X, Pcs/Case = 6. ASN0001 (CO-14101) and ASN0002 (CO-14103) are already submitted, so the oldest open Customer Order Date is 17-Oct.",
         "Order date 17-Oct: 4 destinations, 30 pcs; PO T0409013 (PO date 18-Oct) has only 18 pcs (Short PO, abnormality); the rest of T0409012 (6) is "
         "taken first (older PO date). The split PO T0409014 (12) comes on 19-Oct.",
@@ -75,7 +75,7 @@ SAMPLE = {
         {"title": "F. Result on the screen: Case List (Draft)",
          "columns": ["Item", "Value"],
          "spans": [3, 12],
-         "rows": [["ASN No", "ASN0003 (auto, assigned on submit)"], ["Supplier · Plant", "50221 · 1"],
+         "rows": [["ASN No", "ASN0003 (auto, assigned on submit)"], ["Supplier · Plant", "5001 · 1"],
                   ["Delivery Date · Rit · Route", f"{DT} · {RIT}"], ["Delivery Qty", "24 pcs"], ["Cases", "4 cases"],
                   ["Case 1 .. Case 4", "Case Number, Part Number, Customer Order Date, Qty (6 each); the expand button shows the PO No, Manifest No, Manifest Item and PO Qty "
                                        "(Case 1: T0409012; Cases 2-4: T0409013)"],
@@ -92,7 +92,7 @@ SAMPLE = {
                   ["E1", "The D/S team holds Thailand (CO-14104) after the supplier ticked the unit", "MSG8; the whole create fails, nothing is inserted, "
                                                                                                          "the delivery plan is refreshed and all units are unticked."],
                   ["E2", "The unit is no longer Ready when [Create ASN] is clicked", "MSG7; nothing is inserted; the delivery plan is refreshed."],
-                  ["E3", "D/S team ticks PART-X (supplier 50221-1) and a unit of supplier 50330-2", "MSG9; nothing is inserted."],
+                  ["E3", "D/S team ticks PART-X (supplier 5001-1) and a unit of supplier 5002-1", "MSG9; nothing is inserted."],
                   ["E4", "No ASN yet on 22-Oct: the supplier wants order date 18-Oct first", "Not possible: per Part Number the oldest Customer Order Date first "
                                                                                              "(15-Oct, then 16-Oct, 17-Oct …); later dates are disabled (Wait: dd-Mon first)."],
                   ["E5", "Database error during the insert", "Roll back: nothing is kept; error message on the screen and Log FAILED."]]},

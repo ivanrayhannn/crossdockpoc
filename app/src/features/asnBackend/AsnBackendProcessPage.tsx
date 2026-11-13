@@ -85,7 +85,7 @@ export function AsnBackendProcessPage() {
           ['5', 'Error: roll back the batch, log the error with the Submit ID; the mapping in TB_R_INSTRUCTION is released.', 'Log (existing)'],
         ]} />
         <div style={{ marginTop: 8 }}>
-          Log message on success: <i>"ASN-50221-261015-001 submitted with status Created. 3 cases are saved. Delivery 15-Oct-2026 · Rit 1. The ASN is shown in ASN Inquiry."</i>
+          Log message on success: <i>"ASN-5001-261015-001 submitted with status Created. 3 cases are saved. Delivery 15-Oct-2026 · Rit 1. The ASN is shown in ASN Inquiry."</i>
         </div>
       </Section>
 
@@ -121,7 +121,7 @@ export function AsnBackendProcessPage() {
           <li>Switch back to <b>View as: Supplier</b> and click <b>Create ASN</b>: the message <i>"Some order has been already hold, please select other records"</i> appears, all ticks are removed and the delivery plan is refreshed.</li>
           <li>Release Thailand, tick the whole unit (cases 1-4), Create ASN and Submit: <b>ASN0003</b> as in the workbook; the result is in <a href="#/log-monitoring">Log Monitoring</a>.</li>
           <li>Business date <b>19-Oct</b>: the split PO T0409014 makes case 5 (CO-14110) Ready (ASN0004); order date 18-Oct has 3 destinations (ASN0005). <b>20-Oct</b>: CO-14115 12 pcs = 2 cases (ASN0006, ASN0007).</li>
-          <li>One ASN = one Supplier Code + Plant: in View as D/S team tick PART-X and PART-D (second supplier 50330, not in the workbook) and click Create ASN → message "One ASN is for one Supplier Code and Supplier Plant".</li>
+          <li>One ASN = one Supplier Code + Plant: in View as D/S team tick PART-X and PART-D (second supplier 5002, not in the workbook) and click Create ASN → message "One ASN is for one Supplier Code and Supplier Plant".</li>
         </ol>
         <div style={{ marginTop: 8, color: 'var(--color-neutral-600)', fontSize: 11.5 }}>
           Each View as keeps its own selection, so the two views act like two users on the same data. All days of the workbook: menu ASN Simulation.

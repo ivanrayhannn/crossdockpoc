@@ -122,7 +122,7 @@ CAPS_SIM = {  # screenshots of the prototype with the data of simulasi_asn_rev.x
                           '(Short PO: T0409013 18 of 30 pcs)',
     'c_04_ds_hold': '4. D/S team: Thailand (CO-14104) on hold; the H0253 order and the cases are computed again without it',
     'c_05_selected': '5. Case 3 of PART-X 17-Oct ticked: cases 1-3 are selected (the selection always starts at case 1)',
-    'c_05e_supplier_conflict': '5d. D/S team: units of two suppliers ticked (PART-D of supplier 50330, prototype only), Create ASN: one supplier per ASN',
+    'c_05e_supplier_conflict': '5d. D/S team: units of two suppliers ticked (PART-D of supplier 5002, prototype only), Create ASN: one supplier per ASN',
     'c_06_case_list': '6. Case List sub screen: cases 1-4 of PART-X 17-Oct = ASN0003',
     'c_10_list_after': '10. Delivery plan after submit: only case 5 (CO-14110) is left, Not Ready until the split PO T0409014'}
 

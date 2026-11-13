@@ -394,7 +394,7 @@ a { color: var(--color-accent-700); } a:hover { color: var(--color-accent); }
             </div>
             <div style="padding:12px 18px;border-right:1px solid #e3e6ea;display:flex;flex-direction:column;gap:3px">
               <div style="font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);font-weight:600">Supplier · Plant</div>
-              <div style="font-weight:700;font-size:14px"><span style="font-family:'Roboto Mono',monospace">50221</span> · <span style="font-family:'Roboto Mono',monospace">P01</span></div>
+              <div style="font-weight:700;font-size:14px"><span style="font-family:'Roboto Mono',monospace">5001</span> · <span style="font-family:'Roboto Mono',monospace">P01</span></div>
               <div style="font-size:11.5px;color:var(--color-neutral-600)">PT Dummy Supplier Indonesia</div>
             </div>
             <div style="padding:12px 18px;display:flex;flex-direction:column;gap:3px">
@@ -643,7 +643,7 @@ const SEED = [
 const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const niceD = iso => { const [y, m, d] = iso.split('-'); return d + '-' + MON[+m - 1] + '-' + y; };
 const addDay = iso => { const t = new Date(iso + 'T00:00:00Z'); t.setUTCDate(t.getUTCDate() + 1); return t.toISOString().slice(0, 10); };
-const caseNo = n => '50221X' + String(n).padStart(2, '0');
+const caseNo = n => '5001X' + String(n).padStart(2, '0');
 const plural = (n, w) => n + ' ' + w + (n > 1 ? 's' : '');
 
 const isoD = n => '2026-09-' + String(n).padStart(2, '0');
@@ -655,13 +655,13 @@ const PRESETS = {
 
 const DP_HDR = [{ date: '18-Sep-2026', po: 'PO1', asn: 'xxxxx' }, { date: '19-Sep-2026', po: 'PO2', asn: 'xxxxx' }];
 const DP_CASES = [
-  { v: 'a', date: '18-Sep-2026', part: '1', qty: 6, po: 'PO1', caseNo: '50221X01' },
-  { v: 'b', date: '18-Sep-2026', part: '2', qty: 6, po: 'PO1', caseNo: '50221X02' },
-  { v: 'c', date: '18-Sep-2026', part: '2', qty: 6, po: 'PO1', caseNo: '50221X03' },
-  { v: 'd', date: '18-Sep-2026', part: '3', qty: 12, po: 'PO1', caseNo: '50221X04' },
-  { v: 'e', date: '18-Sep-2026', part: '3', qty: 6, po: 'PO1', caseNo: '50221X05' },
-  { v: 'f', date: '18-Sep-2026', part: '4', qty: 6, po: 'PO1', caseNo: '50221X07' },
-  { v: 'g', date: '19-Sep-2026', part: '3', qty: 6, po: 'PO2', caseNo: '50221X08' }
+  { v: 'a', date: '18-Sep-2026', part: '1', qty: 6, po: 'PO1', caseNo: '5001X01' },
+  { v: 'b', date: '18-Sep-2026', part: '2', qty: 6, po: 'PO1', caseNo: '5001X02' },
+  { v: 'c', date: '18-Sep-2026', part: '2', qty: 6, po: 'PO1', caseNo: '5001X03' },
+  { v: 'd', date: '18-Sep-2026', part: '3', qty: 12, po: 'PO1', caseNo: '5001X04' },
+  { v: 'e', date: '18-Sep-2026', part: '3', qty: 6, po: 'PO1', caseNo: '5001X05' },
+  { v: 'f', date: '18-Sep-2026', part: '4', qty: 6, po: 'PO1', caseNo: '5001X07' },
+  { v: 'g', date: '19-Sep-2026', part: '3', qty: 6, po: 'PO2', caseNo: '5001X08' }
 ];
 const DP_ORD = [
   { v: 'a', no: 'Order 0', qty: 6, od: '' }, { v: 'b', no: 'Order 1', qty: 3, od: '15-Sep' }, { v: 'b', no: 'Order 2', qty: 3, od: '16-Sep' },
@@ -751,7 +751,7 @@ class Component extends DCLogic {
     let n = 0;
     const aDGroups = uniq(draft, 'part').map(pt => { const cs = draft.filter(c => c.part === pt); return { part: pt, meta: plural(cs.length, 'case') + ' · ' + sum(cs) + ' pcs',
       rows: cs.map(c => ({ seq: String(++n).padStart(2, '0'), caseNo: c.id, po: c.po, part: c.part, dest: c.dest, qty: c.qty, rmDisp: ro ? 'none' : 'grid', remove: () => toggle(c.id) })) }; });
-    const asnNo = done ? done.no : 'ASN-50221-260929-00' + (Object.values(asn).length ? new Set(Object.values(asn)).size + 1 : 1);
+    const asnNo = done ? done.no : 'ASN-5001-260929-00' + (Object.values(asn).length ? new Set(Object.values(asn)).size + 1 : 1);
     const dlv = done ? done.dlv : (s.aDlv ?? '2026-09-30');
     const p2 = page === 'draft';
     return {

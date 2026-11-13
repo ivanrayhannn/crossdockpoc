@@ -29,7 +29,7 @@ await view('Supplier'); await search(); await shot('c_04c_supplier_reduce');
 await view('D/S team'); await search();
 if (!(await pg.getByRole('button', { name: 'Release', exact: true }).count())) await unitRow('PART-X', '17-Oct').getByTitle('Destination detail (D/S team)').click();
 await pg.getByRole('button', { name: 'Release', exact: true }).first().click();
-// D/S team: sub screen Hold per Supplier Code + Plant: open POs and the customer orders pre-mapped to them; hold 50221 plant 1
+// D/S team: sub screen Hold per Supplier Code + Plant: open POs and the customer orders pre-mapped to them; hold 5001 plant 1
 await pg.getByRole('button', { name: 'Hold per Supplier', exact: true }).click(); await shot('c_04d_ds_supplier_hold');
 await pg.getByRole('button', { name: 'Hold supplier' }).first().click(); await shot('c_04f_ds_supplier_hold_on');
 await pg.getByRole('button', { name: /Back to ASN Crossdock Creation/ }).click();
@@ -50,7 +50,7 @@ await pg.getByRole('button', { name: 'OK' }).click(); await shot('c_05d_after_re
 await view('D/S team');
 await unitRow('PART-X', '17-Oct').getByTitle('Destination detail (D/S team)').click();
 await destHold('9722D10').click();
-// D/S team ticks units of two suppliers (PART-D of supplier 50330 is not in the workbook)
+// D/S team ticks units of two suppliers (PART-D of supplier 5002 is not in the workbook)
 await search();
 await unitRow('PART-X', '17-Oct').locator('input[type=checkbox]').first().check();
 await unitRow('PART-D', '17-Oct').locator('input[type=checkbox]').first().check();

@@ -80,7 +80,7 @@ export function AsnDraftTab({ state }: { state: CaseSimulationState }) {
               </div>
               <div>
                 <div className="small text-muted text-uppercase font-weight-bold">Supplier · Plant</div>
-                <div className="font-weight-bold text-monospace">50221 · P01</div>
+                <div className="font-weight-bold text-monospace">5001 · P01</div>
                 <small className="text-muted">PT Dummy Supplier Indonesia</small>
               </div>
             </div>

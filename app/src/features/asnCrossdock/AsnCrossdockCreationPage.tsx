@@ -117,7 +117,7 @@ export function AsnCrossdockCreationPage() {
   const [openDest, setOpenDest] = useState<Record<string, boolean>>({});
   const [openCase, setOpenCase] = useState<Record<number, boolean>>({});
   const [page, setPage] = useState<'list' | 'cases' | 'supHold'>('list');
-  const [openSup, setOpenSup] = useState<Record<string, boolean>>({ '50221-1': true });
+  const [openSup, setOpenSup] = useState<Record<string, boolean>>({ '5001-1': true });
   const [confirm, setConfirm] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [labelNote, setLabelNote] = useState(false);
