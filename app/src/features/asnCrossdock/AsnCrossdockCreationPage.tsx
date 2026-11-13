@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { setBusinessDate, setStartState, submitAsnBatch, useAsns, useBusinessDate, useStartState, type StartState } from './asnStore';
 import {
   asnNoFor, BUSINESS_DATES, buildCases, buildUnits, contentOf, DESTS, endBefore, endFor, groupCases, HOLD_INIT, niceDate, PCS_PER_CASE, poQtyOf,
-  LOGIN_SUPPLIER, ritCyclesFor, sentQty, SUPPLIERS, type AsnCase, type InstrLine, type Unit, type UnitCase, type UnitStatus,
+  LOGIN_SUPPLIER, ritCyclesFor, sentQty, SUPPLIERS, type AsnCase, type CaseHoldRow, type InstrLine, type Unit, type UnitCase, type UnitStatus,
 } from './data';
 import { Chip, Modal } from './ui';
 import { card, th, td } from './styles';
@@ -103,14 +103,17 @@ export function AsnCrossdockCreationPage() {
   /** D/S holds (saved): Part Number on hold, and held cases (unit key | case no). */
   const [partHold, setPartHold] = useState<Record<string, boolean>>({});
   const [partEdit, setPartEdit] = useState<Record<string, boolean | undefined>>({});
-  const [caseHold, setCaseHold] = useState<Record<string, boolean>>({});
+  /** Saved case holds per unit key (TB_R_CROSSDOCK_CASE_HOLD); matched again to the cases at each Search (FB-182). */
+  const [caseHold, setCaseHold] = useState<Record<string, CaseHoldRow[]>>({});
   /** Hold per case in edit mode: unit key -> draft of its held cases (Edit / Save like Part List and Mapping). */
   const [caseDraft, setCaseDraft] = useState<Record<string, Record<number, boolean>>>({});
-  const startCaseEdit = (u: Unit) => setCaseDraft({ ...caseDraft, [u.key]: Object.fromEntries(u.cases.map((c) => [c.seq, !!caseHold[`${u.key}|${c.seq}`]])) });
+  const startCaseEdit = (u: Unit) => setCaseDraft({ ...caseDraft, [u.key]: Object.fromEntries(u.cases.map((c) => [c.seq, c.held])) });
   const endCaseEdit = (u: Unit) => { const d = { ...caseDraft }; delete d[u.key]; setCaseDraft(d); };
   const saveCaseEdit = (u: Unit) => {
+    const rows = u.cases.filter((c) => caseDraft[u.key]?.[c.seq])
+      .map((c) => ({ seq: c.seq, destCd: c.lines[0].destCd, custOrderNo: c.lines[0].custOrderNo }));
     const n = { ...caseHold };
-    u.cases.forEach((c) => { const k = `${u.key}|${c.seq}`; if (caseDraft[u.key]?.[c.seq]) n[k] = true; else delete n[k]; });
+    if (rows.length) n[u.key] = rows; else delete n[u.key];
     setCaseHold(n);
     endCaseEdit(u);
   };
@@ -588,7 +591,7 @@ export function AsnCrossdockCreationPage() {
                                   {isDs && (
                                     <td style={{ ...td, textAlign: 'center' }}>
                                       <input type="checkbox" aria-label={`Hold case ${c.seq} of ${u.partNo} ${niceDate(u.orderDt)}`}
-                                        checked={caseDraft[u.key] ? !!caseDraft[u.key][c.seq] : !!caseHold[`${u.key}|${c.seq}`]}
+                                        checked={caseDraft[u.key] ? !!caseDraft[u.key][c.seq] : c.held}
                                         disabled={!caseDraft[u.key] || !c.lines.every((l) => l.poNo)}
                                         title={!caseDraft[u.key] ? 'Click Edit hold first' : c.lines.every((l) => l.poNo) ? 'Hold this case (it and the later cases of the unit are not Ready)' : 'No PO yet: nothing to hold'}
                                         onChange={(e) => setCaseDraft({ ...caseDraft, [u.key]: { ...caseDraft[u.key], [c.seq]: e.target.checked } })} />

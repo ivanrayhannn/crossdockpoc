@@ -198,6 +198,7 @@ XD09 runs on [Search] of XD10 and builds the delivery plan in #TEMP_INSTRUCTION.
 - A case is Ready (CROSSDOCK_STATUS 6) when it and every earlier case of the unit have a PO, else Not Ready (7). 18-Oct: cases 1-4 Ready, case 5 Not Ready → unit Partially Ready, Short PO.
 - Holds of the D/S team (XD10 5.3, decided 13-Nov): a Part Number with HOLD_FLAG Y in TB_R_CROSSDOCK_PART_HOLD -> every case of its units CROSSDOCK_STATUS '8' (On Hold).
 - Cases held in TB_R_CROSSDOCK_CASE_HOLD: Ready end = last valid cut before the first held CASE_SEQ of the unit; the Ready cases after it get CROSSDOCK_STATUS '8' (On Hold). Example: Ready 4, case 4 held -> cases 1-3 Ready, case 4 On Hold; if cases 3-4 belong together -> cases 1-2 Ready, cases 3-4 On Hold.
+- Before this, each hold row is matched to the cases of the run (FB-182): same Customer Order No + Destination, else the same Destination nearest to CASE_SEQ, else the case at CASE_SEQ (or the last case); CASE_SEQ / DESTINATION_CD / CUST_ORDER_NO are updated to the matched case; no case left -> row deleted.
 
 ### 4.4 Delivery Plan on XD10
 
@@ -331,7 +332,7 @@ New table: Part Number put on hold by the D/S team on ASN Crossdock Creation (su
 | CHANGED_DT | DATETIME |  | N | Last changed date and time |
 
 #### TB_R_CROSSDOCK_CASE_HOLD (transaction, proposed)
-New table: supplier case of a unit (Part Number + Customer Order Date + Supplier Code + Plant + case number) held by the D/S team with the Hold check box. The held case and every later case of the unit are not Ready (Ready part ends on the last valid cut before it). Row deleted when unticked. Name and columns proposed.
+New table: supplier case of a unit (Part Number + Customer Order Date + Supplier Code + Plant + case number) held by the D/S team with the Hold check box. The held case and every later case of the unit are not Ready (Ready part ends on the last valid cut before it). Row deleted when unticked. The hold follows its destination when cases move (FB-182). Name and columns proposed.
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
@@ -339,7 +340,9 @@ New table: supplier case of a unit (Part Number + Customer Order Date + Supplier
 | ORDER_DT | DATE | Y | N | Customer Order Date of the unit |
 | SUPPLIER_CD | VARCHAR(TBD) | Y | N | Supplier code of the unit |
 | SUPPLIER_PLANT | VARCHAR(TBD) | Y | N | Supplier plant of the unit |
-| CASE_SEQ | INT | Y | N | Case number of the unit (CASE_SEQ of #TEMP_INSTRUCTION, from 1 in H0253 order) |
+| CASE_SEQ | INT | Y | N | Case number of the unit (CASE_SEQ of #TEMP_INSTRUCTION, from 1 in H0253 order); updated when the hold moves (FB-182) |
+| DESTINATION_CD | VARCHAR(7) |  | N | Destination of the first customer order line of the held case: the hold stays on this destination when cases move |
+| CUST_ORDER_NO | VARCHAR(TBD) |  | N | Customer Order No of the first line of the held case |
 | CREATED_BY | VARCHAR(20) |  | N | Login user (D/S team) who created the record |
 | CREATED_DT | DATETIME |  | N | Created date and time |
 | CHANGED_BY | VARCHAR(20) |  | N | Login user (D/S team) who last changed the record |
