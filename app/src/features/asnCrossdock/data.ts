@@ -176,8 +176,27 @@ export interface UnitCase {
   ready: boolean;
   /** Destinations that would not close their warehouse case if the ASN stopped here. */
   openDests: string[];
-  /** Has a PO but is held by the D/S team through Reduce PO Readiness (case). */
+  /** Has a PO but is not Ready because of a held case (this one or an earlier one of the unit). */
   heldByReduce: boolean;
+  /** Ticked Hold (D/S): a saved case hold resolves to this case. */
+  held: boolean;
+}
+
+/** Saved hold of a case (TB_R_CROSSDOCK_CASE_HOLD): case number and its first customer order line when saved. */
+export interface CaseHoldRow { seq: number; destCd: string; custOrderNo: string }
+
+/** FB-182: the case lines move when an order is cancelled or cases are sent, so a hold is matched again at each Search:
+ * 1) the case that still has the same Customer Order No + Destination; 2) else the case of the same Destination nearest to the saved
+ * case number (lower one on a tie); 3) else (destination gone) the case now at the saved case number, or the last case. */
+export function resolveCaseHold(cases: UnitCase[], rows: CaseHoldRow[]): number[] {
+  if (!cases.length) return [];
+  return rows.map((r) => {
+    const own = cases.find((c) => c.lines.some((l) => l.custOrderNo === r.custOrderNo && l.destCd === r.destCd));
+    if (own) return own.seq;
+    const same = cases.filter((c) => c.lines.some((l) => l.destCd === r.destCd));
+    if (same.length) return same.reduce((a, c) => (Math.abs(c.seq - r.seq) < Math.abs(a.seq - r.seq) ? c : a)).seq;
+    return Math.min(r.seq, cases.length);
+  });
 }
 
 export type UnitStatus = 'ready' | 'partial' | 'notReady' | 'created' | 'hold';
@@ -264,7 +283,7 @@ function cutCases(ls: InstrLine[], pos: { po: Po; open: number }[]): UnitCase[] 
     c.forEach((s) => (cum[s.destCd] = (cum[s.destCd] ?? 0) + s.qty));
     ready = ready && c.every((s) => !!s.poNo);
     const openDests = Object.keys(cum).filter((d) => cum[d] % PCS_PER_CASE !== 0);
-    const out = { seq: i + 1, lines: c, qty: c.reduce((a, s) => a + s.qty, 0), cut: openDests.length === 0, group, ready, openDests, heldByReduce: false };
+    const out = { seq: i + 1, lines: c, qty: c.reduce((a, s) => a + s.qty, 0), cut: openDests.length === 0, group, ready, openDests, heldByReduce: false, held: false };
     if (out.cut) group += 1;
     return out;
   });
@@ -273,7 +292,7 @@ function cutCases(ls: InstrLine[], pos: { po: Po; open: number }[]): UnitCase[] 
 /** XD09 [Search]: open qty (order qty - qty in submitted ASNs) of the lines not on hold, in H0253 order, pre-mapped to the POs released
  * by the business date (open PO qty = PO qty - qty in submitted ASNs), cut into supplier cases. Units of a part take the POs oldest date first. */
 export function buildUnits(today: string, sentByLine: Record<string, number>, sentByPo: Record<string, number>, hold: Record<string, boolean> = {},
-  noAsn = false, opts: { partHold?: Record<string, boolean>; caseHold?: Record<string, boolean> } = {}): Unit[] {
+  noAsn = false, opts: { partHold?: Record<string, boolean>; caseHold?: Record<string, CaseHoldRow[]> } = {}): Unit[] {
   const units: Unit[] = [];
   for (const partNo of [...new Set(H0253.map((l) => l.partNo))]) {
     const released = POS.filter((p) => p.partNo === partNo && p.poDate <= today);
@@ -292,7 +311,8 @@ export function buildUnits(today: string, sentByLine: Record<string, number>, se
       const rawReadyCases = cases.filter((c) => c.ready).length;
       // Hold per case (D/S check box): the first held case and every later case are not Ready; the Ready part ends on the last
       // valid cut before the first held case (cases of the same block are held together).
-      const held = cases.filter((c) => opts.caseHold?.[`${key}|${c.seq}`]).map((c) => c.seq);
+      const held = resolveCaseHold(cases, opts.caseHold?.[key] ?? []);
+      cases.forEach((c) => { c.held = held.includes(c.seq); });
       if (held.length) {
         const first = Math.min(...held);
         const readyEnd = Math.max(0, ...cases.filter((c) => c.cut && c.seq < first).map((c) => c.seq));
