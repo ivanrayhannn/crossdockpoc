@@ -52,10 +52,10 @@
 | Detail (expand, D/S) | D/S team only: show / hide the destinations (cases) of a unit with Qty, Pcs/Case and Hold Flag. |
 | Customer orders (expand, D/S) | D/S team only: show / hide the customer order lines of a destination (Customer Order No, Detailed Item No, Qty, PO No, PO Date). |
 | Hold / Release (D/S) | D/S team only: set HOLD_FLAG of every order line of the destination (part number + customer order date + destination) to 'Y' (hold) or 'N' (release). |
-| Hold per Supplier (D/S) | D/S team only: open the sub screen Hold per Supplier Code + Plant (open POs and the customer orders pre-mapped to them). |
-| Hold / Release Supplier (D/S) | Sub screen, D/S team only: set HOLD_FLAG of a Supplier Code + Plant in TB_M_CROSSDOCK_SUPPLIER_HOLD to 'Y' (hold) or 'N' (release). |
-| Save Reduce (D/S) | Destination detail, D/S team only: save Reduce PO Readiness (case) of the destination in TB_R_CROSSDOCK_CASE_HOLD (0 / blank = release). |
-| Release Reduce (D/S) | Destination detail, D/S team only: delete the Reduce PO Readiness (case) of the destination: its pcs are taken again by Search. |
+| Hold per Part (D/S) | D/S team only: open the sub screen Hold per Part Number + Customer Order Date (POs and the customer orders pre-mapped to them). |
+| Hold / Release hold (D/S) | Sub screen, D/S team only: set HOLD_FLAG of a Part Number + Customer Order Date in TB_R_CROSSDOCK_UNIT_HOLD to 'Y' (hold) or 'N' (release). |
+| Save Reduce (D/S) | Above the cases of a unit, D/S team only: save Reduce PO Readiness (case) of the unit in TB_R_CROSSDOCK_CASE_HOLD (0 / blank = release). |
+| Release Reduce (D/S) | Above the cases of a unit, D/S team only: delete the Reduce PO Readiness (case) of the unit: all Ready cases can be selected again. |
 | Clear selection | Untick all selected units. |
 | Create ASN | Check that the selected units are of one supplier and not held, map the chosen blocks to their POs (insert TB_R_INSTRUCTION) and open the Case List sub screen. |
 | Back | Return from the Case List to ASN Crossdock Creation without submitting; the rows of TB_R_INSTRUCTION are deleted and the mapping is released. |
@@ -68,7 +68,7 @@
 
 ### Screen modes (E = enabled, D = disabled)
 
-| Mode | Section | Description | Search | Detail (expand, D/S) | Customer orders (expand, D/S) | Hold / Release (D/S) | Hold per Supplier (D/S) | Hold / Release Supplier (D/S) | Save Reduce (D/S) | Release Reduce (D/S) | Clear selection | Create ASN | Back | PO detail (expand) | Download Case Label | Cancel | Submit ASN | Yes / No | OK |
+| Mode | Section | Description | Search | Detail (expand, D/S) | Customer orders (expand, D/S) | Hold / Release (D/S) | Hold per Part (D/S) | Hold / Release hold (D/S) | Save Reduce (D/S) | Release Reduce (D/S) | Clear selection | Create ASN | Back | PO detail (expand) | Download Case Label | Cancel | Submit ASN | Yes / No | OK |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | Initial Mode | Delivery | Delivery Date = today (business date); Rit = first rit of the date; Route displayed | E | D | D | D | D | D | D | D | D | D | D | D | D | D | D | D | D |
 | Initial Mode | Delivery plan | Empty: 'Choose the Delivery Date and Rit, then click Search.' Filters disabled | D | D | D | D | D | D | D | D | D | D | D | D | D | D | D | D | D |
@@ -152,25 +152,25 @@ flowchart TB
 
 ![4. D/S team: Japan (CO-14104) on hold; the H0253 order and the cases are computed again without it](../../deliverables/uiss_screens/asn_crossdock/c_04_ds_hold.png)
 
-### 4a. D/S team: Reduce PO Readiness (case) per destination: Taiwan 1 warehouse case held; its 6 pcs are not taken and the unit is cut again (4 cases, all Ready with the PO 24)
+### 4a. D/S team: Reduce PO Readiness (case) 1 on PART-X 17-Oct (above the cases): PO Readiness 4 - 1 = Ready 3, case 4 On Hold (D/S) until released
 
-![4a. D/S team: Reduce PO Readiness (case) per destination: Taiwan 1 warehouse case held; its 6 pcs are not taken and the unit is cut again (4 cases, all Ready with the PO 24)](../../deliverables/uiss_screens/asn_crossdock/c_04b_ds_reduce.png)
+![4a. D/S team: Reduce PO Readiness (case) 1 on PART-X 17-Oct (above the cases): PO Readiness 4 - 1 = Ready 3, case 4 On Hold (D/S) until released](../../deliverables/uiss_screens/asn_crossdock/c_04b_ds_reduce.png)
 
-### 4b. Supplier view of the reduced unit: 4 cases without the held Taiwan pcs
+### 4b. Supplier view of the reduced unit: case 4 On Hold (D/S), only cases 1-3 can be ticked
 
-![4b. Supplier view of the reduced unit: 4 cases without the held Taiwan pcs](../../deliverables/uiss_screens/asn_crossdock/c_04c_supplier_reduce.png)
+![4b. Supplier view of the reduced unit: case 4 On Hold (D/S), only cases 1-3 can be ticked](../../deliverables/uiss_screens/asn_crossdock/c_04c_supplier_reduce.png)
 
-### 4c. D/S team: sub screen Hold per Supplier Code + Plant: open POs of each supplier + plant and the customer orders pre-mapped to them
+### 4c. D/S team: sub screen Hold per Part Number + Customer Order Date: POs of each part + date and the customer orders pre-mapped to them
 
-![4c. D/S team: sub screen Hold per Supplier Code + Plant: open POs of each supplier + plant and the customer orders pre-mapped to them](../../deliverables/uiss_screens/asn_crossdock/c_04d_ds_supplier_hold.png)
+![4c. D/S team: sub screen Hold per Part Number + Customer Order Date: POs of each part + date and the customer orders pre-mapped to them](../../deliverables/uiss_screens/asn_crossdock/c_04d_ds_supplier_hold.png)
 
-### 4d. Sub screen: supplier 5001 plant 1 put on hold (On Hold, [Release hold])
+### 4d. Sub screen: PART-X 17-Oct put on hold (On Hold, [Release hold])
 
-![4d. Sub screen: supplier 5001 plant 1 put on hold (On Hold, [Release hold])](../../deliverables/uiss_screens/asn_crossdock/c_04f_ds_supplier_hold_on.png)
+![4d. Sub screen: PART-X 17-Oct put on hold (On Hold, [Release hold])](../../deliverables/uiss_screens/asn_crossdock/c_04f_ds_supplier_hold_on.png)
 
-### 4e. Supplier view: its units stay visible, On Hold, check boxes disabled (message no. 12)
+### 4e. Supplier view: the held part + date stays visible, On Hold, check boxes disabled (message no. 12)
 
-![4e. Supplier view: its units stay visible, On Hold, check boxes disabled (message no. 12)](../../deliverables/uiss_screens/asn_crossdock/c_04e_supplier_on_hold.png)
+![4e. Supplier view: the held part + date stays visible, On Hold, check boxes disabled (message no. 12)](../../deliverables/uiss_screens/asn_crossdock/c_04e_supplier_on_hold.png)
 
 ### 5. Case 3 of PART-X 17-Oct ticked: cases 1-3 are selected (the selection always starts at case 1)
 
@@ -230,30 +230,30 @@ flowchart TB
 | 10 | Customer Order Date | #TEMP_INSTRUCTION | ORDER_DT | Date | - | O | Label | Left | - | N | DD-Mon-YYYY | - | Customer Order Date of the unit. |
 | 11 | Part Number | #TEMP_INSTRUCTION | PART_NO | Char | 15 | O | Label | Left | - | N | - | - | Part number of the unit (distinct per Customer Order Date). Part name is not shown. |
 | 12 | Case Qty | Computed | - | Number | - | O | Label | Right | - | N | ZZ9 | - | Number of supplier cases of the unit: open qty / pcs/case, cut in H0253 order (e.g. 30 pcs, 6 pcs/case = 5 cases); a case can hold several destinations. |
-| 13 | PO Readiness (case) | Computed | - | Number | - | O | Label | Right | - | N | ZZ9 | - | Cases whose whole qty is pre-mapped to a PO; red when lower than Case Qty. Pcs held by Reduce PO Readiness (case) of a destination are not counted (the unit is cut again without them); the ASN Status shows "<n> warehouse case(s) on hold (reduce: <destination> <n>)" for the D/S team. |
+| 13 | PO Readiness (case) | Computed | - | Number | - | O | Label | Right | - | N | ZZ9 | - | Ready cases: cases whose whole qty is pre-mapped to a PO, minus the cases held by Reduce PO Readiness (case) (rounded down to the last valid cut); red when lower than Case Qty. With a reduction the original readiness is shown below, e.g. "4 - 1 on hold". |
 | 14 | ASN Status | #TEMP_INSTRUCTION | CROSSDOCK_STATUS | Char | 1 | O | Label | Left | - | N | - | - | Ready (all blocks '6', green) / Partially Ready (first block '6', a later block '7', amber) / Not Ready (first block '7', row highlighted) / On Hold (D/S only). Refer 5.2. |
 | 15 | Detail (expand, D/S) | - | - | - | - | I | Button | Center | Enabled | N | - | - | Shown to the D/S team only. Opens the destination detail. |
 | **<Supplier Cases of a Unit (H0253 order)>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| 16 | Select case (check box) | Key-in | - | Char | - | I | CheckBox | Center | <unchecked> | N | - | Enabled only when the case and every earlier case have a PO | One check box per supplier case. The selection always starts at case 1 and takes the cases that belong together (Case Group = GROUP_SEQ of XD09, not shown on the screen): ticking case n ticks the earlier cases and the other cases of its group (message no. 10, e.g. tick case 2 -> cases 2-3 belong together, so cases 1-3); unticking case n unticks its group and the later cases. Refer 5.4. |
-| 17 | Case | #TEMP_INSTRUCTION | CASE_SEQ | Number | - | O | Label | Right | - | N | Z9 | - | Supplier case number in H0253 order (PCS_CASE pcs). |
-| 18 | Qty (pcs) | #TEMP_INSTRUCTION | ASSIGNED_QTY | Number | - | O | Label | Right | - | N | ZZZ9 | - | Pcs of the case (= PCS_CASE). |
-| 19 | Remaining Qty (not assigned) | #TEMP_INSTRUCTION | ASSIGNED_QTY (PO_NO NULL) | Number | - | O | Label | Right | - | N | ZZZ9 | - | Pcs of the case without a PO yet (sum of the slices with PO_NO NULL); 0 when the whole case is assigned; red when > 0. |
-| 20 | Content (D/S team) | #TEMP_INSTRUCTION | DESTINATION_CD / CUSTOMER_ORDER_NO / ASSIGNED_QTY | Char | - | O | Label | Left | - | N | - | - | D/S team only (not shown to the supplier): slices of the case in H0253 order, e.g. KR 3 (CO-14106) + KR 3 (CO-14107). |
-| 21 | PO | #TEMP_INSTRUCTION | PO_NO / ASSIGNED_QTY | Char | - | O | Label | Left | - | N | {PO No} {qty} | - | POs of the case with the assigned qty, e.g. PO-0003 6. |
-| 22 | PO Status | #TEMP_INSTRUCTION | CROSSDOCK_STATUS | Char | - | O | Label | Left | - | N | - | - | '6' Ready (green) / '7' Not Ready (amber): the case or an earlier case has no PO yet. 'On Hold (D/S)' (grey) when the supplier + plant is on hold; check box disabled (message no. 12). |
+| 16 | Reduce PO Readiness (case) | Key-in / TB_R_CROSSDOCK_CASE_HOLD | REDUCE_CASE | Number | - | I | Text Box | Right | Saved value / blank | N | ZZ9 | Whole number 0 .. PO Readiness (message no. 13) | D/S team only, above the cases of the unit: number of Ready cases to hold, counted from the last Ready case; shown with "/ <PO Readiness>". Ready = PO Readiness - reduce, rounded down to the last valid cut (CUT_FLAG Y). Kept until released. |
+| 17 | Save (Reduce) | - | - | - | - | I | Button | Center | Enabled | N | - | - | Saves the reduction of the unit (0 / blank = release). Refer 5.3. |
+| 18 | Release (Reduce) | - | - | - | - | I | Button | Center | Enabled when saved | N | - | - | Deletes the reduction of the unit; shown when a reduction is saved. Refer 5.3. |
+| 19 | Select case (check box) | Key-in | - | Char | - | I | CheckBox | Center | <unchecked> | N | - | Enabled only when the case and every earlier case have a PO | One check box per supplier case. The selection always starts at case 1 and takes the cases that belong together (Case Group = GROUP_SEQ of XD09, not shown on the screen): ticking case n ticks the earlier cases and the other cases of its group (message no. 10, e.g. tick case 2 -> cases 2-3 belong together, so cases 1-3); unticking case n unticks its group and the later cases. Refer 5.4. |
+| 20 | Case | #TEMP_INSTRUCTION | CASE_SEQ | Number | - | O | Label | Right | - | N | Z9 | - | Supplier case number in H0253 order (PCS_CASE pcs). |
+| 21 | Qty (pcs) | #TEMP_INSTRUCTION | ASSIGNED_QTY | Number | - | O | Label | Right | - | N | ZZZ9 | - | Pcs of the case (= PCS_CASE). |
+| 22 | Remaining Qty (not assigned) | #TEMP_INSTRUCTION | ASSIGNED_QTY (PO_NO NULL) | Number | - | O | Label | Right | - | N | ZZZ9 | - | Pcs of the case without a PO yet (sum of the slices with PO_NO NULL); 0 when the whole case is assigned; red when > 0. |
+| 23 | Content (D/S team) | #TEMP_INSTRUCTION | DESTINATION_CD / CUSTOMER_ORDER_NO / ASSIGNED_QTY | Char | - | O | Label | Left | - | N | - | - | D/S team only (not shown to the supplier): slices of the case in H0253 order, e.g. KR 3 (CO-14106) + KR 3 (CO-14107). |
+| 24 | PO | #TEMP_INSTRUCTION | PO_NO / ASSIGNED_QTY | Char | - | O | Label | Left | - | N | {PO No} {qty} | - | POs of the case with the assigned qty, e.g. PO-0003 6. |
+| 25 | PO Status | #TEMP_INSTRUCTION | CROSSDOCK_STATUS | Char | - | O | Label | Left | - | N | - | - | '6' Ready (green) / '7' Not Ready (amber): the case or an earlier case has no PO yet. 'On Hold (D/S)' (grey) when the case is held by Reduce PO Readiness (case) or the part + date is on hold; check box disabled (message no. 14 / 12). |
 | **<Destination Detail (D/S team only)>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| 23 | Destination | #TEMP_INSTRUCTION | DESTINATION_CD | Char | 7 | O | Grid | Left | - | N | {code} · {name} | - | One row per destination with its number of cases (qty / pcs/case); name from TB_M_H0125_DESTINATION. |
-| 24 | Case | Computed | - | Number | - | O | Grid | Right | - | N | 9 | - | 1; 0 when the destination is on hold. |
-| 25 | Qty (pcs) | #TEMP_INSTRUCTION | CUST_ORDER_QTY | Number | 8 | O | Grid | Right | - | N | ZZ,ZZ9 | - | Sum of the order qty of the destination; '(on hold)' when held. |
-| 26 | Pcs/Case | Part master | PCS_PER_CASE | Number | - | O | Grid | Right | - | N | ZZ9 | - | Pieces per case of the part (next to Qty). |
-| 27 | Customer orders (expand, D/S) | - | - | - | - | I | Button | Center | Enabled | N | - | - | Opens the customer order lines of the destination. |
+| 26 | Destination | #TEMP_INSTRUCTION | DESTINATION_CD | Char | 7 | O | Grid | Left | - | N | {code} · {name} | - | One row per destination with its number of cases (qty / pcs/case); name from TB_M_H0125_DESTINATION. |
+| 27 | Case | Computed | - | Number | - | O | Grid | Right | - | N | 9 | - | 1; 0 when the destination is on hold. |
+| 28 | Qty (pcs) | #TEMP_INSTRUCTION | CUST_ORDER_QTY | Number | 8 | O | Grid | Right | - | N | ZZ,ZZ9 | - | Sum of the order qty of the destination; '(on hold)' when held. |
+| 29 | Pcs/Case | Part master | PCS_PER_CASE | Number | - | O | Grid | Right | - | N | ZZ9 | - | Pieces per case of the part (next to Qty). |
+| 30 | Customer orders (expand, D/S) | - | - | - | - | I | Button | Center | Enabled | N | - | - | Opens the customer order lines of the destination. |
 | **<Customer Orders of a Destination (D/S team only)>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| 28 | Customer Order No / Detailed Item No | #TEMP_INSTRUCTION | CUSTOMER_ORDER_NO / DETAILED_ITEM_NO | Char | - | O | Grid | Left | - | N | - | - | Original order row, e.g. order A 4 pcs and order B 2 pcs to Korea. |
-| 29 | Qty (pcs) / PO No / PO Date | #TEMP_INSTRUCTION | CUST_ORDER_QTY / PO_NO / PO_DT | Char | - | O | Grid | Left | - | N | - | - | Pre-mapping of the line. |
-| 30 | Hold / Release (D/S) | - | - | - | - | I | Button | Center | Enabled | N | - | - | Hold Flag of the destination: 'N · Hold' sets Y, 'Y · Release' sets N on every order line of the destination. Refer 5.3. |
-| 31 | Reduce PO Readiness (case) | Key-in / TB_R_CROSSDOCK_CASE_HOLD | REDUCE_CASE | Number | - | I | Text Box | Right | Saved value / blank | N | ZZ9 | Whole number 0 .. warehouse cases of the destination (message no. 13) | Per destination: number of warehouse cases of the destination to hold (n x pcs/case pcs from its last lines in H0253 order). Shown with "/ <warehouse cases>". Kept until released. |
-| 32 | Save (Reduce) | - | - | - | - | I | Button | Center | Enabled | N | - | - | Saves the reduction of the destination (0 / blank = release). Refer 5.3. |
-| 33 | Release (Reduce) | - | - | - | - | I | Button | Center | Enabled when saved | N | - | - | Deletes the reduction of the destination; shown when a reduction is saved. Refer 5.3. |
+| 31 | Customer Order No / Detailed Item No | #TEMP_INSTRUCTION | CUSTOMER_ORDER_NO / DETAILED_ITEM_NO | Char | - | O | Grid | Left | - | N | - | - | Original order row, e.g. order A 4 pcs and order B 2 pcs to Korea. |
+| 32 | Qty (pcs) / PO No / PO Date | #TEMP_INSTRUCTION | CUST_ORDER_QTY / PO_NO / PO_DT | Char | - | O | Grid | Left | - | N | - | - | Pre-mapping of the line. |
+| 33 | Hold / Release (D/S) | - | - | - | - | I | Button | Center | Enabled | N | - | - | Hold Flag of the destination: 'N · Hold' sets Y, 'Y · Release' sets N on every order line of the destination. Refer 5.3. |
 | **<Selection Bar Section>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | 34 | Selection summary | Computed | - | Char | - | O | Label | Left | - | N | - | - | '{n} units · {c} cases · {q} pcs selected · {units}'. Empty: hint that cases of different units / dates can go into one ASN. |
 | 35 | Clear selection | - | - | - | - | I | Button | Center | Disabled | N | - | - | Unticks all cases. |
@@ -275,13 +275,13 @@ flowchart TB
 | 49 | Cancel | - | - | - | - | I | Button | Center | Enabled | N | - | - | Same as Back. |
 | 50 | Submit ASN | - | - | - | - | I | Button | Center | Enabled | N | - | - | Refer Operation Description 5.5. |
 | 51 | No rit cycle message | Computed | - | Char | - | O | Label | Left | - | N | - | - | Message no. 5 when no rit is available. |
-| **<Sub Screen Hold per Supplier Code + Plant (D/S team only)>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| 52 | Supplier Code · Plant | TB_M_CROSSDOCK_SUPPLIER_HOLD / supplier master | SUPPLIER_CD / SUPPLIER_PLANT | Char | - | O | Label | Left | - | N | - | - | One block per supplier + plant with crossdock parts: supplier name, open POs, open pcs and customer orders pre-mapped. |
-| 53 | Hold status | TB_M_CROSSDOCK_SUPPLIER_HOLD | HOLD_FLAG | Char | - | O | Label | Left | - | N | - | - | 'On Hold' (HOLD_FLAG Y, block highlighted) / 'Not on hold'. |
-| 54 | Hold supplier / Release hold | - | HOLD_FLAG | Button | - | I | Button | Center | Hold supplier | N | - | - | [Hold supplier] sets HOLD_FLAG Y, [Release hold] sets N. While Y every unit of the supplier + plant is On Hold (check boxes disabled, message no. 12). Refer 5.3. |
-| 55 | PO No / Manifest / Item / Part Number / PO Date | TB_R_PRA_DAILY_ORDER_MANIFEST / PART | PO_NO / MANIFEST_NO / MANIFEST_ITEM / PART_NO / PO_DT | Char | - | O | Grid | Left | - | N | - | - | Open crossdock POs of the supplier + plant (CROSS_DOCK_FLAG X, open PO qty > 0, released by today). |
-| 56 | PO Qty / Open Qty | TB_R_PRA_DAILY_ORDER_PART / TB_R_PRA_DAILY_ORDER_MAPPED | ORDER_QTY / ORDER_QTY - MAPPED_QTY | Number | - | O | Grid | Right | - | N | - | - | PO qty and the qty not yet in an ASN. |
-| 57 | Customer Order Date / Customer Order No / Destination / Qty / Case | #TEMP_INSTRUCTION (XD09) | ORDER_DT / CUSTOMER_ORDER_NO / DESTINATION_CD / ASSIGNED_QTY / CASE_SEQ | Char | - | O | Grid | Left | - | N | - | - | One row per customer order pre-mapped to the PO by the Search of today (= what the hold stops); the PO columns span its rows. "No customer order pre-mapped in this Search" when none; "No open PO" when the supplier has none. |
+| **<Sub Screen Hold per Part Number + Customer Order Date (D/S team only)>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| 52 | Supplier Code · Plant | Supplier master | SUPPLIER_CD / SUPPLIER_PLANT | Char | - | O | Label | Left | - | N | - | - | One section per supplier + plant: supplier name and number of part + dates. |
+| 53 | Part Number / Customer Order Date | #TEMP_INSTRUCTION (XD09) | PART_NO / ORDER_DT | Char | - | O | Label | Left | - | N | - | - | One row per unit with open qty: cases, cases with PO, POs and pcs. |
+| 54 | Hold status | TB_R_CROSSDOCK_UNIT_HOLD | HOLD_FLAG | Char | - | O | Label | Left | - | N | - | - | 'On Hold' (HOLD_FLAG Y, row highlighted) / 'Not on hold'. |
+| 55 | Hold / Release hold | - | HOLD_FLAG | Button | - | I | Button | Center | Hold | N | - | - | [Hold] sets HOLD_FLAG Y, [Release hold] sets N. While Y the unit is On Hold (check boxes disabled, message no. 12). Refer 5.3. |
+| 56 | PO No / Manifest / Item / PO Date / PO Qty / Open Qty | TB_R_PRA_DAILY_ORDER_MANIFEST / PART / MAPPED | PO_NO / MANIFEST_NO / MANIFEST_ITEM / PO_DT / ORDER_QTY / ORDER_QTY - MAPPED_QTY | Char | - | O | Grid | Left | - | N | - | - | POs pre-mapped to the unit by the Search of today; the PO cells span their customer order rows. |
+| 57 | Customer Order No / Destination / Qty / Case | #TEMP_INSTRUCTION (XD09) | CUSTOMER_ORDER_NO / DESTINATION_CD / ASSIGNED_QTY / CASE_SEQ | Char | - | O | Grid | Left | - | N | - | - | Customer orders pre-mapped to the PO (= what the hold stops); qty without a PO is listed as "No PO yet (waiting for a PO)". |
 | 58 | Back to ASN Crossdock Creation | - | - | - | - | I | Button | Center | Enabled | N | - | - | Closes the sub screen. |
 
 ## 5. Data edit mapping
@@ -343,29 +343,27 @@ flowchart TB
 |  | CREATE_DT | Not changed |
 |  | CREATE_BY | Not changed |
 
-#### 2. Insert / Update TB_M_CROSSDOCK_SUPPLIER_HOLD – Supplier Code + Plant of the button (insert when no row yet)
-- Source: Hold / Release Supplier (D/S)
-- Destination keys: SUPPLIER_CD + SUPPLIER_PLANT = Supplier + plant of the button
+#### 2. Insert / Update TB_R_CROSSDOCK_UNIT_HOLD – Part Number + Customer Order Date of the button (insert when no row yet)
+- Source: Hold / Release hold (D/S)
+- Destination keys: PART_NO + ORDER_DT + SUPPLIER_CD + SUPPLIER_PLANT = Unit of the row
 
 | Source field | Destination field | Description |
 |---|---|---|
-|  | SUPPLIER_CD | Supplier code |
-|  | SUPPLIER_PLANT | Supplier plant |
+|  | PART_NO / ORDER_DT | Part number and Customer Order Date of the unit |
+|  | SUPPLIER_CD / SUPPLIER_PLANT | Supplier of the unit |
 |  | HOLD_FLAG | 'Y' (hold) / 'N' (release) |
 |  | CREATED_BY / CREATED_DT | Login user ID / server date-time (insert only) |
 |  | CHANGED_BY / CHANGED_DT | Login user ID / server date-time |
 
-#### 3. Insert / Update / Delete TB_R_CROSSDOCK_CASE_HOLD – Reduce PO Readiness (case) of the destination: insert / update when > 0; delete when 0, blank or Release
+#### 3. Insert / Update / Delete TB_R_CROSSDOCK_CASE_HOLD – Reduce PO Readiness (case) of the unit: insert / update when > 0; delete when 0, blank or Release
 - Source: Save / Release Reduce (D/S)
-- Destination keys: PART_NO + ORDER_DT + DESTINATION_CD + SUPPLIER_CD + SUPPLIER_PLANT = Unit and destination of the row
+- Destination keys: PART_NO + ORDER_DT + SUPPLIER_CD + SUPPLIER_PLANT = Unit of the cases
 
 | Source field | Destination field | Description |
 |---|---|---|
-|  | PART_NO | Part number of the unit |
-|  | ORDER_DT | Customer Order Date of the unit |
-|  | DESTINATION_CD | Destination of the row |
+|  | PART_NO / ORDER_DT | Part number and Customer Order Date of the unit |
 |  | SUPPLIER_CD / SUPPLIER_PLANT | Supplier of the unit |
-|  | REDUCE_CASE | Input (1 .. warehouse cases of the destination) |
+|  | REDUCE_CASE | Input (1 .. PO Readiness) |
 |  | CREATED_BY / CREATED_DT | Login user ID / server date-time (insert only) |
 |  | CHANGED_BY / CHANGED_DT | Login user ID / server date-time |
 
@@ -612,16 +610,16 @@ b. Supplier case = PCS_CASE pcs in H0253 order; a case can hold several customer
 c. The warehouse packs 1 case = 1 destination, so an ASN may stop only after a case where every destination of the unit is a multiple of PCS_CASE (valid cut). The cases up to a valid cut are a block = one ASN option step (e.g. 18-Oct PART-X 17-Oct: every case ends on a cut, blocks case 1 | 2 | 3 | 4 | 5).
 d. A block is Ready ('6') when it and every earlier block have a PO; otherwise Not Ready ('7'): blocks are never skipped. Unit: Ready (all blocks), Partially Ready (the first k blocks), Not Ready (first block; check box disabled, message no. 2).
 e. Created: blocks in a submitted ASN are no longer in the delivery plan (shown in ASN Inquiry); the open qty of the unit is cut again from case 1 in the same order at the next [Search].
-f. On Hold also when the Supplier Code + Plant of the unit is on hold (5.3, CROSSDOCK_STATUS '8'). Pcs held by Reduce PO Readiness (case) are not in the cases at all (the unit is cut without them).
+f. On Hold also when the Part Number + Customer Order Date is on hold (5.3); cases held by Reduce PO Readiness (case) are not Ready (CROSSDOCK_STATUS '8' On Hold) and are not counted in PO Readiness.
 
 ### 5.3 Detail and Hold (D/S team)
 
 a. The D/S team can expand a unit: one row per destination with Case, Qty (pcs), Pcs/Case and Hold Flag; each destination can be expanded to its customer order lines (Customer Order No, Detailed Item No, Qty, PO No, PO Date). The supplier sees the header only.
 b. Hold / Release is done per destination: it updates HOLD_FLAG of every order line of the unit and destination in TB_R_H0253_ORDER_CONTROL_PRE (refer Data Edit Mapping). A held destination is not taken by Search; the unit is computed without it. A unit with all destinations on hold is shown as On Hold to the D/S team only.
 c. HOLD_FLAG is 'N' when the line is first replicated (XD08) and is kept on the next replications.
-d. Hold per Supplier Code + Plant (decided 13-Nov): [Hold per Supplier] opens a D/S sub screen with one block per supplier + plant: hold status, [Hold supplier] / [Release hold] and the open crossdock POs (PO No, Manifest No, Item, Part Number, PO Date, PO Qty, Open Qty) with the customer orders pre-mapped to each PO by the Search of today (Customer Order Date, Customer Order No, Destination, Qty, Case). Hold sets HOLD_FLAG = Y in TB_M_CROSSDOCK_SUPPLIER_HOLD: every unit of the supplier + plant stays visible with status On Hold, check boxes disabled (message no. 12), until released.
-e. Hold per case = Reduce PO Readiness (case) per destination (decided 13-Nov): in the destination detail (D/S) each destination has an input "Reduce PO Readiness (case) / <warehouse cases>" with Save / Release. n = number of warehouse cases of the destination to hold: n x pcs/case pcs are taken from the last lines of the destination in H0253 order and are not taken by Search; the unit is cut again without them. Example: Taiwan 6 pcs, reduce 1 -> its 6 pcs held; PART-X 17-Oct becomes 24 pcs = 4 cases, all Ready with the 24 pcs PO.
-f. The reduction is saved per unit and destination in TB_R_CROSSDOCK_CASE_HOLD and kept until the D/S team releases it (Release or 0). Input 0 .. warehouse cases of the destination, else message no. 13. A destination whose whole qty is held stays listed in the destination detail with qty 0 (+held qty).
+d. Hold per Part Number + Customer Order Date (decided 13-Nov): [Hold per Part] opens a D/S sub screen with one section per supplier + plant and one row per part + date: hold status, [Hold] / [Release hold], and the POs pre-mapped to the unit (PO No, Manifest No, Item, PO Date, PO Qty, Open Qty) with their customer orders (Customer Order No, Destination, Qty, Case). Hold sets HOLD_FLAG = Y in TB_R_CROSSDOCK_UNIT_HOLD: the unit stays visible with status On Hold, check boxes disabled (message no. 12), until released.
+e. Hold per case = Reduce PO Readiness (case) (decided 13-Nov): above the cases of a unit the D/S team enters the number of Ready cases to hold, e.g. PO Readiness 4, reduce 1 -> Ready 3, case 4 On Hold (D/S). The cases are held from the last Ready case backwards; the Ready part must end on a valid cut (CUT_FLAG Y), else it is rounded down to the previous valid cut (e.g. cases 3-4 belong together, reduce 1 -> Ready 2, cases 3-4 held). Input 0 .. PO Readiness, else message no. 13.
+f. The reduction is saved per unit in TB_R_CROSSDOCK_CASE_HOLD and kept until the D/S team releases it (Release or 0): at every Search, Ready = PO Readiness of XD09 - reduce (a new PO raises the PO Readiness, the reduction stays). A held case shows PO Status On Hold (D/S) to the supplier too (message no. 14).
 g. Both holds are re-checked at [Create ASN] like the destination hold: a hold made after the units were ticked makes the whole create fail (message no. 8) and the delivery plan is refreshed.
 
 ### 5.4 Select Cases and Create ASN
@@ -670,7 +668,8 @@ e. No error: commit, write the result (LOG3) and end (LOG4) messages. Error: rol
 | **Delivery Plan (tooltip of disabled check box)** |  |  |  |  |  |
 | MSG1 | Hover on disabled check box | Unit is On Hold (D/S) | Info | All destinations are on hold | Release a destination. |
 | MSG2 | Hover on disabled check box | Unit is Not Ready | Info | Not Ready: case {n} of {Part No} / {Customer Order Date} (or an earlier case) is not assigned to a PO yet ({k} of {c} cases assigned) | Wait for the next PO. |
-| MSG12 | Hover on disabled check box | Supplier Code + Plant on hold (D/S) | Info | Supplier {Supplier Code} · Plant {Plant} is on hold by the D/S team | Contact the D/S team. |
+| MSG12 | Hover on disabled check box | Part Number + Customer Order Date on hold (D/S) | Info | {Part No} / {Customer Order Date} is on hold by the D/S team | Contact the D/S team. |
+| MSG14 | Hover on disabled case check box | Case held by Reduce PO Readiness (case) | Info | On hold by the D/S team: Reduce PO Readiness (case) {n} of {Part No} / {Customer Order Date} | Contact the D/S team. |
 | **Search** |  |  |  |  |  |
 | MSG3 | Click [Search] / change filter | No unit | Info | No customer order matches this filter. | Change the Delivery Date, Rit or filter. |
 | MSG5 | Change [Delivery Date] | No rit on the date (Sunday) | Info | No rit cycle available for {Delivery Date}. Choose another delivery date. | Choose another Delivery Date. |
@@ -682,7 +681,7 @@ e. No error: commit, write the result (LOG3) and end (LOG4) messages. Error: rol
 | MSG9 | Click [Create ASN] | Ticked units are of more than one Supplier Code + Supplier Plant (D/S team) | Error | One ASN is for one Supplier Code and Supplier Plant. Please select units of one supplier. | Click [OK]; untick the units of the other supplier. |
 | MSG10 | Tick a case that belongs together with later cases | Cases that belong together (Case Group) are sent together | Info | Cases {a}-{b} are sent together. Cases 1-{b} of {Part No} / {Customer Order Date} are selected. | Keep the selection or untick. |
 | MSG11 | Click [Submit ASN] / [Yes] | The draft was released by XD08 or a line changed in GTOPAS (UPD_STATUS, qty) | Error | Some orders have changed. The draft is released; please Search and create the ASN again. | Click [OK]; back to the delivery plan. |
-| MSG13 | Click [Save] (Reduce PO Readiness) | Not a whole number or more than the warehouse cases of the destination | Error | Reduce PO Readiness (case) must be a whole number from 0 to {n} (warehouse cases of the destination). | Correct the value. |
+| MSG13 | Click [Save] (Reduce PO Readiness) | Not a whole number or more than PO Readiness | Error | Reduce PO Readiness (case) must be a whole number from 0 to {PO Readiness} (PO Readiness). | Correct the value. |
 
 ## 8. Logging messages
 
@@ -867,13 +866,15 @@ Existing part master (MST-03); only PART_NAME is used (by PART_NO).
 | VALID_FROM | DATETIME | Y | N | Valid From |
 | VALID_TO | DATETIME |  | Y | Valid To |
 
-#### TB_M_CROSSDOCK_SUPPLIER_HOLD (master, proposed)
-New table: Supplier Code + Plant put on hold by the D/S team on ASN Crossdock Creation. HOLD_FLAG Y = no ASN can be created for the supplier + plant. Name and columns proposed.
+#### TB_R_CROSSDOCK_UNIT_HOLD (transaction, proposed)
+New table: Part Number + Customer Order Date (unit) put on hold by the D/S team on ASN Crossdock Creation. HOLD_FLAG Y = no ASN can be created for the unit. Name and columns proposed.
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
-| SUPPLIER_CD | VARCHAR(TBD) | Y | N | Supplier code (as in the Pra Daily Order / supplier master) |
-| SUPPLIER_PLANT | VARCHAR(TBD) | Y | N | Supplier plant |
+| PART_NO | VARCHAR(15) | Y | N | Part number (H0253.SHIPPING_PART_NO) |
+| ORDER_DT | DATE | Y | N | Customer Order Date of the unit |
+| SUPPLIER_CD | VARCHAR(TBD) | Y | N | Supplier code of the unit |
+| SUPPLIER_PLANT | VARCHAR(TBD) | Y | N | Supplier plant of the unit |
 | HOLD_FLAG | CHAR(1) |  | N | 'Y' on hold / 'N' released (no row = 'N') |
 | CREATED_BY | VARCHAR(20) |  | N | Login user (D/S team) who created the record |
 | CREATED_DT | DATETIME |  | N | Created date and time |
@@ -881,16 +882,15 @@ New table: Supplier Code + Plant put on hold by the D/S team on ASN Crossdock Cr
 | CHANGED_DT | DATETIME |  | N | Last changed date and time |
 
 #### TB_R_CROSSDOCK_CASE_HOLD (transaction, proposed)
-New table: Reduce PO Readiness (case) per destination of a unit (Part Number + Customer Order Date + Destination + Supplier Code + Plant) set by the D/S team: the last REDUCE_CASE warehouse cases (REDUCE_CASE x pcs/case) of the destination are held. Kept until the D/S team releases it (row deleted). Name and columns proposed.
+New table: Reduce PO Readiness (case) of a unit (Part Number + Customer Order Date + Supplier Code + Plant) set by the D/S team: the last REDUCE_CASE Ready cases are held (Ready part rounded down to the last valid cut). Kept until the D/S team releases it (row deleted). Name and columns proposed.
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
 | PART_NO | VARCHAR(15) | Y | N | Part number (H0253.SHIPPING_PART_NO) |
 | ORDER_DT | DATE | Y | N | Customer Order Date of the unit |
-| DESTINATION_CD | VARCHAR(7) | Y | N | Destination of the unit whose warehouse cases are held |
 | SUPPLIER_CD | VARCHAR(TBD) | Y | N | Supplier code of the unit |
 | SUPPLIER_PLANT | VARCHAR(TBD) | Y | N | Supplier plant of the unit |
-| REDUCE_CASE | INT |  | N | Warehouse cases of the destination held (1 .. warehouse cases of the destination); held pcs = REDUCE_CASE x pcs/case, taken from the last lines of the destination in H0253 order |
+| REDUCE_CASE | INT |  | N | Ready cases held, counted from the last Ready case (1 .. PO Readiness) |
 | CREATED_BY | VARCHAR(20) |  | N | Login user (D/S team) who created the record |
 | CREATED_DT | DATETIME |  | N | Created date and time |
 | CHANGED_BY | VARCHAR(20) |  | N | Login user (D/S team) who last changed the record |
