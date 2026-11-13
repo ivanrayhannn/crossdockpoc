@@ -93,12 +93,8 @@
     "function": "Sub screen, D/S team only: set HOLD_FLAG of a Part Number + Customer Order Date in TB_R_CROSSDOCK_UNIT_HOLD to 'Y' (hold) or 'N' (release)."
    },
    {
-    "name": "Save Reduce (D/S)",
-    "function": "Above the cases of a unit, D/S team only: save Reduce PO Readiness (case) of the unit in TB_R_CROSSDOCK_CASE_HOLD (0 / blank = release)."
-   },
-   {
-    "name": "Release Reduce (D/S)",
-    "function": "Above the cases of a unit, D/S team only: delete the Reduce PO Readiness (case) of the unit: all Ready cases can be selected again."
+    "name": "Hold case (check box, D/S)",
+    "function": "Case grid, D/S team only: tick = insert the case in TB_R_CROSSDOCK_CASE_HOLD (case and later cases not Ready); untick = delete it."
    },
    {
     "name": "Clear selection",
@@ -151,8 +147,7 @@
        "Hold / Release (D/S)": "D",
        "Hold per Part (D/S)": "D",
        "Hold / Release hold (D/S)": "D",
-       "Save Reduce (D/S)": "D",
-       "Release Reduce (D/S)": "D",
+       "Hold case (check box, D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
        "Back": "D",
@@ -174,8 +169,7 @@
        "Hold / Release (D/S)": "D",
        "Hold per Part (D/S)": "D",
        "Hold / Release hold (D/S)": "D",
-       "Save Reduce (D/S)": "D",
-       "Release Reduce (D/S)": "D",
+       "Hold case (check box, D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
        "Back": "D",
@@ -202,8 +196,7 @@
        "Hold / Release (D/S)": "D",
        "Hold per Part (D/S)": "D",
        "Hold / Release hold (D/S)": "D",
-       "Save Reduce (D/S)": "D",
-       "Release Reduce (D/S)": "D",
+       "Hold case (check box, D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
        "Back": "D",
@@ -225,8 +218,7 @@
        "Hold / Release (D/S)": "D",
        "Hold per Part (D/S)": "D",
        "Hold / Release hold (D/S)": "D",
-       "Save Reduce (D/S)": "D",
-       "Release Reduce (D/S)": "D",
+       "Hold case (check box, D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
        "Back": "D",
@@ -248,8 +240,7 @@
        "Hold / Release (D/S)": "D",
        "Hold per Part (D/S)": "D",
        "Hold / Release hold (D/S)": "D",
-       "Save Reduce (D/S)": "D",
-       "Release Reduce (D/S)": "D",
+       "Hold case (check box, D/S)": "D",
        "Clear selection": "E",
        "Create ASN": "E",
        "Back": "D",
@@ -276,8 +267,7 @@
        "Hold / Release (D/S)": "E",
        "Hold per Part (D/S)": "E",
        "Hold / Release hold (D/S)": "E",
-       "Save Reduce (D/S)": "E",
-       "Release Reduce (D/S)": "E",
+       "Hold case (check box, D/S)": "E",
        "Clear selection": "D",
        "Create ASN": "D",
        "Back": "D",
@@ -299,8 +289,7 @@
        "Hold / Release (D/S)": "D",
        "Hold per Part (D/S)": "D",
        "Hold / Release hold (D/S)": "D",
-       "Save Reduce (D/S)": "D",
-       "Release Reduce (D/S)": "D",
+       "Hold case (check box, D/S)": "D",
        "Clear selection": "E",
        "Create ASN": "E",
        "Back": "D",
@@ -327,8 +316,7 @@
        "Hold / Release (D/S)": "D",
        "Hold per Part (D/S)": "D",
        "Hold / Release hold (D/S)": "D",
-       "Save Reduce (D/S)": "D",
-       "Release Reduce (D/S)": "D",
+       "Hold case (check box, D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
        "Back": "E",
@@ -350,8 +338,7 @@
        "Hold / Release (D/S)": "D",
        "Hold per Part (D/S)": "D",
        "Hold / Release hold (D/S)": "D",
-       "Save Reduce (D/S)": "D",
-       "Release Reduce (D/S)": "D",
+       "Hold case (check box, D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
        "Back": "D",
@@ -373,8 +360,7 @@
        "Hold / Release (D/S)": "D",
        "Hold per Part (D/S)": "D",
        "Hold / Release hold (D/S)": "D",
-       "Save Reduce (D/S)": "D",
-       "Release Reduce (D/S)": "D",
+       "Hold case (check box, D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
        "Back": "D",
@@ -401,8 +387,7 @@
        "Hold / Release (D/S)": "D",
        "Hold per Part (D/S)": "D",
        "Hold / Release hold (D/S)": "D",
-       "Save Reduce (D/S)": "D",
-       "Release Reduce (D/S)": "D",
+       "Hold case (check box, D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
        "Back": "D",
@@ -424,8 +409,7 @@
        "Hold / Release (D/S)": "D",
        "Hold per Part (D/S)": "D",
        "Hold / Release hold (D/S)": "D",
-       "Save Reduce (D/S)": "D",
-       "Release Reduce (D/S)": "D",
+       "Hold case (check box, D/S)": "D",
        "Clear selection": "D",
        "Create ASN": "D",
        "Back": "D",
@@ -643,7 +627,7 @@
    "image": "deliverables/uiss_screens/asn_crossdock/c_04_ds_hold.png"
   },
   {
-   "caption": "4a. D/S team: Reduce PO Readiness (case) 1 on PART-X 17-Oct (above the cases): PO Readiness 4 - 1 = Ready 3, case 4 On Hold (D/S) until released",
+   "caption": "4a. D/S team: Hold (D/S) ticked on case 4 of PART-X 17-Oct: PO Readiness 4 - 1 = Ready 3, case 4 On Hold (D/S) until unticked; content split into Destination / Customer Order No / Order Qty",
    "image": "deliverables/uiss_screens/asn_crossdock/c_04b_ds_reduce.png"
   },
   {
@@ -905,7 +889,7 @@
    "required": "N",
    "format": "ZZ9",
    "validation": "-",
-   "description": "Ready cases: cases whose whole qty is pre-mapped to a PO, minus the cases held by Reduce PO Readiness (case) (rounded down to the last valid cut); red when lower than Case Qty. With a reduction the original readiness is shown below, e.g. \"4 - 1 on hold\"."
+   "description": "Ready cases: cases whose whole qty is pre-mapped to a PO, minus the cases held by the D/S team (Hold check box, from the first held case; rounded down to the last valid cut); red when lower than Case Qty. With a hold the original readiness is shown below, e.g. \"4 - 1 on hold\"."
   },
   {
    "name": "ASN Status",
@@ -940,51 +924,6 @@
   {
    "group": "<Supplier Cases of a Unit (H0253 order)>",
    "description": ""
-  },
-  {
-   "name": "Reduce PO Readiness (case)",
-   "source": "Key-in / TB_R_CROSSDOCK_CASE_HOLD",
-   "field": "REDUCE_CASE",
-   "type": "Number",
-   "len": "-",
-   "io": "I",
-   "control": "Text Box",
-   "justified": "Right",
-   "initial": "Saved value / blank",
-   "required": "N",
-   "format": "ZZ9",
-   "validation": "Whole number 0 .. PO Readiness (message no. 13)",
-   "description": "D/S team only, above the cases of the unit: number of Ready cases to hold, counted from the last Ready case; shown with \"/ <PO Readiness>\". Ready = PO Readiness - reduce, rounded down to the last valid cut (CUT_FLAG Y). Kept until released."
-  },
-  {
-   "name": "Save (Reduce)",
-   "source": "-",
-   "field": "-",
-   "type": "-",
-   "len": "-",
-   "io": "I",
-   "control": "Button",
-   "justified": "Center",
-   "initial": "Enabled",
-   "required": "N",
-   "format": "-",
-   "validation": "-",
-   "description": "Saves the reduction of the unit (0 / blank = release). Refer 5.3."
-  },
-  {
-   "name": "Release (Reduce)",
-   "source": "-",
-   "field": "-",
-   "type": "-",
-   "len": "-",
-   "io": "I",
-   "control": "Button",
-   "justified": "Center",
-   "initial": "Enabled when saved",
-   "required": "N",
-   "format": "-",
-   "validation": "-",
-   "description": "Deletes the reduction of the unit; shown when a reduction is saved. Refer 5.3."
   },
   {
    "name": "Select case (check box)",
@@ -1047,19 +986,49 @@
    "description": "Pcs of the case without a PO yet (sum of the slices with PO_NO NULL); 0 when the whole case is assigned; red when > 0."
   },
   {
-   "name": "Content (D/S team)",
+   "name": "Destination (D/S team)",
    "source": "#TEMP_INSTRUCTION",
-   "field": "DESTINATION_CD / CUSTOMER_ORDER_NO / ASSIGNED_QTY",
+   "field": "DESTINATION_CD",
    "type": "Char",
    "len": "-",
    "io": "O",
-   "control": "Label",
+   "control": "Grid",
    "justified": "Left",
    "initial": "-",
    "required": "N",
    "format": "-",
    "validation": "-",
-   "description": "D/S team only (not shown to the supplier): slices of the case in H0253 order, e.g. KR 3 (CO-14106) + KR 3 (CO-14107)."
+   "description": "D/S team only: destination code and name of each customer order line in the case, one per line."
+  },
+  {
+   "name": "Customer Order No (D/S team)",
+   "source": "#TEMP_INSTRUCTION",
+   "field": "CUSTOMER_ORDER_NO",
+   "type": "Char",
+   "len": "-",
+   "io": "O",
+   "control": "Grid",
+   "justified": "Left",
+   "initial": "-",
+   "required": "N",
+   "format": "-",
+   "validation": "-",
+   "description": "D/S team only: customer order of each line in the case, one per line."
+  },
+  {
+   "name": "Order Qty (D/S team)",
+   "source": "#TEMP_INSTRUCTION",
+   "field": "ASSIGNED_QTY",
+   "type": "Number",
+   "len": "-",
+   "io": "O",
+   "control": "Grid",
+   "justified": "Right",
+   "initial": "-",
+   "required": "N",
+   "format": "-",
+   "validation": "-",
+   "description": "D/S team only: pcs of each line in the case, one per line (sum = case qty)."
   },
   {
    "name": "PO",
@@ -1089,7 +1058,22 @@
    "required": "N",
    "format": "-",
    "validation": "-",
-   "description": "'6' Ready (green) / '7' Not Ready (amber): the case or an earlier case has no PO yet. 'On Hold (D/S)' (grey) when the case is held by Reduce PO Readiness (case) or the part + date is on hold; check box disabled (message no. 14 / 12)."
+   "description": "'6' Ready (green) / '7' Not Ready (amber): the case or an earlier case has no PO yet. 'On Hold (D/S)' (grey) when the case is held (Hold check box) or the part + date is on hold; check box disabled (message no. 14 / 12)."
+  },
+  {
+   "name": "Hold (D/S)",
+   "source": "Key-in / TB_R_CROSSDOCK_CASE_HOLD",
+   "field": "CASE_SEQ",
+   "type": "Char",
+   "len": "-",
+   "io": "I",
+   "control": "Check Box",
+   "justified": "Center",
+   "initial": "Saved value",
+   "required": "N",
+   "format": "-",
+   "validation": "-",
+   "description": "D/S team only, next to PO Status: tick = hold the case; the held case and every later case of the unit are not Ready (Ready part ends on the last valid cut before the first held case). Kept until unticked. Disabled for a case without PO or a unit on hold."
   },
   {
    "group": "<Destination Detail (D/S team only)>",
@@ -1866,15 +1850,15 @@
     ]
    },
    {
-    "source": "Save / Release Reduce (D/S)",
+    "source": "Hold case (check box, D/S)",
     "destination": {
      "table": "TB_R_CROSSDOCK_CASE_HOLD",
-     "operation": "Insert / Update / Delete",
-     "description": "Reduce PO Readiness (case) of the unit: insert / update when > 0; delete when 0, blank or Release",
+     "operation": "Insert / Delete",
+     "description": "Tick: insert the case; untick: delete it",
      "keys": [
       {
-       "field": "PART_NO + ORDER_DT + SUPPLIER_CD + SUPPLIER_PLANT",
-       "value": "Unit of the cases"
+       "field": "PART_NO + ORDER_DT + SUPPLIER_CD + SUPPLIER_PLANT + CASE_SEQ",
+       "value": "Case of the check box"
       }
      ]
     },
@@ -1888,8 +1872,8 @@
       "description": "Supplier of the unit"
      },
      {
-      "dest_field": "REDUCE_CASE",
-      "description": "Input (1 .. PO Readiness)"
+      "dest_field": "CASE_SEQ",
+      "description": "Case number of the check box"
      },
      {
       "dest_field": "CREATED_BY / CREATED_DT",
@@ -2744,7 +2728,7 @@
     "The warehouse packs 1 case = 1 destination, so an ASN may stop only after a case where every destination of the unit is a multiple of PCS_CASE (valid cut). The cases up to a valid cut are a block = one ASN option step (e.g. 18-Oct PART-X 17-Oct: every case ends on a cut, blocks case 1 | 2 | 3 | 4 | 5).",
     "A block is Ready ('6') when it and every earlier block have a PO; otherwise Not Ready ('7'): blocks are never skipped. Unit: Ready (all blocks), Partially Ready (the first k blocks), Not Ready (first block; check box disabled, message no. 2).",
     "Created: blocks in a submitted ASN are no longer in the delivery plan (shown in ASN Inquiry); the open qty of the unit is cut again from case 1 in the same order at the next [Search].",
-    "On Hold also when the Part Number + Customer Order Date is on hold (5.3); cases held by Reduce PO Readiness (case) are not Ready (CROSSDOCK_STATUS '8' On Hold) and are not counted in PO Readiness."
+    "On Hold also when the Part Number + Customer Order Date is on hold (5.3); cases held with the Hold check box are not Ready (CROSSDOCK_STATUS '8' On Hold) and are not counted in PO Readiness."
    ]
   },
   {
@@ -2760,8 +2744,8 @@
     "Hold / Release is done per destination: it updates HOLD_FLAG of every order line of the unit and destination in TB_R_H0253_ORDER_CONTROL_PRE (refer Data Edit Mapping). A held destination is not taken by Search; the unit is computed without it. A unit with all destinations on hold is shown as On Hold to the D/S team only.",
     "HOLD_FLAG is 'N' when the line is first replicated (XD08) and is kept on the next replications.",
     "Hold per Part Number + Customer Order Date (decided 13-Nov): [Hold per Part] opens a D/S sub screen with one section per supplier + plant and one row per part + date: hold status, [Hold] / [Release hold], and the POs pre-mapped to the unit (PO No, Manifest No, Item, PO Date, PO Qty, Open Qty) with their customer orders (Customer Order No, Destination, Qty, Case). Hold sets HOLD_FLAG = Y in TB_R_CROSSDOCK_UNIT_HOLD: the unit stays visible with status On Hold, check boxes disabled (message no. 12), until released.",
-    "Hold per case = Reduce PO Readiness (case) (decided 13-Nov): above the cases of a unit the D/S team enters the number of Ready cases to hold, e.g. PO Readiness 4, reduce 1 -> Ready 3, case 4 On Hold (D/S). The cases are held from the last Ready case backwards; the Ready part must end on a valid cut (CUT_FLAG Y), else it is rounded down to the previous valid cut (e.g. cases 3-4 belong together, reduce 1 -> Ready 2, cases 3-4 held). Input 0 .. PO Readiness, else message no. 13.",
-    "The reduction is saved per unit in TB_R_CROSSDOCK_CASE_HOLD and kept until the D/S team releases it (Release or 0): at every Search, Ready = PO Readiness of XD09 - reduce (a new PO raises the PO Readiness, the reduction stays). A held case shows PO Status On Hold (D/S) to the supplier too (message no. 14).",
+    "Hold per case (decided 13-Nov): the case grid has a check box Hold (D/S) next to PO Status. Ticking a case holds it: the held case and every later case of the unit are not Ready, and the Ready part ends on the last valid cut before the first held case (cases of the same block are held together). Example: PART-X 17-Oct, PO Readiness 4, case 4 ticked -> Ready 3, case 4 On Hold (D/S).",
+    "The hold is saved per case in TB_R_CROSSDOCK_CASE_HOLD and kept until the D/S team unticks it. Case numbers come from the Search (H0253 order), so a hold follows the case number of the unit. A held case shows PO Status On Hold (D/S) to the supplier too (message no. 14). The D/S team sees the content of each case in the columns Destination, Customer Order No and Order Qty.",
     "Both holds are re-checked at [Create ASN] like the destination hold: a hold made after the units were ticked makes the whole create fail (message no. 8) and the delivery plan is refreshed."
    ]
   },
@@ -2881,10 +2865,10 @@
   },
   {
    "event": "Hover on disabled case check box",
-   "cause": "Case held by Reduce PO Readiness (case)",
+   "cause": "Case held by the D/S team (Hold check box)",
    "type": "Info",
    "msg_id": "MSG14",
-   "message": "On hold by the D/S team: Reduce PO Readiness (case) {n} of {Part No} / {Customer Order Date}",
+   "message": "On hold by the D/S team: case {n} of {Part No} / {Customer Order Date} (Hold per case)",
    "action": "Contact the D/S team."
   },
   {
@@ -2964,14 +2948,6 @@
    "msg_id": "MSG11",
    "message": "Some orders have changed. The draft is released; please Search and create the ASN again.",
    "action": "Click [OK]; back to the delivery plan."
-  },
-  {
-   "event": "Click [Save] (Reduce PO Readiness)",
-   "cause": "Not a whole number or more than PO Readiness",
-   "type": "Error",
-   "msg_id": "MSG13",
-   "message": "Reduce PO Readiness (case) must be a whole number from 0 to {PO Readiness} (PO Readiness).",
-   "action": "Correct the value."
   }
  ],
  "logging_messages": [
@@ -4056,7 +4032,7 @@
    "name": "TB_R_CROSSDOCK_CASE_HOLD",
    "kind": "transaction",
    "proposed": true,
-   "description": "New table: Reduce PO Readiness (case) of a unit (Part Number + Customer Order Date + Supplier Code + Plant) set by the D/S team: the last REDUCE_CASE Ready cases are held (Ready part rounded down to the last valid cut). Kept until the D/S team releases it (row deleted). Name and columns proposed.",
+   "description": "New table: supplier case of a unit (Part Number + Customer Order Date + Supplier Code + Plant + case number) held by the D/S team with the Hold check box. The held case and every later case of the unit are not Ready (Ready part ends on the last valid cut before it). Row deleted when unticked. Name and columns proposed.",
    "columns": [
     [
      "PART_NO",
@@ -4087,11 +4063,11 @@
      "Supplier plant of the unit"
     ],
     [
-     "REDUCE_CASE",
+     "CASE_SEQ",
      "INT",
-     "",
+     "Y",
      "N",
-     "Ready cases held, counted from the last Ready case (1 .. PO Readiness)"
+     "Case number of the unit (CASE_SEQ of #TEMP_INSTRUCTION, from 1 in H0253 order)"
     ],
     [
      "CREATED_BY",

@@ -201,7 +201,7 @@ export interface Unit {
   readyCases: number;
   /** Ready cases before the reduction (cases 1..n with a PO). */
   rawReadyCases: number;
-  /** Reduce PO Readiness (case) of the unit set by the D/S team (0 = none). */
+  /** Cases held by the D/S team (Hold check box per case, incl. the later cases of the same block onwards). */
   reduce: number;
   /** The unit (Part Number + Customer Order Date) is on hold by the D/S team. */
   unitHold: boolean;
@@ -273,7 +273,7 @@ function cutCases(ls: InstrLine[], pos: { po: Po; open: number }[]): UnitCase[] 
 /** XD09 [Search]: open qty (order qty - qty in submitted ASNs) of the lines not on hold, in H0253 order, pre-mapped to the POs released
  * by the business date (open PO qty = PO qty - qty in submitted ASNs), cut into supplier cases. Units of a part take the POs oldest date first. */
 export function buildUnits(today: string, sentByLine: Record<string, number>, sentByPo: Record<string, number>, hold: Record<string, boolean> = {},
-  noAsn = false, opts: { unitHold?: Record<string, boolean>; reduce?: Record<string, number> } = {}): Unit[] {
+  noAsn = false, opts: { unitHold?: Record<string, boolean>; caseHold?: Record<string, boolean> } = {}): Unit[] {
   const units: Unit[] = [];
   for (const partNo of [...new Set(H0253.map((l) => l.partNo))]) {
     const released = POS.filter((p) => p.partNo === partNo && p.poDate <= today);
@@ -290,13 +290,15 @@ export function buildUnits(today: string, sentByLine: Record<string, number>, se
       const cases = cutCases(ls, pos);
       const key = unitKey(partNo, orderDt);
       const rawReadyCases = cases.filter((c) => c.ready).length;
-      // Reduce PO Readiness (case): the last n Ready cases are held; the Ready part ends on a valid cut (rounded down).
-      const reduce = Math.min(opts.reduce?.[key] ?? 0, rawReadyCases);
-      if (reduce > 0) {
-        const target = rawReadyCases - reduce;
-        const readyEnd = Math.max(0, ...cases.filter((c) => c.cut && c.seq <= target).map((c) => c.seq));
+      // Hold per case (D/S check box): the first held case and every later case are not Ready; the Ready part ends on the last
+      // valid cut before the first held case (cases of the same block are held together).
+      const held = cases.filter((c) => opts.caseHold?.[`${key}|${c.seq}`]).map((c) => c.seq);
+      if (held.length) {
+        const first = Math.min(...held);
+        const readyEnd = Math.max(0, ...cases.filter((c) => c.cut && c.seq < first).map((c) => c.seq));
         cases.forEach((c) => { if (c.ready && c.seq > readyEnd) { c.ready = false; c.heldByReduce = true; } });
       }
+      const reduce = cases.filter((c) => c.heldByReduce).length;
       const readyCases = cases.filter((c) => c.ready).length;
       const unitHold = !!opts.unitHold?.[key];
       const sent = all.some((l) => (sentByLine[l.id] ?? 0) > 0);

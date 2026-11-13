@@ -105,7 +105,7 @@ RELATIONS = [
     ('TB_R_H0253_ORDER_CONTROL_PRE', 'SHIPPING_PART_NO + ORDER_DT', 'TB_R_CROSSDOCK_UNIT_HOLD', 'PART_NO + ORDER_DT', '1 : 0..1',
      'Part Number + Customer Order Date on hold by the D/S team: no ASN for the unit (logical)'),
     ('TB_R_H0253_ORDER_CONTROL_PRE', 'SHIPPING_PART_NO + ORDER_DT', 'TB_R_CROSSDOCK_CASE_HOLD', 'PART_NO + ORDER_DT', '1 : 0..1',
-     'Reduce PO Readiness (case) of a unit: the last Ready cases held (logical)'),
+     'Cases of a unit held by the D/S team (Hold check box) (logical)'),
     ('TB_R_CASE_LABEL_LAST_SEQ', 'SUPPLIER_CD + SUPPLIER_PLANT_CD', 'TB_R_DAILY_ORDER_MANIFEST', 'SUPPLIER_CD + SUPPLIER_PLANT', '1 : N',
      'Last sequence of the ASN number and the case numbers per supplier + plant (logical)'),
 ]
