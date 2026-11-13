@@ -655,7 +655,7 @@
    "image": "deliverables/uiss_screens/asn_crossdock/c_04d_ds_supplier_hold.png"
   },
   {
-   "caption": "4d. Sub screen: supplier 50221 plant 1 put on hold (Hold Flag Y)",
+   "caption": "4d. Sub screen: supplier 50221 plant 1 put on hold (On Hold, [Release hold])",
    "image": "deliverables/uiss_screens/asn_crossdock/c_04f_ds_supplier_hold_on.png"
   },
   {
@@ -1518,10 +1518,25 @@
    "required": "N",
    "format": "-",
    "validation": "-",
-   "description": "One block per supplier + plant with crossdock parts; supplier name and number of open POs."
+   "description": "One block per supplier + plant with crossdock parts: supplier name, open POs, open pcs and customer orders pre-mapped."
   },
   {
-   "name": "Hold Flag (button)",
+   "name": "Hold status",
+   "source": "TB_M_CROSSDOCK_SUPPLIER_HOLD",
+   "field": "HOLD_FLAG",
+   "type": "Char",
+   "len": "-",
+   "io": "O",
+   "control": "Label",
+   "justified": "Left",
+   "initial": "-",
+   "required": "N",
+   "format": "-",
+   "validation": "-",
+   "description": "'On Hold' (HOLD_FLAG Y, block highlighted) / 'Not on hold'."
+  },
+  {
+   "name": "Hold supplier / Release hold",
    "source": "-",
    "field": "HOLD_FLAG",
    "type": "Button",
@@ -1529,14 +1544,14 @@
    "io": "I",
    "control": "Button",
    "justified": "Center",
-   "initial": "N · Hold",
+   "initial": "Hold supplier",
    "required": "N",
    "format": "-",
    "validation": "-",
-   "description": "'N · Hold' sets Y, 'Y · Release' sets N. While Y every unit of the supplier + plant is On Hold (check boxes disabled, message no. 12). Refer 5.3."
+   "description": "[Hold supplier] sets HOLD_FLAG Y, [Release hold] sets N. While Y every unit of the supplier + plant is On Hold (check boxes disabled, message no. 12). Refer 5.3."
   },
   {
-   "name": "PO No / Manifest No / Item / Part Number / PO Date",
+   "name": "PO No / Manifest / Item / Part Number / PO Date",
    "source": "TB_R_PRA_DAILY_ORDER_MANIFEST / PART",
    "field": "PO_NO / MANIFEST_NO / MANIFEST_ITEM / PART_NO / PO_DT",
    "type": "Char",
@@ -1566,7 +1581,7 @@
    "description": "PO qty and the qty not yet in an ASN."
   },
   {
-   "name": "Customer orders pre-mapped",
+   "name": "Customer Order Date / Customer Order No / Destination / Qty / Case",
    "source": "#TEMP_INSTRUCTION (XD09)",
    "field": "ORDER_DT / CUSTOMER_ORDER_NO / DESTINATION_CD / ASSIGNED_QTY / CASE_SEQ",
    "type": "Char",
@@ -1578,7 +1593,7 @@
    "required": "N",
    "format": "-",
    "validation": "-",
-   "description": "Customer orders pre-mapped to the PO by the Search of today (Customer Order Date · Customer Order No · Destination · Qty · Case) = what the hold stops; \"Not pre-mapped yet\" when none."
+   "description": "One row per customer order pre-mapped to the PO by the Search of today (= what the hold stops); the PO columns span its rows. \"No customer order pre-mapped in this Search\" when none; \"No open PO\" when the supplier has none."
   },
   {
    "name": "Back to ASN Crossdock Creation",
@@ -2752,7 +2767,7 @@
     "The D/S team can expand a unit: one row per destination with Case, Qty (pcs), Pcs/Case and Hold Flag; each destination can be expanded to its customer order lines (Customer Order No, Detailed Item No, Qty, PO No, PO Date). The supplier sees the header only.",
     "Hold / Release is done per destination: it updates HOLD_FLAG of every order line of the unit and destination in TB_R_H0253_ORDER_CONTROL_PRE (refer Data Edit Mapping). A held destination is not taken by Search; the unit is computed without it. A unit with all destinations on hold is shown as On Hold to the D/S team only.",
     "HOLD_FLAG is 'N' when the line is first replicated (XD08) and is kept on the next replications.",
-    "Hold per Supplier Code + Plant (decided 13-Nov): [Hold per Supplier] opens a D/S sub screen with one block per supplier + plant: Hold Flag button and the open crossdock POs (PO No, Manifest No, Item, Part Number, PO Date, PO Qty, Open Qty) with the customer orders pre-mapped to each PO by the Search of today (Customer Order Date, Customer Order No, Destination, Qty, Case). Hold sets HOLD_FLAG = Y in TB_M_CROSSDOCK_SUPPLIER_HOLD: every unit of the supplier + plant stays visible with status On Hold, check boxes disabled (message no. 12), until released.",
+    "Hold per Supplier Code + Plant (decided 13-Nov): [Hold per Supplier] opens a D/S sub screen with one block per supplier + plant: hold status, [Hold supplier] / [Release hold] and the open crossdock POs (PO No, Manifest No, Item, Part Number, PO Date, PO Qty, Open Qty) with the customer orders pre-mapped to each PO by the Search of today (Customer Order Date, Customer Order No, Destination, Qty, Case). Hold sets HOLD_FLAG = Y in TB_M_CROSSDOCK_SUPPLIER_HOLD: every unit of the supplier + plant stays visible with status On Hold, check boxes disabled (message no. 12), until released.",
     "Hold per case = Reduce PO Readiness (case) per destination (decided 13-Nov): in the destination detail (D/S) each destination has an input \"Reduce PO Readiness (case) / <warehouse cases>\" with Save / Release. n = number of warehouse cases of the destination to hold: n x pcs/case pcs are taken from the last lines of the destination in H0253 order and are not taken by Search; the unit is cut again without them. Example: Philippines 6 pcs, reduce 1 -> its 6 pcs held; PART-X 17-Oct becomes 24 pcs = 4 cases, all Ready with the 24 pcs PO.",
     "The reduction is saved per unit and destination in TB_R_CROSSDOCK_CASE_HOLD and kept until the D/S team releases it (Release or 0). Input 0 .. warehouse cases of the destination, else message no. 13. A destination whose whole qty is held stays listed in the destination detail with qty 0 (+held qty).",
     "Both holds are re-checked at [Create ASN] like the destination hold: a hold made after the units were ticked makes the whole create fail (message no. 8) and the delivery plan is refreshed."

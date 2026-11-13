@@ -41,7 +41,7 @@ sl[k + 1:k + 1] = [
     {'caption': '4a. D/S team: Reduce PO Readiness (case) per destination: Philippines 1 warehouse case held; its 6 pcs are not taken and the unit is cut again (4 cases, all Ready with the PO 24)', 'image': f'{IMG}/c_04b_ds_reduce.png'},
     {'caption': '4b. Supplier view of the reduced unit: 4 cases without the held Philippines pcs', 'image': f'{IMG}/c_04c_supplier_reduce.png'},
     {'caption': '4c. D/S team: sub screen Hold per Supplier Code + Plant: open POs of each supplier + plant and the customer orders pre-mapped to them', 'image': f'{IMG}/c_04d_ds_supplier_hold.png'},
-    {'caption': '4d. Sub screen: supplier 50221 plant 1 put on hold (Hold Flag Y)', 'image': f'{IMG}/c_04f_ds_supplier_hold_on.png'},
+    {'caption': '4d. Sub screen: supplier 50221 plant 1 put on hold (On Hold, [Release hold])', 'image': f'{IMG}/c_04f_ds_supplier_hold_on.png'},
     {'caption': '4e. Supplier view: its units stay visible, On Hold, check boxes disabled (message no. 12)', 'image': f'{IMG}/c_04e_supplier_on_hold.png'}]
 
 # ---------- buttons ----------
@@ -74,14 +74,15 @@ pr['description'] = ('Cases whose whole qty is pre-mapped to a PO; red when lowe
                      '(the unit is cut again without them); the ASN Status shows "<n> warehouse case(s) on hold (reduce: <destination> <n>)" for the D/S team.')
 it.append({'group': '<Sub Screen Hold per Supplier Code + Plant (D/S team only)>', 'description': ''})
 it += [
-    item('Supplier Code · Plant', 'TB_M_CROSSDOCK_SUPPLIER_HOLD / supplier master', 'SUPPLIER_CD / SUPPLIER_PLANT', 'Char', 'O', 'Label', 'One block per supplier + plant with crossdock parts; supplier name and number of open POs.'),
-    item('Hold Flag (button)', '-', 'HOLD_FLAG', 'Button', 'I', 'Button', "'N · Hold' sets Y, 'Y · Release' sets N. While Y every unit of the supplier + plant is On Hold (check boxes disabled, message no. 12). Refer 5.3.",
-         initial='N · Hold', just='Center'),
-    item('PO No / Manifest No / Item / Part Number / PO Date', 'TB_R_PRA_DAILY_ORDER_MANIFEST / PART', 'PO_NO / MANIFEST_NO / MANIFEST_ITEM / PART_NO / PO_DT', 'Char', 'O', 'Grid',
+    item('Supplier Code · Plant', 'TB_M_CROSSDOCK_SUPPLIER_HOLD / supplier master', 'SUPPLIER_CD / SUPPLIER_PLANT', 'Char', 'O', 'Label', 'One block per supplier + plant with crossdock parts: supplier name, open POs, open pcs and customer orders pre-mapped.'),
+    item('Hold status', 'TB_M_CROSSDOCK_SUPPLIER_HOLD', 'HOLD_FLAG', 'Char', 'O', 'Label', "'On Hold' (HOLD_FLAG Y, block highlighted) / 'Not on hold'."),
+    item('Hold supplier / Release hold', '-', 'HOLD_FLAG', 'Button', 'I', 'Button', "[Hold supplier] sets HOLD_FLAG Y, [Release hold] sets N. While Y every unit of the supplier + plant is On Hold (check boxes disabled, message no. 12). Refer 5.3.",
+         initial='Hold supplier', just='Center'),
+    item('PO No / Manifest / Item / Part Number / PO Date', 'TB_R_PRA_DAILY_ORDER_MANIFEST / PART', 'PO_NO / MANIFEST_NO / MANIFEST_ITEM / PART_NO / PO_DT', 'Char', 'O', 'Grid',
          'Open crossdock POs of the supplier + plant (CROSS_DOCK_FLAG X, open PO qty > 0, released by today).'),
     item('PO Qty / Open Qty', 'TB_R_PRA_DAILY_ORDER_PART / TB_R_PRA_DAILY_ORDER_MAPPED', 'ORDER_QTY / ORDER_QTY - MAPPED_QTY', 'Number', 'O', 'Grid', 'PO qty and the qty not yet in an ASN.', just='Right'),
-    item('Customer orders pre-mapped', '#TEMP_INSTRUCTION (XD09)', 'ORDER_DT / CUSTOMER_ORDER_NO / DESTINATION_CD / ASSIGNED_QTY / CASE_SEQ', 'Char', 'O', 'Grid',
-         'Customer orders pre-mapped to the PO by the Search of today (Customer Order Date · Customer Order No · Destination · Qty · Case) = what the hold stops; "Not pre-mapped yet" when none.'),
+    item('Customer Order Date / Customer Order No / Destination / Qty / Case', '#TEMP_INSTRUCTION (XD09)', 'ORDER_DT / CUSTOMER_ORDER_NO / DESTINATION_CD / ASSIGNED_QTY / CASE_SEQ', 'Char', 'O', 'Grid',
+         'One row per customer order pre-mapped to the PO by the Search of today (= what the hold stops); the PO columns span its rows. "No customer order pre-mapped in this Search" when none; "No open PO" when the supplier has none.'),
     item('Back to ASN Crossdock Creation', '-', '-', '-', 'I', 'Button', 'Closes the sub screen.', initial='Enabled', just='Center')]
 dd = next(i for i, x in enumerate(it) if x.get('group') == '<Destination Detail (D/S team only)>')
 hb = next(i for i, x in enumerate(it) if x.get('name') == 'Hold / Release (D/S)')
@@ -102,7 +103,7 @@ for x in it[sc + 1:]:
 op = s['operation']
 h = next(i for i, x in enumerate(op) if x.get('type') == 'heading' and x['text'].startswith('5.3'))
 op[h + 1]['items'] += [
-    'Hold per Supplier Code + Plant (decided 13-Nov): [Hold per Supplier] opens a D/S sub screen with one block per supplier + plant: Hold Flag button and the open crossdock POs '
+    'Hold per Supplier Code + Plant (decided 13-Nov): [Hold per Supplier] opens a D/S sub screen with one block per supplier + plant: hold status, [Hold supplier] / [Release hold] and the open crossdock POs '
     '(PO No, Manifest No, Item, Part Number, PO Date, PO Qty, Open Qty) with the customer orders pre-mapped to each PO by the Search of today (Customer Order Date, Customer Order No, Destination, Qty, Case). '
     'Hold sets HOLD_FLAG = Y in TB_M_CROSSDOCK_SUPPLIER_HOLD: every unit of the supplier + plant stays visible with status On Hold, check boxes disabled (message no. 12), until released.',
     'Hold per case = Reduce PO Readiness (case) per destination (decided 13-Nov): in the destination detail (D/S) each destination has an input "Reduce PO Readiness (case) / <warehouse cases>" with Save / Release. '
