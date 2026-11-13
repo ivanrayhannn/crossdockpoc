@@ -38,8 +38,8 @@ k = next(i for i, x in enumerate(sl) if x['image'].endswith('c_04_ds_hold.png'))
 sl[k + 1:k + 1] = [
     {'caption': '4a. D/S team: Hold (D/S) ticked on case 4 of PART-X 17-Oct: PO Readiness 4 - 1 = Ready 3, case 4 On Hold (D/S) until unticked; content split into Destination / Customer Order No / Order Qty', 'image': f'{IMG}/c_04b_ds_reduce.png'},
     {'caption': '4b. Supplier view of the reduced unit: case 4 On Hold (D/S), only cases 1-3 can be ticked', 'image': f'{IMG}/c_04c_supplier_reduce.png'},
-    {'caption': '4c. D/S team: sub screen Hold per Part Number + Customer Order Date: POs of each part + date and the customer orders pre-mapped to them', 'image': f'{IMG}/c_04d_ds_supplier_hold.png'},
-    {'caption': '4d. Sub screen: PART-X 17-Oct put on hold (On Hold, [Release hold])', 'image': f'{IMG}/c_04f_ds_supplier_hold_on.png'},
+    {'caption': '4c. D/S team: sub screen Hold per Part Number + Customer Order Date: one row per Part Number, expanded to its customer orders', 'image': f'{IMG}/c_04d_ds_supplier_hold.png'},
+    {'caption': '4d. Sub screen: Hold ticked for PART-X 17-Oct (all customer orders of that date On Hold)', 'image': f'{IMG}/c_04f_ds_supplier_hold_on.png'},
     {'caption': '4e. Supplier view: the held part + date stays visible, On Hold, check boxes disabled (message no. 12)', 'image': f'{IMG}/c_04e_supplier_on_hold.png'}]
 
 # ---------- buttons ----------
@@ -47,7 +47,7 @@ g = s['general']
 bi = next(i for i, b in enumerate(g['buttons']) if b['name'] == 'Hold / Release (D/S)')
 NEWB = [
     {'name': 'Hold per Part (D/S)', 'function': 'D/S team only: open the sub screen Hold per Part Number + Customer Order Date (POs and the customer orders pre-mapped to them).'},
-    {'name': 'Hold / Release hold (D/S)', 'function': "Sub screen, D/S team only: set HOLD_FLAG of a Part Number + Customer Order Date in TB_R_CROSSDOCK_UNIT_HOLD to 'Y' (hold) or 'N' (release)."},
+    {'name': 'Hold (check box, sub screen)', 'function': "Sub screen, D/S team only: tick / untick sets HOLD_FLAG of a Part Number + Customer Order Date in TB_R_CROSSDOCK_UNIT_HOLD to 'Y' / 'N'."},
     {'name': 'Hold case (check box, D/S)', 'function': 'Case grid, D/S team only: tick = insert the case in TB_R_CROSSDOCK_CASE_HOLD (case and later cases not Ready); untick = delete it.'}]
 g['buttons'][bi + 1:bi + 1] = NEWB
 for m in g['screen_modes']:
@@ -87,24 +87,24 @@ for x in it[sc + 1:]:
         x['description'] = (x.get('description', '') + " 'On Hold (D/S)' (grey) when the case is held (Hold check box) or the part + date is on hold; check box disabled (message no. 14 / 12).").strip()
 it.append({'group': '<Sub Screen Hold per Part Number + Customer Order Date (D/S team only)>', 'description': ''})
 it += [
-    item('Supplier Code · Plant', 'Supplier master', 'SUPPLIER_CD / SUPPLIER_PLANT', 'Char', 'O', 'Label', 'One section per supplier + plant: supplier name and number of part + dates.'),
-    item('Part Number / Customer Order Date', '#TEMP_INSTRUCTION (XD09)', 'PART_NO / ORDER_DT', 'Char', 'O', 'Label', 'One row per unit with open qty: cases, cases with PO, POs and pcs.'),
-    item('Hold status', 'TB_R_CROSSDOCK_UNIT_HOLD', 'HOLD_FLAG', 'Char', 'O', 'Label', "'On Hold' (HOLD_FLAG Y, row highlighted) / 'Not on hold'."),
-    item('Hold / Release hold', '-', 'HOLD_FLAG', 'Button', 'I', 'Button', "[Hold] sets HOLD_FLAG Y, [Release hold] sets N. While Y the unit is On Hold (check boxes disabled, message no. 12). Refer 5.3.",
-         initial='Hold', just='Center'),
-    item('PO No / Manifest / Item / PO Date / PO Qty / Open Qty', 'TB_R_PRA_DAILY_ORDER_MANIFEST / PART / MAPPED', 'PO_NO / MANIFEST_NO / MANIFEST_ITEM / PO_DT / ORDER_QTY / ORDER_QTY - MAPPED_QTY', 'Char', 'O', 'Grid',
-         'POs pre-mapped to the unit by the Search of today; the PO cells span their customer order rows.'),
-    item('Customer Order No / Destination / Qty / Case', '#TEMP_INSTRUCTION (XD09)', 'CUSTOMER_ORDER_NO / DESTINATION_CD / ASSIGNED_QTY / CASE_SEQ', 'Char', 'O', 'Grid',
-         'Customer orders pre-mapped to the PO (= what the hold stops); qty without a PO is listed as "No PO yet (waiting for a PO)".'),
+    item('Supplier Code · Plant', 'Supplier master', 'SUPPLIER_CD / SUPPLIER_PLANT', 'Char', 'O', 'Label', 'One section per supplier + plant: supplier name and number of part numbers.'),
+    item('Part Number (row)', '#TEMP_INSTRUCTION (XD09)', 'PART_NO', 'Char', 'O', 'Label', 'One row per Part Number with open customer orders: number of customer orders, Customer Order Dates and pcs; status "<n> date(s) on hold" / "Not on hold". Expand to see its customer orders.'),
+    item('Customer Order Date / Customer Order No / Destination / Qty / Case', '#TEMP_INSTRUCTION (XD09)', 'ORDER_DT / CUSTOMER_ORDER_NO / DESTINATION_CD / ASSIGNED_QTY / CASE_SEQ', 'Char', 'O', 'Grid',
+         'Expanded list: one row per customer order line of the part (all Customer Order Dates, oldest first, not grouped).'),
+    item('PO No / Manifest / Item / PO Date', 'TB_R_PRA_DAILY_ORDER_MANIFEST / PART', 'PO_NO / MANIFEST_NO / MANIFEST_ITEM / PO_DT', 'Char', 'O', 'Grid', 'PO pre-mapped to the line by the Search of today; "No PO yet" when none.'),
+    item('Hold (D/S)', 'Key-in / TB_R_CROSSDOCK_UNIT_HOLD', 'HOLD_FLAG', 'Char', 'I', 'Check Box',
+         "One check box per Customer Order Date of the part (spans its rows): tick sets HOLD_FLAG Y, untick N. While Y every customer order of that part + date is On Hold (check boxes on the delivery plan disabled, message no. 12). Refer 5.3.",
+         initial='Saved value', just='Center'),
     item('Back to ASN Crossdock Creation', '-', '-', '-', 'I', 'Button', 'Closes the sub screen.', initial='Enabled', just='Center')]
 
 # ---------- operation ----------
 op = s['operation']
 h = next(i for i, x in enumerate(op) if x.get('type') == 'heading' and x['text'].startswith('5.3'))
 op[h + 1]['items'] += [
-    'Hold per Part Number + Customer Order Date (decided 13-Nov): [Hold per Part] opens a D/S sub screen with one section per supplier + plant and one row per part + date: '
-    'hold status, [Hold] / [Release hold], and the POs pre-mapped to the unit (PO No, Manifest No, Item, PO Date, PO Qty, Open Qty) with their customer orders (Customer Order No, Destination, Qty, Case). '
-    'Hold sets HOLD_FLAG = Y in TB_R_CROSSDOCK_UNIT_HOLD: the unit stays visible with status On Hold, check boxes disabled (message no. 12), until released.',
+    'Hold per Part Number + Customer Order Date (decided 13-Nov): [Hold per Part] opens a D/S sub screen with one section per supplier + plant and one row per Part Number. '
+    'Expanding a part lists its customer orders (Customer Order Date, Customer Order No, Destination, Qty, Case, PO No, Manifest / Item, PO Date), not grouped by date. '
+    'The Hold (D/S) check box is per Customer Order Date of the part (it spans the rows of that date): tick sets HOLD_FLAG = Y in TB_R_CROSSDOCK_UNIT_HOLD; the part + date stays visible '
+    'with status On Hold, check boxes disabled (message no. 12), until unticked.',
     'Hold per case (decided 13-Nov): the case grid has a check box Hold (D/S) next to PO Status. Ticking a case holds it: the held case and every later case of the unit are not Ready, '
     'and the Ready part ends on the last valid cut before the first held case (cases of the same block are held together). Example: PART-X 17-Oct, PO Readiness 4, case 4 ticked -> Ready 3, case 4 On Hold (D/S).',
     'The hold is saved per case in TB_R_CROSSDOCK_CASE_HOLD and kept until the D/S team unticks it. Case numbers come from the Search (H0253 order), so a hold follows the case number of the unit. '
@@ -116,8 +116,8 @@ op[h2 + 1]['items'].append("On Hold also when the Part Number + Customer Order D
 
 # ---------- data map ----------
 s['data_map']['blocks'][1:1] = [
-    {'source': 'Hold / Release hold (D/S)',
-     'destination': {'table': 'TB_R_CROSSDOCK_UNIT_HOLD', 'operation': 'Insert / Update', 'description': 'Part Number + Customer Order Date of the button (insert when no row yet)',
+    {'source': 'Hold (check box, sub screen)',
+     'destination': {'table': 'TB_R_CROSSDOCK_UNIT_HOLD', 'operation': 'Insert / Update', 'description': 'Part Number + Customer Order Date of the check box (insert when no row yet)',
                      'keys': [{'field': 'PART_NO + ORDER_DT + SUPPLIER_CD + SUPPLIER_PLANT', 'value': 'Unit of the row'}]},
      'mappings': [{'dest_field': 'PART_NO / ORDER_DT', 'description': 'Part number and Customer Order Date of the unit'},
                   {'dest_field': 'SUPPLIER_CD / SUPPLIER_PLANT', 'description': 'Supplier of the unit'},
