@@ -14,19 +14,19 @@ Induk: PO-0008 / MF-0008 / 0001 PART-X 12-12-0 · PO-0009 / MF-0009 PART-X 12-12
 
 | Induk | Customer Order | Dest | QTY | Case |
 |---|---|---|---|---|
-| PO-0008 | CO-14101 | VN | 6 | 1 |
-| | CO-14101 | VN | 4 | 2 |
-| | CO-14102 | VN | 2 | 2 |
-| PO-0009 | CO-14102 | VN | 2 | 3 |
-| | CO-14103 | VN | 4 | 3 |
-| | CO-14104 | TH | 6 | 4 |
-| PO-0010 | CO-14105 | PH | 6 | 5 |
+| PO-0008 | CO-14101 | KR | 6 | 1 |
+| | CO-14101 | KR | 4 | 2 |
+| | CO-14102 | KR | 2 | 2 |
+| PO-0009 | CO-14102 | KR | 2 | 3 |
+| | CO-14103 | KR | 4 | 3 |
+| | CO-14104 | JP | 6 | 4 |
+| PO-0010 | CO-14105 | TW | 6 | 5 |
 
 ## Customer order tanpa PO (SIM-3)
 Opsi: A dihitung (qty H0253 − jumlah child) · B induk dummy UNASSIGNED · C tabel pending · D hanya di tabel sementara saat Search.
 **Usulan: A + D**: child permanen hanya dibuat saat Create ASN untuk unit Ready (unit utuh, A2), jadi child tidak pernah berisi order tanpa PO. Order tanpa PO hanya ada di `#TEMP` (PO kosong, MSG2) dan sebagai open order hasil hitung. Cancel order tanpa PO tidak melepas apa pun.
 
-15-Oct: CO-14104 (TH 6) tanpa induk → unit Not Ready, tabel induk-child permanen kosong. 16-Oct: PO PO-0013 (6) masuk → Search → Ready → Create ASN: induk PO-0008 12/12, PO-0009 6/6, PO-0013 6/6; child CO-14104 6 di PO-0013 case 4.
+15-Oct: CO-14104 (JP 6) tanpa induk → unit Not Ready, tabel induk-child permanen kosong. 16-Oct: PO PO-0013 (6) masuk → Search → Ready → Create ASN: induk PO-0008 12/12, PO-0009 6/6, PO-0013 6/6; child CO-14104 6 di PO-0013 case 4.
 
 ## Perbandingan singkat
 | Aspek | Sekarang | PO induk |

@@ -623,22 +623,22 @@ a { color: var(--color-accent-700); } a:hover { color: var(--color-accent); }
 <script type="text/x-dc" data-dc-script>
 const HUES = [250, 145, 70, 305, 190, 20, 110, 340, 45];
 const colorOf = i => 'oklch(0.6 0.13 ' + HUES[i % HUES.length] + ')';
-const DEST = { VN: { name: 'Vietnam', code: '789', c: 'var(--color-accent)' }, JP: { name: 'Japan', code: '456', c: 'oklch(0.6 0.1 135)' }, TH: { name: 'Thailand', code: '123', c: 'oklch(0.7 0.12 70)' } };
-const DORD = ['VN', 'JP', 'TH'];
+const DEST = { KR: { name: 'Korea', code: '789', c: 'var(--color-accent)' }, JP: { name: 'Japan', code: '456', c: 'oklch(0.6 0.1 135)' }, TW: { name: 'Taiwan', code: '123', c: 'oklch(0.7 0.12 70)' } };
+const DORD = ['KR', 'JP', 'TW'];
 const SEED = [
-  { id: 1, no: 'Order 1', date: '2026-09-15', dest: 'VN', qty: 2 },
-  { id: 2, no: 'Order 2', date: '2026-09-15', dest: 'VN', qty: 4 },
+  { id: 1, no: 'Order 1', date: '2026-09-15', dest: 'KR', qty: 2 },
+  { id: 2, no: 'Order 2', date: '2026-09-15', dest: 'KR', qty: 4 },
   { id: 3, no: 'Order 3', date: '2026-09-15', dest: 'JP', qty: 6 },
-  { id: 4, no: 'Order 4', date: '2026-09-16', dest: 'VN', qty: 1 },
-  { id: 5, no: 'Order 5', date: '2026-09-16', dest: 'VN', qty: 5 },
+  { id: 4, no: 'Order 4', date: '2026-09-16', dest: 'KR', qty: 1 },
+  { id: 5, no: 'Order 5', date: '2026-09-16', dest: 'KR', qty: 5 },
   { id: 6, no: 'Order 6', date: '2026-09-16', dest: 'JP', qty: 2 },
   { id: 7, no: 'Order 7', date: '2026-09-16', dest: 'JP', qty: 4 },
-  { id: 8, no: 'Order 8', date: '2026-09-16', dest: 'TH', qty: 3 },
-  { id: 9, no: 'Order 9', date: '2026-09-16', dest: 'TH', qty: 3 },
-  { id: 10, no: 'Order 10', date: '2026-09-17', dest: 'VN', qty: 12 },
-  { id: 11, no: 'Order 11', date: '2026-09-17', dest: 'TH', qty: 2 },
-  { id: 12, no: 'Order 12', date: '2026-09-17', dest: 'TH', qty: 1 },
-  { id: 13, no: 'Order 13', date: '2026-09-17', dest: 'TH', qty: 3 }
+  { id: 8, no: 'Order 8', date: '2026-09-16', dest: 'TW', qty: 3 },
+  { id: 9, no: 'Order 9', date: '2026-09-16', dest: 'TW', qty: 3 },
+  { id: 10, no: 'Order 10', date: '2026-09-17', dest: 'KR', qty: 12 },
+  { id: 11, no: 'Order 11', date: '2026-09-17', dest: 'TW', qty: 2 },
+  { id: 12, no: 'Order 12', date: '2026-09-17', dest: 'TW', qty: 1 },
+  { id: 13, no: 'Order 13', date: '2026-09-17', dest: 'TW', qty: 3 }
 ];
 const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const niceD = iso => { const [y, m, d] = iso.split('-'); return d + '-' + MON[+m - 1] + '-' + y; };
@@ -649,7 +649,7 @@ const plural = (n, w) => n + ' ' + w + (n > 1 ? 's' : '');
 const isoD = n => '2026-09-' + String(n).padStart(2, '0');
 const PRESETS = {
   a: { label: '1 destination · 10 days', maxC: 2, capOv: { [isoD(17)]: 1, [isoD(18)]: 1, [isoD(19)]: 1 },
-    orders: Array.from({ length: 10 }, (_, i) => ({ id: i + 1, no: 'Order ' + (i + 1), date: isoD(15 + i), dest: 'VN', qty: 12 })) },
+    orders: Array.from({ length: 10 }, (_, i) => ({ id: i + 1, no: 'Order ' + (i + 1), date: isoD(15 + i), dest: 'KR', qty: 12 })) },
   b: { label: '3 destinations', maxC: 2, capOv: {}, orders: SEED }
 };
 
@@ -1024,7 +1024,7 @@ class Component extends DCLogic {
       doneFlag: done || !rel,
       playLabel: s.playing ? 'Pause' : placed ? 'Resume' : 'Play',
       playIconDisp: s.playing ? 'none' : 'inline', pauseIconDisp: s.playing ? 'inline' : 'none',
-      addOrder: () => this.edit(st => { const last = [...st.orders].sort((a, b) => a.date < b.date ? -1 : 1).pop(); return { orders: [...st.orders, { id: st.nextId, no: 'Order ' + st.nextId, date: last ? addDay(last.date) : '2026-09-15', dest: 'VN', qty: st.pcs }], nextId: st.nextId + 1 }; }),
+      addOrder: () => this.edit(st => { const last = [...st.orders].sort((a, b) => a.date < b.date ? -1 : 1).pop(); return { orders: [...st.orders, { id: st.nextId, no: 'Order ' + st.nextId, date: last ? addDay(last.date) : '2026-09-15', dest: 'KR', qty: st.pcs }], nextId: st.nextId + 1 }; }),
       total, orderRows,
       releases: releaseVals,
       caseMeta: plural(releases.length, 'release') + ' · ' + poCount + ' PO · ' + plural(caseCount, 'case'),

@@ -46,7 +46,7 @@ flowchart TB
 | Mapping file (sheet Upload) | Excel | Uploaded by the D/S user on the Mapping per Destination screen ([Validate file]). Only sheet Upload is read. Max 5 MB, 5,000 rows. |
 | TB_M_PART_CANDIDATE | DB | Part status (must be Active) and Max Case/Day of each part |
 | TB_M_PART_CANDIDATE_DEST | DB | Current mapping of the ongoing period, to detect parts with no change |
-| TB_M_H0125_DESTINATION (Destination Master) | DB | Valid destination codes (9722D10 Thailand, 9811110 Philippines, 9715310 Vietnam) |
+| TB_M_H0125_DESTINATION (Destination Master) | DB | Valid destination codes (9722D10 Japan, 9811110 Taiwan, 9715310 Korea) |
 
 ### Output
 
@@ -352,7 +352,7 @@ Destination Master (existing NSP table, read only). Only the listed columns are 
 | CUSTOMER_CD | VARCHAR(7) |  | N | Customer code (reference only) |
 | ORDER_TRANSPORTATION_CD | VARCHAR(1) |  | N | Order transportation code (reference only) |
 | BO_INSTRUCTION_CD | VARCHAR(1) |  | N | B/O instruction code (reference only) |
-| DESTINATION_NAME_ENG | VARCHAR(50) |  | N | Destination name, e.g. Thailand. Used by Crossdock: shown with the code ('9722D10 - Thailand') and in Export Excel |
+| DESTINATION_NAME_ENG | VARCHAR(50) |  | N | Destination name, e.g. Japan. Used by Crossdock: shown with the code ('9722D10 - Japan') and in Export Excel |
 | REGION_CD | VARCHAR(2) |  | N | Region code (reference only) |
 | COUNTRY_NAME_ENG | VARCHAR(36) |  | Y | Country name (reference only) |
 | POSTAL_CD_ENG | VARCHAR(10) |  | Y | Postal code (reference only) |

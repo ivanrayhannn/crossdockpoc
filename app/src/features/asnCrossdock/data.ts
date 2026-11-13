@@ -30,10 +30,10 @@ export interface Dest {
 
 /** 7-digit destination code (TB_M_H0125_DESTINATION.DESTINATION_CD). */
 export const DESTS: Record<string, Dest> = {
-  '9715310': { code: '9715310', short: 'VN', name: 'Vietnam' },
-  '9811110': { code: '9811110', short: 'PH', name: 'Philippines' },
-  '9722D10': { code: '9722D10', short: 'TH', name: 'Thailand' },
-  '982220': { code: '982220', short: 'D4', name: 'Destination 982220' },
+  '9715310': { code: '9715310', short: 'KR', name: 'Korea' },
+  '9811110': { code: '9811110', short: 'TW', name: 'Taiwan' },
+  '9722D10': { code: '9722D10', short: 'JP', name: 'Japan' },
+  '982220': { code: '982220', short: 'AU', name: 'Australia' },
 };
 
 /** A customer order line of H0253 (order status 7); on a slice of #TEMP_INSTRUCTION the PO fields are filled and qty is the slice qty. */

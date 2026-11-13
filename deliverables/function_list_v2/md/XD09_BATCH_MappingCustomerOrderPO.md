@@ -34,7 +34,7 @@ Contoh lengkap: `deliverables/simulasi_asn_rev.xlsx` (16–22 Oct), prototype me
 - Blok **Ready ('6')** kalau blok itu dan semua blok sebelumnya punya PO. Blok **tidak boleh dilompati**: kalau blok 2 belum punya PO, blok 3 ikut Not Ready.
 - Line bisa terkirim di beberapa ASN: XD09 ambil **open qty** = ORDER_STATUS_QTY − qty line di TB_R_INSTRUCTION. PO_MAPPED_FLAG = 'Y' hanya kalau seluruh line sudah di TB_R_INSTRUCTION.
 - `#TEMP_INSTRUCTION`: grain **line × PO × case supplier**; kolom baru SORT_SEQ, ORDER_TIME, OPEN_ORDER_QTY, PCS_CASE, CASE_SEQ, LINE_SEQ, CUM_DEST_QTY, SEQ_QTY (isi case gudang destinasi 1..PCS_CASE, reset setelah PCS_CASE), CUT_FLAG, GROUP_SEQ; CROSSDOCK_STATUS per blok; REMAINING_ORDER_QTY dihapus.
-- Contoh (sheet Sample Input): V01 VN 10, T01 TH 6, V02 VN 14, 6 pcs/case, p1 24 (15-Oct), p2 6 (16-Oct) → blok: case 1 | case 2–3 | case 4 | case 5; opsi 15-Oct: 1 / 3 / 4 case, opsi 5 case mulai 16-Oct.
+- Contoh (sheet Sample Input): V01 KR 10, T01 JP 6, V02 KR 14, 6 pcs/case, p1 24 (15-Oct), p2 6 (16-Oct) → blok: case 1 | case 2–3 | case 4 | case 5; opsi 15-Oct: 1 / 3 / 4 case, opsi 5 case mulai 16-Oct.
 - Urutan H0253 = **urutan PK** `TB_R_H0253_ORDER_CONTROL_PRE` (7 key yang sama, urutan sama), jadi replicate sudah menyimpan baris dalam urutan H0253. XD09 tetap memfilter unit dan membaca dengan `ORDER BY SHIPPING_PART_NO, ORDER_DT, <kolom PK>` (urutan PK global untuk semua part / tanggal, dan baca tanpa ORDER BY tidak dijamin urut). SORT_SEQ = `ROW_NUMBER()` per unit dalam urutan ini (opsional, bisa diturunkan ulang).
 
 ### Query urutan baris H0253 (Appendix UISS XD09)

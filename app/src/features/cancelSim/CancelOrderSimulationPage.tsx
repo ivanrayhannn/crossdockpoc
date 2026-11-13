@@ -150,11 +150,11 @@ const SCENARIOS: { key: string; name: string; tag: Level; summary: string; steps
   },
   {
     key: '5', name: '5 · One line in 2 ASNs → partial receipt splits the serial (simulasi_asn CO-14115)', tag: 'warn',
-    summary: 'Same data as simulasi_asn_rev.xlsx: CO-14115 VN 12 pcs (order date 19-Oct) goes in ASN0006 (case 1, PO-0005) and ASN0007 (case 2, PO-0006). On 21-Oct ASN0006 is received: G-System splits the line into serial 0000001 6 pcs status 6 and serial 0000002 6 pcs status 7. XD08 keeps each part linked to its ASN.',
+    summary: 'Same data as simulasi_asn_rev.xlsx: CO-14115 KR 12 pcs (order date 19-Oct) goes in ASN0006 (case 1, PO-0005) and ASN0007 (case 2, PO-0006). On 21-Oct ASN0006 is received: G-System splits the line into serial 0000001 6 pcs status 6 and serial 0000002 6 pcs status 7. XD08 keeps each part linked to its ASN.',
     steps: [
       {
         lane: 'sys', date: '20-Oct', title: 'XD08 inserts CO-14115 (status 7, 12 pcs)',
-        text: 'Order date 19-Oct: CO-14111 TH 6 + CO-14115 VN 12 = 18 pcs → PO PO-0006 (PO date 20-Oct, 18). The 20-Oct Search cuts CO-14115 into case 1 (rest of PO-0005) and case 2 (PO-0006).',
+        text: 'Order date 19-Oct: CO-14111 JP 6 + CO-14115 KR 12 = 18 pcs → PO PO-0006 (PO date 20-Oct, 18). The 20-Oct Search cuts CO-14115 into case 1 (rest of PO-0005) and case 2 (PO-0006).',
         src: [{ order: C5, serial: A, status: '7', qty: 12, upd: '20-Oct 03:30', changed: true }],
         rep: [{ order: C5, serial: A, status: '7', qty: 12, hold: 'N', mapped: 'N', upd: '-', changed: true }], instr: [],
         flags: [['ok', 'One line of 12 pcs = 2 supplier cases.']],
@@ -260,7 +260,7 @@ export function CancelOrderSimulationPage() {
 
       <div style={{ ...card, padding: '10px 14px', fontSize: 12, display: 'flex', flexWrap: 'wrap', gap: '6px 22px' }}>
         {(scen.key === '5'
-          ? [['Customer', '9715300'], ['Customer Order No', 'CO-14115'], ['Order Date', '19-Oct-2026'], ['Destination', '9715310 (VN)'],
+          ? [['Customer', '9715300'], ['Customer Order No', 'CO-14115'], ['Order Date', '19-Oct-2026'], ['Destination', '9715310 (KR)'],
             ['Detailed Item No', '001'], ['Part Number', 'PART-X (6 pcs/case)'], ['Order Qty', '12 pcs']]
           : [['Customer', '9722D10'], ['Customer Order No', 'ID1H4571'], ['Order Date / Time', '31-Aug-2026 · 201241'], ['Destination', '9722D88'],
             ['Detailed Item No', '0004'], ['Part Number', '52119BZV60'], ['Original Shipping Qty', '8 pcs']]).map(([k, v]) => (

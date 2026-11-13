@@ -115,7 +115,7 @@
    {
     "name": "TB_M_H0125_DESTINATION (Destination Master)",
     "type": "DB",
-    "description": "Valid destination codes (9722D10 Thailand, 9811110 Philippines, 9715310 Vietnam)"
+    "description": "Valid destination codes (9722D10 Japan, 9811110 Taiwan, 9715310 Korea)"
    }
   ],
   "outputs": [
@@ -1770,7 +1770,7 @@
      "VARCHAR(50)",
      "",
      "N",
-     "Destination name, e.g. Thailand. Used by Crossdock: shown with the code ('9722D10 - Thailand') and in Export Excel"
+     "Destination name, e.g. Japan. Used by Crossdock: shown with the code ('9722D10 - Japan') and in Export Excel"
     ],
     [
      "REGION_CD",

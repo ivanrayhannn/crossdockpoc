@@ -4,7 +4,7 @@
    holding at most Max Case/Day cases. Cases that do not fit wait in a FIFO
    backlog and go into the next PO first. */
 
-export type DestKey = 'VN' | 'JP' | 'TH';
+export type DestKey = 'KR' | 'JP' | 'TW';
 
 export interface Order {
   id: number;
@@ -23,12 +23,12 @@ export interface SortedOrder extends Order {
   ci: number;
 }
 
-export const DORD: DestKey[] = ['VN', 'JP', 'TH'];
+export const DORD: DestKey[] = ['KR', 'JP', 'TW'];
 
 export const DEST: Record<DestKey, { name: string; code: string; c: string }> = {
-  VN: { name: 'Vietnam', code: '789', c: 'var(--color-accent)' },
+  KR: { name: 'Korea', code: '789', c: 'var(--color-accent)' },
   JP: { name: 'Japan', code: '456', c: 'oklch(0.6 0.1 135)' },
-  TH: { name: 'Thailand', code: '123', c: 'oklch(0.7 0.12 70)' },
+  TW: { name: 'Taiwan', code: '123', c: 'oklch(0.7 0.12 70)' },
 };
 
 const HUES = [250, 145, 70, 305, 190, 20, 110, 340, 45];
@@ -69,19 +69,19 @@ function multiPartScenarioOrders(prefix: string, partLines: { part: string; dest
 }
 
 const SEED: Order[] = [
-  { id: 1, no: 'Order 1', date: '2026-09-15', dest: 'VN', qty: 2 },
-  { id: 2, no: 'Order 2', date: '2026-09-15', dest: 'VN', qty: 4 },
+  { id: 1, no: 'Order 1', date: '2026-09-15', dest: 'KR', qty: 2 },
+  { id: 2, no: 'Order 2', date: '2026-09-15', dest: 'KR', qty: 4 },
   { id: 3, no: 'Order 3', date: '2026-09-15', dest: 'JP', qty: 6 },
-  { id: 4, no: 'Order 4', date: '2026-09-16', dest: 'VN', qty: 1 },
-  { id: 5, no: 'Order 5', date: '2026-09-16', dest: 'VN', qty: 5 },
+  { id: 4, no: 'Order 4', date: '2026-09-16', dest: 'KR', qty: 1 },
+  { id: 5, no: 'Order 5', date: '2026-09-16', dest: 'KR', qty: 5 },
   { id: 6, no: 'Order 6', date: '2026-09-16', dest: 'JP', qty: 2 },
   { id: 7, no: 'Order 7', date: '2026-09-16', dest: 'JP', qty: 4 },
-  { id: 8, no: 'Order 8', date: '2026-09-16', dest: 'TH', qty: 3 },
-  { id: 9, no: 'Order 9', date: '2026-09-16', dest: 'TH', qty: 3 },
-  { id: 10, no: 'Order 10', date: '2026-09-17', dest: 'VN', qty: 12 },
-  { id: 11, no: 'Order 11', date: '2026-09-17', dest: 'TH', qty: 2 },
-  { id: 12, no: 'Order 12', date: '2026-09-17', dest: 'TH', qty: 1 },
-  { id: 13, no: 'Order 13', date: '2026-09-17', dest: 'TH', qty: 3 },
+  { id: 8, no: 'Order 8', date: '2026-09-16', dest: 'TW', qty: 3 },
+  { id: 9, no: 'Order 9', date: '2026-09-16', dest: 'TW', qty: 3 },
+  { id: 10, no: 'Order 10', date: '2026-09-17', dest: 'KR', qty: 12 },
+  { id: 11, no: 'Order 11', date: '2026-09-17', dest: 'TW', qty: 2 },
+  { id: 12, no: 'Order 12', date: '2026-09-17', dest: 'TW', qty: 1 },
+  { id: 13, no: 'Order 13', date: '2026-09-17', dest: 'TW', qty: 3 },
 ];
 
 export type PresetKey = 'a' | 'b' | 'c' | 'd';
@@ -107,7 +107,7 @@ export const PRESETS: Record<PresetKey, Preset> = {
     label: '1 destination · 10 days',
     maxC: 2,
     capOv: { [isoD(17)]: 1, [isoD(18)]: 1, [isoD(19)]: 1 },
-    orders: Array.from({ length: 10 }, (_, i) => ({ id: i + 1, no: `Order ${i + 1}`, date: isoD(15 + i), dest: 'VN' as const, qty: 12 })),
+    orders: Array.from({ length: 10 }, (_, i) => ({ id: i + 1, no: `Order ${i + 1}`, date: isoD(15 + i), dest: 'KR' as const, qty: 12 })),
   },
   b: { label: '3 destinations', maxC: 2, capOv: {}, orders: SEED },
   c: {
@@ -115,10 +115,10 @@ export const PRESETS: Record<PresetKey, Preset> = {
     maxC: 4,
     capOv: {},
     orders: multiPartScenarioOrders('CO-10', [
-      { part: 'P-1001', dest: 'VN' },
-      { part: 'P-1002', dest: 'VN' },
-      { part: 'P-1003', dest: 'VN' },
-      { part: 'P-1004', dest: 'VN' },
+      { part: 'P-1001', dest: 'KR' },
+      { part: 'P-1002', dest: 'KR' },
+      { part: 'P-1003', dest: 'KR' },
+      { part: 'P-1004', dest: 'KR' },
     ]),
   },
   d: {
@@ -126,12 +126,12 @@ export const PRESETS: Record<PresetKey, Preset> = {
     maxC: 4,
     capOv: {},
     orders: multiPartScenarioOrders('CO-20', [
-      { part: 'P-3001', dest: 'VN' },
-      { part: 'P-3002', dest: 'VN' },
+      { part: 'P-3001', dest: 'KR' },
+      { part: 'P-3002', dest: 'KR' },
       { part: 'P-3003', dest: 'JP' },
       { part: 'P-3004', dest: 'JP' },
-      { part: 'P-3005', dest: 'TH' },
-      { part: 'P-3006', dest: 'TH' },
+      { part: 'P-3005', dest: 'TW' },
+      { part: 'P-3006', dest: 'TW' },
     ]),
   },
 };

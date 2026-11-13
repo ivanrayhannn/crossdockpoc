@@ -118,7 +118,7 @@ R = upd(R, CO_14110=(N, 'N', 'Y', 'ASN0004', 'Udah ASN (split PO PO-0004)'),
         CO_14112=(N, 'N', 'Y', 'ASN0005', 'Udah ASN (Case 1, PO-0004)'), CO_14113=(N, 'N', 'Y', 'ASN0005', 'Udah ASN (Case 2, PO-0005)'),
         CO_14114=(N, 'N', 'Y', 'ASN0005', 'Udah ASN (Case 3, PO-0005); sisa PO-0005 6 pcs open'))
 rep('Condition saat create ASN0004 (CO-14110) dan ASN0005 (order date 18/10, Case 1-3)', '19/10/2026', R)
-gsys(GS + ' (ASN0004 & ASN0005 received; order date 19/10: CO-14111 TH 6 + CO-14115 VN 12 → PO-0006 PO_DT 20/10 qty 18)', '20/10/2026',
+gsys(GS + ' (ASN0004 & ASN0005 received; order date 19/10: CO-14111 JP 6 + CO-14115 KR 12 → PO-0006 PO_DT 20/10 qty 18)', '20/10/2026',
      [('CO-14101', '6', None), ('CO-14102', '2', None), ('CO-14103', '6', None), ('CO-14104', '2', None), ('CO-14105', '6', None), ('CO-14106', '6', None),
       ('CO-14107', '6', None), ('CO-14109', '6', None), ('CO-14110', '6', None), ('CO-14112', '6', None), ('CO-14113', '6', None),
       ('CO-14114', '6', None), ('CO-14111', '7', None), ('CO-14115', '7', '1 line 12 pcs = 2 case')])
@@ -256,7 +256,7 @@ r = search(r, '19/10/2026 [Search]: sisa order date 17/10 (CO-14104 UPDT 2, Case
            [['CO-14110'], ['CO-14112', 'CO-14113', 'CO-14114']], [('PO-0004', 12), ('PO-0005', 18)],
            {'CO-14110': 'Ready dengan split PO → ASN0004', 'CO-14112': 'Sisa PO-0004 (PO_DT 19/10, PO no lebih kecil) → ASN0005 Case 1-3',
             'CO-14114': 'PO-0005 sisa 6 open'})
-r = search(r, '20/10/2026 [Search]: order date 19/10 (CO-14115 VN 12 = 2 case, CO-14111 TH 6)', [['CO-14111', 'CO-14115']], [('PO-0005', 6), ('PO-0006', 18)],
+r = search(r, '20/10/2026 [Search]: order date 19/10 (CO-14115 KR 12 = 2 case, CO-14111 JP 6)', [['CO-14111', 'CO-14115']], [('PO-0005', 6), ('PO-0006', 18)],
            {'CO-14115': 'Case 1 → ASN0006 (rit 1), Case 2 → ASN0007 (rit 2): 1 line di 2 ASN', 'CO-14111': 'Case 3 belum dikirim'})
 r = search(r, '21/10/2026 [Search] SALAH (tanpa tata ulang TB_R_INSTRUCTION): serial 0000002 dianggap open 6 → mapping lagi', [['CO-14115/0000002']],
            [('PO-0006', 12)], {'CO-14115': 'DOUBLE: 6 pcs ini sudah di ASN0007'})

@@ -197,7 +197,7 @@ XD09 runs on [Search] of XD10 and builds the delivery plan in #TEMP_INSTRUCTION.
 - CUT_FLAG = Y after a case where the cumulative qty of every destination of the unit is a multiple of PCS_CASE (the warehouse packs 1 case = 1 destination); the ASN may stop only there. SEQ_QTY = fill of the warehouse case of the destination (1..PCS_CASE).
 - A case is Ready (CROSSDOCK_STATUS 6) when it and every earlier case of the unit have a PO, else Not Ready (7). 18-Oct: cases 1-4 Ready, case 5 Not Ready → unit Partially Ready, Short PO.
 - Holds of the D/S team (XD10 5.3, decided 13-Nov): supplier + plant with HOLD_FLAG Y in TB_M_CROSSDOCK_SUPPLIER_HOLD -> every case of its units CROSSDOCK_STATUS '8' (On Hold).
-- Reduce PO Readiness (case) per destination in TB_R_CROSSDOCK_CASE_HOLD (applied before the PO pouring and the cut): REDUCE_CASE x PCS_CASE pcs of the destination are taken off from its last lines in H0253 order (a line can be partly held); the rest is poured and cut as usual. Example 18-Oct: Philippines reduce 1 -> CO-14109 6 pcs held; 24 pcs = 4 cases, the 24 pcs PO covers all (CO-14110 Ready).
+- Reduce PO Readiness (case) per destination in TB_R_CROSSDOCK_CASE_HOLD (applied before the PO pouring and the cut): REDUCE_CASE x PCS_CASE pcs of the destination are taken off from its last lines in H0253 order (a line can be partly held); the rest is poured and cut as usual. Example 18-Oct: Taiwan reduce 1 -> CO-14109 6 pcs held; 24 pcs = 4 cases, the 24 pcs PO covers all (CO-14110 Ready).
 
 ### 4.4 Delivery Plan on XD10
 
@@ -356,23 +356,23 @@ New table: Reduce PO Readiness (case) per destination of a unit (Part Number + C
 
 | Sort Seq | Order Date | Customer Code | Cust Order No | Dest | Open Qty | PO No | Assigned Qty | Case | Cum Dest Qty | Seq Qty | Cut | Status |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | 15-Oct | 9715300 | CO-14101 | VN | 6 | PO-0001 | 6 | 1 | 6 | 6 | Y | Ready |
+| 1 | 15-Oct | 9715300 | CO-14101 | KR | 6 | PO-0001 | 6 | 1 | 6 | 6 | Y | Ready |
 
 ### B. 17-Oct: CO-14102 cancelled (UPD_STATUS 2); CO-14103 takes the rest of PO-0001 (older PO date); PO-0002 stays open
 
 | Sort Seq | Order Date | Customer Code | Cust Order No | Dest | Open Qty | PO No | Assigned Qty | Case | Cum Dest Qty | Seq Qty | Cut | Status |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | 16-Oct | 9722D10 | CO-14103 | TH | 6 | PO-0001 | 6 | 1 | 6 | 6 | Y | Ready |
+| 1 | 16-Oct | 9722D10 | CO-14103 | JP | 6 | PO-0001 | 6 | 1 | 6 | 6 | Y | Ready |
 
 ### C. 18-Oct: order date 17-Oct, 4 destinations, 30 pcs; PO 24 pcs (PO-0002 rest 6 + PO-0003 18): Short PO, case 5 Not Ready
 
 | Sort Seq | Order Date | Customer Code | Cust Order No | Dest | Open Qty | PO No | Assigned Qty | Case | Cum Dest Qty | Seq Qty | Cut | Status |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | 17-Oct | 9715300 | CO-14105 | VN | 6 | PO-0002 | 6 | 1 | 6 | 6 | Y | Ready |
-| 2 | 17-Oct | 9715300 | CO-14106 | VN | 3 | PO-0003 | 3 | 2 | 9 | 3 | N | Ready |
-| 3 | 17-Oct | 9715300 | CO-14107 | VN | 3 | PO-0003 | 3 | 2 | 12 | 6 | Y | Ready |
-| 4 | 17-Oct | 9722D10 | CO-14104 | TH | 6 | PO-0003 | 6 | 3 | 6 | 6 | Y | Ready |
-| 5 | 17-Oct | 9811100 | CO-14109 | PH | 6 | PO-0003 | 6 | 4 | 6 | 6 | Y | Ready |
+| 1 | 17-Oct | 9715300 | CO-14105 | KR | 6 | PO-0002 | 6 | 1 | 6 | 6 | Y | Ready |
+| 2 | 17-Oct | 9715300 | CO-14106 | KR | 3 | PO-0003 | 3 | 2 | 9 | 3 | N | Ready |
+| 3 | 17-Oct | 9715300 | CO-14107 | KR | 3 | PO-0003 | 3 | 2 | 12 | 6 | Y | Ready |
+| 4 | 17-Oct | 9722D10 | CO-14104 | JP | 6 | PO-0003 | 6 | 3 | 6 | 6 | Y | Ready |
+| 5 | 17-Oct | 9811100 | CO-14109 | TW | 6 | PO-0003 | 6 | 4 | 6 | 6 | Y | Ready |
 | 6 | 17-Oct | 982200 | CO-14110 | 982220 | 6 | — | 6 | 5 | 6 | 6 | Y | Not Ready |
 
 ### C1. 18-Oct: pouring the PO qty of PART-X over the lines of order date 17-Oct (top line first)
@@ -393,17 +393,17 @@ New table: Reduce PO Readiness (case) per destination of a unit (Part Number + C
 | Sort Seq | Order Date | Customer Code | Cust Order No | Dest | Open Qty | PO No | Assigned Qty | Case | Cum Dest Qty | Seq Qty | Cut | Status |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | 1 | 17-Oct | 982200 | CO-14110 | 982220 | 6 | PO-0004 | 6 | 1 | 6 | 6 | Y | Ready |
-| 1 | 18-Oct | 9715300 | CO-14112 | VN | 6 | PO-0004 | 6 | 1 | 6 | 6 | Y | Ready |
-| 2 | 18-Oct | 9811100 | CO-14113 | PH | 6 | PO-0005 | 6 | 2 | 6 | 6 | Y | Ready |
+| 1 | 18-Oct | 9715300 | CO-14112 | KR | 6 | PO-0004 | 6 | 1 | 6 | 6 | Y | Ready |
+| 2 | 18-Oct | 9811100 | CO-14113 | TW | 6 | PO-0005 | 6 | 2 | 6 | 6 | Y | Ready |
 | 3 | 18-Oct | 982200 | CO-14114 | 982220 | 6 | PO-0005 | 6 | 3 | 6 | 6 | Y | Ready |
 
 ### E. 20-Oct: order date 19-Oct: CO-14115 12 pcs = 2 cases (one line in 2 ASNs), CO-14111
 
 | Sort Seq | Order Date | Customer Code | Cust Order No | Dest | Open Qty | PO No | Assigned Qty | Case | Cum Dest Qty | Seq Qty | Cut | Status |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | 19-Oct | 9715300 | CO-14115 | VN | 12 | PO-0005 | 6 | 1 | 6 | 6 | Y | Ready |
-| 1 | 19-Oct | 9715300 | CO-14115 | VN | 12 | PO-0006 | 6 | 2 | 12 | 6 | Y | Ready |
-| 2 | 19-Oct | 9722D10 | CO-14111 | TH | 6 | PO-0006 | 6 | 3 | 6 | 6 | Y | Ready |
+| 1 | 19-Oct | 9715300 | CO-14115 | KR | 12 | PO-0005 | 6 | 1 | 6 | 6 | Y | Ready |
+| 1 | 19-Oct | 9715300 | CO-14115 | KR | 12 | PO-0006 | 6 | 2 | 12 | 6 | Y | Ready |
+| 2 | 19-Oct | 9722D10 | CO-14111 | JP | 6 | PO-0006 | 6 | 3 | 6 | 6 | Y | Ready |
 
 ### F. PO per Customer Order Date (PO date = order date + 1, qty = total order qty of all destinations)
 

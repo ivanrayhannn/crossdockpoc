@@ -7,7 +7,7 @@ import type { CalcRun } from './components/CalcRunBar';
 const DEFAULT_Q: PartQuery = {
   part: '',
   name: '',
-  dest: 'Thailand',
+  dest: 'Japan',
   st: 'all',
   sync: 'notsync',
   per: CUR_PER,
@@ -183,7 +183,7 @@ export function useCrossdockState() {
   }, []);
 
   const resetQ = useCallback(() => {
-    const reset = (prev: PartQuery): PartQuery => ({ ...DEFAULT_Q, dest: prev.dest || 'Thailand' });
+    const reset = (prev: PartQuery): PartQuery => ({ ...DEFAULT_Q, dest: prev.dest || 'Japan' });
     setQ(reset);
     setAq(reset);
   }, []);

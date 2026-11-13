@@ -94,7 +94,7 @@ TEMP_DESC = ("Temporary table of one Search run (session): the open qty of the c
 # ---- sample of the user (21-Oct): date 1 = 14-Oct (customer order), PO p1 released 15-Oct, p2 released 16-Oct
 CUST = {'V01': 'CUST-A', 'T01': 'CUST-B', 'V02': 'CUST-C'}
 LINES = [dict(CUSTOMER_CD=CUST[co], CUSTOMER_ORDER_NO=co, ORDER_DT='14-Oct-2026', ORDER_TIME='080000', DESTINATION_CD=d, DETAILED_ITEM_NO='0001',
-              SERIAL_NO='0000001', PART_NO='PART-A', QTY=q) for co, d, q in (('V01', 'VN', 10), ('T01', 'TH', 6), ('V02', 'VN', 14))]
+              SERIAL_NO='0000001', PART_NO='PART-A', QTY=q) for co, d, q in (('V01', 'KR', 10), ('T01', 'JP', 6), ('V02', 'KR', 14))]
 SAMPLE_COLS = ['Sort Seq', 'Customer Code', 'Cust Order No', 'Dest', 'Order Qty', 'PO No', 'Assigned Qty', 'Case', 'Cum Dest Qty', 'Seq Qty', 'Cut', 'Block',
                'Status']
 SAMPLE_W = [8, 12, 12, 7, 9, 8, 11, 7, 12, 6, 7, 8]
@@ -109,19 +109,19 @@ SAMPLE = {
     'title': 'Sample Input',
     'heading': 'Sample pre-mapping - H0253 order, supplier cases and ASN options (blocks)',
     'intro': [
-        "Part PART-A, 6 pcs/case, Customer Order Date 14-Oct-2026 (one unit). H0253 lines (order status 7, Hold Flag N): V01 VN 10, T01 TH 6, "
-        "V02 VN 14 (30 pcs). Dummy customer codes CUST-A / B / C give the H0253 order V01, T01, V02.",
+        "Part PART-A, 6 pcs/case, Customer Order Date 14-Oct-2026 (one unit). H0253 lines (order status 7, Hold Flag N): V01 KR 10, T01 JP 6, "
+        "V02 KR 14 (30 pcs). Dummy customer codes CUST-A / B / C give the H0253 order V01, T01, V02.",
         f"PO parts ({FLAG_RULE}): p1 24 pcs (released 15-Oct), p2 6 pcs (released 16-Oct).",
-        "Cut check after each case: cumulative VN / TH = case 1: 6 / 0 valid; case 2: 10 / 2 not valid (VN short 2, TH short 4); case 3: 12 / 6 valid; "
+        "Cut check after each case: cumulative KR / JP = case 1: 6 / 0 valid; case 2: 10 / 2 not valid (KR short 2, JP short 4); case 3: 12 / 6 valid; "
         "case 4: 18 / 6 valid; case 5: 24 / 6 valid. Blocks: 1 = case 1; 2 = cases 2-3; 3 = case 4; 4 = case 5."],
     'sections': [
         {'title': 'A. [Search] on 15-Oct: only p1 (24 pcs) is released', 'columns': SAMPLE_COLS, 'widths': SAMPLE_W,
          'rows': sample_rows([['p1', 'M-0001', '0001', 24]])},
         {'title': 'B. ASN options on 15-Oct (the supplier chooses one; blocks are taken in order)', 'columns': ['Option', 'Blocks', 'Cases', 'Pcs', 'Content (H0253 order)'],
          'widths': [8, 10, 10, 8, 70],
-         'rows': [['1', '1', '1', 6, 'VN 6 (V01)'],
-                  ['2', '1-2', '1-3', 18, 'VN 6, VN 4, TH 2 | TH 4, VN 2: VN 12 and TH 6 close their cases'],
-                  ['3', '1-3', '1-4', 24, 'Option 2 + VN 6 (V02); p1 used up'],
+         'rows': [['1', '1', '1', 6, 'KR 6 (V01)'],
+                  ['2', '1-2', '1-3', 18, 'KR 6, KR 4, JP 2 | JP 4, KR 2: KR 12 and JP 6 close their cases'],
+                  ['3', '1-3', '1-4', 24, 'Option 2 + KR 6 (V02); p1 used up'],
                   ['4', '1-4', '1-5', 30, 'Not on 15-Oct: block 4 has no PO (status 7); possible from 16-Oct when p2 is released']]},
         {'title': 'C. [Search] on 16-Oct after the supplier sent option 3 on 15-Oct: open qty V02 6, p2 released',
          'columns': SAMPLE_COLS, 'widths': SAMPLE_W,
@@ -162,7 +162,7 @@ XD10_CASE_SECTIONS = [
      'widths': [6, 34, 14, 66],
      'rows': [['C1', 'Tick case 1', '1', 'ASN 6 pcs.'],
               ['C2', 'Tick case 2 (or cases 1 and 2)', '1-3', 'Cases 2-3 belong together: cases 1-2 alone are not possible; case 3 is ticked too '
-               '(message no. 10); ASN 18 pcs. (Reason, D/S view: after case 2 VN 10 / TH 2 would not complete a warehouse case.)'],
+               '(message no. 10); ASN 18 pcs. (Reason, D/S view: after case 2 KR 10 / JP 2 would not complete a warehouse case.)'],
               ['C3', 'Tick case 3', '1-3', 'Cases 1-2 are ticked too; ASN 18 pcs.'],
               ['C4', 'Tick case 4', '1-4', 'ASN 24 pcs.'],
               ['C5', 'Tick case 5 (or the unit check box)', '1-5', 'All cases; ASN 30 pcs.'],
@@ -243,8 +243,8 @@ def xd09():
         {'type': 'heading', 'text': '4.3 Blocks (ASN Options) and Status'},
         {'type': 'bullets', 'marker': '-', 'level': 0, 'items': [
             "In the warehouse 1 case = 1 destination (max PCS_CASE pcs). An ASN may therefore stop only after a case where the "
-            "cumulative qty of every destination of the unit is a multiple of PCS_CASE (valid cut, CUT_FLAG 'Y'). SEQ_QTY = fill of the warehouse case of the destination (1..PCS_CASE, starts again after PCS_CASE): the cut is valid when the last SEQ_QTY of every destination = PCS_CASE. Example: after case 2 VN 10 / TH 2 is "
-            "not valid (VN short 2, TH short 4); after case 3 VN 12 / TH 6 is valid.",
+            "cumulative qty of every destination of the unit is a multiple of PCS_CASE (valid cut, CUT_FLAG 'Y'). SEQ_QTY = fill of the warehouse case of the destination (1..PCS_CASE, starts again after PCS_CASE): the cut is valid when the last SEQ_QTY of every destination = PCS_CASE. Example: after case 2 KR 10 / JP 2 is "
+            "not valid (KR short 2, JP short 4); after case 3 KR 12 / JP 6 is valid.",
             "Block = the cases after the previous valid cut up to the next valid cut (GROUP_SEQ). A block is never split.",
             "CROSSDOCK_STATUS of a block: '6' Ready when the block and every earlier block are fully pre-mapped to a PO; '7' Not Ready otherwise. "
             "A later block with PO stays '7' while an earlier block has no PO (blocks are never skipped).",
@@ -309,7 +309,7 @@ def xd10():
         item('Remaining Qty (not assigned)', '#TEMP_INSTRUCTION', 'ASSIGNED_QTY (PO_NO NULL)', 'Number', 'O', 'Label', 'ZZZ9', '-',
              'Pcs of the case without a PO yet (sum of the slices with PO_NO NULL); 0 when the whole case is assigned; red when > 0.', just='Right'),
         item('Content (D/S team)', '#TEMP_INSTRUCTION', 'DESTINATION_CD / CUSTOMER_ORDER_NO / ASSIGNED_QTY', 'Char', 'O', 'Label', '-', '-',
-             'D/S team only (not shown to the supplier): slices of the case in H0253 order, e.g. VN 4 (V01) + TH 2 (T01).'),
+             'D/S team only (not shown to the supplier): slices of the case in H0253 order, e.g. KR 4 (V01) + JP 2 (T01).'),
         item('PO', '#TEMP_INSTRUCTION', 'PO_NO / ASSIGNED_QTY', 'Char', 'O', 'Label', '{PO No} {qty}', '-', 'POs of the case with the assigned qty, e.g. PO-0012 2.'),
         item('PO Status', '#TEMP_INSTRUCTION', 'CROSSDOCK_STATUS', 'Char', 'O', 'Label', '-', '-',
              "'6' Ready (green) / '7' Not Ready (amber): the case or an earlier case has no PO yet."),
@@ -343,7 +343,7 @@ def xd10():
         "Supplier case = PCS_CASE pcs in H0253 order; a case can hold several customer orders, POs and destinations. Case Qty = number of supplier cases; "
         "PO Readiness (case) = cases whose whole qty is pre-mapped to a PO.",
         "The warehouse packs 1 case = 1 destination, so an ASN may stop only after a case where every destination of the unit is a multiple of "
-        "PCS_CASE (valid cut). The cases up to a valid cut are a block = one ASN option step (e.g. VN 10, TH 6, VN 14: blocks case 1 | cases 2-3 | "
+        "PCS_CASE (valid cut). The cases up to a valid cut are a block = one ASN option step (e.g. KR 10, JP 6, KR 14: blocks case 1 | cases 2-3 | "
         "case 4 | case 5).",
         "A block is Ready ('6') when it and every earlier block have a PO; otherwise Not Ready ('7'): blocks are never skipped. Unit: Ready (all "
         "blocks), Partially Ready (the first k blocks), Not Ready (first block; check box disabled, message no. 2).",
@@ -353,7 +353,7 @@ def xd10():
     op[7]['items'][0] = ("The user ticks the supplier cases to send with the check box of each case row. Cases that belong together (Case Group = "
                          "GROUP_SEQ of XD09, not shown) are always sent together, so that at receiving every destination completes its warehouse case. The "
                          "ticked cases of a unit start at case 1: ticking a case ticks the earlier cases and the other cases of its group (message no. 10). "
-                         "Example: cases 2-3 belong together (D/S view: case 2 = VN 4 + TH 2) -> ticking case 2 gives cases 1-3; cases 1-2 alone are not "
+                         "Example: cases 2-3 belong together (D/S view: case 2 = KR 4 + JP 2) -> ticking case 2 gives cases 1-3; cases 1-2 alone are not "
                          "possible. Only Ready cases can be ticked. One ASN is for one Supplier Code + Supplier Plant "
                          "(existing rule): ticked units of more than one supplier give message no. 9 and nothing is created.")
     op[7]['items'][1] = ("[Create ASN] does the real mapping of the chosen blocks in one transaction: the slices inserted into TB_R_INSTRUCTION (case and "
@@ -380,7 +380,7 @@ def xd10():
             x['description'] = 'Unticks all cases.'
     caps = {'c_02_delivery_plan': '2. Delivery plan after Search (supplier view): unit rows with their supplier case rows (check box, Case, Qty, Remaining Qty, PO, PO Status; no destinations)',
             'c_03_ds_detail': '3. D/S team: destination detail (warehouse cases, Hold Flag) and customer orders of a destination (open qty, cases, PO)',
-            'c_04_ds_hold': '4. D/S team: Thailand on hold; the H0253 order and the cases are computed again without it',
+            'c_04_ds_hold': '4. D/S team: Japan on hold; the H0253 order and the cases are computed again without it',
             'c_05_selected': '5. Case 2 of PART-A ticked: MSG10, cases 1-3 are selected together; unit PART-C ticked (different Customer Order Date)',
             'c_05d_after_refresh': '5c. Delivery plan refreshed automatically, all cases unticked',
             'c_10_list_after': '10. Delivery plan after submit: PART-C is no longer listed, the rest of PART-A (V02 12 pcs) is listed again'}

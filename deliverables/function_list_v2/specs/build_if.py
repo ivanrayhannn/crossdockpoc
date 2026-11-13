@@ -64,7 +64,7 @@ def if_spec(fid, code, name, other_fid, other_name):
                 f"Topology (Option #3, SFTP): NSP Send IF -> TMMIN SFTP server -> {tg['side']} SFTP server -> receive IF on the {tg['side']} -> insert / update "
                 f"{tg['tables']}. NSP develops the generate and send of the IF xDock Part Master; the receive and insert into {name} are developed by the {tg['side']}. "
                 + tg['note'],
-                f"A part is sent as one complete set; {name} replaces the data of the part, so a change such as Philippines up and Thailand down, "
+                f"A part is sent as one complete set; {name} replaces the data of the part, so a change such as Taiwan up and Japan down, "
                 "or a removed destination, arrives as one consistent update.",
                 f"The send status per part is kept in {IFR} (dummy table); together with {other_fid} ({other_name}) it gives the overall Sync Status "
                 "shown on the Cross Dock Part Master screen (XD01)."],

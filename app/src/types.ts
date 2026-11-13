@@ -9,7 +9,7 @@ export type PartCategory = 'Crossdock' | 'Non-Crossdock';
 export type SyncStatus = 0 | 1 | 2 | 3;
 
 export interface DestAllocation {
-  /** Destination name, e.g. "Thailand". Empty string for a manually-added
+  /** Destination name, e.g. "Japan". Empty string for a manually-added
    * row where only the destination code (cd) has been typed in. */
   d: string;
   /** Destination code override — used for manually-added rows in the
