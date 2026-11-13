@@ -2,7 +2,7 @@
 from scan_pack import pack
 
 D, DT, RIT = '17-Oct-2026', '18-Oct-2026', 'Rit 1 · SD01'
-NAME = {'9715310': '9715310 (Vietnam)', '9722D10': '9722D10 (Thailand)', '9811110': '9811110 (Philippines)', '982220': '982220'}
+NAME = {'9715310': '9715310 (Korea)', '9722D10': '9722D10 (Japan)', '9811110': '9811110 (Taiwan)', '982220': '982220'}
 CUST = {'9715310': '9715300', '9722D10': '9722D10', '9811110': '9811100', '982220': '982200'}
 MF = {'PO-0002': 'MF-0002', 'PO-0003': 'MF-0003'}
 LINES = [dict(CUSTOMER_CD=CUST[d], CUSTOMER_ORDER_NO=co, ORDER_DT='2026-10-17', ORDER_TIME='080000', DESTINATION_CD=d, DETAILED_ITEM_NO='001',
@@ -89,7 +89,7 @@ SAMPLE = {
                   ["N3", "[Back] / [Cancel] on the Case List", "The 5 rows are deleted from TB_R_INSTRUCTION, PO_MAPPED_FLAG back to N, MAPPED_QTY back to 0; "
                                                                "the unit is listed again."],
                   ["N4", "19-Oct: split PO PO-0004 released", "Case 5 (CO-14110) is Ready → ASN0004; order date 18-Oct (3 destinations) → ASN0005."],
-                  ["E1", "The D/S team holds Thailand (CO-14104) after the supplier ticked the unit", "MSG8; the whole create fails, nothing is inserted, "
+                  ["E1", "The D/S team holds Japan (CO-14104) after the supplier ticked the unit", "MSG8; the whole create fails, nothing is inserted, "
                                                                                                          "the delivery plan is refreshed and all units are unticked."],
                   ["E2", "The unit is no longer Ready when [Create ASN] is clicked", "MSG7; nothing is inserted; the delivery plan is refreshed."],
                   ["E3", "D/S team ticks PART-X (supplier 5001-1) and a unit of supplier 5002-1", "MSG9; nothing is inserted."],

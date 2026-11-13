@@ -28,8 +28,8 @@ const LANE: Record<'sup' | 'ds' | 'sys', { label: string; bg: string }> = {
 const TIMELINE: ['sup' | 'ds' | 'sys', string][] = [
   ['sup', 'T1 · Search: delivery plan loaded; PART-A 13-Oct is Ready'],
   ['sup', 'T2 · Tick PART-A 13-Oct (held lines at tick time = 0)'],
-  ['ds', 'T3 · Same delivery plan; Hold destination Vietnam of PART-A 13-Oct'],
-  ['sys', 'T4 · HOLD_FLAG = Y on the Vietnam lines (TB_R_H0253_ORDER_CONTROL_PRE)'],
+  ['ds', 'T3 · Same delivery plan; Hold destination Korea of PART-A 13-Oct'],
+  ['sys', 'T4 · HOLD_FLAG = Y on the Korea lines (TB_R_H0253_ORDER_CONTROL_PRE)'],
   ['sup', 'T5 · Click Create ASN'],
   ['sys', 'T6 · Re-check the ticked units in the same transaction: a line now has HOLD_FLAG = Y → stop, nothing is mapped'],
   ['sup', 'T7 · Message "Some order has been already hold, please select other records"; the delivery plan is refreshed automatically and all ticked units are unticked'],
@@ -117,9 +117,9 @@ export function AsnBackendProcessPage() {
         <ol style={{ margin: '4px 0 0', paddingLeft: 20 }}>
           <li>Open <a href="#/asn-creation">ASN Creation</a> with business date <b>18-Oct</b>, keep <b>View as: Supplier</b>, click <b>Search</b>: PART-X 17-Oct has 5 cases, cases 1-4 Ready, case 5 Not Ready (<b>Short PO</b>: PO-0003 18 of 30 pcs).</li>
           <li>Tick <b>case 3</b>: cases 1-3 are selected (the selection always starts at case 1). Do not click Create yet.</li>
-          <li>Switch to <b>View as: D/S team</b> — this is the other session. Open the destination detail of PART-X 17-Oct and click <b>N · Hold</b> on Thailand (CO-14104).</li>
+          <li>Switch to <b>View as: D/S team</b> — this is the other session. Open the destination detail of PART-X 17-Oct and click <b>N · Hold</b> on Japan (CO-14104).</li>
           <li>Switch back to <b>View as: Supplier</b> and click <b>Create ASN</b>: the message <i>"Some order has been already hold, please select other records"</i> appears, all ticks are removed and the delivery plan is refreshed.</li>
-          <li>Release Thailand, tick the whole unit (cases 1-4), Create ASN and Submit: <b>ASN0003</b> as in the workbook; the result is in <a href="#/log-monitoring">Log Monitoring</a>.</li>
+          <li>Release Japan, tick the whole unit (cases 1-4), Create ASN and Submit: <b>ASN0003</b> as in the workbook; the result is in <a href="#/log-monitoring">Log Monitoring</a>.</li>
           <li>Business date <b>19-Oct</b>: the split PO PO-0004 makes case 5 (CO-14110) Ready (ASN0004); order date 18-Oct has 3 destinations (ASN0005). <b>20-Oct</b>: CO-14115 12 pcs = 2 cases (ASN0006, ASN0007).</li>
           <li>One ASN = one Supplier Code + Plant: in View as D/S team tick PART-X and PART-D (second supplier 5002, not in the workbook) and click Create ASN → message "One ASN is for one Supplier Code and Supplier Plant".</li>
         </ol>

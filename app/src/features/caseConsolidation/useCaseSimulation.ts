@@ -83,7 +83,7 @@ export function useCaseSimulation() {
       edit((s) => {
         const lastDate = s.orders.reduce((max, o) => (o.date > max ? o.date : max), '');
         const id = Math.max(0, ...s.orders.map((o) => o.id)) + 1;
-        const order: Order = { id, no: `Order ${id}`, date: lastDate ? addDay(lastDate) : '2026-09-15', dest: 'VN', qty: s.pcs, part: `Part ${String(id).padStart(3, '0')}` };
+        const order: Order = { id, no: `Order ${id}`, date: lastDate ? addDay(lastDate) : '2026-09-15', dest: 'KR', qty: s.pcs, part: `Part ${String(id).padStart(3, '0')}` };
         return { ...s, orders: [...s.orders, order] };
       }),
     [edit],

@@ -3,7 +3,7 @@ from scan_pack import pack
 
 VN, TH, PH, D4 = '9715310', '9722D10', '9811110', '982220'
 CU = {VN: '9715300', TH: '9722D10', PH: '9811100', D4: '982200'}
-SH = {VN: 'VN', TH: 'TH', PH: 'PH', D4: '982220'}
+SH = {VN: 'KR', TH: 'JP', PH: 'TW', D4: '982220'}
 MF = {f'PO-000{n}': f'MF-000{n}' for n in range(1, 7)}
 
 

@@ -19,10 +19,10 @@ await search(); await shot('c_02_delivery_plan');
 await view('D/S team'); await search();
 await unitRow('PART-X', '17-Oct').getByTitle('Destination detail (D/S team)').click();
 await pg.getByTitle('Customer orders').first().click(); await shot('c_03_ds_detail');
-// hold Thailand (CO-14104) of PART-X 17-Oct: scan order and cases are computed again without TH
+// hold Japan (CO-14104) of PART-X 17-Oct: scan order and cases are computed again without TH
 await destHold('9722D10').click(); await shot('c_04_ds_hold');
 await destHold('9722D10').click();
-// D/S team: Reduce PO Readiness (case) per destination: Philippines 1 warehouse case held -> the unit is cut again without its 6 pcs
+// D/S team: Reduce PO Readiness (case) per destination: Taiwan 1 warehouse case held -> the unit is cut again without its 6 pcs
 await pg.getByLabel('Reduce PO Readiness (case) 9811110').fill('1');
 await pg.locator('tr').filter({ has: pg.getByLabel('Reduce PO Readiness (case) 9811110') }).last().getByRole('button', { name: 'Save', exact: true }).click(); await shot('c_04b_ds_reduce');
 await view('Supplier'); await search(); await shot('c_04c_supplier_reduce');
@@ -40,7 +40,7 @@ if (await pg.getByTitle('Destination detail (D/S team)').count()) { const r = un
 // supplier: tick case 3 of PART-X 17-Oct → cases 1-3 selected
 await view('Supplier'); await search();
 await caseBox(/Case 3 can be sent alone/).check(); await shot('c_05_selected');
-// D/S team (other session) holds Thailand of the ticked unit
+// D/S team (other session) holds Japan of the ticked unit
 await view('D/S team'); await search();
 await unitRow('PART-X', '17-Oct').getByTitle('Destination detail (D/S team)').click();
 await destHold('9722D10').click(); await shot('c_05a_ds_hold_other_session');

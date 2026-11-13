@@ -188,7 +188,7 @@ d. Re-check in the same transaction: when a candidate was taken in the meantime 
 
 ### 5.3 Example (simulasi_asn_rev.xlsx; sheet Sample Input)
 
-a. 18-Oct: cases 1-4 of order date 17-Oct are sent in ASN0003 (case 3 = CO-14104, TH, 6 pcs, a middle row). 19-Oct: CO-14104 is cancelled (waiting for a candidate). 21-Oct: CO-14111 (TH, 6 pcs, order date 19-Oct) is received in GTOPAS (UPD_STATUS 6, PO_MAPPED_FLAG N, no ASN). The D/S team moves the 6 pcs of case C-0003-03 to CO-14111.
+a. 18-Oct: cases 1-4 of order date 17-Oct are sent in ASN0003 (case 3 = CO-14104, JP, 6 pcs, a middle row). 19-Oct: CO-14104 is cancelled (waiting for a candidate). 21-Oct: CO-14111 (JP, 6 pcs, order date 19-Oct) is received in GTOPAS (UPD_STATUS 6, PO_MAPPED_FLAG N, no ASN). The D/S team moves the 6 pcs of case C-0003-03 to CO-14111.
 b. Other example (ERD SIM-6, partial cancel): CO-B 8 pcs in ASN00020 (case 1: 4, case 2: 4), 6 pcs cancelled: case 2 4 pcs + 2 of the 4 pcs of case 1 (row split) move to CO-E (4) and CO-F (2).
 
 ## 7. Display messages
@@ -290,13 +290,13 @@ New table: mapped qty per Pra Daily Order PO part (instead of a new column in th
 
 **Sample Change Order Number - simulasi_asn_rev.xlsx (ASN0003, 21-Oct)**
 
-- 18-Oct: cases 1-4 of PART-X 17-Oct in ASN0003. 19-Oct: CO-14104 (TH 6, case 3) is cancelled in GTOPAS (UPD_STATUS 2, LOG5): listed, waiting for a candidate. 21-Oct: CO-14111 (TH 6, order date 19-Oct) is received in GTOPAS with the pcs of case 3 (UPD_STATUS 6, PO_MAPPED_FLAG N, no ASN): candidate.
+- 18-Oct: cases 1-4 of PART-X 17-Oct in ASN0003. 19-Oct: CO-14104 (JP 6, case 3) is cancelled in GTOPAS (UPD_STATUS 2, LOG5): listed, waiting for a candidate. 21-Oct: CO-14111 (JP 6, order date 19-Oct) is received in GTOPAS with the pcs of case 3 (UPD_STATUS 6, PO_MAPPED_FLAG N, no ASN): candidate.
 
 ### A. List and detail
 
 | ASN No | Part | Cancelled order | Cancelled qty | Cases (from the last case) | Candidate | Status |
 |---|---|---|---|---|---|---|
-| ASN0003 | PART-X | CO-14104 / 0000001 | 6 | C-0003-03: 6 | CO-14111 TH 6 (19-Oct) | Candidate available |
+| ASN0003 | PART-X | CO-14104 / 0000001 | 6 | C-0003-03: 6 | CO-14111 JP 6 (19-Oct) | Candidate available |
 
 ### B. TB_R_INSTRUCTION (same row updated; case, PO and ASN not changed)
 

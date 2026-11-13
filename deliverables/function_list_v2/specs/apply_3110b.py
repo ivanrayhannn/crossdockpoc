@@ -41,10 +41,10 @@ def xd07(s):
 
 
 edit('XD07', [
-    ('A part is sent as one complete set; AP POLE replaces the data of the part, so a change such as Philippines up and Thailand down, '
+    ('A part is sent as one complete set; AP POLE replaces the data of the part, so a change such as Taiwan up and Japan down, '
      'or a removed destination, arrives as one consistent update.',
      'A part is sent as one complete set: AP POLE adds a new part, updates an existing part (Pcs/Case, Max Case/Day and destinations) '
-     'and deletes an Inactive part (see 4.2), so a change such as Philippines up and Thailand down, or a removed destination, arrives '
+     'and deletes an Inactive part (see 4.2), so a change such as Taiwan up and Japan down, or a removed destination, arrives '
      'as one consistent update.'),
     ('AP POLE replaces the cross dock master of every part in the file with the content of the file (all destinations of the part).',
      'AP POLE adds a part that it does not have yet, updates an existing part (Pcs/Case, Max Case/Day and all destinations) and '

@@ -120,7 +120,7 @@ def business_logic(fid, key, num):
 CAPS_SIM = {  # screenshots of the prototype with the data of simulasi_asn_rev.xlsx (business date 18-Oct)
     'c_02_delivery_plan': '2. Delivery plan after Search (supplier view, 18-Oct, simulasi_asn_rev.xlsx): PART-X 17-Oct, cases 1-4 Ready, case 5 Not Ready '
                           '(Short PO: PO-0003 18 of 30 pcs)',
-    'c_04_ds_hold': '4. D/S team: Thailand (CO-14104) on hold; the H0253 order and the cases are computed again without it',
+    'c_04_ds_hold': '4. D/S team: Japan (CO-14104) on hold; the H0253 order and the cases are computed again without it',
     'c_05_selected': '5. Case 3 of PART-X 17-Oct ticked: cases 1-3 are selected (the selection always starts at case 1)',
     'c_05e_supplier_conflict': '5d. D/S team: units of two suppliers ticked (PART-D of supplier 5002, prototype only), Create ASN: one supplier per ASN',
     'c_06_case_list': '6. Case List sub screen: cases 1-4 of PART-X 17-Oct = ASN0003',

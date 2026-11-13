@@ -9,7 +9,7 @@ Sumber: UISS `XD10_UISS_Screen_ASNCrossDockCreation.xlsx` (0.1 Initial Draft, 18
 
 
 ## Simulasi (27-Oct, `simulasi_asn_rev.xlsx`)
-UISS **5.0** = perilaku layar dari simulasi (18-Oct: 5 case, Short PO, case 1–4 → ASN0003; centang case 3 = case 1–3; 19-Oct order date 18 menunggu 17; CO-14115 di ASN0006 + ASN0007; hold TH → MSG8; draft dilepas XD08 → MSG11). Sample Input A–I semua dari simulasi (H–I = checkbox 18-Oct dan skenario C1–C7).
+UISS **5.0** = perilaku layar dari simulasi (18-Oct: 5 case, Short PO, case 1–4 → ASN0003; centang case 3 = case 1–3; 19-Oct order date 18 menunggu 17; CO-14115 di ASN0006 + ASN0007; hold JP → MSG8; draft dilepas XD08 → MSG11). Sample Input A–I semua dari simulasi (H–I = checkbox 18-Oct dan skenario C1–C7).
 
 ## Business Logic ASN (24–26 Oct; UISS Operation 5.0)
 1. Customer Order Date (D) → PO Date D+1: 1 PO per Part Number per Customer Order Date.
@@ -24,12 +24,12 @@ Contoh lengkap: `deliverables/simulasi_asn_rev.xlsx` (16–22 Oct), prototype me
 Sample Input UISS (A–G) = Create ASN 18-Oct dari simulasi_asn_rev (PART-X 17-Oct, case 1–4 → ASN0003); H–I = contoh aturan case yang dikirim bersama (V01 / T01 / V02).
 
 ## Keputusan 19-Oct
-- **Case:** per destinasi dipecah sesuai pcs/case (Vietnam 24 pcs, 6 pcs/case = 4 case). GTOPAS rilis kelipatan pcs/case, jadi case selalu penuh. 1 case boleh berisi beberapa Customer Order dan beberapa PO (Supplier) dari destinasi yang sama; line yang tidak muat lanjut ke case berikutnya.
+- **Case:** per destinasi dipecah sesuai pcs/case (Korea 24 pcs, 6 pcs/case = 4 case). GTOPAS rilis kelipatan pcs/case, jadi case selalu penuh. 1 case boleh berisi beberapa Customer Order dan beberapa PO (Supplier) dari destinasi yang sama; line yang tidak muat lanjut ke case berikutnya.
 - **Unit tetap utuh** (Part Number + Customer Order Date): kalau 1 line belum dapat PO, unit belum bisa di-ASN.
 - **Case label:** 1 label = 1 case 1 destinasi, bisa berisi beberapa Customer Order No; format sesuai existing.
 
 ## Sample Create ASN (sheet Sample Input)
-Contoh dummy PART-X / PART-Y (6 pcs/case, delivery 16-Oct Rit 1): input pre-mapping XD09 → case packing (Vietnam 18 pcs = 3 case, Thailand 1, Philippines 1; Case 2 = CO-14101 + CO-14102, Case 3 = CO-14102 + CO-14103) → 7 baris TB_R_INSTRUCTION, PO_MAPPED_FLAG Y, MAPPED_QTY → Case List → skenario N1–N3, E1–E4.
+Contoh dummy PART-X / PART-Y (6 pcs/case, delivery 16-Oct Rit 1): input pre-mapping XD09 → case packing (Korea 18 pcs = 3 case, Japan 1, Taiwan 1; Case 2 = CO-14101 + CO-14102, Case 3 = CO-14102 + CO-14103) → 7 baris TB_R_INSTRUCTION, PO_MAPPED_FLAG Y, MAPPED_QTY → Case List → skenario N1–N3, E1–E4.
 
 ## Keputusan 20-Oct (struktur tabel existing, GTOPAS SPS DB Structure)
 - Submit ASN menulis `TB_R_DAILY_ORDER_MANIFEST` (1 baris per manifest Pra Daily Order dari case, semua dengan `ASN_NO` yang sama) dan `TB_R_DAILY_ORDER_PART` (1 baris per manifest item x case).

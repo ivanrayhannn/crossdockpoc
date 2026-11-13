@@ -81,7 +81,7 @@ def tmp(units, pos, pcs=6, changed=None, notes=None):
 
 PX = [line('CO-14101', VN, 'PART-X', 10), line('CO-14102', VN, 'PART-X', 4), line('CO-14103', VN, 'PART-X', 4), line('CO-14104', TH, 'PART-X', 6)]
 PY = [line('CO-14105', PH, 'PART-Y', 6)]
-VN2 = '9730000'  # second dummy customer of Vietnam (customer code > TH)
+VN2 = '9730000'  # second dummy customer of Korea (customer code > TH)
 SB = [line('A-0101', VN, 'PART-B', 8, item='001', time='080000'), line('A-0101', VN, 'PART-B', 2, item='002', time='080000'),
       line('B-0102', TH, 'PART-B', 6, time='090000'), line('C-0103', VN, 'PART-B', 14, cust=VN2, time='070000')]
 SB2 = [line('A-0201', VN, 'PART-B', 6, od='2026-10-15')]
@@ -94,8 +94,8 @@ SCENARIOS = [
         'id': 'SIM-1', 'title': 'Master setup and monthly calculation', 'flow': 'BPF F1', 'functions': 'XD13, XD01 / XD02, XD04, XD05, XD01 [Sync], XD06 / XD07',
         'story': ['Destination master is synchronised weekly; Procurement registers PART-Y; the monthly run (Oct 2026) uses the actual demand of Jul – Sep.',
                   'XD05: PART-X stays Active (avg MAD 315 ≥ 300), PART-Y becomes Active (130 ≥ 100), PART-Z becomes Inactive (35 < 50) and is set to No Sync.',
-                  'Mapping: PART-X Max Case/Day 10 split by MAD share VN 60 % / TH 30 % / PH 10 % = 6 / 3 / 1. D/S clicks [Sync]: PART-Y (new Active part) is '
-                  'registered in GTOPAS by RPA (destination PH added) and added in AP POLE (SFTP: part, Pcs/Case, Max Case/Day, destinations); '
+                  'Mapping: PART-X Max Case/Day 10 split by MAD share KR 60 % / JP 30 % / TW 10 % = 6 / 3 / 1. D/S clicks [Sync]: PART-Y (new Active part) is '
+                  'registered in GTOPAS by RPA (destination TW added) and added in AP POLE (SFTP: part, Pcs/Case, Max Case/Day, destinations); '
                   'PART-Z (became Inactive) is deleted in GTOPAS (RPA, all rows) and in AP POLE (SFTP, CROSSDOCK_FLAG N, one row).'],
         'steps': [
             ('1. XD13 weekly destination sync (delete – insert)', 'TB_M_H0125_DESTINATION', [
@@ -139,7 +139,7 @@ SCENARIOS = [
     {
         'id': 'SIM-2', 'title': 'Daily order to ASN (normal)', 'flow': 'BPF F2', 'functions': 'XD08, XD09, XD10 (Create ASN, Submit 5.7)',
         'story': ['GTOPAS releases crossdock orders 14-Oct (status 7); the supplier POs of 15-Oct are crossdock manifests (CROSS_DOCK_FLAG X).',
-                  'Supplier searches delivery 16-Oct Rit 1: PART-X (VN 18 + TH 6 = 4 cases in H0253 order, 4 blocks) and PART-Y (PH 6 = 1 case) are Ready; all blocks are chosen, Create ASN and Submit.',
+                  'Supplier searches delivery 16-Oct Rit 1: PART-X (KR 18 + JP 6 = 4 cases in H0253 order, 4 blocks) and PART-Y (TW 6 = 1 case) are Ready; all blocks are chosen, Create ASN and Submit.',
                   'Result: one ASN with 5 cases / 30 pcs, 3 ASN manifests (one per Pra manifest), 5 ASN part rows (manifest item x case).'],
         'steps': [
             ('1. XD08 27:30: status 7 rows (insert)', 'TB_R_H0253_ORDER_CONTROL_PRE', [
@@ -181,14 +181,14 @@ SCENARIOS = [
         ]},
     {
         'id': 'SIM-3', 'title': 'Unit Partially Ready (PO short), Ready the next day', 'flow': 'BPF F2 / AB08', 'functions': 'XD09, XD10',
-        'story': ['PART-X 14-Oct needs 24 pcs (VN 18, TH 6) but only 18 pcs of crossdock PO are released on 15-Oct (PO-0008 12 + PO-0009 6).',
-                  'H0253 order VN (CO-14101..14103) then TH (CO-14104): cases 1-3 (VN) have a PO, case 4 (TH) has none. Every case ends a valid cut, so '
+        'story': ['PART-X 14-Oct needs 24 pcs (KR 18, JP 6) but only 18 pcs of crossdock PO are released on 15-Oct (PO-0008 12 + PO-0009 6).',
+                  'H0253 order KR (CO-14101..14103) then JP (CO-14104): cases 1-3 (KR) have a PO, case 4 (JP) has none. Every case ends a valid cut, so '
                   'blocks 1-3 are Ready and block 4 Not Ready: the unit is Partially Ready (ASN options 1 / 2 / 3 cases).',
                   'In this simulation the supplier waits: on 16-Oct a new crossdock manifest (PO-0013, 6 pcs) is released → [Search] again → block 4 Ready.'],
         'steps': [
             ('1. Crossdock PO of 15-Oct (only 18 pcs)', 'TB_R_PRA_DAILY_ORDER_PART', [
                 ('ref', PRA_PART['1']), ('ref', ['MF-0009', '0001', 'PO-0009', '0001', 'PART-X', 6])]),
-            ('2. [Search] 15-Oct → XD09: block 4 (TH) without PO', '#TEMP_INSTRUCTION',
+            ('2. [Search] 15-Oct → XD09: block 4 (JP) without PO', '#TEMP_INSTRUCTION',
              tmp([PX], [P1, ['PO-0009', 'MF-0009', '0001', 6]], notes={('CO-14104', 4): 'No PO left: block 4 Not Ready, blocks 1-3 Ready'})),
             ('3. New crossdock manifest released 16-Oct', 'TB_R_PRA_DAILY_ORDER_MANIFEST', [
                 ('new', ['MF-0013', 'PO-0013', '5001', '1', '2026-10-16', 'X', 6, '2026-10-17', 'SD01'])]),
@@ -199,18 +199,18 @@ SCENARIOS = [
         ]},
     {
         'id': 'SIM-4', 'title': 'Hold a destination (D/S team)', 'flow': 'BPF F4 / AB09', 'functions': 'XD10 (D/S view), XD09, XD10 Create ASN',
-        'story': ['The D/S team holds Thailand of PART-X 14-Oct: HOLD_FLAG Y on CO-14104.',
-                  'XD09 does not take held lines: the H0253 order and the blocks are computed with Vietnam only (18 pcs = 3 cases, 3 blocks) and the unit is Ready.',
+        'story': ['The D/S team holds Japan of PART-X 14-Oct: HOLD_FLAG Y on CO-14104.',
+                  'XD09 does not take held lines: the H0253 order and the blocks are computed with Korea only (18 pcs = 3 cases, 3 blocks) and the unit is Ready.',
                   'If the supplier had ticked the unit before the hold, [Create ASN] fails for the whole selection (MSG8): nothing is inserted.'],
         'steps': [
-            ('1. D/S Hold Thailand (XD10)', 'TB_R_H0253_ORDER_CONTROL_PRE', [
+            ('1. D/S Hold Japan (XD10)', 'TB_R_H0253_ORDER_CONTROL_PRE', [
                 ('ref', h('CO-14101', VN, '0000001', 'PART-X', 10)), ('ref', h('CO-14102', VN, '0000001', 'PART-X', 4)),
                 ('ref', h('CO-14103', VN, '0000001', 'PART-X', 4)),
                 ('upd', h('CO-14104', TH, '0000001', 'PART-X', 6, hold='Y'), ['HOLD_FLAG'], 'Hold by D/S')]),
-            ('2. [Search] → XD09 without the held line (VN only: 3 cases, 3 blocks)', '#TEMP_INSTRUCTION', tmp([PX[:3]], [P1, P2])),
+            ('2. [Search] → XD09 without the held line (KR only: 3 cases, 3 blocks)', '#TEMP_INSTRUCTION', tmp([PX[:3]], [P1, P2])),
             ('3. Hold placed after the supplier ticked the unit → [Create ASN] fails (MSG8)', 'TB_R_INSTRUCTION', [
                 ('ref', [None, None, None, None, None, None, None, None, None, None, None, None, None], [], 'No row inserted (roll back); delivery plan refreshed')]),
-            ('4. D/S Release Thailand', 'TB_R_H0253_ORDER_CONTROL_PRE', [
+            ('4. D/S Release Japan', 'TB_R_H0253_ORDER_CONTROL_PRE', [
                 ('upd', h('CO-14104', TH, '0000001', 'PART-X', 6, hold='N'), ['HOLD_FLAG'], 'Released: taken again by the next [Search]')]),
         ]},
     {
@@ -289,10 +289,10 @@ SCENARIOS = [
     {
         'id': 'SIM-6', 'title': 'Draft released by XD08; partial cancel after ASN replaced by two lines', 'flow': 'BPF F2 / F4',
         'functions': 'XD10 (Create ASN), XD08, XD11 (Change Order Number)',
-        'story': ['A: CO-14110 (PART-Y, PH, 12 pcs) is in a draft (Create ASN done, not submitted). The next run of XD08 releases every draft, whatever changed: '
+        'story': ['A: CO-14110 (PART-Y, TW, 12 pcs) is in a draft (Create ASN done, not submitted). The next run of XD08 releases every draft, whatever changed: '
                   'the rows are deleted, the mapped qty is given back and the cases come back in the delivery plan.',
-                  'B: CO-B (PART-Y, VN, 8 pcs) is in ASN00020: case 1 = CO-A 2 + CO-B 4, case 2 = CO-B 4 + CO-C 2. GTOPAS cancels 6 pcs (new serial 0000002, status 2).',
-                  'Candidates (UPD_STATUS 6, PO_MAPPED_FLAG N, no ASN, oldest first): CO-E PH 4, CO-F VN 2. From the last case: case 2 CO-B 4 → CO-E; case 1: '
+                  'B: CO-B (PART-Y, KR, 8 pcs) is in ASN00020: case 1 = CO-A 2 + CO-B 4, case 2 = CO-B 4 + CO-C 2. GTOPAS cancels 6 pcs (new serial 0000002, status 2).',
+                  'Candidates (UPD_STATUS 6, PO_MAPPED_FLAG N, no ASN, oldest first): CO-E TW 4, CO-F KR 2. From the last case: case 2 CO-B 4 → CO-E; case 1: '
                   '2 of the 4 pcs → CO-F (row split), 2 pcs stay with CO-B.'],
         'steps': [
             ('A1. 17-Oct draft of CO-14110 (no ASN_NO)', 'TB_R_INSTRUCTION', [
@@ -331,8 +331,8 @@ SCENARIOS = [
         ]},
     {
         'id': 'SIM-7', 'title': 'H0253 order, supplier cases and ASN options (two ASNs)', 'flow': 'BPF F2', 'functions': 'XD09, XD10 (ASN Option, Create ASN)',
-        'story': ['PART-A 14-Oct, 6 pcs/case: V01 VN 10, T01 TH 6, V02 VN 14 (dummy customer codes CUST-A / B / C give this H0253 order).',
-                  'p1 (24 pcs) is released 15-Oct, p2 (6 pcs) 16-Oct. Cuts are valid after cases 1, 3, 4 and 5 (VN / TH multiples of 6): blocks case 1 | 2-3 | 4 | 5.',
+        'story': ['PART-A 14-Oct, 6 pcs/case: V01 KR 10, T01 JP 6, V02 KR 14 (dummy customer codes CUST-A / B / C give this H0253 order).',
+                  'p1 (24 pcs) is released 15-Oct, p2 (6 pcs) 16-Oct. Cuts are valid after cases 1, 3, 4 and 5 (KR / JP multiples of 6): blocks case 1 | 2-3 | 4 | 5.',
                   '15-Oct: blocks 1-3 Ready, the supplier chooses option 4 cases (blocks 1-3, 24 pcs). 16-Oct: the open 6 pcs of V02 get p2 and go in a second ASN.'],
         'steps': [
             ('1. Customer order lines of the unit (XD08)', 'TB_R_H0253_ORDER_CONTROL_PRE', [
@@ -340,8 +340,8 @@ SCENARIOS = [
                 ('ref', h('V02', VN, '0000001', 'PART-A', 14, cust='CUST-C'))]),
             ('', 'TB_R_PRA_DAILY_ORDER_PART', [('ref', ['MF-0001', '0001', 'PO-0001', '0001', 'PART-A', 24], [], 'p1, released 15-Oct')]),
             ('2. [Search] 15-Oct → XD09: 5 cases, 4 blocks; block 4 without PO', '#TEMP_INSTRUCTION',
-             tmp([SA], [['PO-0001', 'MF-0001', '0001', 24]], notes={('V01', 2): 'Case 2 = VN 4 + TH 2: no cut (VN 10, TH 2)',
-                                                                        ('V02', 3): 'Cut: VN 12, TH 6', ('V02', 5): 'No PO yet: block 4 Not Ready'})),
+             tmp([SA], [['PO-0001', 'MF-0001', '0001', 24]], notes={('V01', 2): 'Case 2 = KR 4 + JP 2: no cut (KR 10, JP 2)',
+                                                                        ('V02', 3): 'Cut: KR 12, JP 6', ('V02', 5): 'No PO yet: block 4 Not Ready'})),
             ('3. Supplier chooses option 4 cases (blocks 1-3) → [Create ASN]', 'TB_R_INSTRUCTION', [
                 ('new', [i + 1, c, l, 'PART-A', d, co, '0000001', q, 'PO-0001', 'MF-0001', '0001', None, None]) for i, (c, l, d, co, q) in enumerate((
                     (1, 1, VN, 'V01', 6), (2, 1, VN, 'V01', 4), (2, 2, TH, 'T01', 2), (3, 1, TH, 'T01', 4), (3, 2, VN, 'V02', 2), (4, 1, VN, 'V02', 6)))]),
@@ -364,7 +364,7 @@ SCENARIOS = [
         'story': ['PART-B, 6 pcs/case. H0253 order (ORDER BY) with Allocation Priority = Customer Order Date: 1) Allocation Priority, '
                   '2) Customer Code, 3) Customer Order No, 4) Order Date, 5) Order Time, 6) Destination, 7) Detailed Item No, 8) Serial No. Keys 2-8 are the PK '
                   'of the H0253 replicate; XD09 reads with ORDER BY Part, Allocation Priority + the PK columns (query in XD09 Appendix). SORT_SEQ = row number per unit.',
-                  'Unit 14-Oct: A-0101 item 001 VN 8 (seq 1), A-0101 item 002 VN 2 (seq 2), B-0102 TH 6 (seq 3), C-0103 VN 14 of a second VN customer '
+                  'Unit 14-Oct: A-0101 item 001 KR 8 (seq 1), A-0101 item 002 KR 2 (seq 2), B-0102 JP 6 (seq 3), C-0103 KR 14 of a second KR customer '
                   '9730000 (seq 4). Order Time 07:00 of C-0103 does not move it up: Customer Code and Order No come first. A-0201 (15-Oct) comes after all '
                   '14-Oct lines (Allocation Priority) and is the next unit.',
                   '15-Oct: PO1 20 pcs → blocks 1-2 Ready, block 3 (case 4) only 2 of 6 pcs with PO → Not Ready. The supplier sends option 1 case only.',
@@ -379,8 +379,8 @@ SCENARIOS = [
                 ('ref', h('A-0201', VN, '0000001', 'PART-B', 6, od='2026-10-15'), [], 'Priority 15-Oct: after all 14-Oct lines (unit 15-Oct, SORT_SEQ 1)')]),
             ('2. [Search] 15-Oct (PO1 20 pcs) → XD09: SORT_SEQ, cases, blocks', '#TEMP_INSTRUCTION',
              tmp([SB], [['PO-0012', 'MF-0012', '0001', 20]],
-                 notes={('A-0101', 1): 'SORT_SEQ 1 = 9715300 / A-0101 / item 001', ('B-0102', 2): 'Case 2 = VN 2 + VN 2 + TH 2: no cut (VN 10, TH 2)',
-                        ('C-0103', 3): 'Cut: VN 12, TH 6', ('C-0103', 4): 'Case 4: only 2 of 6 pcs with PO1 → block 3 Not Ready, block 4 too'})),
+                 notes={('A-0101', 1): 'SORT_SEQ 1 = 9715300 / A-0101 / item 001', ('B-0102', 2): 'Case 2 = KR 2 + KR 2 + JP 2: no cut (KR 10, JP 2)',
+                        ('C-0103', 3): 'Cut: KR 12, JP 6', ('C-0103', 4): 'Case 4: only 2 of 6 pcs with PO1 → block 3 Not Ready, block 4 too'})),
             ('3. Supplier chooses option 1 case → [Create ASN]', 'TB_R_INSTRUCTION', [
                 ('new', [1, 1, 1, 'PART-B', VN, 'A-0101', '0000001', 6, 'PO-0012', 'MF-0012', '0001', None, None], [], 'Item 001: 6 of 8, open 2')]),
             ('', 'TB_R_PRA_DAILY_ORDER_MAPPED', [('new', ['PO-0012', 'MF-0012', '0001', 'PART-B', 20, 6])]),
@@ -391,15 +391,15 @@ SCENARIOS = [
         ]},
     {
         'id': 'SIM-9', 'title': 'XD10 case check boxes: cases 1-2 not possible, 1-3 sent', 'flow': 'BPF F2', 'functions': 'XD09, XD10 (Select case, Create ASN)',
-        'story': ['Same unit as SIM-7 (PART-A 14-Oct: V01 VN 10, T01 TH 6, V02 VN 14; 6 pcs/case) but all 5 cases have a PO (p1 24 + p2 6).',
-                  'XD10 shows one check box per supplier case. The supplier wants cases 1 and 2 only: case 2 = VN 4 + TH 2 ends with VN 10 / TH 2 '
-                  '(CUT_FLAG N), so the warehouse could not close the VN and TH cases. XD10 ticks case 3 too (message no. 10): cases 1-3 = 18 pcs.',
+        'story': ['Same unit as SIM-7 (PART-A 14-Oct: V01 KR 10, T01 JP 6, V02 KR 14; 6 pcs/case) but all 5 cases have a PO (p1 24 + p2 6).',
+                  'XD10 shows one check box per supplier case. The supplier wants cases 1 and 2 only: case 2 = KR 4 + JP 2 ends with KR 10 / JP 2 '
+                  '(CUT_FLAG N), so the warehouse could not close the KR and JP cases. XD10 ticks case 3 too (message no. 10): cases 1-3 = 18 pcs.',
                   '[Create ASN] inserts the slices of cases 1-3; V01 and T01 are complete (PO_MAPPED_FLAG Y), V02 keeps 12 pcs open for a later ASN.'],
         'steps': [
             ('1. [Search] → XD09: all cases with PO; CUT_FLAG Y after cases 1, 3, 4, 5', '#TEMP_INSTRUCTION',
              tmp([SA], [['PO-0001', 'MF-0001', '0001', 24], ['PO-0014', 'MF-0014', '0001', 6]],
-                 notes={('V01', 2): 'Case 2 = VN 4 + TH 2: CUT N (VN 10, TH 2) → cannot be the last case',
-                        ('V02', 3): 'Case 3: CUT Y (VN 12, TH 6) → ticked together with case 2'})),
+                 notes={('V01', 2): 'Case 2 = KR 4 + JP 2: CUT N (KR 10, JP 2) → cannot be the last case',
+                        ('V02', 3): 'Case 3: CUT Y (KR 12, JP 6) → ticked together with case 2'})),
             ('2. Supplier ticks cases 1-2 → XD10 ticks case 3 too (MSG10) → [Create ASN] cases 1-3', 'TB_R_INSTRUCTION', [
                 ('new', [i + 1, c, l, 'PART-A', d, co, '0000001', q, 'PO-0001', 'MF-0001', '0001', None, None]) for i, (c, l, d, co, q) in enumerate((
                     (1, 1, VN, 'V01', 6), (2, 1, VN, 'V01', 4), (2, 2, TH, 'T01', 2), (3, 1, TH, 'T01', 4), (3, 2, VN, 'V02', 2)))]),
@@ -412,7 +412,7 @@ SCENARIOS = [
     {
         'id': 'SIM-10', 'title': 'One line in 2 ASNs; partial receipt splits the serial → XD08 re-assigns TB_R_INSTRUCTION (simulasi_asn.xlsx)', 'flow': 'BPF F2',
         'functions': 'XD09, XD10, XD08 (serial split)',
-        'story': ['CO-14115 VN 12 pcs (order date 19-Oct), 6 pcs/case: case 1 → ASN0006 (rit 1), case 2 → ASN0007 (rit 2). One H0253 row, two TB_R_INSTRUCTION rows.',
+        'story': ['CO-14115 KR 12 pcs (order date 19-Oct), 6 pcs/case: case 1 → ASN0006 (rit 1), case 2 → ASN0007 (rit 2). One H0253 row, two TB_R_INSTRUCTION rows.',
                   '21-Oct ASN0006 received: GTOPAS splits the line into serial 0000001 6 pcs status 6 and serial 0000002 6 pcs status 7.',
                   'Upsert alone: serial 0000001 has 12 pcs in TB_R_INSTRUCTION for qty 6 and serial 0000002 looks open (6) → XD09 would map it again (double). '
                   'XD08 re-assigns the rows: serial 0000001 = ASN0006 (oldest ASN = received), serial 0000002 = ASN0007; both PO_MAPPED_FLAG Y.'],
@@ -437,10 +437,10 @@ SCENARIOS = [
     {
         'id': 'SIM-11', 'title': 'Edit mapping per destination (update / insert / delete) and Sync of the differences', 'flow': 'BPF F1',
         'functions': 'XD01 (Edit mapping, [Sync]), XD06 / XD07',
-        'story': ['PART-X (Max Case/Day 10) is mapped VN 6 / TH 3 / PH 1 in Oct 2026. The D/S team changes it to VN 5 / TH 3 / ' + D4 + ' 2 and removes PH.',
-                  'Saved per destination (FB-085): VN updated (CREATED_DT kept), TH not touched, PH deleted, ' + D4 + ' inserted; one history record per changed '
+        'story': ['PART-X (Max Case/Day 10) is mapped KR 6 / JP 3 / TW 1 in Oct 2026. The D/S team changes it to KR 5 / JP 3 / ' + D4 + ' 2 and removes TW.',
+                  'Saved per destination (FB-085): KR updated (CREATED_DT kept), JP not touched, TW deleted, ' + D4 + ' inserted; one history record per changed '
                   'destination; the part becomes No Sync.',
-                  '[Sync]: the RPA bot registers ' + D4 + ' and deletes PH in GTOPAS (VN and TH ignored, no Case/Day in GTOPAS); AP POLE gets the complete '
+                  '[Sync]: the RPA bot registers ' + D4 + ' and deletes TW in GTOPAS (KR and JP ignored, no Case/Day in GTOPAS); AP POLE gets the complete '
                   'set (existing part: Pcs/Case, Max Case/Day and destinations updated).'],
         'steps': [
             ('1. Mapping before the change (ongoing period)', 'TB_M_PART_CANDIDATE_DEST', [
@@ -458,7 +458,7 @@ SCENARIOS = [
                 ('upd', ['PART-X', 'DUMMY PART X', 300, 6, 10, 60, 'Active', '0', 'SCREEN'], ['SYNC_STATUS', 'LAST_SOURCE'], 'Success → No Sync')]),
             ('3. D/S [Sync] → XD06 (GTOPAS, RPA: differences) / XD07 (AP POLE, SFTP: complete set)', 'TB_R_CROSSDOCK_IF_RESULT', [
                 ('upd', ['PART-X', 'GTOPAS', '202610', '1', 'RPA 20261005100000', 'registered 1, deleted 1'],
-                 ['IF_FILE_NAME', 'IF_MESSAGE'], 'VN / TH ignored'),
+                 ['IF_FILE_NAME', 'IF_MESSAGE'], 'KR / JP ignored'),
                 ('upd', ['PART-X', 'APPOLE', '202610', '1', 'XD_CDMASTER_APPOLE_20261005100000.csv', None], ['IF_FILE_NAME'], 'Existing part: updated')]),
             ('', 'TB_M_PART_CANDIDATE', [
                 ('upd', ['PART-X', 'DUMMY PART X', 300, 6, 10, 60, 'Active', '1', 'SCREEN'], ['SYNC_STATUS'], 'No Sync → Waiting → Success')]),

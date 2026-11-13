@@ -30,7 +30,7 @@ def sched(s, rows):
             t['rows'] = rows
 
 
-CASE = ("Case = destination x pcs/case: the qty of a destination is packed in cases of pcs/case (e.g. Vietnam 24 pcs, 6 pcs/case = 4 cases). "
+CASE = ("Case = destination x pcs/case: the qty of a destination is packed in cases of pcs/case (e.g. Korea 24 pcs, 6 pcs/case = 4 cases). "
         "GTOPAS releases in multiples of pcs/case (a remainder stays pending and is not in H0253), so every case is full. "
         "A case can hold several customer orders and several POs of the same destination; a customer order line that does not fit "
         "in the remaining space of a case continues in the next case (e.g. case 3 = CO-14001 4 + CO-14006 2 of PO2; "

@@ -1465,31 +1465,31 @@
     "rows": [
      [
       "16-Oct",
-      "Order date 15-Oct: CO-14101 VN 6, CO-14102 TH 6 (status 7)",
+      "Order date 15-Oct: CO-14101 KR 6, CO-14102 JP 6 (status 7)",
       "Insert; UPD_STATUS NULL, HOLD_FLAG N, PO_MAPPED_FLAG N",
       "-"
      ],
      [
       "17-Oct",
-      "CO-14101 → 6, CO-14102 → 2; order date 16-Oct: CO-14103 TH 6",
+      "CO-14101 → 6, CO-14102 → 2; order date 16-Oct: CO-14103 JP 6",
       "CO-14101 UPD_STATUS 6; CO-14102 UPD_STATUS 2 (PO_MAPPED_FLAG stays N); CO-14103 insert",
       "CO-14102 has no ASN: nothing else"
      ],
      [
       "18-Oct",
-      "CO-14103 → 6; order date 17-Oct: CO-14104 TH 6, CO-14105 VN 6, CO-14106 VN 3, CO-14107 VN 3, CO-14109 PH 6, CO-14110 982220 6",
+      "CO-14103 → 6; order date 17-Oct: CO-14104 JP 6, CO-14105 KR 6, CO-14106 KR 3, CO-14107 KR 3, CO-14109 TW 6, CO-14110 982220 6",
       "CO-14103 UPD_STATUS 6; 6 lines insert",
       "-"
      ],
      [
       "19-Oct",
-      "CO-14105 / 06 / 07 / 09 → 6 (ASN0003 received), CO-14104 → 2; order date 18-Oct: CO-14112 VN, CO-14113 PH, CO-14114 982220",
+      "CO-14105 / 06 / 07 / 09 → 6 (ASN0003 received), CO-14104 → 2; order date 18-Oct: CO-14112 KR, CO-14113 TW, CO-14114 982220",
       "UPD_STATUS 6 / 2; 3 lines insert",
       "CO-14104 is in ASN0003 case 3: LOG5, listed in XD11 (waiting for a candidate)"
      ],
      [
       "20-Oct",
-      "CO-14110, CO-14112 / 13 / 14 → 6; order date 19-Oct: CO-14111 TH 6, CO-14115 VN 12",
+      "CO-14110, CO-14112 / 13 / 14 → 6; order date 19-Oct: CO-14111 JP 6, CO-14115 KR 12",
       "UPD_STATUS 6; 2 lines insert",
       "-"
      ],

@@ -2732,7 +2732,7 @@ export const SIM: SimData = {
    "date": "20/10/2026",
    "blocks": [
     {
-     "title": "Condition Data di Surrounding DB (ASN0004 & ASN0005 received; order date 19/10: CO-14111 TH 6 + CO-14115 VN 12 → PO-0006 PO_DT 20/10 qty 18)",
+     "title": "Condition Data di Surrounding DB (ASN0004 & ASN0005 received; order date 19/10: CO-14111 JP 6 + CO-14115 KR 12 → PO-0006 PO_DT 20/10 qty 18)",
      "table": "TB_R_H0253_ORDER_CONTROL_PRE",
      "kind": "gsys",
      "headers": [
@@ -8156,7 +8156,7 @@ export const SIM: SimData = {
    ]
   },
   {
-   "title": "20/10/2026 [Search]: order date 19/10 (CO-14115 VN 12 = 2 case, CO-14111 TH 6)",
+   "title": "20/10/2026 [Search]: order date 19/10 (CO-14115 KR 12 = 2 case, CO-14111 JP 6)",
    "date": "20/10/2026",
    "headers": [
     "SORT_SEQ",

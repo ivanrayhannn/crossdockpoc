@@ -27,7 +27,7 @@ UISS sheet **Sample Input** = run XD08 16–22 Oct: CO-14102 cancel tanpa ASN (t
 ## Contoh (simulasi_asn.xlsx)
 | Tanggal | Original | Replicate NSP |
 |---|---|---|
-| 16-Oct | CO-14101 VN 6, CO-14102 TH 6 (status 7) | insert, UPD_STATUS NULL; CO-14101 → ASN0001, CO-14102 di-hold D/S |
+| 16-Oct | CO-14101 KR 6, CO-14102 JP 6 (status 7) | insert, UPD_STATUS NULL; CO-14101 → ASN0001, CO-14102 di-hold D/S |
 | 17-Oct | CO-14101 → 6, CO-14102 → 2, CO-14103 baru | CO-14101 UPD 6; CO-14102 UPD 2 (tanpa ASN → diabaikan, PO_MAPPED_FLAG tetap N); CO-14103 insert → ASN0002 |
 | 18-Oct | CO-14103 → 6; order date 17-Oct baru: 4 destinasi, 30 pcs (PO hanya 18 = abnormal) | CO-14103 UPD 6; case 1-4 → ASN0003, case 5 (CO-14110) Not Ready |
 | 19-Oct | ASN0003 received; CO-14104 (baris tengah, case 3) → 2; split PO 12 | CO-14104 UPD 2 padahal di ASN0003 → muncul di XD11 (menunggu kandidat); CO-14110 → ASN0004 |

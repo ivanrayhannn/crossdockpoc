@@ -46,7 +46,7 @@ Konsep lama (sebelum 23-Oct, XD12) sudah tidak berlaku. Konsep sekarang: XD08 UP
 ## Keputusan (Confirmation Points, 19-Oct)
 | No | Function | Keputusan |
 |---|---|---|
-| A1 | ASN Cross Dock Creation Screen (XD10), Mapping Customer Order and PO Batch (XD09) | Case per destinasi dipecah sesuai pcs/case (Vietnam 24 pcs, 6 pcs/case = 4 case). GTOPAS selalu rilis kelipatan pcs/case (sisa tetap pending, tidak muncul di H0253), jadi case selalu penuh |
+| A1 | ASN Cross Dock Creation Screen (XD10), Mapping Customer Order and PO Batch (XD09) | Case per destinasi dipecah sesuai pcs/case (Korea 24 pcs, 6 pcs/case = 4 case). GTOPAS selalu rilis kelipatan pcs/case (sisa tetap pending, tidak muncul di H0253), jadi case selalu penuh |
 | A2 | ASN Cross Dock Creation Screen (XD10) | Tetap utuh per unit (Part Number + Customer Order Date): kalau 1 line belum dapat PO, unit belum bisa di-ASN |
 | A3 | ASN Cross Dock Creation Screen (XD10), ASN Crossdock Inquiry Screen (XD15) | 1 case label = 1 case 1 destinasi, bisa berisi beberapa Customer Order No; format sesuai label existing |
 | A4 | Cancel Crossdock Customer Order Batch (XD11) | Barang CONFLICT boleh dialokasikan ke order destinasi lain juga, atau stok gudang |

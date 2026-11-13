@@ -23,7 +23,7 @@
 - Part List tab: To display the change history of a part.
 - Part List tab: To export the Part List to Excel and upload part settings from Excel (Add and Edit).
 - Part List tab: This sub-menu is opened only for users logged in with a Procurement account; users with a D/S account open the Mapping per Destination sub-menu instead.
-- Mapping per Destination tab: To split the Max Case/Day of each Active part over destinations (Thailand, Philippines, Vietnam) for the ongoing calculation period.
+- Mapping per Destination tab: To split the Max Case/Day of each Active part over destinations (Japan, Taiwan, Korea) for the ongoing calculation period.
 - Mapping per Destination tab: To display the destination mapping per part and calculation period, including past periods (read only).
 - Mapping per Destination tab: To start the interfaces of the cross dock master to GTOPAS (XD06) and AP POLE (XD07) for changed parts, and show the Sync Status of each part.
 - Mapping per Destination tab: To export the mapping to Excel and upload the mapping of the ongoing period from Excel.
@@ -488,7 +488,7 @@ flowchart TB
 | 90 | Edit mapping |  |  |  |  | I | Button | Center |  |  |  |  | Shown only for the ongoing period. |
 | 91 | Cancel |  |  |  |  | I | Button | Center |  |  |  |  | Shown in edit mode; discards the changes. |
 | 92 | Save |  |  |  |  | I | Button | Center |  |  |  |  | Shown in edit mode. Disabled while the mapping cannot be saved (Operation Description 5.15). |
-| 93 | Destination (CD) | TB_M_PART_CANDIDATE_DEST | DEST_CODE | Varchar | TBD | I/O | Combo Box | Left | New row: 'Select destination' | Y | XXXXXXX - X..X | Once per part | List = DESTINATION_CD - DESTINATION_NAME of TB_M_H0125_DESTINATION (Destination Master) (e.g. 9722D10 - Thailand, 9811110 - Philippines, 9715310 - Vietnam). Destinations already used by another row of the same part are hidden. |
+| 93 | Destination (CD) | TB_M_PART_CANDIDATE_DEST | DEST_CODE | Varchar | TBD | I/O | Combo Box | Left | New row: 'Select destination' | Y | XXXXXXX - X..X | Once per part | List = DESTINATION_CD - DESTINATION_NAME of TB_M_H0125_DESTINATION (Destination Master) (e.g. 9722D10 - Japan, 9811110 - Taiwan, 9715310 - Korea). Destinations already used by another row of the same part are hidden. |
 | 94 | Case/Day | TB_M_PART_CANDIDATE_DEST | CASE_DAY | Number | TBD | I/O | Text box | Right | New row: 0 | Y | ZZ,ZZ9 | Whole number (TBD: upper limit) | Editable in edit mode only. |
 | 95 | Pcs/Day |  |  | Number |  | O | Label | Right |  |  | ZZ,ZZ9 |  | Calculated: Pcs/Case x Case/Day of the destination. |
 | 96 | Percentage |  |  | Number |  | O | Label | Right |  |  | ZZ9% |  | Calculated: Case/Day of the destination / total Case/Day of the part. |

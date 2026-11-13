@@ -147,8 +147,8 @@ def build():
                 "message no. 4 is shown; the detail is refreshed."]},
             {"type": "heading", "text": "5.3 Example (simulasi_asn.xlsx)"},
             {"type": "bullets", "marker": "a.", "level": 2, "items": [
-                "18-Oct: cases 1-4 of order date 17-Oct are sent in ASN0003 (case 3 = CO-14104, TH, 6 pcs, a middle row). 19-Oct: CO-14104 is cancelled (waiting for a "
-                "candidate). 21-Oct: CO-14111 (TH, 6 pcs, order date 19-Oct) is received in GTOPAS (UPD_STATUS 6, PO_MAPPED_FLAG N, no ASN). "
+                "18-Oct: cases 1-4 of order date 17-Oct are sent in ASN0003 (case 3 = CO-14104, JP, 6 pcs, a middle row). 19-Oct: CO-14104 is cancelled (waiting for a "
+                "candidate). 21-Oct: CO-14111 (JP, 6 pcs, order date 19-Oct) is received in GTOPAS (UPD_STATUS 6, PO_MAPPED_FLAG N, no ASN). "
                 "The D/S team moves the 6 pcs of case C-0003-03 to CO-14111.",
                 "Partial cancel: CO-B 8 pcs in ASN00020 (case 1: 4, case 2: 4), 6 pcs cancelled: case 2 4 pcs + 2 of the 4 pcs of case 1 (row split) move to CO-E (4) and CO-F (2)."]}],
         "display_messages": [

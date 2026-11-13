@@ -38,8 +38,8 @@ with open('XD10_spec.json') as fh:
 sl = s['screen_layout']
 k = next(i for i, x in enumerate(sl) if x['image'].endswith('c_04_ds_hold.png'))
 sl[k + 1:k + 1] = [
-    {'caption': '4a. D/S team: Reduce PO Readiness (case) per destination: Philippines 1 warehouse case held; its 6 pcs are not taken and the unit is cut again (4 cases, all Ready with the PO 24)', 'image': f'{IMG}/c_04b_ds_reduce.png'},
-    {'caption': '4b. Supplier view of the reduced unit: 4 cases without the held Philippines pcs', 'image': f'{IMG}/c_04c_supplier_reduce.png'},
+    {'caption': '4a. D/S team: Reduce PO Readiness (case) per destination: Taiwan 1 warehouse case held; its 6 pcs are not taken and the unit is cut again (4 cases, all Ready with the PO 24)', 'image': f'{IMG}/c_04b_ds_reduce.png'},
+    {'caption': '4b. Supplier view of the reduced unit: 4 cases without the held Taiwan pcs', 'image': f'{IMG}/c_04c_supplier_reduce.png'},
     {'caption': '4c. D/S team: sub screen Hold per Supplier Code + Plant: open POs of each supplier + plant and the customer orders pre-mapped to them', 'image': f'{IMG}/c_04d_ds_supplier_hold.png'},
     {'caption': '4d. Sub screen: supplier 5001 plant 1 put on hold (On Hold, [Release hold])', 'image': f'{IMG}/c_04f_ds_supplier_hold_on.png'},
     {'caption': '4e. Supplier view: its units stay visible, On Hold, check boxes disabled (message no. 12)', 'image': f'{IMG}/c_04e_supplier_on_hold.png'}]
@@ -108,7 +108,7 @@ op[h + 1]['items'] += [
     'Hold sets HOLD_FLAG = Y in TB_M_CROSSDOCK_SUPPLIER_HOLD: every unit of the supplier + plant stays visible with status On Hold, check boxes disabled (message no. 12), until released.',
     'Hold per case = Reduce PO Readiness (case) per destination (decided 13-Nov): in the destination detail (D/S) each destination has an input "Reduce PO Readiness (case) / <warehouse cases>" with Save / Release. '
     'n = number of warehouse cases of the destination to hold: n x pcs/case pcs are taken from the last lines of the destination in H0253 order and are not taken by Search; '
-    'the unit is cut again without them. Example: Philippines 6 pcs, reduce 1 -> its 6 pcs held; PART-X 17-Oct becomes 24 pcs = 4 cases, all Ready with the 24 pcs PO.',
+    'the unit is cut again without them. Example: Taiwan 6 pcs, reduce 1 -> its 6 pcs held; PART-X 17-Oct becomes 24 pcs = 4 cases, all Ready with the 24 pcs PO.',
     'The reduction is saved per unit and destination in TB_R_CROSSDOCK_CASE_HOLD and kept until the D/S team releases it (Release or 0). Input 0 .. warehouse cases of the destination, else message no. 13. '
     'A destination whose whole qty is held stays listed in the destination detail with qty 0 (+held qty).',
     'Both holds are re-checked at [Create ASN] like the destination hold: a hold made after the units were ticked makes the whole create fail (message no. 8) and the delivery plan is refreshed.']
@@ -161,7 +161,7 @@ h = next(i for i, x in enumerate(fd) if x.get('type') == 'heading' and x.get('te
 fd[h + 1]['items'] += [
     "Holds of the D/S team (XD10 5.3, decided 13-Nov): supplier + plant with HOLD_FLAG Y in TB_M_CROSSDOCK_SUPPLIER_HOLD -> every case of its units CROSSDOCK_STATUS '8' (On Hold).",
     'Reduce PO Readiness (case) per destination in TB_R_CROSSDOCK_CASE_HOLD (applied before the PO pouring and the cut): REDUCE_CASE x PCS_CASE pcs of the destination are taken off from its last lines in H0253 order '
-    '(a line can be partly held); the rest is poured and cut as usual. Example 18-Oct: Philippines reduce 1 -> CO-14109 6 pcs held; 24 pcs = 4 cases, the 24 pcs PO covers all (CO-14110 Ready).']
+    '(a line can be partly held); the rest is poured and cut as usual. Example 18-Oct: Taiwan reduce 1 -> CO-14109 6 pcs held; 24 pcs = 4 cases, the 24 pcs PO covers all (CO-14110 Ready).']
 for t in s['tables']:
     for c in t['columns']:
         if c[0] == 'CROSSDOCK_STATUS':
