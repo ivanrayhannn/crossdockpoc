@@ -115,12 +115,12 @@ export function AsnBackendProcessPage() {
       <Section no="6" title="How to simulate it in this prototype">
         <div style={{ marginBottom: 6 }}>ASN Creation uses the data of simulasi_asn_rev.xlsx (PART-X, 6 pcs/case). Each business date starts from the state of the workbook: the ASNs of the earlier days (ASN0001 …) are already submitted.</div>
         <ol style={{ margin: '4px 0 0', paddingLeft: 20 }}>
-          <li>Open <a href="#/asn-creation">ASN Creation</a> with business date <b>18-Oct</b>, keep <b>View as: Supplier</b>, click <b>Search</b>: PART-X 17-Oct has 5 cases, cases 1-4 Ready, case 5 Not Ready (<b>Short PO</b>: T0409013 18 of 30 pcs).</li>
+          <li>Open <a href="#/asn-creation">ASN Creation</a> with business date <b>18-Oct</b>, keep <b>View as: Supplier</b>, click <b>Search</b>: PART-X 17-Oct has 5 cases, cases 1-4 Ready, case 5 Not Ready (<b>Short PO</b>: PO-0003 18 of 30 pcs).</li>
           <li>Tick <b>case 3</b>: cases 1-3 are selected (the selection always starts at case 1). Do not click Create yet.</li>
           <li>Switch to <b>View as: D/S team</b> — this is the other session. Open the destination detail of PART-X 17-Oct and click <b>N · Hold</b> on Thailand (CO-14104).</li>
           <li>Switch back to <b>View as: Supplier</b> and click <b>Create ASN</b>: the message <i>"Some order has been already hold, please select other records"</i> appears, all ticks are removed and the delivery plan is refreshed.</li>
           <li>Release Thailand, tick the whole unit (cases 1-4), Create ASN and Submit: <b>ASN0003</b> as in the workbook; the result is in <a href="#/log-monitoring">Log Monitoring</a>.</li>
-          <li>Business date <b>19-Oct</b>: the split PO T0409014 makes case 5 (CO-14110) Ready (ASN0004); order date 18-Oct has 3 destinations (ASN0005). <b>20-Oct</b>: CO-14115 12 pcs = 2 cases (ASN0006, ASN0007).</li>
+          <li>Business date <b>19-Oct</b>: the split PO PO-0004 makes case 5 (CO-14110) Ready (ASN0004); order date 18-Oct has 3 destinations (ASN0005). <b>20-Oct</b>: CO-14115 12 pcs = 2 cases (ASN0006, ASN0007).</li>
           <li>One ASN = one Supplier Code + Plant: in View as D/S team tick PART-X and PART-D (second supplier 5002, not in the workbook) and click Create ASN → message "One ASN is for one Supplier Code and Supplier Plant".</li>
         </ol>
         <div style={{ marginTop: 8, color: 'var(--color-neutral-600)', fontSize: 11.5 }}>

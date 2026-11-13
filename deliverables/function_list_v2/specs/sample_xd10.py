@@ -4,12 +4,12 @@ from scan_pack import pack
 D, DT, RIT = '17-Oct-2026', '18-Oct-2026', 'Rit 1 · SD01'
 NAME = {'9715310': '9715310 (Vietnam)', '9722D10': '9722D10 (Thailand)', '9811110': '9811110 (Philippines)', '982220': '982220'}
 CUST = {'9715310': '9715300', '9722D10': '9722D10', '9811110': '9811100', '982220': '982200'}
-MF = {'T0409012': '3126035912', 'T0409013': '3126035913'}
+MF = {'PO-0002': 'MF-0002', 'PO-0003': 'MF-0003'}
 LINES = [dict(CUSTOMER_CD=CUST[d], CUSTOMER_ORDER_NO=co, ORDER_DT='2026-10-17', ORDER_TIME='080000', DESTINATION_CD=d, DETAILED_ITEM_NO='001',
               SERIAL_NO='0000001', PART_NO='PART-X', QTY=q)
          for co, d, q in [('CO-14104', '9722D10', 6), ('CO-14105', '9715310', 6), ('CO-14106', '9715310', 3), ('CO-14107', '9715310', 3),
                           ('CO-14109', '9811110', 6), ('CO-14110', '982220', 6)]]
-SLICES = pack(LINES, [['T0409012', MF['T0409012'], '0001', 6], ['T0409013', MF['T0409013'], '0001', 18]], 6)
+SLICES = pack(LINES, [['PO-0002', MF['PO-0002'], '0001', 6], ['PO-0003', MF['PO-0003'], '0001', 18]], 6)
 SENT = [s for s in SLICES if s['CASE_SEQ'] <= 4]   # the supplier ticks the unit: cases 1-4 (case 5 Not Ready)
 
 WIDTHS_D = [12, 9, 9, 9, 11, 14, 17, 16, 10, 6, 7, 12, 16, 11, 10, 7, 8, 9]
@@ -43,8 +43,8 @@ SAMPLE = {
     "intro": [
         "Data of simulasi_asn_rev.xlsx (also in the prototype, business date 18-Oct). Supplier 5001 plant 1, Delivery Date 18-Oct-2026, Rit 1, Route SD01. "
         "PART-X, Pcs/Case = 6. ASN0001 (CO-14101) and ASN0002 (CO-14103) are already submitted, so the oldest open Customer Order Date is 17-Oct.",
-        "Order date 17-Oct: 4 destinations, 30 pcs; PO T0409013 (PO date 18-Oct) has only 18 pcs (Short PO, abnormality); the rest of T0409012 (6) is "
-        "taken first (older PO date). The split PO T0409014 (12) comes on 19-Oct.",
+        "Order date 17-Oct: 4 destinations, 30 pcs; PO PO-0003 (PO date 18-Oct) has only 18 pcs (Short PO, abnormality); the rest of PO-0002 (6) is "
+        "taken first (older PO date). The split PO PO-0004 (12) comes on 19-Oct.",
         "The supplier ticks the unit PART-X 17-Oct (cases 1-4, case 5 is Not Ready) and clicks [Create ASN]; the submit gives ASN0003.",
     ],
     "sections": [
@@ -55,7 +55,7 @@ SAMPLE = {
         {"title": "B. Input: PO parts before [Create ASN] (Pra Daily Order: manifest with CROSS_DOCK_FLAG = 'X')",
          "columns": ["PO No", "Manifest No", "Manifest Item", "Part No", "PO Qty (ORDER_QTY)", "Mapped Qty (TB_R_PRA_DAILY_ORDER_MAPPED)", "Open Qty"],
          "spans": [1, 1, 1, 1, 1, 2, 1],
-         "rows": [["T0409012", MF['T0409012'], "0001", "PART-X", 6, 0, 6], ["T0409013", MF['T0409013'], "0001", "PART-X", 18, 0, 18]]},
+         "rows": [["PO-0002", MF['PO-0002'], "0001", "PART-X", 6, 0, 6], ["PO-0003", MF['PO-0003'], "0001", "PART-X", 18, 0, 18]]},
         {"title": "C. Supplier cases (6 pcs in H0253 order; CUT_FLAG Y = the ASN may stop after the case)",
          "columns": ["Case", "Qty", "Content (customer order qty (PO))", "CUT_FLAG", "Status"],
          "spans": [1, 1, 8, 1, 2],
@@ -70,15 +70,15 @@ SAMPLE = {
          "spans": [4, 3, 2, 1, 1],
          "rows": [["TB_R_H0253_ORDER_CONTROL_PRE", "CO-14104, CO-14105, CO-14106, CO-14107, CO-14109 (whole line in the ASN)", "PO_MAPPED_FLAG", "N", "Y"],
                   ["TB_R_H0253_ORDER_CONTROL_PRE", "CO-14110 (case 5, not sent)", "PO_MAPPED_FLAG", "N", "N"],
-                  ["TB_R_PRA_DAILY_ORDER_MAPPED", f"T0409012 / {MF['T0409012']} / 0001 / PART-X", "MAPPED_QTY", 0, 6],
-                  ["TB_R_PRA_DAILY_ORDER_MAPPED", f"T0409013 / {MF['T0409013']} / 0001 / PART-X", "MAPPED_QTY", 0, 18]]},
+                  ["TB_R_PRA_DAILY_ORDER_MAPPED", f"PO-0002 / {MF['PO-0002']} / 0001 / PART-X", "MAPPED_QTY", 0, 6],
+                  ["TB_R_PRA_DAILY_ORDER_MAPPED", f"PO-0003 / {MF['PO-0003']} / 0001 / PART-X", "MAPPED_QTY", 0, 18]]},
         {"title": "F. Result on the screen: Case List (Draft)",
          "columns": ["Item", "Value"],
          "spans": [3, 12],
          "rows": [["ASN No", "ASN0003 (auto, assigned on submit)"], ["Supplier · Plant", "5001 · 1"],
                   ["Delivery Date · Rit · Route", f"{DT} · {RIT}"], ["Delivery Qty", "24 pcs"], ["Cases", "4 cases"],
                   ["Case 1 .. Case 4", "Case Number, Part Number, Customer Order Date, Qty (6 each); the expand button shows the PO No, Manifest No, Manifest Item and PO Qty "
-                                       "(Case 1: T0409012; Cases 2-4: T0409013)"],
+                                       "(Case 1: PO-0002; Cases 2-4: PO-0003)"],
                   ["[Submit ASN]", "Confirmation: Submit ASN? 4 cases (24 pcs) will be created into ASN0003, delivery 18-Oct-2026 · Rit 1."]]},
         {"title": "G. Scenarios",
          "columns": ["No", "Scenario", "Expected result"],
@@ -88,7 +88,7 @@ SAMPLE = {
                                                             "only case 5 (CO-14110, Not Ready) stays in the delivery plan."],
                   ["N3", "[Back] / [Cancel] on the Case List", "The 5 rows are deleted from TB_R_INSTRUCTION, PO_MAPPED_FLAG back to N, MAPPED_QTY back to 0; "
                                                                "the unit is listed again."],
-                  ["N4", "19-Oct: split PO T0409014 released", "Case 5 (CO-14110) is Ready → ASN0004; order date 18-Oct (3 destinations) → ASN0005."],
+                  ["N4", "19-Oct: split PO PO-0004 released", "Case 5 (CO-14110) is Ready → ASN0004; order date 18-Oct (3 destinations) → ASN0005."],
                   ["E1", "The D/S team holds Thailand (CO-14104) after the supplier ticked the unit", "MSG8; the whole create fails, nothing is inserted, "
                                                                                                          "the delivery plan is refreshed and all units are unticked."],
                   ["E2", "The unit is no longer Ready when [Create ASN] is clicked", "MSG7; nothing is inserted; the delivery plan is refreshed."],

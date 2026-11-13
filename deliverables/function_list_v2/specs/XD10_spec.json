@@ -631,7 +631,7 @@
    "image": "deliverables/uiss_screens/asn_crossdock/c_01_initial.png"
   },
   {
-   "caption": "2. Delivery plan after Search (supplier view, 18-Oct, simulasi_asn_rev.xlsx): PART-X 17-Oct, cases 1-4 Ready, case 5 Not Ready (Short PO: T0409013 18 of 30 pcs)",
+   "caption": "2. Delivery plan after Search (supplier view, 18-Oct, simulasi_asn_rev.xlsx): PART-X 17-Oct, cases 1-4 Ready, case 5 Not Ready (Short PO: PO-0003 18 of 30 pcs)",
    "image": "deliverables/uiss_screens/asn_crossdock/c_02_delivery_plan.png"
   },
   {
@@ -699,7 +699,7 @@
    "image": "deliverables/uiss_screens/asn_crossdock/c_09_submit_id.png"
   },
   {
-   "caption": "10. Delivery plan after submit: only case 5 (CO-14110) is left, Not Ready until the split PO T0409014",
+   "caption": "10. Delivery plan after submit: only case 5 (CO-14110) is left, Not Ready until the split PO PO-0004",
    "image": "deliverables/uiss_screens/asn_crossdock/c_10_list_after.png"
   }
  ],
@@ -1029,7 +1029,7 @@
    "required": "N",
    "format": "{PO No} {qty}",
    "validation": "-",
-   "description": "POs of the case with the assigned qty, e.g. T0409013 6."
+   "description": "POs of the case with the assigned qty, e.g. PO-0003 6."
   },
   {
    "name": "PO Status",
@@ -2716,9 +2716,9 @@
    "marker": "-",
    "level": 0,
    "items": [
-    "18-Oct, delivery plan PART-X 17-Oct: 5 cases; PO check order 30 pcs vs PO T0409013 18 pcs → Short PO; cases 1-4 Ready (T0409012 rest 6 + T0409013), case 5 (CO-14110) Not Ready with Remaining Qty 6.",
+    "18-Oct, delivery plan PART-X 17-Oct: 5 cases; PO check order 30 pcs vs PO PO-0003 18 pcs → Short PO; cases 1-4 Ready (PO-0002 rest 6 + PO-0003), case 5 (CO-14110) Not Ready with Remaining Qty 6.",
     "The selection starts at case 1 and ends on a case with CUT_FLAG Y: ticking case 3 selects cases 1-3; case 5 is disabled. Per Part Number the oldest Customer Order Date first: on 19-Oct the cases of 18-Oct show \"Wait: 17-Oct first\" until case 1 of 17-Oct (CO-14110) is ticked.",
-    "[Create ASN] with cases 1-4: 5 rows in TB_R_INSTRUCTION, PO_MAPPED_FLAG Y on the 5 lines that are complete (CO-14110 stays N), MAPPED_QTY T0409012 6, T0409013 18. [Submit ASN] gives ASN0003 with case numbers C-0003-01 … 04; only case 5 stays in the delivery plan.",
+    "[Create ASN] with cases 1-4: 5 rows in TB_R_INSTRUCTION, PO_MAPPED_FLAG Y on the 5 lines that are complete (CO-14110 stays N), MAPPED_QTY PO-0002 6, PO-0003 18. [Submit ASN] gives ASN0003 with case numbers C-0003-01 … 04; only case 5 stays in the delivery plan.",
     "One line in two ASNs: CO-14115 12 pcs = case 1 (ASN0006, PO_MAPPED_FLAG N, open 6) and case 2 (ASN0007, PO_MAPPED_FLAG Y).",
     "D/S hold of Thailand (CO-14104) after the supplier ticked the unit: [Create ASN] fails (MSG8); the cases are computed again without Thailand. A draft not submitted is released by the next XD08 run ([Submit ASN] of the old draft: MSG11). A cancel after the ASN goes to XD11 (CO-14104 in ASN0003 case 3 → CO-14111)."
    ]
@@ -4122,7 +4122,7 @@
   "heading": "Sample Create ASN - ASN Cross Dock Creation (simulasi_asn_rev.xlsx, 18-Oct-2026)",
   "intro": [
    "Data of simulasi_asn_rev.xlsx (also in the prototype, business date 18-Oct). Supplier 5001 plant 1, Delivery Date 18-Oct-2026, Rit 1, Route SD01. PART-X, Pcs/Case = 6. ASN0001 (CO-14101) and ASN0002 (CO-14103) are already submitted, so the oldest open Customer Order Date is 17-Oct.",
-   "Order date 17-Oct: 4 destinations, 30 pcs; PO T0409013 (PO date 18-Oct) has only 18 pcs (Short PO, abnormality); the rest of T0409012 (6) is taken first (older PO date). The split PO T0409014 (12) comes on 19-Oct.",
+   "Order date 17-Oct: 4 destinations, 30 pcs; PO PO-0003 (PO date 18-Oct) has only 18 pcs (Short PO, abnormality); the rest of PO-0002 (6) is taken first (older PO date). The split PO PO-0004 (12) comes on 19-Oct.",
    "The supplier ticks the unit PART-X 17-Oct (cases 1-4, case 5 is Not Ready) and clicks [Create ASN]; the submit gives ASN0003."
   ],
   "sections": [
@@ -4162,7 +4162,7 @@
       "0000001",
       "9715310 (Vietnam)",
       6,
-      "T0409012",
+      "PO-0002",
       6,
       1,
       "Y",
@@ -4175,7 +4175,7 @@
       "0000001",
       "9715310 (Vietnam)",
       3,
-      "T0409013",
+      "PO-0003",
       3,
       2,
       "N",
@@ -4188,7 +4188,7 @@
       "0000001",
       "9715310 (Vietnam)",
       3,
-      "T0409013",
+      "PO-0003",
       3,
       2,
       "Y",
@@ -4201,7 +4201,7 @@
       "0000001",
       "9722D10 (Thailand)",
       6,
-      "T0409013",
+      "PO-0003",
       6,
       3,
       "Y",
@@ -4214,7 +4214,7 @@
       "0000001",
       "9811110 (Philippines)",
       6,
-      "T0409013",
+      "PO-0003",
       6,
       4,
       "Y",
@@ -4257,8 +4257,8 @@
     ],
     "rows": [
      [
-      "T0409012",
-      "3126035912",
+      "PO-0002",
+      "MF-0002",
       "0001",
       "PART-X",
       6,
@@ -4266,8 +4266,8 @@
       6
      ],
      [
-      "T0409013",
-      "3126035913",
+      "PO-0003",
+      "MF-0003",
       "0001",
       "PART-X",
       18,
@@ -4296,28 +4296,28 @@
      [
       "Case 1",
       6,
-      "CO-14105 6 (T0409012)",
+      "CO-14105 6 (PO-0002)",
       "Y",
       "Ready"
      ],
      [
       "Case 2",
       6,
-      "CO-14106 3 (T0409013) + CO-14107 3 (T0409013)",
+      "CO-14106 3 (PO-0003) + CO-14107 3 (PO-0003)",
       "Y",
       "Ready"
      ],
      [
       "Case 3",
       6,
-      "CO-14104 6 (T0409013)",
+      "CO-14104 6 (PO-0003)",
       "Y",
       "Ready"
      ],
      [
       "Case 4",
       6,
-      "CO-14109 6 (T0409013)",
+      "CO-14109 6 (PO-0003)",
       "Y",
       "Ready"
      ],
@@ -4384,8 +4384,8 @@
       "001",
       "0000001",
       6,
-      "T0409012",
-      "3126035912",
+      "PO-0002",
+      "MF-0002",
       "0001",
       "18-Oct-2026",
       "1",
@@ -4404,8 +4404,8 @@
       "001",
       "0000001",
       3,
-      "T0409013",
-      "3126035913",
+      "PO-0003",
+      "MF-0003",
       "0001",
       "18-Oct-2026",
       "1",
@@ -4424,8 +4424,8 @@
       "001",
       "0000001",
       3,
-      "T0409013",
-      "3126035913",
+      "PO-0003",
+      "MF-0003",
       "0001",
       "18-Oct-2026",
       "1",
@@ -4444,8 +4444,8 @@
       "001",
       "0000001",
       6,
-      "T0409013",
-      "3126035913",
+      "PO-0003",
+      "MF-0003",
       "0001",
       "18-Oct-2026",
       "1",
@@ -4464,8 +4464,8 @@
       "001",
       "0000001",
       6,
-      "T0409013",
-      "3126035913",
+      "PO-0003",
+      "MF-0003",
       "0001",
       "18-Oct-2026",
       "1",
@@ -4508,14 +4508,14 @@
      ],
      [
       "TB_R_PRA_DAILY_ORDER_MAPPED",
-      "T0409012 / 3126035912 / 0001 / PART-X",
+      "PO-0002 / MF-0002 / 0001 / PART-X",
       "MAPPED_QTY",
       0,
       6
      ],
      [
       "TB_R_PRA_DAILY_ORDER_MAPPED",
-      "T0409013 / 3126035913 / 0001 / PART-X",
+      "PO-0003 / MF-0003 / 0001 / PART-X",
       "MAPPED_QTY",
       0,
       18
@@ -4555,7 +4555,7 @@
      ],
      [
       "Case 1 .. Case 4",
-      "Case Number, Part Number, Customer Order Date, Qty (6 each); the expand button shows the PO No, Manifest No, Manifest Item and PO Qty (Case 1: T0409012; Cases 2-4: T0409013)"
+      "Case Number, Part Number, Customer Order Date, Qty (6 each); the expand button shows the PO No, Manifest No, Manifest Item and PO Qty (Case 1: PO-0002; Cases 2-4: PO-0003)"
      ],
      [
       "[Submit ASN]",
@@ -4593,7 +4593,7 @@
      ],
      [
       "N4",
-      "19-Oct: split PO T0409014 released",
+      "19-Oct: split PO PO-0004 released",
       "Case 5 (CO-14110) is Ready → ASN0004; order date 18-Oct (3 destinations) → ASN0005."
      ],
      [
@@ -4649,7 +4649,7 @@
       6,
       0,
       "VN 6 (CO-14105)",
-      "T0409012 6",
+      "PO-0002 6",
       "Y",
       "Ready"
      ],
@@ -4658,7 +4658,7 @@
       6,
       0,
       "VN 3 (CO-14106) + VN 3 (CO-14107)",
-      "T0409013 6",
+      "PO-0003 6",
       "Y",
       "Ready"
      ],
@@ -4667,7 +4667,7 @@
       6,
       0,
       "TH 6 (CO-14104)",
-      "T0409013 6",
+      "PO-0003 6",
       "Y",
       "Ready"
      ],
@@ -4676,7 +4676,7 @@
       6,
       0,
       "PH 6 (CO-14109)",
-      "T0409013 6",
+      "PO-0003 6",
       "Y",
       "Ready"
      ],
@@ -4734,7 +4734,7 @@
       "C5",
       "Case 5 (no PO)",
       "-",
-      "Disabled; tooltip message no. 2; Ready on 19-Oct with the split PO T0409014."
+      "Disabled; tooltip message no. 2; Ready on 19-Oct with the split PO PO-0004."
      ],
      [
       "C6",

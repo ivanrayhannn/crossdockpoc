@@ -173,21 +173,21 @@ XD09 runs on [Search] of XD10 and builds the delivery plan in #TEMP_INSTRUCTION.
 - Each line takes its qty from the oldest PO that still has qty left (PO_DT, then PO No). The PO is used up before the next PO is taken; what is left of a PO goes on to the next line, also of the next Customer Order Date.
 - PO left < qty of the line: the line is split. The first part gets the rest of this PO; the rest goes on to the next PO (one row per PO). Example: line 6 pcs, PO A has 2 left, PO B has 10 -> 2 rows: PO A 2, PO B 4.
 - No PO left: the rest of the line is still written, with PO_NO NULL (not skipped). Example: line 6 pcs, PO A has 2 left, no other PO -> 2 rows: PO A 2, PO_NO NULL 4. The lines below also get PO_NO NULL.
-- The qty written in each row is ASSIGNED_QTY; the sum of ASSIGNED_QTY of a line = its open qty. A PO qty left by an order that is not sent goes to the next lines: T0409011 (CO-14102 on hold, then cancelled) covers CO-14103; T0409012 then covers CO-14105.
-- PO qty lower than the order qty of the date (Short PO) is an abnormality: order date 17-Oct = 30 pcs, PO left 24 (T0409012 6 + T0409013 18); the last 6 pcs (CO-14110) have no PO (PO_NO NULL) and wait for the split PO T0409014 of 19-Oct.
+- The qty written in each row is ASSIGNED_QTY; the sum of ASSIGNED_QTY of a line = its open qty. A PO qty left by an order that is not sent goes to the next lines: PO-0001 (CO-14102 on hold, then cancelled) covers CO-14103; PO-0002 then covers CO-14105.
+- PO qty lower than the order qty of the date (Short PO) is an abnormality: order date 17-Oct = 30 pcs, PO left 24 (PO-0002 6 + PO-0003 18); the last 6 pcs (CO-14110) have no PO (PO_NO NULL) and wait for the split PO PO-0004 of 19-Oct.
 
 ### 4.2 PO Assignment - example of the pouring
 
-18-Oct [Search], order date 17-Oct, PART-X: PO left of the part (T0409012 6 + T0409013 18 = 24) poured from the top line down; 30 pcs ordered.
+18-Oct [Search], order date 17-Oct, PART-X: PO left of the part (PO-0002 6 + PO-0003 18 = 24) poured from the top line down; 30 pcs ordered.
 
-| Line (order of 4.1) | Qty | PO (ASSIGNED_QTY) | T0409012 left | T0409013 left |
+| Line (order of 4.1) | Qty | PO (ASSIGNED_QTY) | PO-0002 left | PO-0003 left |
 |---|---|---|---|---|
 | Start |  |  | 6 | 18 |
-| 1 CO-14105 (9715310) | 6 | T0409012 6 | 0 | 18 |
-| 2 CO-14106 (9715310) | 3 | T0409013 3 | 0 | 15 |
-| 3 CO-14107 (9715310) | 3 | T0409013 3 | 0 | 12 |
-| 4 CO-14104 (9722D10) | 6 | T0409013 6 | 0 | 6 |
-| 5 CO-14109 (9811110) | 6 | T0409013 6 | 0 | 0 |
+| 1 CO-14105 (9715310) | 6 | PO-0002 6 | 0 | 18 |
+| 2 CO-14106 (9715310) | 3 | PO-0003 3 | 0 | 15 |
+| 3 CO-14107 (9715310) | 3 | PO-0003 3 | 0 | 12 |
+| 4 CO-14104 (9722D10) | 6 | PO-0003 6 | 0 | 6 |
+| 5 CO-14109 (9811110) | 6 | PO-0003 6 | 0 | 0 |
 | 6 CO-14110 (982220) | 6 | PO_NO NULL 6 | 0 | 0 |
 | Total | 30 | 24 with PO + 6 without |  |  |
 
@@ -352,65 +352,65 @@ New table: Reduce PO Readiness (case) per destination of a unit (Part Number + C
 - Same data as simulasi_asn_rev.xlsx and the prototype (ASN Creation, business dates 16-20 Oct). One PO per Customer Order Date (PO date = order date + 1); the ASNs of the earlier days are already submitted (ASN0001 ... ASN0007).
 - Each table = #TEMP_INSTRUCTION of one [Search]. Sort Seq and Case start again at 1 per unit (Part Number + Customer Order Date).
 
-### A. 16-Oct: CO-14102 is on hold, only CO-14101 is taken; T0409011 keeps 6 pcs open
+### A. 16-Oct: CO-14102 is on hold, only CO-14101 is taken; PO-0001 keeps 6 pcs open
 
 | Sort Seq | Order Date | Customer Code | Cust Order No | Dest | Open Qty | PO No | Assigned Qty | Case | Cum Dest Qty | Seq Qty | Cut | Status |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | 15-Oct | 9715300 | CO-14101 | VN | 6 | T0409011 | 6 | 1 | 6 | 6 | Y | Ready |
+| 1 | 15-Oct | 9715300 | CO-14101 | VN | 6 | PO-0001 | 6 | 1 | 6 | 6 | Y | Ready |
 
-### B. 17-Oct: CO-14102 cancelled (UPD_STATUS 2); CO-14103 takes the rest of T0409011 (older PO date); T0409012 stays open
-
-| Sort Seq | Order Date | Customer Code | Cust Order No | Dest | Open Qty | PO No | Assigned Qty | Case | Cum Dest Qty | Seq Qty | Cut | Status |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | 16-Oct | 9722D10 | CO-14103 | TH | 6 | T0409011 | 6 | 1 | 6 | 6 | Y | Ready |
-
-### C. 18-Oct: order date 17-Oct, 4 destinations, 30 pcs; PO 24 pcs (T0409012 rest 6 + T0409013 18): Short PO, case 5 Not Ready
+### B. 17-Oct: CO-14102 cancelled (UPD_STATUS 2); CO-14103 takes the rest of PO-0001 (older PO date); PO-0002 stays open
 
 | Sort Seq | Order Date | Customer Code | Cust Order No | Dest | Open Qty | PO No | Assigned Qty | Case | Cum Dest Qty | Seq Qty | Cut | Status |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | 17-Oct | 9715300 | CO-14105 | VN | 6 | T0409012 | 6 | 1 | 6 | 6 | Y | Ready |
-| 2 | 17-Oct | 9715300 | CO-14106 | VN | 3 | T0409013 | 3 | 2 | 9 | 3 | N | Ready |
-| 3 | 17-Oct | 9715300 | CO-14107 | VN | 3 | T0409013 | 3 | 2 | 12 | 6 | Y | Ready |
-| 4 | 17-Oct | 9722D10 | CO-14104 | TH | 6 | T0409013 | 6 | 3 | 6 | 6 | Y | Ready |
-| 5 | 17-Oct | 9811100 | CO-14109 | PH | 6 | T0409013 | 6 | 4 | 6 | 6 | Y | Ready |
+| 1 | 16-Oct | 9722D10 | CO-14103 | TH | 6 | PO-0001 | 6 | 1 | 6 | 6 | Y | Ready |
+
+### C. 18-Oct: order date 17-Oct, 4 destinations, 30 pcs; PO 24 pcs (PO-0002 rest 6 + PO-0003 18): Short PO, case 5 Not Ready
+
+| Sort Seq | Order Date | Customer Code | Cust Order No | Dest | Open Qty | PO No | Assigned Qty | Case | Cum Dest Qty | Seq Qty | Cut | Status |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | 17-Oct | 9715300 | CO-14105 | VN | 6 | PO-0002 | 6 | 1 | 6 | 6 | Y | Ready |
+| 2 | 17-Oct | 9715300 | CO-14106 | VN | 3 | PO-0003 | 3 | 2 | 9 | 3 | N | Ready |
+| 3 | 17-Oct | 9715300 | CO-14107 | VN | 3 | PO-0003 | 3 | 2 | 12 | 6 | Y | Ready |
+| 4 | 17-Oct | 9722D10 | CO-14104 | TH | 6 | PO-0003 | 6 | 3 | 6 | 6 | Y | Ready |
+| 5 | 17-Oct | 9811100 | CO-14109 | PH | 6 | PO-0003 | 6 | 4 | 6 | 6 | Y | Ready |
 | 6 | 17-Oct | 982200 | CO-14110 | 982220 | 6 | — | 6 | 5 | 6 | 6 | Y | Not Ready |
 
 ### C1. 18-Oct: pouring the PO qty of PART-X over the lines of order date 17-Oct (top line first)
 
-| Step | Customer Order No | Destination | Qty | PO taken | ASSIGNED_QTY | T0409012 left (PO date 17-Oct) | T0409013 left (PO date 18-Oct) |
+| Step | Customer Order No | Destination | Qty | PO taken | ASSIGNED_QTY | PO-0002 left (PO date 17-Oct) | PO-0003 left (PO date 18-Oct) |
 |---|---|---|---|---|---|---|---|
 | Start |  |  |  |  |  | 6 | 18 |
-| 1 | CO-14105 | 9715310 | 6 | T0409012 | 6 | 0 | 18 |
-| 2 | CO-14106 | 9715310 | 3 | T0409013 | 3 | 0 | 15 |
-| 3 | CO-14107 | 9715310 | 3 | T0409013 | 3 | 0 | 12 |
-| 4 | CO-14104 | 9722D10 | 6 | T0409013 | 6 | 0 | 6 |
-| 5 | CO-14109 | 9811110 | 6 | T0409013 | 6 | 0 | 0 |
+| 1 | CO-14105 | 9715310 | 6 | PO-0002 | 6 | 0 | 18 |
+| 2 | CO-14106 | 9715310 | 3 | PO-0003 | 3 | 0 | 15 |
+| 3 | CO-14107 | 9715310 | 3 | PO-0003 | 3 | 0 | 12 |
+| 4 | CO-14104 | 9722D10 | 6 | PO-0003 | 6 | 0 | 6 |
+| 5 | CO-14109 | 9811110 | 6 | PO-0003 | 6 | 0 | 0 |
 | 6 | CO-14110 | 982220 | 6 | - (no PO left) | 6 | 0 | 0 |
 | Total |  |  | 30 |  | 24 with PO, 6 PO_NO NULL |  |  |
 
-### D. 19-Oct: rest of 17-Oct (CO-14104 cancelled, cases 1-4 in ASN0003) with the split PO T0409014, then order date 18-Oct
+### D. 19-Oct: rest of 17-Oct (CO-14104 cancelled, cases 1-4 in ASN0003) with the split PO PO-0004, then order date 18-Oct
 
 | Sort Seq | Order Date | Customer Code | Cust Order No | Dest | Open Qty | PO No | Assigned Qty | Case | Cum Dest Qty | Seq Qty | Cut | Status |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | 17-Oct | 982200 | CO-14110 | 982220 | 6 | T0409014 | 6 | 1 | 6 | 6 | Y | Ready |
-| 1 | 18-Oct | 9715300 | CO-14112 | VN | 6 | T0409014 | 6 | 1 | 6 | 6 | Y | Ready |
-| 2 | 18-Oct | 9811100 | CO-14113 | PH | 6 | T0409015 | 6 | 2 | 6 | 6 | Y | Ready |
-| 3 | 18-Oct | 982200 | CO-14114 | 982220 | 6 | T0409015 | 6 | 3 | 6 | 6 | Y | Ready |
+| 1 | 17-Oct | 982200 | CO-14110 | 982220 | 6 | PO-0004 | 6 | 1 | 6 | 6 | Y | Ready |
+| 1 | 18-Oct | 9715300 | CO-14112 | VN | 6 | PO-0004 | 6 | 1 | 6 | 6 | Y | Ready |
+| 2 | 18-Oct | 9811100 | CO-14113 | PH | 6 | PO-0005 | 6 | 2 | 6 | 6 | Y | Ready |
+| 3 | 18-Oct | 982200 | CO-14114 | 982220 | 6 | PO-0005 | 6 | 3 | 6 | 6 | Y | Ready |
 
 ### E. 20-Oct: order date 19-Oct: CO-14115 12 pcs = 2 cases (one line in 2 ASNs), CO-14111
 
 | Sort Seq | Order Date | Customer Code | Cust Order No | Dest | Open Qty | PO No | Assigned Qty | Case | Cum Dest Qty | Seq Qty | Cut | Status |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | 19-Oct | 9715300 | CO-14115 | VN | 12 | T0409015 | 6 | 1 | 6 | 6 | Y | Ready |
-| 1 | 19-Oct | 9715300 | CO-14115 | VN | 12 | T0409016 | 6 | 2 | 12 | 6 | Y | Ready |
-| 2 | 19-Oct | 9722D10 | CO-14111 | TH | 6 | T0409016 | 6 | 3 | 6 | 6 | Y | Ready |
+| 1 | 19-Oct | 9715300 | CO-14115 | VN | 12 | PO-0005 | 6 | 1 | 6 | 6 | Y | Ready |
+| 1 | 19-Oct | 9715300 | CO-14115 | VN | 12 | PO-0006 | 6 | 2 | 12 | 6 | Y | Ready |
+| 2 | 19-Oct | 9722D10 | CO-14111 | TH | 6 | PO-0006 | 6 | 3 | 6 | 6 | Y | Ready |
 
 ### F. PO per Customer Order Date (PO date = order date + 1, qty = total order qty of all destinations)
 
 | Customer Order Date | Destinations | Total Order Qty | PO No | PO Date | PO Qty | Check | Split PO |
 |---|---|---|---|---|---|---|---|
-| 15-Oct | 2 | 12 | T0409011 | 16-Oct | 12 | OK | - |
-| 16-Oct | 1 | 6 | T0409012 | 17-Oct | 6 | OK | - |
-| 17-Oct | 4 | 30 | T0409013 | 18-Oct | 18 | Short PO (12 pcs) | T0409014 12 (19-Oct) |
-| 18-Oct | 3 | 18 | T0409015 | 19-Oct | 18 | OK | - |
-| 19-Oct | 2 | 18 | T0409016 | 20-Oct | 18 | OK | - |
+| 15-Oct | 2 | 12 | PO-0001 | 16-Oct | 12 | OK | - |
+| 16-Oct | 1 | 6 | PO-0002 | 17-Oct | 6 | OK | - |
+| 17-Oct | 4 | 30 | PO-0003 | 18-Oct | 18 | Short PO (12 pcs) | PO-0004 12 (19-Oct) |
+| 18-Oct | 3 | 18 | PO-0005 | 19-Oct | 18 | OK | - |
+| 19-Oct | 2 | 18 | PO-0006 | 20-Oct | 18 | OK | - |

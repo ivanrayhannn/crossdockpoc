@@ -206,7 +206,7 @@ Existing ASN part (TR-02). Submit ASN: one row per manifest item and case (a cas
 
 | Case No | Part | Customer Order Date | Destination | Customer Order No | Qty | PO No |
 |---|---|---|---|---|---|---|
-| C-0003-01 | PART-X | 17-Oct-2026 | 9715310 | CO-14105 | 6 | T0409012 |
-| C-0003-02 | PART-X | 17-Oct-2026 | 9715310 | CO-14106 3 + CO-14107 3 | 6 | T0409013 |
-| C-0003-03 | PART-X | 17-Oct-2026 | 9722D10 | CO-14111 (was CO-14104) | 6 | T0409013 |
-| C-0003-04 | PART-X | 17-Oct-2026 | 9811110 | CO-14109 | 6 | T0409013 |
+| C-0003-01 | PART-X | 17-Oct-2026 | 9715310 | CO-14105 | 6 | PO-0002 |
+| C-0003-02 | PART-X | 17-Oct-2026 | 9715310 | CO-14106 3 + CO-14107 3 | 6 | PO-0003 |
+| C-0003-03 | PART-X | 17-Oct-2026 | 9722D10 | CO-14111 (was CO-14104) | 6 | PO-0003 |
+| C-0003-04 | PART-X | 17-Oct-2026 | 9811110 | CO-14109 | 6 | PO-0003 |
