@@ -293,7 +293,8 @@ const FUNCS = [
         'Kolom: Case Qty, PO Readiness (case), opsi ASN, status. Per Part Number tanggal tertua dulu ("Wait: tanggal sebelumnya first").',
         'D/S: expand unit → per destinasi (case, qty, Hold Flag) → per customer order line. Hold / Release per destinasi meng-update HOLD_FLAG semua line unit + destinasi; destinasi hold tidak diambil Search.',
         'Hold per Part Number + Customer Order Date (D/S, 13-Nov): tombol [Hold per Part] membuka sub screen per supplier + plant, satu baris per part + tanggal: status hold, [Hold] / [Release hold] (TB_R_CROSSDOCK_UNIT_HOLD) dan PO yang ter-map ke unit itu beserta customer order-nya (No, destinasi, qty, case). Unit yang di-hold tetap tampil, On Hold, check box disabled (MSG12).',
-        'Hold per case = Reduce PO Readiness (case) di level case (D/S, 13-Nov): di atas tabel case unit isi jumlah case Ready yang di-hold, contoh PO Readiness 4, reduce 1 → Ready 3, case 4 On Hold (D/S). Ready dibulatkan ke bawah ke cut valid terakhir. Disimpan di TB_R_CROSSDOCK_CASE_HOLD sampai release; input 0 .. PO Readiness (MSG13).',
+        'Hold per case (D/S, 13-Nov): check box Hold (D/S) di samping PO Status. Case yang dicentang dan case sesudahnya tidak Ready; Ready berhenti di cut valid terakhir sebelum case itu. Contoh PART-X 17-Oct: centang case 4 → Ready 3, case 4 On Hold (D/S). Disimpan per case di TB_R_CROSSDOCK_CASE_HOLD sampai dicentang ulang (uncheck).',
+        'Content case (D/S) dipecah jadi kolom Destination, Customer Order No dan Order Qty (satu baris per customer order line di case).',
         'Pilih case: check box per case mulai case 1 sampai case dengan cut valid; case satu grup selalu terkirim bersama. Satu ASN = satu Supplier Code + Plant.',
         '[Create ASN] (satu transaksi): re-check hold (row lock), insert TB_R_INSTRUCTION, MAPPED_QTY bertambah, PO_MAPPED_FLAG Y untuk line yang seluruhnya masuk ASN. [Back] / [Cancel] di Case List membatalkan (baris dihapus, flag dan qty dikembalikan).',
         'Case List: ringkasan ASN, case (Case Number, Part, Qty, detail PO), [Download Case Label] mengikuti case label NSP existing.',
@@ -303,8 +304,7 @@ const FUNCS = [
         { k: 'Block yang dipilih sudah tidak Ready', d: 'Error, delivery plan di-refresh', s: 'Create dibatalkan', u: 'Pilih ulang' },
         { k: 'Order di-hold D/S setelah unit dicentang', d: 'Error "order already hold"', s: 'Create gagal, case dihitung ulang tanpa destinasi itu', u: 'Pilih case lain' },
         { k: 'Part + tanggal di-hold D/S', d: 'MSG12 di check box', s: 'Unit On Hold, tidak bisa dipilih', u: 'Hubungi D/S' },
-        { k: 'Case di-hold lewat Reduce PO Readiness', d: 'PO Status On Hold (D/S), MSG14', s: 'Hanya case Ready sisanya yang bisa dipilih', u: 'Hubungi D/S' },
-        { k: 'Reduce PO Readiness bukan bilangan bulat 0 .. PO Readiness', d: 'MSG13', s: 'Tidak disimpan', u: 'Perbaiki angka' },
+        { k: 'Case di-hold D/S (check box Hold)', d: 'PO Status On Hold (D/S), MSG14', s: 'Hanya case Ready sebelumnya yang bisa dipilih', u: 'Hubungi D/S' },
         { k: 'Unit dari lebih dari satu supplier dicentang (D/S)', d: 'Error satu ASN satu supplier', s: 'Tidak ada yang dibuat', u: 'Pilih unit satu supplier' },
         { k: 'Draft dilepas XD08 atau line berubah di GTOPAS saat Submit', d: 'Error "orders have changed"', s: 'Draft dilepas, tidak disubmit', u: '[Search] dan buat ASN lagi' },
         { k: 'Database error saat mapping / draft', d: 'LOG1', s: 'Rollback', u: 'Ulangi; hubungi PIC' },
@@ -1312,21 +1312,12 @@ const MSGS = {
 "action": "Contact the D/S team."
 },
 {
-"id": "MSG13",
-"kind": "Display",
-"type": "Error",
-"event": "Click [Save] (Reduce PO Readiness)",
-"cause": "Not a whole number or more than PO Readiness",
-"message": "Reduce PO Readiness (case) must be a whole number from 0 to {PO Readiness} (PO Readiness).",
-"action": "Correct the value."
-},
-{
 "id": "MSG14",
 "kind": "Display",
 "type": "Info",
 "event": "Hover on disabled case check box",
-"cause": "Case held by Reduce PO Readiness (case)",
-"message": "On hold by the D/S team: Reduce PO Readiness (case) {n} of {Part No} / {Customer Order Date}",
+"cause": "Case held by the D/S team (Hold check box)",
+"message": "On hold by the D/S team: case {n} of {Part No} / {Customer Order Date} (Hold per case)",
 "action": "Contact the D/S team."
 },
 {

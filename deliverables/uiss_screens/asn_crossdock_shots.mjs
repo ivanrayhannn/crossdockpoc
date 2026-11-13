@@ -22,12 +22,11 @@ await pg.getByTitle('Customer orders').first().click(); await shot('c_03_ds_deta
 // hold Japan (CO-14104) of PART-X 17-Oct: scan order and cases are computed again without TH
 await destHold('9722D10').click(); await shot('c_04_ds_hold');
 await destHold('9722D10').click();
-// D/S team: Reduce PO Readiness (case) of PART-X 17-Oct (case level): PO Readiness 4 - 1 -> Ready 3, case 4 On Hold (D/S)
-const red = pg.locator('[id="reduce-PART-X|2026-10-17"]');
-await red.fill('1'); await pg.locator('div').filter({ has: red }).last().getByRole('button', { name: 'Save', exact: true }).click(); await shot('c_04b_ds_reduce');
+// D/S team: Hold per case (check box next to PO Status): case 4 of PART-X 17-Oct held -> Ready 3, case 4 On Hold (D/S)
+await pg.getByRole('checkbox', { name: 'Hold case 4 of PART-X 17-Oct-2026' }).check(); await shot('c_04b_ds_reduce');
 await view('Supplier'); await search(); await shot('c_04c_supplier_reduce');
 await view('D/S team'); await search();
-await pg.locator('div').filter({ has: pg.locator('[id="reduce-PART-X|2026-10-17"]') }).last().getByRole('button', { name: 'Release', exact: true }).click();
+await pg.getByRole('checkbox', { name: 'Hold case 4 of PART-X 17-Oct-2026' }).uncheck();
 // D/S team: sub screen Hold per Part Number + Customer Order Date: POs and customer orders of each part + date; hold PART-X 17-Oct
 await pg.getByRole('button', { name: 'Hold per Part', exact: true }).click(); await shot('c_04d_ds_supplier_hold');
 await pg.getByRole('button', { name: 'Hold PART-X 17-Oct-2026' }).click(); await shot('c_04f_ds_supplier_hold_on');

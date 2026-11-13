@@ -101,9 +101,7 @@ export function AsnCrossdockCreationPage() {
   const [hold, setHold] = useState<Record<string, boolean>>(HOLD_INIT);
   /** D/S team: Supplier Code + Plant on hold (TB_M_CROSSDOCK_SUPPLIER_HOLD) and Reduce PO Readiness (case) per unit (TB_R_CROSSDOCK_CASE_HOLD). */
   const [unitHold, setUnitHold] = useState<Record<string, boolean>>({});
-  const [reduce, setReduce] = useState<Record<string, number>>({});
-  const [reduceDraft, setReduceDraft] = useState<Record<string, string>>({});
-  const [reduceErr, setReduceErr] = useState<Record<string, string>>({});
+  const [caseHold, setCaseHold] = useState<Record<string, boolean>>({});
   // Each view is its own session (supplier / D/S team).
   const [selByView, setSelByView] = useState<Record<ViewAs, Record<string, Sel>>>({ sup: {}, ds: {} });
   const sel = selByView[viewAs];
@@ -122,8 +120,8 @@ export function AsnCrossdockCreationPage() {
 
   const rits = ritCyclesFor(deliveryDate);
   const rit = rits.find((r) => r.no === ritNo) ?? rits[0];
-  const units = useMemo(() => { const s = sentQty(asns); return buildUnits(today, s.byLine, s.byPo, hold, startState === 'none', { unitHold, reduce }); },
-    [today, asns, hold, startState, unitHold, reduce]);
+  const units = useMemo(() => { const s = sentQty(asns); return buildUnits(today, s.byLine, s.byPo, hold, startState === 'none', { unitHold, caseHold }); },
+    [today, asns, hold, startState, unitHold, caseHold]);
   // Units fully in an ASN and units without any pre-mapped case are not listed; a fully held unit only for the D/S team.
   // The supplier sees only its own Supplier Code + Plant; the D/S team (super admin) sees every supplier.
   const visible = units.filter((u) => (isDs || u.supplier === LOGIN_SUPPLIER) && u.status !== 'created'
@@ -172,21 +170,6 @@ export function AsnCrossdockCreationPage() {
     const next = { ...hold };
     lines.forEach((l) => (next[l.id] = !held));
     setHold(next);
-  };
-
-  /** Reduce PO Readiness (case) of a unit (D/S team): the last n Ready cases are held until released (0 = release). */
-  const saveReduce = (u: Unit) => {
-    const raw = (reduceDraft[u.key] ?? String(reduce[u.key] || '')).trim();
-    const n = raw === '' ? 0 : Number(raw);
-    if (!Number.isInteger(n) || n < 0 || n > u.rawReadyCases) {
-      setReduceErr({ ...reduceErr, [u.key]: `Reduce PO Readiness (case) must be a whole number from 0 to ${u.rawReadyCases} (PO Readiness).` });
-      return;
-    }
-    setReduceErr({ ...reduceErr, [u.key]: '' });
-    const next = { ...reduce };
-    if (n) next[u.key] = n; else delete next[u.key];
-    setReduce(next);
-    setReduceDraft({ ...reduceDraft, [u.key]: n ? String(n) : '' });
   };
 
   /** Case check box: the selection starts at case 1 and ends on a case with CUT_FLAG Y (MSG10 when the end moves on). */
@@ -563,33 +546,19 @@ export function AsnCrossdockCreationPage() {
                     <td style={{ ...td, textAlign: 'right', fontWeight: 600 }}>{u.caseCount}</td>
                     <td style={{ ...td, textAlign: 'right', color: u.readyCases < u.caseCount ? 'var(--color-danger)' : undefined }}>{u.readyCases}{u.reduce > 0 && <div className="ax-muted">{u.rawReadyCases} − {u.reduce} on hold</div>}</td>
                     <td style={{ ...td, textAlign: 'right' }}>{s ? `${s.end} case${s.end > 1 ? 's' : ''}` : '—'}</td>
-                    <td style={td} title={tip}><StatusChip s={u.status} />{wait && <span title={tip} style={{ marginLeft: 4 }}><Chip tone="neutral">{`Wait: ${niceDate(wait.orderDt).slice(0, 6)} first`}</Chip></span>}{u.poCheck.short && <span title={poCheckText(u)} style={{ marginLeft: 4 }}><Chip tone="warn">Short PO</Chip></span>}{u.sent && <div className="ax-muted">rest of an earlier ASN</div>}{u.heldLines.length > 0 && isDs && <div className="ax-muted">{new Set(u.heldLines.map((l) => l.destCd)).size} destination(s) on hold</div>}{u.unitHold && <div className="ax-muted">Part + date on hold (D/S)</div>}{u.reduce > 0 && <div className="ax-muted">{u.cases.filter((c) => c.heldByReduce).length} case(s) on hold (reduce)</div>}</td>
+                    <td style={td} title={tip}><StatusChip s={u.status} />{wait && <span title={tip} style={{ marginLeft: 4 }}><Chip tone="neutral">{`Wait: ${niceDate(wait.orderDt).slice(0, 6)} first`}</Chip></span>}{u.poCheck.short && <span title={poCheckText(u)} style={{ marginLeft: 4 }}><Chip tone="warn">Short PO</Chip></span>}{u.sent && <div className="ax-muted">rest of an earlier ASN</div>}{u.heldLines.length > 0 && isDs && <div className="ax-muted">{new Set(u.heldLines.map((l) => l.destCd)).size} destination(s) on hold</div>}{u.unitHold && <div className="ax-muted">Part + date on hold (D/S)</div>}{u.reduce > 0 && <div className="ax-muted">{u.reduce} case(s) on hold (D/S)</div>}</td>
                     <td style={td}>{isDs && <button className="btn btn-secondary" title="Destination detail (D/S team)" style={{ padding: '2px 8px', fontSize: 11 }} onClick={() => setOpen({ ...open, [u.key]: !open[u.key] })}>{open[u.key] ? '▾' : '▸'}</button>}</td>
                   </tr>,
                   u.cases.length > 0 && (
                     <tr key={`${u.key}-c`}>
                       <td colSpan={colCount} style={{ padding: '4px 16px 10px 50px', borderBottom: '1px solid var(--color-divider)' }}>
                         <div className="ax-muted" style={{ margin: '2px 0 4px', color: u.poCheck.short || u.poCheck.missing ? 'var(--color-danger)' : undefined }}>{poCheckText(u)}</div>
-                        {isDs && !u.unitHold && u.rawReadyCases > 0 && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '6px 0 8px', flexWrap: 'wrap', fontSize: 12 }}>
-                            <label htmlFor={`reduce-${u.key}`} style={{ fontWeight: 600 }}>Reduce PO Readiness (case)</label>
-                            <input id={`reduce-${u.key}`} className="input" inputMode="numeric" placeholder="0" style={{ width: 56, height: 26, padding: '2px 6px' }}
-                              value={reduceDraft[u.key] ?? (reduce[u.key] ? String(reduce[u.key]) : '')} onChange={(e) => setReduceDraft({ ...reduceDraft, [u.key]: e.target.value })} />
-                            <span className="ax-muted">/ {u.rawReadyCases}</span>
-                            <button className="btn btn-secondary" style={{ padding: '1px 8px', fontSize: 11 }} onClick={() => saveReduce(u)}>Save</button>
-                            {reduce[u.key] ? <button className="btn btn-secondary" style={{ padding: '1px 8px', fontSize: 11 }} onClick={() => { setReduceDraft({ ...reduceDraft, [u.key]: '' }); const n = { ...reduce }; delete n[u.key]; setReduce(n); }}>Release</button> : null}
-                            <span className="ax-muted">
-                              {u.reduce > 0 ? `PO Readiness ${u.rawReadyCases} − ${u.reduce} → Ready ${u.readyCases}${u.readyCases < u.rawReadyCases - u.reduce ? ' (rounded down to the last valid cut)' : ''}; the last cases are held until released.` : 'Holds the last Ready cases until released.'}
-                            </span>
-                            {reduceErr[u.key] && <span style={{ color: 'var(--color-danger)', width: '100%' }}>{reduceErr[u.key]}</span>}
-                          </div>
-                        )}
                         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-                          <thead><tr><th style={{ ...th, background: 'transparent', width: 30 }} />{['Case', 'Qty', 'Remaining Qty (not assigned)', ...(isDs ? ['Content (D/S team)'] : []), 'PO', 'PO Status'].map((h) => <th key={h} style={{ ...th, background: 'transparent', height: 28 }}>{h}</th>)}</tr></thead>
+                          <thead><tr><th style={{ ...th, background: 'transparent', width: 30 }} />{['Case', 'Qty', 'Remaining Qty (not assigned)', ...(isDs ? ['Destination', 'Customer Order No', 'Order Qty'] : []), 'PO', 'PO Status', ...(isDs ? ['Hold (D/S)'] : [])].map((h) => <th key={h} style={{ ...th, background: 'transparent', height: 28 }}>{h}</th>)}</tr></thead>
                           <tbody>
                             {u.cases.map((c) => {
                               const g = groupCases(u, c.group);
-                              const ctip = u.unitHold && c.ready ? tip : c.heldByReduce ? `On hold by the D/S team: Reduce PO Readiness (case) ${u.reduce} of ${u.partNo} / ${niceDate(u.orderDt)}`
+                              const ctip = u.unitHold && c.ready ? tip : c.heldByReduce ? `On hold by the D/S team: case ${c.seq} of ${u.partNo} / ${niceDate(u.orderDt)} (Hold per case)`
                                 : c.ready ? (g.length > 1 ? `Cases ${g[0].seq}-${g[g.length - 1].seq} are sent together` : `Case ${c.seq} can be sent alone`)
                                 : `Not Ready: case ${c.seq} of ${u.partNo} / ${niceDate(u.orderDt)} (or an earlier case) is not assigned to a PO yet (${u.readyCases} of ${u.caseCount} cases assigned)`;
                               const on = !!s && c.seq <= s.end;
@@ -600,9 +569,18 @@ export function AsnCrossdockCreationPage() {
                                   <td style={{ ...td, fontFamily: 'var(--font-mono)', fontWeight: 600 }}>Case {c.seq}</td>
                                   <td style={td}>{c.qty}</td>
                                   <td style={{ ...td, color: remain ? 'var(--color-danger)' : undefined, fontWeight: remain ? 600 : undefined }}>{remain}</td>
-                                  {isDs && <td style={td}>{contentOf(c.lines)}</td>}
+                                  {isDs && <td style={td}>{c.lines.map((l, i) => <div key={i} style={{ whiteSpace: 'nowrap' }}>{DESTS[l.destCd].code} · {DESTS[l.destCd].name}</div>)}</td>}
+                                  {isDs && <td style={td}>{c.lines.map((l, i) => <div key={i} style={{ whiteSpace: 'nowrap' }}>{l.custOrderNo}</div>)}</td>}
+                                  {isDs && <td style={{ ...td, textAlign: 'right' }}>{c.lines.map((l, i) => <div key={i}>{l.qty}</div>)}</td>}
                                   <td style={td}>{poRowsOf(c.lines).map((r) => `${r.poNo} ${r.qty}`).join(', ') || '—'}</td>
                                   <td style={td} title={ctip}><Chip tone={c.ready && !u.unitHold ? 'ok' : c.heldByReduce || (u.unitHold && c.ready) ? 'neutral' : 'warn'}>{c.ready && !u.unitHold ? 'Ready' : c.heldByReduce || u.unitHold && c.ready ? 'On Hold (D/S)' : 'Not Ready'}</Chip></td>
+                                  {isDs && (
+                                    <td style={{ ...td, textAlign: 'center' }}>
+                                      <input type="checkbox" aria-label={`Hold case ${c.seq} of ${u.partNo} ${niceDate(u.orderDt)}`} checked={!!caseHold[`${u.key}|${c.seq}`]}
+                                        disabled={u.unitHold || !c.lines.every((l) => l.poNo)} title={c.lines.every((l) => l.poNo) ? 'Hold this case (it and the later cases of the unit are not Ready)' : 'No PO yet: nothing to hold'}
+                                        onChange={(e) => { const n = { ...caseHold }; if (e.target.checked) n[`${u.key}|${c.seq}`] = true; else delete n[`${u.key}|${c.seq}`]; setCaseHold(n); }} />
+                                    </td>
+                                  )}
                                 </tr>
                               );
                             })}
