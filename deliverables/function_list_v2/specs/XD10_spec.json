@@ -631,6 +631,14 @@
    "image": "deliverables/uiss_screens/asn_crossdock/c_04a_ds_case_edit.png"
   },
   {
+   "caption": "4a-2. [Save]: confirmation (message no. 15) listing what is held / released",
+   "image": "deliverables/uiss_screens/asn_crossdock/c_04g_ds_hold_confirm.png"
+  },
+  {
+   "caption": "4a-3. [Yes, save]: saved message (message no. 16); the delivery plan is refreshed behind it",
+   "image": "deliverables/uiss_screens/asn_crossdock/c_04h_ds_hold_saved.png"
+  },
+  {
    "caption": "4b. After [Save]: CO-14109 Taiwan 6 pcs On Hold below the cases (PO released); its PO-0003 qty goes to CO-14110 Australia, so the 4 cases left are all Ready",
    "image": "deliverables/uiss_screens/asn_crossdock/c_04b_ds_reduce.png"
   },
@@ -1002,7 +1010,7 @@
    "required": "N",
    "format": "-",
    "validation": "-",
-   "description": "D/S team only: destination code and name of each customer order line in the case, one per line."
+   "description": "D/S team only: destination code and name of the case, shown once per case (cell merged over its lines); a supplier case holds one destination."
   },
   {
    "name": "Customer Order No (D/S team)",
@@ -1017,7 +1025,7 @@
    "required": "N",
    "format": "-",
    "validation": "-",
-   "description": "D/S team only: customer order of each line in the case, one per line."
+   "description": "D/S team only: one row per customer order line in the case (the case-level cells are merged over these rows)."
   },
   {
    "name": "Order Qty (D/S team)",
@@ -1032,7 +1040,7 @@
    "required": "N",
    "format": "-",
    "validation": "-",
-   "description": "D/S team only: pcs of each line in the case, one per line (sum = case qty)."
+   "description": "D/S team only: pcs of the line, one per row (sum = case qty)."
   },
   {
    "name": "PO",
@@ -1047,7 +1055,7 @@
    "required": "N",
    "format": "{PO No} {qty}",
    "validation": "-",
-   "description": "POs of the case with the assigned qty, e.g. PO-0003 6."
+   "description": "PO and assigned qty, e.g. PO-0003 · 6. Rows of the case with the same PO are merged into one cell; supplier view: one row per PO of the case. Held line: \"PO released\"."
   },
   {
    "name": "PO Status",
@@ -1092,7 +1100,7 @@
    "required": "N",
    "format": "-",
    "validation": "-",
-   "description": "D/S team only, per Part Number + Customer Order Date (right of the PO check): [Edit hold] enables the Hold (D/S) check boxes; [Save] stores them; [Cancel] discards. Not shown for a part on hold. Refer 5.3."
+   "description": "D/S team only, per Part Number + Customer Order Date (right of the PO check): [Edit hold] enables the Hold (D/S) check boxes; [Save] asks for confirmation (message no. 15), stores the holds, shows message no. 16 and refreshes the delivery plan (the selection of the unit is cleared); [Save] without a change just closes the edit; [Cancel] discards. Not shown for a part on hold. Refer 5.3."
   },
   {
    "group": "<Destination Detail (D/S team only)>",
@@ -2770,7 +2778,9 @@
     "Hold per case (decided 13-Nov, rev. 14-Nov): the case grid has a check box Hold (D/S) next to PO Status, changed with [Edit hold] / [Save] / [Cancel] of the Part Number + Customer Order Date. [Save] of a ticked case stores its customer order lines with their pcs (HOLD_QTY) in TB_R_CROSSDOCK_CASE_HOLD. At the next Search (XD09) the held pcs leave the unit before the PO pouring: they take no PO, so the PO qty they had goes on to the next lines of the part (same Customer Order Date, then the next dates). The other cases are cut again and keep their own readiness (no Ready end at the held case).",
     "Example: 18-Oct, PART-X 17-Oct, case 4 = CO-14109 Taiwan 6 pcs ticked -> Taiwan On Hold; PO-0003 6 pcs go to CO-14110 Australia (no PO before), so cases 1-4 (Korea, Korea, Japan, Australia) are all Ready. On 19-Oct the PO qty left after the 17-Oct lines goes to the 18-Oct orders.",
     "The held lines are listed below the cases (Case = On hold, PO = released, PO Status On Hold (D/S), message no. 14), for the supplier too, and cannot be ticked for an ASN. The hold is on the customer order line, so it does not move when other lines are cancelled or sent. Unticking a held line + [Save] deletes the row: the pcs come back to their place in the H0253 order and take PO at the next Search (they come first again, so PO not yet in an ASN can move back to them). A held line cancelled in GTOPAS -> row deleted. The D/S team sees the content of each case in the columns Destination, Customer Order No and Order Qty.",
-    "Both holds are re-checked at [Create ASN] like the destination hold: a hold made after the units were ticked makes the whole create fail (message no. 8) and the delivery plan is refreshed."
+    "Both holds are re-checked at [Create ASN] like the destination hold: a hold made after the units were ticked makes the whole create fail (message no. 8) and the delivery plan is refreshed.",
+    "Saving a hold (case grid [Save] and sub screen [Save]): confirmation first (message no. 15, [No] keeps the edit open); [Yes, save] stores the change, shows message no. 16 and refreshes the delivery plan right away (Search again with the same Delivery Date / Rit, ticks of that unit cleared). No change = no message.",
+    "Case grid: bordered cells. Case, Qty, Remaining Qty, Destination, PO Status and the check boxes are shown once per case (merged over its customer order lines); PO is merged over the lines of the same PO."
    ]
   },
   {
@@ -2894,6 +2904,22 @@
    "msg_id": "MSG14",
    "message": "On hold by the D/S team: {Customer Order No} of {Part No} / {Customer Order Date}, {n} pcs; its PO qty is used by the next orders",
    "action": "Contact the D/S team."
+  },
+  {
+   "event": "Click [Save] of a hold (case grid or sub screen)",
+   "cause": "Hold changed",
+   "type": "Confirmation",
+   "msg_id": "MSG15",
+   "message": "Hold of {Part No} / {Customer Order Date}? Save: hold case {n} ({Customer Order No}, {qty} pcs); release {Customer Order No} ({qty} pcs). Held pcs take no PO; their PO qty goes to the next orders.",
+   "action": "[Yes, save] / [No]"
+  },
+  {
+   "event": "After [Yes, save]",
+   "cause": "Hold saved",
+   "type": "Info",
+   "msg_id": "MSG16",
+   "message": "Hold of {Part No} / {Customer Order Date} saved. The delivery plan has been refreshed.",
+   "action": "[OK]"
   },
   {
    "group": "Search"

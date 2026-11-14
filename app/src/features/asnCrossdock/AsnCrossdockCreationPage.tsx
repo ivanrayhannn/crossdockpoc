@@ -74,6 +74,20 @@ interface PoRow {
   qty: number;
 }
 
+const GRID = '1px solid var(--color-neutral-300)';
+
+/** rowSpan per row for runs of equal values: the first row of a run gets the run length, the others 0. */
+function mergeRuns(vals: string[]): number[] {
+  const out = vals.map(() => 0);
+  for (let i = 0; i < vals.length;) {
+    let j = i;
+    while (j < vals.length && vals[j] === vals[i]) j++;
+    out[i] = j - i;
+    i = j;
+  }
+  return out;
+}
+
 function poRowsOf(ls: InstrLine[]): PoRow[] {
   const m = new Map<string, PoRow>();
   for (const l of ls) {
@@ -111,14 +125,67 @@ export function AsnCrossdockCreationPage() {
   const startCaseEdit = (u: Unit) => setCaseDraft({ ...caseDraft, [u.key]: Object.fromEntries([
     ...u.cases.map((c) => [`c:${c.seq}`, false]), ...u.caseHeld.map((l) => [`h:${l.id}`, true])]) });
   const endCaseEdit = (u: Unit) => { const d = { ...caseDraft }; delete d[u.key]; setCaseDraft(d); };
+  /** [Save] of a hold asks first, then shows the result; the delivery plan is computed again (refreshed) right after. */
+  const [holdAsk, setHoldAsk] = useState<{ title: string; text: string; apply: () => void } | null>(null);
+  const [holdDone, setHoldDone] = useState<string | null>(null);
+  const runHoldSave = () => {
+    if (!holdAsk) return;
+    holdAsk.apply();
+    setLoaded((l) => (l ? { ...l, at: nowTime() } : l));
+    setHoldDone(`${holdAsk.title.replace(/\?$/, '')} saved. The delivery plan has been refreshed.`);
+    setHoldAsk(null);
+  };
   const saveCaseEdit = (u: Unit) => {
     const d = caseDraft[u.key] ?? {};
-    const n = { ...caseHold };
-    u.caseHeld.forEach((l) => { if (!d[`h:${l.id}`]) delete n[l.id]; });
-    u.cases.forEach((c) => { if (d[`c:${c.seq}`]) c.lines.forEach((l) => { n[l.id] = (n[l.id] ?? 0) + l.qty; }); });
-    setCaseHold(n);
-    endCaseEdit(u);
+    const hold = u.cases.filter((c) => d[`c:${c.seq}`]);
+    const release = u.caseHeld.filter((l) => !d[`h:${l.id}`]);
+    if (!hold.length && !release.length) { endCaseEdit(u); return; }
+    const parts = [
+      ...hold.map((c) => `hold case ${c.seq} (${[...new Set(c.lines.map((l) => l.custOrderNo))].join(', ')}, ${c.qty} pcs)`),
+      ...release.map((l) => `release ${l.custOrderNo} (${l.qty} pcs)`),
+    ];
+    setHoldAsk({
+      title: `Hold of ${u.partNo} / ${niceDate(u.orderDt)}?`,
+      text: `Save: ${parts.join('; ')}. Held pcs take no PO; their PO qty goes to the next orders.`,
+      apply: () => {
+        const n = { ...caseHold };
+        release.forEach((l) => { delete n[l.id]; });
+        hold.forEach((c) => c.lines.forEach((l) => { n[l.id] = (n[l.id] ?? 0) + l.qty; }));
+        setCaseHold(n);
+        const s = { ...selByView };
+        (['sup', 'ds'] as const).forEach((v) => { const x = { ...s[v] }; delete x[u.key]; s[v] = x; });
+        setSelByView(s);
+        endCaseEdit(u);
+      },
+    });
   };
+  const savePartEdit = (partNo: string) => {
+    const on = !!partEdit[partNo];
+    if (on === !!partHold[partNo]) { const n = { ...partEdit }; delete n[partNo]; setPartEdit(n); return; }
+    setHoldAsk({
+      title: `Hold of ${partNo}?`,
+      text: on ? `Put ${partNo} on hold: no ASN can be created for any Customer Order Date until it is released.` : `Release ${partNo}: its cases can be sent again.`,
+      apply: () => {
+        setPartHold({ ...partHold, [partNo]: on });
+        setPartEdit((pe) => { const n = { ...pe }; delete n[partNo]; return n; });
+      },
+    });
+  };
+  const holdModals = (
+    <>
+      {holdAsk && (
+        <Modal title={holdAsk.title} onClose={() => setHoldAsk(null)}
+          actions={<><button className="btn btn-secondary" autoFocus onClick={() => setHoldAsk(null)}>No</button><button className="btn btn-primary" onClick={runHoldSave}>Yes, save</button></>}>
+          {holdAsk.text}
+        </Modal>
+      )}
+      {holdDone && (
+        <Modal title="Saved" onClose={() => setHoldDone(null)} actions={<button className="btn btn-primary" autoFocus onClick={() => setHoldDone(null)}>OK</button>}>
+          {holdDone}
+        </Modal>
+      )}
+    </>
+  );
   // Each view is its own session (supplier / D/S team).
   const [selByView, setSelByView] = useState<Record<ViewAs, Record<string, Sel>>>({ sup: {}, ds: {} });
   const sel = selByView[viewAs];
@@ -300,7 +367,7 @@ export function AsnCrossdockCreationPage() {
                           <>
                             <button className="btn btn-secondary" style={{ padding: '4px 12px', fontSize: 12 }} onClick={() => { const n = { ...partEdit }; delete n[partNo]; setPartEdit(n); }}>Cancel</button>
                             <button className="btn btn-primary" style={{ padding: '4px 12px', fontSize: 12 }} aria-label={`Save hold of ${partNo}`}
-                              onClick={() => { setPartHold({ ...partHold, [partNo]: !!partEdit[partNo] }); const n = { ...partEdit }; delete n[partNo]; setPartEdit(n); }}>Save</button>
+                              onClick={() => savePartEdit(partNo)}>Save</button>
                           </>
                         ) : (
                           <button className="btn btn-secondary" style={{ padding: '4px 12px', fontSize: 12 }} aria-label={`Edit hold of ${partNo}`} onClick={() => setPartEdit({ ...partEdit, [partNo]: held })}>Edit</button>
@@ -333,6 +400,7 @@ export function AsnCrossdockCreationPage() {
             </section>
           );
         })}
+        {holdModals}
       </div>
     );
   }
@@ -569,29 +637,37 @@ export function AsnCrossdockCreationPage() {
                             <button className="btn btn-secondary" style={{ marginLeft: 'auto', padding: '2px 10px', fontSize: 11.5 }} aria-label={`Edit hold of ${u.partNo} ${niceDate(u.orderDt)}`} onClick={() => startCaseEdit(u)}>Edit hold</button>
                           ))}
                         </div>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-                          <thead><tr><th style={{ ...th, background: 'transparent', width: 30 }} />{['Case', 'Qty', 'Remaining Qty (not assigned)', ...(isDs ? ['Destination', 'Customer Order No', 'Order Qty'] : []), 'PO', 'PO Status', ...(isDs ? ['Hold (D/S)'] : [])].map((h) => <th key={h} style={{ ...th, background: 'transparent', height: 28 }}>{h}</th>)}</tr></thead>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, border: GRID }}>
+                          <thead><tr>{['', 'Case', 'Qty', 'Remaining Qty (not assigned)', ...(isDs ? ['Destination', 'Customer Order No', 'Order Qty'] : []), 'PO', 'PO Status', ...(isDs ? ['Hold (D/S)'] : [])].map((h, i) => <th key={i} style={{ ...th, height: 28, border: GRID, width: i === 0 ? 34 : undefined, textAlign: h === 'Order Qty' || h === 'Qty' ? 'right' : h === 'Hold (D/S)' ? 'center' : 'left' }}>{h}</th>)}</tr></thead>
                           <tbody>
-                            {u.cases.map((c) => {
+                            {u.cases.flatMap((c) => {
                               const g = groupCases(u, c.group);
                               const ctip = u.unitHold && c.ready ? tip
                                 : c.ready ? (g.length > 1 ? `Cases ${g[0].seq}-${g[g.length - 1].seq} are sent together` : `Case ${c.seq} can be sent alone`)
                                 : `Not Ready: case ${c.seq} of ${u.partNo} / ${niceDate(u.orderDt)} (or an earlier case) is not assigned to a PO yet (${u.readyCases} of ${u.caseCount} cases assigned)`;
                               const on = !!s && c.seq <= s.end;
                               const remain = c.lines.filter((l) => !l.poNo).reduce((a, l) => a + l.qty, 0);
-                              return (
-                                <tr key={c.seq} style={{ background: on ? 'var(--color-accent-100, #eef4fb)' : undefined, color: c.ready ? undefined : 'var(--color-neutral-600)' }}>
-                                  <td style={td}><input type="checkbox" checked={on} disabled={!c.ready || endFor(u, c.seq) === null || !!wait} title={wait ? tip : ctip} onChange={(e) => tickCase(u, c, e.target.checked)} /></td>
-                                  <td style={{ ...td, fontFamily: 'var(--font-mono)', fontWeight: 600 }}>Case {c.seq}</td>
-                                  <td style={td}>{c.qty}</td>
-                                  <td style={{ ...td, color: remain ? 'var(--color-danger)' : undefined, fontWeight: remain ? 600 : undefined }}>{remain}</td>
-                                  {isDs && <td style={td}>{c.lines.map((l, i) => <div key={i} style={{ whiteSpace: 'nowrap' }}>{DESTS[l.destCd].code} · {DESTS[l.destCd].name}</div>)}</td>}
-                                  {isDs && <td style={td}>{c.lines.map((l, i) => <div key={i} style={{ whiteSpace: 'nowrap' }}>{l.custOrderNo}</div>)}</td>}
-                                  {isDs && <td style={{ ...td, textAlign: 'right' }}>{c.lines.map((l, i) => <div key={i}>{l.qty}</div>)}</td>}
-                                  <td style={td}>{poRowsOf(c.lines).map((r) => `${r.poNo} ${r.qty}`).join(', ') || '—'}</td>
-                                  <td style={td} title={ctip}><Chip tone={c.ready && !u.unitHold ? 'ok' : u.unitHold && c.ready ? 'neutral' : 'warn'}>{c.ready && !u.unitHold ? 'Ready' : u.unitHold && c.ready ? 'On Hold (D/S)' : 'Not Ready'}</Chip></td>
-                                  {isDs && (
-                                    <td style={{ ...td, textAlign: 'center' }}>
+                              // D/S: one row per customer order line; supplier: one row per PO. Case-level cells are merged over the rows.
+                              const subs = isDs ? c.lines.map((l) => ({ order: l.custOrderNo, qty: l.qty, po: l.poNo }))
+                                : (poRowsOf(c.lines).length ? poRowsOf(c.lines).map((r) => ({ order: '', qty: r.qty, po: r.poNo as string | null })) : [{ order: '', qty: c.qty, po: null }]);
+                              const poSpan = mergeRuns(subs.map((x) => x.po ?? '—'));
+                              const n = subs.length;
+                              const bg = on ? 'var(--color-accent-100, #eef4fb)' : undefined;
+                              const cell = { ...td, border: GRID, verticalAlign: 'middle' as const };
+                              const dests = [...new Set(c.lines.map((l) => l.destCd))];
+                              return subs.map((x, i) => (
+                                <tr key={`${c.seq}-${i}`} style={{ background: bg, color: c.ready ? undefined : 'var(--color-neutral-700)' }}>
+                                  {i === 0 && <td rowSpan={n} style={{ ...cell, textAlign: 'center' }}><input type="checkbox" aria-label={`Select case ${c.seq} of ${u.partNo} ${niceDate(u.orderDt)}`} checked={on} disabled={!c.ready || endFor(u, c.seq) === null || !!wait} title={wait ? tip : ctip} onChange={(e) => tickCase(u, c, e.target.checked)} /></td>}
+                                  {i === 0 && <td rowSpan={n} style={{ ...cell, fontFamily: 'var(--font-mono)', fontWeight: 600, whiteSpace: 'nowrap' }}>Case {c.seq}</td>}
+                                  {i === 0 && <td rowSpan={n} style={{ ...cell, textAlign: 'right' }}>{c.qty}</td>}
+                                  {i === 0 && <td rowSpan={n} style={{ ...cell, color: remain ? 'var(--color-danger)' : undefined, fontWeight: remain ? 600 : undefined }}>{remain}</td>}
+                                  {isDs && i === 0 && <td rowSpan={n} style={{ ...cell, whiteSpace: 'nowrap' }}>{dests.map((d) => `${DESTS[d].code} · ${DESTS[d].name}`).join(', ')}</td>}
+                                  {isDs && <td style={cell}>{x.order}</td>}
+                                  {isDs && <td style={{ ...cell, textAlign: 'right' }}>{x.qty}</td>}
+                                  {poSpan[i] > 0 && <td rowSpan={poSpan[i]} style={{ ...cell, whiteSpace: 'nowrap' }}>{x.po ? `${x.po} · ${subs.slice(i, i + poSpan[i]).reduce((a, y) => a + y.qty, 0)}` : '—'}</td>}
+                                  {i === 0 && <td rowSpan={n} style={cell} title={ctip}><Chip tone={c.ready && !u.unitHold ? 'ok' : u.unitHold && c.ready ? 'neutral' : 'warn'}>{c.ready && !u.unitHold ? 'Ready' : u.unitHold && c.ready ? 'On Hold (D/S)' : 'Not Ready'}</Chip></td>}
+                                  {isDs && i === 0 && (
+                                    <td rowSpan={n} style={{ ...cell, textAlign: 'center' }}>
                                       <input type="checkbox" aria-label={`Hold case ${c.seq} of ${u.partNo} ${niceDate(u.orderDt)}`}
                                         checked={!!caseDraft[u.key]?.[`c:${c.seq}`]}
                                         disabled={!caseDraft[u.key]}
@@ -600,23 +676,24 @@ export function AsnCrossdockCreationPage() {
                                     </td>
                                   )}
                                 </tr>
-                              );
+                              ));
                             })}
                             {u.caseHeld.map((l) => {
                               const htip = `On hold by the D/S team: ${l.custOrderNo} of ${u.partNo} / ${niceDate(u.orderDt)}, ${l.qty} pcs; its PO qty is used by the next orders`;
+                              const cell = { ...td, border: GRID, verticalAlign: 'middle' as const };
                               return (
-                                <tr key={`h-${l.id}`} style={{ background: 'var(--color-neutral-100)', color: 'var(--color-neutral-600)' }}>
-                                  <td style={td} />
-                                  <td style={{ ...td, fontWeight: 600 }}>On hold</td>
-                                  <td style={td}>{l.qty}</td>
-                                  <td style={td}>—</td>
-                                  {isDs && <td style={{ ...td, whiteSpace: 'nowrap' }}>{DESTS[l.destCd].code} · {DESTS[l.destCd].name}</td>}
-                                  {isDs && <td style={td}>{l.custOrderNo}</td>}
-                                  {isDs && <td style={{ ...td, textAlign: 'right' }}>{l.qty}</td>}
-                                  <td style={td}>— (PO released)</td>
-                                  <td style={td} title={htip}><Chip tone="neutral">On Hold (D/S)</Chip></td>
+                                <tr key={`h-${l.id}`} style={{ background: 'var(--color-surface)', color: 'var(--color-neutral-700)' }}>
+                                  <td style={cell} />
+                                  <td style={{ ...cell, fontWeight: 600 }}>On hold</td>
+                                  <td style={{ ...cell, textAlign: 'right' }}>{l.qty}</td>
+                                  <td style={cell}>—</td>
+                                  {isDs && <td style={{ ...cell, whiteSpace: 'nowrap' }}>{DESTS[l.destCd].code} · {DESTS[l.destCd].name}</td>}
+                                  {isDs && <td style={cell}>{l.custOrderNo}</td>}
+                                  {isDs && <td style={{ ...cell, textAlign: 'right' }}>{l.qty}</td>}
+                                  <td style={cell}>PO released</td>
+                                  <td style={cell} title={htip}><Chip tone="neutral">On Hold (D/S)</Chip></td>
                                   {isDs && (
-                                    <td style={{ ...td, textAlign: 'center' }}>
+                                    <td style={{ ...cell, textAlign: 'center' }}>
                                       <input type="checkbox" aria-label={`Hold ${l.custOrderNo} of ${u.partNo} ${niceDate(u.orderDt)}`}
                                         checked={caseDraft[u.key] ? !!caseDraft[u.key][`h:${l.id}`] : true}
                                         disabled={!caseDraft[u.key]}
@@ -710,6 +787,7 @@ export function AsnCrossdockCreationPage() {
           Some order has been already hold, please select other records. The delivery plan has been refreshed.
         </Modal>
       )}
+      {holdModals}
     </div>
   );
 }

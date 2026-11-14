@@ -155,6 +155,14 @@ flowchart TB
 
 ![4a. D/S team: [Edit hold] on PART-X 17-Oct, Hold (D/S) of case 4 (CO-14109 Taiwan) ticked, [Save] / [Cancel] shown; content split into Destination / Customer Order No / Order Qty](../../deliverables/uiss_screens/asn_crossdock/c_04a_ds_case_edit.png)
 
+### 4a-2. [Save]: confirmation (message no. 15) listing what is held / released
+
+![4a-2. [Save]: confirmation (message no. 15) listing what is held / released](../../deliverables/uiss_screens/asn_crossdock/c_04g_ds_hold_confirm.png)
+
+### 4a-3. [Yes, save]: saved message (message no. 16); the delivery plan is refreshed behind it
+
+![4a-3. [Yes, save]: saved message (message no. 16); the delivery plan is refreshed behind it](../../deliverables/uiss_screens/asn_crossdock/c_04h_ds_hold_saved.png)
+
 ### 4b. After [Save]: CO-14109 Taiwan 6 pcs On Hold below the cases (PO released); its PO-0003 qty goes to CO-14110 Australia, so the 4 cases left are all Ready
 
 ![4b. After [Save]: CO-14109 Taiwan 6 pcs On Hold below the cases (PO released); its PO-0003 qty goes to CO-14110 Australia, so the 4 cases left are all Ready](../../deliverables/uiss_screens/asn_crossdock/c_04b_ds_reduce.png)
@@ -241,13 +249,13 @@ flowchart TB
 | 17 | Case | #TEMP_INSTRUCTION | CASE_SEQ | Number | - | O | Label | Right | - | N | Z9 | - | Supplier case number in H0253 order (PCS_CASE pcs). |
 | 18 | Qty (pcs) | #TEMP_INSTRUCTION | ASSIGNED_QTY | Number | - | O | Label | Right | - | N | ZZZ9 | - | Pcs of the case (= PCS_CASE). |
 | 19 | Remaining Qty (not assigned) | #TEMP_INSTRUCTION | ASSIGNED_QTY (PO_NO NULL) | Number | - | O | Label | Right | - | N | ZZZ9 | - | Pcs of the case without a PO yet (sum of the slices with PO_NO NULL); 0 when the whole case is assigned; red when > 0. |
-| 20 | Destination (D/S team) | #TEMP_INSTRUCTION | DESTINATION_CD | Char | - | O | Grid | Left | - | N | - | - | D/S team only: destination code and name of each customer order line in the case, one per line. |
-| 21 | Customer Order No (D/S team) | #TEMP_INSTRUCTION | CUSTOMER_ORDER_NO | Char | - | O | Grid | Left | - | N | - | - | D/S team only: customer order of each line in the case, one per line. |
-| 22 | Order Qty (D/S team) | #TEMP_INSTRUCTION | ASSIGNED_QTY | Number | - | O | Grid | Right | - | N | - | - | D/S team only: pcs of each line in the case, one per line (sum = case qty). |
-| 23 | PO | #TEMP_INSTRUCTION | PO_NO / ASSIGNED_QTY | Char | - | O | Label | Left | - | N | {PO No} {qty} | - | POs of the case with the assigned qty, e.g. PO-0003 6. |
+| 20 | Destination (D/S team) | #TEMP_INSTRUCTION | DESTINATION_CD | Char | - | O | Grid | Left | - | N | - | - | D/S team only: destination code and name of the case, shown once per case (cell merged over its lines); a supplier case holds one destination. |
+| 21 | Customer Order No (D/S team) | #TEMP_INSTRUCTION | CUSTOMER_ORDER_NO | Char | - | O | Grid | Left | - | N | - | - | D/S team only: one row per customer order line in the case (the case-level cells are merged over these rows). |
+| 22 | Order Qty (D/S team) | #TEMP_INSTRUCTION | ASSIGNED_QTY | Number | - | O | Grid | Right | - | N | - | - | D/S team only: pcs of the line, one per row (sum = case qty). |
+| 23 | PO | #TEMP_INSTRUCTION | PO_NO / ASSIGNED_QTY | Char | - | O | Label | Left | - | N | {PO No} {qty} | - | PO and assigned qty, e.g. PO-0003 · 6. Rows of the case with the same PO are merged into one cell; supplier view: one row per PO of the case. Held line: "PO released". |
 | 24 | PO Status | #TEMP_INSTRUCTION | CROSSDOCK_STATUS | Char | - | O | Label | Left | - | N | - | - | '6' Ready (green) / '7' Not Ready (amber): the case or an earlier case has no PO yet. 'On Hold (D/S)' (grey) for a held line (Hold per case) or when the part is on hold; check box disabled (message no. 14 / 12). |
 | 25 | Hold (D/S) | Key-in / TB_R_CROSSDOCK_CASE_HOLD | HOLD_QTY | Char | - | I | Check Box | Center | Unticked (case) / ticked (held line), disabled | N | - | - | D/S team only, next to PO Status: enabled after [Edit hold] of the unit. Case row: tick = hold the case; after [Save] its pcs leave the unit (no PO) and are listed as held lines. Held line row (On Hold, ticked): untick = release; the pcs come back to the unit and take PO again at the next Search (refer 5.3). |
-| 26 | Edit hold / Save / Cancel | - | - | - | - | I | Button | Center | Edit hold | N | - | - | D/S team only, per Part Number + Customer Order Date (right of the PO check): [Edit hold] enables the Hold (D/S) check boxes; [Save] stores them; [Cancel] discards. Not shown for a part on hold. Refer 5.3. |
+| 26 | Edit hold / Save / Cancel | - | - | - | - | I | Button | Center | Edit hold | N | - | - | D/S team only, per Part Number + Customer Order Date (right of the PO check): [Edit hold] enables the Hold (D/S) check boxes; [Save] asks for confirmation (message no. 15), stores the holds, shows message no. 16 and refreshes the delivery plan (the selection of the unit is cleared); [Save] without a change just closes the edit; [Cancel] discards. Not shown for a part on hold. Refer 5.3. |
 | **<Destination Detail (D/S team only)>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | 27 | Destination | #TEMP_INSTRUCTION | DESTINATION_CD | Char | 7 | O | Grid | Left | - | N | {code} · {name} | - | One row per destination with its number of cases (qty / pcs/case); name from TB_M_H0125_DESTINATION. |
 | 28 | Case | Computed | - | Number | - | O | Grid | Right | - | N | 9 | - | 1; 0 when the destination is on hold. |
@@ -627,6 +635,8 @@ e. Hold per case (decided 13-Nov, rev. 14-Nov): the case grid has a check box Ho
 f. Example: 18-Oct, PART-X 17-Oct, case 4 = CO-14109 Taiwan 6 pcs ticked -> Taiwan On Hold; PO-0003 6 pcs go to CO-14110 Australia (no PO before), so cases 1-4 (Korea, Korea, Japan, Australia) are all Ready. On 19-Oct the PO qty left after the 17-Oct lines goes to the 18-Oct orders.
 g. The held lines are listed below the cases (Case = On hold, PO = released, PO Status On Hold (D/S), message no. 14), for the supplier too, and cannot be ticked for an ASN. The hold is on the customer order line, so it does not move when other lines are cancelled or sent. Unticking a held line + [Save] deletes the row: the pcs come back to their place in the H0253 order and take PO at the next Search (they come first again, so PO not yet in an ASN can move back to them). A held line cancelled in GTOPAS -> row deleted. The D/S team sees the content of each case in the columns Destination, Customer Order No and Order Qty.
 h. Both holds are re-checked at [Create ASN] like the destination hold: a hold made after the units were ticked makes the whole create fail (message no. 8) and the delivery plan is refreshed.
+i. Saving a hold (case grid [Save] and sub screen [Save]): confirmation first (message no. 15, [No] keeps the edit open); [Yes, save] stores the change, shows message no. 16 and refreshes the delivery plan right away (Search again with the same Delivery Date / Rit, ticks of that unit cleared). No change = no message.
+j. Case grid: bordered cells. Case, Qty, Remaining Qty, Destination, PO Status and the check boxes are shown once per case (merged over its customer order lines); PO is merged over the lines of the same PO.
 
 ### 5.4 Select Cases and Create ASN
 
@@ -676,6 +686,8 @@ e. No error: commit, write the result (LOG3) and end (LOG4) messages. Error: rol
 | MSG2 | Hover on disabled check box | Unit is Not Ready | Info | Not Ready: case {n} of {Part No} / {Customer Order Date} (or an earlier case) is not assigned to a PO yet ({k} of {c} cases assigned) | Wait for the next PO. |
 | MSG12 | Hover on disabled check box | Part Number on hold (D/S) | Info | {Part No} is on hold by the D/S team | Contact the D/S team. |
 | MSG14 | Hover on a held line | Customer order line held by the D/S team (Hold per case) | Info | On hold by the D/S team: {Customer Order No} of {Part No} / {Customer Order Date}, {n} pcs; its PO qty is used by the next orders | Contact the D/S team. |
+| MSG15 | Click [Save] of a hold (case grid or sub screen) | Hold changed | Confirmation | Hold of {Part No} / {Customer Order Date}? Save: hold case {n} ({Customer Order No}, {qty} pcs); release {Customer Order No} ({qty} pcs). Held pcs take no PO; their PO qty goes to the next orders. | [Yes, save] / [No] |
+| MSG16 | After [Yes, save] | Hold saved | Info | Hold of {Part No} / {Customer Order Date} saved. The delivery plan has been refreshed. | [OK] |
 | **Search** |  |  |  |  |  |
 | MSG3 | Click [Search] / change filter | No unit | Info | No customer order matches this filter. | Change the Delivery Date, Rit or filter. |
 | MSG5 | Change [Delivery Date] | No rit on the date (Sunday) | Info | No rit cycle available for {Delivery Date}. Choose another delivery date. | Choose another Delivery Date. |

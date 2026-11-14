@@ -160,6 +160,46 @@ dm[m2 + 1:m2 + 1] = [
     {'event': 'Hover on a held line', 'cause': 'Customer order line held by the D/S team (Hold per case)', 'type': 'Info', 'msg_id': 'MSG14',
      'message': 'On hold by the D/S team: {Customer Order No} of {Part No} / {Customer Order Date}, {n} pcs; its PO qty is used by the next orders', 'action': 'Contact the D/S team.'}]
 
+# ---------- 14-Nov: Save with confirmation + success + refresh; case grid with borders and merged cells ----------
+sl = s['screen_layout']
+k = next(i for i, x in enumerate(sl) if x['image'].endswith('c_04a_ds_case_edit.png'))
+sl[k + 1:k + 1] = [
+    {'caption': '4a-2. [Save]: confirmation (message no. 15) listing what is held / released', 'image': f'{IMG}/c_04g_ds_hold_confirm.png'},
+    {'caption': '4a-3. [Yes, save]: saved message (message no. 16); the delivery plan is refreshed behind it', 'image': f'{IMG}/c_04h_ds_hold_saved.png'}]
+for x in s['items']:
+    n = x.get('name')
+    if n == 'Edit hold / Save / Cancel':
+        x['description'] = ('D/S team only, per Part Number + Customer Order Date (right of the PO check): [Edit hold] enables the Hold (D/S) check boxes; '
+                            '[Save] asks for confirmation (message no. 15), stores the holds, shows message no. 16 and refreshes the delivery plan (the selection of the unit is cleared); '
+                            '[Save] without a change just closes the edit; [Cancel] discards. Not shown for a part on hold. Refer 5.3.')
+    elif n == 'Destination (D/S team)':
+        x['description'] = 'D/S team only: destination code and name of the case, shown once per case (cell merged over its lines); a supplier case holds one destination.'
+    elif n == 'Customer Order No (D/S team)':
+        x['description'] = 'D/S team only: one row per customer order line in the case (the case-level cells are merged over these rows).'
+    elif n == 'Order Qty (D/S team)':
+        x['description'] = 'D/S team only: pcs of the line, one per row (sum = case qty).'
+    elif n == 'PO':
+        x['description'] = ('PO and assigned qty, e.g. PO-0003 · 6. Rows of the case with the same PO are merged into one cell; '
+                            'supplier view: one row per PO of the case. Held line: "PO released".')
+for b in s.get('buttons', []):
+    if b.get('name') == 'Edit hold / Save / Cancel (case, D/S)':
+        b['function'] += ' [Save] shows a confirmation (message no. 15) first, then message no. 16, and refreshes the delivery plan.'
+op = s['operation']
+h3 = next(i for i, x in enumerate(op) if x.get('type') == 'heading' and x['text'].startswith('5.3'))
+op[h3 + 1]['items'] += [
+    'Saving a hold (case grid [Save] and sub screen [Save]): confirmation first (message no. 15, [No] keeps the edit open); [Yes, save] stores the change, '
+    'shows message no. 16 and refreshes the delivery plan right away (Search again with the same Delivery Date / Rit, ticks of that unit cleared). No change = no message.',
+    'Case grid: bordered cells. Case, Qty, Remaining Qty, Destination, PO Status and the check boxes are shown once per case (merged over its customer order lines); '
+    'PO is merged over the lines of the same PO.']
+dm = s['display_messages']
+m14 = next(i for i, x in enumerate(dm) if x.get('msg_id') == 'MSG14')
+dm[m14 + 1:m14 + 1] = [
+    {'event': 'Click [Save] of a hold (case grid or sub screen)', 'cause': 'Hold changed', 'type': 'Confirmation', 'msg_id': 'MSG15',
+     'message': 'Hold of {Part No} / {Customer Order Date}? Save: hold case {n} ({Customer Order No}, {qty} pcs); release {Customer Order No} ({qty} pcs). Held pcs take no PO; their PO qty goes to the next orders.',
+     'action': '[Yes, save] / [No]'},
+    {'event': 'After [Yes, save]', 'cause': 'Hold saved', 'type': 'Info', 'msg_id': 'MSG16',
+     'message': 'Hold of {Part No} / {Customer Order Date} saved. The delivery plan has been refreshed.', 'action': '[OK]'}]
+
 # ---------- tables ----------
 s['tables'] += [T_UNIT, T_CASE]
 with open('XD10_spec.json', 'w') as fh:
