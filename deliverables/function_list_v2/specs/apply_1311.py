@@ -181,7 +181,7 @@ for x in s['items']:
     elif n == 'PO':
         x['description'] = ('PO and assigned qty, e.g. PO-0003 · 6. Rows of the case with the same PO are merged into one cell; '
                             'supplier view: one row per PO of the case. Held line: "PO released".')
-for b in s.get('buttons', []):
+for b in s['general']['buttons']:
     if b.get('name') == 'Edit hold / Save / Cancel (case, D/S)':
         b['function'] += ' [Save] shows a confirmation (message no. 15) first, then message no. 16, and refreshes the delivery plan.'
 op = s['operation']
@@ -199,6 +199,42 @@ dm[m14 + 1:m14 + 1] = [
      'action': '[Yes, save] / [No]'},
     {'event': 'After [Yes, save]', 'cause': 'Hold saved', 'type': 'Info', 'msg_id': 'MSG16',
      'message': 'Hold of {Part No} / {Customer Order Date} saved. The delivery plan has been refreshed.', 'action': '[OK]'}]
+
+# ---------- 14-Nov (b): PO check moved to an info pop up on the ASN status; bordered unit table; destination detail hidden ----------
+sl = s['screen_layout']
+k = next(i for i, x in enumerate(sl) if x['image'].endswith('c_02_delivery_plan.png'))
+sl[k]['caption'] = ('2. Delivery plan after Search (supplier view, 18-Oct, simulasi_asn_rev.xlsx): PART-X 17-Oct, cases 1-4 Ready, case 5 Not Ready; '
+                    'ASN Status Partially Ready + Short PO (click for the PO information)')
+sl[k + 1:k + 1] = [{'caption': '2a. Click on the ASN status (Partially Ready / Short PO): PO information of the unit in Indonesian (message no. 17)', 'image': f'{IMG}/c_02a_po_info.png'}]
+for x in sl:
+    if x['image'].endswith(('c_03_ds_detail.png', 'c_04_ds_hold.png')):
+        x['caption'] += ' [destination detail hidden on the screen for now, 14-Nov]'
+for x in s['items']:
+    n = x.get('name')
+    if n == 'ASN Status':
+        x['description'] += (' Partially Ready, Not Ready and Short PO are a button: a click opens the PO information of the unit (message no. 17): '
+                             'customer order qty, regular / split PO with qty and date, Short PO and the qty still waiting, ready cases, pcs on hold. '
+                             'The PO check line above the cases is no longer shown.')
+    elif n == 'Edit hold / Save / Cancel':
+        x['description'] = x['description'].replace('(right of the PO check)', '(above the cases, right side)')
+for b in s['general']['buttons']:
+    if b['name'] == 'Detail (expand, D/S)':
+        b['function'] += ' Hidden on the screen for now (14-Nov, FB-184), with the destination Hold Flag; shown again on request.'
+    if b['name'] == 'Hold / Release (D/S)':
+        b['function'] += ' Hidden for now with the destination detail (FB-184).'
+op = s['operation']
+op[1]['items'][0] = ('18-Oct, delivery plan PART-X 17-Oct: 5 cases; order 30 pcs vs PO PO-0003 18 pcs -> Short PO (shown with the ASN status, details in the PO information pop up); '
+                     'cases 1-4 Ready (PO-0002 rest 6 + PO-0003), case 5 (CO-14110) Not Ready with Remaining Qty 6.')
+h3 = next(i for i, x in enumerate(op) if x.get('type') == 'heading' and x['text'].startswith('5.3'))
+op[h3 + 1]['items'].append('Unit table and case grid: bordered cells (14-Nov). The destination detail with Hold Flag is hidden on the screen for now (FB-184).')
+dm = s['display_messages']
+m16 = next(i for i, x in enumerate(dm) if x.get('msg_id') == 'MSG16')
+dm[m16 + 1:m16 + 1] = [
+    {'event': 'Click the ASN status (Partially Ready / Not Ready / Short PO)', 'cause': 'Not all cases have a PO, or PO qty < order qty', 'type': 'Info', 'msg_id': 'MSG17',
+     'message': 'Info PO · {Part No} / {Customer Order Date}: Order customer tanggal {date}: {n} pcs (semua destinasi). PO reguler {PO No}: {qty} pcs, terbit {date}. '
+                '[Split PO {PO No}: {qty} pcs, terbit {date}.] PO kurang dari order (Short PO): {n} pcs masih menunggu split PO. '
+                '{a} dari {b} case sudah dapat PO dan siap dikirim; case lainnya menunggu PO. [{n} pcs di-hold tim D/S; PO-nya dipakai order berikutnya.]',
+     'action': '[OK]'}]
 
 # ---------- tables ----------
 s['tables'] += [T_UNIT, T_CASE]

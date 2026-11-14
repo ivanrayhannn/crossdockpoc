@@ -17,7 +17,7 @@ export function Modal({ title, children, actions, onClose }: { title: string; ch
     <div role="dialog" aria-modal="true" onKeyDown={(e) => e.key === 'Escape' && onClose()} style={{ position: 'fixed', inset: 0, zIndex: 110, background: 'rgba(33,33,33,.55)', display: 'grid', placeItems: 'center', padding: 36 }}>
       <div style={{ width: 420, background: 'var(--color-neutral-100)', borderRadius: 10, boxShadow: 'var(--shadow-lg)', padding: '22px 24px 18px' }}>
         <h3 style={{ fontSize: 18, margin: '0 0 8px' }}>{title}</h3>
-        <p style={{ fontSize: 13, color: 'var(--color-neutral-700)', margin: '0 0 18px' }}>{children}</p>
+        <div style={{ fontSize: 13, color: 'var(--color-neutral-700)', margin: '0 0 18px' }}>{children}</div>
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>{actions}</div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { setBusinessDate, setStartState, submitAsnBatch, useAsns, useBusinessDate, useStartState, type StartState } from './asnStore';
 import {
   asnNoFor, BUSINESS_DATES, buildCases, buildUnits, contentOf, DESTS, endBefore, endFor, groupCases, HOLD_INIT, niceDate, PCS_PER_CASE, poQtyOf,
@@ -29,14 +29,21 @@ const nowTime = () => new Date().toTimeString().slice(0, 8);
 const STATUS_LABEL: Record<UnitStatus, string> = { ready: 'Ready', partial: 'Partially Ready', notReady: 'Not Ready', created: 'Created', hold: 'On Hold' };
 
 /** PO check of the unit (business logic: one PO per Part + Customer Order Date, PO date = order date + 1, PO qty = total order qty). */
-function poCheckText(u: Unit): string {
+/** PO information of a unit in plain Indonesian, shown when the ASN status is clicked. */
+function poInfo(u: Unit): string[] {
   const p = u.poCheck;
-  const head = `PO check: order ${p.orderQty} pcs (all destinations) · `;
-  if (!p.regular) return `${head}PO of ${niceDate(u.orderDt)} (due ${niceDate(p.due)}) not released yet`;
-  const reg = `PO ${p.regular.poNo} ${p.regular.qty} pcs (${niceDate(p.regular.poDate)})`;
-  const sp = p.splits.map((x) => ` + split PO ${x.poNo} ${x.qty} pcs (${niceDate(x.poDate)})`).join('');
-  if (!p.short) return `${head}${reg} → OK`;
-  return `${head}${reg}${sp} → Short PO (abnormality)${p.missing ? `: ${p.missing} pcs wait for the split PO` : ': covered by the split PO'}`;
+  const out = [`Order customer tanggal ${niceDate(u.orderDt)}: ${p.orderQty} pcs (semua destinasi).`];
+  if (!p.regular) out.push(`PO untuk order ini belum terbit (dijadwalkan ${niceDate(p.due)}).`);
+  else {
+    out.push(`PO reguler ${p.regular.poNo}: ${p.regular.qty} pcs, terbit ${niceDate(p.regular.poDate)}.`);
+    p.splits.forEach((x) => out.push(`Split PO ${x.poNo}: ${x.qty} pcs, terbit ${niceDate(x.poDate)}.`));
+    if (!p.short) out.push('Jumlah PO sudah sama dengan order.');
+    else out.push(p.missing ? `PO kurang dari order (Short PO): ${p.missing} pcs masih menunggu split PO.` : 'PO reguler kurang dari order (Short PO), tapi kekurangannya sudah ditutup split PO.');
+  }
+  out.push(u.readyCases === u.caseCount ? `Semua ${u.caseCount} case sudah dapat PO dan siap dikirim.`
+    : `${u.readyCases} dari ${u.caseCount} case sudah dapat PO dan siap dikirim; case lainnya menunggu PO.`);
+  if (u.caseHeldQty > 0) out.push(`${u.caseHeldQty} pcs di-hold tim D/S; PO-nya dipakai order berikutnya.`);
+  return out;
 }
 
 function StatusChip({ s }: { s: UnitStatus }) {
@@ -194,6 +201,10 @@ export function AsnCrossdockCreationPage() {
   const [supplierConflict, setSupplierConflict] = useState(false);
   const [cutNote, setCutNote] = useState<string | null>(null);
   const [open, setOpen] = useState<Record<string, boolean>>({});
+  /** Destination detail (Hold Flag per destination) is hidden for now; window.__axDestDetail(true) shows it again (prototype only). */
+  const [showDest, setShowDest] = useState(false);
+  useEffect(() => { (window as unknown as { __axDestDetail?: (v: boolean) => void }).__axDestDetail = setShowDest; }, []);
+  const [poInfoOf, setPoInfoOf] = useState<Unit | null>(null);
   const [openDest, setOpenDest] = useState<Record<string, boolean>>({});
   const [openCase, setOpenCase] = useState<Record<number, boolean>>({});
   const [page, setPage] = useState<'list' | 'cases' | 'supHold'>('list');
@@ -482,7 +493,10 @@ export function AsnCrossdockCreationPage() {
     );
   }
 
-  const colCount = isDs ? 9 : 8;
+  const hasExp = isDs && showDest;
+  const colCount = (isDs ? 8 : 7) + (hasExp ? 1 : 0);
+  const mth = { ...th, border: GRID };
+  const mtd = { ...td, border: GRID, verticalAlign: 'middle' as const };
   return (
     <div style={{ padding: '18px 24px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
@@ -587,18 +601,18 @@ export function AsnCrossdockCreationPage() {
         ) : rows.length === 0 ? (
           <div style={{ padding: '40px 24px', textAlign: 'center', fontSize: 13 }}>No customer order matches this filter.</div>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: 12.5 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5, border: GRID }}>
             <thead>
               <tr>
-                <th style={{ ...th, width: 34 }} />
-                <th style={th}>Customer Order Date</th>
-                {isDs && <th style={th}>Supplier · Plant</th>}
-                <th style={th}>Part Number</th>
-                <th style={{ ...th, textAlign: 'right' }}>Case Qty</th>
-                <th style={{ ...th, textAlign: 'right' }}>PO Readiness (case)</th>
-                <th style={{ ...th, textAlign: 'right' }}>Selected</th>
-                <th style={th}>ASN Status</th>
-                <th style={{ ...th, width: 34 }} />
+                <th style={{ ...mth, width: 34 }} />
+                <th style={mth}>Customer Order Date</th>
+                {isDs && <th style={mth}>Supplier · Plant</th>}
+                <th style={mth}>Part Number</th>
+                <th style={{ ...mth, textAlign: 'right' }}>Case Qty</th>
+                <th style={{ ...mth, textAlign: 'right' }}>PO Readiness (case)</th>
+                <th style={{ ...mth, textAlign: 'right' }}>Selected</th>
+                <th style={mth}>ASN Status</th>
+                {hasExp && <th style={{ ...mth, width: 34 }} />}
               </tr>
             </thead>
             <tbody>
@@ -613,30 +627,33 @@ export function AsnCrossdockCreationPage() {
                   : u.status === 'hold' ? 'All destinations are on hold' : 'Tick all Ready cases of the unit';
                 return [
                   <tr key={u.key} style={{ background: u.status === 'notReady' ? 'var(--color-warn-bg, #fff8e6)' : undefined }}>
-                    <td style={td}><TriBox checked={!!s && s.end === last} partly={!!s && s.end !== last} disabled={!enabled} title={tip} onChange={() => tickUnit(u)} /></td>
-                    <td style={{ ...td, fontWeight: 600 }}>{niceDate(u.orderDt)}</td>
-                    {isDs && <td style={td}>{SUPPLIERS[u.supplier].code} · {SUPPLIERS[u.supplier].plant}</td>}
-                    <td style={{ ...td, fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{u.partNo}</td>
-                    <td style={{ ...td, textAlign: 'right', fontWeight: 600 }}>{u.caseCount}</td>
-                    <td style={{ ...td, textAlign: 'right', color: u.readyCases < u.caseCount ? 'var(--color-danger)' : undefined }}>{u.readyCases}</td>
-                    <td style={{ ...td, textAlign: 'right' }}>{s ? `${s.end} case${s.end > 1 ? 's' : ''}` : '—'}</td>
-                    <td style={td} title={tip}><StatusChip s={u.status} />{wait && <span title={tip} style={{ marginLeft: 4 }}><Chip tone="neutral">{`Wait: ${niceDate(wait.orderDt).slice(0, 6)} first`}</Chip></span>}{u.poCheck.short && <span title={poCheckText(u)} style={{ marginLeft: 4 }}><Chip tone="warn">Short PO</Chip></span>}{u.sent && <div className="ax-muted">rest of an earlier ASN</div>}{u.heldLines.length > 0 && isDs && <div className="ax-muted">{new Set(u.heldLines.map((l) => l.destCd)).size} destination(s) on hold</div>}{u.unitHold && <div className="ax-muted">Part Number on hold (D/S)</div>}{u.caseHeldQty > 0 && <div className="ax-muted">{u.caseHeldQty} pcs on hold (D/S), PO released</div>}</td>
-                    <td style={td}>{isDs && <button className="btn btn-secondary" title="Destination detail (D/S team)" style={{ padding: '2px 8px', fontSize: 11 }} onClick={() => setOpen({ ...open, [u.key]: !open[u.key] })}>{open[u.key] ? '▾' : '▸'}</button>}</td>
+                    <td style={mtd}><TriBox checked={!!s && s.end === last} partly={!!s && s.end !== last} disabled={!enabled} title={tip} onChange={() => tickUnit(u)} /></td>
+                    <td style={{ ...mtd, fontWeight: 600 }}>{niceDate(u.orderDt)}</td>
+                    {isDs && <td style={mtd}>{SUPPLIERS[u.supplier].code} · {SUPPLIERS[u.supplier].plant}</td>}
+                    <td style={{ ...mtd, fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{u.partNo}</td>
+                    <td style={{ ...mtd, textAlign: 'right', fontWeight: 600 }}>{u.caseCount}</td>
+                    <td style={{ ...mtd, textAlign: 'right', color: u.readyCases < u.caseCount ? 'var(--color-danger)' : undefined }}>{u.readyCases}</td>
+                    <td style={{ ...mtd, textAlign: 'right' }}>{s ? `${s.end} case${s.end > 1 ? 's' : ''}` : '—'}</td>
+                    <td style={mtd} title={tip}>{u.status === 'partial' || u.status === 'notReady' || u.poCheck.short ? (
+                      <button type="button" className="ax-chipbtn" aria-label={`Info PO ${u.partNo} ${niceDate(u.orderDt)}`} title="Klik untuk info PO" onClick={() => setPoInfoOf(u)}>
+                        <StatusChip s={u.status} />{u.poCheck.short && <span style={{ marginLeft: 4 }}><Chip tone="warn">Short PO</Chip></span>}
+                      </button>
+                    ) : <StatusChip s={u.status} />}{wait && <span title={tip} style={{ marginLeft: 4 }}><Chip tone="neutral">{`Wait: ${niceDate(wait.orderDt).slice(0, 6)} first`}</Chip></span>}{u.sent && <div className="ax-muted">rest of an earlier ASN</div>}{u.heldLines.length > 0 && isDs && <div className="ax-muted">{new Set(u.heldLines.map((l) => l.destCd)).size} destination(s) on hold</div>}{u.unitHold && <div className="ax-muted">Part Number on hold (D/S)</div>}{u.caseHeldQty > 0 && <div className="ax-muted">{u.caseHeldQty} pcs on hold (D/S), PO released</div>}</td>
+                    {hasExp && <td style={mtd}><button className="btn btn-secondary" title="Destination detail (D/S team)" style={{ padding: '2px 8px', fontSize: 11 }} onClick={() => setOpen({ ...open, [u.key]: !open[u.key] })}>{open[u.key] ? '▾' : '▸'}</button></td>}
                   </tr>,
                   (u.cases.length > 0 || u.caseHeld.length > 0) && (
                     <tr key={`${u.key}-c`}>
-                      <td colSpan={colCount} style={{ padding: '4px 16px 10px 50px', borderBottom: '1px solid var(--color-divider)' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '2px 0 4px' }}>
-                          <span className="ax-muted" style={{ color: u.poCheck.short || u.poCheck.missing ? 'var(--color-danger)' : undefined }}>{poCheckText(u)}</span>
-                          {isDs && !u.unitHold && (caseDraft[u.key] ? (
+                      <td colSpan={colCount} style={{ padding: '6px 16px 10px 50px', border: GRID }}>
+                        {isDs && !u.unitHold && <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '0 0 6px' }}>
+                          {caseDraft[u.key] ? (
                             <span style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
                               <button className="btn btn-secondary" style={{ padding: '2px 10px', fontSize: 11.5 }} onClick={() => endCaseEdit(u)}>Cancel</button>
                               <button className="btn btn-primary" style={{ padding: '2px 10px', fontSize: 11.5 }} onClick={() => saveCaseEdit(u)}>Save</button>
                             </span>
                           ) : (
                             <button className="btn btn-secondary" style={{ marginLeft: 'auto', padding: '2px 10px', fontSize: 11.5 }} aria-label={`Edit hold of ${u.partNo} ${niceDate(u.orderDt)}`} onClick={() => startCaseEdit(u)}>Edit hold</button>
-                          ))}
-                        </div>
+                          )}
+                        </div>}
                         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, border: GRID }}>
                           <thead><tr>{['', 'Case', 'Qty', 'Remaining Qty (not assigned)', ...(isDs ? ['Destination', 'Customer Order No', 'Order Qty'] : []), 'PO', 'PO Status', ...(isDs ? ['Hold (D/S)'] : [])].map((h, i) => <th key={i} style={{ ...th, height: 28, border: GRID, width: i === 0 ? 34 : undefined, textAlign: h === 'Order Qty' || h === 'Qty' ? 'right' : h === 'Hold (D/S)' ? 'center' : 'left' }}>{h}</th>)}</tr></thead>
                           <tbody>
@@ -709,7 +726,7 @@ export function AsnCrossdockCreationPage() {
                       </td>
                     </tr>
                   ),
-                  isDs && open[u.key] && (
+                  hasExp && open[u.key] && (
                     <tr key={`${u.key}-d`}>
                       <td colSpan={colCount} style={{ padding: '8px 16px 12px 50px', background: 'var(--color-surface)', borderBottom: '1px solid var(--color-divider)' }}>
                         <div className="ax-lbl" style={{ marginBottom: 4 }}>Destination · {u.qty} pcs</div>
@@ -788,6 +805,12 @@ export function AsnCrossdockCreationPage() {
         </Modal>
       )}
       {holdModals}
+      {poInfoOf && (
+        <Modal title={`Info PO · ${poInfoOf.partNo} / ${niceDate(poInfoOf.orderDt)}`} onClose={() => setPoInfoOf(null)}
+          actions={<button className="btn btn-primary" autoFocus onClick={() => setPoInfoOf(null)}>OK</button>}>
+          <ul style={{ margin: 0, paddingLeft: 18, display: 'grid', gap: 4 }}>{poInfo(poInfoOf).map((x) => <li key={x}>{x}</li>)}</ul>
+        </Modal>
+      )}
     </div>
   );
 }
