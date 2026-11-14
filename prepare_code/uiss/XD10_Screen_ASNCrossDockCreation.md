@@ -54,7 +54,7 @@
 | Hold / Release (D/S) | D/S team only: set HOLD_FLAG of every order line of the destination (part number + customer order date + destination) to 'Y' (hold) or 'N' (release). |
 | Hold per Part (D/S) | D/S team only: open the sub screen Hold per Part Number (one row per part, expanded to its customer orders). |
 | Edit / Save / Cancel (part, sub screen) | Sub screen, D/S team only: [Edit] enables the Hold check box of the part; [Save] writes HOLD_FLAG 'Y' / 'N' in TB_R_CROSSDOCK_PART_HOLD; [Cancel] discards. |
-| Edit hold / Save / Cancel (case, D/S) | Per Part Number + Customer Order Date, D/S team only: [Edit hold] enables the Hold (D/S) check boxes of its cases; [Save] writes TB_R_CROSSDOCK_CASE_HOLD (ticked = insert, unticked = delete); [Cancel] discards. |
+| Edit hold / Save / Cancel (case, D/S) | Per Part Number + Customer Order Date, D/S team only: [Edit hold] enables the Hold (D/S) check boxes of its cases and of its held lines; [Save] writes TB_R_CROSSDOCK_CASE_HOLD (case ticked = its lines inserted / HOLD_QTY added, held line unticked = deleted); [Cancel] discards. |
 | Clear selection | Untick all selected units. |
 | Create ASN | Check that the selected units are of one supplier and not held, map the chosen blocks to their POs (insert TB_R_INSTRUCTION) and open the Case List sub screen. |
 | Back | Return from the Case List to ASN Crossdock Creation without submitting; the rows of TB_R_INSTRUCTION are deleted and the mapping is released. |
@@ -151,17 +151,17 @@ flowchart TB
 
 ![4. D/S team: Japan (CO-14104) on hold; the H0253 order and the cases are computed again without it](../../deliverables/uiss_screens/asn_crossdock/c_04_ds_hold.png)
 
-### 4a. D/S team: [Edit hold] on PART-X 17-Oct, Hold (D/S) of case 4 ticked, [Save] / [Cancel] shown; content split into Destination / Customer Order No / Order Qty
+### 4a. D/S team: [Edit hold] on PART-X 17-Oct, Hold (D/S) of case 4 (CO-14109 Taiwan) ticked, [Save] / [Cancel] shown; content split into Destination / Customer Order No / Order Qty
 
-![4a. D/S team: [Edit hold] on PART-X 17-Oct, Hold (D/S) of case 4 ticked, [Save] / [Cancel] shown; content split into Destination / Customer Order No / Order Qty](../../deliverables/uiss_screens/asn_crossdock/c_04a_ds_case_edit.png)
+![4a. D/S team: [Edit hold] on PART-X 17-Oct, Hold (D/S) of case 4 (CO-14109 Taiwan) ticked, [Save] / [Cancel] shown; content split into Destination / Customer Order No / Order Qty](../../deliverables/uiss_screens/asn_crossdock/c_04a_ds_case_edit.png)
 
-### 4b. After [Save]: PO Readiness 4 - 1 = Ready 3, case 4 On Hold (D/S) until changed again
+### 4b. After [Save]: CO-14109 Taiwan 6 pcs On Hold below the cases (PO released); its PO-0003 qty goes to CO-14110 Australia, so the 4 cases left are all Ready
 
-![4b. After [Save]: PO Readiness 4 - 1 = Ready 3, case 4 On Hold (D/S) until changed again](../../deliverables/uiss_screens/asn_crossdock/c_04b_ds_reduce.png)
+![4b. After [Save]: CO-14109 Taiwan 6 pcs On Hold below the cases (PO released); its PO-0003 qty goes to CO-14110 Australia, so the 4 cases left are all Ready](../../deliverables/uiss_screens/asn_crossdock/c_04b_ds_reduce.png)
 
-### 4c. Supplier view of the unit: case 4 On Hold (D/S), only cases 1-3 can be ticked
+### 4c. Supplier view: cases 1-4 Ready, the held 6 pcs shown On Hold (D/S) and cannot be ticked
 
-![4c. Supplier view of the unit: case 4 On Hold (D/S), only cases 1-3 can be ticked](../../deliverables/uiss_screens/asn_crossdock/c_04c_supplier_reduce.png)
+![4c. Supplier view: cases 1-4 Ready, the held 6 pcs shown On Hold (D/S) and cannot be ticked](../../deliverables/uiss_screens/asn_crossdock/c_04c_supplier_reduce.png)
 
 ### 4d. D/S team: sub screen Hold per Part Number: one row per Part Number (status, Hold check box, [Edit]), expanded to its customer orders
 
@@ -233,7 +233,7 @@ flowchart TB
 | 10 | Customer Order Date | #TEMP_INSTRUCTION | ORDER_DT | Date | - | O | Label | Left | - | N | DD-Mon-YYYY | - | Customer Order Date of the unit. |
 | 11 | Part Number | #TEMP_INSTRUCTION | PART_NO | Char | 15 | O | Label | Left | - | N | - | - | Part number of the unit (distinct per Customer Order Date). Part name is not shown. |
 | 12 | Case Qty | Computed | - | Number | - | O | Label | Right | - | N | ZZ9 | - | Number of supplier cases of the unit: open qty / pcs/case, cut in H0253 order (e.g. 30 pcs, 6 pcs/case = 5 cases); a case can hold several destinations. |
-| 13 | PO Readiness (case) | Computed | - | Number | - | O | Label | Right | - | N | ZZ9 | - | Ready cases: cases whose whole qty is pre-mapped to a PO, minus the cases held by the D/S team (Hold check box, from the first held case; rounded down to the last valid cut); red when lower than Case Qty. With a hold the original readiness is shown below, e.g. "4 - 1 on hold". |
+| 13 | PO Readiness (case) | Computed | - | Number | - | O | Label | Right | - | N | ZZ9 | - | Ready cases: cases whose whole qty is pre-mapped to a PO; red when lower than Case Qty. Pcs held by the D/S team (Hold per case) are not in the cases and not counted; the status shows "n pcs on hold (D/S), PO released". |
 | 14 | ASN Status | #TEMP_INSTRUCTION | CROSSDOCK_STATUS | Char | 1 | O | Label | Left | - | N | - | - | Ready (all blocks '6', green) / Partially Ready (first block '6', a later block '7', amber) / Not Ready (first block '7', row highlighted) / On Hold (D/S only). Refer 5.2. |
 | 15 | Detail (expand, D/S) | - | - | - | - | I | Button | Center | Enabled | N | - | - | Shown to the D/S team only. Opens the destination detail. |
 | **<Supplier Cases of a Unit (H0253 order)>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
@@ -245,8 +245,8 @@ flowchart TB
 | 21 | Customer Order No (D/S team) | #TEMP_INSTRUCTION | CUSTOMER_ORDER_NO | Char | - | O | Grid | Left | - | N | - | - | D/S team only: customer order of each line in the case, one per line. |
 | 22 | Order Qty (D/S team) | #TEMP_INSTRUCTION | ASSIGNED_QTY | Number | - | O | Grid | Right | - | N | - | - | D/S team only: pcs of each line in the case, one per line (sum = case qty). |
 | 23 | PO | #TEMP_INSTRUCTION | PO_NO / ASSIGNED_QTY | Char | - | O | Label | Left | - | N | {PO No} {qty} | - | POs of the case with the assigned qty, e.g. PO-0003 6. |
-| 24 | PO Status | #TEMP_INSTRUCTION | CROSSDOCK_STATUS | Char | - | O | Label | Left | - | N | - | - | '6' Ready (green) / '7' Not Ready (amber): the case or an earlier case has no PO yet. 'On Hold (D/S)' (grey) when the case is held (Hold check box) or the part + date is on hold; check box disabled (message no. 14 / 12). |
-| 25 | Hold (D/S) | Key-in / TB_R_CROSSDOCK_CASE_HOLD | CASE_SEQ | Char | - | I | Check Box | Center | Saved value (disabled) | N | - | - | D/S team only, next to PO Status: enabled after [Edit hold] of the unit; tick = hold the case; the held case and every later case of the unit are not Ready (Ready part ends on the last valid cut before the first held case). Saved with [Save], kept until changed; it stays on the same destination when cases move (refer 5.3). Disabled for a case without PO. |
+| 24 | PO Status | #TEMP_INSTRUCTION | CROSSDOCK_STATUS | Char | - | O | Label | Left | - | N | - | - | '6' Ready (green) / '7' Not Ready (amber): the case or an earlier case has no PO yet. 'On Hold (D/S)' (grey) for a held line (Hold per case) or when the part is on hold; check box disabled (message no. 14 / 12). |
+| 25 | Hold (D/S) | Key-in / TB_R_CROSSDOCK_CASE_HOLD | HOLD_QTY | Char | - | I | Check Box | Center | Unticked (case) / ticked (held line), disabled | N | - | - | D/S team only, next to PO Status: enabled after [Edit hold] of the unit. Case row: tick = hold the case; after [Save] its pcs leave the unit (no PO) and are listed as held lines. Held line row (On Hold, ticked): untick = release; the pcs come back to the unit and take PO again at the next Search (refer 5.3). |
 | 26 | Edit hold / Save / Cancel | - | - | - | - | I | Button | Center | Edit hold | N | - | - | D/S team only, per Part Number + Customer Order Date (right of the PO check): [Edit hold] enables the Hold (D/S) check boxes; [Save] stores them; [Cancel] discards. Not shown for a part on hold. Refer 5.3. |
 | **<Destination Detail (D/S team only)>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | 27 | Destination | #TEMP_INSTRUCTION | DESTINATION_CD | Char | 7 | O | Grid | Left | - | N | {code} · {name} | - | One row per destination with its number of cases (qty / pcs/case); name from TB_M_H0125_DESTINATION. |
@@ -359,16 +359,16 @@ flowchart TB
 |  | CREATED_BY / CREATED_DT | Login user ID / server date-time (insert only) |
 |  | CHANGED_BY / CHANGED_DT | Login user ID / server date-time |
 
-#### 3. Insert / Delete TB_R_CROSSDOCK_CASE_HOLD – Per case of the unit: ticked and not yet held = insert; unticked and held = delete
-- Source: [Save] of Edit hold (cases of the unit)
-- Destination keys: PART_NO + ORDER_DT + SUPPLIER_CD + SUPPLIER_PLANT + CASE_SEQ = Case of the check box
+#### 3. Insert / Update / Delete TB_R_CROSSDOCK_CASE_HOLD – Ticked case: per customer order line in it, insert (or add its pcs to HOLD_QTY); unticked held line: delete
+- Source: [Save] of Edit hold (cases and held lines of the unit)
+- Destination keys: PART_NO + ORDER_DT + SUPPLIER_CD + SUPPLIER_PLANT + CUSTOMER_CD + CUSTOMER_ORDER_NO + DESTINATION_CD + DETAILED_ITEM_NO + SERIAL_NO = Customer order line in the case
 
 | Source field | Destination field | Description |
 |---|---|---|
 |  | PART_NO / ORDER_DT | Part number and Customer Order Date of the unit |
 |  | SUPPLIER_CD / SUPPLIER_PLANT | Supplier of the unit |
-|  | CASE_SEQ | Case number of the check box |
-|  | DESTINATION_CD / CUST_ORDER_NO | Destination and Customer Order No of the first line of the case |
+|  | CUSTOMER_CD / CUSTOMER_ORDER_NO / DESTINATION_CD / DETAILED_ITEM_NO / SERIAL_NO | Customer order line in the ticked case (#TEMP_INSTRUCTION) |
+|  | HOLD_QTY | Pcs of the line in the ticked case (ASSIGNED_QTY), added when the line is already held |
 |  | CREATED_BY / CREATED_DT | Login user ID / server date-time (insert only) |
 |  | CHANGED_BY / CHANGED_DT | Login user ID / server date-time |
 
@@ -615,7 +615,7 @@ b. Supplier case = PCS_CASE pcs in H0253 order; a case can hold several customer
 c. The warehouse packs 1 case = 1 destination, so an ASN may stop only after a case where every destination of the unit is a multiple of PCS_CASE (valid cut). The cases up to a valid cut are a block = one ASN option step (e.g. 18-Oct PART-X 17-Oct: every case ends on a cut, blocks case 1 | 2 | 3 | 4 | 5).
 d. A block is Ready ('6') when it and every earlier block have a PO; otherwise Not Ready ('7'): blocks are never skipped. Unit: Ready (all blocks), Partially Ready (the first k blocks), Not Ready (first block; check box disabled, message no. 2).
 e. Created: blocks in a submitted ASN are no longer in the delivery plan (shown in ASN Inquiry); the open qty of the unit is cut again from case 1 in the same order at the next [Search].
-f. On Hold also when the Part Number is on hold (5.3); cases held with the Hold check box are not Ready (CROSSDOCK_STATUS '8' On Hold) and are not counted in PO Readiness.
+f. On Hold also when the Part Number is on hold (5.3). Pcs held with the Hold check box are not in the cases (On Hold, CROSSDOCK_STATUS '8') and are not counted in PO Readiness; the other cases keep their own readiness.
 
 ### 5.3 Detail and Hold (D/S team)
 
@@ -623,9 +623,10 @@ a. The D/S team can expand a unit: one row per destination with Case, Qty (pcs),
 b. Hold / Release is done per destination: it updates HOLD_FLAG of every order line of the unit and destination in TB_R_H0253_ORDER_CONTROL_PRE (refer Data Edit Mapping). A held destination is not taken by Search; the unit is computed without it. A unit with all destinations on hold is shown as On Hold to the D/S team only.
 c. HOLD_FLAG is 'N' when the line is first replicated (XD08) and is kept on the next replications.
 d. Hold per Part Number (decided 13-Nov): [Hold per Part] opens a D/S sub screen with one section per supplier + plant and one row per Part Number (status, Hold check box, [Edit]). [Edit] enables the Hold check box, [Save] writes HOLD_FLAG in TB_R_CROSSDOCK_PART_HOLD, [Cancel] discards (same pattern as Part List and Mapping per Destination). Expanding a part lists its customer orders (Customer Order Date, Customer Order No, Destination, Qty, Case), not grouped by date, without PO information. A held part stays visible with status On Hold for every Customer Order Date, check boxes disabled (message no. 12), until saved as not on hold.
-e. Hold per case (decided 13-Nov): the case grid has a check box Hold (D/S) next to PO Status, changed with [Edit hold] / [Save] / [Cancel] of the Part Number + Customer Order Date. A held case and every later case of the unit are not Ready, and the Ready part ends on the last valid cut before the first held case (cases of the same block are held together). Example: PART-X 17-Oct, PO Readiness 4, case 4 ticked -> Ready 3, case 4 On Hold (D/S).
-f. The hold is saved per case in TB_R_CROSSDOCK_CASE_HOLD with [Save] and kept until changed again. Case numbers come from the Search (H0253 order). A hold is matched again to the cases at each Search (decided 13-Nov, FB-182), because cases move when an order is cancelled or earlier cases are sent: 1) the case that still has the saved Customer Order No + Destination; 2) else the case of the same Destination nearest to the saved case number (the lower one when equally near); 3) else (destination no longer in the unit) the case now at the saved case number, or the last case. The row is then updated to the matched case. No case left in the unit = the row is deleted. Example: case 4 = CO-14109 Taiwan held; CO-14104 cancelled -> the hold moves to case 3 (still CO-14109 Taiwan); CO-14109 cancelled and no other Taiwan line -> the hold stays on case 4 (now Australia). A held case shows PO Status On Hold (D/S) to the supplier too (message no. 14). The D/S team sees the content of each case in the columns Destination, Customer Order No and Order Qty.
-g. Both holds are re-checked at [Create ASN] like the destination hold: a hold made after the units were ticked makes the whole create fail (message no. 8) and the delivery plan is refreshed.
+e. Hold per case (decided 13-Nov, rev. 14-Nov): the case grid has a check box Hold (D/S) next to PO Status, changed with [Edit hold] / [Save] / [Cancel] of the Part Number + Customer Order Date. [Save] of a ticked case stores its customer order lines with their pcs (HOLD_QTY) in TB_R_CROSSDOCK_CASE_HOLD. At the next Search (XD09) the held pcs leave the unit before the PO pouring: they take no PO, so the PO qty they had goes on to the next lines of the part (same Customer Order Date, then the next dates). The other cases are cut again and keep their own readiness (no Ready end at the held case).
+f. Example: 18-Oct, PART-X 17-Oct, case 4 = CO-14109 Taiwan 6 pcs ticked -> Taiwan On Hold; PO-0003 6 pcs go to CO-14110 Australia (no PO before), so cases 1-4 (Korea, Korea, Japan, Australia) are all Ready. On 19-Oct the PO qty left after the 17-Oct lines goes to the 18-Oct orders.
+g. The held lines are listed below the cases (Case = On hold, PO = released, PO Status On Hold (D/S), message no. 14), for the supplier too, and cannot be ticked for an ASN. The hold is on the customer order line, so it does not move when other lines are cancelled or sent. Unticking a held line + [Save] deletes the row: the pcs come back to their place in the H0253 order and take PO at the next Search (they come first again, so PO not yet in an ASN can move back to them). A held line cancelled in GTOPAS -> row deleted. The D/S team sees the content of each case in the columns Destination, Customer Order No and Order Qty.
+h. Both holds are re-checked at [Create ASN] like the destination hold: a hold made after the units were ticked makes the whole create fail (message no. 8) and the delivery plan is refreshed.
 
 ### 5.4 Select Cases and Create ASN
 
@@ -674,7 +675,7 @@ e. No error: commit, write the result (LOG3) and end (LOG4) messages. Error: rol
 | MSG1 | Hover on disabled check box | Unit is On Hold (D/S) | Info | All destinations are on hold | Release a destination. |
 | MSG2 | Hover on disabled check box | Unit is Not Ready | Info | Not Ready: case {n} of {Part No} / {Customer Order Date} (or an earlier case) is not assigned to a PO yet ({k} of {c} cases assigned) | Wait for the next PO. |
 | MSG12 | Hover on disabled check box | Part Number on hold (D/S) | Info | {Part No} is on hold by the D/S team | Contact the D/S team. |
-| MSG14 | Hover on disabled case check box | Case held by the D/S team (Hold check box) | Info | On hold by the D/S team: case {n} of {Part No} / {Customer Order Date} (Hold per case) | Contact the D/S team. |
+| MSG14 | Hover on a held line | Customer order line held by the D/S team (Hold per case) | Info | On hold by the D/S team: {Customer Order No} of {Part No} / {Customer Order Date}, {n} pcs; its PO qty is used by the next orders | Contact the D/S team. |
 | **Search** |  |  |  |  |  |
 | MSG3 | Click [Search] / change filter | No unit | Info | No customer order matches this filter. | Change the Delivery Date, Rit or filter. |
 | MSG5 | Change [Delivery Date] | No rit on the date (Sunday) | Info | No rit cycle available for {Delivery Date}. Choose another delivery date. | Choose another Delivery Date. |
@@ -885,7 +886,7 @@ New table: Part Number put on hold by the D/S team on ASN Crossdock Creation (su
 | CHANGED_DT | DATETIME |  | N | Last changed date and time |
 
 #### TB_R_CROSSDOCK_CASE_HOLD (transaction, proposed)
-New table: supplier case of a unit (Part Number + Customer Order Date + Supplier Code + Plant + case number) held by the D/S team with the Hold check box. The held case and every later case of the unit are not Ready (Ready part ends on the last valid cut before it). Row deleted when unticked. The hold follows its destination when cases move (FB-182). Name and columns proposed.
+New table: customer order lines (pcs) of a supplier case held by the D/S team with the Hold check box (decided 14-Nov). The held pcs leave the unit before the PO pouring of XD09: they take no PO, the PO qty goes on to the next orders, the other cases stay Ready with their own PO. Row deleted when released (unticked). Name and columns proposed.
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
@@ -893,9 +894,12 @@ New table: supplier case of a unit (Part Number + Customer Order Date + Supplier
 | ORDER_DT | DATE | Y | N | Customer Order Date of the unit |
 | SUPPLIER_CD | VARCHAR(TBD) | Y | N | Supplier code of the unit |
 | SUPPLIER_PLANT | VARCHAR(TBD) | Y | N | Supplier plant of the unit |
-| CASE_SEQ | INT | Y | N | Case number of the unit (CASE_SEQ of #TEMP_INSTRUCTION, from 1 in H0253 order); updated when the hold moves (FB-182) |
-| DESTINATION_CD | VARCHAR(7) |  | N | Destination of the first customer order line of the held case: the hold stays on this destination when cases move |
-| CUST_ORDER_NO | VARCHAR(TBD) |  | N | Customer Order No of the first line of the held case |
+| CUSTOMER_CD | VARCHAR(TBD) | Y | N | Customer order line key (H0253) |
+| CUSTOMER_ORDER_NO | VARCHAR(TBD) | Y | N | Customer order line key (H0253) |
+| DESTINATION_CD | VARCHAR(7) | Y | N | Customer order line key (H0253) |
+| DETAILED_ITEM_NO | VARCHAR(TBD) | Y | N | Customer order line key (H0253) |
+| SERIAL_NO | VARCHAR(TBD) | Y | N | Customer order line key (H0253) |
+| HOLD_QTY | INT |  | N | Held pcs of the line (sum of the line pcs in the held cases); not more than the open qty of the line |
 | CREATED_BY | VARCHAR(20) |  | N | Login user (D/S team) who created the record |
 | CREATED_DT | DATETIME |  | N | Created date and time |
 | CHANGED_BY | VARCHAR(20) |  | N | Login user (D/S team) who last changed the record |

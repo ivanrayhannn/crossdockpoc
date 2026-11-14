@@ -263,7 +263,7 @@ Existing last sequence per supplier + plant (TR-06): the case number (case label
 #### TB_R_CROSSDOCK_CASE_HOLD (transaction, proposed)
 Used by: XD09, XD10
 
-New table: supplier case of a unit (Part Number + Customer Order Date + Supplier Code + Plant + case number) held by the D/S team with the Hold check box. The held case and every later case of the unit are not Ready (Ready part ends on the last valid cut before it). Row deleted when unticked. The hold follows its destination when cases move (FB-182). Name and columns proposed.
+New table: customer order lines (pcs) of a supplier case held by the D/S team with the Hold check box (decided 14-Nov). The held pcs leave the unit before the PO pouring of XD09: they take no PO, the PO qty goes on to the next orders, the other cases stay Ready with their own PO. Row deleted when released (unticked). Name and columns proposed.
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
@@ -271,9 +271,12 @@ New table: supplier case of a unit (Part Number + Customer Order Date + Supplier
 | ORDER_DT | DATE | Y | N | Customer Order Date of the unit |
 | SUPPLIER_CD | VARCHAR(TBD) | Y | N | Supplier code of the unit |
 | SUPPLIER_PLANT | VARCHAR(TBD) | Y | N | Supplier plant of the unit |
-| CASE_SEQ | INT | Y | N | Case number of the unit (CASE_SEQ of #TEMP_INSTRUCTION, from 1 in H0253 order); updated when the hold moves (FB-182) |
-| DESTINATION_CD | VARCHAR(7) |  | N | Destination of the first customer order line of the held case: the hold stays on this destination when cases move |
-| CUST_ORDER_NO | VARCHAR(TBD) |  | N | Customer Order No of the first line of the held case |
+| CUSTOMER_CD | VARCHAR(TBD) | Y | N | Customer order line key (H0253) |
+| CUSTOMER_ORDER_NO | VARCHAR(TBD) | Y | N | Customer order line key (H0253) |
+| DESTINATION_CD | VARCHAR(7) | Y | N | Customer order line key (H0253) |
+| DETAILED_ITEM_NO | VARCHAR(TBD) | Y | N | Customer order line key (H0253) |
+| SERIAL_NO | VARCHAR(TBD) | Y | N | Customer order line key (H0253) |
+| HOLD_QTY | INT |  | N | Held pcs of the line (sum of the line pcs in the held cases); not more than the open qty of the line |
 | CREATED_BY | VARCHAR(20) |  | N | Login user (D/S team) who created the record |
 | CREATED_DT | DATETIME |  | N | Created date and time |
 | CHANGED_BY | VARCHAR(20) |  | N | Login user (D/S team) who last changed the record |

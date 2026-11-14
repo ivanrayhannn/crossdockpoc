@@ -21,7 +21,7 @@ TABLES = [
     ('TR-02', 'TB_R_CROSSDOCK_IF_RESULT', 'Crossdock IF Result', 'Transaction', 'Send status of the crossdock master per part and target (dummy table).'),
     ('TR-03', 'TB_R_INSTRUCTION', 'Crossdock Instruction', 'Transaction', 'Real mapping of Create ASN: case x customer order line x PO.'),
     ('TR-04', 'TB_R_PRA_DAILY_ORDER_MAPPED', 'Pra Daily Order Mapped Qty', 'Transaction', 'Qty of a crossdock PO line mapped to customer orders.'),
-    ('TR-05', 'TB_R_CROSSDOCK_CASE_HOLD', 'Crossdock Case Hold', 'Transaction', 'Supplier case held by the D/S team on XD10 (Hold check box): it and the later cases of the unit are not Ready (kept until unticked); stays on the same destination when cases move (FB-182).'),
+    ('TR-05', 'TB_R_CROSSDOCK_CASE_HOLD', 'Crossdock Case Hold', 'Transaction', 'Customer order lines of a supplier case held by the D/S team on XD10 (Hold check box): the held pcs take no PO, the PO qty goes to the next orders (kept until released).'),
     ('TR-06', 'TB_R_CROSSDOCK_PART_HOLD', 'Crossdock Part Hold', 'Transaction', 'Part Number on hold by the D/S team on XD10 (no ASN for the part while HOLD_FLAG Y).'),
     ('TMP-01', '#TEMP_INSTRUCTION', 'Crossdock Pre-mapping Temporary', 'Temporary', 'Pre-mapping of one [Search] (session).'),
     ('REP-01', 'TB_M_H0125_DESTINATION', 'Destination Master (H0125)', 'Replicated', 'Destination master replicated from DB Surrounding by XD13.'),

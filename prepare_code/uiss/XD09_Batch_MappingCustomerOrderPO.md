@@ -47,7 +47,7 @@ flowchart TB
 | TB_R_INSTRUCTION | DB | Qty of each line already mapped (open Case List or submitted ASN) |
 | TB_M_PART_CANDIDATE | DB | PCS_CASE of the part |
 | TB_R_CROSSDOCK_PART_HOLD | DB | Part Number on hold (HOLD_FLAG Y): every case of its units On Hold |
-| TB_R_CROSSDOCK_CASE_HOLD | DB | Cases held by the D/S team: the first held case and later cases On Hold |
+| TB_R_CROSSDOCK_CASE_HOLD | DB | Customer order lines (HOLD_QTY pcs) held by the D/S team: taken out before the PO pouring |
 
 ### Output
 
@@ -175,6 +175,7 @@ XD09 runs on [Search] of XD10 and builds the delivery plan in #TEMP_INSTRUCTION.
 - No PO left: the rest of the line is still written, with PO_NO NULL (not skipped). Example: line 6 pcs, PO A has 2 left, no other PO -> 2 rows: PO A 2, PO_NO NULL 4. The lines below also get PO_NO NULL.
 - The qty written in each row is ASSIGNED_QTY; the sum of ASSIGNED_QTY of a line = its open qty. A PO qty left by an order that is not sent goes to the next lines: PO-0001 (CO-14102 on hold, then cancelled) covers CO-14103; PO-0002 then covers CO-14105.
 - PO qty lower than the order qty of the date (Short PO) is an abnormality: order date 17-Oct = 30 pcs, PO left 24 (PO-0002 6 + PO-0003 18); the last 6 pcs (CO-14110) have no PO (PO_NO NULL) and wait for the split PO PO-0004 of 19-Oct.
+- Pcs held by the D/S team (TB_R_CROSSDOCK_CASE_HOLD, 4.3) are not poured: the PO qty goes on to the next lines.
 
 ### 4.2 PO Assignment - example of the pouring
 
@@ -197,8 +198,8 @@ XD09 runs on [Search] of XD10 and builds the delivery plan in #TEMP_INSTRUCTION.
 - CUT_FLAG = Y after a case where the cumulative qty of every destination of the unit is a multiple of PCS_CASE (the warehouse packs 1 case = 1 destination); the ASN may stop only there. SEQ_QTY = fill of the warehouse case of the destination (1..PCS_CASE).
 - A case is Ready (CROSSDOCK_STATUS 6) when it and every earlier case of the unit have a PO, else Not Ready (7). 18-Oct: cases 1-4 Ready, case 5 Not Ready → unit Partially Ready, Short PO.
 - Holds of the D/S team (XD10 5.3, decided 13-Nov): a Part Number with HOLD_FLAG Y in TB_R_CROSSDOCK_PART_HOLD -> every case of its units CROSSDOCK_STATUS '8' (On Hold).
-- Cases held in TB_R_CROSSDOCK_CASE_HOLD: Ready end = last valid cut before the first held CASE_SEQ of the unit; the Ready cases after it get CROSSDOCK_STATUS '8' (On Hold). Example: Ready 4, case 4 held -> cases 1-3 Ready, case 4 On Hold; if cases 3-4 belong together -> cases 1-2 Ready, cases 3-4 On Hold.
-- Before this, each hold row is matched to the cases of the run (FB-182): same Customer Order No + Destination, else the same Destination nearest to CASE_SEQ, else the case at CASE_SEQ (or the last case); CASE_SEQ / DESTINATION_CD / CUST_ORDER_NO are updated to the matched case; no case left -> row deleted.
+- Lines held in TB_R_CROSSDOCK_CASE_HOLD (decided 14-Nov): HOLD_QTY pcs of the line are taken out of the open qty BEFORE the PO pouring (4.2) and the case cut: they take no PO, the PO qty goes on to the next lines of the part (same date, then the next Customer Order Dates); the held pcs are written with PO_NO NULL and CROSSDOCK_STATUS '8' (On Hold). The other cases are cut from the rest and keep their own readiness. Example 18-Oct: CO-14109 Taiwan 6 held -> PO-0003 6 goes to CO-14110 Australia; PART-X 17-Oct = 4 cases, all Ready.
+- Held line no longer open (cancelled in GTOPAS or open qty 0) -> row deleted; HOLD_QTY > open qty -> only the open qty is held.
 
 ### 4.4 Delivery Plan on XD10
 
@@ -332,7 +333,7 @@ New table: Part Number put on hold by the D/S team on ASN Crossdock Creation (su
 | CHANGED_DT | DATETIME |  | N | Last changed date and time |
 
 #### TB_R_CROSSDOCK_CASE_HOLD (transaction, proposed)
-New table: supplier case of a unit (Part Number + Customer Order Date + Supplier Code + Plant + case number) held by the D/S team with the Hold check box. The held case and every later case of the unit are not Ready (Ready part ends on the last valid cut before it). Row deleted when unticked. The hold follows its destination when cases move (FB-182). Name and columns proposed.
+New table: customer order lines (pcs) of a supplier case held by the D/S team with the Hold check box (decided 14-Nov). The held pcs leave the unit before the PO pouring of XD09: they take no PO, the PO qty goes on to the next orders, the other cases stay Ready with their own PO. Row deleted when released (unticked). Name and columns proposed.
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
@@ -340,9 +341,12 @@ New table: supplier case of a unit (Part Number + Customer Order Date + Supplier
 | ORDER_DT | DATE | Y | N | Customer Order Date of the unit |
 | SUPPLIER_CD | VARCHAR(TBD) | Y | N | Supplier code of the unit |
 | SUPPLIER_PLANT | VARCHAR(TBD) | Y | N | Supplier plant of the unit |
-| CASE_SEQ | INT | Y | N | Case number of the unit (CASE_SEQ of #TEMP_INSTRUCTION, from 1 in H0253 order); updated when the hold moves (FB-182) |
-| DESTINATION_CD | VARCHAR(7) |  | N | Destination of the first customer order line of the held case: the hold stays on this destination when cases move |
-| CUST_ORDER_NO | VARCHAR(TBD) |  | N | Customer Order No of the first line of the held case |
+| CUSTOMER_CD | VARCHAR(TBD) | Y | N | Customer order line key (H0253) |
+| CUSTOMER_ORDER_NO | VARCHAR(TBD) | Y | N | Customer order line key (H0253) |
+| DESTINATION_CD | VARCHAR(7) | Y | N | Customer order line key (H0253) |
+| DETAILED_ITEM_NO | VARCHAR(TBD) | Y | N | Customer order line key (H0253) |
+| SERIAL_NO | VARCHAR(TBD) | Y | N | Customer order line key (H0253) |
+| HOLD_QTY | INT |  | N | Held pcs of the line (sum of the line pcs in the held cases); not more than the open qty of the line |
 | CREATED_BY | VARCHAR(20) |  | N | Login user (D/S team) who created the record |
 | CREATED_DT | DATETIME |  | N | Created date and time |
 | CHANGED_BY | VARCHAR(20) |  | N | Login user (D/S team) who last changed the record |

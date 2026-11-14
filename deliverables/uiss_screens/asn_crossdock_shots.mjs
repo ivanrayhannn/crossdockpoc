@@ -22,7 +22,7 @@ await pg.getByTitle('Customer orders').first().click(); await shot('c_03_ds_deta
 // hold Japan (CO-14104) of PART-X 17-Oct: scan order and cases are computed again without TH
 await destHold('9722D10').click(); await shot('c_04_ds_hold');
 await destHold('9722D10').click();
-// D/S team: Hold per case with Edit / Save at Part Number + Customer Order Date level: Edit hold, tick case 4, Save -> Ready 3, case 4 On Hold (D/S)
+// D/S team: Hold per case with Edit / Save at Part Number + Customer Order Date level: Edit hold, tick case 4 (CO-14109 Taiwan), Save -> Taiwan On Hold, its PO goes to Australia (all 4 cases Ready)
 const saveCases = () => pg.locator('td').filter({ has: pg.getByRole('button', { name: 'Cancel', exact: true }) }).last().getByRole('button', { name: 'Save', exact: true }).click();
 await pg.getByRole('button', { name: 'Edit hold of PART-X 17-Oct-2026' }).click();
 await pg.getByRole('checkbox', { name: 'Hold case 4 of PART-X 17-Oct-2026' }).check(); await shot('c_04a_ds_case_edit');
@@ -30,7 +30,7 @@ await saveCases(); await shot('c_04b_ds_reduce');
 await view('Supplier'); await search(); await shot('c_04c_supplier_reduce');
 await view('D/S team'); await search();
 await pg.getByRole('button', { name: 'Edit hold of PART-X 17-Oct-2026' }).click();
-await pg.getByRole('checkbox', { name: 'Hold case 4 of PART-X 17-Oct-2026' }).uncheck(); await saveCases();
+await pg.getByRole('checkbox', { name: 'Hold CO-14109 of PART-X 17-Oct-2026' }).uncheck(); await saveCases();
 // D/S team: sub screen Hold per Part Number: Edit, tick Hold, Save on PART-X (no PO information)
 await pg.getByRole('button', { name: 'Hold per Part', exact: true }).click(); await shot('c_04d_ds_supplier_hold');
 await pg.getByRole('button', { name: 'Edit hold of PART-X' }).click(); await pg.getByRole('checkbox', { name: 'Hold PART-X' }).check();
