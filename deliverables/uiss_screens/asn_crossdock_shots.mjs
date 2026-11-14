@@ -9,19 +9,24 @@ const unitRow = (part, date) => pg.locator('tbody > tr').filter({ has: pg.locato
 const caseBox = (title) => pg.locator(`input[type=checkbox][title^="${title}"]`).first();
 const view = (who) => pg.getByRole('button', { name: who, exact: true }).click();
 const search = () => pg.getByRole('button', { name: 'Search', exact: true }).click();
+// Destination detail (Hold Flag per destination) is hidden on the screen for now; shown only for the steps of the destination hold.
+const destDetail = (on) => pg.evaluate((v) => window.__axDestDetail(v), on);
 
 // data = simulasi_asn_rev.xlsx, business date 18-Oct (default): PART-X 17-Oct, 5 cases, cases 1-4 Ready, case 5 Short PO
 const destHold = (code) => pg.locator('tr').filter({ has: pg.locator('td', { hasText: new RegExp(`^${code} · `) }) }).last().getByRole('button', { name: /Hold|Release/ });
 await pg.goto(url + '#/asn-creation'); await pg.waitForTimeout(800);
 await shot('c_01_initial');
 await search(); await shot('c_02_delivery_plan');
+// click the ASN status of a partially ready unit: PO information in Indonesian
+await pg.getByRole('button', { name: 'Info PO PART-X 17-Oct-2026' }).click(); await shot('c_02a_po_info');
+await pg.getByRole('button', { name: 'OK', exact: true }).click();
 // D/S team: destination detail and customer orders of PART-X 17-Oct
-await view('D/S team'); await search();
+await view('D/S team'); await search(); await destDetail(true);
 await unitRow('PART-X', '17-Oct').getByTitle('Destination detail (D/S team)').click();
 await pg.getByTitle('Customer orders').first().click(); await shot('c_03_ds_detail');
 // hold Japan (CO-14104) of PART-X 17-Oct: scan order and cases are computed again without TH
 await destHold('9722D10').click(); await shot('c_04_ds_hold');
-await destHold('9722D10').click();
+await destHold('9722D10').click(); await destDetail(false);
 // D/S team: Hold per case with Edit / Save at Part Number + Customer Order Date level: Edit hold, tick case 4 (CO-14109 Taiwan), Save -> Taiwan On Hold, its PO goes to Australia (all 4 cases Ready)
 // [Save] asks for confirmation, then shows the saved message; the delivery plan is refreshed behind it.
 const confirmSave = async (askShot, doneShot) => {
@@ -55,7 +60,7 @@ if (await pg.getByTitle('Destination detail (D/S team)').count()) { const r = un
 await view('Supplier'); await search();
 await caseBox('Case 3 can be sent alone').check(); await shot('c_05_selected');
 // D/S team (other session) holds Japan of the ticked unit
-await view('D/S team'); await search();
+await view('D/S team'); await search(); await destDetail(true);
 await unitRow('PART-X', '17-Oct').getByTitle('Destination detail (D/S team)').click();
 await destHold('9722D10').click(); await shot('c_05a_ds_hold_other_session');
 await view('Supplier');
@@ -63,7 +68,7 @@ await pg.getByRole('button', { name: 'Create ASN' }).click(); await shot('c_05c_
 await pg.getByRole('button', { name: 'OK' }).click(); await shot('c_05d_after_refresh');
 await view('D/S team');
 await unitRow('PART-X', '17-Oct').getByTitle('Destination detail (D/S team)').click();
-await destHold('9722D10').click();
+await destHold('9722D10').click(); await destDetail(false);
 // D/S team ticks units of two suppliers (PART-D of supplier 5002 is not in the workbook)
 await search();
 await unitRow('PART-X', '17-Oct').locator('input[type=checkbox]').first().check();

@@ -74,7 +74,7 @@
    },
    {
     "name": "Detail (expand, D/S)",
-    "function": "D/S team only: show / hide the destinations (cases) of a unit with Qty, Pcs/Case and Hold Flag."
+    "function": "D/S team only: show / hide the destinations (cases) of a unit with Qty, Pcs/Case and Hold Flag. Hidden on the screen for now (14-Nov, FB-184), with the destination Hold Flag; shown again on request."
    },
    {
     "name": "Customer orders (expand, D/S)",
@@ -82,7 +82,7 @@
    },
    {
     "name": "Hold / Release (D/S)",
-    "function": "D/S team only: set HOLD_FLAG of every order line of the destination (part number + customer order date + destination) to 'Y' (hold) or 'N' (release)."
+    "function": "D/S team only: set HOLD_FLAG of every order line of the destination (part number + customer order date + destination) to 'Y' (hold) or 'N' (release). Hidden for now with the destination detail (FB-184)."
    },
    {
     "name": "Hold per Part (D/S)",
@@ -94,7 +94,7 @@
    },
    {
     "name": "Edit hold / Save / Cancel (case, D/S)",
-    "function": "Per Part Number + Customer Order Date, D/S team only: [Edit hold] enables the Hold (D/S) check boxes of its cases and of its held lines; [Save] writes TB_R_CROSSDOCK_CASE_HOLD (case ticked = its lines inserted / HOLD_QTY added, held line unticked = deleted); [Cancel] discards."
+    "function": "Per Part Number + Customer Order Date, D/S team only: [Edit hold] enables the Hold (D/S) check boxes of its cases and of its held lines; [Save] writes TB_R_CROSSDOCK_CASE_HOLD (case ticked = its lines inserted / HOLD_QTY added, held line unticked = deleted); [Cancel] discards. [Save] shows a confirmation (message no. 15) first, then message no. 16, and refreshes the delivery plan."
    },
    {
     "name": "Clear selection",
@@ -615,15 +615,19 @@
    "image": "deliverables/uiss_screens/asn_crossdock/c_01_initial.png"
   },
   {
-   "caption": "2. Delivery plan after Search (supplier view, 18-Oct, simulasi_asn_rev.xlsx): PART-X 17-Oct, cases 1-4 Ready, case 5 Not Ready (Short PO: PO-0003 18 of 30 pcs)",
+   "caption": "2. Delivery plan after Search (supplier view, 18-Oct, simulasi_asn_rev.xlsx): PART-X 17-Oct, cases 1-4 Ready, case 5 Not Ready; ASN Status Partially Ready + Short PO (click for the PO information)",
    "image": "deliverables/uiss_screens/asn_crossdock/c_02_delivery_plan.png"
   },
   {
-   "caption": "3. D/S team: destination detail (warehouse cases, Hold Flag) and customer orders of a destination (open qty, cases, PO)",
+   "caption": "2a. Click on the ASN status (Partially Ready / Short PO): PO information of the unit in Indonesian (message no. 17)",
+   "image": "deliverables/uiss_screens/asn_crossdock/c_02a_po_info.png"
+  },
+  {
+   "caption": "3. D/S team: destination detail (warehouse cases, Hold Flag) and customer orders of a destination (open qty, cases, PO) [destination detail hidden on the screen for now, 14-Nov]",
    "image": "deliverables/uiss_screens/asn_crossdock/c_03_ds_detail.png"
   },
   {
-   "caption": "4. D/S team: Japan (CO-14104) on hold; the H0253 order and the cases are computed again without it",
+   "caption": "4. D/S team: Japan (CO-14104) on hold; the H0253 order and the cases are computed again without it [destination detail hidden on the screen for now, 14-Nov]",
    "image": "deliverables/uiss_screens/asn_crossdock/c_04_ds_hold.png"
   },
   {
@@ -916,7 +920,7 @@
    "required": "N",
    "format": "-",
    "validation": "-",
-   "description": "Ready (all blocks '6', green) / Partially Ready (first block '6', a later block '7', amber) / Not Ready (first block '7', row highlighted) / On Hold (D/S only). Refer 5.2."
+   "description": "Ready (all blocks '6', green) / Partially Ready (first block '6', a later block '7', amber) / Not Ready (first block '7', row highlighted) / On Hold (D/S only). Refer 5.2. Partially Ready, Not Ready and Short PO are a button: a click opens the PO information of the unit (message no. 17): customer order qty, regular / split PO with qty and date, Short PO and the qty still waiting, ready cases, pcs on hold. The PO check line above the cases is no longer shown."
   },
   {
    "name": "Detail (expand, D/S)",
@@ -1100,7 +1104,7 @@
    "required": "N",
    "format": "-",
    "validation": "-",
-   "description": "D/S team only, per Part Number + Customer Order Date (right of the PO check): [Edit hold] enables the Hold (D/S) check boxes; [Save] asks for confirmation (message no. 15), stores the holds, shows message no. 16 and refreshes the delivery plan (the selection of the unit is cleared); [Save] without a change just closes the edit; [Cancel] discards. Not shown for a part on hold. Refer 5.3."
+   "description": "D/S team only, per Part Number + Customer Order Date (above the cases, right side): [Edit hold] enables the Hold (D/S) check boxes; [Save] asks for confirmation (message no. 15), stores the holds, shows message no. 16 and refreshes the delivery plan (the selection of the unit is cleared); [Save] without a change just closes the edit; [Cancel] discards. Not shown for a part on hold. Refer 5.3."
   },
   {
    "group": "<Destination Detail (D/S team only)>",
@@ -2723,7 +2727,7 @@
    "marker": "-",
    "level": 0,
    "items": [
-    "18-Oct, delivery plan PART-X 17-Oct: 5 cases; PO check order 30 pcs vs PO PO-0003 18 pcs → Short PO; cases 1-4 Ready (PO-0002 rest 6 + PO-0003), case 5 (CO-14110) Not Ready with Remaining Qty 6.",
+    "18-Oct, delivery plan PART-X 17-Oct: 5 cases; order 30 pcs vs PO PO-0003 18 pcs -> Short PO (shown with the ASN status, details in the PO information pop up); cases 1-4 Ready (PO-0002 rest 6 + PO-0003), case 5 (CO-14110) Not Ready with Remaining Qty 6.",
     "The selection starts at case 1 and ends on a case with CUT_FLAG Y: ticking case 3 selects cases 1-3; case 5 is disabled. Per Part Number the oldest Customer Order Date first: on 19-Oct the cases of 18-Oct show \"Wait: 17-Oct first\" until case 1 of 17-Oct (CO-14110) is ticked.",
     "[Create ASN] with cases 1-4: 5 rows in TB_R_INSTRUCTION, PO_MAPPED_FLAG Y on the 5 lines that are complete (CO-14110 stays N), MAPPED_QTY PO-0002 6, PO-0003 18. [Submit ASN] gives ASN0003 with case numbers C-0003-01 … 04; only case 5 stays in the delivery plan.",
     "One line in two ASNs: CO-14115 12 pcs = case 1 (ASN0006, PO_MAPPED_FLAG N, open 6) and case 2 (ASN0007, PO_MAPPED_FLAG Y).",
@@ -2780,7 +2784,8 @@
     "The held lines are listed below the cases (Case = On hold, PO = released, PO Status On Hold (D/S), message no. 14), for the supplier too, and cannot be ticked for an ASN. The hold is on the customer order line, so it does not move when other lines are cancelled or sent. Unticking a held line + [Save] deletes the row: the pcs come back to their place in the H0253 order and take PO at the next Search (they come first again, so PO not yet in an ASN can move back to them). A held line cancelled in GTOPAS -> row deleted. The D/S team sees the content of each case in the columns Destination, Customer Order No and Order Qty.",
     "Both holds are re-checked at [Create ASN] like the destination hold: a hold made after the units were ticked makes the whole create fail (message no. 8) and the delivery plan is refreshed.",
     "Saving a hold (case grid [Save] and sub screen [Save]): confirmation first (message no. 15, [No] keeps the edit open); [Yes, save] stores the change, shows message no. 16 and refreshes the delivery plan right away (Search again with the same Delivery Date / Rit, ticks of that unit cleared). No change = no message.",
-    "Case grid: bordered cells. Case, Qty, Remaining Qty, Destination, PO Status and the check boxes are shown once per case (merged over its customer order lines); PO is merged over the lines of the same PO."
+    "Case grid: bordered cells. Case, Qty, Remaining Qty, Destination, PO Status and the check boxes are shown once per case (merged over its customer order lines); PO is merged over the lines of the same PO.",
+    "Unit table and case grid: bordered cells (14-Nov). The destination detail with Hold Flag is hidden on the screen for now (FB-184)."
    ]
   },
   {
@@ -2919,6 +2924,14 @@
    "type": "Info",
    "msg_id": "MSG16",
    "message": "Hold of {Part No} / {Customer Order Date} saved. The delivery plan has been refreshed.",
+   "action": "[OK]"
+  },
+  {
+   "event": "Click the ASN status (Partially Ready / Not Ready / Short PO)",
+   "cause": "Not all cases have a PO, or PO qty < order qty",
+   "type": "Info",
+   "msg_id": "MSG17",
+   "message": "Info PO · {Part No} / {Customer Order Date}: Order customer tanggal {date}: {n} pcs (semua destinasi). PO reguler {PO No}: {qty} pcs, terbit {date}. [Split PO {PO No}: {qty} pcs, terbit {date}.] PO kurang dari order (Short PO): {n} pcs masih menunggu split PO. {a} dari {b} case sudah dapat PO dan siap dikirim; case lainnya menunggu PO. [{n} pcs di-hold tim D/S; PO-nya dipakai order berikutnya.]",
    "action": "[OK]"
   },
   {
