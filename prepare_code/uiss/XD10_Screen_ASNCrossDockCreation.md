@@ -163,13 +163,17 @@ flowchart TB
 
 ![4a-2. [Save]: confirmation (message no. 15) listing what is held / released](../../deliverables/uiss_screens/asn_crossdock/c_04g_ds_hold_confirm.png)
 
-### 4a-3. [Yes, save]: saved message (message no. 16); the delivery plan is refreshed behind it
+### 4a-3. [Ya, simpan]: saved message (message no. 16); the delivery plan is refreshed behind it
 
-![4a-3. [Yes, save]: saved message (message no. 16); the delivery plan is refreshed behind it](../../deliverables/uiss_screens/asn_crossdock/c_04h_ds_hold_saved.png)
+![4a-3. [Ya, simpan]: saved message (message no. 16); the delivery plan is refreshed behind it](../../deliverables/uiss_screens/asn_crossdock/c_04h_ds_hold_saved.png)
 
 ### 4b. After [Save]: CO-14109 Taiwan 6 pcs On Hold below the cases (PO released); its PO-0003 qty goes to CO-14110 Australia, so the 4 cases left are all Ready
 
 ![4b. After [Save]: CO-14109 Taiwan 6 pcs On Hold below the cases (PO released); its PO-0003 qty goes to CO-14110 Australia, so the 4 cases left are all Ready](../../deliverables/uiss_screens/asn_crossdock/c_04b_ds_reduce.png)
+
+### 4b-2. Click on the Hold chip next to the status: hold information of the unit in Indonesian (message no. 18)
+
+![4b-2. Click on the Hold chip next to the status: hold information of the unit in Indonesian (message no. 18)](../../deliverables/uiss_screens/asn_crossdock/c_04i_hold_info.png)
 
 ### 4c. Supplier view: cases 1-4 Ready, the held 6 pcs shown On Hold (D/S) and cannot be ticked
 
@@ -245,8 +249,8 @@ flowchart TB
 | 10 | Customer Order Date | #TEMP_INSTRUCTION | ORDER_DT | Date | - | O | Label | Left | - | N | DD-Mon-YYYY | - | Customer Order Date of the unit. |
 | 11 | Part Number | #TEMP_INSTRUCTION | PART_NO | Char | 15 | O | Label | Left | - | N | - | - | Part number of the unit (distinct per Customer Order Date). Part name is not shown. |
 | 12 | Case Qty | Computed | - | Number | - | O | Label | Right | - | N | ZZ9 | - | Number of supplier cases of the unit: open qty / pcs/case, cut in H0253 order (e.g. 30 pcs, 6 pcs/case = 5 cases); a case can hold several destinations. |
-| 13 | PO Readiness (case) | Computed | - | Number | - | O | Label | Right | - | N | ZZ9 | - | Ready cases: cases whose whole qty is pre-mapped to a PO; red when lower than Case Qty. Pcs held by the D/S team (Hold per case) are not in the cases and not counted; the status shows "n pcs on hold (D/S), PO released". |
-| 14 | ASN Status | #TEMP_INSTRUCTION | CROSSDOCK_STATUS | Char | 1 | O | Label | Left | - | N | - | - | Ready (all blocks '6', green) / Partially Ready (first block '6', a later block '7', amber) / Not Ready (first block '7', row highlighted) / On Hold (D/S only). Refer 5.2. Partially Ready, Not Ready and Short PO are a button: a click opens the PO information of the unit (message no. 17): customer order qty, regular / split PO with qty and date, Short PO and the qty still waiting, ready cases, pcs on hold. The PO check line above the cases is no longer shown. |
+| 13 | PO Readiness (case) | Computed | - | Number | - | O | Label | Right | - | N | ZZ9 | - | Ready cases: cases whose whole qty is pre-mapped to a PO; red when lower than Case Qty. Pcs held by the D/S team (Hold per case) are not in the cases and not counted (see the Hold chip of ASN Status). |
+| 14 | ASN Status | #TEMP_INSTRUCTION | CROSSDOCK_STATUS | Char | 1 | O | Label | Left | - | N | - | - | Ready (all blocks '6', green) / Partially Ready (first block '6', a later block '7', amber) / Not Ready (first block '7', row highlighted) / On Hold (D/S only). Refer 5.2. Partially Ready, Not Ready and Short PO are a button: a click opens the PO information of the unit (message no. 17): customer order qty, regular / split PO with qty and date, Short PO and the qty still waiting, ready cases, pcs on hold. The PO check line above the cases is no longer shown. A Hold chip (grey button) is shown next to the status when the unit has a hold (Part Number on hold, pcs held per case, or a destination on hold for the D/S team); a click opens the hold information (message no. 18). The text lines under the status (pcs on hold, Part Number on hold, destinations on hold) are no longer shown. |
 | 15 | Detail (expand, D/S) | - | - | - | - | I | Button | Center | Enabled | N | - | - | Shown to the D/S team only. Opens the destination detail. |
 | **<Supplier Cases of a Unit (H0253 order)>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | 16 | Select case (check box) | Key-in | - | Char | - | I | CheckBox | Center | <unchecked> | N | - | Enabled only when the case and every earlier case have a PO | One check box per supplier case. The selection always starts at case 1 and takes the cases that belong together (Case Group = GROUP_SEQ of XD09, not shown on the screen): ticking case n ticks the earlier cases and the other cases of its group (message no. 10, e.g. tick case 2 -> cases 2-3 belong together, so cases 1-3); unticking case n unticks its group and the later cases. Refer 5.4. |
@@ -617,7 +621,7 @@ flowchart TB
 
 a. On first display Delivery Date = today (business date), Rit = first rit of the date, Route displayed (disabled). The delivery plan is empty.
 b. [Search] runs XD09 Mapping Customer Order and PO Batch (UISS XD09): the open qty of the H0253 customer orders with order status 7 and Hold Flag N, in the H0253 order per Part Number + Customer Order Date, pre-mapped to the PO parts of the Pra Daily Order (PO qty of the part poured over the lines from the top down, oldest PO first; refer UISS-Batch XD09 4.2), cut into supplier cases and blocks in the temporary table #TEMP_INSTRUCTION (pre-mapping only; nothing is saved yet). Supplier: units of the login Supplier Code + Plant; D/S team: all suppliers.
-c. The delivery plan shows one row per Part Number + Customer Order Date, sorted Ready, Partially Ready, Not Ready, then Part Number ascending. Units without any pre-mapped case and units fully Created are not listed. Part Number and Status filters apply at once. No row: message no. 3.
+c. The delivery plan shows one row per Part Number + Customer Order Date, sorted Ready, Partially Ready, Not Ready, then Part Number ascending. Units without any pre-mapped case and units fully Created are not listed. Part Number and Status filters apply at once. No row: message no. 3. The heading shows only "Delivery plan" (no summary line with date, Rit, route, number of units and refresh time; decided 14-Nov).
 d. Delivery Date and Rit do not filter the orders; they are carried to the ASN. Rit and Route come from the existing route master table.
 
 ### 5.2 Status Rule
@@ -639,7 +643,7 @@ e. Hold per case (decided 13-Nov, rev. 14-Nov): the case grid has a check box Ho
 f. Example: 18-Oct, PART-X 17-Oct, case 4 = CO-14109 Taiwan 6 pcs ticked -> Taiwan On Hold; PO-0003 6 pcs go to CO-14110 Australia (no PO before), so cases 1-4 (Korea, Korea, Japan, Australia) are all Ready. On 19-Oct the PO qty left after the 17-Oct lines goes to the 18-Oct orders.
 g. The held lines are listed below the cases (Case = On hold, PO = released, PO Status On Hold (D/S), message no. 14), for the supplier too, and cannot be ticked for an ASN. The hold is on the customer order line, so it does not move when other lines are cancelled or sent. Unticking a held line + [Save] deletes the row: the pcs come back to their place in the H0253 order and take PO at the next Search (they come first again, so PO not yet in an ASN can move back to them). A held line cancelled in GTOPAS -> row deleted. The D/S team sees the content of each case in the columns Destination, Customer Order No and Order Qty.
 h. Both holds are re-checked at [Create ASN] like the destination hold: a hold made after the units were ticked makes the whole create fail (message no. 8) and the delivery plan is refreshed.
-i. Saving a hold (case grid [Save] and sub screen [Save]): confirmation first (message no. 15, [No] keeps the edit open); [Yes, save] stores the change, shows message no. 16 and refreshes the delivery plan right away (Search again with the same Delivery Date / Rit, ticks of that unit cleared). No change = no message.
+i. Saving a hold (case grid [Save] and sub screen [Save]): confirmation first (message no. 15, [Tidak] keeps the edit open); [Ya, simpan] stores the change, shows message no. 16 and refreshes the delivery plan right away (Search again with the same Delivery Date / Rit, ticks of that unit cleared). No change = no message.
 j. Case grid: bordered cells. Case, Qty, Remaining Qty, Destination, PO Status and the check boxes are shown once per case (merged over its customer order lines); PO is merged over the lines of the same PO.
 k. Unit table and case grid: bordered cells (14-Nov). The destination detail with Hold Flag is hidden on the screen for now (FB-184).
 
@@ -691,9 +695,10 @@ e. No error: commit, write the result (LOG3) and end (LOG4) messages. Error: rol
 | MSG2 | Hover on disabled check box | Unit is Not Ready | Info | Not Ready: case {n} of {Part No} / {Customer Order Date} (or an earlier case) is not assigned to a PO yet ({k} of {c} cases assigned) | Wait for the next PO. |
 | MSG12 | Hover on disabled check box | Part Number on hold (D/S) | Info | {Part No} is on hold by the D/S team | Contact the D/S team. |
 | MSG14 | Hover on a held line | Customer order line held by the D/S team (Hold per case) | Info | On hold by the D/S team: {Customer Order No} of {Part No} / {Customer Order Date}, {n} pcs; its PO qty is used by the next orders | Contact the D/S team. |
-| MSG15 | Click [Save] of a hold (case grid or sub screen) | Hold changed | Confirmation | Hold of {Part No} / {Customer Order Date}? Save: hold case {n} ({Customer Order No}, {qty} pcs); release {Customer Order No} ({qty} pcs). Held pcs take no PO; their PO qty goes to the next orders. | [Yes, save] / [No] |
-| MSG16 | After [Yes, save] | Hold saved | Info | Hold of {Part No} / {Customer Order Date} saved. The delivery plan has been refreshed. | [OK] |
+| MSG15 | Click [Save] of a hold (case grid or sub screen) | Hold changed | Confirmation | Simpan hold {Part No} / {Customer Order Date}? Yang disimpan: hold case {n} ({Customer Order No}, {qty} pcs); lepas hold {Customer Order No} ({qty} pcs). Pcs yang di-hold tidak dapat PO; PO-nya dipakai order berikutnya. (Sub screen: Simpan hold {Part No}? {Part No} di-hold: belum bisa dibuat ASN untuk semua Customer Order Date sampai hold dilepas. / Hold {Part No} dilepas: case-nya bisa dikirim lagi.) | [Ya, simpan] / [Tidak] |
+| MSG16 | After [Ya, simpan] | Hold saved | Info | Tersimpan: Hold {Part No} / {Customer Order Date} sudah disimpan. Delivery plan sudah di-refresh. | [OK] |
 | MSG17 | Click the ASN status (Partially Ready / Not Ready / Short PO) | Not all cases have a PO, or PO qty < order qty | Info | Info PO · {Part No} / {Customer Order Date}: Order customer tanggal {date}: {n} pcs (semua destinasi). PO reguler {PO No}: {qty} pcs, terbit {date}. [Split PO {PO No}: {qty} pcs, terbit {date}.] PO kurang dari order (Short PO): {n} pcs masih menunggu split PO. {a} dari {b} case sudah dapat PO dan siap dikirim; case lainnya menunggu PO. [{n} pcs di-hold tim D/S; PO-nya dipakai order berikutnya.] | [OK] |
+| MSG18 | Click the Hold chip next to the ASN status | The unit has a hold | Info | Info hold · {Part No} / {Customer Order Date}: [Part Number {Part No} di-hold tim D/S: belum bisa dibuat ASN untuk semua Customer Order Date.] [{n} pcs di-hold tim D/S, PO-nya dilepas dan dipakai order berikutnya. {Customer Order No} · {Destination} (D/S team): {qty} pcs] [{n} destinasi di-hold (Hold Flag Y). (D/S team)] | [OK] |
 | **Search** |  |  |  |  |  |
 | MSG3 | Click [Search] / change filter | No unit | Info | No customer order matches this filter. | Change the Delivery Date, Rit or filter. |
 | MSG5 | Change [Delivery Date] | No rit on the date (Sunday) | Info | No rit cycle available for {Delivery Date}. Choose another delivery date. | Choose another Delivery Date. |

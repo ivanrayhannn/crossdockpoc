@@ -31,7 +31,7 @@ await destHold('9722D10').click(); await destDetail(false);
 // [Save] asks for confirmation, then shows the saved message; the delivery plan is refreshed behind it.
 const confirmSave = async (askShot, doneShot) => {
   if (askShot) await shot(askShot);
-  await pg.getByRole('button', { name: 'Yes, save' }).click();
+  await pg.getByRole('button', { name: 'Ya, simpan' }).click();
   if (doneShot) await shot(doneShot);
   await pg.getByRole('button', { name: 'OK', exact: true }).click();
 };
@@ -42,6 +42,9 @@ const saveCases = async (askShot, doneShot) => {
 await pg.getByRole('button', { name: 'Edit hold of PART-X 17-Oct-2026' }).click();
 await pg.getByRole('checkbox', { name: 'Hold case 4 of PART-X 17-Oct-2026' }).check(); await shot('c_04a_ds_case_edit');
 await saveCases('c_04g_ds_hold_confirm', 'c_04h_ds_hold_saved'); await shot('c_04b_ds_reduce');
+// the Hold chip next to the status opens the hold information
+await pg.getByRole('button', { name: 'Info hold PART-X 17-Oct-2026' }).click(); await shot('c_04i_hold_info');
+await pg.getByRole('button', { name: 'OK', exact: true }).click();
 await view('Supplier'); await search(); await shot('c_04c_supplier_reduce');
 await view('D/S team'); await search();
 await pg.getByRole('button', { name: 'Edit hold of PART-X 17-Oct-2026' }).click();

@@ -42,7 +42,18 @@ function poInfo(u: Unit): string[] {
   }
   out.push(u.readyCases === u.caseCount ? `Semua ${u.caseCount} case sudah dapat PO dan siap dikirim.`
     : `${u.readyCases} dari ${u.caseCount} case sudah dapat PO dan siap dikirim; case lainnya menunggu PO.`);
-  if (u.caseHeldQty > 0) out.push(`${u.caseHeldQty} pcs di-hold tim D/S; PO-nya dipakai order berikutnya.`);
+  return out;
+}
+
+/** Holds of a unit in plain Indonesian, shown when the Hold chip next to the status is clicked. */
+function holdInfo(u: Unit, isDs: boolean): string[] {
+  const out: string[] = [];
+  if (u.unitHold) out.push(`Part Number ${u.partNo} di-hold tim D/S: belum bisa dibuat ASN untuk semua Customer Order Date.`);
+  if (u.caseHeldQty > 0) {
+    out.push(`${u.caseHeldQty} pcs di-hold tim D/S, PO-nya dilepas dan dipakai order berikutnya.`);
+    u.caseHeld.forEach((l) => out.push(`${l.custOrderNo}${isDs ? ` · ${DESTS[l.destCd].code} ${DESTS[l.destCd].name}` : ''}: ${l.qty} pcs`));
+  }
+  if (isDs && u.heldLines.length) out.push(`${new Set(u.heldLines.map((l) => l.destCd)).size} destinasi di-hold (Hold Flag Y).`);
   return out;
 }
 
@@ -133,13 +144,13 @@ export function AsnCrossdockCreationPage() {
     ...u.cases.map((c) => [`c:${c.seq}`, false]), ...u.caseHeld.map((l) => [`h:${l.id}`, true])]) });
   const endCaseEdit = (u: Unit) => { const d = { ...caseDraft }; delete d[u.key]; setCaseDraft(d); };
   /** [Save] of a hold asks first, then shows the result; the delivery plan is computed again (refreshed) right after. */
-  const [holdAsk, setHoldAsk] = useState<{ title: string; text: string; apply: () => void } | null>(null);
+  const [holdAsk, setHoldAsk] = useState<{ title: string; text: string; done: string; apply: () => void } | null>(null);
   const [holdDone, setHoldDone] = useState<string | null>(null);
   const runHoldSave = () => {
     if (!holdAsk) return;
     holdAsk.apply();
     setLoaded((l) => (l ? { ...l, at: nowTime() } : l));
-    setHoldDone(`${holdAsk.title.replace(/\?$/, '')} saved. The delivery plan has been refreshed.`);
+    setHoldDone(holdAsk.done);
     setHoldAsk(null);
   };
   const saveCaseEdit = (u: Unit) => {
@@ -149,11 +160,12 @@ export function AsnCrossdockCreationPage() {
     if (!hold.length && !release.length) { endCaseEdit(u); return; }
     const parts = [
       ...hold.map((c) => `hold case ${c.seq} (${[...new Set(c.lines.map((l) => l.custOrderNo))].join(', ')}, ${c.qty} pcs)`),
-      ...release.map((l) => `release ${l.custOrderNo} (${l.qty} pcs)`),
+      ...release.map((l) => `lepas hold ${l.custOrderNo} (${l.qty} pcs)`),
     ];
     setHoldAsk({
-      title: `Hold of ${u.partNo} / ${niceDate(u.orderDt)}?`,
-      text: `Save: ${parts.join('; ')}. Held pcs take no PO; their PO qty goes to the next orders.`,
+      title: `Simpan hold ${u.partNo} / ${niceDate(u.orderDt)}?`,
+      text: `Yang disimpan: ${parts.join('; ')}. Pcs yang di-hold tidak dapat PO; PO-nya dipakai order berikutnya.`,
+      done: `Hold ${u.partNo} / ${niceDate(u.orderDt)} sudah disimpan. Delivery plan sudah di-refresh.`,
       apply: () => {
         const n = { ...caseHold };
         release.forEach((l) => { delete n[l.id]; });
@@ -170,8 +182,9 @@ export function AsnCrossdockCreationPage() {
     const on = !!partEdit[partNo];
     if (on === !!partHold[partNo]) { const n = { ...partEdit }; delete n[partNo]; setPartEdit(n); return; }
     setHoldAsk({
-      title: `Hold of ${partNo}?`,
-      text: on ? `Put ${partNo} on hold: no ASN can be created for any Customer Order Date until it is released.` : `Release ${partNo}: its cases can be sent again.`,
+      title: `Simpan hold ${partNo}?`,
+      text: on ? `${partNo} di-hold: belum bisa dibuat ASN untuk semua Customer Order Date sampai hold dilepas.` : `Hold ${partNo} dilepas: case-nya bisa dikirim lagi.`,
+      done: `Hold ${partNo} sudah disimpan. Delivery plan sudah di-refresh.`,
       apply: () => {
         setPartHold({ ...partHold, [partNo]: on });
         setPartEdit((pe) => { const n = { ...pe }; delete n[partNo]; return n; });
@@ -182,12 +195,12 @@ export function AsnCrossdockCreationPage() {
     <>
       {holdAsk && (
         <Modal title={holdAsk.title} onClose={() => setHoldAsk(null)}
-          actions={<><button className="btn btn-secondary" autoFocus onClick={() => setHoldAsk(null)}>No</button><button className="btn btn-primary" onClick={runHoldSave}>Yes, save</button></>}>
+          actions={<><button className="btn btn-secondary" autoFocus onClick={() => setHoldAsk(null)}>Tidak</button><button className="btn btn-primary" onClick={runHoldSave}>Ya, simpan</button></>}>
           {holdAsk.text}
         </Modal>
       )}
       {holdDone && (
-        <Modal title="Saved" onClose={() => setHoldDone(null)} actions={<button className="btn btn-primary" autoFocus onClick={() => setHoldDone(null)}>OK</button>}>
+        <Modal title="Tersimpan" onClose={() => setHoldDone(null)} actions={<button className="btn btn-primary" autoFocus onClick={() => setHoldDone(null)}>OK</button>}>
           {holdDone}
         </Modal>
       )}
@@ -205,6 +218,7 @@ export function AsnCrossdockCreationPage() {
   const [showDest, setShowDest] = useState(false);
   useEffect(() => { (window as unknown as { __axDestDetail?: (v: boolean) => void }).__axDestDetail = setShowDest; }, []);
   const [poInfoOf, setPoInfoOf] = useState<Unit | null>(null);
+  const [holdInfoOf, setHoldInfoOf] = useState<Unit | null>(null);
   const [openDest, setOpenDest] = useState<Record<string, boolean>>({});
   const [openCase, setOpenCase] = useState<Record<number, boolean>>({});
   const [page, setPage] = useState<'list' | 'cases' | 'supHold'>('list');
@@ -565,12 +579,7 @@ export function AsnCrossdockCreationPage() {
       <div style={{ ...card, overflow: 'hidden' }}>
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 13, padding: '10px 16px', borderBottom: '1px solid var(--color-divider)' }}>
           <div style={{ marginRight: 'auto', alignSelf: 'center' }}>
-            <span style={{ fontSize: 12.5, fontWeight: 600 }}>Delivery plan</span>{' '}
-            {loaded && (
-              <span style={{ fontSize: 11.5, color: 'var(--color-neutral-600)' }}>
-                {niceDate(loaded.deliveryDate)} · {loaded.ritNo} · {loaded.route} — {rows.length} units · {rows.filter((u) => u.status === 'ready').length} ready · {rows.filter((u) => u.status === 'partial').length} partially ready · {rows.filter((u) => u.status === 'notReady').length} not ready · refreshed {loaded.at}
-              </span>
-            )}
+            <span style={{ fontSize: 12.5, fontWeight: 600 }}>Delivery plan</span>
           </div>
           <div className="field" style={{ width: 150 }}>
             <label>Part Number</label>
@@ -638,7 +647,9 @@ export function AsnCrossdockCreationPage() {
                       <button type="button" className="ax-chipbtn" aria-label={`Info PO ${u.partNo} ${niceDate(u.orderDt)}`} title="Klik untuk info PO" onClick={() => setPoInfoOf(u)}>
                         <StatusChip s={u.status} />{u.poCheck.short && <span style={{ marginLeft: 4 }}><Chip tone="warn">Short PO</Chip></span>}
                       </button>
-                    ) : <StatusChip s={u.status} />}{wait && <span title={tip} style={{ marginLeft: 4 }}><Chip tone="neutral">{`Wait: ${niceDate(wait.orderDt).slice(0, 6)} first`}</Chip></span>}{u.sent && <div className="ax-muted">rest of an earlier ASN</div>}{u.heldLines.length > 0 && isDs && <div className="ax-muted">{new Set(u.heldLines.map((l) => l.destCd)).size} destination(s) on hold</div>}{u.unitHold && <div className="ax-muted">Part Number on hold (D/S)</div>}{u.caseHeldQty > 0 && <div className="ax-muted">{u.caseHeldQty} pcs on hold (D/S), PO released</div>}</td>
+                    ) : <StatusChip s={u.status} />}{wait && <span title={tip} style={{ marginLeft: 4 }}><Chip tone="neutral">{`Wait: ${niceDate(wait.orderDt).slice(0, 6)} first`}</Chip></span>}{u.sent && <div className="ax-muted">rest of an earlier ASN</div>}{(u.unitHold || u.caseHeldQty > 0 || (isDs && u.heldLines.length > 0)) && (
+                      <button type="button" className="ax-chipbtn" style={{ marginLeft: 4 }} aria-label={`Info hold ${u.partNo} ${niceDate(u.orderDt)}`} title="Klik untuk info hold" onClick={() => setHoldInfoOf(u)}><Chip tone="neutral">Hold</Chip></button>
+                    )}</td>
                     {hasExp && <td style={mtd}><button className="btn btn-secondary" title="Destination detail (D/S team)" style={{ padding: '2px 8px', fontSize: 11 }} onClick={() => setOpen({ ...open, [u.key]: !open[u.key] })}>{open[u.key] ? '▾' : '▸'}</button></td>}
                   </tr>,
                   (u.cases.length > 0 || u.caseHeld.length > 0) && (
@@ -809,6 +820,12 @@ export function AsnCrossdockCreationPage() {
         <Modal title={`Info PO · ${poInfoOf.partNo} / ${niceDate(poInfoOf.orderDt)}`} onClose={() => setPoInfoOf(null)}
           actions={<button className="btn btn-primary" autoFocus onClick={() => setPoInfoOf(null)}>OK</button>}>
           <ul style={{ margin: 0, paddingLeft: 18, display: 'grid', gap: 4 }}>{poInfo(poInfoOf).map((x) => <li key={x}>{x}</li>)}</ul>
+        </Modal>
+      )}
+      {holdInfoOf && (
+        <Modal title={`Info hold · ${holdInfoOf.partNo} / ${niceDate(holdInfoOf.orderDt)}`} onClose={() => setHoldInfoOf(null)}
+          actions={<button className="btn btn-primary" autoFocus onClick={() => setHoldInfoOf(null)}>OK</button>}>
+          <ul style={{ margin: 0, paddingLeft: 18, display: 'grid', gap: 4 }}>{holdInfo(holdInfoOf, isDs).map((x) => <li key={x}>{x}</li>)}</ul>
         </Modal>
       )}
     </div>
