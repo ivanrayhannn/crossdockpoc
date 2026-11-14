@@ -23,13 +23,14 @@ T_UNIT = {'name': 'TB_R_CROSSDOCK_PART_HOLD', 'kind': 'transaction', 'proposed':
           'description': 'New table: Part Number put on hold by the D/S team on ASN Crossdock Creation (sub screen Hold per Part). HOLD_FLAG Y = no ASN can be created for the part, whatever the Customer Order Date. Name and columns proposed.',
           'columns': [UNIT_KEY[0], UNIT_KEY[2], UNIT_KEY[3], ['HOLD_FLAG', 'CHAR(1)', '', 'N', "'Y' on hold / 'N' released (no row = 'N')"]] + AUDIT}
 T_CASE = {'name': 'TB_R_CROSSDOCK_CASE_HOLD', 'kind': 'transaction', 'proposed': True,
-          'description': 'New table: customer order lines (pcs) of a supplier case held by the D/S team with the Hold check box (decided 14-Nov). The held pcs leave the unit before the PO pouring of XD09: they take no PO, the PO qty goes on to the next orders, the other cases stay Ready with their own PO. Row deleted when released (unticked). Name and columns proposed.',
+          'description': 'New table: customer order lines (pcs) of a supplier case held by the D/S team with the Hold check box (decided 14-Nov). The held pcs leave the unit before the PO pouring of XD09: they take no PO, the PO qty goes on to the next orders, the other cases stay Ready with their own PO. Released (unticked) = HOLD_FLAG N, kept until the line is fully in an ASN or cancelled (FB-183). Name and columns proposed.',
           'columns': UNIT_KEY + [['CUSTOMER_CD', 'VARCHAR(TBD)', 'Y', 'N', 'Customer order line key (H0253)'],
                                  ['CUSTOMER_ORDER_NO', 'VARCHAR(TBD)', 'Y', 'N', 'Customer order line key (H0253)'],
                                  ['DESTINATION_CD', 'VARCHAR(7)', 'Y', 'N', 'Customer order line key (H0253)'],
                                  ['DETAILED_ITEM_NO', 'VARCHAR(TBD)', 'Y', 'N', 'Customer order line key (H0253)'],
                                  ['SERIAL_NO', 'VARCHAR(TBD)', 'Y', 'N', 'Customer order line key (H0253)'],
-                                 ['HOLD_QTY', 'INT', '', 'N', 'Held pcs of the line (sum of the line pcs in the held cases); not more than the open qty of the line']] + AUDIT}
+                                 ['HOLD_QTY', 'INT', '', 'N', 'Held pcs of the line (sum of the line pcs in the held cases); not more than the open qty of the line'],
+                                 ['HOLD_FLAG', 'CHAR(1)', '', 'N', "'Y' on hold / 'N' released: the line goes to the end of its Customer Order Date in the PO pouring (FB-183)"]] + AUDIT}
 
 
 def item(name, src, field, typ, io, control, desc, initial='-', fmt='-', valid='-', required='N', just='Left', length='-'):
@@ -270,6 +271,19 @@ dm[m17 + 1:m17 + 1] = [
                 '[{n} destinasi di-hold (Hold Flag Y). (D/S team)]',
      'action': '[OK]'}]
 
+# ---------- 14-Nov (d): FB-183 released line goes to the end of its Customer Order Date ----------
+op = s['operation']
+h3 = next(i for i, x in enumerate(op) if x.get('type') == 'heading' and x['text'].startswith('5.3'))
+op[h3 + 1]['items'].append(
+    'Release of a held line (decided 14-Nov, FB-183): untick + [Save] sets HOLD_FLAG N. From the next Search the line is poured and cut at the END of its Customer Order Date: '
+    'the lines of the same date that got the PO while it was held keep it (they stay Ready); the released line takes the next PO with qty left, '
+    'and still comes before the newer Customer Order Dates (oldest date first). Example: 18-Oct Taiwan released after Australia took PO-0003 -> Australia stays Ready (case 4), '
+    'Taiwan becomes case 5 Not Ready; 19-Oct the PO-0003 qty freed by the Japan cancel goes to Taiwan before the 18-Oct orders.')
+for b in s['data_map']['blocks']:
+    if b.get('destination', {}).get('table') == 'TB_R_CROSSDOCK_CASE_HOLD':
+        b['destination']['description'] = 'Ticked case: per customer order line in it, insert with HOLD_FLAG Y (or add its pcs to HOLD_QTY); unticked held line: HOLD_FLAG N (released, FB-183)'
+        b['mappings'].append({'dest_field': 'HOLD_FLAG', 'description': "'Y' when ticked / 'N' when unticked (released)"})
+
 # ---------- tables ----------
 s['tables'] += [T_UNIT, T_CASE]
 with open('XD10_spec.json', 'w') as fh:
@@ -289,7 +303,9 @@ fd[h + 1]['items'] += [
     "Lines held in TB_R_CROSSDOCK_CASE_HOLD (decided 14-Nov): HOLD_QTY pcs of the line are taken out of the open qty BEFORE the PO pouring (4.2) and the case cut: "
     "they take no PO, the PO qty goes on to the next lines of the part (same date, then the next Customer Order Dates); the held pcs are written with PO_NO NULL and CROSSDOCK_STATUS '8' (On Hold). "
     'The other cases are cut from the rest and keep their own readiness. Example 18-Oct: CO-14109 Taiwan 6 held -> PO-0003 6 goes to CO-14110 Australia; PART-X 17-Oct = 4 cases, all Ready.',
-    'Held line no longer open (cancelled in GTOPAS or open qty 0) -> row deleted; HOLD_QTY > open qty -> only the open qty is held.']
+    'Held line no longer open (cancelled in GTOPAS or open qty 0) -> row deleted; HOLD_QTY > open qty -> only the open qty is held.',
+    "Released lines (HOLD_FLAG N, FB-183): poured and cut at the END of their Customer Order Date (after the other lines of that date, before the newer dates), "
+    'so the lines that took the PO while it was held keep it; the released line takes the next PO with qty left.']
 pp = next(i for i, x in enumerate(fd) if x.get('type') == 'heading' and x.get('text', '').startswith('4.2'))
 fd[pp + 1]['items'].append('Pcs held by the D/S team (TB_R_CROSSDOCK_CASE_HOLD, 4.3) are not poured: the PO qty goes on to the next lines.')
 for t in s['tables']:

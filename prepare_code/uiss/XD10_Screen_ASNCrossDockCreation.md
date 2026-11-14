@@ -375,7 +375,7 @@ flowchart TB
 |  | CREATED_BY / CREATED_DT | Login user ID / server date-time (insert only) |
 |  | CHANGED_BY / CHANGED_DT | Login user ID / server date-time |
 
-#### 3. Insert / Update / Delete TB_R_CROSSDOCK_CASE_HOLD – Ticked case: per customer order line in it, insert (or add its pcs to HOLD_QTY); unticked held line: delete
+#### 3. Insert / Update / Delete TB_R_CROSSDOCK_CASE_HOLD – Ticked case: per customer order line in it, insert with HOLD_FLAG Y (or add its pcs to HOLD_QTY); unticked held line: HOLD_FLAG N (released, FB-183)
 - Source: [Save] of Edit hold (cases and held lines of the unit)
 - Destination keys: PART_NO + ORDER_DT + SUPPLIER_CD + SUPPLIER_PLANT + CUSTOMER_CD + CUSTOMER_ORDER_NO + DESTINATION_CD + DETAILED_ITEM_NO + SERIAL_NO = Customer order line in the case
 
@@ -387,6 +387,7 @@ flowchart TB
 |  | HOLD_QTY | Pcs of the line in the ticked case (ASSIGNED_QTY), added when the line is already held |
 |  | CREATED_BY / CREATED_DT | Login user ID / server date-time (insert only) |
 |  | CHANGED_BY / CHANGED_DT | Login user ID / server date-time |
+|  | HOLD_FLAG | 'Y' when ticked / 'N' when unticked (released) |
 
 #### 4. Update TB_R_H0253_ORDER_CONTROL_PRE – [Create ASN]: the lines of the chosen blocks
 - Source: #TEMP_INSTRUCTION (chosen blocks)
@@ -646,6 +647,7 @@ h. Both holds are re-checked at [Create ASN] like the destination hold: a hold m
 i. Saving a hold (case grid [Save] and sub screen [Save]): confirmation first (message no. 15, [Tidak] keeps the edit open); [Ya, simpan] stores the change, shows message no. 16 and refreshes the delivery plan right away (Search again with the same Delivery Date / Rit, ticks of that unit cleared). No change = no message.
 j. Case grid: bordered cells. Case, Qty, Remaining Qty, Destination, PO Status and the check boxes are shown once per case (merged over its customer order lines); PO is merged over the lines of the same PO.
 k. Unit table and case grid: bordered cells (14-Nov). The destination detail with Hold Flag is hidden on the screen for now (FB-184).
+l. Release of a held line (decided 14-Nov, FB-183): untick + [Save] sets HOLD_FLAG N. From the next Search the line is poured and cut at the END of its Customer Order Date: the lines of the same date that got the PO while it was held keep it (they stay Ready); the released line takes the next PO with qty left, and still comes before the newer Customer Order Dates (oldest date first). Example: 18-Oct Taiwan released after Australia took PO-0003 -> Australia stays Ready (case 4), Taiwan becomes case 5 Not Ready; 19-Oct the PO-0003 qty freed by the Japan cancel goes to Taiwan before the 18-Oct orders.
 
 ### 5.4 Select Cases and Create ASN
 
@@ -909,7 +911,7 @@ New table: Part Number put on hold by the D/S team on ASN Crossdock Creation (su
 | CHANGED_DT | DATETIME |  | N | Last changed date and time |
 
 #### TB_R_CROSSDOCK_CASE_HOLD (transaction, proposed)
-New table: customer order lines (pcs) of a supplier case held by the D/S team with the Hold check box (decided 14-Nov). The held pcs leave the unit before the PO pouring of XD09: they take no PO, the PO qty goes on to the next orders, the other cases stay Ready with their own PO. Row deleted when released (unticked). Name and columns proposed.
+New table: customer order lines (pcs) of a supplier case held by the D/S team with the Hold check box (decided 14-Nov). The held pcs leave the unit before the PO pouring of XD09: they take no PO, the PO qty goes on to the next orders, the other cases stay Ready with their own PO. Released (unticked) = HOLD_FLAG N, kept until the line is fully in an ASN or cancelled (FB-183). Name and columns proposed.
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
@@ -923,6 +925,7 @@ New table: customer order lines (pcs) of a supplier case held by the D/S team wi
 | DETAILED_ITEM_NO | VARCHAR(TBD) | Y | N | Customer order line key (H0253) |
 | SERIAL_NO | VARCHAR(TBD) | Y | N | Customer order line key (H0253) |
 | HOLD_QTY | INT |  | N | Held pcs of the line (sum of the line pcs in the held cases); not more than the open qty of the line |
+| HOLD_FLAG | CHAR(1) |  | N | 'Y' on hold / 'N' released: the line goes to the end of its Customer Order Date in the PO pouring (FB-183) |
 | CREATED_BY | VARCHAR(20) |  | N | Login user (D/S team) who created the record |
 | CREATED_DT | DATETIME |  | N | Created date and time |
 | CHANGED_BY | VARCHAR(20) |  | N | Login user (D/S team) who last changed the record |

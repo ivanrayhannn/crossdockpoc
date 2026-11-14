@@ -162,8 +162,10 @@ def main():
                                '(tanggal yang sama, lalu Customer Order Date berikutnya). Case lain dipotong ulang dan tetap Ready sesuai PO-nya.'],
         ['Yang tidak lagi berlaku', 'Aturan lama "case yang di-hold dan semua case sesudahnya tidak Ready" dan aturan geser hold (cara 13-Nov) dihapus.'],
         ['Tampilan', 'Line yang di-hold tampil di bawah case: Case = On hold, PO = dilepas, PO Status = On Hold (D/S). Supplier juga melihatnya tapi tidak bisa memilihnya.'],
-        ['Release', 'D/S untick line On hold lalu [Save]: line kembali ke posisinya di urutan H0253 dan dituang PO lagi di Search berikutnya.'],
-        ['Sheet 2-5', '2. Search 18-Oct sebelum hold; 3. Hold Taiwan 18-Oct; 4. Search 19-Oct (PO Taiwan dipakai order 18-Oct); 5. Release Taiwan setelah ASN.'],
+        ['Release', 'D/S untick line On hold lalu [Save] (HOLD_FLAG N): line kembali ke unit di urutan terakhir tanggal order-nya dan dituang PO lagi di Search berikutnya.'],
+        ['Release (FB-183)', 'Line yang di-release masuk ke urutan TERAKHIR tanggal order-nya: line tanggal yang sama yang sudah dapat PO tetap memakainya. '
+                             'Line yang di-release dapat PO berikutnya yang masih ada, dan tetap lebih dulu dari order tanggal yang lebih baru.'],
+        ['Sheet 2-5b', '2. Search 18-Oct sebelum hold; 3. Hold Taiwan 18-Oct; 4. Search 19-Oct (PO Taiwan dipakai order 18-Oct); 5. Release Taiwan 18-Oct; 5b. Search 19-Oct setelah release.'],
     ], [22, 120])
 
     scenario(wb, '2. Sebelum hold', 'Search 18-Oct, belum ada hold', ['PO tersedia: PO-0002 sisa 6 + PO-0003 18 = 24 pcs, order 17-Oct 30 pcs.'],
@@ -178,24 +180,30 @@ def main():
              [('17-Oct', [l for l in no_tw if l[0] != 'CO-14104']), ('18-Oct', D18)], P19, {'17-Oct': TWH},
              outcome=['17-Oct: case 1-3 Ready, Taiwan On Hold. 18-Oct: CO-14112 pakai sisa PO-0003 (6 pcs bekas Taiwan), case 1-3 Ready.',
                       'Tanpa hold, PO-0003 habis di 17-Oct dan CO-14112 baru dapat PO-0004.'])
-    scenario(wb, '5. Release Taiwan', 'Release Taiwan 18-Oct setelah supplier buat ASN case 1-4 17-Oct (Korea, Japan, Australia)', [
-        'Case yang sudah masuk ASN tidak dituang ulang. Sisa PO 18-Oct = 0, jadi Taiwan yang kembali belum dapat PO.'],
-             [('17-Oct', [('CO-14109', TW, 6)])], [('PO-0002 (sisa setelah ASN)', 0), ('PO-0003 (sisa setelah ASN)', 0)],
-             outcome=['Taiwan kembali ke unit 17-Oct sebagai case 1 dan Not Ready sampai ada PO lagi: split PO PO-0004 (19-Oct).',
-                      'Kalau di-release sebelum ASN dibuat, Taiwan ada di atas Australia di urutan H0253, jadi Taiwan dapat PO-0003 lagi dan Australia kembali Not Ready (lihat FB-183).'])
-
+    rel17 = [l for l in no_tw] + TWH
+    scenario(wb, '5. Release Taiwan 18-Oct', 'Release Taiwan 18-Oct (Australia sudah dapat PO, belum ASN)', [
+        'Aturan FB-183: line yang di-release masuk ke urutan TERAKHIR tanggal order-nya. Australia tetap pakai PO-0003; Taiwan menunggu PO berikutnya.'],
+             [('17-Oct', rel17)], P18,
+             outcome=['Case 1-4 (Korea, Korea, Japan, Australia) tetap Ready. Taiwan jadi case 5, Not Ready karena PO 18-Oct sudah habis.',
+                      'Australia tidak kehilangan PO-nya walaupun di urutan H0253 Taiwan ada di atas Australia.'])
+    scenario(wb, '5b. Search 19-Oct', 'Search 19-Oct setelah release: CO-14104 Japan cancel, PO-0004 dan PO-0005 rilis', [
+        'Taiwan tetap di urutan terakhir 17-Oct, tapi tetap lebih dulu dari order 18-Oct (tanggal lebih lama didahulukan).'],
+             [('17-Oct', [l for l in rel17 if l[0] != 'CO-14104']), ('18-Oct', D18)], P19,
+             outcome=['17-Oct: Taiwan dapat sisa PO-0003 (bekas Japan yang cancel) sebelum order 18-Oct. Semua case 17-Oct Ready.',
+                      '18-Oct: CO-14112, CO-14113, CO-14114 pakai PO-0004 dan PO-0005.'])
     ws, r = sheet(wb, '6. Tabel & FB', 'TB_R_CROSSDOCK_CASE_HOLD (rev. 14-Nov)', [])
     r = table(ws, r, ['Kolom', 'Isi'], [
         ['PART_NO, ORDER_DT, SUPPLIER_CD, SUPPLIER_PLANT', 'Unit (Part Number + Customer Order Date + supplier)'],
         ['CUSTOMER_CD, CUSTOMER_ORDER_NO, DESTINATION_CD, DETAILED_ITEM_NO, SERIAL_NO', 'Customer order line (H0253) di case yang dicentang'],
         ['HOLD_QTY', 'Pcs line itu di case yang dicentang (line 12 pcs terpecah 2 case, 1 case di-hold = 6)'],
+        ['HOLD_FLAG', "'Y' di-hold / 'N' sudah di-release (masuk urutan terakhir tanggal order-nya)"],
         ['CREATED_BY/DT, CHANGED_BY/DT', 'Audit'],
-        ['Hapus baris', 'Line di-untick + [Save], line di-cancel GTOPAS, atau open qty line = 0'],
+        ['Hapus baris', 'Line sudah masuk ASN semua, di-cancel GTOPAS, atau open qty line = 0'],
     ], [48, 90])
     table(ws, r, ['FB', 'Status', 'Isi'], [
         ['FB-182', 'Done', '14-Nov: case yang di-hold tidak menahan case lain. PO-nya dilepas dan dipakai order berikutnya; case lain tetap Ready (sheet 3, 4).'],
-        ['FB-183', 'Perlu konfirmasi', 'Saat Taiwan di-release dan case lain belum masuk ASN, Taiwan dapat PO lagi sesuai urutan H0253 (lebih dulu dari Australia), '
-                                       'jadi Australia bisa kembali Not Ready. Setuju, atau line yang di-release masuk antrean paling belakang?'],
+        ['FB-183', 'Done', '14-Nov: line yang di-release masuk urutan terakhir tanggal order-nya (Australia tetap pakai PO-nya), dapat PO berikutnya, '
+                           'dan tetap lebih dulu dari order tanggal yang lebih baru (sheet 5, 5b).'],
     ], [9, 15, 120])
 
     wb.save(OUT)
