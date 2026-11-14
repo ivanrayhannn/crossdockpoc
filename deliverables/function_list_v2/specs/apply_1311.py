@@ -236,6 +236,40 @@ dm[m16 + 1:m16 + 1] = [
                 '{a} dari {b} case sudah dapat PO dan siap dikirim; case lainnya menunggu PO. [{n} pcs di-hold tim D/S; PO-nya dipakai order berikutnya.]',
      'action': '[OK]'}]
 
+# ---------- 14-Nov (c): Hold chip with hold information; plan summary line removed; save pop ups in Indonesian ----------
+txt = json.dumps(s, ensure_ascii=False).replace('[Yes, save]', '[Ya, simpan]').replace('[No] keeps the edit open', '[Tidak] keeps the edit open')
+s = json.loads(txt)
+sl = s['screen_layout']
+k = next(i for i, x in enumerate(sl) if x['image'].endswith('c_04b_ds_reduce.png'))
+sl[k + 1:k + 1] = [{'caption': '4b-2. Click on the Hold chip next to the status: hold information of the unit in Indonesian (message no. 18)', 'image': f'{IMG}/c_04i_hold_info.png'}]
+for x in s['items']:
+    n = x.get('name')
+    if n == 'PO Readiness (case)':
+        x['description'] = ('Ready cases: cases whose whole qty is pre-mapped to a PO; red when lower than Case Qty. '
+                            'Pcs held by the D/S team (Hold per case) are not in the cases and not counted (see the Hold chip of ASN Status).')
+    elif n == 'ASN Status':
+        x['description'] += (' A Hold chip (grey button) is shown next to the status when the unit has a hold (Part Number on hold, pcs held per case, '
+                             'or a destination on hold for the D/S team); a click opens the hold information (message no. 18). '
+                             'The text lines under the status (pcs on hold, Part Number on hold, destinations on hold) are no longer shown.')
+op = s['operation']
+op[3]['items'][2] += ' The heading shows only "Delivery plan" (no summary line with date, Rit, route, number of units and refresh time; decided 14-Nov).'
+dm = s['display_messages']
+for m in dm:
+    if m.get('msg_id') == 'MSG15':
+        m['message'] = ('Simpan hold {Part No} / {Customer Order Date}? Yang disimpan: hold case {n} ({Customer Order No}, {qty} pcs); lepas hold {Customer Order No} ({qty} pcs). '
+                        'Pcs yang di-hold tidak dapat PO; PO-nya dipakai order berikutnya. '
+                        '(Sub screen: Simpan hold {Part No}? {Part No} di-hold: belum bisa dibuat ASN untuk semua Customer Order Date sampai hold dilepas. / Hold {Part No} dilepas: case-nya bisa dikirim lagi.)')
+        m['action'] = '[Ya, simpan] / [Tidak]'
+    if m.get('msg_id') == 'MSG16':
+        m['message'] = 'Tersimpan: Hold {Part No} / {Customer Order Date} sudah disimpan. Delivery plan sudah di-refresh.'
+m17 = next(i for i, x in enumerate(dm) if x.get('msg_id') == 'MSG17')
+dm[m17 + 1:m17 + 1] = [
+    {'event': 'Click the Hold chip next to the ASN status', 'cause': 'The unit has a hold', 'type': 'Info', 'msg_id': 'MSG18',
+     'message': 'Info hold · {Part No} / {Customer Order Date}: [Part Number {Part No} di-hold tim D/S: belum bisa dibuat ASN untuk semua Customer Order Date.] '
+                '[{n} pcs di-hold tim D/S, PO-nya dilepas dan dipakai order berikutnya. {Customer Order No} · {Destination} (D/S team): {qty} pcs] '
+                '[{n} destinasi di-hold (Hold Flag Y). (D/S team)]',
+     'action': '[OK]'}]
+
 # ---------- tables ----------
 s['tables'] += [T_UNIT, T_CASE]
 with open('XD10_spec.json', 'w') as fh:
