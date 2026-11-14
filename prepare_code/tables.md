@@ -263,7 +263,7 @@ Existing last sequence per supplier + plant (TR-06): the case number (case label
 #### TB_R_CROSSDOCK_CASE_HOLD (transaction, proposed)
 Used by: XD09, XD10
 
-New table: customer order lines (pcs) of a supplier case held by the D/S team with the Hold check box (decided 14-Nov). The held pcs leave the unit before the PO pouring of XD09: they take no PO, the PO qty goes on to the next orders, the other cases stay Ready with their own PO. Row deleted when released (unticked). Name and columns proposed.
+New table: customer order lines (pcs) of a supplier case held by the D/S team with the Hold check box (decided 14-Nov). The held pcs leave the unit before the PO pouring of XD09: they take no PO, the PO qty goes on to the next orders, the other cases stay Ready with their own PO. Released (unticked) = HOLD_FLAG N, kept until the line is fully in an ASN or cancelled (FB-183). Name and columns proposed.
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
@@ -277,6 +277,7 @@ New table: customer order lines (pcs) of a supplier case held by the D/S team wi
 | DETAILED_ITEM_NO | VARCHAR(TBD) | Y | N | Customer order line key (H0253) |
 | SERIAL_NO | VARCHAR(TBD) | Y | N | Customer order line key (H0253) |
 | HOLD_QTY | INT |  | N | Held pcs of the line (sum of the line pcs in the held cases); not more than the open qty of the line |
+| HOLD_FLAG | CHAR(1) |  | N | 'Y' on hold / 'N' released: the line goes to the end of its Customer Order Date in the PO pouring (FB-183) |
 | CREATED_BY | VARCHAR(20) |  | N | Login user (D/S team) who created the record |
 | CREATED_DT | DATETIME |  | N | Created date and time |
 | CHANGED_BY | VARCHAR(20) |  | N | Login user (D/S team) who last changed the record |

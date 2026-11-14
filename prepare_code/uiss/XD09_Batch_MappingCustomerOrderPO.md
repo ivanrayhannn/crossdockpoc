@@ -200,6 +200,7 @@ XD09 runs on [Search] of XD10 and builds the delivery plan in #TEMP_INSTRUCTION.
 - Holds of the D/S team (XD10 5.3, decided 13-Nov): a Part Number with HOLD_FLAG Y in TB_R_CROSSDOCK_PART_HOLD -> every case of its units CROSSDOCK_STATUS '8' (On Hold).
 - Lines held in TB_R_CROSSDOCK_CASE_HOLD (decided 14-Nov): HOLD_QTY pcs of the line are taken out of the open qty BEFORE the PO pouring (4.2) and the case cut: they take no PO, the PO qty goes on to the next lines of the part (same date, then the next Customer Order Dates); the held pcs are written with PO_NO NULL and CROSSDOCK_STATUS '8' (On Hold). The other cases are cut from the rest and keep their own readiness. Example 18-Oct: CO-14109 Taiwan 6 held -> PO-0003 6 goes to CO-14110 Australia; PART-X 17-Oct = 4 cases, all Ready.
 - Held line no longer open (cancelled in GTOPAS or open qty 0) -> row deleted; HOLD_QTY > open qty -> only the open qty is held.
+- Released lines (HOLD_FLAG N, FB-183): poured and cut at the END of their Customer Order Date (after the other lines of that date, before the newer dates), so the lines that took the PO while it was held keep it; the released line takes the next PO with qty left.
 
 ### 4.4 Delivery Plan on XD10
 
@@ -333,7 +334,7 @@ New table: Part Number put on hold by the D/S team on ASN Crossdock Creation (su
 | CHANGED_DT | DATETIME |  | N | Last changed date and time |
 
 #### TB_R_CROSSDOCK_CASE_HOLD (transaction, proposed)
-New table: customer order lines (pcs) of a supplier case held by the D/S team with the Hold check box (decided 14-Nov). The held pcs leave the unit before the PO pouring of XD09: they take no PO, the PO qty goes on to the next orders, the other cases stay Ready with their own PO. Row deleted when released (unticked). Name and columns proposed.
+New table: customer order lines (pcs) of a supplier case held by the D/S team with the Hold check box (decided 14-Nov). The held pcs leave the unit before the PO pouring of XD09: they take no PO, the PO qty goes on to the next orders, the other cases stay Ready with their own PO. Released (unticked) = HOLD_FLAG N, kept until the line is fully in an ASN or cancelled (FB-183). Name and columns proposed.
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
@@ -347,6 +348,7 @@ New table: customer order lines (pcs) of a supplier case held by the D/S team wi
 | DETAILED_ITEM_NO | VARCHAR(TBD) | Y | N | Customer order line key (H0253) |
 | SERIAL_NO | VARCHAR(TBD) | Y | N | Customer order line key (H0253) |
 | HOLD_QTY | INT |  | N | Held pcs of the line (sum of the line pcs in the held cases); not more than the open qty of the line |
+| HOLD_FLAG | CHAR(1) |  | N | 'Y' on hold / 'N' released: the line goes to the end of its Customer Order Date in the PO pouring (FB-183) |
 | CREATED_BY | VARCHAR(20) |  | N | Login user (D/S team) who created the record |
 | CREATED_DT | DATETIME |  | N | Created date and time |
 | CHANGED_BY | VARCHAR(20) |  | N | Login user (D/S team) who last changed the record |

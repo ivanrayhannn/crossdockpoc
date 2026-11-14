@@ -270,7 +270,7 @@ function cutCases(ls: InstrLine[], pos: { po: Po; open: number }[]): UnitCase[] 
 /** XD09 [Search]: open qty (order qty - qty in submitted ASNs) of the lines not on hold, in H0253 order, pre-mapped to the POs released
  * by the business date (open PO qty = PO qty - qty in submitted ASNs), cut into supplier cases. Units of a part take the POs oldest date first. */
 export function buildUnits(today: string, sentByLine: Record<string, number>, sentByPo: Record<string, number>, hold: Record<string, boolean> = {},
-  noAsn = false, opts: { partHold?: Record<string, boolean>; caseHold?: Record<string, number> } = {}): Unit[] {
+  noAsn = false, opts: { partHold?: Record<string, boolean>; caseHold?: Record<string, number>; caseRel?: Record<string, boolean> } = {}): Unit[] {
   const units: Unit[] = [];
   for (const partNo of [...new Set(H0253.map((l) => l.partNo))]) {
     const released = POS.filter((p) => p.partNo === partNo && p.poDate <= today);
@@ -288,7 +288,11 @@ export function buildUnits(today: string, sentByLine: Record<string, number>, se
       // the next lines (same date, then the next Customer Order Dates). The other cases keep their own PO readiness.
       const ch = opts.caseHold ?? {};
       const caseHeld = notHeld.filter((l) => ch[l.id]).map((l) => ({ ...l, qty: Math.min(ch[l.id], l.qty), poNo: null }));
-      const ls = notHeld.map((l) => ({ ...l, qty: l.qty - Math.min(ch[l.id] ?? 0, l.qty) })).filter((l) => l.qty > 0);
+      // Released from a hold (FB-183): the line goes to the end of its Customer Order Date, so the lines of the same date that took the
+      // PO in the meantime keep it; it still comes before the newer dates (oldest date first).
+      const rel = opts.caseRel ?? {};
+      const free = notHeld.map((l) => ({ ...l, qty: l.qty - Math.min(ch[l.id] ?? 0, l.qty) })).filter((l) => l.qty > 0);
+      const ls = [...free.filter((l) => !rel[l.id]), ...free.filter((l) => rel[l.id])];
       const cases = cutCases(ls, pos);
       const key = unitKey(partNo, orderDt);
       const readyCases = cases.filter((c) => c.ready).length;

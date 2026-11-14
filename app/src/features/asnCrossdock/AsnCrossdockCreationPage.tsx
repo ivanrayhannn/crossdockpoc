@@ -137,6 +137,8 @@ export function AsnCrossdockCreationPage() {
   const [partEdit, setPartEdit] = useState<Record<string, boolean | undefined>>({});
   /** Saved case holds (TB_R_CROSSDOCK_CASE_HOLD): customer order line id -> held pcs. Held pcs leave the unit and take no PO. */
   const [caseHold, setCaseHold] = useState<Record<string, number>>({});
+  /** Lines released from a hold (HOLD_FLAG N): poured at the end of their Customer Order Date (FB-183). */
+  const [caseRel, setCaseRel] = useState<Record<string, boolean>>({});
   /** Hold per case in edit mode: unit key -> draft of its held cases (Edit / Save like Part List and Mapping). */
   /** Draft per unit: `c:<case no>` = tick to hold the case, `h:<line id>` = held line (untick to release). */
   const [caseDraft, setCaseDraft] = useState<Record<string, Record<string, boolean>>>({});
@@ -164,13 +166,15 @@ export function AsnCrossdockCreationPage() {
     ];
     setHoldAsk({
       title: `Simpan hold ${u.partNo} / ${niceDate(u.orderDt)}?`,
-      text: `Yang disimpan: ${parts.join('; ')}. Pcs yang di-hold tidak dapat PO; PO-nya dipakai order berikutnya.`,
+      text: `Yang disimpan: ${parts.join('; ')}. Pcs yang di-hold tidak dapat PO; PO-nya dipakai order berikutnya.${release.length ? ' Order yang dilepas masuk ke urutan terakhir tanggal order-nya dan menunggu PO berikutnya.' : ''}`,
       done: `Hold ${u.partNo} / ${niceDate(u.orderDt)} sudah disimpan. Delivery plan sudah di-refresh.`,
       apply: () => {
         const n = { ...caseHold };
-        release.forEach((l) => { delete n[l.id]; });
-        hold.forEach((c) => c.lines.forEach((l) => { n[l.id] = (n[l.id] ?? 0) + l.qty; }));
+        const r = { ...caseRel };
+        release.forEach((l) => { delete n[l.id]; r[l.id] = true; });
+        hold.forEach((c) => c.lines.forEach((l) => { n[l.id] = (n[l.id] ?? 0) + l.qty; delete r[l.id]; }));
         setCaseHold(n);
+        setCaseRel(r);
         const s = { ...selByView };
         (['sup', 'ds'] as const).forEach((v) => { const x = { ...s[v] }; delete x[u.key]; s[v] = x; });
         setSelByView(s);
@@ -229,8 +233,8 @@ export function AsnCrossdockCreationPage() {
 
   const rits = ritCyclesFor(deliveryDate);
   const rit = rits.find((r) => r.no === ritNo) ?? rits[0];
-  const units = useMemo(() => { const s = sentQty(asns); return buildUnits(today, s.byLine, s.byPo, hold, startState === 'none', { partHold, caseHold }); },
-    [today, asns, hold, startState, partHold, caseHold]);
+  const units = useMemo(() => { const s = sentQty(asns); return buildUnits(today, s.byLine, s.byPo, hold, startState === 'none', { partHold, caseHold, caseRel }); },
+    [today, asns, hold, startState, partHold, caseHold, caseRel]);
   // Units fully in an ASN and units without any pre-mapped case are not listed; a fully held unit only for the D/S team.
   // The supplier sees only its own Supplier Code + Plant; the D/S team (super admin) sees every supplier.
   const visible = units.filter((u) => (isDs || u.supplier === LOGIN_SUPPLIER) && u.status !== 'created'
