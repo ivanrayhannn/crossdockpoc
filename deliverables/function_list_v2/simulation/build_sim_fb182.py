@@ -1,4 +1,5 @@
-"""FB-182 simulation: hold per case stored by CASE_SEQ (old) vs the rule decided 13-Nov (the hold follows its destination), data of PART-X 17-Oct (6 pcs/case).
+"""FB-182 simulation (rev. 14-Nov): a held case leaves the unit before the PO pouring; its PO qty goes back to the next orders.
+Data of PART-X 17-Oct / 18-Oct (6 pcs/case), as in the prototype.
 Run: python3 build_sim_fb182.py"""
 import os
 from openpyxl import Workbook
@@ -53,28 +54,6 @@ def table(ws, r0, cols, rows, widths, fills=None):
     return r0 + len(rows) + 2
 
 
-def cut(lines, pos):
-    """lines: (order, dest, qty) in H0253 order; pos: [(po, open)] -> cases [{seq, lines:[(order, dest, qty, po)]}]."""
-    pos = [list(p) for p in pos]
-    cases, cur, room = [], [], PCS
-    for order, dest, qty in lines:
-        left = qty
-        while left:
-            p = next((x for x in pos if x[1] > 0), None)
-            q = min(left, room, p[1] if p else left)
-            if p:
-                p[1] -= q
-            cur.append((order, dest, q, p[0] if p else '-'))
-            left -= q
-            room -= q
-            if room == 0:
-                cases.append(cur)
-                cur, room = [], PCS
-    if cur:
-        cases.append(cur)
-    return [{'seq': i + 1, 'lines': c} for i, c in enumerate(cases)]
-
-
 def result(ws, r0, rows, fills):
     """Cara | Hasil (merged B:D) | Benar? in the 5 columns of the case table."""
     for c, h in ((1, 'Cara'), (2, 'Hasil'), (5, 'Benar?')):
@@ -95,128 +74,128 @@ def result(ws, r0, rows, fills):
     return r0 + len(rows) + 2
 
 
-def resolve(cases, seq, dest, order):
-    """Rule decided 13-Nov (FB-182): 1) same Customer Order No + Destination; 2) same Destination nearest to the saved case number
-    (lower on a tie); 3) destination gone: the case at the saved number, or the last case. None = no case left."""
-    if not cases:
-        return None
-    own = next((c for c in cases if any(l[0] == order and l[1] == dest for l in c['lines'])), None)
-    if own:
-        return own['seq']
-    same = [c for c in cases if any(l[1] == dest for l in c['lines'])]
-    if same:
-        return min(same, key=lambda c: (abs(c['seq'] - seq), c['seq']))['seq']
-    return min(seq, len(cases))
+def pour(units, pos):
+    """units: [(order date, [(order, dest, qty)])] in H0253 order; pos: [[po, open]] shared and reduced in place (oldest PO first).
+    Returns {order date: cases}; a case = {'seq', 'lines': [(order, dest, qty, po)]}."""
+    out = {}
+    for dt, lines in units:
+        cases, cur, room = [], [], PCS
+        for order, dest, qty in lines:
+            left = qty
+            while left:
+                p = next((x for x in pos if x[1] > 0), None)
+                q = min(left, room, p[1] if p else left)
+                if p:
+                    p[1] -= q
+                cur.append((order, dest, q, p[0] if p else '-'))
+                left -= q
+                room -= q
+                if room == 0:
+                    cases.append(cur)
+                    cur, room = [], PCS
+        if cur:
+            cases.append(cur)
+        out[dt] = [{'seq': i + 1, 'lines': c} for i, c in enumerate(cases)]
+    return out
 
 
-def case_rows(cases, held_seq=None):
+def case_rows(dt, cases, held=()):
+    """Rows: Order Date | Case | Customer Order No | Destination | Qty | PO | PO Status; held lines at the end."""
     rows, fills = [], {}
+    ready = True
     for c in cases:
+        ready = ready and all(l[3] != '-' for l in c['lines'])
         for j, (o, d, q, po) in enumerate(c['lines']):
-            rows.append([f'Case {c["seq"]}' + (' (hold)' if c['seq'] == held_seq and j == 0 else '') if j == 0 else '', o, d, q, po])
-            if c['seq'] == held_seq:
-                fills[len(rows)] = HOLD
+            rows.append([dt if not rows else '', f'Case {c["seq"]}' if j == 0 else '', o, d, q, po, ('Ready' if ready else 'Not Ready') if j == 0 else ''])
+            fills[len(rows)] = OK if ready else BAD
+    for o, d, q in held:
+        rows.append(['', 'On hold', o, d, q, '- (PO dilepas)', 'On Hold (D/S)'])
+        fills[len(rows)] = HOLD
     return rows, fills
+
+
+def po_rows(pos0, res):
+    rows = []
+    for po, qty in pos0:
+        use = [f'{o} {q}' for cs in res.values() for c in cs for (o, d, q, p) in c['lines'] if p == po]
+        used = sum(q for cs in res.values() for c in cs for (o, d, q, p) in c['lines'] if p == po)
+        rows.append([po, qty, ', '.join(use) or '-', qty - used])
+    return rows
+
+
+def scenario(wb, title, heading, notes, units, pos0, held=None, outcome=None):
+    held = held or {}
+    ws, r = sheet(wb, title, heading, notes)
+    res = pour(units, [list(p) for p in pos0])
+    rows, fills = [], {}
+    for dt, cs in res.items():
+        rr, ff = case_rows(dt, cs, held.get(dt, ()))
+        fills.update({k + len(rows): v for k, v in ff.items()})
+        rows += rr
+    r = table(ws, r, ['Customer Order Date', 'Case', 'Customer Order No', 'Destination', 'Qty', 'PO', 'PO Status'], rows, [14, 11, 18, 20, 7, 18, 15], fills)
+    ws.cell(r - 1, 1, 'Pemakaian PO (dituang dari baris paling atas, PO paling lama dulu)').font = FB
+    r = table(ws, r, ['PO', 'Qty PO', 'Dipakai oleh', 'Sisa'], po_rows(pos0, res), [14, 11, 18, 20])
+    if outcome:
+        table(ws, r, ['Hasil'], [[x] for x in outcome], [14])
+        for k in range(len(outcome) + 1):
+            ws.merge_cells(start_row=r + k, start_column=1, end_row=r + k, end_column=7)
+            ws.row_dimensions[r + k].height = 28 if k else 16
+    return res
 
 
 def main():
     wb = Workbook()
     wb.remove(wb.active)
     KR, JP, TW, AU = '9715310 Korea', '9722D10 Japan', '9811110 Taiwan', '982220 Australia'
-    L17 = [('CO-14105', KR, 6), ('CO-14106', KR, 3), ('CO-14107', KR, 3), ('CO-14104', JP, 6), ('CO-14109', TW, 6), ('CO-14110', AU, 6)]
-    cols = ['Case', 'Customer Order No', 'Destination', 'Qty', 'PO']
-    W = [22, 18, 20, 8, 30]
+    D17 = [('CO-14105', KR, 6), ('CO-14106', KR, 3), ('CO-14107', KR, 3), ('CO-14104', JP, 6), ('CO-14109', TW, 6), ('CO-14110', AU, 6)]
+    D18 = [('CO-14112', KR, 6), ('CO-14113', TW, 6), ('CO-14114', AU, 6)]
+    no_tw = [l for l in D17 if l[0] != 'CO-14109']
+    P18 = [('PO-0002', 6), ('PO-0003', 18)]
+    P19 = P18 + [('PO-0004', 12), ('PO-0005', 18)]
+    TWH = [('CO-14109', TW, 6)]
 
-    # ---------- Penjelasan ----------
-    ws, r = sheet(wb, '1. Penjelasan', 'FB-182: hold per case disimpan per nomor case (CASE_SEQ), apakah bisa bergeser?', [
-        'Data PART-X, Customer Order Date 17-Oct, 6 pcs/case (sama dengan simulasi ASN). Kuning = case yang di-hold.'])
+    ws, r = sheet(wb, '1. Penjelasan', 'FB-182 (rev. 14-Nov): hold per case - PO yang sudah ter-mapping dilepas untuk order berikutnya', [
+        'Data PART-X, 6 pcs/case, sama dengan prototype. Hijau = Ready, merah = Not Ready, kuning = On Hold (D/S).'])
     table(ws, r, ['Poin', 'Penjelasan'], [
-        ['Masalah', 'Nomor case dihitung ulang setiap Search dari open qty dalam urutan H0253. Kalau ada line yang hilang dari unit (cancel, sudah masuk ASN, hold destinasi), '
-                    'case di bawahnya naik nomor. Hold yang disimpan sebagai "case 4" lalu menunjuk ke isi yang lain.'],
-        ['Niat D/S', 'Di Search 18-Oct D/S hold case 4 = CO-14109 Taiwan (barang Taiwan belum boleh dikirim).'],
-        ['Kejadian A (sheet 3)', '19-Oct: CO-14104 Japan di-cancel GTOPAS (UPD_STATUS 2). Unit dipotong ulang: Taiwan jadi case 3, Australia jadi case 4.'],
-        ['Kejadian B (sheet 4)', 'Supplier sudah buat ASN case 1-2 (Korea). Search berikutnya case dihitung lagi dari 1: Taiwan jadi case 2.'],
-        ['Kejadian C (sheet 5)', 'CO-14109 Taiwan sendiri di-cancel: tidak ada lagi line Taiwan di unit.'],
-        ['Cara lama', 'TB_R_CROSSDOCK_CASE_HOLD hanya menyimpan CASE_SEQ. Hold ikut nomor, bukan isi.'],
-        ['Aturan baru (disepakati 13-Nov)', 'Simpan juga DESTINATION_CD dan CUST_ORDER_NO dari line pertama case saat [Save]. Setiap Search hold dicocokkan lagi: '
-                            '1) case yang masih berisi Customer Order No + Destination itu; 2) kalau tidak ada, case dengan Destination yang sama, paling dekat ke nomor case lama; '
-                            '3) kalau destination itu sudah tidak ada, hold geser ke destination lain: case di nomor yang sama (atau case terakhir). '
-                            'Baris hold di-update ke case hasil cocok. Aturan Ready tetap: case hold dan sesudahnya tidak Ready.'],
+        ['Aturan', 'D/S centang Hold (D/S) di case lalu [Save]. Customer order line di case itu (dengan qty-nya) disimpan di TB_R_CROSSDOCK_CASE_HOLD.'],
+        ['Saat Search (XD09)', 'Pcs yang di-hold dikeluarkan dari unit SEBELUM PO dituang. Pcs itu tidak dapat PO; PO qty-nya mengalir ke baris berikutnya '
+                               '(tanggal yang sama, lalu Customer Order Date berikutnya). Case lain dipotong ulang dan tetap Ready sesuai PO-nya.'],
+        ['Yang tidak lagi berlaku', 'Aturan lama "case yang di-hold dan semua case sesudahnya tidak Ready" dan aturan geser hold (cara 13-Nov) dihapus.'],
+        ['Tampilan', 'Line yang di-hold tampil di bawah case: Case = On hold, PO = dilepas, PO Status = On Hold (D/S). Supplier juga melihatnya tapi tidak bisa memilihnya.'],
+        ['Release', 'D/S untick line On hold lalu [Save]: line kembali ke posisinya di urutan H0253 dan dituang PO lagi di Search berikutnya.'],
+        ['Sheet 2-5', '2. Search 18-Oct sebelum hold; 3. Hold Taiwan 18-Oct; 4. Search 19-Oct (PO Taiwan dipakai order 18-Oct); 5. Release Taiwan setelah ASN.'],
     ], [22, 120])
 
-    # ---------- Search 18-Oct ----------
-    ws, r = sheet(wb, '2. Search 18-Oct', 'Search 18-Oct: D/S hold case 4 (CO-14109 Taiwan)', [
-        'PO tersedia: PO-0002 sisa 6 + PO-0003 18 = 24 pcs. Case 5 belum dapat PO.'])
-    c18 = cut(L17, [('PO-0002', 6), ('PO-0003', 18)])
-    rows, fills = case_rows(c18, held_seq=4)
-    r = table(ws, r, cols, rows, W, fills)
-    ws, r = sheet(wb, '2b. Isi tabel hold', 'Yang disimpan saat [Save] di Search 18-Oct', [])
-    table(ws, r, ['Disimpan', 'Cara lama', 'Aturan baru'], [
-        ['Isi tabel hold', 'PART-X / 17-Oct / 5001-1 / CASE_SEQ 4', 'PART-X / 17-Oct / 5001-1 / CASE_SEQ 4 / DESTINATION_CD 9811110 / CUST_ORDER_NO CO-14109'],
-        ['Hasil', 'Case 1-3 Ready, case 4 On Hold, case 5 Not Ready', 'Sama: case 1-3 Ready, case 4 On Hold, case 5 Not Ready'],
-    ], [18, 40, 60])
+    scenario(wb, '2. Sebelum hold', 'Search 18-Oct, belum ada hold', ['PO tersedia: PO-0002 sisa 6 + PO-0003 18 = 24 pcs, order 17-Oct 30 pcs.'],
+             [('17-Oct', D17)], P18, outcome=['Case 1-4 Ready (Taiwan di case 4 pakai PO-0003). Case 5 Australia belum dapat PO: Not Ready.'])
+    scenario(wb, '3. Hold Taiwan 18-Oct', 'Search 18-Oct: D/S hold case 4 (CO-14109 Taiwan 6 pcs) lalu [Save]', [
+        'Taiwan keluar dari unit sebelum PO dituang. PO-0003 6 pcs yang tadinya untuk Taiwan mengalir ke baris berikutnya: CO-14110 Australia.'],
+             [('17-Oct', no_tw)], P18, {'17-Oct': TWH},
+             outcome=['Case 1-4 (Korea, Korea, Japan, Australia) semua Ready. Taiwan On Hold (D/S), tidak pakai PO.',
+                      'Australia sekarang dapat PO-0003 6 pcs dan bisa dikirim.'])
+    scenario(wb, '4. Search 19-Oct', 'Search 19-Oct: Taiwan masih di-hold, CO-14104 Japan cancel, PO-0004 (split) dan PO-0005 rilis', [
+        'Order 18-Oct ikut di-Search. PO-0003 yang dilepas Taiwan dipakai order berikutnya (CO-14112 Korea, 18-Oct).'],
+             [('17-Oct', [l for l in no_tw if l[0] != 'CO-14104']), ('18-Oct', D18)], P19, {'17-Oct': TWH},
+             outcome=['17-Oct: case 1-3 Ready, Taiwan On Hold. 18-Oct: CO-14112 pakai sisa PO-0003 (6 pcs bekas Taiwan), case 1-3 Ready.',
+                      'Tanpa hold, PO-0003 habis di 17-Oct dan CO-14112 baru dapat PO-0004.'])
+    scenario(wb, '5. Release Taiwan', 'Release Taiwan 18-Oct setelah supplier buat ASN case 1-4 17-Oct (Korea, Japan, Australia)', [
+        'Case yang sudah masuk ASN tidak dituang ulang. Sisa PO 18-Oct = 0, jadi Taiwan yang kembali belum dapat PO.'],
+             [('17-Oct', [('CO-14109', TW, 6)])], [('PO-0002 (sisa setelah ASN)', 0), ('PO-0003 (sisa setelah ASN)', 0)],
+             outcome=['Taiwan kembali ke unit 17-Oct sebagai case 1 dan Not Ready sampai ada PO lagi: split PO PO-0004 (19-Oct).',
+                      'Kalau di-release sebelum ASN dibuat, Taiwan ada di atas Australia di urutan H0253, jadi Taiwan dapat PO-0003 lagi dan Australia kembali Not Ready (lihat FB-183).'])
 
-    # ---------- Kejadian A ----------
-    ws, r = sheet(wb, '3. Kejadian A - cancel', 'Kejadian A: 19-Oct CO-14104 Japan di-cancel (UPD_STATUS 2), hold belum diubah', [
-        'Line yang di-cancel tidak diambil Search. PO tersedia 19-Oct: PO-0002 6 + PO-0003 18 + split PO PO-0004 12.'])
-    HS, HD, HO = 4, TW, 'CO-14109'
-    LA = [l for l in L17 if l[0] != 'CO-14104']
-    cA = cut(LA, [('PO-0002', 6), ('PO-0003', 18), ('PO-0004', 12)])
-    ws.cell(r - 1, 1, 'Cara lama: hold tetap CASE_SEQ 4').font = FB
-    rows, fills = case_rows(cA, held_seq=4)
-    r = table(ws, r, cols, rows, W, fills)
-    ws.cell(r - 1, 1, f'Aturan baru: langkah 1 (CO-14109 Taiwan masih ada) -> case {resolve(cA, HS, HD, HO)}').font = FB
-    rows, fills = case_rows(cA, resolve(cA, HS, HD, HO))
-    r = table(ws, r, cols, rows, W, fills)
-    result(ws, r, [
-        ['Cara lama', 'Case 4 sekarang CO-14110 Australia yang di-hold. Taiwan (case 3) jadi Ready dan bisa dikirim.', 'SALAH: hold pindah ke Australia'],
-        ['Aturan baru', 'Case 3 (CO-14109 Taiwan) yang di-hold, case 4 Australia ikut tidak Ready (aturan: case sesudah hold). Baris hold di-update ke CASE_SEQ 3.', 'BENAR: tetap Taiwan'],
-    ], {1: BAD, 2: OK})
-
-    # ---------- Kejadian B ----------
-    ws, r = sheet(wb, '4. Kejadian B - ASN', 'Kejadian B: supplier buat ASN case 1-2 (Korea 12 pcs), lalu Search lagi', [
-        'Case yang sudah masuk ASN tidak muncul lagi; sisa unit dipotong ulang mulai case 1.'])
-    LB = [l for l in L17 if l[0] not in ('CO-14105', 'CO-14106', 'CO-14107')]
-    cB = cut(LB, [('PO-0003', 12)])
-    ws.cell(r - 1, 1, 'Cara lama: hold tetap CASE_SEQ 4').font = FB
-    rows, fills = case_rows(cB, held_seq=4)
-    r = table(ws, r, cols, rows, W, fills)
-    ws.cell(r - 1, 1, f'Aturan baru: langkah 1 (CO-14109 Taiwan masih ada) -> case {resolve(cB, HS, HD, HO)}').font = FB
-    rows, fills = case_rows(cB, resolve(cB, HS, HD, HO))
-    r = table(ws, r, cols, rows, W, fills)
-    result(ws, r, [
-        ['Cara lama', 'Sisa unit cuma 3 case, case 4 tidak ada: hold hilang, Taiwan (case 2) Ready dan bisa dikirim.', 'SALAH: hold hilang'],
-        ['Aturan baru', 'Case 2 (CO-14109 Taiwan) di-hold, case 3 Australia ikut tidak Ready.', 'BENAR: tetap Taiwan'],
-    ], {1: BAD, 2: OK})
-
-    # ---------- Kejadian C ----------
-    ws, r = sheet(wb, '5. Kejadian C - TW hilang', 'Kejadian C: 19-Oct CO-14109 Taiwan di-cancel, tidak ada line Taiwan lain di unit', [
-        'Destination yang di-hold sudah tidak ada: hold geser ke destination lain (case di nomor yang sama).'])
-    LC = [l for l in L17 if l[0] != 'CO-14109']
-    cC = cut(LC, [('PO-0002', 6), ('PO-0003', 18), ('PO-0004', 12)])
-    hc = resolve(cC, HS, HD, HO)
-    ws.cell(r - 1, 1, f'Aturan baru: langkah 1 dan 2 tidak ketemu (Taiwan hilang) -> langkah 3, case {hc}').font = FB
-    rows, fills = case_rows(cC, hc)
-    r = table(ws, r, cols, rows, W, fills)
-    result(ws, r, [
-        ['Cara lama', 'Case 4 (CO-14110 Australia) di-hold.', 'Sama hasilnya'],
-        ['Aturan baru', f'Taiwan sudah tidak ada, hold geser ke case {hc} (CO-14110 Australia, destination lain). Baris hold di-update ke 982220 / CO-14110. '
-                        'D/S bisa lepas hold lewat [Edit hold] kalau tidak perlu lagi.', 'Sesuai keputusan 13-Nov'],
-    ], {1: OK, 2: OK})
-
-    # ---------- Usulan ----------
-    ws, r = sheet(wb, '6. Keputusan', 'Perubahan TB_R_CROSSDOCK_CASE_HOLD (disepakati 13-Nov)', [])
-    r = table(ws, r, ['Kolom', 'Cara lama', 'Aturan baru'], [
-        ['Key unit', 'PART_NO, ORDER_DT, SUPPLIER_CD, SUPPLIER_PLANT', 'Sama'],
-        ['Key hold', 'CASE_SEQ', 'CASE_SEQ (tetap 1 baris per case)'],
-        ['Kolom tambahan', '-', 'DESTINATION_CD, CUST_ORDER_NO (line pertama case saat [Save])'],
-        ['Tampilan check box', 'Dicentang kalau CASE_SEQ ada', 'Dicentang di case hasil pencocokan (langkah 1-3)'],
-        ['Order di-cancel / case sudah ASN', 'Hold bisa pindah ke destination lain atau hilang (sheet 3, 4)', 'Hold tetap di destination yang sama (sheet 3, 4)'],
-        ['Destination yang di-hold hilang', 'Hold di case nomor sama', 'Hold geser ke destination lain: case nomor sama atau case terakhir (sheet 5)'],
-        ['Semua case unit sudah ASN', 'Baris tertinggal', 'Baris hold dihapus'],
-    ], [34, 50, 80])
-    table(ws, r, ['FB', 'Status', 'Keputusan'], [
-        ['FB-182', 'Done', '13-Nov: hold 1 case geser ke destination yang sama kalau ada; kalau tidak ada baru geser ke destination lain. Sudah di XD10 5.3, XD09 4.3, ERD dan prototype.'],
+    ws, r = sheet(wb, '6. Tabel & FB', 'TB_R_CROSSDOCK_CASE_HOLD (rev. 14-Nov)', [])
+    r = table(ws, r, ['Kolom', 'Isi'], [
+        ['PART_NO, ORDER_DT, SUPPLIER_CD, SUPPLIER_PLANT', 'Unit (Part Number + Customer Order Date + supplier)'],
+        ['CUSTOMER_CD, CUSTOMER_ORDER_NO, DESTINATION_CD, DETAILED_ITEM_NO, SERIAL_NO', 'Customer order line (H0253) di case yang dicentang'],
+        ['HOLD_QTY', 'Pcs line itu di case yang dicentang (line 12 pcs terpecah 2 case, 1 case di-hold = 6)'],
+        ['CREATED_BY/DT, CHANGED_BY/DT', 'Audit'],
+        ['Hapus baris', 'Line di-untick + [Save], line di-cancel GTOPAS, atau open qty line = 0'],
+    ], [48, 90])
+    table(ws, r, ['FB', 'Status', 'Isi'], [
+        ['FB-182', 'Done', '14-Nov: case yang di-hold tidak menahan case lain. PO-nya dilepas dan dipakai order berikutnya; case lain tetap Ready (sheet 3, 4).'],
+        ['FB-183', 'Perlu konfirmasi', 'Saat Taiwan di-release dan case lain belum masuk ASN, Taiwan dapat PO lagi sesuai urutan H0253 (lebih dulu dari Australia), '
+                                       'jadi Australia bisa kembali Not Ready. Setuju, atau line yang di-release masuk antrean paling belakang?'],
     ], [9, 15, 120])
 
     wb.save(OUT)

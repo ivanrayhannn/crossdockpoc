@@ -176,27 +176,6 @@ export interface UnitCase {
   ready: boolean;
   /** Destinations that would not close their warehouse case if the ASN stopped here. */
   openDests: string[];
-  /** Has a PO but is not Ready because of a held case (this one or an earlier one of the unit). */
-  heldByReduce: boolean;
-  /** Ticked Hold (D/S): a saved case hold resolves to this case. */
-  held: boolean;
-}
-
-/** Saved hold of a case (TB_R_CROSSDOCK_CASE_HOLD): case number and its first customer order line when saved. */
-export interface CaseHoldRow { seq: number; destCd: string; custOrderNo: string }
-
-/** FB-182: the case lines move when an order is cancelled or cases are sent, so a hold is matched again at each Search:
- * 1) the case that still has the same Customer Order No + Destination; 2) else the case of the same Destination nearest to the saved
- * case number (lower one on a tie); 3) else (destination gone) the case now at the saved case number, or the last case. */
-export function resolveCaseHold(cases: UnitCase[], rows: CaseHoldRow[]): number[] {
-  if (!cases.length) return [];
-  return rows.map((r) => {
-    const own = cases.find((c) => c.lines.some((l) => l.custOrderNo === r.custOrderNo && l.destCd === r.destCd));
-    if (own) return own.seq;
-    const same = cases.filter((c) => c.lines.some((l) => l.destCd === r.destCd));
-    if (same.length) return same.reduce((a, c) => (Math.abs(c.seq - r.seq) < Math.abs(a.seq - r.seq) ? c : a)).seq;
-    return Math.min(r.seq, cases.length);
-  });
 }
 
 export type UnitStatus = 'ready' | 'partial' | 'notReady' | 'created' | 'hold';
@@ -216,12 +195,11 @@ export interface Unit {
   qty: number;
   cases: UnitCase[];
   caseCount: number;
-  /** PO Readiness: Ready cases (after Reduce PO Readiness). */
+  /** PO Readiness: Ready cases. */
   readyCases: number;
-  /** Ready cases before the reduction (cases 1..n with a PO). */
-  rawReadyCases: number;
-  /** Cases held by the D/S team (Hold check box per case, incl. the later cases of the same block onwards). */
-  reduce: number;
+  /** Customer order lines (held pcs) taken out of the unit by Hold per case (D/S); they take no PO. */
+  caseHeld: InstrLine[];
+  caseHeldQty: number;
   /** The Part Number of the unit is on hold by the D/S team (every Customer Order Date). */
   unitHold: boolean;
   /** Cases the user may end the selection on (CUT_FLAG Y and Ready). */
@@ -283,7 +261,7 @@ function cutCases(ls: InstrLine[], pos: { po: Po; open: number }[]): UnitCase[] 
     c.forEach((s) => (cum[s.destCd] = (cum[s.destCd] ?? 0) + s.qty));
     ready = ready && c.every((s) => !!s.poNo);
     const openDests = Object.keys(cum).filter((d) => cum[d] % PCS_PER_CASE !== 0);
-    const out = { seq: i + 1, lines: c, qty: c.reduce((a, s) => a + s.qty, 0), cut: openDests.length === 0, group, ready, openDests, heldByReduce: false, held: false };
+    const out = { seq: i + 1, lines: c, qty: c.reduce((a, s) => a + s.qty, 0), cut: openDests.length === 0, group, ready, openDests };
     if (out.cut) group += 1;
     return out;
   });
@@ -292,7 +270,7 @@ function cutCases(ls: InstrLine[], pos: { po: Po; open: number }[]): UnitCase[] 
 /** XD09 [Search]: open qty (order qty - qty in submitted ASNs) of the lines not on hold, in H0253 order, pre-mapped to the POs released
  * by the business date (open PO qty = PO qty - qty in submitted ASNs), cut into supplier cases. Units of a part take the POs oldest date first. */
 export function buildUnits(today: string, sentByLine: Record<string, number>, sentByPo: Record<string, number>, hold: Record<string, boolean> = {},
-  noAsn = false, opts: { partHold?: Record<string, boolean>; caseHold?: Record<string, CaseHoldRow[]> } = {}): Unit[] {
+  noAsn = false, opts: { partHold?: Record<string, boolean>; caseHold?: Record<string, number> } = {}): Unit[] {
   const units: Unit[] = [];
   for (const partNo of [...new Set(H0253.map((l) => l.partNo))]) {
     const released = POS.filter((p) => p.partNo === partNo && p.poDate <= today);
@@ -305,20 +283,14 @@ export function buildUnits(today: string, sentByLine: Record<string, number>, se
       // lines with UPD_STATUS (changed in G-System) are not taken
       // without any ASN nothing can be received in G-System: only the cancels (status 2) apply
       const open = all.filter((l) => !(l.upd && l.upd.date <= today && (!noAsn || l.upd.status === '2'))).map((l) => ({ ...l, qty: l.qty - (sentByLine[l.id] ?? 0) })).filter((l) => l.qty > 0);
-      const ls = open.filter((l) => !hold[l.id]);
+      const notHeld = open.filter((l) => !hold[l.id]);
+      // Hold per case (D/S): the pcs of a held case leave the unit before the PO pouring, so they take no PO; the PO qty goes on to
+      // the next lines (same date, then the next Customer Order Dates). The other cases keep their own PO readiness.
+      const ch = opts.caseHold ?? {};
+      const caseHeld = notHeld.filter((l) => ch[l.id]).map((l) => ({ ...l, qty: Math.min(ch[l.id], l.qty), poNo: null }));
+      const ls = notHeld.map((l) => ({ ...l, qty: l.qty - Math.min(ch[l.id] ?? 0, l.qty) })).filter((l) => l.qty > 0);
       const cases = cutCases(ls, pos);
       const key = unitKey(partNo, orderDt);
-      const rawReadyCases = cases.filter((c) => c.ready).length;
-      // Hold per case (D/S check box): the first held case and every later case are not Ready; the Ready part ends on the last
-      // valid cut before the first held case (cases of the same block are held together).
-      const held = resolveCaseHold(cases, opts.caseHold?.[key] ?? []);
-      cases.forEach((c) => { c.held = held.includes(c.seq); });
-      if (held.length) {
-        const first = Math.min(...held);
-        const readyEnd = Math.max(0, ...cases.filter((c) => c.cut && c.seq < first).map((c) => c.seq));
-        cases.forEach((c) => { if (c.ready && c.seq > readyEnd) { c.ready = false; c.heldByReduce = true; } });
-      }
-      const reduce = cases.filter((c) => c.heldByReduce).length;
       const readyCases = cases.filter((c) => c.ready).length;
       const unitHold = !!opts.partHold?.[partNo];
       const sent = all.some((l) => (sentByLine[l.id] ?? 0) > 0);
@@ -334,7 +306,7 @@ export function buildUnits(today: string, sentByLine: Record<string, number>, se
       };
       units.push({
         key, partNo, supplier: all[0].supplier, orderDt, lines: ls, heldLines: open.filter((l) => hold[l.id]),
-        qty: ls.reduce((a, l) => a + l.qty, 0), cases, caseCount: cases.length, readyCases, rawReadyCases, reduce, unitHold,
+        qty: ls.reduce((a, l) => a + l.qty, 0), cases, caseCount: cases.length, readyCases, caseHeld, caseHeldQty: caseHeld.reduce((a, l) => a + l.qty, 0), unitHold,
         validEnds: unitHold ? [] : cases.filter((c) => c.ready && c.cut).map((c) => c.seq), sent, status, poCheck,
       });
     }

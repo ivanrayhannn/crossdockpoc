@@ -3,8 +3,9 @@
    Hold check box and Edit / Save / Cancel; expanded to its customer orders (no PO information). A held part stays visible, On Hold,
    check boxes disabled, for every Customer Order Date.
 2) Hold per case = check box Hold (D/S) next to PO Status (TB_R_CROSSDOCK_CASE_HOLD), changed with [Edit hold] / [Save] / [Cancel] at
-   Part Number + Customer Order Date level (like Part List and Mapping): the held case and every later case of the unit are not Ready;
-   the Ready part ends on the last valid cut before the first held case.
+   Part Number + Customer Order Date level (like Part List and Mapping). Rev. 5 (14-Nov): the pcs of the held case (its customer order
+   lines) leave the unit before the PO pouring: they take no PO, the PO qty goes back to the next orders, the other cases keep their
+   own readiness. The held lines are listed below the cases (On Hold) until released.
 3) Content of a case split into the columns Destination, Customer Order No and Order Qty.
 XD09 sets CROSSDOCK_STATUS '8' (On Hold) for both."""
 import json
@@ -22,10 +23,13 @@ T_UNIT = {'name': 'TB_R_CROSSDOCK_PART_HOLD', 'kind': 'transaction', 'proposed':
           'description': 'New table: Part Number put on hold by the D/S team on ASN Crossdock Creation (sub screen Hold per Part). HOLD_FLAG Y = no ASN can be created for the part, whatever the Customer Order Date. Name and columns proposed.',
           'columns': [UNIT_KEY[0], UNIT_KEY[2], UNIT_KEY[3], ['HOLD_FLAG', 'CHAR(1)', '', 'N', "'Y' on hold / 'N' released (no row = 'N')"]] + AUDIT}
 T_CASE = {'name': 'TB_R_CROSSDOCK_CASE_HOLD', 'kind': 'transaction', 'proposed': True,
-          'description': 'New table: supplier case of a unit (Part Number + Customer Order Date + Supplier Code + Plant + case number) held by the D/S team with the Hold check box. The held case and every later case of the unit are not Ready (Ready part ends on the last valid cut before it). Row deleted when unticked. The hold follows its destination when cases move (FB-182). Name and columns proposed.',
-          'columns': UNIT_KEY + [['CASE_SEQ', 'INT', 'Y', 'N', 'Case number of the unit (CASE_SEQ of #TEMP_INSTRUCTION, from 1 in H0253 order); updated when the hold moves (FB-182)'],
-                                 ['DESTINATION_CD', 'VARCHAR(7)', '', 'N', 'Destination of the first customer order line of the held case: the hold stays on this destination when cases move'],
-                                 ['CUST_ORDER_NO', 'VARCHAR(TBD)', '', 'N', 'Customer Order No of the first line of the held case']] + AUDIT}
+          'description': 'New table: customer order lines (pcs) of a supplier case held by the D/S team with the Hold check box (decided 14-Nov). The held pcs leave the unit before the PO pouring of XD09: they take no PO, the PO qty goes on to the next orders, the other cases stay Ready with their own PO. Row deleted when released (unticked). Name and columns proposed.',
+          'columns': UNIT_KEY + [['CUSTOMER_CD', 'VARCHAR(TBD)', 'Y', 'N', 'Customer order line key (H0253)'],
+                                 ['CUSTOMER_ORDER_NO', 'VARCHAR(TBD)', 'Y', 'N', 'Customer order line key (H0253)'],
+                                 ['DESTINATION_CD', 'VARCHAR(7)', 'Y', 'N', 'Customer order line key (H0253)'],
+                                 ['DETAILED_ITEM_NO', 'VARCHAR(TBD)', 'Y', 'N', 'Customer order line key (H0253)'],
+                                 ['SERIAL_NO', 'VARCHAR(TBD)', 'Y', 'N', 'Customer order line key (H0253)'],
+                                 ['HOLD_QTY', 'INT', '', 'N', 'Held pcs of the line (sum of the line pcs in the held cases); not more than the open qty of the line']] + AUDIT}
 
 
 def item(name, src, field, typ, io, control, desc, initial='-', fmt='-', valid='-', required='N', just='Left', length='-'):
@@ -40,9 +44,9 @@ with open('XD10_spec.json') as fh:
 sl = s['screen_layout']
 k = next(i for i, x in enumerate(sl) if x['image'].endswith('c_04_ds_hold.png'))
 sl[k + 1:k + 1] = [
-    {'caption': '4a. D/S team: [Edit hold] on PART-X 17-Oct, Hold (D/S) of case 4 ticked, [Save] / [Cancel] shown; content split into Destination / Customer Order No / Order Qty', 'image': f'{IMG}/c_04a_ds_case_edit.png'},
-    {'caption': '4b. After [Save]: PO Readiness 4 - 1 = Ready 3, case 4 On Hold (D/S) until changed again', 'image': f'{IMG}/c_04b_ds_reduce.png'},
-    {'caption': '4c. Supplier view of the unit: case 4 On Hold (D/S), only cases 1-3 can be ticked', 'image': f'{IMG}/c_04c_supplier_reduce.png'},
+    {'caption': '4a. D/S team: [Edit hold] on PART-X 17-Oct, Hold (D/S) of case 4 (CO-14109 Taiwan) ticked, [Save] / [Cancel] shown; content split into Destination / Customer Order No / Order Qty', 'image': f'{IMG}/c_04a_ds_case_edit.png'},
+    {'caption': '4b. After [Save]: CO-14109 Taiwan 6 pcs On Hold below the cases (PO released); its PO-0003 qty goes to CO-14110 Australia, so the 4 cases left are all Ready', 'image': f'{IMG}/c_04b_ds_reduce.png'},
+    {'caption': '4c. Supplier view: cases 1-4 Ready, the held 6 pcs shown On Hold (D/S) and cannot be ticked', 'image': f'{IMG}/c_04c_supplier_reduce.png'},
     {'caption': '4d. D/S team: sub screen Hold per Part Number: one row per Part Number (status, Hold check box, [Edit]), expanded to its customer orders', 'image': f'{IMG}/c_04d_ds_supplier_hold.png'},
     {'caption': '4e. Sub screen: PART-X held ([Edit], tick Hold, [Save])', 'image': f'{IMG}/c_04f_ds_supplier_hold_on.png'},
     {'caption': '4f. Supplier view: the held part stays visible, On Hold, check boxes disabled (message no. 12)', 'image': f'{IMG}/c_04e_supplier_on_hold.png'}]
@@ -53,7 +57,7 @@ bi = next(i for i, b in enumerate(g['buttons']) if b['name'] == 'Hold / Release 
 NEWB = [
     {'name': 'Hold per Part (D/S)', 'function': 'D/S team only: open the sub screen Hold per Part Number (one row per part, expanded to its customer orders).'},
     {'name': 'Edit / Save / Cancel (part, sub screen)', 'function': "Sub screen, D/S team only: [Edit] enables the Hold check box of the part; [Save] writes HOLD_FLAG 'Y' / 'N' in TB_R_CROSSDOCK_PART_HOLD; [Cancel] discards."},
-    {'name': 'Edit hold / Save / Cancel (case, D/S)', 'function': 'Per Part Number + Customer Order Date, D/S team only: [Edit hold] enables the Hold (D/S) check boxes of its cases; [Save] writes TB_R_CROSSDOCK_CASE_HOLD (ticked = insert, unticked = delete); [Cancel] discards.'}]
+    {'name': 'Edit hold / Save / Cancel (case, D/S)', 'function': 'Per Part Number + Customer Order Date, D/S team only: [Edit hold] enables the Hold (D/S) check boxes of its cases and of its held lines; [Save] writes TB_R_CROSSDOCK_CASE_HOLD (case ticked = its lines inserted / HOLD_QTY added, held line unticked = deleted); [Cancel] discards.'}]
 g['buttons'][bi + 1:bi + 1] = NEWB
 for m in g['screen_modes']:
     for sec in m['sections']:
@@ -71,14 +75,14 @@ for m in g['screen_modes']:
 # ---------- items ----------
 it = s['items']
 pr = next(x for x in it if x.get('name') == 'PO Readiness (case)')
-pr['description'] = ('Ready cases: cases whose whole qty is pre-mapped to a PO, minus the cases held by the D/S team (Hold check box, from the first held case; rounded down to the last valid cut); '
-                     'red when lower than Case Qty. With a hold the original readiness is shown below, e.g. "4 - 1 on hold".')
+pr['description'] = ('Ready cases: cases whose whole qty is pre-mapped to a PO; red when lower than Case Qty. '
+                     'Pcs held by the D/S team (Hold per case) are not in the cases and not counted; the status shows "n pcs on hold (D/S), PO released".')
 sc = next(i for i, x in enumerate(it) if x.get('group') == '<Supplier Cases of a Unit (H0253 order)>')
 ps = next(i for i, x in enumerate(it[sc:], sc) if x.get('name') == 'PO Status')
 it[ps + 1:ps + 1] = [
-    item('Hold (D/S)', 'Key-in / TB_R_CROSSDOCK_CASE_HOLD', 'CASE_SEQ', 'Char', 'I', 'Check Box',
-         'D/S team only, next to PO Status: enabled after [Edit hold] of the unit; tick = hold the case; the held case and every later case of the unit are not Ready (Ready part ends on the last valid cut before the first held case). '
-         'Saved with [Save], kept until changed; it stays on the same destination when cases move (refer 5.3). Disabled for a case without PO.', initial='Saved value (disabled)', just='Center'),
+    item('Hold (D/S)', 'Key-in / TB_R_CROSSDOCK_CASE_HOLD', 'HOLD_QTY', 'Char', 'I', 'Check Box',
+         'D/S team only, next to PO Status: enabled after [Edit hold] of the unit. Case row: tick = hold the case; after [Save] its pcs leave the unit (no PO) and are listed as held lines. '
+         'Held line row (On Hold, ticked): untick = release; the pcs come back to the unit and take PO again at the next Search (refer 5.3).', initial='Unticked (case) / ticked (held line), disabled', just='Center'),
     item('Edit hold / Save / Cancel', '-', '-', '-', 'I', 'Button', 'D/S team only, per Part Number + Customer Order Date (right of the PO check): [Edit hold] enables the Hold (D/S) check boxes; [Save] stores them; [Cancel] discards. Not shown for a part on hold. Refer 5.3.',
          initial='Edit hold', just='Center')]
 ct = next(i for i, x in enumerate(it[sc:], sc) if x.get('name', '').startswith('Content'))
@@ -91,7 +95,7 @@ for x in it[sc + 1:]:
     if 'group' in x:
         break
     if x.get('name') == 'PO Status':
-        x['description'] = (x.get('description', '') + " 'On Hold (D/S)' (grey) when the case is held (Hold check box) or the part + date is on hold; check box disabled (message no. 14 / 12).").strip()
+        x['description'] = (x.get('description', '') + " 'On Hold (D/S)' (grey) for a held line (Hold per case) or when the part is on hold; check box disabled (message no. 14 / 12).").strip()
 it.append({'group': '<Sub Screen Hold per Part Number (D/S team only)>', 'description': ''})
 it += [
     item('Supplier Code · Plant', 'Supplier master', 'SUPPLIER_CD / SUPPLIER_PLANT', 'Char', 'O', 'Label', 'One section per supplier + plant: supplier name and number of part numbers.'),
@@ -113,16 +117,18 @@ op[h + 1]['items'] += [
     '[Edit] enables the Hold check box, [Save] writes HOLD_FLAG in TB_R_CROSSDOCK_PART_HOLD, [Cancel] discards (same pattern as Part List and Mapping per Destination). '
     'Expanding a part lists its customer orders (Customer Order Date, Customer Order No, Destination, Qty, Case), not grouped by date, without PO information. '
     'A held part stays visible with status On Hold for every Customer Order Date, check boxes disabled (message no. 12), until saved as not on hold.',
-    'Hold per case (decided 13-Nov): the case grid has a check box Hold (D/S) next to PO Status, changed with [Edit hold] / [Save] / [Cancel] of the Part Number + Customer Order Date. '
-    'A held case and every later case of the unit are not Ready, '
-    'and the Ready part ends on the last valid cut before the first held case (cases of the same block are held together). Example: PART-X 17-Oct, PO Readiness 4, case 4 ticked -> Ready 3, case 4 On Hold (D/S).',
-    'The hold is saved per case in TB_R_CROSSDOCK_CASE_HOLD with [Save] and kept until changed again. Case numbers come from the Search (H0253 order). '
-    'A hold is matched again to the cases at each Search (decided 13-Nov, FB-182), because cases move when an order is cancelled or earlier cases are sent: 1) the case that still has the saved Customer Order No + Destination; 2) else the case of the same Destination nearest to the saved case number (the lower one when equally near); 3) else (destination no longer in the unit) the case now at the saved case number, or the last case. The row is then updated to the matched case. No case left in the unit = the row is deleted. Example: case 4 = CO-14109 Taiwan held; CO-14104 cancelled -> the hold moves to case 3 (still CO-14109 Taiwan); CO-14109 cancelled and no other Taiwan line -> the hold stays on case 4 (now Australia). '
-    'A held case shows PO Status On Hold (D/S) to the supplier too (message no. 14). The D/S team sees the content of each case in the columns Destination, Customer Order No and Order Qty.',
+    'Hold per case (decided 13-Nov, rev. 14-Nov): the case grid has a check box Hold (D/S) next to PO Status, changed with [Edit hold] / [Save] / [Cancel] of the Part Number + Customer Order Date. '
+    '[Save] of a ticked case stores its customer order lines with their pcs (HOLD_QTY) in TB_R_CROSSDOCK_CASE_HOLD. At the next Search (XD09) the held pcs leave the unit before the PO pouring: '
+    'they take no PO, so the PO qty they had goes on to the next lines of the part (same Customer Order Date, then the next dates). The other cases are cut again and keep their own readiness (no Ready end at the held case).',
+    'Example: 18-Oct, PART-X 17-Oct, case 4 = CO-14109 Taiwan 6 pcs ticked -> Taiwan On Hold; PO-0003 6 pcs go to CO-14110 Australia (no PO before), so cases 1-4 (Korea, Korea, Japan, Australia) are all Ready. '
+    'On 19-Oct the PO qty left after the 17-Oct lines goes to the 18-Oct orders.',
+    'The held lines are listed below the cases (Case = On hold, PO = released, PO Status On Hold (D/S), message no. 14), for the supplier too, and cannot be ticked for an ASN. '
+    'The hold is on the customer order line, so it does not move when other lines are cancelled or sent. Unticking a held line + [Save] deletes the row: the pcs come back to their place in the H0253 order and take PO at the next Search '
+    '(they come first again, so PO not yet in an ASN can move back to them). A held line cancelled in GTOPAS -> row deleted. The D/S team sees the content of each case in the columns Destination, Customer Order No and Order Qty.',
     'Both holds are re-checked at [Create ASN] like the destination hold: a hold made after the units were ticked makes the whole create fail (message no. 8) and the delivery plan is refreshed.']
 h2 = next(i for i, x in enumerate(op) if x.get('type') == 'heading' and x['text'].startswith('5.2'))
-op[h2 + 1]['items'].append("On Hold also when the Part Number is on hold (5.3); cases held with the Hold check box are not Ready "
-                           "(CROSSDOCK_STATUS '8' On Hold) and are not counted in PO Readiness.")
+op[h2 + 1]['items'].append("On Hold also when the Part Number is on hold (5.3). Pcs held with the Hold check box are not in the cases (On Hold, CROSSDOCK_STATUS '8') "
+                           "and are not counted in PO Readiness; the other cases keep their own readiness.")
 
 # ---------- data map ----------
 s['data_map']['blocks'][1:1] = [
@@ -134,14 +140,14 @@ s['data_map']['blocks'][1:1] = [
                   {'dest_field': 'HOLD_FLAG', 'description': "'Y' (hold) / 'N' (release)"},
                   {'dest_field': 'CREATED_BY / CREATED_DT', 'description': 'Login user ID / server date-time (insert only)'},
                   {'dest_field': 'CHANGED_BY / CHANGED_DT', 'description': 'Login user ID / server date-time'}]},
-    {'source': '[Save] of Edit hold (cases of the unit)',
-     'destination': {'table': 'TB_R_CROSSDOCK_CASE_HOLD', 'operation': 'Insert / Delete',
-                     'description': 'Per case of the unit: ticked and not yet held = insert; unticked and held = delete',
-                     'keys': [{'field': 'PART_NO + ORDER_DT + SUPPLIER_CD + SUPPLIER_PLANT + CASE_SEQ', 'value': 'Case of the check box'}]},
+    {'source': '[Save] of Edit hold (cases and held lines of the unit)',
+     'destination': {'table': 'TB_R_CROSSDOCK_CASE_HOLD', 'operation': 'Insert / Update / Delete',
+                     'description': 'Ticked case: per customer order line in it, insert (or add its pcs to HOLD_QTY); unticked held line: delete',
+                     'keys': [{'field': 'PART_NO + ORDER_DT + SUPPLIER_CD + SUPPLIER_PLANT + CUSTOMER_CD + CUSTOMER_ORDER_NO + DESTINATION_CD + DETAILED_ITEM_NO + SERIAL_NO', 'value': 'Customer order line in the case'}]},
      'mappings': [{'dest_field': 'PART_NO / ORDER_DT', 'description': 'Part number and Customer Order Date of the unit'},
                   {'dest_field': 'SUPPLIER_CD / SUPPLIER_PLANT', 'description': 'Supplier of the unit'},
-                  {'dest_field': 'CASE_SEQ', 'description': 'Case number of the check box'},
-                  {'dest_field': 'DESTINATION_CD / CUST_ORDER_NO', 'description': 'Destination and Customer Order No of the first line of the case'},
+                  {'dest_field': 'CUSTOMER_CD / CUSTOMER_ORDER_NO / DESTINATION_CD / DETAILED_ITEM_NO / SERIAL_NO', 'description': 'Customer order line in the ticked case (#TEMP_INSTRUCTION)'},
+                  {'dest_field': 'HOLD_QTY', 'description': 'Pcs of the line in the ticked case (ASSIGNED_QTY), added when the line is already held'},
                   {'dest_field': 'CREATED_BY / CREATED_DT', 'description': 'Login user ID / server date-time (insert only)'},
                   {'dest_field': 'CHANGED_BY / CHANGED_DT', 'description': 'Login user ID / server date-time'}]}]
 
@@ -151,8 +157,8 @@ m2 = next(i for i, x in enumerate(dm) if x.get('msg_id') == 'MSG2')
 dm[m2 + 1:m2 + 1] = [
     {'event': 'Hover on disabled check box', 'cause': 'Part Number on hold (D/S)', 'type': 'Info', 'msg_id': 'MSG12',
      'message': '{Part No} is on hold by the D/S team', 'action': 'Contact the D/S team.'},
-    {'event': 'Hover on disabled case check box', 'cause': 'Case held by the D/S team (Hold check box)', 'type': 'Info', 'msg_id': 'MSG14',
-     'message': 'On hold by the D/S team: case {n} of {Part No} / {Customer Order Date} (Hold per case)', 'action': 'Contact the D/S team.'}]
+    {'event': 'Hover on a held line', 'cause': 'Customer order line held by the D/S team (Hold per case)', 'type': 'Info', 'msg_id': 'MSG14',
+     'message': 'On hold by the D/S team: {Customer Order No} of {Part No} / {Customer Order Date}, {n} pcs; its PO qty is used by the next orders', 'action': 'Contact the D/S team.'}]
 
 # ---------- tables ----------
 s['tables'] += [T_UNIT, T_CASE]
@@ -165,14 +171,17 @@ with open('XD09_spec.json') as fh:
     s = json.load(fh)
 s['general']['inputs'] += [
     {'name': 'TB_R_CROSSDOCK_PART_HOLD', 'type': 'DB', 'description': 'Part Number on hold (HOLD_FLAG Y): every case of its units On Hold'},
-    {'name': 'TB_R_CROSSDOCK_CASE_HOLD', 'type': 'DB', 'description': 'Cases held by the D/S team: the first held case and later cases On Hold'}]
+    {'name': 'TB_R_CROSSDOCK_CASE_HOLD', 'type': 'DB', 'description': 'Customer order lines (HOLD_QTY pcs) held by the D/S team: taken out before the PO pouring'}]
 fd = s['func_desc']
 h = next(i for i, x in enumerate(fd) if x.get('type') == 'heading' and x.get('text', '').startswith('4.3'))
 fd[h + 1]['items'] += [
     "Holds of the D/S team (XD10 5.3, decided 13-Nov): a Part Number with HOLD_FLAG Y in TB_R_CROSSDOCK_PART_HOLD -> every case of its units CROSSDOCK_STATUS '8' (On Hold).",
-    "Cases held in TB_R_CROSSDOCK_CASE_HOLD: Ready end = last valid cut before the first held CASE_SEQ of the unit; the Ready cases after it get CROSSDOCK_STATUS '8' (On Hold). "
-    'Example: Ready 4, case 4 held -> cases 1-3 Ready, case 4 On Hold; if cases 3-4 belong together -> cases 1-2 Ready, cases 3-4 On Hold.',
-    'Before this, each hold row is matched to the cases of the run (FB-182): same Customer Order No + Destination, else the same Destination nearest to CASE_SEQ, else the case at CASE_SEQ (or the last case); CASE_SEQ / DESTINATION_CD / CUST_ORDER_NO are updated to the matched case; no case left -> row deleted.']
+    "Lines held in TB_R_CROSSDOCK_CASE_HOLD (decided 14-Nov): HOLD_QTY pcs of the line are taken out of the open qty BEFORE the PO pouring (4.2) and the case cut: "
+    "they take no PO, the PO qty goes on to the next lines of the part (same date, then the next Customer Order Dates); the held pcs are written with PO_NO NULL and CROSSDOCK_STATUS '8' (On Hold). "
+    'The other cases are cut from the rest and keep their own readiness. Example 18-Oct: CO-14109 Taiwan 6 held -> PO-0003 6 goes to CO-14110 Australia; PART-X 17-Oct = 4 cases, all Ready.',
+    'Held line no longer open (cancelled in GTOPAS or open qty 0) -> row deleted; HOLD_QTY > open qty -> only the open qty is held.']
+pp = next(i for i, x in enumerate(fd) if x.get('type') == 'heading' and x.get('text', '').startswith('4.2'))
+fd[pp + 1]['items'].append('Pcs held by the D/S team (TB_R_CROSSDOCK_CASE_HOLD, 4.3) are not poured: the PO qty goes on to the next lines.')
 for t in s['tables']:
     for c in t['columns']:
         if c[0] == 'CROSSDOCK_STATUS':
