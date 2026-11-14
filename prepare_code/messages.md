@@ -187,6 +187,8 @@
 | MSG2 | Hover on disabled check box | Unit is Not Ready | Info | Not Ready: case {n} of {Part No} / {Customer Order Date} (or an earlier case) is not assigned to a PO yet ({k} of {c} cases assigned) | Wait for the next PO. |
 | MSG12 | Hover on disabled check box | Part Number on hold (D/S) | Info | {Part No} is on hold by the D/S team | Contact the D/S team. |
 | MSG14 | Hover on a held line | Customer order line held by the D/S team (Hold per case) | Info | On hold by the D/S team: {Customer Order No} of {Part No} / {Customer Order Date}, {n} pcs; its PO qty is used by the next orders | Contact the D/S team. |
+| MSG15 | Click [Save] of a hold (case grid or sub screen) | Hold changed | Confirmation | Hold of {Part No} / {Customer Order Date}? Save: hold case {n} ({Customer Order No}, {qty} pcs); release {Customer Order No} ({qty} pcs). Held pcs take no PO; their PO qty goes to the next orders. | [Yes, save] / [No] |
+| MSG16 | After [Yes, save] | Hold saved | Info | Hold of {Part No} / {Customer Order Date} saved. The delivery plan has been refreshed. | [OK] |
 | **Search** |  |  |  |  |  |
 | MSG3 | Click [Search] / change filter | No unit | Info | No customer order matches this filter. | Change the Delivery Date, Rit or filter. |
 | MSG5 | Change [Delivery Date] | No rit on the date (Sunday) | Info | No rit cycle available for {Delivery Date}. Choose another delivery date. | Choose another Delivery Date. |
