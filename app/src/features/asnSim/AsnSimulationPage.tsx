@@ -58,7 +58,7 @@ export function AsnSimulationPage() {
       </div>
 
       {day && day.blocks.map((b, i) => <Table key={i} t={b} sub={b.table} />)}
-      {searches.map((s, i) => <Table key={`s${i}`} t={s} sub="#TEMP_INSTRUCTION (XD09)" />)}
+      {searches.map((s, i) => <Table key={`s${i}`} t={s} sub="TB_T_INSTRUCTION_D (XD09, per slice)" />)}
       {tab === 'Tables' && SIM.ref.map((t, i) => <Table key={`r${i}`} t={t} />)}
       {tab === 'Tables' && <div style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{SIM.intro}</div>}
       {notes.map((n, i) => <div key={`n${i}`} style={{ ...card, padding: '8px 12px', fontSize: 12 }}>{n}</div>)}
