@@ -20,6 +20,7 @@
 |  |  |  |  | Rows per company of the login user (LEFT(CREATE_BY, 4)), deleted and inserted again at each run; company 1000 sees all suppliers. |
 |  |  |  |  | CASE_NO made by XD09 from TB_R_CASE_LABEL_LAST_SEQ (same CASE_NO for PCS_CASE pcs); input TB_R_CASE_LABEL_LAST_SEQ added. |
 |  |  |  |  | Added to the DR table for the rules of 4.1-4.3: SEQ_NO, CUSTOMER_CD, CUT_FLAG, GROUP_SEQ, CROSSDOCK_STATUS. |
+|  |  |  |  | No new table TB_R_PRA_DAILY_ORDER_MAPPED: open PO qty = REMAIN_QTY of the existing TB_R_PRA_DAILY_ORDER_PART. |
 
 ## 1. General
 
@@ -52,8 +53,7 @@ flowchart TB
 |---|---|---|
 | Delivery Date, Rit, Route | Screen | From the Delivery section of XD10 (carried to the ASN) |
 | TB_R_H0253_ORDER_CONTROL_PRE | DB | ORDER_STATUS = '7', UPD_STATUS IS NULL (no status change in GTOPAS), HOLD_FLAG = 'N', PO_MAPPED_FLAG = 'N'; open qty = ORDER_STATUS_QTY - qty of the line already in TB_R_INSTRUCTION; latest data (replicated by XD08) |
-| TB_R_PRA_DAILY_ORDER_MANIFEST / TB_R_PRA_DAILY_ORDER_PART | DB | manifests with TB_R_PRA_DAILY_ORDER_MANIFEST.CROSS_DOCK_FLAG = 'X'; their part data from TB_R_PRA_DAILY_ORDER_PART (join MANIFEST_NO); latest data; by PO_DT ascending |
-| TB_R_PRA_DAILY_ORDER_MAPPED | DB | New table: MAPPED_QTY per PO part; open PO qty = ORDER_QTY - MAPPED_QTY |
+| TB_R_PRA_DAILY_ORDER_MANIFEST / TB_R_PRA_DAILY_ORDER_PART | DB | manifests with TB_R_PRA_DAILY_ORDER_MANIFEST.CROSS_DOCK_FLAG = 'X'; their part data from TB_R_PRA_DAILY_ORDER_PART (join MANIFEST_NO); latest data; by PO_DT ascending Open PO qty = REMAIN_QTY of TB_R_PRA_DAILY_ORDER_PART. |
 | TB_R_INSTRUCTION | DB | Qty of each line already mapped (open Case List or submitted ASN) |
 | TB_M_PART_CANDIDATE | DB | PCS_CASE of the part |
 | TB_R_CROSSDOCK_PART_HOLD | DB | Part Number on hold (HOLD_FLAG Y): every case of its units On Hold |
@@ -117,7 +117,7 @@ flowchart TB
   - ORDER_STATUS = '7' (Cross Dock), UPD_STATUS IS NULL (no status change in GTOPAS), HOLD_FLAG = 'N', PO_MAPPED_FLAG = 'N'; latest data; open qty = ORDER_STATUS_QTY - qty of the line already in TB_R_INSTRUCTION (> 0). Lines changed in GTOPAS (UPD_STATUS '6' / '2', set by XD08) are not taken.
   - Get: Customer Code, Customer Order No, Order Date, Order Time, Destination Code, Detailed Item No, Serial No, Part Number, Order Status Qty; Pcs/Case of the part from TB_M_PART_CANDIDATE.
 3. Get the PO parts from TB_R_PRA_DAILY_ORDER_MANIFEST + TB_R_PRA_DAILY_ORDER_PART:
-  - manifests with TB_R_PRA_DAILY_ORDER_MANIFEST.CROSS_DOCK_FLAG = 'X'; their part data from TB_R_PRA_DAILY_ORDER_PART (join MANIFEST_NO); latest data; open PO qty = ORDER_QTY - MAPPED_QTY of TB_R_PRA_DAILY_ORDER_MAPPED (0 when no row) > 0; ordered by Order Date ascending (FIFO).
+  - manifests with TB_R_PRA_DAILY_ORDER_MANIFEST.CROSS_DOCK_FLAG = 'X'; their part data from TB_R_PRA_DAILY_ORDER_PART (join MANIFEST_NO); latest data; open PO qty = REMAIN_QTY of TB_R_PRA_DAILY_ORDER_PART (as is when no row) > 0; ordered by Order Date ascending (FIFO).
   - Get: PO Number, Manifest Number, Supplier Code / Plant, Sub Supplier Code / Plant, Order Type, Dock Code, PO Order Qty, Order Date, ETD Ori, Manifest Item, Part Number.
 4. Per unit (Part Number + Customer Order Date, oldest date first), pre-map in H0253 order (see 4.1 and 4.2) and insert the result in TB_T_INSTRUCTION_H / TB_T_INSTRUCTION_D.
   - Lines in H0253 order: 1) Allocation Priority (= Customer Order Date), 2) Customer Code, 3) Customer Order No, 4) Customer Order Date, 5) Customer Order Time, 6) Destination Code, 7) Detailed Item No, 8) Serial No.
@@ -175,7 +175,7 @@ flowchart TB
 
 ## 4. Function description
 
-XD09 runs on [Search] of XD10 and writes the draft of the delivery plan in TB_T_INSTRUCTION_H / TB_T_INSTRUCTION_D (table concept of the DR XD09 (11-Nov)). [Create ASN] (XD10) writes TB_R_INSTRUCTION, PO_MAPPED_FLAG and MAPPED_QTY. Examples: simulasi_asn_rev.xlsx (sheet Sample Input).
+XD09 runs on [Search] of XD10 and writes the draft of the delivery plan in TB_T_INSTRUCTION_H / TB_T_INSTRUCTION_D (table concept of the DR XD09 (11-Nov)). [Create ASN] (XD10) writes TB_R_INSTRUCTION, PO_MAPPED_FLAG and REMAIN_QTY. Examples: simulasi_asn_rev.xlsx (sheet Sample Input).
 
 ### 4.0 Draft tables (16-Nov, from the DR XD09)
 
@@ -194,7 +194,7 @@ XD09 runs on [Search] of XD10 and writes the draft of the delivery plan in TB_T_
 
 ### 4.2 PO Assignment
 
-- One PO per Part Number per Customer Order Date: PO date = order date + 1, PO qty = total order qty of all destinations of that date. Open PO qty = ORDER_QTY - MAPPED_QTY.
+- One PO per Part Number per Customer Order Date: PO date = order date + 1, PO qty = total order qty of all destinations of that date. Open PO qty = REMAIN_QTY of TB_R_PRA_DAILY_ORDER_PART.
 - Pouring (Part Number level): the open PO qty of the part is poured over the customer order lines from the top of the list (order of 4.1, oldest unit first) down, like filling holes one after the other.
 - Each line takes its qty from the oldest PO that still has qty left (PO_DT, then PO No). The PO is used up before the next PO is taken; what is left of a PO goes on to the next line, also of the next Customer Order Date.
 - PO left < qty of the line: the line is split. The first part gets the rest of this PO; the rest goes on to the next PO (one row per PO). Example: line 6 pcs, PO A has 2 left, PO B has 10 -> 2 rows: PO A 2, PO B 4.
@@ -339,24 +339,6 @@ Draft of ASN Crossdock, detail (DR XD09 (11-Nov)): one row per pc. The customer 
 | UPDATE_DT | TIMESTAMP |  | Y | Last update date-time |
 | UPDATE_BY | VARCHAR(20) |  | Y | Last update user |
 
-#### TB_R_PRA_DAILY_ORDER_MAPPED (transaction, proposed)
-New table: mapped qty per Pra Daily Order PO part (instead of a new column in the Pra Daily Order). Name and columns proposed.
-
-| Column | Type | PK | Null | Description |
-|---|---|---|---|---|
-| PO_NO | VARCHAR(TBD) | Y | N | PO number (Pra Daily Order Manifest) |
-| MANIFEST_NO | VARCHAR(TBD) | Y | N | Manifest number |
-| MANIFEST_ITEM | VARCHAR(TBD) | Y | N | Manifest item number (Pra Daily Order Part) |
-| PART_NO | VARCHAR(15) |  | N | Part number |
-| SUPPLIER_CD | VARCHAR(TBD) |  | N | Supplier code |
-| SUPPLIER_PLANT | VARCHAR(TBD) |  | N | Supplier plant |
-| ORDER_QTY | NUMBER(TBD) |  | N | PO qty of the part |
-| MAPPED_QTY | NUMBER(TBD) |  | N | Qty already mapped to customer orders by [Create ASN]; open qty = ORDER_QTY - MAPPED_QTY |
-| CREATED_BY | VARCHAR(TBD) |  | N | User who created the record |
-| CREATED_DT | DATETIME |  | N | Created date and time |
-| CHANGED_BY | VARCHAR(TBD) |  | N | User who last changed the record |
-| CHANGED_DT | DATETIME |  | N | Last changed date and time |
-
 #### TB_R_CROSSDOCK_PART_HOLD (transaction, proposed)
 New table: Part Number put on hold by the D/S team on ASN Crossdock Creation (sub screen Hold per Part). HOLD_FLAG Y = no ASN can be created for the part, whatever the Customer Order Date. Name and columns proposed.
 
@@ -391,6 +373,21 @@ New table: customer order lines (pcs) of a supplier case held by the D/S team wi
 | CREATED_DT | DATETIME |  | N | Created date and time |
 | CHANGED_BY | VARCHAR(20) |  | N | Login user (D/S team) who last changed the record |
 | CHANGED_DT | DATETIME |  | N | Last changed date and time |
+
+#### TB_R_PRA_DAILY_ORDER_PART (transaction, existing)
+Existing Pra Daily Order part (one row per manifest item). Crossdock uses ORDER_QTY and REMAIN_QTY of the parts of the manifests with CROSS_DOCK_FLAG = 'X': open PO qty = REMAIN_QTY (no new mapped-qty table, decided 16-Nov).
+
+| Column | Type | PK | Null | Description |
+|---|---|---|---|---|
+| MANIFEST_NO | VARCHAR(10+) | Y | N | Manifest number (TB_R_PRA_DAILY_ORDER_MANIFEST) |
+| MANIFEST_ITEM | VARCHAR(4+) | Y | N | Item of the manifest |
+| PO_NO | VARCHAR(8+) |  | N | PO number |
+| PO_ITEM | VARCHAR(4+) |  | N | Item of the PO |
+| PART_NO | VARCHAR(12+) |  | N | Part number |
+| ORDER_QTY | NUMERIC |  | N | PO qty (pcs) |
+| REMAIN_QTY | NUMERIC |  | N | Qty of the PO part not yet in an ASN: open PO qty of XD09; reduced by [Create ASN] (XD10), added back on Back / Cancel, submit error and XD08 release |
+| CHANGED_BY | VARCHAR(20) |  | Y | Last change user |
+| CHANGED_DT | DATETIME |  | Y | Last change date-time |
 
 ## Sample Input
 

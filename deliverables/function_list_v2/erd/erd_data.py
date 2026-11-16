@@ -17,14 +17,14 @@ LAYOUT = [
     ['TB_M_PART_CANDIDATE', 'TB_H_PART_CANDIDATE', 'TB_R_CROSSDOCK_IF_RESULT'],
     ['TB_R_H0253_ORDER_CONTROL_PRE', 'TB_H_CROSSDOCK_ORDER_CHANGE'],
     ['TB_R_INSTRUCTION', 'TB_T_INSTRUCTION_H', 'TB_T_INSTRUCTION_D', 'TB_R_CROSSDOCK_CASE_HOLD', 'TB_R_CROSSDOCK_PART_HOLD'],
-    ['TB_R_PRA_DAILY_ORDER_MANIFEST', 'TB_R_PRA_DAILY_ORDER_PART', 'TB_R_PRA_DAILY_ORDER_MAPPED'],
+    ['TB_R_PRA_DAILY_ORDER_MANIFEST', 'TB_R_PRA_DAILY_ORDER_PART'],
     ['TB_R_DAILY_ORDER_MANIFEST', 'TB_R_DAILY_ORDER_PART', 'TB_R_CASE_LABEL_LAST_SEQ'],
 ]
 
 TABLE_KIND = {
     'TB_M_H0125_DESTINATION': 'replica', 'TB_R_ACTUAL_DEMAND_SUMMARY': 'replica', 'TB_R_H0253_ORDER_CONTROL_PRE': 'replica',
     'TB_M_PART_CANDIDATE': 'new', 'TB_M_PART_CANDIDATE_DEST': 'new', 'TB_H_PART_CANDIDATE': 'new', 'TB_R_PART_DAD_RESULT': 'new',
-    'TB_R_CROSSDOCK_IF_RESULT': 'new', 'TB_H_CROSSDOCK_ORDER_CHANGE': 'new', 'TB_R_INSTRUCTION': 'new', 'TB_R_PRA_DAILY_ORDER_MAPPED': 'new',
+    'TB_R_CROSSDOCK_IF_RESULT': 'new', 'TB_H_CROSSDOCK_ORDER_CHANGE': 'new', 'TB_R_INSTRUCTION': 'new',
     'TB_R_CROSSDOCK_CASE_HOLD': 'new', 'TB_R_CROSSDOCK_PART_HOLD': 'new',
     'TB_T_INSTRUCTION_H': 'new', 'TB_T_INSTRUCTION_D': 'new',
     'TB_R_PRA_DAILY_ORDER_MANIFEST': 'existing', 'TB_R_PRA_DAILY_ORDER_PART': 'existing', 'TB_R_DAILY_ORDER_MANIFEST': 'existing',
@@ -47,8 +47,8 @@ PRA_NOTES = {
         'MANIFEST_NO': 'Manifest number (TB_R_PRA_DAILY_ORDER_MANIFEST)', 'MANIFEST_ITEM': 'Item of the manifest (0001 ...)',
         'PO_NO': 'PO number', 'PO_ITEM': 'Item of the PO (can differ from MANIFEST_ITEM)', 'PART_NO': 'Part number',
         'PART_NAME': 'Part name', 'QTY_PER_CONTAINER': 'Qty per container of the PO (mostly 1; not the crossdock pcs/case)',
-        'ORDER_QTY': 'PO qty (pcs) — basis of the open qty for XD09 (ORDER_QTY - MAPPED_QTY)', 'DELIVERY_QTY': 'Delivered qty',
-        'REMAIN_QTY': 'Remaining qty', 'DOCK_CD': 'Receiving dock', 'STATUS': "Status ('0' in the sample)"}),
+        'ORDER_QTY': 'PO qty (pcs)', 'DELIVERY_QTY': 'Delivered qty',
+        'REMAIN_QTY': 'Remaining qty: open PO qty of XD09; reduced by [Create ASN] (XD10), added back on Back / Cancel / XD08 release', 'DOCK_CD': 'Receiving dock', 'STATUS': "Status ('0' in the sample)"}),
 }
 
 # new-table columns renamed to the names of the existing Pra Daily Order tables (UISS still uses the old names)
@@ -98,7 +98,6 @@ RELATIONS = [
     ('TB_T_INSTRUCTION_H', 'ORDER_DT + SHIPPING_PART_NO + SUPPLIER_CD + SUPPLIER_PLANT', 'TB_T_INSTRUCTION_D', 'ORDER_DT + SHIPPING_PART_NO + SUPPLIER_CD + SUPPLIER_PLANT',
      '1 : N', 'Pcs of a unit of the draft'),
     ('TB_R_PRA_DAILY_ORDER_MANIFEST', 'MANIFEST_NO', 'TB_R_PRA_DAILY_ORDER_PART', 'MANIFEST_NO', '1 : N', 'Items of a manifest (existing); crossdock when the manifest has CROSS_DOCK_FLAG X'),
-    ('TB_R_PRA_DAILY_ORDER_PART', 'MANIFEST_NO + MANIFEST_ITEM', 'TB_R_PRA_DAILY_ORDER_MAPPED', 'MANIFEST_NO + MANIFEST_ITEM', '1 : 0..1', 'Mapped qty of a crossdock PO line'),
     ('TB_R_PRA_DAILY_ORDER_PART', 'MANIFEST_NO + MANIFEST_ITEM', 'TB_R_INSTRUCTION', 'MANIFEST_NO + MANIFEST_ITEM', '1 : N', 'PO line of a mapping row'),
     ('TB_R_PRA_DAILY_ORDER_PART', 'MANIFEST_NO + MANIFEST_ITEM', 'TB_T_INSTRUCTION_D', 'MANIFEST_NO + MANIFEST_ITEM', '1 : N', 'PO line of a pc of the draft'),
     ('TB_R_DAILY_ORDER_MANIFEST', 'SUB_MANIFEST_NO + MANIFEST_NO', 'TB_R_DAILY_ORDER_PART', 'SUB_MANIFEST_NO + MANIFEST_NO', '1 : N', 'Items x cases of an ASN manifest (existing)'),

@@ -20,7 +20,7 @@ One definition per table (the most complete one among the UISS); "Used by" = fun
 | TB_R_H0253_ORDER_CONTROL_PRE | transaction | existing | XD08 |
 | TB_R_INSTRUCTION | transaction | proposed | XD08, XD10, XD11 |
 | TB_R_PART_DAD_RESULT | transaction | proposed | XD05 |
-| TB_R_PRA_DAILY_ORDER_MAPPED | transaction | proposed | XD08, XD09, XD10, XD11 |
+| TB_R_PRA_DAILY_ORDER_PART | transaction | existing | XD08, XD09, XD10, XD11 |
 | TB_T_INSTRUCTION_D | transaction | proposed | XD09, XD10 |
 | TB_T_INSTRUCTION_H | transaction | proposed | XD09, XD10 |
 
@@ -450,25 +450,22 @@ Result of the DAD Volume Calculation, one record per calculated part and period.
 | CREATED_BY | VARCHAR(TBD) |  | N | Batch user ID |
 | CREATED_DT | DATETIME |  | N | Date and time of the calculation |
 
-#### TB_R_PRA_DAILY_ORDER_MAPPED (transaction, proposed)
+#### TB_R_PRA_DAILY_ORDER_PART (transaction, existing)
 Used by: XD08, XD09, XD10, XD11
 
-New table: mapped qty per Pra Daily Order PO part (instead of a new column in the Pra Daily Order). Name and columns proposed.
+Existing Pra Daily Order part (one row per manifest item). Crossdock uses ORDER_QTY and REMAIN_QTY of the parts of the manifests with CROSS_DOCK_FLAG = 'X': open PO qty = REMAIN_QTY (no new mapped-qty table, decided 16-Nov).
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
-| PO_NO | VARCHAR(TBD) | Y | N | PO number (Pra Daily Order Manifest) |
-| MANIFEST_NO | VARCHAR(TBD) | Y | N | Manifest number |
-| MANIFEST_ITEM | VARCHAR(TBD) | Y | N | Manifest item number (Pra Daily Order Part) |
-| PART_NO | VARCHAR(15) |  | N | Part number |
-| SUPPLIER_CD | VARCHAR(TBD) |  | N | Supplier code |
-| SUPPLIER_PLANT | VARCHAR(TBD) |  | N | Supplier plant |
-| ORDER_QTY | NUMBER(TBD) |  | N | PO qty of the part |
-| MAPPED_QTY | NUMBER(TBD) |  | N | Qty already mapped to customer orders by [Create ASN]; open qty = ORDER_QTY - MAPPED_QTY |
-| CREATED_BY | VARCHAR(TBD) |  | N | User who created the record |
-| CREATED_DT | DATETIME |  | N | Created date and time |
-| CHANGED_BY | VARCHAR(TBD) |  | N | User who last changed the record |
-| CHANGED_DT | DATETIME |  | N | Last changed date and time |
+| MANIFEST_NO | VARCHAR(10+) | Y | N | Manifest number (TB_R_PRA_DAILY_ORDER_MANIFEST) |
+| MANIFEST_ITEM | VARCHAR(4+) | Y | N | Item of the manifest |
+| PO_NO | VARCHAR(8+) |  | N | PO number |
+| PO_ITEM | VARCHAR(4+) |  | N | Item of the PO |
+| PART_NO | VARCHAR(12+) |  | N | Part number |
+| ORDER_QTY | NUMERIC |  | N | PO qty (pcs) |
+| REMAIN_QTY | NUMERIC |  | N | Qty of the PO part not yet in an ASN: open PO qty of XD09; reduced by [Create ASN] (XD10), added back on Back / Cancel, submit error and XD08 release |
+| CHANGED_BY | VARCHAR(20) |  | Y | Last change user |
+| CHANGED_DT | DATETIME |  | Y | Last change date-time |
 
 #### TB_T_INSTRUCTION_D (transaction, proposed)
 Used by: XD09, XD10

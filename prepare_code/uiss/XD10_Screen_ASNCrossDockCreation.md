@@ -24,6 +24,7 @@
 |  |  |  |  | Destination detail (Destination / pcs, Hold Flag) hidden on the screen for now (FB-184). |
 | 0.5 | FID Rayhan | 16-Nov-26 |  | Source of the delivery plan: TB_T_INSTRUCTION_H / TB_T_INSTRUCTION_D (table concept of the DR XD09) instead of #TEMP_INSTRUCTION. |
 |  |  |  |  | Case No of the ASN = CASE_NO of the draft made by XD09; Submit ASN no longer generates the case numbers (ASN number as existing). |
+|  |  |  |  | No new table TB_R_PRA_DAILY_ORDER_MAPPED: [Create ASN] reduces REMAIN_QTY of TB_R_PRA_DAILY_ORDER_PART; Back / Cancel / submit error add it back. |
 
 ## 1. General
 
@@ -459,23 +460,14 @@ flowchart TB
 |  | CREATE_DT | Not changed |
 |  | CREATE_BY | Not changed |
 
-#### 5. Insert / Update TB_R_PRA_DAILY_ORDER_MAPPED – [Create ASN]: one row per PO part used by the chosen blocks (insert when none yet)
+#### 5. Update TB_R_PRA_DAILY_ORDER_PART – [Create ASN]: REMAIN_QTY of every PO part used by the chosen case groups
 - Source: TB_T_INSTRUCTION_D (chosen case groups)
-- Destination keys: PO_NO + MANIFEST_NO + MANIFEST_ITEM = PO part of the pre-mapping
+- Destination keys: MANIFEST_NO + MANIFEST_ITEM = PO part of the rows
 
 | Source field | Destination field | Description |
 |---|---|---|
-|  | MAPPED_QTY | + SUM(PO_QTY) of the chosen case groups; - again on Back / Cancel |
-| PO_NO | PO_NO |  |
-| MANIFEST_NO | MANIFEST_NO |  |
-| MANIFEST_ITEM | MANIFEST_ITEM |  |
-| PART_NO | PART_NO |  |
-| SUPPLIER_CD | SUPPLIER_CD |  |
-| SUPPLIER_PLANT | SUPPLIER_PLANT |  |
-| ORDER_QTY | ORDER_QTY |  |
-|  | CREATED_BY | Login user ID (insert only) |
-|  | CREATED_DT | Server system date-time (insert only) |
-|  | CHANGED_BY | Login user ID |
+|  | REMAIN_QTY | - qty of the chosen case groups (sum per PO part); + again on Back / Cancel / submit error |
+|  | CHANGED_BY | Login user / batch user |
 |  | CHANGED_DT | Server system date-time |
 
 #### 6. Insert TB_R_INSTRUCTION – [Create ASN]: one row per case x line x PO
@@ -627,7 +619,7 @@ flowchart TB
 
 - 18-Oct, delivery plan PART-X 17-Oct: 5 cases; order 30 pcs vs PO PO-0003 18 pcs -> Short PO (shown with the ASN status, details in the PO information pop up); cases 1-4 Ready (PO-0002 rest 6 + PO-0003), case 5 (CO-14110) Not Ready with Remaining Qty 6.
 - The selection starts at case 1 and ends on a case with CUT_FLAG Y: ticking case 3 selects cases 1-3; case 5 is disabled. Per Part Number the oldest Customer Order Date first: on 19-Oct the cases of 18-Oct show "Wait: 17-Oct first" until case 1 of 17-Oct (CO-14110) is ticked.
-- [Create ASN] with cases 1-4: 5 rows in TB_R_INSTRUCTION, PO_MAPPED_FLAG Y on the 5 lines that are complete (CO-14110 stays N), MAPPED_QTY PO-0002 6, PO-0003 18. [Submit ASN] gives ASN0003 with case numbers C-0003-01 … 04; only case 5 stays in the delivery plan.
+- [Create ASN] with cases 1-4: 5 rows in TB_R_INSTRUCTION, PO_MAPPED_FLAG Y on the 5 lines that are complete (CO-14110 stays N), REMAIN_QTY PO-0002 6 -> 0, PO-0003 18 -> 0. [Submit ASN] gives ASN0003 with case numbers C-0003-01 … 04; only case 5 stays in the delivery plan.
 - One line in two ASNs: CO-14115 12 pcs = case 1 (ASN0006, PO_MAPPED_FLAG N, open 6) and case 2 (ASN0007, PO_MAPPED_FLAG Y).
 - D/S hold of Japan (CO-14104) after the supplier ticked the unit: [Create ASN] fails (MSG8); the cases are computed again without Japan. A draft not submitted is released by the next XD08 run ([Submit ASN] of the old draft: MSG11). A cancel after the ASN goes to XD11 (CO-14104 in ASN0003 case 3 → CO-14111).
 
@@ -665,9 +657,9 @@ l. Release of a held line (decided 14-Nov, FB-183): untick + [Save] sets HOLD_FL
 ### 5.4 Select Cases and Create ASN
 
 a. The user ticks the supplier cases to send with the check box of each case row. Cases that belong together (Case Group = GROUP_SEQ of XD09, not shown) are always sent together, so that at receiving every destination completes its warehouse case. The ticked cases of a unit start at case 1: ticking a case ticks the earlier cases and the other cases of its group (message no. 10). Example (18-Oct, PART-X 17-Oct): ticking case 3 gives cases 1-3; case 5 (no PO) cannot be ticked. When a case does not end on a cut (e.g. a case with KR 4 + JP 2), the cases up to the next cut are ticked with it. Only Ready cases can be ticked. One ASN is for one Supplier Code + Supplier Plant (existing rule): ticked units of more than one supplier give message no. 9 and nothing is created.
-b. [Create ASN] does the real mapping of the chosen blocks in one transaction: the slices inserted into TB_R_INSTRUCTION (case and line sequence of XD09), MAPPED_QTY in the new table TB_R_PRA_DAILY_ORDER_MAPPED, and PO_MAPPED_FLAG = 'Y' on the H0253 lines that are now completely in TB_R_INSTRUCTION. Then the Case List opens.
+b. [Create ASN] does the real mapping of the chosen blocks in one transaction: the slices inserted into TB_R_INSTRUCTION (case and line sequence of XD09), REMAIN_QTY of TB_R_PRA_DAILY_ORDER_PART reduced, and PO_MAPPED_FLAG = 'Y' on the H0253 lines that are now completely in TB_R_INSTRUCTION. Then the Case List opens.
 c. Before mapping, the ticked units are re-checked in the same transaction (row lock on the H0253 lines): if a line got HOLD_FLAG = 'Y' after the unit was ticked (e.g. the D/S team held a destination in another session), the creation fails for the whole selection (also the units that are not held): message no. 8 (Hold), the delivery plan is refreshed automatically and all ticked units are unticked. If a unit is no longer Ready for another reason (changed by another user), message no. 7.
-d. [Back] / [Cancel] on the Case List cancel the creation: the rows are deleted from TB_R_INSTRUCTION, PO_MAPPED_FLAG back to 'N' and MAPPED_QTY reduced again, so the blocks can be selected again. A draft left open (no Submit, no Cancel) is released by the next run of XD08 (every run releases all drafts, decided 23-Oct): the cases come back in the delivery plan and the supplier ticks them again.
+d. [Back] / [Cancel] on the Case List cancel the creation: the rows are deleted from TB_R_INSTRUCTION, PO_MAPPED_FLAG back to 'N' and REMAIN_QTY added back, so the blocks can be selected again. A draft left open (no Submit, no Cancel) is released by the next run of XD08 (every run releases all drafts, decided 23-Oct): the cases come back in the delivery plan and the supplier ticks them again.
 
 ### 5.5 Case List and Submit ASN
 
@@ -678,7 +670,7 @@ d. [Submit ASN]: confirmation (message no. 4). Yes: the draft is handed with a S
 
 ### 5.6 Notes
 
-- TB_T_INSTRUCTION_H / TB_T_INSTRUCTION_D hold the draft of [Search] per company of the login user (table concept of the DR XD09 (11-Nov)). TB_R_INSTRUCTION holds the mapping from [Create ASN] until submit or Back / Cancel. TB_R_PRA_DAILY_ORDER_MAPPED is a new table for the mapped qty. Submitted ASNs are in TB_R_DAILY_ORDER_MANIFEST / PART and shown in ASN Inquiry (XD15).
+- TB_T_INSTRUCTION_H / TB_T_INSTRUCTION_D hold the draft of [Search] per company of the login user (table concept of the DR XD09 (11-Nov)). TB_R_INSTRUCTION holds the mapping from [Create ASN] until submit or Back / Cancel. The open PO qty is REMAIN_QTY of the existing TB_R_PRA_DAILY_ORDER_PART (no new table). Submitted ASNs are in TB_R_DAILY_ORDER_MANIFEST / PART and shown in ASN Inquiry (XD15).
 - Case number: CASE_NO of the draft, made by XD09 at [Search] in the existing NSP format; the last sequence is kept in TB_R_CASE_LABEL_LAST_SEQ.
 - Cancel of an order is not done in NSP: it comes from the source (H0253 order status '2'); NSP only holds (HOLD_FLAG). Refer XD08 / XD11.
 - The prototype has a 'Business date' switch (PO release) and a 'View as' switch (Supplier / D/S team); they are not part of the real screen.
@@ -689,7 +681,7 @@ a. Re-check before the submit: the draft must still exist (not released by XD08)
 b. The screen generates the Submit ID, writes the start message to the log (LOG2) and starts the submit process. The screen returns to the delivery plan and shows the Submit ID.
 c. Read the rows of the Submit ID from TB_R_INSTRUCTION (one Supplier Code + Plant). Take the ASN No from the existing numbering and take the Case No of each case from CASE_NO of TB_T_INSTRUCTION_D (made by XD09).
 d. Insert TB_R_DAILY_ORDER_MANIFEST (status Created) and TB_R_DAILY_ORDER_PART (existing tables, refer Data Edit Mapping); write ASN_NO / CASE_NO back to TB_R_INSTRUCTION.
-e. No error: commit, write the result (LOG3) and end (LOG4) messages. Error: roll back, release the mapping (delete the rows from TB_R_INSTRUCTION, PO_MAPPED_FLAG back to 'N', MAPPED_QTY of TB_R_PRA_DAILY_ORDER_MAPPED reduced again), write the error (LOG5). Exit.
+e. No error: commit, write the result (LOG3) and end (LOG4) messages. Error: roll back, release the mapping (delete the rows from TB_R_INSTRUCTION, PO_MAPPED_FLAG back to 'N', REMAIN_QTY of TB_R_PRA_DAILY_ORDER_PART added back), write the error (LOG5). Exit.
 
 - Submit ASN runs as a batch so the screen does not wait; the user sees the Submit ID and checks the result in Log Monitoring. No success popup is shown on the screen.
 - The log follows the existing NSP log (same table and columns); the Submit ID is the key to find the run.
@@ -823,24 +815,6 @@ Real mapping made by [Create ASN]: one row per supplier case x customer order li
 | CHANGED_BY | VARCHAR(TBD) |  | N | User who last changed the record |
 | CHANGED_DT | DATETIME |  | N | Last changed date and time |
 
-#### TB_R_PRA_DAILY_ORDER_MAPPED (transaction, proposed)
-New table: mapped qty per Pra Daily Order PO part (instead of a new column in the Pra Daily Order). Name and columns proposed.
-
-| Column | Type | PK | Null | Description |
-|---|---|---|---|---|
-| PO_NO | VARCHAR(TBD) | Y | N | PO number (Pra Daily Order Manifest) |
-| MANIFEST_NO | VARCHAR(TBD) | Y | N | Manifest number |
-| MANIFEST_ITEM | VARCHAR(TBD) | Y | N | Manifest item number (Pra Daily Order Part) |
-| PART_NO | VARCHAR(15) |  | N | Part number |
-| SUPPLIER_CD | VARCHAR(TBD) |  | N | Supplier code |
-| SUPPLIER_PLANT | VARCHAR(TBD) |  | N | Supplier plant |
-| ORDER_QTY | NUMBER(TBD) |  | N | PO qty of the part |
-| MAPPED_QTY | NUMBER(TBD) |  | N | Qty already mapped to customer orders by [Create ASN]; open qty = ORDER_QTY - MAPPED_QTY |
-| CREATED_BY | VARCHAR(TBD) |  | N | User who created the record |
-| CREATED_DT | DATETIME |  | N | Created date and time |
-| CHANGED_BY | VARCHAR(TBD) |  | N | User who last changed the record |
-| CHANGED_DT | DATETIME |  | N | Last changed date and time |
-
 #### TB_R_DAILY_ORDER_MANIFEST (transaction, existing)
 Existing ASN manifest (GTOPAS SPS DB structure TR-01). Submit ASN: one row per Pra Daily Order manifest of the cases, all with the same ASN_NO. Only the columns used are listed.
 
@@ -956,6 +930,21 @@ New table: customer order lines (pcs) of a supplier case held by the D/S team wi
 | CHANGED_BY | VARCHAR(20) |  | N | Login user (D/S team) who last changed the record |
 | CHANGED_DT | DATETIME |  | N | Last changed date and time |
 
+#### TB_R_PRA_DAILY_ORDER_PART (transaction, existing)
+Existing Pra Daily Order part (one row per manifest item). Crossdock uses ORDER_QTY and REMAIN_QTY of the parts of the manifests with CROSS_DOCK_FLAG = 'X': open PO qty = REMAIN_QTY (no new mapped-qty table, decided 16-Nov).
+
+| Column | Type | PK | Null | Description |
+|---|---|---|---|---|
+| MANIFEST_NO | VARCHAR(10+) | Y | N | Manifest number (TB_R_PRA_DAILY_ORDER_MANIFEST) |
+| MANIFEST_ITEM | VARCHAR(4+) | Y | N | Item of the manifest |
+| PO_NO | VARCHAR(8+) |  | N | PO number |
+| PO_ITEM | VARCHAR(4+) |  | N | Item of the PO |
+| PART_NO | VARCHAR(12+) |  | N | Part number |
+| ORDER_QTY | NUMERIC |  | N | PO qty (pcs) |
+| REMAIN_QTY | NUMERIC |  | N | Qty of the PO part not yet in an ASN: open PO qty of XD09; reduced by [Create ASN] (XD10), added back on Back / Cancel, submit error and XD08 release |
+| CHANGED_BY | VARCHAR(20) |  | Y | Last change user |
+| CHANGED_DT | DATETIME |  | Y | Last change date-time |
+
 ## Sample Input
 
 **Sample Create ASN - ASN Cross Dock Creation (simulasi_asn_rev.xlsx, 18-Oct-2026)**
@@ -977,10 +966,10 @@ New table: customer order lines (pcs) of a supplier case held by the D/S team wi
 
 ### B. Input: PO parts before [Create ASN] (Pra Daily Order: manifest with CROSS_DOCK_FLAG = 'X')
 
-| PO No | Manifest No | Manifest Item | Part No | PO Qty (ORDER_QTY) | Mapped Qty (TB_R_PRA_DAILY_ORDER_MAPPED) | Open Qty |
+| PO No | Manifest No | Manifest Item | Part No | PO Qty (ORDER_QTY) | Remaining Qty (TB_R_PRA_DAILY_ORDER_PART.REMAIN_QTY) | Open Qty |
 |---|---|---|---|---|---|---|
-| PO-0002 | MF-0002 | 0001 | PART-X | 6 | 0 | 6 |
-| PO-0003 | MF-0003 | 0001 | PART-X | 18 | 0 | 18 |
+| PO-0002 | MF-0002 | 0001 | PART-X | 6 | 6 | 6 |
+| PO-0003 | MF-0003 | 0001 | PART-X | 18 | 18 | 18 |
 
 ### C. Supplier cases (6 pcs in H0253 order; CUT_FLAG Y = the ASN may stop after the case)
 
@@ -1008,8 +997,8 @@ New table: customer order lines (pcs) of a supplier case held by the D/S team wi
 |---|---|---|---|---|
 | TB_R_H0253_ORDER_CONTROL_PRE | CO-14104, CO-14105, CO-14106, CO-14107, CO-14109 (whole line in the ASN) | PO_MAPPED_FLAG | N | Y |
 | TB_R_H0253_ORDER_CONTROL_PRE | CO-14110 (case 5, not sent) | PO_MAPPED_FLAG | N | N |
-| TB_R_PRA_DAILY_ORDER_MAPPED | PO-0002 / MF-0002 / 0001 / PART-X | MAPPED_QTY | 0 | 6 |
-| TB_R_PRA_DAILY_ORDER_MAPPED | PO-0003 / MF-0003 / 0001 / PART-X | MAPPED_QTY | 0 | 18 |
+| TB_R_PRA_DAILY_ORDER_PART | PO-0002 / MF-0002 / 0001 / PART-X | REMAIN_QTY | 6 | 0 |
+| TB_R_PRA_DAILY_ORDER_PART | PO-0003 / MF-0003 / 0001 / PART-X | REMAIN_QTY | 18 | 0 |
 
 ### F. Result on the screen: Case List (Draft)
 
@@ -1027,9 +1016,9 @@ New table: customer order lines (pcs) of a supplier case held by the D/S team wi
 
 | No | Scenario | Expected result |
 |---|---|---|
-| N1 | Create ASN with the unit PART-X 17-Oct ticked (cases 1-4) | Sections C to F: 4 cases, 5 rows in TB_R_INSTRUCTION, PO_MAPPED_FLAG Y on 5 lines, mapped qty added; Case List opens. |
+| N1 | Create ASN with the unit PART-X 17-Oct ticked (cases 1-4) | Sections C to F: 4 cases, 5 rows in TB_R_INSTRUCTION, PO_MAPPED_FLAG Y on 5 lines, REMAIN_QTY reduced; Case List opens. |
 | N2 | [Submit ASN] and [Yes, submit] | Submit ID handed to the submit process (5.7); ASN0003 and CASE_NO are written back to the 5 rows; only case 5 (CO-14110, Not Ready) stays in the delivery plan. |
-| N3 | [Back] / [Cancel] on the Case List | The 5 rows are deleted from TB_R_INSTRUCTION, PO_MAPPED_FLAG back to N, MAPPED_QTY back to 0; the unit is listed again. |
+| N3 | [Back] / [Cancel] on the Case List | The 5 rows are deleted from TB_R_INSTRUCTION, PO_MAPPED_FLAG back to N, REMAIN_QTY back to the PO qty; the unit is listed again. |
 | N4 | 19-Oct: split PO PO-0004 released | Case 5 (CO-14110) is Ready → ASN0004; order date 18-Oct (3 destinations) → ASN0005. |
 | E1 | The D/S team holds Japan (CO-14104) after the supplier ticked the unit | MSG8; the whole create fails, nothing is inserted, the delivery plan is refreshed and all units are unticked. |
 | E2 | The unit is no longer Ready when [Create ASN] is clicked | MSG7; nothing is inserted; the delivery plan is refreshed. |

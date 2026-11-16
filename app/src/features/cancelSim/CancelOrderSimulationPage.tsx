@@ -91,7 +91,7 @@ const SCENARIOS: { key: string; name: string; tag: Level; summary: string; steps
     steps: [START,
       {
         lane: 'sup', date: '14-Oct', title: 'Create ASN done, not submitted',
-        text: 'Create ASN mapped the 8 pcs (TB_R_INSTRUCTION without ASN No, PO MAPPED_QTY 8, PO_MAPPED_FLAG Y). The Case List is left open without Submit.',
+        text: 'Create ASN mapped the 8 pcs (TB_R_INSTRUCTION without ASN No, PO REMAIN_QTY − 8, PO_MAPPED_FLAG Y). The Case List is left open without Submit.',
         src: SRC14, rep: REP14_M, instr: [{ order: O, serial: A, qty: 8, po: PO, asn: '— (draft)' }],
         flags: [['warn', 'Draft: not yet in an ASN.']],
       },
@@ -103,7 +103,7 @@ const SCENARIOS: { key: string; name: string; tag: Level; summary: string; steps
       },
       {
         lane: 'sys', date: '15-Oct', title: 'XD08: UPD_STATUS 2 and all drafts released',
-        text: 'XD08 sets UPD_STATUS 2 (ORDER_STATUS stays 7) and releases every draft: the TB_R_INSTRUCTION rows without ASN No are deleted, MAPPED_QTY is reduced again and PO_MAPPED_FLAG goes back to N. The cases come back in the delivery plan; the cancelled line is no longer taken.',
+        text: 'XD08 sets UPD_STATUS 2 (ORDER_STATUS stays 7) and releases every draft: the TB_R_INSTRUCTION rows without ASN No are deleted, REMAIN_QTY of the PO is added back and PO_MAPPED_FLAG goes back to N. The cases come back in the delivery plan; the cancelled line is no longer taken.',
         src: [{ order: O, serial: A, status: '2', qty: 8, upd: '15-Oct 03:30' }], rep: [{ order: O, serial: A, status: '7', qty: 8, hold: 'N', mapped: 'N', upd: '2', changed: true }],
         instr: [{ order: O, serial: A, qty: 8, po: PO, asn: '— (draft)', deleted: true }],
         flags: [['ok', 'Draft released by XD08.'], ['warn', '[Submit ASN] of the old Case List fails (re-check); the supplier searches and creates the ASN again.']],

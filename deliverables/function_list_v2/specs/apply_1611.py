@@ -28,6 +28,7 @@ REVISIONS = {
         'Rows per company of the login user (LEFT(CREATE_BY, 4)), deleted and inserted again at each run; company 1000 sees all suppliers.',
         'CASE_NO made by XD09 from TB_R_CASE_LABEL_LAST_SEQ (same CASE_NO for PCS_CASE pcs); input TB_R_CASE_LABEL_LAST_SEQ added.',
         'Added to the DR table for the rules of 4.1-4.3: SEQ_NO, CUSTOMER_CD, CUT_FLAG, GROUP_SEQ, CROSSDOCK_STATUS.',
+        'No new table TB_R_PRA_DAILY_ORDER_MAPPED: open PO qty = REMAIN_QTY of the existing TB_R_PRA_DAILY_ORDER_PART.',
     ]),
     'XD10': [INITIAL] + rev('0.2', '11-Nov-26', [
         'Pre-mapping refers to the pouring rule of XD09 4.2 (FB-172).',
@@ -49,9 +50,12 @@ REVISIONS = {
     ]) + rev('0.5', '16-Nov-26', [
         'Source of the delivery plan: TB_T_INSTRUCTION_H / TB_T_INSTRUCTION_D (table concept of the DR XD09) instead of #TEMP_INSTRUCTION.',
         'Case No of the ASN = CASE_NO of the draft made by XD09; Submit ASN no longer generates the case numbers (ASN number as existing).',
+        'No new table TB_R_PRA_DAILY_ORDER_MAPPED: [Create ASN] reduces REMAIN_QTY of TB_R_PRA_DAILY_ORDER_PART; Back / Cancel / submit error add it back.',
     ]),
     'XD11': [INITIAL] + rev('0.2', '13-Nov-26', [
         'Dummy data: supplier 5001-1 / 5002-1, PO-0001.., MF-0001.., destinations Korea / Japan / Taiwan / Australia.',
+    ]) + rev('0.3', '16-Nov-26', [
+        'Table TB_R_PRA_DAILY_ORDER_MAPPED removed from the table list: the PO qty is REMAIN_QTY of TB_R_PRA_DAILY_ORDER_PART.',
     ]),
 }
 

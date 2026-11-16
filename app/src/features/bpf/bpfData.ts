@@ -454,8 +454,7 @@ export const BPF: BpfData = {
       "TB_R_H0253_ORDER_CONTROL_PRE (status 7, HOLD N, open qty)",
       "TB_R_INSTRUCTION",
       "TB_R_PRA_DAILY_ORDER_MANIFEST",
-      "TB_R_PRA_DAILY_ORDER_PART",
-      "TB_R_PRA_DAILY_ORDER_MAPPED"
+      "TB_R_PRA_DAILY_ORDER_PART (REMAIN_QTY)"
      ],
      "write": [
       "TB_T_INSTRUCTION_H / D"
@@ -502,7 +501,7 @@ export const BPF: BpfData = {
      "write": [
       "TB_R_INSTRUCTION",
       "TB_R_H0253_ORDER_CONTROL_PRE (PO_MAPPED_FLAG Y)",
-      "TB_R_PRA_DAILY_ORDER_MAPPED (MAPPED_QTY)"
+      "TB_R_PRA_DAILY_ORDER_PART (REMAIN_QTY −)"
      ],
      "ab": [],
      "next": [
@@ -932,7 +931,7 @@ export const BPF: BpfData = {
      ],
      "write": [
       "TB_R_INSTRUCTION (delete drafts)",
-      "TB_R_PRA_DAILY_ORDER_MAPPED (MAPPED_QTY −)",
+      "TB_R_PRA_DAILY_ORDER_PART (REMAIN_QTY +)",
       "TB_R_H0253_ORDER_CONTROL_PRE (PO_MAPPED_FLAG N)"
      ],
      "ab": [

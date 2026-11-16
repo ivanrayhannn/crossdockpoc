@@ -49,7 +49,7 @@ flowchart TB
 |---|---|---|
 | TB_R_H0253_ORDER_CONTROL_PRE (NSP) | DB | Rows inserted / updated; PO_MAPPED_FLAG 'N' for the lines of released drafts |
 | TB_R_INSTRUCTION | DB | Draft rows deleted |
-| TB_R_PRA_DAILY_ORDER_MAPPED | DB | MAPPED_QTY of the released drafts given back |
+| TB_R_PRA_DAILY_ORDER_PART | DB | REMAIN_QTY of the released drafts given back (+ qty) |
 | Log | DB | One record per run with status, counts and watermark; LOG5 / LOG6 per cancel in an ASN |
 
 ### Parameters
@@ -76,7 +76,7 @@ flowchart TB
   p3["3. Insert new keys / update existing keys, UPD_STATUS"]
   d[("TB_R_H0253_ORDER_CONTROL_PRE (NSP)")]
   p4["4. Release all drafts"]
-  i[("TB_R_INSTRUCTION / TB_R_PRA_DAILY_ORDER_MAPPED")]
+  i[("TB_R_INSTRUCTION / TB_R_PRA_DAILY_ORDER_PART")]
   p5["5. Check cancels in submitted ASNs"]
   p6["6. Commit or roll back, Log (watermark)"]
   log[("Log")]
@@ -100,7 +100,7 @@ flowchart TB
 4. Serial split (a line in more than one ASN is split by GTOPAS into a received part and a remaining part):
   - Keep each part linked to its ASN in TB_R_INSTRUCTION: the received part to the ASN sent first, the remaining part to the next ASN. A part already in an ASN is not offered to the supplier again (PO_MAPPED_FLAG 'Y'). Write LOG7.
 5. Release all drafts of TB_R_INSTRUCTION (rows with ASN_NO NULL), whatever changed:
-  - Delete the rows; MAPPED_QTY of TB_R_PRA_DAILY_ORDER_MAPPED - their qty; PO_MAPPED_FLAG = 'N' on their lines.
+  - Delete the rows; REMAIN_QTY of TB_R_PRA_DAILY_ORDER_PART + their qty; PO_MAPPED_FLAG = 'N' on their lines.
   - The cases come back in the delivery plan of XD10; the supplier ticks them again and creates the ASN again (lines with UPD_STATUS are no longer taken).
 6. Check the lines with UPD_STATUS '2' that have rows in TB_R_INSTRUCTION with ASN_NO (cancel of qty in a submitted ASN):
   - Write LOG5 per line and ASN; the line is listed in Change Order Number (XD11). Nothing is changed in the ASN.
@@ -175,14 +175,15 @@ flowchart TB
 |---|---|---|
 |  | (row) | Deleted |
 
-#### 3. Update TB_R_PRA_DAILY_ORDER_MAPPED – Mapped qty of the released drafts given back
+#### 3. Update TB_R_PRA_DAILY_ORDER_PART – REMAIN_QTY given back for the released / moved rows
 - Source: TB_R_INSTRUCTION drafts (sum of QTY per PO line)
-- Destination keys: PO_NO + MANIFEST_NO + MANIFEST_ITEM = PO lines of the drafts
+- Destination keys: MANIFEST_NO + MANIFEST_ITEM = PO part of the rows
 
 | Source field | Destination field | Description |
 |---|---|---|
-|  | MAPPED_QTY | - QTY of the released rows |
-|  | CHANGED_BY / CHANGED_DT | Batch user ID / system date-time |
+|  | REMAIN_QTY | + qty of the released rows (sum of TB_R_INSTRUCTION.QTY per PO part) |
+|  | CHANGED_BY | Login user / batch user |
+|  | CHANGED_DT | Server system date-time |
 
 #### 4. Update TB_R_H0253_ORDER_CONTROL_PRE (NSP) – Lines of the released drafts
 - Source: TB_R_INSTRUCTION drafts (lines)
@@ -321,23 +322,20 @@ Real mapping made by [Create ASN]: one row per supplier case x customer order li
 | CHANGED_BY | VARCHAR(TBD) |  | N | User who last changed the record |
 | CHANGED_DT | DATETIME |  | N | Last changed date and time |
 
-#### TB_R_PRA_DAILY_ORDER_MAPPED (transaction, proposed)
-New table: mapped qty per Pra Daily Order PO part (instead of a new column in the Pra Daily Order). Name and columns proposed.
+#### TB_R_PRA_DAILY_ORDER_PART (transaction, existing)
+Existing Pra Daily Order part (one row per manifest item). Crossdock uses ORDER_QTY and REMAIN_QTY of the parts of the manifests with CROSS_DOCK_FLAG = 'X': open PO qty = REMAIN_QTY (no new mapped-qty table, decided 16-Nov).
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
-| PO_NO | VARCHAR(TBD) | Y | N | PO number (Pra Daily Order Manifest) |
-| MANIFEST_NO | VARCHAR(TBD) | Y | N | Manifest number |
-| MANIFEST_ITEM | VARCHAR(TBD) | Y | N | Manifest item number (Pra Daily Order Part) |
-| PART_NO | VARCHAR(15) |  | N | Part number |
-| SUPPLIER_CD | VARCHAR(TBD) |  | N | Supplier code |
-| SUPPLIER_PLANT | VARCHAR(TBD) |  | N | Supplier plant |
-| ORDER_QTY | NUMBER(TBD) |  | N | PO qty of the part |
-| MAPPED_QTY | NUMBER(TBD) |  | N | Qty already mapped to customer orders by [Create ASN]; open qty = ORDER_QTY - MAPPED_QTY |
-| CREATED_BY | VARCHAR(TBD) |  | N | User who created the record |
-| CREATED_DT | DATETIME |  | N | Created date and time |
-| CHANGED_BY | VARCHAR(TBD) |  | N | User who last changed the record |
-| CHANGED_DT | DATETIME |  | N | Last changed date and time |
+| MANIFEST_NO | VARCHAR(10+) | Y | N | Manifest number (TB_R_PRA_DAILY_ORDER_MANIFEST) |
+| MANIFEST_ITEM | VARCHAR(4+) | Y | N | Item of the manifest |
+| PO_NO | VARCHAR(8+) |  | N | PO number |
+| PO_ITEM | VARCHAR(4+) |  | N | Item of the PO |
+| PART_NO | VARCHAR(12+) |  | N | Part number |
+| ORDER_QTY | NUMERIC |  | N | PO qty (pcs) |
+| REMAIN_QTY | NUMERIC |  | N | Qty of the PO part not yet in an ASN: open PO qty of XD09; reduced by [Create ASN] (XD10), added back on Back / Cancel, submit error and XD08 release |
+| CHANGED_BY | VARCHAR(20) |  | Y | Last change user |
+| CHANGED_DT | DATETIME |  | Y | Last change date-time |
 
 ## Sample Input
 
