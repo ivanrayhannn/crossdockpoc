@@ -11,6 +11,7 @@
 | Rev | Author | Date | Reviewed by | Description |
 |---|---|---|---|---|
 | 0.1 | FID Rayhan | 18-Oct-26 |  | Initial Draft |
+| 0.2 | FID Rayhan | 13-Nov-26 |  | Dummy data: supplier 5001-1 / 5002-1, PO-0001.., MF-0001.., destinations Korea / Japan / Taiwan / Australia. |
 
 ## 1. General
 

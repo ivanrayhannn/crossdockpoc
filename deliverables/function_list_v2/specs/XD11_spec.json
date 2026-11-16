@@ -6,7 +6,9 @@
   "block_name": "Screen",
   "function_name": "XD11 Change Order Number Screen",
   "created_date": "18-Oct-26",
-  "created_by": "FID Rayhan"
+  "created_by": "FID Rayhan",
+  "updated_date": "13-Nov-26",
+  "updated_by": "FID Rayhan"
  },
  "revisions": [
   {
@@ -15,6 +17,13 @@
    "date": "18-Oct-26",
    "reviewed_by": "",
    "description": "Initial Draft"
+  },
+  {
+   "revision": "0.2",
+   "author": "FID Rayhan",
+   "date": "13-Nov-26",
+   "reviewed_by": "",
+   "description": "Dummy data: supplier 5001-1 / 5002-1, PO-0001.., MF-0001.., destinations Korea / Japan / Taiwan / Australia."
   }
  ],
  "general": {

@@ -11,6 +11,11 @@
 | Rev | Author | Date | Reviewed by | Description |
 |---|---|---|---|---|
 | 0.1 | FID Rayhan | 18-Oct-26 |  | Initial Draft |
+| 0.2 | FID Rayhan | 11-Nov-26 |  | 4.2 PO Assignment: pouring of the PO qty (Part Number level) over the customer order lines, top line first, oldest PO first; line split per PO; no PO left = PO_NO NULL (FB-172). |
+| 0.3 | FID Rayhan | 13-Nov-26 |  | Dummy data: supplier 5001-1 / 5002-1, PO-0001.., MF-0001.., destinations Korea / Japan / Taiwan / Australia. |
+|  |  |  |  | Inputs TB_R_CROSSDOCK_PART_HOLD and TB_R_CROSSDOCK_CASE_HOLD (holds of the D/S team on XD10); CROSSDOCK_STATUS '8' On Hold. |
+| 0.4 | FID Rayhan | 14-Nov-26 |  | Hold per case: the held pcs (customer order line + HOLD_QTY) are taken out before the PO pouring; their PO qty goes to the next lines; the other cases keep their own readiness. |
+|  |  |  |  | Released line (HOLD_FLAG N): poured and cut at the end of its Customer Order Date, before the newer dates (FB-183). |
 
 ## 1. General
 
