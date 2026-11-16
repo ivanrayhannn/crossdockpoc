@@ -458,7 +458,7 @@ export const BPF: BpfData = {
       "TB_R_PRA_DAILY_ORDER_MAPPED"
      ],
      "write": [
-      "#TEMP_INSTRUCTION"
+      "TB_T_INSTRUCTION_H / D"
      ],
      "ab": [
       "AB08"
@@ -475,7 +475,7 @@ export const BPF: BpfData = {
      "fn": "XD10",
      "title": "Tick cases: per part the oldest Customer Order Date first; from case 1 up to a cut (CUT_FLAG); [Create ASN]",
      "read": [
-      "#TEMP_INSTRUCTION"
+      "TB_T_INSTRUCTION_H / D"
      ],
      "write": [],
      "ab": [
@@ -496,7 +496,7 @@ export const BPF: BpfData = {
      "fn": "XD10",
      "title": "Lock + re-check; insert the ticked cases (XD09); real mapping; PO_MAPPED_FLAG Y when the whole line is in the ASN",
      "read": [
-      "#TEMP_INSTRUCTION",
+      "TB_T_INSTRUCTION_H / D",
       "TB_R_H0253_ORDER_CONTROL_PRE"
      ],
      "write": [
@@ -809,7 +809,7 @@ export const BPF: BpfData = {
       "TB_R_H0253_ORDER_CONTROL_PRE (HOLD N)"
      ],
      "write": [
-      "#TEMP_INSTRUCTION"
+      "TB_T_INSTRUCTION_H / D"
      ],
      "ab": [],
      "next": [
@@ -824,7 +824,7 @@ export const BPF: BpfData = {
      "fn": "XD10",
      "title": "[Create ASN] re-checks the hold: a line held after the tick → whole create fails, list refreshed",
      "read": [
-      "#TEMP_INSTRUCTION",
+      "TB_T_INSTRUCTION_H / D",
       "TB_R_H0253_ORDER_CONTROL_PRE"
      ],
      "write": [],
@@ -860,7 +860,7 @@ export const BPF: BpfData = {
       "TB_R_H0253_ORDER_CONTROL_PRE (HOLD N)"
      ],
      "write": [
-      "#TEMP_INSTRUCTION"
+      "TB_T_INSTRUCTION_H / D"
      ],
      "ab": [],
      "next": []
@@ -972,7 +972,7 @@ export const BPF: BpfData = {
      "fn": "XD10",
      "title": "[Search] again and tick the cases again; [Submit ASN] of an old draft fails (MSG11)",
      "read": [
-      "#TEMP_INSTRUCTION"
+      "TB_T_INSTRUCTION_H / D"
      ],
      "write": [],
      "ab": [

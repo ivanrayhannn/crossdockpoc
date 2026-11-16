@@ -4,7 +4,6 @@ One definition per table (the most complete one among the UISS); "Used by" = fun
 
 | Table | Kind | New / existing | Used by |
 |---|---|---|---|
-| #TEMP_INSTRUCTION | temp | proposed | XD09, XD10 |
 | TB_H_CROSSDOCK_ORDER_CHANGE | history | proposed | XD11 |
 | TB_H_PART_CANDIDATE | history | proposed | XD01, XD02, XD03, XD05, XD06, XD07 |
 | TB_M_H0125_DESTINATION | master | existing | XD03, XD05, XD13 |
@@ -22,48 +21,8 @@ One definition per table (the most complete one among the UISS); "Used by" = fun
 | TB_R_INSTRUCTION | transaction | proposed | XD08, XD10, XD11 |
 | TB_R_PART_DAD_RESULT | transaction | proposed | XD05 |
 | TB_R_PRA_DAILY_ORDER_MAPPED | transaction | proposed | XD08, XD09, XD10, XD11 |
-
-#### #TEMP_INSTRUCTION (temp, proposed)
-Used by: XD09, XD10
-
-Temporary table of one Search run (session): the open qty of the customer order lines (H0253, order status 7, Hold Flag N) in H0253 order, pre-mapped to the supplier POs (Pra Daily Order) and cut into supplier cases and blocks. One row per line x PO x supplier case; PO_NO NULL for the qty still without a PO. Columns proposed.
-
-| Column | Type | PK | Null | Description |
-|---|---|---|---|---|
-| INSTRUCTION_ID | BIGINT | Y | N | Running number within the session |
-| SORT_SEQ | NUMBER(6) |  | N | H0253 order of the line within the unit (refer 4.1) |
-| CUSTOMER_CD | VARCHAR(7) |  | N | H0253.CUSTOMER_CD (order key 1) |
-| CUSTOMER_ORDER_NO | VARCHAR(8) |  | N | H0253.CUSTOMER_ORDER_NO (order key 2) |
-| ORDER_DT | DATE |  | N | Customer Order Date (H0253.ORDER_DT; unit and order key 3) |
-| ORDER_TIME | VARCHAR(6) |  | N | H0253.ORDER_TIME (order key 4) |
-| DESTINATION_CD | VARCHAR(7) |  | N | H0253.DESTINATION_CD (order key 5) |
-| DETAILED_ITEM_NO | VARCHAR(4) |  | N | H0253.DETAILED_ITEM_NO (order key 6) |
-| SERIAL_NO | VARCHAR(7) |  | N | H0253.SERIAL_NO (order key 7) |
-| PART_NO | VARCHAR(15) |  | N | Order part number (H0253.SHIPPING_PART_NO) |
-| ORDER_STATUS | VARCHAR(1) |  | N | H0253.ORDER_STATUS ('7' Cross Dock) |
-| CUST_ORDER_QTY | NUMBER(8) |  | N | Order status qty of the customer order line (H0253.ORDER_STATUS_QTY) |
-| OPEN_ORDER_QTY | NUMBER(8) |  | N | Qty of the line not yet in TB_R_INSTRUCTION (sent or in an open Case List) |
-| ASSIGNED_QTY | NUMBER(8) |  | N | Qty of this slice (line x PO x supplier case) |
-| PO_NO | VARCHAR(TBD) |  | Y | Supplier PO number (Pra Daily Order Manifest); NULL while not assigned |
-| MANIFEST_NO | VARCHAR(TBD) |  | Y | Manifest number |
-| MANIFEST_ITEM | VARCHAR(TBD) |  | Y | Manifest item number (Pra Daily Order Part) |
-| PO_DT | DATE |  | Y | Order date of the PO (PO Date) |
-| ORDER_QTY | NUMBER(TBD) |  | Y | Order qty of the PO part |
-| SUPPLIER_CD | VARCHAR(TBD) |  | Y | Supplier code |
-| SUPPLIER_PLANT | VARCHAR(TBD) |  | Y | Supplier plant |
-| SUB_SUPPLIER_CD | VARCHAR(TBD) |  | Y | Sub supplier code |
-| SUB_SUPPLIER_PLANT | VARCHAR(TBD) |  | Y | Sub supplier plant |
-| ORDER_TYPE | VARCHAR(TBD) |  | Y | Order type of the PO |
-| DOCK_CD | VARCHAR(TBD) |  | Y | Dock code |
-| ETD_ORI | DATE |  | Y | Original ETD |
-| PCS_CASE | NUMBER(4) |  | N | Pcs per case of the part (TB_M_PART_CANDIDATE.PCS_CASE) |
-| CASE_SEQ | NUMBER(4) |  | N | Supplier case of the slice within the unit (PCS_CASE pcs in H0253 order) |
-| LINE_SEQ | NUMBER(4) |  | N | Sequence of the slice within the case |
-| CUM_DEST_QTY | NUMBER(8) |  | N | Cumulative qty of the destination within the unit up to this slice |
-| SEQ_QTY | NUMBER(4) |  | N | Fill of the warehouse case (1 case = 1 destination) of the destination after this slice: 1..PCS_CASE, starts again after PCS_CASE |
-| CUT_FLAG | VARCHAR(1) |  | N | 'Y' on the last slice of a case after which the ASN may stop (every destination a multiple of PCS_CASE) |
-| GROUP_SEQ | NUMBER(4) |  | N | Case Group (block) of the slice: the cases up to and including a valid cut; the cases of a group are sent together |
-| CROSSDOCK_STATUS | VARCHAR(1) |  | N | Status of the block: '6' Ready (the block and every earlier block have a PO) / '7' Not Ready / '8' On Hold (D/S: part on hold or case held) |
+| TB_T_INSTRUCTION_D | transaction | proposed | XD09, XD10 |
+| TB_T_INSTRUCTION_H | transaction | proposed | XD09, XD10 |
 
 #### TB_H_CROSSDOCK_ORDER_CHANGE (history, proposed)
 Used by: XD11
@@ -510,3 +469,59 @@ New table: mapped qty per Pra Daily Order PO part (instead of a new column in th
 | CREATED_DT | DATETIME |  | N | Created date and time |
 | CHANGED_BY | VARCHAR(TBD) |  | N | User who last changed the record |
 | CHANGED_DT | DATETIME |  | N | Last changed date and time |
+
+#### TB_T_INSTRUCTION_D (transaction, proposed)
+Used by: XD09, XD10
+
+Draft of ASN Crossdock, detail (DR XD09 (11-Nov)): one row per pc. The customer order line is broken down to 1 pc per row (ORDER_STATUS_QTY = 1) and the PO qty is broken down to 1 (PO_QTY = 1). The pcs of a supplier case share one CASE_NO. Columns marked (added) are not in the DR but needed by the rules of 4.1-4.3.
+
+| Column | Type | PK | Null | Description |
+|---|---|---|---|---|
+| ORDER_DT | DATE | Y | N | Customer Order Date (H0253.ORDER_DT) |
+| SHIPPING_PART_NO | VARCHAR(15) | Y | N | Part Number (H0253.SHIPPING_PART_NO) |
+| SUPPLIER_CD | VARCHAR(4) | Y | N | Supplier of the crossdock PO (TB_R_PRA_DAILY_ORDER_MANIFEST.SUPPLIER_CD) |
+| SUPPLIER_PLANT | VARCHAR(1) | Y | N | Supplier plant (TB_R_PRA_DAILY_ORDER_MANIFEST.SUPPLIER_PLANT) |
+| SUB_SUPP_CD | VARCHAR(4) |  | Y | Sub supplier (TB_R_PRA_DAILY_ORDER_MANIFEST.SUB_SUPP_CD) |
+| SUB_SUPP_PLANT | VARCHAR(1) |  | Y | Sub supplier plant (TB_R_PRA_DAILY_ORDER_MANIFEST.SUB_SUPP_PLANT) |
+| SEQ_NO | NUMBER(6) | Y | N | (added) Sequence of the pc in the unit in the H0253 order of 4.1; key of the row |
+| CUSTOMER_CD | VARCHAR(7) |  | N | (added) H0253.CUSTOMER_CD (order key 1, needed for the H0253 order and TB_R_INSTRUCTION) |
+| CUSTOMER_ORDER_NO | VARCHAR(8) |  | N | H0253.CUSTOMER_ORDER_NO |
+| DESTINATION_CD | VARCHAR(7) |  | N | H0253.DESTINATION_CD |
+| DETAILED_ITEM_NO | VARCHAR(4) |  | N | H0253.DETAILED_ITEM_NO |
+| SERIAL_NO | VARCHAR(7) |  | N | H0253.SERIAL_NO (DR simulation: SERIAL_CARD_NO, refer FB-193) |
+| ORDER_STATUS_QTY | NUMBER(8) |  | N | Always 1 (customer order line broken down to 1 pc) |
+| PO_NO | VARCHAR(20) |  | Y | PO of the pc (pouring of 4.2: oldest PO first); NULL when no PO is left or the pc is held |
+| PO_ITEM | VARCHAR(4) |  | Y | TB_R_PRA_DAILY_ORDER_PART.PO_ITEM |
+| MANIFEST_NO | VARCHAR(20) |  | Y | TB_R_PRA_DAILY_ORDER_PART.MANIFEST_NO |
+| MANIFEST_ITEM | VARCHAR(4) |  | Y | TB_R_PRA_DAILY_ORDER_PART.MANIFEST_ITEM |
+| PO_QTY | NUMBER(8) |  | N | 1 when the pc has a PO (PO qty broken down to 1); 0 when PO_NO is NULL |
+| CASE_NO | VARCHAR(8) |  | Y | Supplier case (case label) of the pc: supplier (sub supplier when it exists) + plant + initial palletize code + next CASE_LABEL_LAST_SEQ of TB_R_CASE_LABEL_LAST_SEQ; the same CASE_NO for PCS_CASE pcs in H0253 order (DR); NULL for a held pc |
+| CUT_FLAG | VARCHAR(1) |  | Y | (added) 'Y' on the pcs of a case after which the ASN may stop (every destination of the unit a multiple of PCS_CASE, 4.3) |
+| GROUP_SEQ | NUMBER(4) |  | Y | (added) Case Group: the cases up to and including a valid cut; sent together |
+| CROSSDOCK_STATUS | VARCHAR(1) |  | Y | (added) '6' Ready / '7' Not Ready / '8' On Hold (D/S) of the case group |
+| HOLD_STS | CHAR(1) |  | Y | 'Y' pc held by the D/S team (Hold per case, Part Number on hold): no PO, no CASE_NO; NULL otherwise |
+| CREATE_DT | TIMESTAMP |  | N | System date-time of the run |
+| CREATE_BY | VARCHAR(20) |  | N | Login user; LEFT(CREATE_BY, 4) = company code of the user (rows of the company) |
+| UPDATE_DT | TIMESTAMP |  | Y | Last update date-time |
+| UPDATE_BY | VARCHAR(20) |  | Y | Last update user |
+
+#### TB_T_INSTRUCTION_H (transaction, proposed)
+Used by: XD09, XD10
+
+Draft of ASN Crossdock, header (DR XD09 (11-Nov)): one row per unit = Customer Order Date + Part Number + supplier. Written by XD09 at [Search] of XD10 for the company of the login user: its rows (LEFT(CREATE_BY, 4) = company code) are deleted and inserted again; company 1000 (TMMIN, D/S team) sees every supplier.
+
+| Column | Type | PK | Null | Description |
+|---|---|---|---|---|
+| ORDER_DT | DATE | Y | N | Customer Order Date (H0253.ORDER_DT) |
+| SHIPPING_PART_NO | VARCHAR(15) | Y | N | Part Number (H0253.SHIPPING_PART_NO) |
+| SUPPLIER_CD | VARCHAR(4) | Y | N | Supplier of the crossdock PO (TB_R_PRA_DAILY_ORDER_MANIFEST.SUPPLIER_CD) |
+| SUPPLIER_PLANT | VARCHAR(1) | Y | N | Supplier plant (TB_R_PRA_DAILY_ORDER_MANIFEST.SUPPLIER_PLANT) |
+| SUB_SUPP_CD | VARCHAR(4) |  | Y | Sub supplier (TB_R_PRA_DAILY_ORDER_MANIFEST.SUB_SUPP_CD) |
+| SUB_SUPP_PLANT | VARCHAR(1) |  | Y | Sub supplier plant (TB_R_PRA_DAILY_ORDER_MANIFEST.SUB_SUPP_PLANT) |
+| ORDER_STATUS_QTY | NUMBER(8) |  | N | Open qty of the unit = SUM(H0253.ORDER_STATUS_QTY) of the lines not on hold and not yet in TB_R_INSTRUCTION |
+| CASE | NUMBER(8) |  | N | Case Qty of the unit = number of supplier cases (CEILING(ORDER_STATUS_QTY / TB_M_PART_CANDIDATE.PCS_CASE)) |
+| SUBMIT_ASN_STS | VARCHAR(1) |  | Y | 'Y' the unit has Ready cases that can go into an ASN / 'N' not (DR; also named GENERATE_ASN_STS in the DR Data Map, refer FB-193) |
+| CREATE_DT | TIMESTAMP |  | N | System date-time of the run |
+| CREATE_BY | VARCHAR(20) |  | N | Login user; LEFT(CREATE_BY, 4) = company code of the user (rows of the company) |
+| UPDATE_DT | TIMESTAMP |  | Y | Last update date-time |
+| UPDATE_BY | VARCHAR(20) |  | Y | Last update user |

@@ -36,7 +36,7 @@ export const DESTS: Record<string, Dest> = {
   '982220': { code: '982220', short: 'AU', name: 'Australia' },
 };
 
-/** A customer order line of H0253 (order status 7); on a slice of #TEMP_INSTRUCTION the PO fields are filled and qty is the slice qty. */
+/** A customer order line of H0253 (order status 7); on a slice of TB_T_INSTRUCTION_D (rows of 1 pc summed) the PO fields are filled and qty is the slice qty. */
 export interface InstrLine {
   id: string;
   custCd: string;

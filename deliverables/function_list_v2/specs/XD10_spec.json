@@ -7,7 +7,7 @@
   "function_name": "XD10 ASN Cross Dock Creation Screen",
   "created_date": "18-Oct-26",
   "created_by": "FID Rayhan",
-  "updated_date": "14-Nov-26",
+  "updated_date": "16-Nov-26",
   "updated_by": "FID Rayhan"
  },
  "revisions": [
@@ -94,6 +94,20 @@
    "date": "",
    "reviewed_by": "",
    "description": "Destination detail (Destination / pcs, Hold Flag) hidden on the screen for now (FB-184)."
+  },
+  {
+   "revision": "0.5",
+   "author": "FID Rayhan",
+   "date": "16-Nov-26",
+   "reviewed_by": "",
+   "description": "Source of the delivery plan: TB_T_INSTRUCTION_H / TB_T_INSTRUCTION_D (table concept of the DR XD09) instead of #TEMP_INSTRUCTION."
+  },
+  {
+   "revision": "",
+   "author": "",
+   "date": "",
+   "reviewed_by": "",
+   "description": "Case No of the ASN = CASE_NO of the draft made by XD09; Submit ASN no longer generates the case numbers (ASN number as existing)."
   }
  ],
  "general": {
@@ -103,7 +117,7 @@
    "To let the D/S team (super admin) see the units of all suppliers, the destination detail and hold / release a destination of a unit.",
    "To tick the supplier cases to send (check box per case, from case 1, cases that belong together) of one Supplier Code + Supplier Plant, map them to their POs (TB_R_INSTRUCTION), review the cases, download the case labels and submit the ASN.",
    "Submit ASN runs in the background with a Submit ID and follows the existing ASN submit of NSP (refer 5.7).",
-   "Submit ASN (decided 20-Oct, existing structure GTOPAS SPS DB): one TB_R_DAILY_ORDER_MANIFEST row per Pra Daily Order manifest of the cases (same ASN_NO) and one TB_R_DAILY_ORDER_PART row per manifest item and case; the ASN number and the case numbers (case label) are auto generated and their last sequence is saved in TB_R_CASE_LABEL_LAST_SEQ; PART_NAME from TB_M_PART_MASTER."
+   "Submit ASN (decided 20-Oct, existing structure GTOPAS SPS DB): one TB_R_DAILY_ORDER_MANIFEST row per Pra Daily Order manifest of the cases (same ASN_NO) and one TB_R_DAILY_ORDER_PART row per manifest item and case; the ASN number is auto generated (last sequence ASN_LAST_SEQ in TB_R_CASE_LABEL_LAST_SEQ); the case numbers come from CASE_NO of the draft (made by XD09 from TB_R_CASE_LABEL_LAST_SEQ, DR XD09); PART_NAME from TB_M_PART_MASTER."
   ],
   "display_order": [
    {
@@ -584,7 +598,7 @@
      },
      {
       "id": "g",
-      "label": "XD09: get customer orders, pre-map to PO (#TEMP_INSTRUCTION)",
+      "label": "XD09: get customer orders, pre-map to PO (TB_T_INSTRUCTION_H / TB_T_INSTRUCTION_D)",
       "type": "process"
      },
      {
@@ -789,7 +803,8 @@
  "items": [
   {
    "group": "<Delivery Section>",
-   "description": ""
+   "description": "",
+   "field": ""
   },
   {
    "name": "Delivery Date",
@@ -853,7 +868,8 @@
   },
   {
    "group": "<Delivery Plan Section>",
-   "description": ""
+   "description": "",
+   "field": ""
   },
   {
    "name": "Counter",
@@ -917,7 +933,7 @@
   },
   {
    "name": "Supplier · Plant (D/S)",
-   "source": "#TEMP_INSTRUCTION",
+   "source": "TB_T_INSTRUCTION_D",
    "field": "SUPPLIER_CD / SUPPLIER_PLANT",
    "type": "Char",
    "len": "-",
@@ -932,7 +948,7 @@
   },
   {
    "name": "Customer Order Date",
-   "source": "#TEMP_INSTRUCTION",
+   "source": "TB_T_INSTRUCTION_H",
    "field": "ORDER_DT",
    "type": "Date",
    "len": "-",
@@ -947,8 +963,8 @@
   },
   {
    "name": "Part Number",
-   "source": "#TEMP_INSTRUCTION",
-   "field": "PART_NO",
+   "source": "TB_T_INSTRUCTION_H",
+   "field": "SHIPPING_PART_NO",
    "type": "Char",
    "len": "15",
    "io": "O",
@@ -962,8 +978,8 @@
   },
   {
    "name": "Case Qty",
-   "source": "Computed",
-   "field": "-",
+   "source": "TB_T_INSTRUCTION_H",
+   "field": "CASE",
    "type": "Number",
    "len": "-",
    "io": "O",
@@ -992,7 +1008,7 @@
   },
   {
    "name": "ASN Status",
-   "source": "#TEMP_INSTRUCTION",
+   "source": "TB_T_INSTRUCTION_D",
    "field": "CROSSDOCK_STATUS",
    "type": "Char",
    "len": "1",
@@ -1022,7 +1038,8 @@
   },
   {
    "group": "<Supplier Cases of a Unit (H0253 order)>",
-   "description": ""
+   "description": "",
+   "field": ""
   },
   {
    "name": "Select case (check box)",
@@ -1041,8 +1058,8 @@
   },
   {
    "name": "Case",
-   "source": "#TEMP_INSTRUCTION",
-   "field": "CASE_SEQ",
+   "source": "TB_T_INSTRUCTION_D",
+   "field": "CASE_NO",
    "type": "Number",
    "len": "-",
    "io": "O",
@@ -1056,8 +1073,8 @@
   },
   {
    "name": "Qty (pcs)",
-   "source": "#TEMP_INSTRUCTION",
-   "field": "ASSIGNED_QTY",
+   "source": "TB_T_INSTRUCTION_D",
+   "field": "SUM(ORDER_STATUS_QTY)",
    "type": "Number",
    "len": "-",
    "io": "O",
@@ -1071,8 +1088,8 @@
   },
   {
    "name": "Remaining Qty (not assigned)",
-   "source": "#TEMP_INSTRUCTION",
-   "field": "ASSIGNED_QTY (PO_NO NULL)",
+   "source": "TB_T_INSTRUCTION_D",
+   "field": "COUNT(pcs) with PO_NO NULL",
    "type": "Number",
    "len": "-",
    "io": "O",
@@ -1086,7 +1103,7 @@
   },
   {
    "name": "Destination (D/S team)",
-   "source": "#TEMP_INSTRUCTION",
+   "source": "TB_T_INSTRUCTION_D",
    "field": "DESTINATION_CD",
    "type": "Char",
    "len": "-",
@@ -1101,7 +1118,7 @@
   },
   {
    "name": "Customer Order No (D/S team)",
-   "source": "#TEMP_INSTRUCTION",
+   "source": "TB_T_INSTRUCTION_D",
    "field": "CUSTOMER_ORDER_NO",
    "type": "Char",
    "len": "-",
@@ -1116,8 +1133,8 @@
   },
   {
    "name": "Order Qty (D/S team)",
-   "source": "#TEMP_INSTRUCTION",
-   "field": "ASSIGNED_QTY",
+   "source": "TB_T_INSTRUCTION_D",
+   "field": "SUM(ORDER_STATUS_QTY)",
    "type": "Number",
    "len": "-",
    "io": "O",
@@ -1131,8 +1148,8 @@
   },
   {
    "name": "PO",
-   "source": "#TEMP_INSTRUCTION",
-   "field": "PO_NO / ASSIGNED_QTY",
+   "source": "TB_T_INSTRUCTION_D",
+   "field": "PO_NO / SUM(PO_QTY)",
    "type": "Char",
    "len": "-",
    "io": "O",
@@ -1146,7 +1163,7 @@
   },
   {
    "name": "PO Status",
-   "source": "#TEMP_INSTRUCTION",
+   "source": "TB_T_INSTRUCTION_D",
    "field": "CROSSDOCK_STATUS",
    "type": "Char",
    "len": "-",
@@ -1191,11 +1208,12 @@
   },
   {
    "group": "<Destination Detail (D/S team only)>",
-   "description": ""
+   "description": "",
+   "field": ""
   },
   {
    "name": "Destination",
-   "source": "#TEMP_INSTRUCTION",
+   "source": "TB_T_INSTRUCTION_D",
    "field": "DESTINATION_CD",
    "type": "Char",
    "len": "7",
@@ -1225,7 +1243,7 @@
   },
   {
    "name": "Qty (pcs)",
-   "source": "#TEMP_INSTRUCTION",
+   "source": "TB_T_INSTRUCTION_D",
    "field": "CUST_ORDER_QTY",
    "type": "Number",
    "len": "8",
@@ -1270,11 +1288,12 @@
   },
   {
    "group": "<Customer Orders of a Destination (D/S team only)>",
-   "description": ""
+   "description": "",
+   "field": ""
   },
   {
    "name": "Customer Order No / Detailed Item No",
-   "source": "#TEMP_INSTRUCTION",
+   "source": "TB_T_INSTRUCTION_D",
    "field": "CUSTOMER_ORDER_NO / DETAILED_ITEM_NO",
    "type": "Char",
    "len": "-",
@@ -1289,7 +1308,7 @@
   },
   {
    "name": "Qty (pcs) / PO No / PO Date",
-   "source": "#TEMP_INSTRUCTION",
+   "source": "TB_T_INSTRUCTION_D",
    "field": "CUST_ORDER_QTY / PO_NO / PO_DT",
    "type": "Char",
    "len": "-",
@@ -1319,7 +1338,8 @@
   },
   {
    "group": "<Selection Bar Section>",
-   "description": ""
+   "description": "",
+   "field": ""
   },
   {
    "name": "Selection summary",
@@ -1368,7 +1388,8 @@
   },
   {
    "group": "<Case List Sub Screen - ASN Summary>",
-   "description": ""
+   "description": "",
+   "field": ""
   },
   {
    "name": "Back",
@@ -1402,7 +1423,7 @@
   },
   {
    "name": "Supplier · Plant",
-   "source": "#TEMP_INSTRUCTION",
+   "source": "TB_T_INSTRUCTION_D",
    "field": "SUPPLIER_CD / SUPPLIER_PLANT",
    "type": "Char",
    "len": "TBD",
@@ -1462,7 +1483,8 @@
   },
   {
    "group": "<Case List Sub Screen - Case List>",
-   "description": ""
+   "description": "",
+   "field": ""
   },
   {
    "name": "Download Case Label",
@@ -1497,7 +1519,7 @@
   {
    "name": "Case Number",
    "source": "TB_R_INSTRUCTION",
-   "field": "CASE_SEQ",
+   "field": "CASE_NO",
    "type": "Char",
    "len": "-",
    "io": "O",
@@ -1601,7 +1623,8 @@
   },
   {
    "group": "<Sub Screen Hold per Part Number (D/S team only)>",
-   "description": ""
+   "description": "",
+   "field": ""
   },
   {
    "name": "Supplier Code · Plant",
@@ -1620,7 +1643,7 @@
   },
   {
    "name": "Part Number (row)",
-   "source": "#TEMP_INSTRUCTION (XD09)",
+   "source": "TB_T_INSTRUCTION_D",
    "field": "PART_NO",
    "type": "Char",
    "len": "-",
@@ -1680,8 +1703,8 @@
   },
   {
    "name": "Customer Order Date / Customer Order No / Destination / Qty / Case",
-   "source": "#TEMP_INSTRUCTION (XD09)",
-   "field": "ORDER_DT / CUSTOMER_ORDER_NO / DESTINATION_CD / ASSIGNED_QTY / CASE_SEQ",
+   "source": "TB_T_INSTRUCTION_D",
+   "field": "ORDER_DT / CUSTOMER_ORDER_NO / DESTINATION_CD / SUM(ORDER_STATUS_QTY) / CASE_NO",
    "type": "Char",
    "len": "-",
    "io": "O",
@@ -1987,11 +2010,11 @@
      },
      {
       "dest_field": "CUSTOMER_CD / CUSTOMER_ORDER_NO / DESTINATION_CD / DETAILED_ITEM_NO / SERIAL_NO",
-      "description": "Customer order line in the ticked case (#TEMP_INSTRUCTION)"
+      "description": "Customer order line in the ticked case (TB_T_INSTRUCTION_D)"
      },
      {
       "dest_field": "HOLD_QTY",
-      "description": "Pcs of the line in the ticked case (ASSIGNED_QTY), added when the line is already held"
+      "description": "Pcs of the line in the ticked case (rows of TB_T_INSTRUCTION_D), added when the line is already held"
      },
      {
       "dest_field": "CREATED_BY / CREATED_DT",
@@ -2008,7 +2031,7 @@
     ]
    },
    {
-    "source": "#TEMP_INSTRUCTION (chosen blocks)",
+    "source": "TB_T_INSTRUCTION_D (chosen case groups)",
     "destination": {
      "table": "TB_R_H0253_ORDER_CONTROL_PRE",
      "operation": "Update",
@@ -2224,7 +2247,7 @@
     ]
    },
    {
-    "source": "#TEMP_INSTRUCTION (chosen blocks)",
+    "source": "TB_T_INSTRUCTION_D (chosen case groups)",
     "destination": {
      "table": "TB_R_PRA_DAILY_ORDER_MAPPED",
      "operation": "Insert / Update",
@@ -2239,7 +2262,7 @@
     "mappings": [
      {
       "dest_field": "MAPPED_QTY",
-      "description": "+ ASSIGNED_QTY of the chosen blocks; - again on Back / Cancel"
+      "description": "+ SUM(PO_QTY) of the chosen case groups; - again on Back / Cancel"
      },
      {
       "source_field": "PO_NO",
@@ -2288,7 +2311,7 @@
     ]
    },
    {
-    "source": "#TEMP_INSTRUCTION (chosen blocks)",
+    "source": "TB_T_INSTRUCTION_D (chosen case groups)",
     "destination": {
      "table": "TB_R_INSTRUCTION",
      "operation": "Insert",
@@ -2301,7 +2324,7 @@
      },
      {
       "dest_field": "CASE_SEQ",
-      "description": "Case sequence: selected unit, then CASE_SEQ of XD09 (H0253 order)"
+      "description": "Case sequence: selected unit, then the order of CASE_NO of TB_T_INSTRUCTION_D (H0253 order)"
      },
      {
       "dest_field": "LINE_SEQ",
@@ -2352,7 +2375,7 @@
       "dest_field": "ORDER_QTY"
      },
      {
-      "source_field": "ASSIGNED_QTY",
+      "source_field": "COUNT(pcs) per case x line x PO",
       "dest_field": "QTY"
      },
      {
@@ -2385,7 +2408,7 @@
      },
      {
       "dest_field": "CASE_NO",
-      "description": "NULL (filled by the submit process, refer 5.7)"
+      "description": "CASE_NO of TB_T_INSTRUCTION_D"
      },
      {
       "dest_field": "CREATED_BY",
@@ -2554,7 +2577,7 @@
      },
      {
       "dest_field": "CASE_NO",
-      "description": "Auto generated per CASE_SEQ (case label); last sequence CASE_LABEL_LAST_SEQ in TB_R_CASE_LABEL_LAST_SEQ"
+      "description": "CASE_NO of TB_T_INSTRUCTION_D (case label made by XD09 from TB_R_CASE_LABEL_LAST_SEQ)"
      },
      {
       "dest_field": "PO_NO",
@@ -2640,7 +2663,7 @@
      },
      {
       "dest_field": "CASE_NO",
-      "description": "Case No of the CASE_SEQ"
+      "description": "Not changed (CASE_NO of the draft)"
      },
      {
       "dest_field": "CHANGED_BY",
@@ -2790,7 +2813,7 @@
      },
      {
       "dest_field": "CASE_LABEL_LAST_SEQ",
-      "description": "Last sequence used for the case numbers"
+      "description": "Not changed at submit: updated by XD09 when the CASE_NO of the draft are made"
      },
      {
       "dest_field": "CHANGED_BY",
@@ -2831,7 +2854,7 @@
    "level": 2,
    "items": [
     "On first display Delivery Date = today (business date), Rit = first rit of the date, Route displayed (disabled). The delivery plan is empty.",
-    "[Search] runs XD09 Mapping Customer Order and PO Batch (UISS XD09): the open qty of the H0253 customer orders with order status 7 and Hold Flag N, in the H0253 order per Part Number + Customer Order Date, pre-mapped to the PO parts of the Pra Daily Order (PO qty of the part poured over the lines from the top down, oldest PO first; refer UISS-Batch XD09 4.2), cut into supplier cases and blocks in the temporary table #TEMP_INSTRUCTION (pre-mapping only; nothing is saved yet). Supplier: units of the login Supplier Code + Plant; D/S team: all suppliers.",
+    "[Search] runs XD09 Mapping Customer Order and PO Batch (UISS XD09): the open qty of the H0253 customer orders with order status 7 and Hold Flag N, in the H0253 order per Part Number + Customer Order Date, pre-mapped to the PO parts of the Pra Daily Order (PO qty of the part poured over the lines from the top down, oldest PO first; refer UISS-Batch XD09 4.2), cut into supplier cases and blocks in the draft tables TB_T_INSTRUCTION_H / TB_T_INSTRUCTION_D (per company of the login user; nothing is mapped yet). Supplier: units of the login Supplier Code + Plant; D/S team: all suppliers.",
     "The delivery plan shows one row per Part Number + Customer Order Date, sorted Ready, Partially Ready, Not Ready, then Part Number ascending. Units without any pre-mapped case and units fully Created are not listed. Part Number and Status filters apply at once. No row: message no. 3. The heading shows only \"Delivery plan\" (no summary line with date, Rit, route, number of units and refresh time; decided 14-Nov).",
     "Delivery Date and Rit do not filter the orders; they are carried to the ASN. Rit and Route come from the existing route master table."
    ]
@@ -2915,8 +2938,8 @@
    "marker": "-",
    "level": 2,
    "items": [
-    "#TEMP_INSTRUCTION is temporary (pre-mapping of [Search]). TB_R_INSTRUCTION holds the mapping from [Create ASN] until submit or Back / Cancel. TB_R_PRA_DAILY_ORDER_MAPPED is a new table for the mapped qty. Submitted ASNs are in TB_R_DAILY_ORDER_MANIFEST / PART and shown in ASN Inquiry (XD15).",
-    "Case number: the format follows the existing NSP case number; the last sequence is kept in the TB_R_CASE_LABEL_LAST_SEQ (note only, not detailed here).",
+    "TB_T_INSTRUCTION_H / TB_T_INSTRUCTION_D hold the draft of [Search] per company of the login user (table concept of the DR XD09 (11-Nov)). TB_R_INSTRUCTION holds the mapping from [Create ASN] until submit or Back / Cancel. TB_R_PRA_DAILY_ORDER_MAPPED is a new table for the mapped qty. Submitted ASNs are in TB_R_DAILY_ORDER_MANIFEST / PART and shown in ASN Inquiry (XD15).",
+    "Case number: CASE_NO of the draft, made by XD09 at [Search] in the existing NSP format; the last sequence is kept in TB_R_CASE_LABEL_LAST_SEQ.",
     "Cancel of an order is not done in NSP: it comes from the source (H0253 order status '2'); NSP only holds (HOLD_FLAG). Refer XD08 / XD11.",
     "The prototype has a 'Business date' switch (PO release) and a 'View as' switch (Supplier / D/S team); they are not part of the real screen."
    ]
@@ -2932,7 +2955,7 @@
    "items": [
     "Re-check before the submit: the draft must still exist (not released by XD08) and every line of it must still have UPD_STATUS NULL and the same qty. Otherwise nothing is submitted, the draft is released and message no. 11 is shown; the supplier searches again.",
     "The screen generates the Submit ID, writes the start message to the log (LOG2) and starts the submit process. The screen returns to the delivery plan and shows the Submit ID.",
-    "Read the rows of the Submit ID from TB_R_INSTRUCTION (one Supplier Code + Plant). Take the ASN No from the existing numbering and auto generate one Case No per case by checking the last sequence (TB_R_CASE_LABEL_LAST_SEQ; format as existing).",
+    "Read the rows of the Submit ID from TB_R_INSTRUCTION (one Supplier Code + Plant). Take the ASN No from the existing numbering and take the Case No of each case from CASE_NO of TB_T_INSTRUCTION_D (made by XD09).",
     "Insert TB_R_DAILY_ORDER_MANIFEST (status Created) and TB_R_DAILY_ORDER_PART (existing tables, refer Data Edit Mapping); write ASN_NO / CASE_NO back to TB_R_INSTRUCTION.",
     "No error: commit, write the result (LOG3) and end (LOG4) messages. Error: roll back, release the mapping (delete the rows from TB_R_INSTRUCTION, PO_MAPPED_FLAG back to 'N', MAPPED_QTY of TB_R_PRA_DAILY_ORDER_MAPPED reduced again), write the error (LOG5). Exit."
    ]
@@ -2945,7 +2968,7 @@
     "Submit ASN runs as a batch so the screen does not wait; the user sees the Submit ID and checks the result in Log Monitoring. No success popup is shown on the screen.",
     "The log follows the existing NSP log (same table and columns); the Submit ID is the key to find the run.",
     "All-or-nothing: on error nothing is saved and the mapping made by [Create ASN] is released (rows deleted from TB_R_INSTRUCTION), so the units can be selected again.",
-    "The ASN is saved in the existing tables TB_R_DAILY_ORDER_MANIFEST / TB_R_DAILY_ORDER_PART; the case number is auto generated by checking the last sequence kept in the TB_R_CASE_LABEL_LAST_SEQ (format as existing, not detailed here).",
+    "The ASN is saved in the existing tables TB_R_DAILY_ORDER_MANIFEST / TB_R_DAILY_ORDER_PART; the case number is CASE_NO of TB_T_INSTRUCTION_D, made by XD09 from the last sequence in TB_R_CASE_LABEL_LAST_SEQ (16-Nov, DR XD09).",
     "The submit process (Submit ID, batch call, log) follows the existing ASN submit of NSP."
    ]
   },
@@ -3158,248 +3181,298 @@
  ],
  "tables": [
   {
-   "name": "#TEMP_INSTRUCTION",
-   "kind": "temp",
+   "name": "TB_T_INSTRUCTION_H",
+   "kind": "transaction",
    "proposed": true,
-   "description": "Temporary table of one Search run (session): the open qty of the customer order lines (H0253, order status 7, Hold Flag N) in H0253 order, pre-mapped to the supplier POs (Pra Daily Order) and cut into supplier cases and blocks. One row per line x PO x supplier case; PO_NO NULL for the qty still without a PO. Columns proposed.",
+   "description": "Draft of ASN Crossdock, header (DR XD09 (11-Nov)): one row per unit = Customer Order Date + Part Number + supplier. Written by XD09 at [Search] of XD10 for the company of the login user: its rows (LEFT(CREATE_BY, 4) = company code) are deleted and inserted again; company 1000 (TMMIN, D/S team) sees every supplier.",
    "columns": [
     [
-     "INSTRUCTION_ID",
-     "BIGINT",
+     "ORDER_DT",
+     "DATE",
      "Y",
      "N",
-     "Running number within the session"
+     "Customer Order Date (H0253.ORDER_DT)"
     ],
     [
-     "SORT_SEQ",
-     "NUMBER(6)",
+     "SHIPPING_PART_NO",
+     "VARCHAR(15)",
+     "Y",
+     "N",
+     "Part Number (H0253.SHIPPING_PART_NO)"
+    ],
+    [
+     "SUPPLIER_CD",
+     "VARCHAR(4)",
+     "Y",
+     "N",
+     "Supplier of the crossdock PO (TB_R_PRA_DAILY_ORDER_MANIFEST.SUPPLIER_CD)"
+    ],
+    [
+     "SUPPLIER_PLANT",
+     "VARCHAR(1)",
+     "Y",
+     "N",
+     "Supplier plant (TB_R_PRA_DAILY_ORDER_MANIFEST.SUPPLIER_PLANT)"
+    ],
+    [
+     "SUB_SUPP_CD",
+     "VARCHAR(4)",
+     "",
+     "Y",
+     "Sub supplier (TB_R_PRA_DAILY_ORDER_MANIFEST.SUB_SUPP_CD)"
+    ],
+    [
+     "SUB_SUPP_PLANT",
+     "VARCHAR(1)",
+     "",
+     "Y",
+     "Sub supplier plant (TB_R_PRA_DAILY_ORDER_MANIFEST.SUB_SUPP_PLANT)"
+    ],
+    [
+     "ORDER_STATUS_QTY",
+     "NUMBER(8)",
      "",
      "N",
-     "H0253 order of the line within the unit (refer 4.1)"
+     "Open qty of the unit = SUM(H0253.ORDER_STATUS_QTY) of the lines not on hold and not yet in TB_R_INSTRUCTION"
+    ],
+    [
+     "CASE",
+     "NUMBER(8)",
+     "",
+     "N",
+     "Case Qty of the unit = number of supplier cases (CEILING(ORDER_STATUS_QTY / TB_M_PART_CANDIDATE.PCS_CASE))"
+    ],
+    [
+     "SUBMIT_ASN_STS",
+     "VARCHAR(1)",
+     "",
+     "Y",
+     "'Y' the unit has Ready cases that can go into an ASN / 'N' not (DR; also named GENERATE_ASN_STS in the DR Data Map, refer FB-193)"
+    ],
+    [
+     "CREATE_DT",
+     "TIMESTAMP",
+     "",
+     "N",
+     "System date-time of the run"
+    ],
+    [
+     "CREATE_BY",
+     "VARCHAR(20)",
+     "",
+     "N",
+     "Login user; LEFT(CREATE_BY, 4) = company code of the user (rows of the company)"
+    ],
+    [
+     "UPDATE_DT",
+     "TIMESTAMP",
+     "",
+     "Y",
+     "Last update date-time"
+    ],
+    [
+     "UPDATE_BY",
+     "VARCHAR(20)",
+     "",
+     "Y",
+     "Last update user"
+    ]
+   ]
+  },
+  {
+   "name": "TB_T_INSTRUCTION_D",
+   "kind": "transaction",
+   "proposed": true,
+   "description": "Draft of ASN Crossdock, detail (DR XD09 (11-Nov)): one row per pc. The customer order line is broken down to 1 pc per row (ORDER_STATUS_QTY = 1) and the PO qty is broken down to 1 (PO_QTY = 1). The pcs of a supplier case share one CASE_NO. Columns marked (added) are not in the DR but needed by the rules of 4.1-4.3.",
+   "columns": [
+    [
+     "ORDER_DT",
+     "DATE",
+     "Y",
+     "N",
+     "Customer Order Date (H0253.ORDER_DT)"
+    ],
+    [
+     "SHIPPING_PART_NO",
+     "VARCHAR(15)",
+     "Y",
+     "N",
+     "Part Number (H0253.SHIPPING_PART_NO)"
+    ],
+    [
+     "SUPPLIER_CD",
+     "VARCHAR(4)",
+     "Y",
+     "N",
+     "Supplier of the crossdock PO (TB_R_PRA_DAILY_ORDER_MANIFEST.SUPPLIER_CD)"
+    ],
+    [
+     "SUPPLIER_PLANT",
+     "VARCHAR(1)",
+     "Y",
+     "N",
+     "Supplier plant (TB_R_PRA_DAILY_ORDER_MANIFEST.SUPPLIER_PLANT)"
+    ],
+    [
+     "SUB_SUPP_CD",
+     "VARCHAR(4)",
+     "",
+     "Y",
+     "Sub supplier (TB_R_PRA_DAILY_ORDER_MANIFEST.SUB_SUPP_CD)"
+    ],
+    [
+     "SUB_SUPP_PLANT",
+     "VARCHAR(1)",
+     "",
+     "Y",
+     "Sub supplier plant (TB_R_PRA_DAILY_ORDER_MANIFEST.SUB_SUPP_PLANT)"
+    ],
+    [
+     "SEQ_NO",
+     "NUMBER(6)",
+     "Y",
+     "N",
+     "(added) Sequence of the pc in the unit in the H0253 order of 4.1; key of the row"
     ],
     [
      "CUSTOMER_CD",
      "VARCHAR(7)",
      "",
      "N",
-     "H0253.CUSTOMER_CD (order key 1)"
+     "(added) H0253.CUSTOMER_CD (order key 1, needed for the H0253 order and TB_R_INSTRUCTION)"
     ],
     [
      "CUSTOMER_ORDER_NO",
      "VARCHAR(8)",
      "",
      "N",
-     "H0253.CUSTOMER_ORDER_NO (order key 2)"
-    ],
-    [
-     "ORDER_DT",
-     "DATE",
-     "",
-     "N",
-     "Customer Order Date (H0253.ORDER_DT; unit and order key 3)"
-    ],
-    [
-     "ORDER_TIME",
-     "VARCHAR(6)",
-     "",
-     "N",
-     "H0253.ORDER_TIME (order key 4)"
+     "H0253.CUSTOMER_ORDER_NO"
     ],
     [
      "DESTINATION_CD",
      "VARCHAR(7)",
      "",
      "N",
-     "H0253.DESTINATION_CD (order key 5)"
+     "H0253.DESTINATION_CD"
     ],
     [
      "DETAILED_ITEM_NO",
      "VARCHAR(4)",
      "",
      "N",
-     "H0253.DETAILED_ITEM_NO (order key 6)"
+     "H0253.DETAILED_ITEM_NO"
     ],
     [
      "SERIAL_NO",
      "VARCHAR(7)",
      "",
      "N",
-     "H0253.SERIAL_NO (order key 7)"
+     "H0253.SERIAL_NO (DR simulation: SERIAL_CARD_NO, refer FB-193)"
     ],
     [
-     "PART_NO",
-     "VARCHAR(15)",
-     "",
-     "N",
-     "Order part number (H0253.SHIPPING_PART_NO)"
-    ],
-    [
-     "ORDER_STATUS",
-     "VARCHAR(1)",
-     "",
-     "N",
-     "H0253.ORDER_STATUS ('7' Cross Dock)"
-    ],
-    [
-     "CUST_ORDER_QTY",
+     "ORDER_STATUS_QTY",
      "NUMBER(8)",
      "",
      "N",
-     "Order status qty of the customer order line (H0253.ORDER_STATUS_QTY)"
-    ],
-    [
-     "OPEN_ORDER_QTY",
-     "NUMBER(8)",
-     "",
-     "N",
-     "Qty of the line not yet in TB_R_INSTRUCTION (sent or in an open Case List)"
-    ],
-    [
-     "ASSIGNED_QTY",
-     "NUMBER(8)",
-     "",
-     "N",
-     "Qty of this slice (line x PO x supplier case)"
+     "Always 1 (customer order line broken down to 1 pc)"
     ],
     [
      "PO_NO",
-     "VARCHAR(TBD)",
+     "VARCHAR(20)",
      "",
      "Y",
-     "Supplier PO number (Pra Daily Order Manifest); NULL while not assigned"
+     "PO of the pc (pouring of 4.2: oldest PO first); NULL when no PO is left or the pc is held"
+    ],
+    [
+     "PO_ITEM",
+     "VARCHAR(4)",
+     "",
+     "Y",
+     "TB_R_PRA_DAILY_ORDER_PART.PO_ITEM"
     ],
     [
      "MANIFEST_NO",
-     "VARCHAR(TBD)",
+     "VARCHAR(20)",
      "",
      "Y",
-     "Manifest number"
+     "TB_R_PRA_DAILY_ORDER_PART.MANIFEST_NO"
     ],
     [
      "MANIFEST_ITEM",
-     "VARCHAR(TBD)",
+     "VARCHAR(4)",
      "",
      "Y",
-     "Manifest item number (Pra Daily Order Part)"
+     "TB_R_PRA_DAILY_ORDER_PART.MANIFEST_ITEM"
     ],
     [
-     "PO_DT",
-     "DATE",
-     "",
-     "Y",
-     "Order date of the PO (PO Date)"
-    ],
-    [
-     "ORDER_QTY",
-     "NUMBER(TBD)",
-     "",
-     "Y",
-     "Order qty of the PO part"
-    ],
-    [
-     "SUPPLIER_CD",
-     "VARCHAR(TBD)",
-     "",
-     "Y",
-     "Supplier code"
-    ],
-    [
-     "SUPPLIER_PLANT",
-     "VARCHAR(TBD)",
-     "",
-     "Y",
-     "Supplier plant"
-    ],
-    [
-     "SUB_SUPPLIER_CD",
-     "VARCHAR(TBD)",
-     "",
-     "Y",
-     "Sub supplier code"
-    ],
-    [
-     "SUB_SUPPLIER_PLANT",
-     "VARCHAR(TBD)",
-     "",
-     "Y",
-     "Sub supplier plant"
-    ],
-    [
-     "ORDER_TYPE",
-     "VARCHAR(TBD)",
-     "",
-     "Y",
-     "Order type of the PO"
-    ],
-    [
-     "DOCK_CD",
-     "VARCHAR(TBD)",
-     "",
-     "Y",
-     "Dock code"
-    ],
-    [
-     "ETD_ORI",
-     "DATE",
-     "",
-     "Y",
-     "Original ETD"
-    ],
-    [
-     "PCS_CASE",
-     "NUMBER(4)",
-     "",
-     "N",
-     "Pcs per case of the part (TB_M_PART_CANDIDATE.PCS_CASE)"
-    ],
-    [
-     "CASE_SEQ",
-     "NUMBER(4)",
-     "",
-     "N",
-     "Supplier case of the slice within the unit (PCS_CASE pcs in H0253 order)"
-    ],
-    [
-     "LINE_SEQ",
-     "NUMBER(4)",
-     "",
-     "N",
-     "Sequence of the slice within the case"
-    ],
-    [
-     "CUM_DEST_QTY",
+     "PO_QTY",
      "NUMBER(8)",
      "",
      "N",
-     "Cumulative qty of the destination within the unit up to this slice"
+     "1 when the pc has a PO (PO qty broken down to 1); 0 when PO_NO is NULL"
     ],
     [
-     "SEQ_QTY",
-     "NUMBER(4)",
+     "CASE_NO",
+     "VARCHAR(8)",
      "",
-     "N",
-     "Fill of the warehouse case (1 case = 1 destination) of the destination after this slice: 1..PCS_CASE, starts again after PCS_CASE"
+     "Y",
+     "Supplier case (case label) of the pc: supplier (sub supplier when it exists) + plant + initial palletize code + next CASE_LABEL_LAST_SEQ of TB_R_CASE_LABEL_LAST_SEQ; the same CASE_NO for PCS_CASE pcs in H0253 order (DR); NULL for a held pc"
     ],
     [
      "CUT_FLAG",
      "VARCHAR(1)",
      "",
-     "N",
-     "'Y' on the last slice of a case after which the ASN may stop (every destination a multiple of PCS_CASE)"
+     "Y",
+     "(added) 'Y' on the pcs of a case after which the ASN may stop (every destination of the unit a multiple of PCS_CASE, 4.3)"
     ],
     [
      "GROUP_SEQ",
      "NUMBER(4)",
      "",
-     "N",
-     "Case Group (block) of the slice: the cases up to and including a valid cut; the cases of a group are sent together"
+     "Y",
+     "(added) Case Group: the cases up to and including a valid cut; sent together"
     ],
     [
      "CROSSDOCK_STATUS",
      "VARCHAR(1)",
      "",
+     "Y",
+     "(added) '6' Ready / '7' Not Ready / '8' On Hold (D/S) of the case group"
+    ],
+    [
+     "HOLD_STS",
+     "CHAR(1)",
+     "",
+     "Y",
+     "'Y' pc held by the D/S team (Hold per case, Part Number on hold): no PO, no CASE_NO; NULL otherwise"
+    ],
+    [
+     "CREATE_DT",
+     "TIMESTAMP",
+     "",
      "N",
-     "Status of the block: '6' Ready (the block and every earlier block have a PO) / '7' Not Ready"
+     "System date-time of the run"
+    ],
+    [
+     "CREATE_BY",
+     "VARCHAR(20)",
+     "",
+     "N",
+     "Login user; LEFT(CREATE_BY, 4) = company code of the user (rows of the company)"
+    ],
+    [
+     "UPDATE_DT",
+     "TIMESTAMP",
+     "",
+     "Y",
+     "Last update date-time"
+    ],
+    [
+     "UPDATE_BY",
+     "VARCHAR(20)",
+     "",
+     "Y",
+     "Last update user"
     ]
    ]
   },
@@ -4304,7 +4377,7 @@
   ],
   "sections": [
    {
-    "title": "A. Input: pre-mapping of XD09 (#TEMP_INSTRUCTION) in H0253 order: Customer Order Date, Customer Code, Customer Order No, …",
+    "title": "A. Input: pre-mapping of XD09 (TB_T_INSTRUCTION_H / TB_T_INSTRUCTION_D) in H0253 order: Customer Order Date, Customer Code, Customer Order No, …",
     "columns": [
      "Sort Seq",
      "Customer Order No",

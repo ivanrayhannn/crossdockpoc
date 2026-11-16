@@ -275,15 +275,17 @@ const FUNCS = [
   { id: 'XD09', name: 'Mapping Customer Order and PO Batch', type: 'Batch', trigger: '[Search] di XD10 (on demand, tanpa scheduler)',
     sections: [
       { key: 'N', title: 'Proses normal', points: [
-        'Temporary table session dikosongkan; Delivery Date dan Rit dari XD10 hanya dibawa ke ASN, tidak memfilter order.',
+        'Konsep tabel (16-Nov, ikut DR XD09): draft disimpan di TB_T_INSTRUCTION_H (1 baris per unit: open qty, Case Qty, SUBMIT_ASN_STS) dan TB_T_INSTRUCTION_D (1 baris per pc: qty order dan qty PO dipecah jadi 1, PO, CASE_NO, HOLD_STS).',
+        'Baris milik company user login (LEFT(CREATE_BY, 4)) dihapus lalu di-insert ulang setiap [Search]; company 1000 (TMMIN) melihat semua supplier. Delivery Date dan Rit dari XD10 hanya dibawa ke ASN, tidak memfilter order.',
+        'CASE_NO dibuat XD09 dari TB_R_CASE_LABEL_LAST_SEQ (CASE_NO sama untuk PCS_CASE pcs); Submit ASN memakai CASE_NO ini.',
         'Ambil customer order H0253: status 7, UPD_STATUS kosong, HOLD_FLAG N, PO_MAPPED_FLAG N; open qty = qty − qty yang sudah di TB_R_INSTRUCTION (> 0).',
         'Ambil PO crossdock: manifest CROSS_DOCK_FLAG X + part-nya (key MANIFEST_NO + MANIFEST_ITEM); open PO qty = ORDER_QTY − MAPPED_QTY; urut PO date (FIFO).',
         'Per unit (Part Number + Customer Order Date, tanggal tertua dulu): line diurut H0253 order (Allocation Priority, Customer Code, Customer Order No, Order Date, Order Time, Destination, Detailed Item No, Serial No); qty PO dialokasikan berurutan, satu line bisa terbagi ke beberapa PO.',
         'Pcs dipotong per supplier case (PCS_CASE); cut valid hanya setelah case di mana setiap destinasi kelipatan PCS_CASE (1 case = 1 destinasi di gudang); case sampai cut valid = block (opsi ASN).',
         'Block Ready kalau block itu dan semua block sebelumnya punya PO; status unit Ready / Partially Ready / Not Ready dikembalikan ke XD10.' ] },
       { key: 'AB', title: 'Abnormality', points: [
-        { k: 'Baca / insert temporary table gagal', d: 'LOG1', s: 'Temporary table dikosongkan, error di layar', u: 'Ulangi; hubungi PIC' },
-        { k: 'Error sistem lain', d: 'LOG2', s: 'Temporary table dikosongkan', u: 'Hubungi PIC' } ] } ] },
+        { k: 'Baca / insert TB_T_INSTRUCTION_H / D gagal', d: 'LOG1', s: 'Baris company user dikosongkan, error di layar', u: 'Ulangi; hubungi PIC' },
+        { k: 'Error sistem lain', d: 'LOG2', s: 'Baris company user dikosongkan', u: 'Hubungi PIC' } ] } ] },
 
   { id: 'XD10', name: 'ASN Cross Dock Creation Screen', type: 'Screen', trigger: 'Supplier (unit sendiri) · D/S team (semua supplier, hold)',
     sections: [
@@ -1194,7 +1196,7 @@ const MSGS = {
 "event": "Mapping Customer Order and PO",
 "cause": "Read or insert fails",
 "message": "Mapping Customer Order and PO failed for Delivery Date <DELIVERY_DT> <RIT>: <ERROR_DETAIL>.",
-"action": "system: Clear the temporary table.; user: Retry; contact PIC if it persists."
+"action": "system: Delete the rows of the company in TB_T_INSTRUCTION_H / D.; user: Retry; contact PIC if it persists."
 },
 {
 "id": "LOG2",
@@ -1203,7 +1205,7 @@ const MSGS = {
 "event": "Unexpected error",
 "cause": "Any other system error",
 "message": "Unexpected error: <ERROR_DETAIL>.",
-"action": "system: Clear the temporary table.; user: User contact PIC"
+"action": "system: Delete the rows of the company in TB_T_INSTRUCTION_H / D.; user: User contact PIC"
 }
 ],
 "XD10": [

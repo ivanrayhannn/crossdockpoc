@@ -22,6 +22,8 @@
 |  |  |  |  | PO check line replaced by the PO information pop up on the ASN status (MSG17); Hold chip with hold information (MSG18). |
 |  |  |  |  | Bordered unit table and case grid; destination once per case; same PO merged; summary line of the delivery plan removed. |
 |  |  |  |  | Destination detail (Destination / pcs, Hold Flag) hidden on the screen for now (FB-184). |
+| 0.5 | FID Rayhan | 16-Nov-26 |  | Source of the delivery plan: TB_T_INSTRUCTION_H / TB_T_INSTRUCTION_D (table concept of the DR XD09) instead of #TEMP_INSTRUCTION. |
+|  |  |  |  | Case No of the ASN = CASE_NO of the draft made by XD09; Submit ASN no longer generates the case numbers (ASN number as existing). |
 
 ## 1. General
 
@@ -32,7 +34,7 @@
 - To let the D/S team (super admin) see the units of all suppliers, the destination detail and hold / release a destination of a unit.
 - To tick the supplier cases to send (check box per case, from case 1, cases that belong together) of one Supplier Code + Supplier Plant, map them to their POs (TB_R_INSTRUCTION), review the cases, download the case labels and submit the ASN.
 - Submit ASN runs in the background with a Submit ID and follows the existing ASN submit of NSP (refer 5.7).
-- Submit ASN (decided 20-Oct, existing structure GTOPAS SPS DB): one TB_R_DAILY_ORDER_MANIFEST row per Pra Daily Order manifest of the cases (same ASN_NO) and one TB_R_DAILY_ORDER_PART row per manifest item and case; the ASN number and the case numbers (case label) are auto generated and their last sequence is saved in TB_R_CASE_LABEL_LAST_SEQ; PART_NAME from TB_M_PART_MASTER.
+- Submit ASN (decided 20-Oct, existing structure GTOPAS SPS DB): one TB_R_DAILY_ORDER_MANIFEST row per Pra Daily Order manifest of the cases (same ASN_NO) and one TB_R_DAILY_ORDER_PART row per manifest item and case; the ASN number is auto generated (last sequence ASN_LAST_SEQ in TB_R_CASE_LABEL_LAST_SEQ); the case numbers come from CASE_NO of the draft (made by XD09 from TB_R_CASE_LABEL_LAST_SEQ, DR XD09); PART_NAME from TB_M_PART_MASTER.
 
 ### Display order – Delivery plan
 
@@ -122,7 +124,7 @@ flowchart LR
 flowchart TB
   s(["START"])
   e>"Choose Delivery Date and Rit, click Search"]
-  g["XD09: get customer orders, pre-map to PO (#TEMP_INSTRUCTION)"]
+  g["XD09: get customer orders, pre-map to PO (TB_T_INSTRUCTION_H / TB_T_INSTRUCTION_D)"]
   d{"First block Ready? (blocks in H0253 order)"}
   w>"Not Ready: check box disabled"]
   p["Tick cases (from case 1, cases that belong together), Create ASN: insert TB_R_INSTRUCTION"]
@@ -256,34 +258,34 @@ flowchart TB
 | 6 | Part Number (filter) | Key-in | - | Char | 15 | I | Combo Box | Left | All | N | - | - | Filters the delivery plan at once. |
 | 7 | Status (filter) | Key-in | - | Char | - | I | Combo Box | Left | All | N | - | - | All / Ready / Not Ready (D/S team also On Hold). Filters at once. |
 | 8 | Select (check box) | Key-in | - | Char | 1 | I | CheckBox | Center | <unchecked> | N | - | Enabled when the first block of the unit is Ready | Ticks / unticks all Ready cases of the unit (partly ticked when only some cases are ticked). Refer Screen Mode remark 2). |
-| 9 | Supplier · Plant (D/S) | #TEMP_INSTRUCTION | SUPPLIER_CD / SUPPLIER_PLANT | Char | - | O | Label | Left | - | N | {code} · {plant} | - | D/S team only (all suppliers). The supplier sees its own Supplier Code + Plant only. |
-| 10 | Customer Order Date | #TEMP_INSTRUCTION | ORDER_DT | Date | - | O | Label | Left | - | N | DD-Mon-YYYY | - | Customer Order Date of the unit. |
-| 11 | Part Number | #TEMP_INSTRUCTION | PART_NO | Char | 15 | O | Label | Left | - | N | - | - | Part number of the unit (distinct per Customer Order Date). Part name is not shown. |
-| 12 | Case Qty | Computed | - | Number | - | O | Label | Right | - | N | ZZ9 | - | Number of supplier cases of the unit: open qty / pcs/case, cut in H0253 order (e.g. 30 pcs, 6 pcs/case = 5 cases); a case can hold several destinations. |
+| 9 | Supplier · Plant (D/S) | TB_T_INSTRUCTION_D | SUPPLIER_CD / SUPPLIER_PLANT | Char | - | O | Label | Left | - | N | {code} · {plant} | - | D/S team only (all suppliers). The supplier sees its own Supplier Code + Plant only. |
+| 10 | Customer Order Date | TB_T_INSTRUCTION_H | ORDER_DT | Date | - | O | Label | Left | - | N | DD-Mon-YYYY | - | Customer Order Date of the unit. |
+| 11 | Part Number | TB_T_INSTRUCTION_H | SHIPPING_PART_NO | Char | 15 | O | Label | Left | - | N | - | - | Part number of the unit (distinct per Customer Order Date). Part name is not shown. |
+| 12 | Case Qty | TB_T_INSTRUCTION_H | CASE | Number | - | O | Label | Right | - | N | ZZ9 | - | Number of supplier cases of the unit: open qty / pcs/case, cut in H0253 order (e.g. 30 pcs, 6 pcs/case = 5 cases); a case can hold several destinations. |
 | 13 | PO Readiness (case) | Computed | - | Number | - | O | Label | Right | - | N | ZZ9 | - | Ready cases: cases whose whole qty is pre-mapped to a PO; red when lower than Case Qty. Pcs held by the D/S team (Hold per case) are not in the cases and not counted (see the Hold chip of ASN Status). |
-| 14 | ASN Status | #TEMP_INSTRUCTION | CROSSDOCK_STATUS | Char | 1 | O | Label | Left | - | N | - | - | Ready (all blocks '6', green) / Partially Ready (first block '6', a later block '7', amber) / Not Ready (first block '7', row highlighted) / On Hold (D/S only). Refer 5.2. Partially Ready, Not Ready and Short PO are a button: a click opens the PO information of the unit (message no. 17): customer order qty, regular / split PO with qty and date, Short PO and the qty still waiting, ready cases, pcs on hold. The PO check line above the cases is no longer shown. A Hold chip (grey button) is shown next to the status when the unit has a hold (Part Number on hold, pcs held per case, or a destination on hold for the D/S team); a click opens the hold information (message no. 18). The text lines under the status (pcs on hold, Part Number on hold, destinations on hold) are no longer shown. |
+| 14 | ASN Status | TB_T_INSTRUCTION_D | CROSSDOCK_STATUS | Char | 1 | O | Label | Left | - | N | - | - | Ready (all blocks '6', green) / Partially Ready (first block '6', a later block '7', amber) / Not Ready (first block '7', row highlighted) / On Hold (D/S only). Refer 5.2. Partially Ready, Not Ready and Short PO are a button: a click opens the PO information of the unit (message no. 17): customer order qty, regular / split PO with qty and date, Short PO and the qty still waiting, ready cases, pcs on hold. The PO check line above the cases is no longer shown. A Hold chip (grey button) is shown next to the status when the unit has a hold (Part Number on hold, pcs held per case, or a destination on hold for the D/S team); a click opens the hold information (message no. 18). The text lines under the status (pcs on hold, Part Number on hold, destinations on hold) are no longer shown. |
 | 15 | Detail (expand, D/S) | - | - | - | - | I | Button | Center | Enabled | N | - | - | Shown to the D/S team only. Opens the destination detail. |
 | **<Supplier Cases of a Unit (H0253 order)>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | 16 | Select case (check box) | Key-in | - | Char | - | I | CheckBox | Center | <unchecked> | N | - | Enabled only when the case and every earlier case have a PO | One check box per supplier case. The selection always starts at case 1 and takes the cases that belong together (Case Group = GROUP_SEQ of XD09, not shown on the screen): ticking case n ticks the earlier cases and the other cases of its group (message no. 10, e.g. tick case 2 -> cases 2-3 belong together, so cases 1-3); unticking case n unticks its group and the later cases. Refer 5.4. |
-| 17 | Case | #TEMP_INSTRUCTION | CASE_SEQ | Number | - | O | Label | Right | - | N | Z9 | - | Supplier case number in H0253 order (PCS_CASE pcs). |
-| 18 | Qty (pcs) | #TEMP_INSTRUCTION | ASSIGNED_QTY | Number | - | O | Label | Right | - | N | ZZZ9 | - | Pcs of the case (= PCS_CASE). |
-| 19 | Remaining Qty (not assigned) | #TEMP_INSTRUCTION | ASSIGNED_QTY (PO_NO NULL) | Number | - | O | Label | Right | - | N | ZZZ9 | - | Pcs of the case without a PO yet (sum of the slices with PO_NO NULL); 0 when the whole case is assigned; red when > 0. |
-| 20 | Destination (D/S team) | #TEMP_INSTRUCTION | DESTINATION_CD | Char | - | O | Grid | Left | - | N | - | - | D/S team only: destination code and name of the case, shown once per case (cell merged over its lines); a supplier case holds one destination. |
-| 21 | Customer Order No (D/S team) | #TEMP_INSTRUCTION | CUSTOMER_ORDER_NO | Char | - | O | Grid | Left | - | N | - | - | D/S team only: one row per customer order line in the case (the case-level cells are merged over these rows). |
-| 22 | Order Qty (D/S team) | #TEMP_INSTRUCTION | ASSIGNED_QTY | Number | - | O | Grid | Right | - | N | - | - | D/S team only: pcs of the line, one per row (sum = case qty). |
-| 23 | PO | #TEMP_INSTRUCTION | PO_NO / ASSIGNED_QTY | Char | - | O | Label | Left | - | N | {PO No} {qty} | - | PO and assigned qty, e.g. PO-0003 · 6. Rows of the case with the same PO are merged into one cell; supplier view: one row per PO of the case. Held line: "PO released". |
-| 24 | PO Status | #TEMP_INSTRUCTION | CROSSDOCK_STATUS | Char | - | O | Label | Left | - | N | - | - | '6' Ready (green) / '7' Not Ready (amber): the case or an earlier case has no PO yet. 'On Hold (D/S)' (grey) for a held line (Hold per case) or when the part is on hold; check box disabled (message no. 14 / 12). |
+| 17 | Case | TB_T_INSTRUCTION_D | CASE_NO | Number | - | O | Label | Right | - | N | Z9 | - | Supplier case number in H0253 order (PCS_CASE pcs). |
+| 18 | Qty (pcs) | TB_T_INSTRUCTION_D | SUM(ORDER_STATUS_QTY) | Number | - | O | Label | Right | - | N | ZZZ9 | - | Pcs of the case (= PCS_CASE). |
+| 19 | Remaining Qty (not assigned) | TB_T_INSTRUCTION_D | COUNT(pcs) with PO_NO NULL | Number | - | O | Label | Right | - | N | ZZZ9 | - | Pcs of the case without a PO yet (sum of the slices with PO_NO NULL); 0 when the whole case is assigned; red when > 0. |
+| 20 | Destination (D/S team) | TB_T_INSTRUCTION_D | DESTINATION_CD | Char | - | O | Grid | Left | - | N | - | - | D/S team only: destination code and name of the case, shown once per case (cell merged over its lines); a supplier case holds one destination. |
+| 21 | Customer Order No (D/S team) | TB_T_INSTRUCTION_D | CUSTOMER_ORDER_NO | Char | - | O | Grid | Left | - | N | - | - | D/S team only: one row per customer order line in the case (the case-level cells are merged over these rows). |
+| 22 | Order Qty (D/S team) | TB_T_INSTRUCTION_D | SUM(ORDER_STATUS_QTY) | Number | - | O | Grid | Right | - | N | - | - | D/S team only: pcs of the line, one per row (sum = case qty). |
+| 23 | PO | TB_T_INSTRUCTION_D | PO_NO / SUM(PO_QTY) | Char | - | O | Label | Left | - | N | {PO No} {qty} | - | PO and assigned qty, e.g. PO-0003 · 6. Rows of the case with the same PO are merged into one cell; supplier view: one row per PO of the case. Held line: "PO released". |
+| 24 | PO Status | TB_T_INSTRUCTION_D | CROSSDOCK_STATUS | Char | - | O | Label | Left | - | N | - | - | '6' Ready (green) / '7' Not Ready (amber): the case or an earlier case has no PO yet. 'On Hold (D/S)' (grey) for a held line (Hold per case) or when the part is on hold; check box disabled (message no. 14 / 12). |
 | 25 | Hold (D/S) | Key-in / TB_R_CROSSDOCK_CASE_HOLD | HOLD_QTY | Char | - | I | Check Box | Center | Unticked (case) / ticked (held line), disabled | N | - | - | D/S team only, next to PO Status: enabled after [Edit hold] of the unit. Case row: tick = hold the case; after [Save] its pcs leave the unit (no PO) and are listed as held lines. Held line row (On Hold, ticked): untick = release; the pcs come back to the unit and take PO again at the next Search (refer 5.3). |
 | 26 | Edit hold / Save / Cancel | - | - | - | - | I | Button | Center | Edit hold | N | - | - | D/S team only, per Part Number + Customer Order Date (above the cases, right side): [Edit hold] enables the Hold (D/S) check boxes; [Save] asks for confirmation (message no. 15), stores the holds, shows message no. 16 and refreshes the delivery plan (the selection of the unit is cleared); [Save] without a change just closes the edit; [Cancel] discards. Not shown for a part on hold. Refer 5.3. |
 | **<Destination Detail (D/S team only)>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| 27 | Destination | #TEMP_INSTRUCTION | DESTINATION_CD | Char | 7 | O | Grid | Left | - | N | {code} · {name} | - | One row per destination with its number of cases (qty / pcs/case); name from TB_M_H0125_DESTINATION. |
+| 27 | Destination | TB_T_INSTRUCTION_D | DESTINATION_CD | Char | 7 | O | Grid | Left | - | N | {code} · {name} | - | One row per destination with its number of cases (qty / pcs/case); name from TB_M_H0125_DESTINATION. |
 | 28 | Case | Computed | - | Number | - | O | Grid | Right | - | N | 9 | - | 1; 0 when the destination is on hold. |
-| 29 | Qty (pcs) | #TEMP_INSTRUCTION | CUST_ORDER_QTY | Number | 8 | O | Grid | Right | - | N | ZZ,ZZ9 | - | Sum of the order qty of the destination; '(on hold)' when held. |
+| 29 | Qty (pcs) | TB_T_INSTRUCTION_D | CUST_ORDER_QTY | Number | 8 | O | Grid | Right | - | N | ZZ,ZZ9 | - | Sum of the order qty of the destination; '(on hold)' when held. |
 | 30 | Pcs/Case | Part master | PCS_PER_CASE | Number | - | O | Grid | Right | - | N | ZZ9 | - | Pieces per case of the part (next to Qty). |
 | 31 | Customer orders (expand, D/S) | - | - | - | - | I | Button | Center | Enabled | N | - | - | Opens the customer order lines of the destination. |
 | **<Customer Orders of a Destination (D/S team only)>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| 32 | Customer Order No / Detailed Item No | #TEMP_INSTRUCTION | CUSTOMER_ORDER_NO / DETAILED_ITEM_NO | Char | - | O | Grid | Left | - | N | - | - | Original order row, e.g. order A 4 pcs and order B 2 pcs to Korea. |
-| 33 | Qty (pcs) / PO No / PO Date | #TEMP_INSTRUCTION | CUST_ORDER_QTY / PO_NO / PO_DT | Char | - | O | Grid | Left | - | N | - | - | Pre-mapping of the line. |
+| 32 | Customer Order No / Detailed Item No | TB_T_INSTRUCTION_D | CUSTOMER_ORDER_NO / DETAILED_ITEM_NO | Char | - | O | Grid | Left | - | N | - | - | Original order row, e.g. order A 4 pcs and order B 2 pcs to Korea. |
+| 33 | Qty (pcs) / PO No / PO Date | TB_T_INSTRUCTION_D | CUST_ORDER_QTY / PO_NO / PO_DT | Char | - | O | Grid | Left | - | N | - | - | Pre-mapping of the line. |
 | 34 | Hold / Release (D/S) | - | - | - | - | I | Button | Center | Enabled | N | - | - | Hold Flag of the destination: 'N · Hold' sets Y, 'Y · Release' sets N on every order line of the destination. Refer 5.3. |
 | **<Selection Bar Section>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | 35 | Selection summary | Computed | - | Char | - | O | Label | Left | - | N | - | - | '{n} units · {c} cases · {q} pcs selected · {units}'. Empty: hint that cases of different units / dates can go into one ASN. |
@@ -292,14 +294,14 @@ flowchart TB
 | **<Case List Sub Screen - ASN Summary>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | 38 | Back | - | - | - | - | I | Button | Center | Enabled | N | - | - | Returns to ASN Crossdock Creation without submitting; the draft mapping is released. |
 | 39 | ASN No | TB_R_DAILY_ORDER_MANIFEST | ASN_NO | Char | TBD | O | Label | Left | - | N | - | - | Existing ASN numbering; 'auto · assigned on submit'. |
-| 40 | Supplier · Plant | #TEMP_INSTRUCTION | SUPPLIER_CD / SUPPLIER_PLANT | Char | TBD | O | Label | Left | - | N | - | - | Supplier of the cases (one Supplier Code + Plant per ASN). |
+| 40 | Supplier · Plant | TB_T_INSTRUCTION_D | SUPPLIER_CD / SUPPLIER_PLANT | Char | TBD | O | Label | Left | - | N | - | - | Supplier of the cases (one Supplier Code + Plant per ASN). |
 | 41 | Delivery Date · Rit · Route | TB_R_INSTRUCTION | DELIVERY_DT / RIT_CYCLE / ROUTE | Char | - | O | Label | Left | - | N | - | - | From the Search. |
 | 42 | Delivery Qty | Computed | - | Number | - | O | Label | Left | - | N | ZZ,ZZ9 pcs | - | Total pieces of the ASN. |
 | 43 | Cases | Computed | - | Number | - | O | Label | Left | - | N | N cases | - | Number of cases. |
 | **<Case List Sub Screen - Case List>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | 44 | Download Case Label | - | - | - | - | I | Button | Center | Enabled | N | - | - | Downloads the labels of all cases (existing label format). |
 | 45 | PO detail (expand) | - | - | - | - | I | Button | Center | Enabled | N | - | - | Opens the PO detail of the case. |
-| 46 | Case Number | TB_R_INSTRUCTION | CASE_SEQ | Char | - | O | Grid | Left | - | N | Case {n} | - | Case sequence; the case number is auto generated on submit by checking the last sequence (existing table). |
+| 46 | Case Number | TB_R_INSTRUCTION | CASE_NO | Char | - | O | Grid | Left | - | N | Case {n} | - | Case sequence; the case number is auto generated on submit by checking the last sequence (existing table). |
 | 47 | Part Number | TB_R_INSTRUCTION | PART_NO | Char | 15 | O | Grid | Left | - | N | - | - | Supplier case of PCS_CASE pcs in H0253 order; a case can hold several destinations. |
 | 48 | Qty / Total | TB_R_INSTRUCTION | QTY | Number | - | O | Grid | Right | - | N | ZZ,ZZ9 | - | Pieces of the case; total of all cases. |
 | 49 | PO No / Manifest No / Manifest Item / PO Qty | TB_R_INSTRUCTION | PO_NO / MANIFEST_NO / MANIFEST_ITEM / ORDER_QTY | Char | - | O | Grid | Left | - | N | - | - | Expanded PO detail of the case. |
@@ -308,11 +310,11 @@ flowchart TB
 | 52 | No rit cycle message | Computed | - | Char | - | O | Label | Left | - | N | - | - | Message no. 5 when no rit is available. |
 | **<Sub Screen Hold per Part Number (D/S team only)>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | 53 | Supplier Code · Plant | Supplier master | SUPPLIER_CD / SUPPLIER_PLANT | Char | - | O | Label | Left | - | N | - | - | One section per supplier + plant: supplier name and number of part numbers. |
-| 54 | Part Number (row) | #TEMP_INSTRUCTION (XD09) | PART_NO | Char | - | O | Label | Left | - | N | - | - | One row per Part Number with open customer orders: number of customer orders, Customer Order Dates and pcs. Expand to see its customer orders. |
+| 54 | Part Number (row) | TB_T_INSTRUCTION_D | PART_NO | Char | - | O | Label | Left | - | N | - | - | One row per Part Number with open customer orders: number of customer orders, Customer Order Dates and pcs. Expand to see its customer orders. |
 | 55 | Hold status | TB_R_CROSSDOCK_PART_HOLD | HOLD_FLAG | Char | - | O | Label | Left | - | N | - | - | 'On Hold' (row highlighted) / 'Not on hold'. |
 | 56 | Hold (check box) | Key-in / TB_R_CROSSDOCK_PART_HOLD | HOLD_FLAG | Char | - | I | Check Box | Center | Saved value (disabled) | N | - | - | On the Part Number row; enabled after [Edit]. Saved with [Save]: Y = every customer order of the part (all Customer Order Dates) is On Hold (check boxes on the delivery plan disabled, message no. 12). |
 | 57 | Edit / Save / Cancel | - | - | - | - | I | Button | Center | Edit | N | - | - | [Edit] enables the Hold check box of the part; [Save] stores it; [Cancel] discards. Refer 5.3. |
-| 58 | Customer Order Date / Customer Order No / Destination / Qty / Case | #TEMP_INSTRUCTION (XD09) | ORDER_DT / CUSTOMER_ORDER_NO / DESTINATION_CD / ASSIGNED_QTY / CASE_SEQ | Char | - | O | Grid | Left | - | N | - | - | Expanded list: one row per customer order line of the part (all Customer Order Dates, oldest first, not grouped); no PO information. |
+| 58 | Customer Order Date / Customer Order No / Destination / Qty / Case | TB_T_INSTRUCTION_D | ORDER_DT / CUSTOMER_ORDER_NO / DESTINATION_CD / SUM(ORDER_STATUS_QTY) / CASE_NO | Char | - | O | Grid | Left | - | N | - | - | Expanded list: one row per customer order line of the part (all Customer Order Dates, oldest first, not grouped); no PO information. |
 | 59 | Back to ASN Crossdock Creation | - | - | - | - | I | Button | Center | Enabled | N | - | - | Closes the sub screen. |
 
 ## 5. Data edit mapping
@@ -394,14 +396,14 @@ flowchart TB
 |---|---|---|
 |  | PART_NO / ORDER_DT | Part number and Customer Order Date of the unit |
 |  | SUPPLIER_CD / SUPPLIER_PLANT | Supplier of the unit |
-|  | CUSTOMER_CD / CUSTOMER_ORDER_NO / DESTINATION_CD / DETAILED_ITEM_NO / SERIAL_NO | Customer order line in the ticked case (#TEMP_INSTRUCTION) |
-|  | HOLD_QTY | Pcs of the line in the ticked case (ASSIGNED_QTY), added when the line is already held |
+|  | CUSTOMER_CD / CUSTOMER_ORDER_NO / DESTINATION_CD / DETAILED_ITEM_NO / SERIAL_NO | Customer order line in the ticked case (TB_T_INSTRUCTION_D) |
+|  | HOLD_QTY | Pcs of the line in the ticked case (rows of TB_T_INSTRUCTION_D), added when the line is already held |
 |  | CREATED_BY / CREATED_DT | Login user ID / server date-time (insert only) |
 |  | CHANGED_BY / CHANGED_DT | Login user ID / server date-time |
 |  | HOLD_FLAG | 'Y' when ticked / 'N' when unticked (released) |
 
 #### 4. Update TB_R_H0253_ORDER_CONTROL_PRE – [Create ASN]: the lines of the chosen blocks
-- Source: #TEMP_INSTRUCTION (chosen blocks)
+- Source: TB_T_INSTRUCTION_D (chosen case groups)
 - Destination keys: Unique key (customer order line incl. SERIAL_NO) = Lines of the chosen blocks
 
 | Source field | Destination field | Description |
@@ -458,12 +460,12 @@ flowchart TB
 |  | CREATE_BY | Not changed |
 
 #### 5. Insert / Update TB_R_PRA_DAILY_ORDER_MAPPED – [Create ASN]: one row per PO part used by the chosen blocks (insert when none yet)
-- Source: #TEMP_INSTRUCTION (chosen blocks)
+- Source: TB_T_INSTRUCTION_D (chosen case groups)
 - Destination keys: PO_NO + MANIFEST_NO + MANIFEST_ITEM = PO part of the pre-mapping
 
 | Source field | Destination field | Description |
 |---|---|---|
-|  | MAPPED_QTY | + ASSIGNED_QTY of the chosen blocks; - again on Back / Cancel |
+|  | MAPPED_QTY | + SUM(PO_QTY) of the chosen case groups; - again on Back / Cancel |
 | PO_NO | PO_NO |  |
 | MANIFEST_NO | MANIFEST_NO |  |
 | MANIFEST_ITEM | MANIFEST_ITEM |  |
@@ -477,12 +479,12 @@ flowchart TB
 |  | CHANGED_DT | Server system date-time |
 
 #### 6. Insert TB_R_INSTRUCTION – [Create ASN]: one row per case x line x PO
-- Source: #TEMP_INSTRUCTION (chosen blocks)
+- Source: TB_T_INSTRUCTION_D (chosen case groups)
 
 | Source field | Destination field | Description |
 |---|---|---|
 |  | DRAFT_ID | New id per [Create ASN] (same for all rows of the creation) |
-|  | CASE_SEQ | Case sequence: selected unit, then CASE_SEQ of XD09 (H0253 order) |
+|  | CASE_SEQ | Case sequence: selected unit, then the order of CASE_NO of TB_T_INSTRUCTION_D (H0253 order) |
 |  | LINE_SEQ | LINE_SEQ of XD09 (sequence within the case) |
 | PART_NO | PART_NO |  |
 | ORDER_DT | ORDER_DT |  |
@@ -495,7 +497,7 @@ flowchart TB
 | MANIFEST_NO | MANIFEST_NO |  |
 | MANIFEST_ITEM | MANIFEST_ITEM |  |
 | ORDER_QTY | ORDER_QTY |  |
-| ASSIGNED_QTY | QTY |  |
+| COUNT(pcs) per case x line x PO | QTY |  |
 | Delivery Date | DELIVERY_DT |  |
 | Rit | RIT_CYCLE |  |
 | Route | ROUTE |  |
@@ -503,7 +505,7 @@ flowchart TB
 | SUPPLIER_CD | SUPPLIER_CD |  |
 | SUPPLIER_PLANT | SUPPLIER_PLANT |  |
 |  | ASN_NO | NULL (filled by the submit process, refer 5.7) |
-|  | CASE_NO | NULL (filled by the submit process, refer 5.7) |
+|  | CASE_NO | CASE_NO of TB_T_INSTRUCTION_D |
 |  | CREATED_BY | Login user ID |
 |  | CREATED_DT | Server system date-time |
 |  | CHANGED_BY | Login user ID |
@@ -547,7 +549,7 @@ flowchart TB
 |  | SUB_MANIFEST_NO | Of the TB_R_DAILY_ORDER_MANIFEST row of the manifest |
 | TB_R_INSTRUCTION.MANIFEST_NO | MANIFEST_NO |  |
 | TB_R_INSTRUCTION.MANIFEST_ITEM | MANIFEST_ITEM |  |
-|  | CASE_NO | Auto generated per CASE_SEQ (case label); last sequence CASE_LABEL_LAST_SEQ in TB_R_CASE_LABEL_LAST_SEQ |
+|  | CASE_NO | CASE_NO of TB_T_INSTRUCTION_D (case label made by XD09 from TB_R_CASE_LABEL_LAST_SEQ) |
 | TB_R_PRA_DAILY_ORDER_PART.PO_NO | PO_NO |  |
 | TB_R_PRA_DAILY_ORDER_PART.PO_ITEM | PO_ITEM |  |
 |  | ASN_NO | ASN_NO of the submit |
@@ -571,7 +573,7 @@ flowchart TB
 | Source field | Destination field | Description |
 |---|---|---|
 |  | ASN_NO | ASN No of the manifest |
-|  | CASE_NO | Case No of the CASE_SEQ |
+|  | CASE_NO | Not changed (CASE_NO of the draft) |
 |  | CHANGED_BY | User ID |
 |  | CHANGED_DT | Server system date-time |
 |  | INSTRUCTION_ID | Not changed |
@@ -615,7 +617,7 @@ flowchart TB
 | Source field | Destination field | Description |
 |---|---|---|
 |  | ASN_LAST_SEQ | Last sequence used for the ASN number |
-|  | CASE_LABEL_LAST_SEQ | Last sequence used for the case numbers |
+|  | CASE_LABEL_LAST_SEQ | Not changed at submit: updated by XD09 when the CASE_NO of the draft are made |
 |  | CHANGED_BY | User ID |
 |  | CHANGED_DT | Server system date-time |
 
@@ -632,7 +634,7 @@ flowchart TB
 ### 5.1 Initial Display and Search
 
 a. On first display Delivery Date = today (business date), Rit = first rit of the date, Route displayed (disabled). The delivery plan is empty.
-b. [Search] runs XD09 Mapping Customer Order and PO Batch (UISS XD09): the open qty of the H0253 customer orders with order status 7 and Hold Flag N, in the H0253 order per Part Number + Customer Order Date, pre-mapped to the PO parts of the Pra Daily Order (PO qty of the part poured over the lines from the top down, oldest PO first; refer UISS-Batch XD09 4.2), cut into supplier cases and blocks in the temporary table #TEMP_INSTRUCTION (pre-mapping only; nothing is saved yet). Supplier: units of the login Supplier Code + Plant; D/S team: all suppliers.
+b. [Search] runs XD09 Mapping Customer Order and PO Batch (UISS XD09): the open qty of the H0253 customer orders with order status 7 and Hold Flag N, in the H0253 order per Part Number + Customer Order Date, pre-mapped to the PO parts of the Pra Daily Order (PO qty of the part poured over the lines from the top down, oldest PO first; refer UISS-Batch XD09 4.2), cut into supplier cases and blocks in the draft tables TB_T_INSTRUCTION_H / TB_T_INSTRUCTION_D (per company of the login user; nothing is mapped yet). Supplier: units of the login Supplier Code + Plant; D/S team: all suppliers.
 c. The delivery plan shows one row per Part Number + Customer Order Date, sorted Ready, Partially Ready, Not Ready, then Part Number ascending. Units without any pre-mapped case and units fully Created are not listed. Part Number and Status filters apply at once. No row: message no. 3. The heading shows only "Delivery plan" (no summary line with date, Rit, route, number of units and refresh time; decided 14-Nov).
 d. Delivery Date and Rit do not filter the orders; they are carried to the ASN. Rit and Route come from the existing route master table.
 
@@ -676,8 +678,8 @@ d. [Submit ASN]: confirmation (message no. 4). Yes: the draft is handed with a S
 
 ### 5.6 Notes
 
-- #TEMP_INSTRUCTION is temporary (pre-mapping of [Search]). TB_R_INSTRUCTION holds the mapping from [Create ASN] until submit or Back / Cancel. TB_R_PRA_DAILY_ORDER_MAPPED is a new table for the mapped qty. Submitted ASNs are in TB_R_DAILY_ORDER_MANIFEST / PART and shown in ASN Inquiry (XD15).
-- Case number: the format follows the existing NSP case number; the last sequence is kept in the TB_R_CASE_LABEL_LAST_SEQ (note only, not detailed here).
+- TB_T_INSTRUCTION_H / TB_T_INSTRUCTION_D hold the draft of [Search] per company of the login user (table concept of the DR XD09 (11-Nov)). TB_R_INSTRUCTION holds the mapping from [Create ASN] until submit or Back / Cancel. TB_R_PRA_DAILY_ORDER_MAPPED is a new table for the mapped qty. Submitted ASNs are in TB_R_DAILY_ORDER_MANIFEST / PART and shown in ASN Inquiry (XD15).
+- Case number: CASE_NO of the draft, made by XD09 at [Search] in the existing NSP format; the last sequence is kept in TB_R_CASE_LABEL_LAST_SEQ.
 - Cancel of an order is not done in NSP: it comes from the source (H0253 order status '2'); NSP only holds (HOLD_FLAG). Refer XD08 / XD11.
 - The prototype has a 'Business date' switch (PO release) and a 'View as' switch (Supplier / D/S team); they are not part of the real screen.
 
@@ -685,14 +687,14 @@ d. [Submit ASN]: confirmation (message no. 4). Yes: the draft is handed with a S
 
 a. Re-check before the submit: the draft must still exist (not released by XD08) and every line of it must still have UPD_STATUS NULL and the same qty. Otherwise nothing is submitted, the draft is released and message no. 11 is shown; the supplier searches again.
 b. The screen generates the Submit ID, writes the start message to the log (LOG2) and starts the submit process. The screen returns to the delivery plan and shows the Submit ID.
-c. Read the rows of the Submit ID from TB_R_INSTRUCTION (one Supplier Code + Plant). Take the ASN No from the existing numbering and auto generate one Case No per case by checking the last sequence (TB_R_CASE_LABEL_LAST_SEQ; format as existing).
+c. Read the rows of the Submit ID from TB_R_INSTRUCTION (one Supplier Code + Plant). Take the ASN No from the existing numbering and take the Case No of each case from CASE_NO of TB_T_INSTRUCTION_D (made by XD09).
 d. Insert TB_R_DAILY_ORDER_MANIFEST (status Created) and TB_R_DAILY_ORDER_PART (existing tables, refer Data Edit Mapping); write ASN_NO / CASE_NO back to TB_R_INSTRUCTION.
 e. No error: commit, write the result (LOG3) and end (LOG4) messages. Error: roll back, release the mapping (delete the rows from TB_R_INSTRUCTION, PO_MAPPED_FLAG back to 'N', MAPPED_QTY of TB_R_PRA_DAILY_ORDER_MAPPED reduced again), write the error (LOG5). Exit.
 
 - Submit ASN runs as a batch so the screen does not wait; the user sees the Submit ID and checks the result in Log Monitoring. No success popup is shown on the screen.
 - The log follows the existing NSP log (same table and columns); the Submit ID is the key to find the run.
 - All-or-nothing: on error nothing is saved and the mapping made by [Create ASN] is released (rows deleted from TB_R_INSTRUCTION), so the units can be selected again.
-- The ASN is saved in the existing tables TB_R_DAILY_ORDER_MANIFEST / TB_R_DAILY_ORDER_PART; the case number is auto generated by checking the last sequence kept in the TB_R_CASE_LABEL_LAST_SEQ (format as existing, not detailed here).
+- The ASN is saved in the existing tables TB_R_DAILY_ORDER_MANIFEST / TB_R_DAILY_ORDER_PART; the case number is CASE_NO of TB_T_INSTRUCTION_D, made by XD09 from the last sequence in TB_R_CASE_LABEL_LAST_SEQ (16-Nov, DR XD09).
 - The submit process (Submit ID, batch call, log) follows the existing ASN submit of NSP.
 
 ### 5.8 Sample Create ASN
@@ -736,45 +738,57 @@ e. No error: commit, write the result (LOG3) and end (LOG4) messages. Error: rol
 
 ## 9. Tables
 
-#### #TEMP_INSTRUCTION (temp, proposed)
-Temporary table of one Search run (session): the open qty of the customer order lines (H0253, order status 7, Hold Flag N) in H0253 order, pre-mapped to the supplier POs (Pra Daily Order) and cut into supplier cases and blocks. One row per line x PO x supplier case; PO_NO NULL for the qty still without a PO. Columns proposed.
+#### TB_T_INSTRUCTION_H (transaction, proposed)
+Draft of ASN Crossdock, header (DR XD09 (11-Nov)): one row per unit = Customer Order Date + Part Number + supplier. Written by XD09 at [Search] of XD10 for the company of the login user: its rows (LEFT(CREATE_BY, 4) = company code) are deleted and inserted again; company 1000 (TMMIN, D/S team) sees every supplier.
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
-| INSTRUCTION_ID | BIGINT | Y | N | Running number within the session |
-| SORT_SEQ | NUMBER(6) |  | N | H0253 order of the line within the unit (refer 4.1) |
-| CUSTOMER_CD | VARCHAR(7) |  | N | H0253.CUSTOMER_CD (order key 1) |
-| CUSTOMER_ORDER_NO | VARCHAR(8) |  | N | H0253.CUSTOMER_ORDER_NO (order key 2) |
-| ORDER_DT | DATE |  | N | Customer Order Date (H0253.ORDER_DT; unit and order key 3) |
-| ORDER_TIME | VARCHAR(6) |  | N | H0253.ORDER_TIME (order key 4) |
-| DESTINATION_CD | VARCHAR(7) |  | N | H0253.DESTINATION_CD (order key 5) |
-| DETAILED_ITEM_NO | VARCHAR(4) |  | N | H0253.DETAILED_ITEM_NO (order key 6) |
-| SERIAL_NO | VARCHAR(7) |  | N | H0253.SERIAL_NO (order key 7) |
-| PART_NO | VARCHAR(15) |  | N | Order part number (H0253.SHIPPING_PART_NO) |
-| ORDER_STATUS | VARCHAR(1) |  | N | H0253.ORDER_STATUS ('7' Cross Dock) |
-| CUST_ORDER_QTY | NUMBER(8) |  | N | Order status qty of the customer order line (H0253.ORDER_STATUS_QTY) |
-| OPEN_ORDER_QTY | NUMBER(8) |  | N | Qty of the line not yet in TB_R_INSTRUCTION (sent or in an open Case List) |
-| ASSIGNED_QTY | NUMBER(8) |  | N | Qty of this slice (line x PO x supplier case) |
-| PO_NO | VARCHAR(TBD) |  | Y | Supplier PO number (Pra Daily Order Manifest); NULL while not assigned |
-| MANIFEST_NO | VARCHAR(TBD) |  | Y | Manifest number |
-| MANIFEST_ITEM | VARCHAR(TBD) |  | Y | Manifest item number (Pra Daily Order Part) |
-| PO_DT | DATE |  | Y | Order date of the PO (PO Date) |
-| ORDER_QTY | NUMBER(TBD) |  | Y | Order qty of the PO part |
-| SUPPLIER_CD | VARCHAR(TBD) |  | Y | Supplier code |
-| SUPPLIER_PLANT | VARCHAR(TBD) |  | Y | Supplier plant |
-| SUB_SUPPLIER_CD | VARCHAR(TBD) |  | Y | Sub supplier code |
-| SUB_SUPPLIER_PLANT | VARCHAR(TBD) |  | Y | Sub supplier plant |
-| ORDER_TYPE | VARCHAR(TBD) |  | Y | Order type of the PO |
-| DOCK_CD | VARCHAR(TBD) |  | Y | Dock code |
-| ETD_ORI | DATE |  | Y | Original ETD |
-| PCS_CASE | NUMBER(4) |  | N | Pcs per case of the part (TB_M_PART_CANDIDATE.PCS_CASE) |
-| CASE_SEQ | NUMBER(4) |  | N | Supplier case of the slice within the unit (PCS_CASE pcs in H0253 order) |
-| LINE_SEQ | NUMBER(4) |  | N | Sequence of the slice within the case |
-| CUM_DEST_QTY | NUMBER(8) |  | N | Cumulative qty of the destination within the unit up to this slice |
-| SEQ_QTY | NUMBER(4) |  | N | Fill of the warehouse case (1 case = 1 destination) of the destination after this slice: 1..PCS_CASE, starts again after PCS_CASE |
-| CUT_FLAG | VARCHAR(1) |  | N | 'Y' on the last slice of a case after which the ASN may stop (every destination a multiple of PCS_CASE) |
-| GROUP_SEQ | NUMBER(4) |  | N | Case Group (block) of the slice: the cases up to and including a valid cut; the cases of a group are sent together |
-| CROSSDOCK_STATUS | VARCHAR(1) |  | N | Status of the block: '6' Ready (the block and every earlier block have a PO) / '7' Not Ready |
+| ORDER_DT | DATE | Y | N | Customer Order Date (H0253.ORDER_DT) |
+| SHIPPING_PART_NO | VARCHAR(15) | Y | N | Part Number (H0253.SHIPPING_PART_NO) |
+| SUPPLIER_CD | VARCHAR(4) | Y | N | Supplier of the crossdock PO (TB_R_PRA_DAILY_ORDER_MANIFEST.SUPPLIER_CD) |
+| SUPPLIER_PLANT | VARCHAR(1) | Y | N | Supplier plant (TB_R_PRA_DAILY_ORDER_MANIFEST.SUPPLIER_PLANT) |
+| SUB_SUPP_CD | VARCHAR(4) |  | Y | Sub supplier (TB_R_PRA_DAILY_ORDER_MANIFEST.SUB_SUPP_CD) |
+| SUB_SUPP_PLANT | VARCHAR(1) |  | Y | Sub supplier plant (TB_R_PRA_DAILY_ORDER_MANIFEST.SUB_SUPP_PLANT) |
+| ORDER_STATUS_QTY | NUMBER(8) |  | N | Open qty of the unit = SUM(H0253.ORDER_STATUS_QTY) of the lines not on hold and not yet in TB_R_INSTRUCTION |
+| CASE | NUMBER(8) |  | N | Case Qty of the unit = number of supplier cases (CEILING(ORDER_STATUS_QTY / TB_M_PART_CANDIDATE.PCS_CASE)) |
+| SUBMIT_ASN_STS | VARCHAR(1) |  | Y | 'Y' the unit has Ready cases that can go into an ASN / 'N' not (DR; also named GENERATE_ASN_STS in the DR Data Map, refer FB-193) |
+| CREATE_DT | TIMESTAMP |  | N | System date-time of the run |
+| CREATE_BY | VARCHAR(20) |  | N | Login user; LEFT(CREATE_BY, 4) = company code of the user (rows of the company) |
+| UPDATE_DT | TIMESTAMP |  | Y | Last update date-time |
+| UPDATE_BY | VARCHAR(20) |  | Y | Last update user |
+
+#### TB_T_INSTRUCTION_D (transaction, proposed)
+Draft of ASN Crossdock, detail (DR XD09 (11-Nov)): one row per pc. The customer order line is broken down to 1 pc per row (ORDER_STATUS_QTY = 1) and the PO qty is broken down to 1 (PO_QTY = 1). The pcs of a supplier case share one CASE_NO. Columns marked (added) are not in the DR but needed by the rules of 4.1-4.3.
+
+| Column | Type | PK | Null | Description |
+|---|---|---|---|---|
+| ORDER_DT | DATE | Y | N | Customer Order Date (H0253.ORDER_DT) |
+| SHIPPING_PART_NO | VARCHAR(15) | Y | N | Part Number (H0253.SHIPPING_PART_NO) |
+| SUPPLIER_CD | VARCHAR(4) | Y | N | Supplier of the crossdock PO (TB_R_PRA_DAILY_ORDER_MANIFEST.SUPPLIER_CD) |
+| SUPPLIER_PLANT | VARCHAR(1) | Y | N | Supplier plant (TB_R_PRA_DAILY_ORDER_MANIFEST.SUPPLIER_PLANT) |
+| SUB_SUPP_CD | VARCHAR(4) |  | Y | Sub supplier (TB_R_PRA_DAILY_ORDER_MANIFEST.SUB_SUPP_CD) |
+| SUB_SUPP_PLANT | VARCHAR(1) |  | Y | Sub supplier plant (TB_R_PRA_DAILY_ORDER_MANIFEST.SUB_SUPP_PLANT) |
+| SEQ_NO | NUMBER(6) | Y | N | (added) Sequence of the pc in the unit in the H0253 order of 4.1; key of the row |
+| CUSTOMER_CD | VARCHAR(7) |  | N | (added) H0253.CUSTOMER_CD (order key 1, needed for the H0253 order and TB_R_INSTRUCTION) |
+| CUSTOMER_ORDER_NO | VARCHAR(8) |  | N | H0253.CUSTOMER_ORDER_NO |
+| DESTINATION_CD | VARCHAR(7) |  | N | H0253.DESTINATION_CD |
+| DETAILED_ITEM_NO | VARCHAR(4) |  | N | H0253.DETAILED_ITEM_NO |
+| SERIAL_NO | VARCHAR(7) |  | N | H0253.SERIAL_NO (DR simulation: SERIAL_CARD_NO, refer FB-193) |
+| ORDER_STATUS_QTY | NUMBER(8) |  | N | Always 1 (customer order line broken down to 1 pc) |
+| PO_NO | VARCHAR(20) |  | Y | PO of the pc (pouring of 4.2: oldest PO first); NULL when no PO is left or the pc is held |
+| PO_ITEM | VARCHAR(4) |  | Y | TB_R_PRA_DAILY_ORDER_PART.PO_ITEM |
+| MANIFEST_NO | VARCHAR(20) |  | Y | TB_R_PRA_DAILY_ORDER_PART.MANIFEST_NO |
+| MANIFEST_ITEM | VARCHAR(4) |  | Y | TB_R_PRA_DAILY_ORDER_PART.MANIFEST_ITEM |
+| PO_QTY | NUMBER(8) |  | N | 1 when the pc has a PO (PO qty broken down to 1); 0 when PO_NO is NULL |
+| CASE_NO | VARCHAR(8) |  | Y | Supplier case (case label) of the pc: supplier (sub supplier when it exists) + plant + initial palletize code + next CASE_LABEL_LAST_SEQ of TB_R_CASE_LABEL_LAST_SEQ; the same CASE_NO for PCS_CASE pcs in H0253 order (DR); NULL for a held pc |
+| CUT_FLAG | VARCHAR(1) |  | Y | (added) 'Y' on the pcs of a case after which the ASN may stop (every destination of the unit a multiple of PCS_CASE, 4.3) |
+| GROUP_SEQ | NUMBER(4) |  | Y | (added) Case Group: the cases up to and including a valid cut; sent together |
+| CROSSDOCK_STATUS | VARCHAR(1) |  | Y | (added) '6' Ready / '7' Not Ready / '8' On Hold (D/S) of the case group |
+| HOLD_STS | CHAR(1) |  | Y | 'Y' pc held by the D/S team (Hold per case, Part Number on hold): no PO, no CASE_NO; NULL otherwise |
+| CREATE_DT | TIMESTAMP |  | N | System date-time of the run |
+| CREATE_BY | VARCHAR(20) |  | N | Login user; LEFT(CREATE_BY, 4) = company code of the user (rows of the company) |
+| UPDATE_DT | TIMESTAMP |  | Y | Last update date-time |
+| UPDATE_BY | VARCHAR(20) |  | Y | Last update user |
 
 #### TB_R_INSTRUCTION (transaction, proposed)
 Real mapping made by [Create ASN]: one row per supplier case x customer order line x PO of the chosen blocks (case and line sequence of XD09). Rows are deleted by [Back] / [Cancel] on the Case List; [Submit ASN] (5.7) fills ASN_NO and CASE_NO. Columns proposed. Rows without ASN_NO are a draft: every run of XD08 releases all drafts (decided 23-Oct); a cancelled line in a submitted ASN is moved to other lines in Change Order Number (XD11).
@@ -950,7 +964,7 @@ New table: customer order lines (pcs) of a supplier case held by the D/S team wi
 - Order date 17-Oct: 4 destinations, 30 pcs; PO PO-0003 (PO date 18-Oct) has only 18 pcs (Short PO, abnormality); the rest of PO-0002 (6) is taken first (older PO date). The split PO PO-0004 (12) comes on 19-Oct.
 - The supplier ticks the unit PART-X 17-Oct (cases 1-4, case 5 is Not Ready) and clicks [Create ASN]; the submit gives ASN0003.
 
-### A. Input: pre-mapping of XD09 (#TEMP_INSTRUCTION) in H0253 order: Customer Order Date, Customer Code, Customer Order No, …
+### A. Input: pre-mapping of XD09 (TB_T_INSTRUCTION_H / TB_T_INSTRUCTION_D) in H0253 order: Customer Order Date, Customer Code, Customer Order No, …
 
 | Sort Seq | Customer Order No | Detailed Item No | Serial No | Destination | Open Qty | PO No | Assigned Qty | Case | Cut | Status |
 |---|---|---|---|---|---|---|---|---|---|---|
