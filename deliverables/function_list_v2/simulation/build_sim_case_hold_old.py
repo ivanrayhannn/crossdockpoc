@@ -14,6 +14,7 @@ NAME = {KR: 'Korea', JP: 'Japan', TW: 'Taiwan', AU: 'Australia'}
 CUST = {KR: '9715300', JP: '9722D00', TW: '9811100', AU: '982200'}
 D17 = [('CO-14105', KR, 6), ('CO-14106', KR, 3), ('CO-14107', KR, 3), ('CO-14104', JP, 6), ('CO-14109', TW, 6), ('CO-14110', AU, 6)]
 D18 = [('CO-14112', KR, 6), ('CO-14113', TW, 6), ('CO-14114', AU, 6)]
+D19 = [('CO-14115', KR, 12)]
 W = [12, 12, 16, 12, 12, 12, 12, 12, 12, 12, 16]
 
 
@@ -131,8 +132,9 @@ def main():
         ['Submit ASN', 'TB_R_INSTRUCTION, TB_R_CASE_LABEL_LAST_SEQ', 'ASN_NO dan CASE_NO dibuat sekali, hanya untuk case yang dikirim.'],
     ], [22, 40, 90])
 
-    simple(wb, '2. H0253 replicate', 'TB_R_H0253_ORDER_CONTROL_PRE setelah XD08 (17-Oct dan 18-Oct)', ['Order 17-Oct 30 pcs, 18-Oct 18 pcs.'],
-           [('TB_R_H0253_ORDER_CONTROL_PRE', H0253_HEAD, h0253(D17, '17-Oct') + h0253(D18, '18-Oct'), None)])
+    simple(wb, '2. H0253 replicate', 'TB_R_H0253_ORDER_CONTROL_PRE setelah XD08 (order 17-Oct, 18-Oct, 19-Oct)', [
+        'Order 17-Oct 30 pcs, 18-Oct 18 pcs, 19-Oct 12 pcs (CO-14115). Order tanggal D masuk NSP lewat XD08 di D+1, jadi baru muncul di [Search] D+1.'],
+           [('TB_R_H0253_ORDER_CONTROL_PRE', H0253_HEAD, h0253(D17, '17-Oct') + h0253(D18, '18-Oct') + h0253(D19, '19-Oct'), None)])
     temp_sheet(wb, '3. Search 18-Oct', '[Search] 18-Oct: #TEMP_INSTRUCTION, belum ada hold', ['PO tersedia 18-Oct: PO-0002 sisa 6, PO-0003 18 (unit 18-Oct belum masuk: diambil H+1).'],
                [('17-Oct', D17)], P18, outcome=['Case 1-4 Ready (CROSSDOCK_STATUS 6), case 5 Australia tanpa PO (7).',
                                                 'CASE_SEQ hanya urutan di sesi ini; Case No asli belum ada.'])
@@ -165,10 +167,18 @@ def main():
         'H0253 yang masih open: CO-14109 (17-Oct, PO_MAPPED_FLAG N) dan order 18-Oct. PO-0002 / PO-0003 REMAIN_QTY 0.'],
         [('17-Oct', [('CO-14109', TW, 6)]), ('18-Oct', D18)], [('PO-0004', 12), ('PO-0005', 18)], released=('CO-14109',),
         outcome=['Taiwan dapat PO-0004 6 lebih dulu dari order 18-Oct. Setelah Taiwan masuk ASN, baris di TB_R_CROSSDOCK_CASE_HOLD dihapus.'])
-    simple(wb, '9. Line terpecah', 'Line terpecah ke 2 case: CO-14115 Korea 12 pcs (case 1 dan 2), D/S hold case 2 saja', ['Disimpan HOLD_QTY 6.'],
+    temp_sheet(wb, '9a. Search 20-Oct', '[Search] 20-Oct: order 19-Oct CO-14115 Korea 12 pcs muncul pertama kali', [
+        'Order 17-Oct dan 18-Oct sudah dikirim (ASN 19-Oct). PO tersedia: PO-0005 sisa 6, PO-0006 12 (PO order date 19-Oct, rilis 20-Oct).',
+        'CO-14115 12 pcs dipotong jadi 2 case: case 1 dibayar PO-0005 6, case 2 dibayar PO-0006 6.'],
+        [('19-Oct', D19)], [('PO-0005', 6), ('PO-0006', 12)],
+        outcome=['CO-14115 ada di case 1 dan case 2 (1 line terpecah ke 2 case). Keduanya Ready.'])
+    simple(wb, '9b. Hold case 2', 'D/S centang Hold di case 2 saja (isi: CO-14115 6 pcs) lalu [Save]', ['Yang disimpan: line CO-14115 dengan HOLD_QTY 6 (bukan seluruh line).'],
            [('TB_R_CROSSDOCK_CASE_HOLD', HOLD_HEAD, [[PART, '19-Oct', SUP, PLANT, 'CO-14115', f'{KR} Korea', 6, 'Y']], HOLD)],
-           ['[Search] berikutnya: 6 pcs pertama CO-14115 tetap case 1 (dapat PO), 6 pcs terakhir On hold (CROSSDOCK_STATUS 8).',
-            'Kalau D/S hold case 1 juga, HOLD_QTY jadi 12.'])
+           ['HOLD_QTY = pcs CO-14115 di case 2 = 6. Kalau D/S hold case 1 juga, HOLD_QTY jadi 12 (seluruh line).'])
+    temp_sheet(wb, '9c. Search stlh hold', '[Search] 20-Oct setelah hold case 2', ['6 pcs terakhir CO-14115 di-hold, 6 pcs pertama tetap jalan.'],
+        [('19-Oct', D19)], [('PO-0005', 6), ('PO-0006', 12)], hold={'CO-14115': 6},
+        outcome=['Case 1: CO-14115 6 pcs PO-0005, Ready. 6 pcs On hold (CROSSDOCK_STATUS 8), tanpa PO.',
+                 'PO-0006 12 tidak terpakai: sisa untuk order berikutnya (REMAIN_QTY tetap 12).'])
     wb.save(OUT)
     print('saved', OUT)
 
