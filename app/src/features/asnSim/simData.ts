@@ -8653,151 +8653,151 @@ export const SIM: SimData = {
    ]
   },
   {
-   "title": "TB_R_PRA_DAILY_ORDER_MAPPED",
-   "headers": [
-    "Updated",
-    "PO_NO",
-    "MANIFEST_NO",
-    "MANIFEST_ITEM",
-    "PART_NO",
-    "ORDER_QTY",
-    "MAPPED_QTY",
-    "Note"
-   ],
-   "rows": [
-    {
-     "cells": [
-      "17/10/2026",
-      "PO-0001",
-      "MF-0001",
-      "0001",
-      "PART-X",
-      "12",
-      "12",
-      "16/10: 6 (CO-14101), 17/10: +6 (CO-14103)"
-     ],
-     "mark": [
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null
-     ]
-    },
-    {
-     "cells": [
-      "18/10/2026",
-      "PO-0002",
-      "MF-0002",
-      "0001",
-      "PART-X",
-      "6",
-      "6",
-      "CO-14105"
-     ],
-     "mark": [
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null
-     ]
-    },
-    {
-     "cells": [
-      "18/10/2026",
-      "PO-0003",
-      "MF-0003",
-      "0001",
-      "PART-X",
-      "18",
-      "18",
-      "CO-14106, CO-14107, CO-14104, CO-14109; Change Order Number tidak mengubah MAPPED_QTY"
-     ],
-     "mark": [
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null
-     ]
-    },
-    {
-     "cells": [
-      "19/10/2026",
-      "PO-0004",
-      "MF-0004",
-      "0001",
-      "PART-X",
-      "12",
-      "12",
-      "CO-14110 (ASN0004), CO-14112 (ASN0005)"
-     ],
-     "mark": [
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null
-     ]
-    },
-    {
-     "cells": [
-      "20/10/2026",
-      "PO-0005",
-      "MF-0005",
-      "0001",
-      "PART-X",
-      "18",
-      "18",
-      "19/10: CO-14113, CO-14114 (ASN0005); 20/10: +6 CO-14115 (ASN0006)"
-     ],
-     "mark": [
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null
-     ]
-    },
-    {
-     "cells": [
-      "20/10/2026",
-      "PO-0006",
-      "MF-0006",
-      "0001",
-      "PART-X",
-      "18",
-      "6",
-      "CO-14115 (ASN0007); 12 pcs masih open; pecah serial tidak mengubah MAPPED_QTY"
-     ],
-     "mark": [
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null
-     ]
-    }
-   ]
+    "title": "TB_R_PRA_DAILY_ORDER_PART",
+    "headers": [
+      "Updated",
+      "PO_NO",
+      "MANIFEST_NO",
+      "MANIFEST_ITEM",
+      "PART_NO",
+      "ORDER_QTY",
+      "REMAIN_QTY",
+      "Note"
+    ],
+    "rows": [
+      {
+        "cells": [
+          "17/10/2026",
+          "PO-0001",
+          "MF-0001",
+          "0001",
+          "PART-X",
+          "12",
+          "0",
+          "Used: 16/10: 6 (CO-14101), 17/10: +6 (CO-14103)"
+        ],
+        "mark": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      },
+      {
+        "cells": [
+          "18/10/2026",
+          "PO-0002",
+          "MF-0002",
+          "0001",
+          "PART-X",
+          "6",
+          "0",
+          "Used: CO-14105"
+        ],
+        "mark": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      },
+      {
+        "cells": [
+          "18/10/2026",
+          "PO-0003",
+          "MF-0003",
+          "0001",
+          "PART-X",
+          "18",
+          "0",
+          "Used: CO-14106, CO-14107, CO-14104, CO-14109; Change Order Number tidak mengubah REMAIN_QTY"
+        ],
+        "mark": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      },
+      {
+        "cells": [
+          "19/10/2026",
+          "PO-0004",
+          "MF-0004",
+          "0001",
+          "PART-X",
+          "12",
+          "0",
+          "Used: CO-14110 (ASN0004), CO-14112 (ASN0005)"
+        ],
+        "mark": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      },
+      {
+        "cells": [
+          "20/10/2026",
+          "PO-0005",
+          "MF-0005",
+          "0001",
+          "PART-X",
+          "18",
+          "0",
+          "Used: 19/10: CO-14113, CO-14114 (ASN0005); 20/10: +6 CO-14115 (ASN0006)"
+        ],
+        "mark": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      },
+      {
+        "cells": [
+          "20/10/2026",
+          "PO-0006",
+          "MF-0006",
+          "0001",
+          "PART-X",
+          "18",
+          "12",
+          "Used: CO-14115 (ASN0007); 12 pcs masih open; pecah serial tidak mengubah REMAIN_QTY"
+        ],
+        "mark": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      }
+    ]
   },
   {
    "title": "TB_R_INSTRUCTION",

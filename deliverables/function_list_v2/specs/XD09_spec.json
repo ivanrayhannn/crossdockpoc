@@ -80,6 +80,13 @@
    "date": "",
    "reviewed_by": "",
    "description": "Added to the DR table for the rules of 4.1-4.3: SEQ_NO, CUSTOMER_CD, CUT_FLAG, GROUP_SEQ, CROSSDOCK_STATUS."
+  },
+  {
+   "revision": "",
+   "author": "",
+   "date": "",
+   "reviewed_by": "",
+   "description": "No new table TB_R_PRA_DAILY_ORDER_MAPPED: open PO qty = REMAIN_QTY of the existing TB_R_PRA_DAILY_ORDER_PART."
   }
  ],
  "general": {
@@ -154,12 +161,7 @@
    {
     "name": "TB_R_PRA_DAILY_ORDER_MANIFEST / TB_R_PRA_DAILY_ORDER_PART",
     "type": "DB",
-    "description": "manifests with TB_R_PRA_DAILY_ORDER_MANIFEST.CROSS_DOCK_FLAG = 'X'; their part data from TB_R_PRA_DAILY_ORDER_PART (join MANIFEST_NO); latest data; by PO_DT ascending"
-   },
-   {
-    "name": "TB_R_PRA_DAILY_ORDER_MAPPED",
-    "type": "DB",
-    "description": "New table: MAPPED_QTY per PO part; open PO qty = ORDER_QTY - MAPPED_QTY"
+    "description": "manifests with TB_R_PRA_DAILY_ORDER_MANIFEST.CROSS_DOCK_FLAG = 'X'; their part data from TB_R_PRA_DAILY_ORDER_PART (join MANIFEST_NO); latest data; by PO_DT ascending Open PO qty = REMAIN_QTY of TB_R_PRA_DAILY_ORDER_PART."
    },
    {
     "name": "TB_R_INSTRUCTION",
@@ -364,7 +366,7 @@
    {
     "text": "Get the PO parts from TB_R_PRA_DAILY_ORDER_MANIFEST + TB_R_PRA_DAILY_ORDER_PART:",
     "children": [
-     "manifests with TB_R_PRA_DAILY_ORDER_MANIFEST.CROSS_DOCK_FLAG = 'X'; their part data from TB_R_PRA_DAILY_ORDER_PART (join MANIFEST_NO); latest data; open PO qty = ORDER_QTY - MAPPED_QTY of TB_R_PRA_DAILY_ORDER_MAPPED (0 when no row) > 0; ordered by Order Date ascending (FIFO).",
+     "manifests with TB_R_PRA_DAILY_ORDER_MANIFEST.CROSS_DOCK_FLAG = 'X'; their part data from TB_R_PRA_DAILY_ORDER_PART (join MANIFEST_NO); latest data; open PO qty = REMAIN_QTY of TB_R_PRA_DAILY_ORDER_PART (as is when no row) > 0; ordered by Order Date ascending (FIFO).",
      "Get: PO Number, Manifest Number, Supplier Code / Plant, Sub Supplier Code / Plant, Order Type, Dock Code, PO Order Qty, Order Date, ETD Ori, Manifest Item, Part Number."
     ]
    },
@@ -575,7 +577,7 @@
   {
    "type": "text",
    "level": 0,
-   "text": "XD09 runs on [Search] of XD10 and writes the draft of the delivery plan in TB_T_INSTRUCTION_H / TB_T_INSTRUCTION_D (table concept of the DR XD09 (11-Nov)). [Create ASN] (XD10) writes TB_R_INSTRUCTION, PO_MAPPED_FLAG and MAPPED_QTY. Examples: simulasi_asn_rev.xlsx (sheet Sample Input)."
+   "text": "XD09 runs on [Search] of XD10 and writes the draft of the delivery plan in TB_T_INSTRUCTION_H / TB_T_INSTRUCTION_D (table concept of the DR XD09 (11-Nov)). [Create ASN] (XD10) writes TB_R_INSTRUCTION, PO_MAPPED_FLAG and REMAIN_QTY. Examples: simulasi_asn_rev.xlsx (sheet Sample Input)."
   },
   {
    "type": "heading",
@@ -615,7 +617,7 @@
    "marker": "-",
    "level": 0,
    "items": [
-    "One PO per Part Number per Customer Order Date: PO date = order date + 1, PO qty = total order qty of all destinations of that date. Open PO qty = ORDER_QTY - MAPPED_QTY.",
+    "One PO per Part Number per Customer Order Date: PO date = order date + 1, PO qty = total order qty of all destinations of that date. Open PO qty = REMAIN_QTY of TB_R_PRA_DAILY_ORDER_PART.",
     "Pouring (Part Number level): the open PO qty of the part is poured over the customer order lines from the top of the list (order of 4.1, oldest unit first) down, like filling holes one after the other.",
     "Each line takes its qty from the oldest PO that still has qty left (PO_DT, then PO No). The PO is used up before the next PO is taken; what is left of a PO goes on to the next line, also of the next Customer Order Date.",
     "PO left < qty of the line: the line is split. The first part gets the rest of this PO; the rest goes on to the next PO (one row per PO). Example: line 6 pcs, PO A has 2 left, PO B has 10 -> 2 rows: PO A 2, PO B 4.",
@@ -1774,98 +1776,6 @@
    ]
   },
   {
-   "name": "TB_R_PRA_DAILY_ORDER_MAPPED",
-   "kind": "transaction",
-   "proposed": true,
-   "description": "New table: mapped qty per Pra Daily Order PO part (instead of a new column in the Pra Daily Order). Name and columns proposed.",
-   "columns": [
-    [
-     "PO_NO",
-     "VARCHAR(TBD)",
-     "Y",
-     "N",
-     "PO number (Pra Daily Order Manifest)"
-    ],
-    [
-     "MANIFEST_NO",
-     "VARCHAR(TBD)",
-     "Y",
-     "N",
-     "Manifest number"
-    ],
-    [
-     "MANIFEST_ITEM",
-     "VARCHAR(TBD)",
-     "Y",
-     "N",
-     "Manifest item number (Pra Daily Order Part)"
-    ],
-    [
-     "PART_NO",
-     "VARCHAR(15)",
-     "",
-     "N",
-     "Part number"
-    ],
-    [
-     "SUPPLIER_CD",
-     "VARCHAR(TBD)",
-     "",
-     "N",
-     "Supplier code"
-    ],
-    [
-     "SUPPLIER_PLANT",
-     "VARCHAR(TBD)",
-     "",
-     "N",
-     "Supplier plant"
-    ],
-    [
-     "ORDER_QTY",
-     "NUMBER(TBD)",
-     "",
-     "N",
-     "PO qty of the part"
-    ],
-    [
-     "MAPPED_QTY",
-     "NUMBER(TBD)",
-     "",
-     "N",
-     "Qty already mapped to customer orders by [Create ASN]; open qty = ORDER_QTY - MAPPED_QTY"
-    ],
-    [
-     "CREATED_BY",
-     "VARCHAR(TBD)",
-     "",
-     "N",
-     "User who created the record"
-    ],
-    [
-     "CREATED_DT",
-     "DATETIME",
-     "",
-     "N",
-     "Created date and time"
-    ],
-    [
-     "CHANGED_BY",
-     "VARCHAR(TBD)",
-     "",
-     "N",
-     "User who last changed the record"
-    ],
-    [
-     "CHANGED_DT",
-     "DATETIME",
-     "",
-     "N",
-     "Last changed date and time"
-    ]
-   ]
-  },
-  {
    "name": "TB_R_CROSSDOCK_PART_HOLD",
    "kind": "transaction",
    "proposed": true,
@@ -2039,6 +1949,77 @@
      "",
      "N",
      "Last changed date and time"
+    ]
+   ]
+  },
+  {
+   "name": "TB_R_PRA_DAILY_ORDER_PART",
+   "kind": "transaction",
+   "proposed": false,
+   "description": "Existing Pra Daily Order part (one row per manifest item). Crossdock uses ORDER_QTY and REMAIN_QTY of the parts of the manifests with CROSS_DOCK_FLAG = 'X': open PO qty = REMAIN_QTY (no new mapped-qty table, decided 16-Nov).",
+   "columns": [
+    [
+     "MANIFEST_NO",
+     "VARCHAR(10+)",
+     "Y",
+     "N",
+     "Manifest number (TB_R_PRA_DAILY_ORDER_MANIFEST)"
+    ],
+    [
+     "MANIFEST_ITEM",
+     "VARCHAR(4+)",
+     "Y",
+     "N",
+     "Item of the manifest"
+    ],
+    [
+     "PO_NO",
+     "VARCHAR(8+)",
+     "",
+     "N",
+     "PO number"
+    ],
+    [
+     "PO_ITEM",
+     "VARCHAR(4+)",
+     "",
+     "N",
+     "Item of the PO"
+    ],
+    [
+     "PART_NO",
+     "VARCHAR(12+)",
+     "",
+     "N",
+     "Part number"
+    ],
+    [
+     "ORDER_QTY",
+     "NUMERIC",
+     "",
+     "N",
+     "PO qty (pcs)"
+    ],
+    [
+     "REMAIN_QTY",
+     "NUMERIC",
+     "",
+     "N",
+     "Qty of the PO part not yet in an ASN: open PO qty of XD09; reduced by [Create ASN] (XD10), added back on Back / Cancel, submit error and XD08 release"
+    ],
+    [
+     "CHANGED_BY",
+     "VARCHAR(20)",
+     "",
+     "Y",
+     "Last change user"
+    ],
+    [
+     "CHANGED_DT",
+     "DATETIME",
+     "",
+     "Y",
+     "Last change date-time"
     ]
    ]
   }

@@ -7,7 +7,7 @@
   "function_name": "XD11 Change Order Number Screen",
   "created_date": "18-Oct-26",
   "created_by": "FID Rayhan",
-  "updated_date": "13-Nov-26",
+  "updated_date": "16-Nov-26",
   "updated_by": "FID Rayhan"
  },
  "revisions": [
@@ -24,6 +24,13 @@
    "date": "13-Nov-26",
    "reviewed_by": "",
    "description": "Dummy data: supplier 5001-1 / 5002-1, PO-0001.., MF-0001.., destinations Korea / Japan / Taiwan / Australia."
+  },
+  {
+   "revision": "0.3",
+   "author": "FID Rayhan",
+   "date": "16-Nov-26",
+   "reviewed_by": "",
+   "description": "Table TB_R_PRA_DAILY_ORDER_MAPPED removed from the table list: the PO qty is REMAIN_QTY of TB_R_PRA_DAILY_ORDER_PART."
   }
  ],
  "general": {
@@ -1048,94 +1055,73 @@
    ]
   },
   {
-   "name": "TB_R_PRA_DAILY_ORDER_MAPPED",
+   "name": "TB_R_PRA_DAILY_ORDER_PART",
    "kind": "transaction",
-   "proposed": true,
-   "description": "New table: mapped qty per Pra Daily Order PO part (instead of a new column in the Pra Daily Order). Name and columns proposed.",
+   "proposed": false,
+   "description": "Existing Pra Daily Order part (one row per manifest item). Crossdock uses ORDER_QTY and REMAIN_QTY of the parts of the manifests with CROSS_DOCK_FLAG = 'X': open PO qty = REMAIN_QTY (no new mapped-qty table, decided 16-Nov).",
    "columns": [
     [
-     "PO_NO",
-     "VARCHAR(TBD)",
-     "Y",
-     "N",
-     "PO number (Pra Daily Order Manifest)"
-    ],
-    [
      "MANIFEST_NO",
-     "VARCHAR(TBD)",
+     "VARCHAR(10+)",
      "Y",
      "N",
-     "Manifest number"
+     "Manifest number (TB_R_PRA_DAILY_ORDER_MANIFEST)"
     ],
     [
      "MANIFEST_ITEM",
-     "VARCHAR(TBD)",
+     "VARCHAR(4+)",
      "Y",
      "N",
-     "Manifest item number (Pra Daily Order Part)"
+     "Item of the manifest"
+    ],
+    [
+     "PO_NO",
+     "VARCHAR(8+)",
+     "",
+     "N",
+     "PO number"
+    ],
+    [
+     "PO_ITEM",
+     "VARCHAR(4+)",
+     "",
+     "N",
+     "Item of the PO"
     ],
     [
      "PART_NO",
-     "VARCHAR(15)",
+     "VARCHAR(12+)",
      "",
      "N",
      "Part number"
     ],
     [
-     "SUPPLIER_CD",
-     "VARCHAR(TBD)",
-     "",
-     "N",
-     "Supplier code"
-    ],
-    [
-     "SUPPLIER_PLANT",
-     "VARCHAR(TBD)",
-     "",
-     "N",
-     "Supplier plant"
-    ],
-    [
      "ORDER_QTY",
-     "NUMBER(TBD)",
+     "NUMERIC",
      "",
      "N",
-     "PO qty of the part"
+     "PO qty (pcs)"
     ],
     [
-     "MAPPED_QTY",
-     "NUMBER(TBD)",
+     "REMAIN_QTY",
+     "NUMERIC",
      "",
      "N",
-     "Qty already mapped to customer orders by [Create ASN]; open qty = ORDER_QTY - MAPPED_QTY"
-    ],
-    [
-     "CREATED_BY",
-     "VARCHAR(TBD)",
-     "",
-     "N",
-     "User who created the record"
-    ],
-    [
-     "CREATED_DT",
-     "DATETIME",
-     "",
-     "N",
-     "Created date and time"
+     "Qty of the PO part not yet in an ASN: open PO qty of XD09; reduced by [Create ASN] (XD10), added back on Back / Cancel, submit error and XD08 release"
     ],
     [
      "CHANGED_BY",
-     "VARCHAR(TBD)",
+     "VARCHAR(20)",
      "",
-     "N",
-     "User who last changed the record"
+     "Y",
+     "Last change user"
     ],
     [
      "CHANGED_DT",
      "DATETIME",
      "",
-     "N",
-     "Last changed date and time"
+     "Y",
+     "Last change date-time"
     ]
    ]
   }

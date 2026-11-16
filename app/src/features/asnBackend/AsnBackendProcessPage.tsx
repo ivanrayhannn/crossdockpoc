@@ -60,7 +60,7 @@ export function AsnBackendProcessPage() {
       <Section no="1" title="Search – Get Order (X12, on demand)">
         <Steps rows={[
           ['1', 'Read the open qty of the H0253 customer orders (ORDER_STATUS 7, HOLD_FLAG N; open qty = order qty minus the qty in TB_R_INSTRUCTION) in the H0253 order: Allocation Priority (= Customer Order Date), Customer Code, Customer Order No, Order Date, Order Time, Destination, Detailed Item No, Serial No.', 'TB_R_H0253_ORDER_CONTROL_PRE, TB_R_INSTRUCTION'],
-          ['2', 'Read PO parts of the Pra Daily Order: CROSS_DOCK_FLAG X; open qty = PO qty minus the mapped qty; by PO date.', 'TB_R_PRA_DAILY_ORDER_MANIFEST / PART, TB_R_PRA_DAILY_ORDER_MAPPED (new)'],
+          ['2', 'Read PO parts of the Pra Daily Order: CROSS_DOCK_FLAG X; open qty = REMAIN_QTY of the PO part; by PO date.', 'TB_R_PRA_DAILY_ORDER_MANIFEST / PART, TB_R_PRA_DAILY_ORDER_PART (REMAIN_QTY)'],
           ['3', 'Per unit (Part Number + Customer Order Date, oldest first) give the PO qty in H0253 order and cut the pcs into supplier cases of pcs/case (a case can hold several destinations). Mark CUT_FLAG Y after a case where every destination is a multiple of pcs/case; a case is Ready (6) when it and every earlier case have a PO (no permanent change).', 'TB_T_INSTRUCTION_H / TB_T_INSTRUCTION_D (draft per company of the login user; CASE_NO from TB_R_CASE_LABEL_LAST_SEQ)'],
           ['4', 'Return the delivery plan with the case rows: the user ticks cases from case 1 up to a case with CUT_FLAG Y (MSG10 when the next cases are ticked together). Units without any pre-mapped case and units fully in an ASN are not listed.', 'Screen'],
         ]} />
@@ -70,7 +70,7 @@ export function AsnBackendProcessPage() {
         <Steps rows={[
           ['1', 'Lock the H0253 lines of the ticked units (row lock in one transaction).', 'TB_R_H0253_ORDER_CONTROL_PRE'],
           ['2', 'Re-check each line: HOLD_FLAG must still be N; the ticked cases must still be Ready and end on CUT_FLAG Y.', 'If not: roll back, the whole create fails, message "Some order has been already hold, please select other records", the delivery plan is refreshed automatically and all units are unticked'],
-          ['3', 'Check that all ticked units are of one Supplier Code + Plant (one ASN = one supplier + plant). Add the mapped qty per PO part; PO_MAPPED_FLAG = Y on the lines that are now completely mapped.', 'TB_R_H0253_ORDER_CONTROL_PRE, TB_R_PRA_DAILY_ORDER_MAPPED (new)'],
+          ['3', 'Check that all ticked units are of one Supplier Code + Plant (one ASN = one supplier + plant). Reduce REMAIN_QTY per PO part; PO_MAPPED_FLAG = Y on the lines that are now completely mapped.', 'TB_R_H0253_ORDER_CONTROL_PRE, TB_R_PRA_DAILY_ORDER_PART (REMAIN_QTY)'],
           ['4', 'Insert the real mapping of the ticked cases: one row per supplier case x order line x PO, case and line sequence of the Search (H0253 order). The rest of a line stays open for a later ASN.', 'TB_R_INSTRUCTION'],
           ['5', 'Commit and open the Case List. Back / Cancel deletes the rows from TB_R_INSTRUCTION and releases the flags and mapped qty.', 'Screen'],
         ]} />
@@ -105,7 +105,7 @@ export function AsnBackendProcessPage() {
         <Steps rows={[
           ['1', 'The order is cancelled in G-System (with or without hold flag Y): the H0253 row changes to ORDER_STATUS 2; a partial cancel splits the line into a new SERIAL_NO. Supplier System never cancels an order itself.', 'H0253 (G-System, insert / update)'],
           ['2', 'XD08 (one batch) upserts the rows changed since the last run (INTF_UPDATE_DT): ORDER_STATUS keeps the first value, UPD_STATUS = 2 (cancel) or 6 (received). Lines with UPD_STATUS are not taken by XD09.', 'TB_R_H0253_ORDER_CONTROL_PRE'],
-          ['3', 'XD08 releases every draft (TB_R_INSTRUCTION without ASN No): rows deleted, MAPPED_QTY reduced, PO_MAPPED_FLAG N; the cases come back in the delivery plan. [Submit ASN] re-checks the draft as well.', 'TB_R_INSTRUCTION, TB_R_PRA_DAILY_ORDER_MAPPED'],
+          ['3', 'XD08 releases every draft (TB_R_INSTRUCTION without ASN No): rows deleted, REMAIN_QTY added back, PO_MAPPED_FLAG N; the cases come back in the delivery plan. [Submit ASN] re-checks the draft as well.', 'TB_R_INSTRUCTION, TB_R_PRA_DAILY_ORDER_PART (REMAIN_QTY)'],
           ['4', 'A cancel of qty already in a submitted ASN (abnormality) is listed in Change Order Number (XD11, D/S team) until the qty is moved to received lines of the same part (UPD_STATUS 6, PO_MAPPED_FLAG N, no ASN; oldest first; several lines / another destination allowed). No Cancel ASN.', 'TB_R_INSTRUCTION, TB_H_CROSSDOCK_ORDER_CHANGE'],
           ['5', 'Serial split: a line in more than one ASN is split by G-System when only part of it is received. XD08 keeps each part linked to its ASN (received part = ASN sent first, TBC with G-System), so nothing is offered to the supplier again (LOG7).', 'TB_R_INSTRUCTION (SERIAL_NO), TB_R_H0253_ORDER_CONTROL_PRE'],
           ['6', 'Simulation of the H0253 scenarios: menu Cancel Order Simulation; replacement: menu Change Order Number.', 'Prototype'],

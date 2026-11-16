@@ -263,7 +263,7 @@ const FUNCS = [
         'Baca H0253 di DB Surrounding yang berubah sejak run terakhir (INTF_UPDATE_DT > watermark), order status 7 / 6 / 2.',
         'Upsert ke tabel H0253 NSP per key (termasuk SERIAL_NO). Key baru: insert, HOLD_FLAG N, PO_MAPPED_FLAG N, UPD_STATUS kosong kalau status 7. Key lama: update kolom sumber kecuali ORDER_STATUS; UPD_STATUS = 6 (diterima) atau 2 (cancel).',
         'Serial split (line di lebih dari satu ASN dipecah GTOPAS): bagian yang diterima ditautkan ke ASN yang dikirim pertama, sisanya ke ASN berikutnya (LOG7).',
-        'Semua draft TB_R_INSTRUCTION (Create ASN tanpa Submit) dilepas: baris dihapus, MAPPED_QTY dikurangi, PO_MAPPED_FLAG N; case kembali ke delivery plan XD10.',
+        'Semua draft TB_R_INSTRUCTION (Create ASN tanpa Submit) dilepas: baris dihapus, REMAIN_QTY PO dikembalikan (+), PO_MAPPED_FLAG N; case kembali ke delivery plan XD10.',
         'Line status 2 yang qty-nya sudah di ASN yang di-submit: tidak diubah, dicatat LOG5 dan muncul di Change Order Number (XD11).',
         'Berhasil: commit, watermark baru disimpan. Line dengan UPD_STATUS tidak diambil lagi oleh XD09.' ] },
       { key: 'AB', title: 'Abnormality', points: [
@@ -279,7 +279,7 @@ const FUNCS = [
         'Baris milik company user login (LEFT(CREATE_BY, 4)) dihapus lalu di-insert ulang setiap [Search]; company 1000 (TMMIN) melihat semua supplier. Delivery Date dan Rit dari XD10 hanya dibawa ke ASN, tidak memfilter order.',
         'CASE_NO dibuat XD09 dari TB_R_CASE_LABEL_LAST_SEQ (CASE_NO sama untuk PCS_CASE pcs); Submit ASN memakai CASE_NO ini.',
         'Ambil customer order H0253: status 7, UPD_STATUS kosong, HOLD_FLAG N, PO_MAPPED_FLAG N; open qty = qty − qty yang sudah di TB_R_INSTRUCTION (> 0).',
-        'Ambil PO crossdock: manifest CROSS_DOCK_FLAG X + part-nya (key MANIFEST_NO + MANIFEST_ITEM); open PO qty = ORDER_QTY − MAPPED_QTY; urut PO date (FIFO).',
+        'Ambil PO crossdock: manifest CROSS_DOCK_FLAG X + part-nya (key MANIFEST_NO + MANIFEST_ITEM); open PO qty = REMAIN_QTY di TB_R_PRA_DAILY_ORDER_PART (tidak pakai tabel MAPPED baru, 16-Nov); urut PO date (FIFO).',
         'Per unit (Part Number + Customer Order Date, tanggal tertua dulu): line diurut H0253 order (Allocation Priority, Customer Code, Customer Order No, Order Date, Order Time, Destination, Detailed Item No, Serial No); qty PO dialokasikan berurutan, satu line bisa terbagi ke beberapa PO.',
         'Pcs dipotong per supplier case (PCS_CASE); cut valid hanya setelah case di mana setiap destinasi kelipatan PCS_CASE (1 case = 1 destinasi di gudang); case sampai cut valid = block (opsi ASN).',
         'Block Ready kalau block itu dan semua block sebelumnya punya PO; status unit Ready / Partially Ready / Not Ready dikembalikan ke XD10.' ] },
@@ -302,7 +302,7 @@ const FUNCS = [
         'Hold chip (14-Nov): kalau unit punya hold, chip Hold muncul di samping Short PO; diklik → pop up info hold (MSG18, misal 6 pcs di-hold, PO dilepas). Pop up konfirmasi dan sukses Save hold dibuat bahasa Indonesia (MSG15/16). Baris ringkasan delivery plan (tanggal · Rit · jumlah unit) dihapus.',
         'Content case (D/S) dipecah jadi kolom Destination, Customer Order No dan Order Qty (satu baris per customer order line di case).',
         'Pilih case: check box per case mulai case 1 sampai case dengan cut valid; case satu grup selalu terkirim bersama. Satu ASN = satu Supplier Code + Plant.',
-        '[Create ASN] (satu transaksi): re-check hold (row lock), insert TB_R_INSTRUCTION, MAPPED_QTY bertambah, PO_MAPPED_FLAG Y untuk line yang seluruhnya masuk ASN. [Back] / [Cancel] di Case List membatalkan (baris dihapus, flag dan qty dikembalikan).',
+        '[Create ASN] (satu transaksi): re-check hold (row lock), insert TB_R_INSTRUCTION, REMAIN_QTY PO dikurangi, PO_MAPPED_FLAG Y untuk line yang seluruhnya masuk ASN. [Back] / [Cancel] di Case List membatalkan (baris dihapus, flag dan qty dikembalikan).',
         'Case List: ringkasan ASN, case (Case Number, Part, Qty, detail PO), [Download Case Label] mengikuti case label NSP existing.',
         '[Submit ASN] (konfirmasi msg 4): re-check draft masih ada dan line tidak berubah; Submit ID ke proses submit batch (5.7) → ASN No dan Case No otomatis (last sequence), insert TB_R_DAILY_ORDER_MANIFEST / PART, ASN_NO / CASE_NO ditulis balik. Hasil di Log Monitoring.' ] },
       { key: 'AB', title: 'Abnormality', points: [

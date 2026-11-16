@@ -12,6 +12,7 @@
 |---|---|---|---|---|
 | 0.1 | FID Rayhan | 18-Oct-26 |  | Initial Draft |
 | 0.2 | FID Rayhan | 13-Nov-26 |  | Dummy data: supplier 5001-1 / 5002-1, PO-0001.., MF-0001.., destinations Korea / Japan / Taiwan / Australia. |
+| 0.3 | FID Rayhan | 16-Nov-26 |  | Table TB_R_PRA_DAILY_ORDER_MAPPED removed from the table list: the PO qty is REMAIN_QTY of TB_R_PRA_DAILY_ORDER_PART. |
 
 ## 1. General
 
@@ -269,23 +270,20 @@ Real mapping made by [Create ASN]: one row per supplier case x customer order li
 | CHANGED_BY | VARCHAR(TBD) |  | N | User who last changed the record |
 | CHANGED_DT | DATETIME |  | N | Last changed date and time |
 
-#### TB_R_PRA_DAILY_ORDER_MAPPED (transaction, proposed)
-New table: mapped qty per Pra Daily Order PO part (instead of a new column in the Pra Daily Order). Name and columns proposed.
+#### TB_R_PRA_DAILY_ORDER_PART (transaction, existing)
+Existing Pra Daily Order part (one row per manifest item). Crossdock uses ORDER_QTY and REMAIN_QTY of the parts of the manifests with CROSS_DOCK_FLAG = 'X': open PO qty = REMAIN_QTY (no new mapped-qty table, decided 16-Nov).
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
-| PO_NO | VARCHAR(TBD) | Y | N | PO number (Pra Daily Order Manifest) |
-| MANIFEST_NO | VARCHAR(TBD) | Y | N | Manifest number |
-| MANIFEST_ITEM | VARCHAR(TBD) | Y | N | Manifest item number (Pra Daily Order Part) |
-| PART_NO | VARCHAR(15) |  | N | Part number |
-| SUPPLIER_CD | VARCHAR(TBD) |  | N | Supplier code |
-| SUPPLIER_PLANT | VARCHAR(TBD) |  | N | Supplier plant |
-| ORDER_QTY | NUMBER(TBD) |  | N | PO qty of the part |
-| MAPPED_QTY | NUMBER(TBD) |  | N | Qty already mapped to customer orders by [Create ASN]; open qty = ORDER_QTY - MAPPED_QTY |
-| CREATED_BY | VARCHAR(TBD) |  | N | User who created the record |
-| CREATED_DT | DATETIME |  | N | Created date and time |
-| CHANGED_BY | VARCHAR(TBD) |  | N | User who last changed the record |
-| CHANGED_DT | DATETIME |  | N | Last changed date and time |
+| MANIFEST_NO | VARCHAR(10+) | Y | N | Manifest number (TB_R_PRA_DAILY_ORDER_MANIFEST) |
+| MANIFEST_ITEM | VARCHAR(4+) | Y | N | Item of the manifest |
+| PO_NO | VARCHAR(8+) |  | N | PO number |
+| PO_ITEM | VARCHAR(4+) |  | N | Item of the PO |
+| PART_NO | VARCHAR(12+) |  | N | Part number |
+| ORDER_QTY | NUMERIC |  | N | PO qty (pcs) |
+| REMAIN_QTY | NUMERIC |  | N | Qty of the PO part not yet in an ASN: open PO qty of XD09; reduced by [Create ASN] (XD10), added back on Back / Cancel, submit error and XD08 release |
+| CHANGED_BY | VARCHAR(20) |  | Y | Last change user |
+| CHANGED_DT | DATETIME |  | Y | Last change date-time |
 
 ## Sample Input
 

@@ -20,7 +20,6 @@ TABLES = [
     ('TR-01', 'TB_R_PART_DAD_RESULT', 'DAD Volume Calculation Result', 'Transaction', 'Result of XD05 process 1 per part and period.'),
     ('TR-02', 'TB_R_CROSSDOCK_IF_RESULT', 'Crossdock IF Result', 'Transaction', 'Send status of the crossdock master per part and target (dummy table).'),
     ('TR-03', 'TB_R_INSTRUCTION', 'Crossdock Instruction', 'Transaction', 'Real mapping of Create ASN: case x customer order line x PO.'),
-    ('TR-04', 'TB_R_PRA_DAILY_ORDER_MAPPED', 'Pra Daily Order Mapped Qty', 'Transaction', 'Qty of a crossdock PO line mapped to customer orders.'),
     ('TR-05', 'TB_R_CROSSDOCK_CASE_HOLD', 'Crossdock Case Hold', 'Transaction', 'Customer order lines of a supplier case held by the D/S team on XD10 (Hold check box): the held pcs take no PO, the PO qty goes to the next orders (kept until released).'),
     ('TR-06', 'TB_R_CROSSDOCK_PART_HOLD', 'Crossdock Part Hold', 'Transaction', 'Part Number on hold by the D/S team on XD10 (no ASN for the part while HOLD_FLAG Y).'),
     ('TR-07', 'TB_T_INSTRUCTION_H', 'Crossdock ASN Draft Header', 'Transaction', 'Draft of [Search] per unit (Customer Order Date + Part Number + supplier), per company of the login user (DR XD09).'),

@@ -71,7 +71,7 @@ def main():
         ['Kenapa perlu', '1 case bisa berisi beberapa line (case 2 tgl 17-Oct = CO-14106 3 + CO-14107 3); 1 line bisa di beberapa case / PO (CO-14115 12 = case 1 PO-0005 6 + case 2 PO-0006 6); '
                          'qty tanpa PO tetap jadi baris dengan PO_NO kosong (CO-14110 6). OPEN_ORDER_QTY saja tidak bisa menunjukkan pembagian ini.'],
         ['Aturan cek', 'Jumlah ASSIGNED_QTY per line = OPEN_ORDER_QTY line itu; jumlah ASSIGNED_QTY per case = PCS_CASE (case penuh).'],
-        ['Dipakai di', 'XD10: Qty per case, Remaining Qty (not assigned), kolom PO dan Content, status Ready / Not Ready. Create ASN: MAPPED_QTY per PO, QTY di TB_R_INSTRUCTION.'],
+        ['Dipakai di', 'XD10: Qty per case, Remaining Qty (not assigned), kolom PO dan Content, status Ready / Not Ready. Create ASN: REMAIN_QTY PO dikurangi (TB_R_PRA_DAILY_ORDER_PART), QTY di TB_R_INSTRUCTION.'],
     ], [18, 140])
 
     # ---------- 2. Input ----------
@@ -82,8 +82,8 @@ def main():
         ['18-Oct', 1, 'CO-14105', '9715310', 6], ['18-Oct', 2, 'CO-14106', '9715310', 3], ['18-Oct', 3, 'CO-14107', '9715310', 3],
         ['18-Oct', 4, 'CO-14104', '9722D10', 6], ['18-Oct', 5, 'CO-14109', '9811110', 6], ['18-Oct', 6, 'CO-14110', '982220', 6],
         ['20-Oct', 1, 'CO-14115', '9715310', 12], ['20-Oct', 2, 'CO-14111', '9722D10', 6]], [10, 10, 18, 15, 16])
-    ws.cell(r - 1, 1, 'B. PO crossdock yang masih ada sisa (open PO qty = ORDER_QTY - MAPPED_QTY)').font = FB
-    put(ws, r, ['Search', 'PO_NO', 'PO_DT', 'ORDER_QTY', 'MAPPED_QTY', 'Open PO qty', 'Catatan'], [
+    ws.cell(r - 1, 1, 'B. PO crossdock yang masih ada sisa (open PO qty = REMAIN_QTY di TB_R_PRA_DAILY_ORDER_PART)').font = FB
+    put(ws, r, ['Search', 'PO_NO', 'PO_DT', 'ORDER_QTY', 'Sudah dipakai ASN', 'REMAIN_QTY (open)', 'Catatan'], [
         ['18-Oct', 'PO-0002', '17-Oct', 6, 0, 6, 'PO order date 16-Oct; masih open karena CO-14103 dibayar sisa PO-0001 (PO lebih lama)'],
         ['18-Oct', 'PO-0003', '18-Oct', 18, 0, 18, 'PO order date 17-Oct (18 pcs); total order 30 > PO tersedia 24 (6 + 18) = Short PO'],
         ['20-Oct', 'PO-0005', '19-Oct', 18, 12, 6, 'PO order date 18-Oct; 12 sudah dipakai CO-14113 + CO-14114, sisa 6'],
@@ -139,16 +139,16 @@ def main():
         [9, 7, 10, 16, 18, 40, 12], key_cols=('Qty (pcs)', 'Remaining Qty (not assigned)'))
 
     # ---------- 6. Create ASN ----------
-    ws, r = new_sheet(wb, '6. Create ASN', 'Create ASN 18-Oct (case 1-4 dipilih, ASN0003): ASSIGNED_QTY dipakai untuk MAPPED_QTY dan TB_R_INSTRUCTION', [
+    ws, r = new_sheet(wb, '6. Create ASN', 'Create ASN 18-Oct (case 1-4 dipilih, ASN0003): ASSIGNED_QTY mengurangi REMAIN_QTY dan masuk TB_R_INSTRUCTION', [
         'Case 5 Not Ready (tanpa PO) tidak bisa dipilih.'])
-    ws.cell(r - 1, 1, 'A. TB_R_PRA_DAILY_ORDER_MAPPED: MAPPED_QTY ditambah ASSIGNED_QTY per PO').font = FB
+    ws.cell(r - 1, 1, 'A. TB_R_PRA_DAILY_ORDER_PART: REMAIN_QTY dikurangi ASSIGNED_QTY per PO').font = FB
     pos = [('PO-0002', 6, 0), ('PO-0003', 18, 0)]
     rows = []
     for i, (po, oq, before) in enumerate(pos):
         rr = r + 1 + i
-        rows.append([po, oq, before, '=SUMIFS(%s,%s,"18-Oct",%s,A%d,%s,"<=4")' % (ASG, S, PO, rr, CASE), '=C%d+D%d' % (rr, rr), '=B%d-E%d' % (rr, rr)])
-    r = put(ws, r, ['PO_NO', 'ORDER_QTY', 'MAPPED_QTY sebelum', '+ ASSIGNED_QTY case 1-4', 'MAPPED_QTY sesudah', 'Open PO qty sesudah'], rows,
-            [12, 11, 16, 20, 17, 17], key_cols=('+ ASSIGNED_QTY case 1-4',))
+        rows.append([po, oq, oq - before, '=SUMIFS(%s,%s,"18-Oct",%s,A%d,%s,"<=4")' % (ASG, S, PO, rr, CASE), '=C%d-D%d' % (rr, rr), '=B%d-E%d' % (rr, rr)])
+    r = put(ws, r, ['PO_NO', 'ORDER_QTY', 'REMAIN_QTY sebelum', '- ASSIGNED_QTY case 1-4', 'REMAIN_QTY sesudah', 'Sudah dipakai ASN'], rows,
+            [12, 11, 16, 20, 17, 17], key_cols=('- ASSIGNED_QTY case 1-4',))
     ws.cell(r - 1, 1, 'B. TB_R_INSTRUCTION: 1 baris per potongan, QTY = ASSIGNED_QTY').font = FB
     rows = [['ASN0003', 1, 'CO-14105', '9715310', 'PO-0002', 6], ['ASN0003', 2, 'CO-14106', '9715310', 'PO-0003', 3],
             ['ASN0003', 2, 'CO-14107', '9715310', 'PO-0003', 3], ['ASN0003', 3, 'CO-14104', '9722D10', 'PO-0003', 6],

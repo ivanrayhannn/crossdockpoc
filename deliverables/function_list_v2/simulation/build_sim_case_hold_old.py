@@ -127,7 +127,7 @@ def main():
         ['[Search] (XD09)', '#TEMP_INSTRUCTION', 'Tabel sementara per sesi. Pcs dituang PO, dipotong per case (CASE_SEQ = urutan 1, 2, 3...). Belum ada Case No asli.'],
         ['[Save] hold (XD10)', 'TB_R_CROSSDOCK_CASE_HOLD', 'Case yang dicentang disimpan sebagai order line + HOLD_QTY, bukan CASE_SEQ.'],
         ['[Search] berikutnya', '#TEMP_INSTRUCTION', 'Pcs yang di-hold tanpa PO dan tanpa CASE_SEQ (CROSSDOCK_STATUS 8); PO pindah ke line berikutnya.'],
-        ['[Create ASN] (XD10)', 'TB_R_INSTRUCTION, TB_R_PRA_DAILY_ORDER_MAPPED, H0253', 'Mapping nyata case yang dicentang; MAPPED_QTY naik; PO_MAPPED_FLAG Y untuk line yang sudah penuh. CASE_NO masih NULL.'],
+        ['[Create ASN] (XD10)', 'TB_R_INSTRUCTION, TB_R_PRA_DAILY_ORDER_PART, H0253', 'Mapping nyata case yang dicentang; REMAIN_QTY PO turun; PO_MAPPED_FLAG Y untuk line yang sudah penuh. CASE_NO masih NULL.'],
         ['Submit ASN', 'TB_R_INSTRUCTION, TB_R_CASE_LABEL_LAST_SEQ', 'ASN_NO dan CASE_NO dibuat sekali, hanya untuk case yang dikirim.'],
     ], [22, 40, 90])
 
@@ -151,7 +151,7 @@ def main():
            [5, 4, 1, 'CO-14110', AU, 6, 'PO-0003', '17-Oct', 'NULL', 'NULL']]
     simple(wb, '6. Create ASN', 'Supplier centang case 1-4, klik [Create ASN] (XD10)', ['Mapping nyata ditulis dari #TEMP_INSTRUCTION ke tabel tetap.'], [
         ('TB_R_INSTRUCTION (1 baris per case x line x PO)', INS_HEAD, ins, OK),
-        ('TB_R_PRA_DAILY_ORDER_MAPPED', ['PO_NO', 'MANIFEST_NO', 'ORDER_QTY', 'MAPPED_QTY'], [['PO-0002', 'MF-0002', 6, 6], ['PO-0003', 'MF-0003', 18, 18]], None),
+        ('TB_R_PRA_DAILY_ORDER_PART (update REMAIN_QTY)', ['PO_NO', 'MANIFEST_NO', 'ORDER_QTY', 'REMAIN_QTY sebelum', 'REMAIN_QTY sesudah'], [['PO-0002', 'MF-0002', 6, 6, 0], ['PO-0003', 'MF-0003', 18, 18, 0]], None),
         ('TB_R_H0253_ORDER_CONTROL_PRE (update)', H0253_HEAD, h0253(D17, '17-Oct', mapped=('CO-14105', 'CO-14106', 'CO-14107', 'CO-14104', 'CO-14110')), None),
     ], ['CASE_NO dan ASN_NO masih NULL. PO_MAPPED_FLAG Y untuk 5 line; CO-14109 Taiwan tetap N (di-hold, belum dikirim).'])
     simple(wb, '7. Submit ASN', 'Submit ASN: ASN_NO dan CASE_NO dibuat (format dummy)', ['Nomor case label dipakai sekali, hanya untuk 4 case yang dikirim.'], [
@@ -162,7 +162,7 @@ def main():
            [('TB_R_CROSSDOCK_CASE_HOLD', HOLD_HEAD, [[PART, '17-Oct', SUP, PLANT, 'CO-14109', f'{TW} Taiwan', 6, 'N']], HOLD)],
            ['CO-14109 masuk urutan terakhir 17-Oct, tetap lebih dulu dari order 18-Oct.'])
     temp_sheet(wb, '8b. Search 19-Oct', '[Search] 19-Oct: PO-0004 (12) dan PO-0005 (18) rilis', [
-        'H0253 yang masih open: CO-14109 (17-Oct, PO_MAPPED_FLAG N) dan order 18-Oct. PO-0002 / PO-0003 sudah penuh (MAPPED_QTY).'],
+        'H0253 yang masih open: CO-14109 (17-Oct, PO_MAPPED_FLAG N) dan order 18-Oct. PO-0002 / PO-0003 REMAIN_QTY 0.'],
         [('17-Oct', [('CO-14109', TW, 6)]), ('18-Oct', D18)], [('PO-0004', 12), ('PO-0005', 18)], released=('CO-14109',),
         outcome=['Taiwan dapat PO-0004 6 lebih dulu dari order 18-Oct. Setelah Taiwan masuk ASN, baris di TB_R_CROSSDOCK_CASE_HOLD dihapus.'])
     simple(wb, '9. Line terpecah', 'Line terpecah ke 2 case: CO-14115 Korea 12 pcs (case 1 dan 2), D/S hold case 2 saja', ['Disimpan HOLD_QTY 6.'],
