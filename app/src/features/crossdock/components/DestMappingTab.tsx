@@ -210,6 +210,7 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
                   <th style={{ ...th, textAlign: 'right', width: 110 }}>Pcs/Day</th>
                   <th style={{ ...th, textAlign: 'right', width: 110 }}>Percentage</th>
                   <th style={{ ...th, width: 120 }}>Sync Status</th>
+                  <th style={{ ...th, width: 150 }} title="Last successful sync of the mapping to GTOPAS / AP POLE (RPA XD06 / XD07)">Last Sync</th>
                 </tr>
               </thead>
               <tbody>
@@ -339,9 +340,10 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
         <td style={td}>
           <span style={{ display: 'inline-flex', fontSize: 10, fontWeight: 700, padding: '2px 9px', borderRadius: 999, background: sb.bg, color: sb.fg, whiteSpace: 'nowrap' }}>{sb.t}</span>
         </td>
+        <td style={{ ...td, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums', color: p.lastSyncDt ? undefined : 'var(--color-neutral-600)' }}>{p.lastSyncDt || 'Never'}</td>
       </tr>
       <tr style={{ display: isOpen ? 'table-row' : 'none' }}>
-        <td colSpan={8} style={{ padding: '0 16px 16px 46px', borderBottom: '1px solid var(--color-divider)', background: 'var(--color-surface)', position: 'relative' }}>
+        <td colSpan={9} style={{ padding: '0 16px 16px 46px', borderBottom: '1px solid var(--color-divider)', background: 'var(--color-surface)', position: 'relative' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '11px 0 10px' }}>
             <span style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--color-accent-2-800)' }}>Destination mapping</span>
             <span style={{ fontSize: 11.5, color: dOver ? 'var(--color-danger)' : 'var(--color-neutral-700)', fontVariantNumeric: 'tabular-nums' }}>
