@@ -17,28 +17,35 @@ SOURCE = {
     'title': 'NSP: get the source data for GTOPAS (Crossdock Master Setting)',
     'caption': NSP_CAP,
     'meta': [('Function', 'XD01 Crossdock Master Setting ([Sync], Export Excel) as the source of XD06 RPA Cross Dock Master to GTOPAS'),
-             ('User', 'D/S team. The RPA reads the same list from the NSP database (XD06); the Excel is used to check the result or to do it by hand'),
+             ('User', 'D/S team: only [Sync]. Everything after [Sync] is done by the RPA bot: download, Excel, GTOPAS (decided 17-Nov)'),
              ('Result', 'Crossdock_Mapping_per_Destination_<Period>_YYYYMMDD.xlsx, sheets Mapping per Destination (NSP list) and Active to Inactive'),
              ('NSP list', 'Every Active part of the ongoing period with its Destination Codes (one row per part + destination), whatever the Sync Status')],
     'blocks': [
-        ('step', 'Open Crossdock Master Setting, tab Mapping per Destination',
+        ('table', 'Who does what', ['No', 'Who', 'What'], [
+            ['1', 'D/S team', 'Crossdock Master Setting, tab Mapping per Destination, ongoing period: click [Sync] (steps 1 and 2)'],
+            ['2', 'RPA bot', 'Log in to NSP, [Export Excel] of Mapping per Destination (ongoing period, Sync Status All) and open the file (steps 3 to 5)'],
+            ['3', 'RPA bot', 'GTOPAS WVJA5204: Search Depot 01, read every page (sheet "1. GTOPAS Crossdock Master")'],
+            ['4', 'RPA bot', 'Add the sheet GTOPAS Compare to the file: Keep / Add / Delete per P/No. + Destination Code (sheet "2. Scenario Detail")'],
+            ['5', 'RPA bot', 'Add / delete the rows in GTOPAS; write Result and GTOPAS message per row in GTOPAS Compare'],
+            ['6', 'RPA bot', 'Write the result to NSP: Sync Status Success (Last Sync) or Failed; the file stays as evidence of the run']], [6, 34, 100]),
+        ('step', 'D/S: open Crossdock Master Setting, tab Mapping per Destination',
          'In the left menu click Master > Crossdock Master Setting. With the D/S account the screen opens on the tab Mapping per Destination.', 'g1_map_menu.png'),
-        ('step', 'Search the ongoing period (Sync Status All) and click [Sync]',
+        ('step', 'D/S: search the ongoing period and click [Sync]',
          'Calculation period = the ongoing period (e.g. Sep 2026 (ongoing)), Sync Status = All, click [Search]. Click [Sync (n)]: the parts with '
-         'No Sync or Failed become Waiting and the RPA starts. GTOPAS only keeps Part + Destination Code, so the RPA compares the whole list, '
-         'not only the Waiting parts.', 'g2_map_sync.png'),
-        ('step', 'Click [Export Excel] with Sync Status All',
-         'Keep Sync Status = All and Part Number empty, click [Export Excel]. The browser downloads '
-         'Crossdock_Mapping_per_Destination_Sep_2026_YYYYMMDD.xlsx. Open it in Excel.', 'g3_map_export.png'),
-        ('step', 'Read sheet "Mapping per Destination" = NSP list',
+         'No Sync or Failed become Waiting and the RPA bot starts. This is the last manual step.', 'g2_map_sync.png'),
+        ('step', 'Bot: download the Excel ([Export Excel], Sync Status All)',
+         'The bot logs in to NSP, opens the same screen, ongoing period, Sync Status = All (GTOPAS keeps only Part + Destination Code, so the '
+         'whole list is compared, not only the Waiting parts), Part Number empty, clicks [Search] and [Export Excel], and opens '
+         'Crossdock_Mapping_per_Destination_Sep_2026_YYYYMMDD.xlsx.', 'g3_map_export.png'),
+        ('step', 'Bot: read sheet "Mapping per Destination" = NSP list',
          'One row per Active part and Destination Code of the ongoing period. Only Part Number and Destination Code are used for GTOPAS '
          '(Dest Case/Day is not sent). A row with an empty Destination Code = Active part without destination: GTOPAS must have no row for it.',
          'x_gt_nsp_all.png'),
-        ('step', 'Read sheet "Active to Inactive"',
+        ('step', 'Bot: read sheet "Active to Inactive"',
          'Parts that went Inactive after their last sync. They are not in the NSP list any more, so all their rows in GTOPAS are deleted.',
          'x_inactive.png'),
     ],
-    'notes': ['Download after [Sync] and change nothing in NSP until the RPA has finished.',
+    'notes': ['Change nothing in NSP from [Sync] until the RPA has finished: a part changed in between goes back to No Sync.',
               'Sheet "Upload" of the file is not used for GTOPAS.',
               'When the RPA has finished, Sync Status becomes Success (Last Sync = run date-time) when AP POLE (XD07) is also done, or Failed.']}
 
@@ -48,7 +55,7 @@ SCREEN = {
     'caption': GT_CAP,
     'meta': [('Function', 'XD06 RPA Cross Dock Master to GTOPAS'),
              ('Screen', 'GTOPAS WVJA5204 Crossdock Master, menu Supply > Master > Crossdock Master'),
-             ('User', 'RPA bot (the same steps can be done by the D/S team by hand)'),
+             ('User', 'RPA bot, started by [Sync] (the same steps can be done by the D/S team by hand as a fallback)'),
              ('Compare key', 'P/No. (without "-") + Destination Code. GTOPAS shows P/No. with "-" (52119-BZV60), NSP without (52119BZV60)')],
     'blocks': [
         ('step', 'Open Crossdock Master', 'Log in to GTOPAS and open the menu Supply > Master > Crossdock Master (WVJA5204).', None),
@@ -59,8 +66,9 @@ SCREEN = {
         ('step', 'Read every page',
          'Click [NextPage] until the last page and note every row: P/No. + Destination Code (one row per part and destination).', None),
         ('image', 'GTOPAS list before the run (example of sheet "2. Scenario Detail")', 'x_gt_before.png'),
-        ('step', 'Compare with the NSP list and choose the scenario',
-         'For every P/No. + Destination Code: in NSP and in GTOPAS = keep; in NSP only = add; in GTOPAS only = delete. Refer sheet "2. Scenario Detail".', None),
+        ('step', 'Compare and fill the sheet GTOPAS Compare',
+         'For every P/No. + Destination Code: in NSP and in GTOPAS = Keep; in NSP only = Add; in GTOPAS only = Delete. The bot writes the rows '
+         'to the new sheet GTOPAS Compare of the downloaded file. Refer sheet "2. Scenario Detail".', None),
         ('step', 'Add a row (register)',
          'Add a new row with the fixed values of the table below and the P/No. + Destination Code of NSP. Register. Message MZD34006FEI '
          '"Registration completed" = done.', None),
@@ -76,8 +84,8 @@ SCREEN = {
          'Search the row (P/No. + Destination Code), set MT = DEL on the row and register. Message "MZD34006FEI: Registration completed." = done '
          '(screenshot of step 2: 52119-BZV60 + 9618274 deleted).', None),
         ('step', 'Check the result',
-         'Search Depot Code 01 again: the list must have exactly the rows of the NSP list (Active parts of the ongoing period with destination).',
-         None),
+         'After each Add / Delete the bot writes Result (OK) and the GTOPAS message in GTOPAS Compare. At the end the GTOPAS list (Depot 01) has '
+         'exactly the rows of the NSP list, and Sync Status in NSP becomes Success (when AP POLE is also done).', None),
         ('image', 'GTOPAS list after the run (example)', 'x_gt_after.png'),
     ],
     'notes': ['Column R of the list shows "O" on the row of the screenshot: meaning TBC (not used by the RPA).',
@@ -103,6 +111,7 @@ DETAIL = {
             ['S3', 'Part Inactive (sheet Active to Inactive), Candidate, or not in NSP', 'Delete all rows of the part'],
             ['S3', 'Active part without destination (empty Destination Code)', 'Delete all rows of the part; nothing to add']], [6, 34, 100]),
         ('image', 'Comparison of the examples below (green = keep, blue = add, red = delete)', 'x_gt_compare.png'),
+        ('image', 'The same rows in the sheet GTOPAS Compare, filled by the bot after the actions (Result, message, date-time)', 'x_gt_work.png'),
 
         ('heading', 'B. Example 1: PART-009, new part with 3 destinations (S2)'),
         ('text', 'NSP: 3 rows 9722D10, 9811110, 9715310 (Last Sync Date empty). GTOPAS now: [Search] P/No. PART-009 shows no data.'),

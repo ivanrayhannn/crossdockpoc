@@ -138,7 +138,7 @@
 | LOG1 | Batch start | [Sync] on XD01 | Info | RPA cross dock master to GTOPAS started. <n> Waiting part(s). | system: Write the log.; user: - |
 | LOG2 | Batch end | Bot finishes | Info | RPA cross dock master to GTOPAS ended. NSP rows <n>, GTOPAS rows <g>, registered <a>, skipped <k>, deleted <d>, status <STATUS>. | system: Write the log.; user: - |
 | LOG3 | Register / delete | Row registered or deleted on the screen | Info | <REGISTER / DELETE> <PART_NO> <DEST_CODE>: <GTOPAS message>. | system: Write the log.; user: - |
-| LOG4 | Error (try-catch) | Login, screen, timeout, GTOPAS error message or NSP database error | Error | RPA to GTOPAS stopped at <STEP> <PART_NO> <DEST_CODE>: <ERROR_DETAIL>. All Waiting parts Failed. | system: Stop the bot. IF_STATUS = 2 for every Waiting part.; user: Click [Sync] again; contact PIC if it persists. |
+| LOG4 | Error (try-catch) | Login, screen, timeout, GTOPAS error message, NSP download or Excel error | Error | RPA to GTOPAS stopped at <STEP> <PART_NO> <DEST_CODE>: <ERROR_DETAIL>. All Waiting parts Failed. | system: Stop the bot. IF_STATUS = 2 for every Waiting part.; user: Click [Sync] again; contact PIC if it persists. |
 | LOG5 | Unexpected error | Any other system error | Critical | Unexpected error: <ERROR_DETAIL>. | system: Stop. STATUS = ERROR. All Waiting parts Failed.; user: User contact PIC |
 
 ## XD07 – IF Cross Dock Master to AP POLE

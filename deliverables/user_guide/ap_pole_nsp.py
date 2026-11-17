@@ -7,41 +7,43 @@ SOURCE = {
     'caption': 'Screens from the NSP prototype: header "Supplier System" is NSP; "Preview ... / Switch sub-menu" exists only in the prototype. '
                'Red box = the item to click. Excel pictures: orange header = column read for AP POLE, yellow rows = examples of sheet "3. Scenario Detail".',
     'meta': [('Function', 'XD01 Crossdock Master Setting ([Sync], Export Excel) as the source of XD07 RPA Cross Dock Master to AP POLE'),
-             ('User', 'D/S team ([Sync], Mapping per Destination) and Procurement team (Part List); the RPA reads the two files'),
+             ('User', 'D/S team: only [Sync]. The RPA bot downloads the two files, fills a work sheet AP POLE Compare and works on AP POLE (17-Nov)'),
              ('Result', 'Crossdock_Mapping_per_Destination_<Period>_YYYYMMDD.xlsx (sheets Mapping per Destination, Active to Inactive) and '
                         'Crossdock_Part_List_YYYYMMDD.xlsx (sheet Part List)')],
     'blocks': [
-        ('step', 'Open Crossdock Master Setting, tab Mapping per Destination',
+        ('step', 'D/S: open Crossdock Master Setting, tab Mapping per Destination',
          'In the left menu click Master > Crossdock Master Setting. With the D/S account the screen opens on the tab Mapping per Destination.', 'n1_map_menu.png'),
-        ('step', 'Search the ongoing period and click [Sync]',
+        ('step', 'D/S: search the ongoing period and click [Sync]',
          'Calculation period = the ongoing period (e.g. Sep 2026 (ongoing)), Sync Status = All, click [Search]. Click [Sync (n)]: every Active part '
          'of the ongoing period with Sync Status No Sync or Failed becomes Waiting. n = number of parts that will be sent to GTOPAS and AP POLE. '
-         'The button is disabled when there is nothing to sync.', 'n2_map_sync.png'),
-        ('step', 'Check the parts to process: Sync Status = Waiting',
+         'The button is disabled when there is nothing to sync. [Sync] starts the RPA bot: the next steps are done by the bot.', 'n2_map_sync.png'),
+        ('step', 'Bot: search the parts to process (Sync Status = Waiting)',
          'Sync Status = Waiting, click [Search]. These are the parts the RPA processes in AP POLE. Column Last Sync: "Never" = the part was never '
          'synced, so AP POLE does not have it yet (Add); a date = the part was synced before, so AP POLE has it (Edit). Example PART-F: '
          'Last Sync 28-Aug-2026 10:05 (the run after it Failed, so the part is sent again).', 'n3_map_waiting.png'),
-        ('step', 'Check the destinations of a part (optional)',
+        ('step', 'Destinations of a part (for checking only)',
          'Click the arrow > in front of the Part Number. Example PART-009: 3 destinations, Case/Day 7 + 7 + 5 = 19 = Max Case/Day (19 / 19, 100%). '
          'These rows become the Buyer-PD rows of WLM9Q860 in AP POLE.', 'n4_map_dest.png'),
-        ('step', 'Click [Export Excel] (Sync Status Waiting)',
+        ('step', 'Bot: download Mapping per Destination ([Export Excel], Waiting)',
          'With Sync Status = Waiting and Part Number empty, click [Export Excel]. The browser downloads '
-         'Crossdock_Mapping_per_Destination_Sep_2026_YYYYMMDD.xlsx (period of step 2, download date). Open it in Excel.', 'n5_map_export.png'),
-        ('step', 'Read sheet "Mapping per Destination" (destination level)',
+         'Crossdock_Mapping_per_Destination_Sep_2026_YYYYMMDD.xlsx (period of step 2, download date) and the bot opens it.', 'n5_map_export.png'),
+        ('step', 'Bot: read sheet "Mapping per Destination" (destination level)',
          'One row per part and destination of the Waiting parts. Used for AP POLE WLM9Q860: Part Number, Destination Code (-> Buyer-PD), '
          'Dest Case/Day (-> Max Shipping Box Qty), Max Case/Day (quota) (-> Max Shipping Box Qty of the part) and Last Sync Date. '
          'A part without mapping has one row with an empty Destination Code (e.g. PART-B).', 'x_map_waiting.png'),
-        ('step', 'Read sheet "Active to Inactive" (delete)',
+        ('step', 'Bot: read sheet "Active to Inactive" (delete)',
          'Parts that went from Active to Inactive (monthly run of XD05) after their last successful sync: AP POLE still has them. One row per '
          'destination; Action = Delete in GTOPAS / AP POLE. Always every part of the master, whatever the search filter.', 'x_inactive.png'),
-        ('step', 'Download the Part List (part level)',
-         'Switch to the tab Part List (Procurement account), click [Search] without a filter, then [Export Excel]. The browser downloads '
+        ('step', 'Bot: download the Part List (part level)',
+         'The bot opens the tab Part List, clicks [Search] without a filter, then [Export Excel]. The browser downloads '
          'Crossdock_Part_List_YYYYMMDD.xlsx.', 'n6_part_export.png'),
-        ('step', 'Read sheet "Part List": filter Sync Status = Waiting',
-         'In Excel: Data > Filter, column Sync Status = Waiting. Used for AP POLE WLM9Q890: Part Number (-> Part No.), Pcs/Case (-> Shipping Box Qty), '
+        ('step', 'Bot: read sheet "Part List" (Sync Status = Waiting)',
+         'The bot filters column Sync Status = Waiting. Used for AP POLE WLM9Q890: Part Number (-> Part No.), Pcs/Case (-> Shipping Box Qty), '
          'Max Case/Day (-> Max Shipping Box Qty) and Status. The same parts are Waiting in both files.', 'x_part_waiting.png'),
     ],
-    'notes': ['Download both files on the same day, after [Sync], and change nothing in NSP until the RPA has finished: a part changed after [Sync] goes back to No Sync.',
+    'notes': ['Change nothing in NSP from [Sync] until the RPA has finished: a part changed in between goes back to No Sync.',
+              'The bot adds a work sheet AP POLE Compare to the downloaded file: per part / Buyer-PD the NSP value, the AP POLE value, the action '
+              '(Add / Edit / Delete / Keep), Result and AP POLE message. The file stays as the evidence of the run.',
               'Sheet "Upload" of both files is not used for AP POLE (it is the upload format of NSP).',
               'When the RPA has finished, Sync Status becomes Success (Last Sync = the run date-time) or Failed (all parts of the run; click [Sync] again).']}
 
