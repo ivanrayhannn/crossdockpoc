@@ -9,8 +9,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, 'Crossdock_User_Guide_GTOPAS.xlsx')
 NSP_CAP = ('Screens from the NSP prototype: header "Supplier System" is NSP; "Preview ... / Switch sub-menu" exists only in the prototype. '
            'Red box = the item to click. Excel pictures: orange header = column used for GTOPAS, yellow rows = examples of sheet "2. Scenario Detail".')
-GT_CAP = ('No screenshot of GTOPAS yet: the GTOPAS lists below are illustrations of the screen list with example data (to be replaced by '
-          'screenshots of WVJA5204).')
+GT_CAP = ('Screenshot of GTOPAS WVJA5204 given by the user (one row searched and deleted). The GTOPAS lists with several rows are '
+          'illustrations of the same list with example data.')
 
 SOURCE = {
     'sheet': '0. Source Data (NSP)',
@@ -53,8 +53,9 @@ SCREEN = {
     'blocks': [
         ('step', 'Open Crossdock Master', 'Log in to GTOPAS and open the menu Supply > Master > Crossdock Master (WVJA5204).', None),
         ('step', 'Search Depot Code 01',
-         'Depot Code = 01 (mandatory). Leave P/No., Destination Code, Maker Code, Dom/Os, TOPAS Order Type and Trans Code blank to list every row. '
-         'Click [Search].', None),
+         'Depot Code = 01 (mandatory, yellow). Leave P/No., Destination Code, Maker Code, Dom/Os, TOPAS Order Type and Trans Code blank to list '
+         'every row, or fill P/No. (without "-", e.g. 52119BZV60) + Destination Code (e.g. 9618274) to find one row. Click [Search]. '
+         'The list shows P/No. with "-" (52119-BZV60).', 'g01_wvja5204_delete.png'),
         ('step', 'Read every page',
          'Click [NextPage] until the last page and note every row: P/No. + Destination Code (one row per part and destination).', None),
         ('image', 'GTOPAS list before the run (example of sheet "2. Scenario Detail")', 'x_gt_before.png'),
@@ -69,16 +70,18 @@ SCREEN = {
             ['P/No.', 'Part Number of NSP', 'Mapping per Destination, Part Number (GTOPAS shows it with "-")'],
             ['Domestic/Overseas', '2', 'Fixed (decided 11-Nov)'],
             ['Destination Code', 'Destination Code of NSP', 'Mapping per Destination, Destination Code: the same 7 characters, no conversion'],
-            ['TOPAS Order Type', '3', 'Fixed (decided 11-Nov)'],
+            ['TOPAS Order Type', '3', 'Fixed (decided 11-Nov). The screenshot shows "*" on an existing row: 3 or * TBC (FB-203)'],
             ['Order Transportation Code', '2', 'Fixed (decided 11-Nov)']], [40, 50, 50]),
         ('step', 'Delete a row',
-         'Set MT = DEL on the row and register. Message MZD34006FEI = done.', None),
+         'Search the row (P/No. + Destination Code), set MT = DEL on the row and register. Message "MZD34006FEI: Registration completed." = done '
+         '(screenshot of step 2: 52119-BZV60 + 9618274 deleted).', None),
         ('step', 'Check the result',
          'Search Depot Code 01 again: the list must have exactly the rows of the NSP list (Active parts of the ongoing period with destination).',
          None),
         ('image', 'GTOPAS list after the run (example)', 'x_gt_after.png'),
     ],
-    'notes': ['Any other message than MZD34006FEI (error, time out, screen not available) stops the RPA: the run is Failed for every Waiting part; '
+    'notes': ['Column R of the list shows "O" on the row of the screenshot: meaning TBC (not used by the RPA).',
+              'Any other message than MZD34006FEI (error, time out, screen not available) stops the RPA: the run is Failed for every Waiting part; '
               'rows already added or deleted stay, the next [Sync] compares again and completes the rest.',
               'FB-176: every GTOPAS row of Depot 01 that is not in NSP is deleted. At go-live all crossdock parts of GTOPAS must exist in NSP.']}
 
