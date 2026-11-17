@@ -231,6 +231,13 @@ function syncDatesOf(p: SeedPart): { lastSyncDt: string | null; inactiveDt: stri
   return { lastSyncDt, inactiveDt };
 }
 
+/** Sync Status rule: a part that went Active -> Inactive (01-Oct run) after its last successful sync is No Sync again. */
+function syncOf(p: SeedPart): Pick<Part, 'syncStatus' | 'lastSyncDt' | 'inactiveDt'> {
+  const d = syncDatesOf(p);
+  const resent = p.syncStatus === 1 && d.inactiveDt && d.lastSyncDt === '28-Sep-2026 10:15';
+  return { ...d, syncStatus: resent ? 0 : p.syncStatus };
+}
+
 /** Builds a plausible change history for one part, newest-first — status
  * flips, Pcs/Case / Min MAD / Max Case/Day edits, and the Total Pcs/Day
  * that falls out of Pcs/Case × Max Case/Day whenever either one moves. */
@@ -294,7 +301,7 @@ const activeInPastOnly = (p: SeedPart) => p.st === 'Active' && p.per !== CUR_PER
 export function cloneSeedParts(): Part[] {
   return ALL_SEED.map((p) => ({
     ...p,
-    ...syncDatesOf(p),
+    ...syncOf(p),
     effDate: effDateOf(p),
     ...(activeInPastOnly(p) ? { per: CUR_PER, dests: [] } : { dests: withCodes(p) }),
   }));

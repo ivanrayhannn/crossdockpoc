@@ -138,7 +138,7 @@
    },
    {
     "name": "Sync",
-    "function": "Start XD06 (GTOPAS) and XD07 (AP POLE) for every Active part of the ongoing period, and every part that became Inactive, with Sync Status No Sync or Failed, whatever the filter shows; the parts become Waiting. The label shows the number of parts, e.g. Sync (17)."
+    "function": "Start XD06 (GTOPAS) and XD07 (AP POLE) for every part with status Active (ongoing period) or Inactive whose Sync Status is No Sync or Failed, whatever the filter shows; the parts become Waiting. The label shows the number of parts, e.g. Sync (21)."
    },
    {
     "name": "Upload Excel (Mapping)",
@@ -920,7 +920,7 @@
    "1) Prev is disabled on the first page and Next on the last page.",
    "2) A user logged in with a read-only account sees [View] instead of [Edit] and cannot use Add Part / Upload Excel / Save. TBD: which accounts are read-only is not defined yet.",
    "3) Run calculation is shown as D (disabled) by default; it is enabled only when the scheduled DAD Volume Calculation has failed 3 times (auto retry).",
-   "4) Sync is enabled only when at least one Active part of the ongoing period, or a part that became Inactive, is No Sync or Failed (not limited to the listed rows).",
+   "4) Sync is enabled only when at least one part with status Active (ongoing period) or Inactive is No Sync or Failed (not limited to the listed rows).",
    "5) Split evenly is shown only in edit mode when the part has more than one destination row.",
    "7) Prev is disabled on the first page and Next on the last page.",
    "8) Run calculation is enabled only when the scheduled XD05 DAD Volume Calculation (process 2) has failed 3 times (auto retry); otherwise disabled with message no. 30 as tooltip.",
@@ -2648,7 +2648,7 @@
    "required": "",
    "format": "",
    "validation": "",
-   "description": "n = Active parts of the ongoing period and parts that became Inactive, with Sync Status No Sync or Failed, whatever the filter. Disabled when n = 0. Refer Operation Description 5.16."
+   "description": "n = parts with status Active (ongoing period) or Inactive and Sync Status No Sync or Failed, whatever the filter. Disabled when n = 0. Refer Operation Description 5.16."
   },
   {
    "name": "Upload Excel (Mapping)",
@@ -3674,11 +3674,11 @@
      "keys": [
       {
        "field": "PART_STATUS",
-       "value": "'Active' (ongoing period), or Inactive and listed in Active to Inactive"
+       "value": "'Active' (ongoing period) or 'Inactive'"
       },
       {
        "field": "SYNC_STATUS",
-       "value": "'0' or '2' (Active); not '3' (Inactive listed)"
+       "value": "'0' (No Sync) or '2' (Failed)"
       }
      ]
     },
@@ -4371,7 +4371,7 @@
    "marker": "1.",
    "level": 3,
    "items": [
-    "Select every Active part of the ongoing period, and every part that became Inactive (Active -> Inactive by XD05, a Save or an upload, listed in Active to Inactive), with Sync Status No Sync or Failed, whatever the search criteria show (n of the button). Inactive parts: all their rows are deleted in GTOPAS (XD06) and AP POLE (XD07). Candidate parts are never synchronised.",
+    "Select every part with status Active (ongoing period) or Inactive whose Sync Status is No Sync or Failed, whatever the filter shows (n of the button). Active parts: their part and destinations are added / changed in GTOPAS (XD06) and AP POLE (XD07). Inactive parts: all their rows are deleted there (a part that was never synced has nothing to delete). Candidate parts are never synchronised.",
     "Set SYNC_STATUS = 3 (Waiting) for these parts in TB_M_PART_CANDIDATE, set one row per part and target system (GTOPAS, AP POLE) to IF_STATUS = 3 (Waiting) in TB_R_CROSSDOCK_IF_RESULT, and start XD06 and XD07. Display message no. 27.",
     "With the default filter No Sync the parts leave the list; select Sync Status = Waiting or All to follow them."
    ]
@@ -5103,6 +5103,13 @@
    "date": "17-Nov-26",
    "reviewed_by": "",
    "description": "Sync Status rule: No Sync only when a value sent to GTOPAS / AP POLE changes; a manual Active -> Inactive is listed in Active to Inactive and taken by [Sync] (FB-204 / FB-205)."
+  },
+  {
+   "revision": "0.3",
+   "author": "FID Rayhan",
+   "date": "17-Nov-26",
+   "reviewed_by": "",
+   "description": "[Sync] takes every part with status Active (ongoing period) or Inactive whose Sync Status is No Sync or Failed, whatever the filter shows (Candidate never)."
   }
  ]
 }

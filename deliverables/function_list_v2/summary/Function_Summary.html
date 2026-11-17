@@ -119,7 +119,7 @@ const FUNCS = [
         'Download: sheet "Mapping per Destination" (informasi) dan "Upload" (part Active periode ongoing, satu baris per destinasi; baris kosong Upload (A/E) = A untuk part tanpa mapping).',
         'Upload mapping (XD03): hanya periode ongoing (selain itu msg 23). Disimpan per destinasi; part yang tidak ada di file tidak berubah. All-or-nothing; berhasil msg 24.',
         'Mapping Calculation (XD05 proses 2): scheduler, auto retry 3×; [Run calculation] aktif hanya setelah gagal 3×; selesai msg 29.',
-        '[Sync (n)]: part Active periode ongoing dengan status No Sync / Failed dan part di sheet Active to Inactive (Inactive setelah sync terakhir, oleh XD05 / Save / upload) yang belum Waiting, tanpa melihat filter. Part jadi Waiting, XD06 dan XD07 dijalankan (msg 27). Part Candidate tidak pernah di-sync.',
+        '[Sync (n)]: semua part berstatus Active (periode ongoing) dan Inactive yang Sync Status-nya No Sync / Failed, tanpa melihat filter (17-Nov). Active ditambah / diubah, Inactive dihapus di GTOPAS / AP POLE. Part jadi Waiting, XD06 dan XD07 dijalankan (msg 27). Part Candidate tidak pernah di-sync.',
         'Hasil Sync per part: Success kalau GTOPAS (RPA) dan AP POLE (RPA) berhasil; Failed kalau salah satu gagal (tooltip msg 28, ikut Sync berikutnya); No Sync kalau part diubah saat proses kirim. Setiap hasil masuk history.' ] },
       { key: 'AB', title: 'Abnormality', points: [
         { k: 'Part sudah didaftarkan user lain saat Add', d: 'msg 3', s: 'Simpan dibatalkan', u: 'Tutup modal, cari part' },

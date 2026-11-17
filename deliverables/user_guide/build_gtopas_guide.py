@@ -31,8 +31,8 @@ SOURCE = {
         ('step', 'D/S: open Crossdock Master Setting, tab Mapping per Destination',
          'In the left menu click Master > Crossdock Master Setting. With the D/S account the screen opens on the tab Mapping per Destination.', 'g1_map_menu.png'),
         ('step', 'D/S: search the ongoing period and click [Sync]',
-         'Calculation period = the ongoing period (e.g. Sep 2026 (ongoing)), Sync Status = All, click [Search]. Click [Sync (n)]: the parts with '
-         'No Sync or Failed become Waiting and the RPA bot starts. This is the last manual step.', 'g2_map_sync.png'),
+         'Calculation period = the ongoing period (e.g. Sep 2026 (ongoing)), Sync Status = All, click [Search]. Click [Sync (n)]: every part with '
+         'status Active (ongoing period) or Inactive and Sync Status No Sync or Failed becomes Waiting (Candidate never) and the RPA bot starts. This is the last manual step.', 'g2_map_sync.png'),
         ('step', 'Bot: download the Excel ([Export Excel], Sync Status All)',
          'The bot logs in to NSP, opens the same screen, ongoing period, Sync Status = All (GTOPAS keeps only Part + Destination Code, so the '
          'whole list is compared, not only the Waiting parts), Part Number empty, clicks [Search] and [Export Excel], and opens '
