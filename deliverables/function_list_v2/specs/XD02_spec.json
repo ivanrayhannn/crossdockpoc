@@ -6,7 +6,9 @@
   "block_name": "Batch",
   "function_name": "XD02 Cross Dock Part Master Upload Batch",
   "created_date": "18-Oct-26",
-  "created_by": "FID Rayhan"
+  "created_by": "FID Rayhan",
+  "updated_date": "17-Nov-26",
+  "updated_by": "FID Rayhan"
  },
  "revisions": [
   {
@@ -15,6 +17,13 @@
    "date": "18-Oct-26",
    "reviewed_by": "",
    "description": "Initial Draft"
+  },
+  {
+   "revision": "0.2",
+   "author": "FID Rayhan",
+   "date": "17-Nov-26",
+   "reviewed_by": "",
+   "description": "Sync Status = No Sync only when a value sent to GTOPAS / AP POLE changed (Status to or from Active, Pcs/Case or Max Case/Day of an Active part); else kept (Sync Status rule of XD01, 17-Nov)."
   }
  ],
  "general": {
@@ -327,7 +336,7 @@
     "children": [
      "Add: register the new part as Candidate.",
      "Edit: update the changed values, including status Active <-> Inactive. A row with no change is skipped.",
-     "Every saved part gets Sync Status = No Sync."
+     "A new part gets Sync Status = No Sync. An updated part gets No Sync only when a value sent to GTOPAS / AP POLE changed (Status to or from Active, Pcs/Case or Max Case/Day of an Active part); otherwise the Sync Status is kept."
     ]
    },
    "Create the result report and record the result (completed or rejected) in the upload log. The Part List screen shows the result to the user. Exit."
@@ -482,7 +491,7 @@
      },
      {
       "dest_field": "SYNC_STATUS",
-      "description": "Set '0' (No Sync)"
+      "description": "'0' (No Sync) when a value sent to GTOPAS / AP POLE changed (Status to or from Active, Pcs/Case or Max Case/Day of an Active part); else not changed"
      },
      {
       "dest_field": "SYNC_DT",
@@ -681,7 +690,7 @@
     "If all rows are valid, the data is saved to TB_M_PART_CANDIDATE: flag A inserts a new part (status Candidate), flag E updates the changed values, including status Active <-> Inactive. Rows with no change are skipped.",
     "The status of a Candidate part is changed only in the Edit part data modal on the screen, not by upload.",
     "Every inserted or changed part gets a history record per changed field in TB_H_PART_CANDIDATE (event ADD / EDIT, source UPLOAD, UPLOAD_ID of this run; refer Appendix).",
-    "Every saved record gets Sync Status = No Sync. It is sent to GTOPAS and AP POLE by the IF functions (XD06 / XD07) when D/S clicks [Sync] in Mapping per Destination.",
+    "A new record gets Sync Status = No Sync; an updated record only when a value sent to GTOPAS / AP POLE changed (Status to or from Active, Pcs/Case or Max Case/Day of an Active part). It is sent to GTOPAS and AP POLE by the RPA (XD06 / XD07) when D/S clicks [Sync] in Mapping per Destination. Status Active -> Inactive is listed in sheet Active to Inactive like the change of XD05.",
     "A result report (.xlsx) is created for both cases."
    ]
   },

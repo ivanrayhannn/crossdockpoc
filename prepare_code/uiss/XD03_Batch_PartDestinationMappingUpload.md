@@ -11,6 +11,7 @@
 | Rev | Author | Date | Reviewed by | Description |
 |---|---|---|---|---|
 | 0.1 | FID Rayhan | 18-Oct-26 |  | Initial Draft |
+| 0.2 | FID Rayhan | 17-Nov-26 |  | Sync Status = No Sync only when the destinations or Case/Day of the part changed (Sync Status rule of XD01, 17-Nov). |
 
 ## 1. General
 
@@ -173,7 +174,7 @@ flowchart TB
 |  | PART_STATUS | Not changed |
 |  | SYNC_DT | Not changed |
 |  | SYNC_MESSAGE | Not changed |
-|  | SYNC_STATUS | Set '0' (No Sync) |
+|  | SYNC_STATUS | '0' (No Sync) when a destination or its Case/Day changed; else not changed |
 |  | LAST_SOURCE | Set 'UPLOAD' |
 |  | LAST_UPLOAD_ID | UPLOAD_ID of this run |
 |  | CREATED_BY | Not changed |
@@ -242,7 +243,7 @@ Every row is checked and all errors are collected, so the user can correct the f
 - For a changed part, its rows of the ongoing period in TB_M_PART_CANDIDATE_DEST are compared with the rows of the file by destination code (key PART_NO + PERIOD + DEST_CODE): a destination in both with a different Case/Day is updated (CASE_DAY, CHANGED_BY, CHANGED_DT; CREATED_BY / CREATED_DT are kept), a destination only in the file is inserted, a destination only in the table is deleted, and a destination with the same Case/Day is not touched. All changes are saved in one transaction.
 - A part whose rows are all blank (placeholder) is not changed, so a mapping cannot be removed completely by upload (same as the screen: at least one destination).
 - Every changed part gets a history record per added, changed or removed destination in TB_H_PART_CANDIDATE (event MAPPING, source UPLOAD, DEST_CODE and FIELD_NAME CASE_DAY; refer Appendix).
-- Every changed part gets Sync Status = No Sync in TB_M_PART_CANDIDATE. It is sent to GTOPAS and AP POLE by the IF functions (XD06 / XD07) when D/S clicks [Sync] on the screen.
+- Every part whose destinations or Case/Day changed gets Sync Status = No Sync in TB_M_PART_CANDIDATE; file rows equal to the current mapping keep it. It is sent to GTOPAS and AP POLE by the RPA (XD06 / XD07) when D/S clicks [Sync] on the screen.
 - A result report (.xlsx) is created for both cases.
 
 | No | Check | Column |

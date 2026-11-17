@@ -11,6 +11,7 @@
 | Rev | Author | Date | Reviewed by | Description |
 |---|---|---|---|---|
 | 0.1 | FID Rayhan | 18-Oct-26 |  | Initial Draft |
+| 0.2 | FID Rayhan | 17-Nov-26 |  | Sync Status = No Sync only when a value sent to GTOPAS / AP POLE changed (Status to or from Active, Pcs/Case or Max Case/Day of an Active part); else kept (Sync Status rule of XD01, 17-Nov). |
 
 ## 1. General
 
@@ -108,7 +109,7 @@ flowchart TB
 6. If all rows are valid, save to master table TB_M_PART_CANDIDATE (see 4.3).
   - Add: register the new part as Candidate.
   - Edit: update the changed values, including status Active <-> Inactive. A row with no change is skipped.
-  - Every saved part gets Sync Status = No Sync.
+  - A new part gets Sync Status = No Sync. An updated part gets No Sync only when a value sent to GTOPAS / AP POLE changed (Status to or from Active, Pcs/Case or Max Case/Day of an Active part); otherwise the Sync Status is kept.
 7. Create the result report and record the result (completed or rejected) in the upload log. The Part List screen shows the result to the user. Exit.
 
 ## 3. Data edit mapping
@@ -150,7 +151,7 @@ flowchart TB
 |  | TOTAL_PCS_DAY | Recalculate : PCS_CASE x MAX_CASE_DAY |
 | Effective Start Date | EFFECTIVE_START_DATE | Only while PART_STATUS = 'Candidate' |
 | Status | PART_STATUS | Active <-> Inactive only; blank = not changed |
-|  | SYNC_STATUS | Set '0' (No Sync) |
+|  | SYNC_STATUS | '0' (No Sync) when a value sent to GTOPAS / AP POLE changed (Status to or from Active, Pcs/Case or Max Case/Day of an Active part); else not changed |
 |  | SYNC_DT | Not changed |
 |  | SYNC_MESSAGE | Not changed |
 |  | LAST_SOURCE | Set 'UPLOAD' |
@@ -219,7 +220,7 @@ Every row is checked and all errors are collected, so the user can correct the f
 - If all rows are valid, the data is saved to TB_M_PART_CANDIDATE: flag A inserts a new part (status Candidate), flag E updates the changed values, including status Active <-> Inactive. Rows with no change are skipped.
 - The status of a Candidate part is changed only in the Edit part data modal on the screen, not by upload.
 - Every inserted or changed part gets a history record per changed field in TB_H_PART_CANDIDATE (event ADD / EDIT, source UPLOAD, UPLOAD_ID of this run; refer Appendix).
-- Every saved record gets Sync Status = No Sync. It is sent to GTOPAS and AP POLE by the IF functions (XD06 / XD07) when D/S clicks [Sync] in Mapping per Destination.
+- A new record gets Sync Status = No Sync; an updated record only when a value sent to GTOPAS / AP POLE changed (Status to or from Active, Pcs/Case or Max Case/Day of an Active part). It is sent to GTOPAS and AP POLE by the RPA (XD06 / XD07) when D/S clicks [Sync] in Mapping per Destination. Status Active -> Inactive is listed in sheet Active to Inactive like the change of XD05.
 - A result report (.xlsx) is created for both cases.
 
 | No | Check | Column |

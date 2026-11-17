@@ -11,6 +11,7 @@
 | Rev | Author | Date | Reviewed by | Description |
 |---|---|---|---|---|
 | 0.1 | FID Rayhan | 18-Oct-26 |  | Initial Draft |
+| 0.2 | FID Rayhan | 17-Nov-26 |  | SYNC_STATUS = 0 (No Sync) for every status change to or from Active (data edit mapping aligned with 4.3, FB-207); AP POLE delete by RPA (XD07, WLM9Q890) instead of SFTP file. |
 
 ## 1. General
 
@@ -216,7 +217,7 @@ flowchart TB
 |  | TOTAL_PCS_DAY | Not changed |
 |  | EFFECTIVE_START_DATE | Not changed |
 | NEW_STATUS | PART_STATUS | Active / Inactive |
-|  | SYNC_STATUS | Not changed (a status change does not need a new Sync) |
+|  | SYNC_STATUS | '0' (No Sync) when the status changes to or from Active (Candidate -> Active, Inactive -> Active, Active -> Inactive); else not changed (decided 30-Oct / 17-Nov) |
 |  | SYNC_DT | Not changed |
 |  | SYNC_MESSAGE | Not changed |
 |  | LAST_SOURCE | Set 'CALC' |
@@ -372,9 +373,9 @@ One batch with two processes run in sequence: process 1 sets the part status fro
 
 - One record per calculated part is inserted into TB_R_PART_DAD_RESULT (also when the status does not change).
 - Only parts whose status changes are updated in TB_M_PART_CANDIDATE (PART_STATUS, LAST_SOURCE = CALC, CHANGED_BY / CHANGED_DT) and get a history record (event CALC, source BATCH).
-- SYNC_STATUS: a part that changes from Active to Inactive gets SYNC_STATUS = 0 (No Sync), so the next [Sync] deletes it in GTOPAS (XD06, RPA, all rows) and in AP POLE (XD07, RPA, WLM9Q890 [Delete]) (decided 30-Oct). Other status changes do not change SYNC_STATUS.
+- SYNC_STATUS: a part whose status changes to or from Active gets SYNC_STATUS = 0 (No Sync): Active -> Inactive is deleted by the next [Sync] in GTOPAS (XD06, RPA, all rows) and in AP POLE (XD07, RPA, WLM9Q890 [Delete]) (decided 30-Oct); Candidate -> Active and Inactive -> Active are added. Other status changes do not change SYNC_STATUS (17-Nov).
 - All-or-nothing: any error rolls back the whole run.
-- Every status change is written to TB_H_PART_CANDIDATE (OLD_STATUS / NEW_STATUS, CREATED_DT = run date-time). Active -> Inactive is read by XD06 / XD07 and the Export Excel of XD01 (sheet "Active to Inactive", 17-Nov).
+- Every status change is written to TB_H_PART_CANDIDATE (FIELD_NAME PART_STATUS, OLD_VALUE / NEW_VALUE, CREATED_DT = run date-time). Active -> Inactive is read by XD06 / XD07 and the Export Excel of XD01 (sheet "Active to Inactive", 17-Nov).
 
 ### 4.4 Process 1 - Retry and Manual Trigger
 

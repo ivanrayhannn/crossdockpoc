@@ -108,8 +108,9 @@ const FUNCS = [
         'History (ikon jam): riwayat perubahan part terbaru di atas (Add / Edit, upload, mapping, hasil Sync, status oleh XD05), disimpan tanpa batas waktu. Tanpa history: msg 12.',
         'Download (Export Excel): 2 sheet – "Part List" (hasil filter, informasi) dan "Upload" (semua part, Upload (A/E) = E) sebagai file dasar upload.',
         'Upload part list (XD02): pakai sheet Upload; Upload (A/E) A = part baru, E = edit. Status Candidate tidak bisa diubah lewat upload, Active ↔ Inactive boleh, tidak ada yang bisa jadi Candidate. All-or-nothing; berhasil msg 11.',
-        'DAD Calculation (XD05 proses 1): scheduler bulanan, auto retry 3×; [Run calculation] aktif hanya setelah gagal 3× (badge "Scheduled run failed 3x"). Part Active yang jadi Inactive otomatis No Sync.',
-        'Setiap Add / Edit / Upload membuat part No Sync, supaya dikirim ulang ke GTOPAS dan AP POLE lewat [Sync].' ] },
+        'DAD Calculation (XD05 proses 1): scheduler bulanan, auto retry 3×; [Run calculation] aktif hanya setelah gagal 3× (badge "Scheduled run failed 3x"). Perubahan status ke / dari Active otomatis No Sync.',
+        'Aturan Sync Status (17-Nov): part jadi No Sync hanya kalau nilai yang dikirim ke GTOPAS / AP POLE berubah: status ke / dari Active, Pcs/Case atau Max Case/Day part Active, destinasi atau Case/Day. Min MAD, Effective Start Date, Candidate ↔ Inactive dan Save tanpa perubahan tidak mengubah Sync Status.',
+        'Status diubah manual Active → Inactive: tanggalnya dicatat di history, part masuk sheet Active to Inactive dan ikut [Sync] berikutnya (dihapus di GTOPAS / AP POLE).' ] },
       { key: 'MP', title: 'Proses normal – Tab Mapping per Destination (D/S)', points: [
         'Buka menu: hanya akun D/S. Default periode ongoing, Sync Status No Sync. Periode ongoing: semua part Active dengan destinasinya (tanpa destinasi: 0 / quota). Periode baru mulai kosong; periode lalu hanya bisa dilihat.',
         'Kolom Total Case/Day (used / quota): used = jumlah Case/Day semua destinasi, quota = Max Case/Day dari Part List. Pcs/Day = Pcs/Case × used; Percentage = used / quota (maksimal 100%).',
@@ -118,7 +119,7 @@ const FUNCS = [
         'Download: sheet "Mapping per Destination" (informasi) dan "Upload" (part Active periode ongoing, satu baris per destinasi; baris kosong Upload (A/E) = A untuk part tanpa mapping).',
         'Upload mapping (XD03): hanya periode ongoing (selain itu msg 23). Disimpan per destinasi; part yang tidak ada di file tidak berubah. All-or-nothing; berhasil msg 24.',
         'Mapping Calculation (XD05 proses 2): scheduler, auto retry 3×; [Run calculation] aktif hanya setelah gagal 3×; selesai msg 29.',
-        '[Sync (n)]: part Active periode ongoing dan part yang baru jadi Inactive dengan status No Sync / Failed, tanpa melihat filter. Part jadi Waiting, XD06 dan XD07 dijalankan (msg 27). Part Candidate tidak pernah di-sync.',
+        '[Sync (n)]: part Active periode ongoing dengan status No Sync / Failed dan part di sheet Active to Inactive (Inactive setelah sync terakhir, oleh XD05 / Save / upload) yang belum Waiting, tanpa melihat filter. Part jadi Waiting, XD06 dan XD07 dijalankan (msg 27). Part Candidate tidak pernah di-sync.',
         'Hasil Sync per part: Success kalau GTOPAS (RPA) dan AP POLE (RPA) berhasil; Failed kalau salah satu gagal (tooltip msg 28, ikut Sync berikutnya); No Sync kalau part diubah saat proses kirim. Setiap hasil masuk history.' ] },
       { key: 'AB', title: 'Abnormality', points: [
         { k: 'Part sudah didaftarkan user lain saat Add', d: 'msg 3', s: 'Simpan dibatalkan', u: 'Tutup modal, cari part' },
@@ -139,7 +140,7 @@ const FUNCS = [
         'Cek file: .xlsx, maksimal 5 MB, 1–5.000 baris, sheet "Upload" ada (sheet lain diabaikan), 7 kolom template dengan nama sama seperti sheet export, dibaca berdasarkan nama kolom: Part Number, Min MAD, Pcs/Case, Max Case/Day, Status, Upload (A/E), Effective Start Date.',
         'Semua baris dicek dulu dan semua error dikumpulkan sekaligus, supaya file cukup diperbaiki satu kali.',
         'Simpan hanya kalau semua baris valid (all-or-nothing). A: part baru sebagai Candidate, Part Name dari Part Master, Total Pcs/Day dihitung. E: nilai yang berubah di-update (termasuk Active ↔ Inactive); baris tanpa perubahan dilewati.',
-        'Part yang tersimpan jadi No Sync; history per field (ADD / EDIT, source UPLOAD); part yang tidak ada di file tidak berubah.',
+        'Part baru No Sync; part yang di-update jadi No Sync hanya kalau nilai yang dikirim berubah (status ke / dari Active, Pcs/Case / Max Case/Day part Active); history per field (ADD / EDIT, source UPLOAD); part yang tidak ada di file tidak berubah.',
         'Result report (.xlsx: Summary, Result, Re-upload, Changes) dibuat untuk berhasil maupun ditolak; upload log COMPLETED / REJECTED.' ] },
       { key: 'R', title: 'Aturan validasi per baris', points: [
         'Kolom Upload (A/E) = A (Add) atau E (Edit).', 'Part No ada di Part Master.', 'A: part belum terdaftar · E: part sudah terdaftar.', 'Part No hanya sekali di file.',
@@ -165,7 +166,7 @@ const FUNCS = [
         'Satu baris per part × destinasi; semua baris satu part = mapping baru part itu. Semua error dikumpulkan sekaligus.',
         'All-or-nothing. Part tanpa perubahan dilewati. Part yang berubah disimpan per destinasi: Case/Day berubah → update (CREATED tetap), destinasi baru → insert, tidak ada lagi di file → delete, sama → tidak disentuh.',
         'Part yang semua barisnya kosong tidak diubah: mapping tidak bisa dihapus total lewat upload (minimal 1 destinasi).',
-        'Part yang berubah jadi No Sync; history per destinasi (MAPPING, source UPLOAD). Result report dan upload log seperti XD02.',
+        'Part yang destinasi / Case/Day-nya berubah jadi No Sync (baris yang sama dengan mapping sekarang tidak mengubah Sync Status); history per destinasi (MAPPING, source UPLOAD). Result report dan upload log seperti XD02.',
         'Contoh: DB D01 = 10, D02 = 5; file D01 = 8, D03 = 7 → D01 update 8, D03 insert, D02 delete, history 3 record.' ] },
       { key: 'R', title: 'Aturan validasi per baris', points: [
         'Part terdaftar dan statusnya Active.', 'Kode destinasi ada di Destination Master.', 'Dest Case/Day bilangan bulat > 0 kalau Destination Code terisi.', 'Satu destinasi hanya sekali per part.',
@@ -209,7 +210,7 @@ const FUNCS = [
         'Semua part (Candidate, Active, Inactive); part dengan Effective Start Date setelah tanggal run dilewati (LOG4).',
         'TOTAL_MAD = jumlah MAD semua buyer / PD / order type N + S dalam range; AVG_MAD = TOTAL_MAD / N (bulan tanpa data dihitung 0).',
         'AVG_MAD ≥ Min MAD → Active; AVG_MAD < Min MAD → Inactive.',
-        'Simpan hasil di TB_R_PART_DAD_RESULT; kalau status berubah, update Part List dan history (CALC). Active → Inactive membuat part No Sync (supaya dihapus di GTOPAS / AP POLE).',
+        'Simpan hasil di TB_R_PART_DAD_RESULT; kalau status berubah, update Part List dan history (CALC). Status ke / dari Active membuat part No Sync (Active → Inactive dihapus, ke Active ditambah di GTOPAS / AP POLE).',
         'Berhasil: commit, lanjut proses 2. Gagal: rollback, proses 2 tidak jalan, auto retry 3×; setelah itu [Run calculation (Part List)] aktif.' ] },
       { key: 'P2', title: 'Proses 2 – mapping destinasi', points: [
         'Jalan setelah proses 1 berhasil (atau retry / [Run calculation (Mapping)] untuk proses 2 saja). Periode baru = bulan run.',
