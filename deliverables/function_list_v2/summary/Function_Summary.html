@@ -225,19 +225,20 @@ const FUNCS = [
         { k: 'Jadwal dan 3 retry gagal', d: 'LOG6 / LOG14', s: '[Run calculation] aktif di XD01', u: 'Cek penyebab, klik [Run calculation]' },
         { k: 'Error sistem lain', d: 'LOG7 / LOG15', s: 'Rollback, FAILED, retry', u: 'Hubungi PIC' } ] } ] },
 
-  { id: 'XD06', name: 'IF Cross Dock Master to GTOPAS', type: 'Batch (RPA)', trigger: '[Sync] di XD01 (RPA saja, tanpa IF, 11-Nov)',
+  { id: 'XD06', name: 'IF Cross Dock Master to GTOPAS', type: 'Batch (RPA)', trigger: '[Sync] di XD01: bot download Excel, isi sheet kerja, lalu GTOPAS (17-Nov)',
     sections: [
       { key: 'N', title: 'Proses normal', points: [
-        'Bot RPA membaca langsung DB NSP: semua part Active dan destinasinya di periode berjalan (TB_M_PART_CANDIDATE + TB_M_PART_CANDIDATE_DEST). Tidak ada file input / interface.',
+        'D/S hanya klik [Sync]. Bot login ke NSP, buka Crossdock Master Setting tab Mapping per Destination (periode berjalan, Sync Status All), [Export Excel], dan membuka file-nya: sheet Mapping per Destination = daftar NSP (part Active + destinasi), sheet Active to Inactive = part yang dihapus. Bot tidak membaca DB NSP (17-Nov).',
         'Bot membuka GTOPAS menu Supply > Master > Crossdock Master (WVJA5204), isi Depot Code 01, [Search], dan membaca semua halaman ([NextPage]).',
         'Bandingkan per P/No. + Destination Code (GTOPAS menampilkan P/No. dengan "-", contoh 52119-BZV60). Destination Code = buyer code + PD code, harus sama persis di NSP dan GTOPAS, tanpa konversi (11-Nov).',
         'Register dengan nilai tetap: Depot Code 01, Maker Code A, Dom/Os 2, TOPAS Order Type 3, Trans Code 2 (11-Nov).',
+        'Bot mengisi sheet kerja GTOPAS Compare di file tersebut: P/No., Destination Code, In NSP, In GTOPAS, Action (Keep / Add / Delete), lalu Result dan pesan GTOPAS setelah tiap aksi.',
         'Ada di NSP dan ada di GTOPAS → skip. Ada di NSP, belum di GTOPAS → didaftarkan. Ada di GTOPAS, tidak ada di NSP → dihapus (MT = DEL). Pesan sukses GTOPAS: MZD34006FEI Registration completed.',
         'Part yang jadi Inactive atau Active tanpa destinasi tidak ada di daftar NSP, jadi semua row-nya di GTOPAS terhapus.',
         'Pcs/Case, Max Case/Day, Effective Start Date dan Case/Day tidak dikirim.',
         'Selesai tanpa error: semua part Waiting GTOPAS = Success; Sync Status gabungan dengan XD07, history SYNC (source RPA), Log jumlah register / skip / delete.' ] },
       { key: 'AB', title: 'Abnormality', points: [
-        { k: 'Error apa pun di bot (login, layar, timeout, pesan error GTOPAS, DB NSP)', d: 'LOG4', s: 'Try-catch: bot berhenti, semua part Waiting Failed (1 gagal, gagal semua); row yang sudah diproses tetap di GTOPAS', u: '[Sync] lagi; run berikutnya membandingkan ulang dan melanjutkan' },
+        { k: 'Error apa pun di bot (login, layar, timeout, pesan error GTOPAS, download NSP / Excel gagal)', d: 'LOG4', s: 'Try-catch: bot berhenti, semua part Waiting Failed (1 gagal, gagal semua); row yang sudah diproses tetap di GTOPAS', u: '[Sync] lagi; run berikutnya membandingkan ulang dan melanjutkan' },
         { k: 'Error sistem lain', d: 'LOG5', s: 'Stop, ERROR, semua part Failed', u: 'Hubungi PIC' } ] },
       { key: 'C', title: 'Catatan terbuka', points: [
         'FB-173 / 174 / 175 (selesai 11-Nov): kode destinasi sama persis tanpa konversi; nilai register A / 2 / 3 / 2; nama function tetap.',
@@ -246,7 +247,7 @@ const FUNCS = [
   { id: 'XD07', name: 'RPA Cross Dock Master to AP POLE', type: 'Batch (RPA)', trigger: '[Sync] di XD01 (RPA di layar AP POLE, 17-Nov)',
     sections: [
       { key: 'N', title: 'Proses normal', points: [
-        'Sumber: file Export Excel XD01 (Part List, Mapping per Destination, sheet Active to Inactive), part yang belum ter-sync (No Sync / Waiting). Tidak pakai file SFTP lagi.',
+        'Sumber: file Export Excel XD01 (Part List, Mapping per Destination, sheet Active to Inactive) yang di-download bot sendiri setelah [Sync] (17-Nov), part Waiting. Bot mengisi sheet kerja AP POLE Compare (aksi dan hasil per part / Buyer-PD). Tidak pakai file SFTP lagi.',
         'Level part, layar WLM9Q890 Cross Dock Kanban Part Master: Effective From awal bulan s/d akhir bulan, isi Part No, [Search]. Part No = PART_NO, Shipping Box Qty = Pcs/Case, Max Shipping Box Qty = Max Case/Day (Max Allowance Qty dihitung AP POLE).',
         'Skenario part: Candidate → Active = Add; Inactive → Active = Add kalau belum ada, Edit kalau sudah ada; Active → Inactive = centang, Delete; tetap Active tapi Pcs/Case / Max Case/Day berubah = Edit.',
         'Level destinasi: centang part, [Maintain Cross Dock] → WLM9Q860 Export Customer Cross Dock Master. Buyer-PD = DEST_CODE (9722D-88), Order Type **, Transport Code 2, Max Shipping Box Qty = Case/Day destinasi.',
@@ -256,7 +257,7 @@ const FUNCS = [
         { k: 'Login / layar AP POLE gagal, timeout, pesan error AP POLE', d: 'LOG4', s: 'Bot berhenti, semua part Waiting Failed', u: '[Sync] lagi; hubungi PIC' },
         { k: 'File sumber tidak terbaca', d: 'LOG4', s: 'Bot berhenti, semua part Waiting Failed', u: 'Download ulang, [Sync] lagi' },
         { k: 'Error sistem lain', d: 'LOG5', s: 'Stop, ERROR', u: 'Hubungi PIC' } ] },
-      { key: 'C', title: 'Catatan terbuka', points: [ 'Operator ID bot di AP POLE (P5 / P6) TBC. Lewat layar atau Common File Upload (LM9Q900 / LM9Q870) TBC. Sumber file Export Excel atau baca DB langsung TBC. Guide: Crossdock_User_Guide_AP_POLE.xlsx.' ] } ] },
+      { key: 'C', title: 'Catatan terbuka', points: [ 'Operator ID bot di AP POLE (P5 / P6) TBC. Lewat layar atau Common File Upload (LM9Q900 / LM9Q870) TBC. Sumber: Export Excel yang di-download bot setelah [Sync] (17-Nov, selesai). Guide: Crossdock_User_Guide_AP_POLE.xlsx.' ] } ] },
 
   { id: 'XD08', name: 'Order Control Information to NSP Batch', type: 'Batch', trigger: 'Scheduler harian 27:30 setelah data GTOPAS tersedia, auto retry 3×',
     sections: [
@@ -1063,7 +1064,7 @@ const MSGS = {
 "kind": "Log",
 "type": "Error",
 "event": "Error (try-catch)",
-"cause": "Login, screen, timeout, GTOPAS error message or NSP database error",
+"cause": "Login, screen, timeout, GTOPAS error message, NSP download or Excel error",
 "message": "RPA to GTOPAS stopped at <STEP> <PART_NO> <DEST_CODE>: <ERROR_DETAIL>. All Waiting parts Failed.",
 "action": "system: Stop the bot. IF_STATUS = 2 for every Waiting part.; user: Click [Sync] again; contact PIC if it persists."
 },

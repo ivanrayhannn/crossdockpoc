@@ -23,13 +23,13 @@ PART = {
     'title': 'AP POLE: Cross Dock Kanban Part Master (part level)',
     'meta': [('Function', 'XD07 RPA Cross Dock Master to AP POLE, part level'),
              ('Screen', 'AP POLE WLM9Q890 Cross Dock Kanban Part Master (menu Master Maintenance)'),
-             ('User', 'RPA bot (the same steps can be done by the D/S team by hand)'),
+             ('User', 'RPA bot, started by [Sync] (the same steps can be done by the D/S team by hand as a fallback)'),
              ('Source data', 'NSP Export Excel Part List (sheet Part List: Part Number, Part Name, Status, Sync Status, Pcs/Case, Max Case/Day) '
                              'and sheet "Active to Inactive" of the Mapping per Destination Export Excel. Refer sheet "0. Source Data (NSP)"'),
              ('Condition', 'Only the parts with Sync Status Waiting (set by [Sync] in NSP) and the parts of sheet "Active to Inactive"')],
     'blocks': [
-        ('step', 'Download the source data from NSP',
-         'Click [Sync] and download the Mapping per Destination and the Part List with [Export Excel] on Crossdock Master Setting: refer sheet '
+        ('step', 'Bot: download the source data from NSP',
+         'After [Sync] by the D/S team, the bot downloads the Mapping per Destination and the Part List with [Export Excel] on Crossdock Master Setting: refer sheet '
          '"0. Source Data (NSP)". Take the parts with Sync Status Waiting. Which scenario applies to which part: refer sheet "3. Scenario Detail".', None),
         ('step', 'Open the menu Master Maintenance',
          'Log in to AP POLE (https://ap-pole.toyota-asia.com/lm9/) and open the menu Master Maintenance.', 'a01_menu_master.png'),
@@ -68,7 +68,7 @@ DEST = {
     'title': 'AP POLE: Export Customer Cross Dock Master (destination level)',
     'meta': [('Function', 'XD07 RPA Cross Dock Master to AP POLE, destination level'),
              ('Screen', 'AP POLE WLM9Q860 Export Customer Cross Dock Master (from WLM9Q890 [Maintain Cross Dock])'),
-             ('User', 'RPA bot (the same steps can be done by the D/S team by hand)'),
+             ('User', 'RPA bot, started by [Sync] (the same steps can be done by the D/S team by hand as a fallback)'),
              ('Source data', 'NSP Export Excel Mapping per Destination (ongoing period, sheet Mapping per Destination: Part Number, Destination Code, '
                              'Dest Case/Day, Max Case/Day (quota), Sync Status, Last Sync Date). Refer sheet "0. Source Data (NSP)"'),
              ('Condition', 'Only the parts with Sync Status Waiting (set by [Sync] in NSP)')],
@@ -162,14 +162,14 @@ def build_sheet(wb, g):
     ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=5)
     ws.row_dimensions[r].height = max(15, 12 * lines(cap, 140) + 3)
     r += 2
-    if any(b[0] == 'step' for b in g['blocks']):
-        for c0, c1, h in ((2, 2, 'Step'), (3, 3, 'Action'), (4, 5, 'Detail')):
-            cell(ws, r, c0, c1, h, F(10, True), HEAD)
-        r += 1
     n = 0
     for b in g['blocks']:
         if b[0] == 'step':
             _, action, detail, img = b
+            if n == 0:  # header of the step table, before the first step
+                for c0, c1, h in ((2, 2, 'Step'), (3, 3, 'Action'), (4, 5, 'Detail')):
+                    cell(ws, r, c0, c1, h, F(10, True), HEAD)
+                r += 1
             n += 1
             cell(ws, r, 2, 2, n, F(10, True), STEP, Alignment(horizontal='center', vertical='top'))
             cell(ws, r, 3, 3, action, F(10, True), STEP)

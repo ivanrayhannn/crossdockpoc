@@ -12,13 +12,14 @@
 |---|---|---|---|---|
 | 0.1 | FID Rayhan | 18-Oct-26 |  | Initial Draft |
 | 0.2 | FID Rayhan | 17-Nov-26 |  | RPA on the AP POLE screens WLM9Q890 / WLM9Q860 instead of the SFTP interface file; source = XD01 Export Excel; part and destination scenarios; LAST_SYNC_DT (from Crossdock_ap_pole_guide.xlsx). |
+| 0.3 | FID Rayhan | 17-Nov-26 |  | [Sync] runs the RPA from the download: the bot downloads the XD01 Export Excel itself and fills the work sheet AP POLE Compare (source open point closed). |
 
 ## 1. General
 
 ### Objective
 
 - To make the cross dock master of AP POLE equal to NSP by an RPA process on the AP POLE web screens (decided 17-Nov, replaces the SFTP interface file): part level on WLM9Q890 Cross Dock Kanban Part Master, destination level on WLM9Q860 Export Customer Cross Dock Master.
-- Source data: the Export Excel files of XD01 (Part List: Status, Part Name, Pcs/Case, Max Case/Day; Mapping per Destination: Period, Destination Code, Dest Case/Day; sheet Active to Inactive), only the parts not synced yet (Sync Status No Sync / Waiting).
+- Source data: the Export Excel files of XD01, downloaded by the bot itself after [Sync] (decided 17-Nov): Part List (Status, Part Name, Pcs/Case, Max Case/Day), Mapping per Destination of the ongoing period (Destination Code, Dest Case/Day, Last Sync Date) and sheet Active to Inactive; only the parts with Sync Status Waiting.
 - Part level: a part that became Active is added (or edited when AP POLE still has it), an Active part with a new Pcs/Case or Max Case/Day is edited, a part that went Active -> Inactive is deleted. Destination level: destinations are added, deleted or edited so that AP POLE has the same Buyer-PD and Max Shipping Box Qty as NSP.
 - Step by step guide with the AP POLE screens: deliverables/user_guide/Crossdock_User_Guide_AP_POLE.xlsx.
 
@@ -45,8 +46,8 @@ flowchart TB
 
 | Name | Type | Description |
 |---|---|---|
-| XD01 Export Excel: Part List | File | Sheet Part List: Part Number, Part Name, Pcs/Case, Max Case/Day, Status, Sync Status |
-| XD01 Export Excel: Mapping per Destination | File | Sheet Mapping per Destination (ongoing period): Part Number, Destination Code, Dest Case/Day, Sync Status; sheet Active to Inactive: parts to delete |
+| XD01 Export Excel: Part List | File | Downloaded by the bot after [Sync]. Sheet Part List: Part Number, Part Name, Pcs/Case, Max Case/Day, Status, Sync Status |
+| XD01 Export Excel: Mapping per Destination | File | Downloaded by the bot after [Sync]. Sheet Mapping per Destination (ongoing period): Part Number, Destination Code, Dest Case/Day, Sync Status; sheet Active to Inactive: parts to delete |
 | TB_R_CROSSDOCK_IF_RESULT | DB | Parts Waiting for 'APPOLE' (IF_STATUS = '3'), set by [Sync] on XD01; LAST_SYNC_DT |
 | AP POLE WLM9Q890 / WLM9Q860 | System | Current part and destination rows of AP POLE, read by the bot (search per part) |
 
@@ -127,7 +128,7 @@ flowchart TB
 ```
 
 1. [Sync] on XD01 sets the parts to Waiting (SYNC_STATUS = '3', IF_STATUS = '3' for 'GTOPAS' and 'APPOLE') and starts the RPA bot. Write LOG1. The whole run is inside one try-catch.
-2. The bot reads the source data: the XD01 Export Excel of Part List and of Mapping per Destination (ongoing period).
+2. The bot logs in to NSP and downloads the XD01 Export Excel: Mapping per Destination (ongoing period, Sync Status = Waiting) and Part List; it reads them and sheet Active to Inactive. It adds the work sheet AP POLE Compare to the file (part / Buyer-PD, NSP value, AP POLE value, Action Add / Edit / Delete / Keep, Result, AP POLE message).
   - Parts to process = Sync Status No Sync / Waiting (not synced since the last change). Part level from Part List (Status, Part Name, Pcs/Case, Max Case/Day); destination level from Mapping per Destination (Destination Code, Dest Case/Day); parts to delete from sheet Active to Inactive.
 3. AP POLE menu Master Maintenance > Cross Dock Kanban Part Master (WLM9Q890): Effective From = first day, To = last day of the month, Part No. = part of the source, [Search].
 4. Part level (4.2): add, edit or delete the part on WLM9Q890.
@@ -146,7 +147,7 @@ flowchart TB
 ## 3. Data edit mapping
 
 #### 1. Insert / Update / Delete AP POLE WLM9Q890 Cross Dock Kanban Part Master (by RPA) – Part level, scenarios of 4.2 (not in NSP scope; done on the screen)
-- Source: XD01 Export Excel Part List (read by the bot) (keys: Sync Status = No Sync / Waiting)
+- Source: XD01 Export Excel Part List (downloaded by the bot) (keys: Sync Status = No Sync / Waiting)
 - Destination keys: Part No. + Effective Month / Year = Part of the source, current month
 
 | Source field | Destination field | Description |
@@ -160,7 +161,7 @@ flowchart TB
 | - | Max Allowance Qty | Calculated by AP POLE |
 
 #### 2. Insert / Update / Delete AP POLE WLM9Q860 Export Customer Cross Dock Master (by RPA) – Destination level, scenarios of 4.3 (not in NSP scope; done on the screen)
-- Source: XD01 Export Excel Mapping per Destination (read by the bot) (keys: Period = Ongoing period)
+- Source: XD01 Export Excel Mapping per Destination (downloaded by the bot) (keys: Period = Ongoing period)
 - Destination keys: Part No. + Buyer-PD = Destination of the part
 
 | Source field | Destination field | Description |
@@ -247,9 +248,9 @@ flowchart TB
 ### 4.1 Business Process
 
 - The Procurement team maintains the Part List and the D/S team the Mapping per Destination on XD01. Every change sets the part to No Sync.
-- The D/S team clicks [Sync] when the changes are complete; the RPA bot makes AP POLE equal to NSP (XD07) and GTOPAS (XD06).
+- The D/S team clicks [Sync] when the changes are complete; that is the only manual step. The RPA bot downloads the Excel, fills the work sheet and makes AP POLE equal to NSP (XD07) and GTOPAS (XD06).
 - RPA on the AP POLE web screens (decided 17-Nov): the SFTP interface file is no longer used. Part level on WLM9Q890, destination level on WLM9Q860 ([Maintain Cross Dock] of the ticked part).
-- Source data: the XD01 Export Excel files (Part List, Mapping per Destination, sheet Active to Inactive), parts not synced yet. Steps with the AP POLE screens: deliverables/user_guide/Crossdock_User_Guide_AP_POLE.xlsx.
+- Source data: the XD01 Export Excel files (Part List, Mapping per Destination, sheet Active to Inactive), downloaded by the bot after [Sync]; parts with Sync Status Waiting. Steps with the screens: deliverables/user_guide/Crossdock_User_Guide_AP_POLE.xlsx.
 
 ### 4.2 Part Level Scenarios (WLM9Q890 Cross Dock Kanban Part Master)
 
@@ -290,7 +291,7 @@ flowchart TB
 
 - Operator ID of the bot on AP POLE (P5, P6 seen on the screen) - TBC.
 - Screen steps (4.2 / 4.3) or Common File Upload (4.5) - TBC.
-- Source: XD01 Export Excel downloaded by the D/S team or a direct read of the NSP database (as XD06) - TBC.
+- Source: the XD01 Export Excel, downloaded by the bot after [Sync] (decided 17-Nov, closed).
 - Effective Month of a new part: next month (auto by AP POLE); a change for the current month - TBC with the AP POLE team.
 
 ## 5. Logging messages

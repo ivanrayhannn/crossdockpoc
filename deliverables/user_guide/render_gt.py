@@ -85,6 +85,18 @@ for p in order:
         comp.append([p, k[1], 'Y' if k in nsp else 'N (Inactive)' if p == 'PART-023' else 'N', 'Y' if k in gt else 'N', a])
 render('x_gt_compare', CH, comp, ['Part Number', 'Destination Code', 'Action'], lambda r: ACT.get(r[4]), {'In NSP': 18, 'Action': 10})
 
+# the same rows as the bot writes them in the work sheet GTOPAS Compare of the downloaded file
+WH = ['P/No.', 'Destination Code', 'In NSP', 'In GTOPAS', 'Action', 'Result', 'GTOPAS message', 'Done date-time']
+work, t = [], 0
+for r in comp:
+    if r[4] == 'Nothing':
+        continue
+    t += 1
+    msg = '' if r[4] == 'Keep' else 'MZD34006FEI: Registration completed.'
+    work.append([r[0], r[1], r[2][0], r[3], r[4], 'OK', msg, f'17-Nov-2026 08:{t:02d}'])
+render('x_gt_work', WH, work, ['Action', 'Result'], lambda r: ACT.get(r[4]),
+       {'GTOPAS message': 36, 'Done date-time': 18, 'Destination Code': 17})
+
 # GTOPAS list after the run
 after = [g(*k) for k in sorted(nsp)]
 for i, r in enumerate(after, 1):
