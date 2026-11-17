@@ -2,7 +2,7 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { CUR_PER, PAST_ROWS, DOTS, MASTER_DESTS, PERIODS } from '../../../data/seed';
 import { fmt, num, syncBadge } from '../../../lib/format';
 import type { DestAllocation, Part } from '../../../types';
-import { exportMappingXlsx, inactiveSinceSync } from '../mappingExport';
+import { exportMappingXlsx } from '../mappingExport';
 import { CalcRunBar } from './CalcRunBar';
 import type { CrossdockState } from '../useCrossdockState';
 
@@ -54,11 +54,11 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
   // ...and only in the ongoing period; past periods are read-only.
   // [Sync] hands every Active part of the ongoing period that is No Sync (or Failed, to retry) to the RPA,
   // whatever the filter shows; they wait as "Waiting" until the RPA writes back Success or Failed.
-  // ...plus the parts that went Active -> Inactive after their last sync (to delete in GTOPAS / AP POLE), not Waiting yet (FB-204).
-  const inactiveToSync = inactiveSinceSync(parts).filter((p) => p.syncStatus !== 3);
-  const syncable = parts
-    .filter((p) => p.st === 'Active' && p.per === CUR_PER && (p.syncStatus === 0 || p.syncStatus === 2))
-    .concat(inactiveToSync);
+  // Definition (17-Nov): every part with status Active (ongoing period) or Inactive whose Sync Status is No Sync or Failed.
+  // Inactive parts are deleted in GTOPAS / AP POLE; Candidate parts are never synced.
+  const syncable = parts.filter(
+    (p) => ((p.st === 'Active' && p.per === CUR_PER) || p.st === 'Inactive') && (p.syncStatus === 0 || p.syncStatus === 2),
+  );
   const syncableCount = syncable.length;
 
   const exportExcel = () => {

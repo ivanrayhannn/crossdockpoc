@@ -14,8 +14,8 @@ SOURCE = {
         ('step', 'D/S: open Crossdock Master Setting, tab Mapping per Destination',
          'In the left menu click Master > Crossdock Master Setting. With the D/S account the screen opens on the tab Mapping per Destination.', 'n1_map_menu.png'),
         ('step', 'D/S: search the ongoing period and click [Sync]',
-         'Calculation period = the ongoing period (e.g. Sep 2026 (ongoing)), Sync Status = All, click [Search]. Click [Sync (n)]: every Active part '
-         'of the ongoing period with Sync Status No Sync or Failed becomes Waiting. n = number of parts that will be sent to GTOPAS and AP POLE. '
+         'Calculation period = the ongoing period (e.g. Sep 2026 (ongoing)), Sync Status = All, click [Search]. Click [Sync (n)]: every part with '
+         'status Active (ongoing period) or Inactive and Sync Status No Sync or Failed becomes Waiting (Candidate never). n = number of parts that will be sent to GTOPAS and AP POLE. '
          'The button is disabled when there is nothing to sync. [Sync] starts the RPA bot: the next steps are done by the bot.', 'n2_map_sync.png'),
         ('step', 'Bot: search the parts to process (Sync Status = Waiting)',
          'Sync Status = Waiting, click [Search]. These are the parts the RPA processes in AP POLE. Column Last Sync: "Never" = the part was never '

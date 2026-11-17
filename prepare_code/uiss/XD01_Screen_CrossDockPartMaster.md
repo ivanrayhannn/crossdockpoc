@@ -12,6 +12,7 @@
 |---|---|---|---|---|
 | 0.1 | FID Rayhan | 18-Oct-26 |  | Initial Draft |
 | 0.2 | FID Rayhan | 17-Nov-26 |  | Sync Status rule: No Sync only when a value sent to GTOPAS / AP POLE changes; a manual Active -> Inactive is listed in Active to Inactive and taken by [Sync] (FB-204 / FB-205). |
+| 0.3 | FID Rayhan | 17-Nov-26 |  | [Sync] takes every part with status Active (ongoing period) or Inactive whose Sync Status is No Sync or Failed, whatever the filter shows (Candidate never). |
 
 ## 1. General
 
@@ -86,7 +87,7 @@
 | Validate file | Save button of the upload: validate the uploaded file and save it (all-or-nothing), then show the success popup. |
 | OK | Close the success popup. |
 | Run calculation (Mapping) | Start process 2 (mapping destination) of the XD05 DAD Volume Calculation batch manually. Enabled only when the scheduled run and its 3 auto retries have failed. |
-| Sync | Start XD06 (GTOPAS) and XD07 (AP POLE) for every Active part of the ongoing period, and every part that became Inactive, with Sync Status No Sync or Failed, whatever the filter shows; the parts become Waiting. The label shows the number of parts, e.g. Sync (17). |
+| Sync | Start XD06 (GTOPAS) and XD07 (AP POLE) for every part with status Active (ongoing period) or Inactive whose Sync Status is No Sync or Failed, whatever the filter shows; the parts become Waiting. The label shows the number of parts, e.g. Sync (21). |
 | Upload Excel (Mapping) | Open the "Upload Excel - destination mapping" modal. Enabled only when the ongoing calculation period is selected. |
 | Export Excel (Mapping) | Download the mapping as .xlsx: sheet "Mapping per Destination" (active filter) and sheet "Upload" (base file for the upload). |
 | Expand (arrow) | Open / close the Destination Mapping panel of the part row. |
@@ -126,7 +127,7 @@
 - 1) Prev is disabled on the first page and Next on the last page.
 - 2) A user logged in with a read-only account sees [View] instead of [Edit] and cannot use Add Part / Upload Excel / Save. TBD: which accounts are read-only is not defined yet.
 - 3) Run calculation is shown as D (disabled) by default; it is enabled only when the scheduled DAD Volume Calculation has failed 3 times (auto retry).
-- 4) Sync is enabled only when at least one Active part of the ongoing period, or a part that became Inactive, is No Sync or Failed (not limited to the listed rows).
+- 4) Sync is enabled only when at least one part with status Active (ongoing period) or Inactive is No Sync or Failed (not limited to the listed rows).
 - 5) Split evenly is shown only in edit mode when the part has more than one destination row.
 - 7) Prev is disabled on the first page and Next on the last page.
 - 8) Run calculation is enabled only when the scheduled XD05 DAD Volume Calculation (process 2) has failed 3 times (auto retry); otherwise disabled with message no. 30 as tooltip.
@@ -464,7 +465,7 @@ flowchart TB
 | 68 | Last mapping calculation |  |  | Datetime |  | O | Label | Left |  |  | DD-Mon-YYYY HH:MM |  | Date-time of the last successful run of process 2 (mapping destination) of the XD05 DAD Volume Calculation batch (one date per batch run). |
 | 69 | Failed badge |  |  | Varchar |  | O | Label | Left |  |  |  |  | 'Scheduled run failed 3x'; shown when the scheduled run and its 3 auto retries have failed. |
 | 70 | Run calculation (Mapping) |  |  |  |  | I | Button | Center |  |  |  |  | Manual trigger of process 2 (mapping destination) of the XD05 DAD Volume Calculation batch. Refer Operation Description 5.19 and Screen Mode remark 8). |
-| 71 | Sync (n) |  |  |  |  | I | Button | Center |  |  |  |  | n = Active parts of the ongoing period and parts that became Inactive, with Sync Status No Sync or Failed, whatever the filter. Disabled when n = 0. Refer Operation Description 5.16. |
+| 71 | Sync (n) |  |  |  |  | I | Button | Center |  |  |  |  | n = parts with status Active (ongoing period) or Inactive and Sync Status No Sync or Failed, whatever the filter. Disabled when n = 0. Refer Operation Description 5.16. |
 | 72 | Upload Excel (Mapping) |  |  |  |  | I | Button | Center |  |  |  |  | Disabled for a past period or All periods (tooltip message no. 23). Refer Operation Description 5.17. |
 | 73 | Export Excel (Mapping) |  |  |  |  | I | Button | Center |  |  |  |  | Refer Operation Description 5.18. |
 | 74 | Period | TB_M_PART_CANDIDATE_DEST | PERIOD | Char | 6 | O | Label | Left |  |  | Mon YYYY |  | Calculation period of the row. Stored as YYYYMM (e.g. 202609), displayed as Mon YYYY. |
@@ -637,7 +638,7 @@ flowchart TB
 |  | CREATED_DT | Server system date and time |
 
 #### 9. Update TB_M_PART_CANDIDATE – [Sync]
-- Source: TB_M_PART_CANDIDATE (keys: PART_STATUS = 'Active' (ongoing period), or Inactive and listed in Active to Inactive, SYNC_STATUS = '0' or '2' (Active); not '3' (Inactive listed))
+- Source: TB_M_PART_CANDIDATE (keys: PART_STATUS = 'Active' (ongoing period) or 'Inactive', SYNC_STATUS = '0' (No Sync) or '2' (Failed))
 - Destination keys: PART_NO = Each part to synchronise
 
 | Source field | Destination field | Description |
@@ -852,7 +853,7 @@ c. A part without destination shows message no. 19.
 ### 5.16 Sync
 
 - a. User clicks [Sync (n)] (on demand).
-  1. Select every Active part of the ongoing period, and every part that became Inactive (Active -> Inactive by XD05, a Save or an upload, listed in Active to Inactive), with Sync Status No Sync or Failed, whatever the search criteria show (n of the button). Inactive parts: all their rows are deleted in GTOPAS (XD06) and AP POLE (XD07). Candidate parts are never synchronised.
+  1. Select every part with status Active (ongoing period) or Inactive whose Sync Status is No Sync or Failed, whatever the filter shows (n of the button). Active parts: their part and destinations are added / changed in GTOPAS (XD06) and AP POLE (XD07). Inactive parts: all their rows are deleted there (a part that was never synced has nothing to delete). Candidate parts are never synchronised.
   2. Set SYNC_STATUS = 3 (Waiting) for these parts in TB_M_PART_CANDIDATE, set one row per part and target system (GTOPAS, AP POLE) to IF_STATUS = 3 (Waiting) in TB_R_CROSSDOCK_IF_RESULT, and start XD06 and XD07. Display message no. 27.
   3. With the default filter No Sync the parts leave the list; select Sync Status = Waiting or All to follow them.
 
