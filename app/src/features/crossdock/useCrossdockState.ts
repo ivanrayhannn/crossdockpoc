@@ -3,6 +3,7 @@ import { blankPart, cloneSeedParts, CUR_PER } from '../../data/seed';
 import { nowStamp, num } from '../../lib/format';
 import type { DestAllocation, ModalKind, Part, PartQuery, TabView, UserRole } from '../../types';
 import type { CalcRun } from './components/CalcRunBar';
+import { destsChanged, syncAfterSave } from './syncRule';
 
 const DEFAULT_Q: PartQuery = {
   part: '',
@@ -118,12 +119,13 @@ export function useCrossdockState() {
   const saveDest = useCallback(() => {
     setParts((prevParts) => {
       if (!editDest || !draftDests) return prevParts;
-      return prevParts.map((p) =>
-        p.p === editDest
-          // A mapping edit invalidates whatever was last synced, so it drops back to No Sync.
-          ? { ...p, dests: draftDests.map((d) => ({ ...d, al: num(d.al) })), by: EDITOR, dt: nowStamp(), syncStatus: 0 }
-          : p,
-      );
+      return prevParts.map((p) => {
+        if (p.p !== editDest) return p;
+        const dests = draftDests.map((d) => ({ ...d, al: num(d.al) }));
+        // Only a real change of a destination or its Case/Day has to be synced again (FB-205).
+        if (!destsChanged(p.dests, dests)) return p;
+        return { ...p, dests, by: EDITOR, dt: nowStamp(), syncStatus: 0 as const };
+      });
     });
     setEditDest(null);
     setDraftDests(null);
@@ -144,8 +146,10 @@ export function useCrossdockState() {
   /** Commits the in-progress form to the parts list and closes the modal. */
   const commit = useCallback(() => {
     if (!form) return;
-    // Any change at the part-number level invalidates the current mapping sync.
-    const f: Part = { ...form, pc: num(form.pc), mc: num(form.mc), minMad: num(form.minMad), by: EDITOR, dt: nowStamp(), syncStatus: 0 };
+    const prev = editId ? parts.find((p) => p.p === editId) : undefined;
+    const saved: Part = { ...form, pc: num(form.pc), mc: num(form.mc), minMad: num(form.minMad) };
+    // Sync Status follows syncRule: only Status changes to / from Active and Pcs/Case / Max Case/Day of an Active part need a new Sync.
+    const f: Part = { ...saved, by: EDITOR, dt: nowStamp(), ...syncAfterSave(prev, saved) };
     // The saved part goes to the top of the list, whether it was added or edited.
     setParts((prevParts) => [f, ...prevParts.filter((p) => p.p !== f.p)]);
     // Show it right away: drop filters that could hide it and sort newest first.
@@ -156,7 +160,7 @@ export function useCrossdockState() {
     setModal(null);
     setForm(null);
     setEditId(null);
-  }, [form, editId]);
+  }, [form, editId, parts]);
 
   const dismissNotice = useCallback(() => setNotice(null), []);
 
