@@ -147,11 +147,11 @@
 
 | ID | Event | Cause | Type | Message | Action |
 |---|---|---|---|---|---|
-| LOG1 | Batch start | [Sync] on XD01 | Info | IF cross dock master to AP POLE started. <n> part(s). | system: Write the log.; user: - |
-| LOG2 | Batch end | Batch finishes | Info | IF cross dock master to AP POLE ended. File <FILE_NAME>, parts <n>, records <r>, status <STATUS>. | system: Write the log.; user: - |
-| LOG3 | Create file | Interface file cannot be created | Error | Cannot create the interface file to AP POLE: <ERROR_DETAIL>. | system: All parts of the run IF_STATUS = 2. Stop.; user: Click [Sync] again; contact PIC if it persists. |
-| LOG4 | SFTP transfer | AP POLE SFTP not available / transfer fails after retry | Error | SFTP transfer of <FILE_NAME> to AP POLE failed: <ERROR_DETAIL>. | system: All parts of the file IF_STATUS = 2. Keep the file in the outbound folder.; user: Click [Sync] again later; contact PIC if it persists. |
-| LOG5 | Unexpected error | Any other system error | Critical | Unexpected error: <ERROR_DETAIL>. | system: Stop. STATUS = ERROR.; user: User contact PIC |
+| LOG1 | Batch start | [Sync] on XD01 | Info | RPA cross dock master to AP POLE started. <n> Waiting part(s). | system: Write the log.; user: - |
+| LOG2 | Batch end | Bot finishes | Info | RPA cross dock master to AP POLE ended. Parts added <a>, edited <e>, deleted <d>; destinations added <da>, deleted <dd>, edited <de>; status <STATUS>. | system: Write the log.; user: - |
+| LOG3 | Change done | Part or destination changed on the screen | Info | <ADD / EDIT / DELETE> <PART_NO> <BUYER_PD>: <AP POLE message>. | system: Write the log.; user: - |
+| LOG4 | Error (try-catch) | Login, screen, timeout, AP POLE error message or source file error | Error | RPA to AP POLE stopped at <STEP> <PART_NO> <BUYER_PD>: <ERROR_DETAIL>. All Waiting parts Failed. | system: Stop the bot. IF_STATUS = 2 for every Waiting part.; user: Click [Sync] again; contact PIC if it persists. |
+| LOG5 | Unexpected error | Any other system error | Critical | Unexpected error: <ERROR_DETAIL>. | system: Stop. STATUS = ERROR. All Waiting parts Failed.; user: User contact PIC |
 
 ## XD08 – Order Control Information to NSP Batch
 

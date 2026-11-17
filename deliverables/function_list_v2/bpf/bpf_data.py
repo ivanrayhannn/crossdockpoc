@@ -8,7 +8,7 @@ LANES = {
     'PR': 'Procurement',
     'DS': 'D/S Team',
     'SP': 'Supplier',
-    'AP': 'AP POLE (via SFTP)',
+    'AP': 'AP POLE (via RPA)',
 }
 
 # step: id, lane, band, slot, fn, title, read, write, ab (abnormality ids), next (ids)
@@ -45,13 +45,13 @@ FLOWS = [
                  write=['TB_M_PART_CANDIDATE_DEST', 'TB_M_PART_CANDIDATE (SYNC_STATUS No Sync)', 'TB_H_PART_CANDIDATE'], ab=['AB02'], next=['M10']),
             dict(id='M10', lane='DS', band='B4', slot=1, fn='XD01', title='Sync Active and newly Inactive parts with status No Sync & Failed',
                  read=['TB_M_PART_CANDIDATE'], write=[], ab=[], next=['M11']),
-            dict(id='M11', lane='NB', band='B4', slot=2, fn='XD06 · XD07', title='Send crossdock master: GTOPAS by RPA, AP POLE file by SFTP (Inactive: delete)',
+            dict(id='M11', lane='NB', band='B4', slot=2, fn='XD06 · XD07', title='Send crossdock master: GTOPAS by RPA, AP POLE by RPA (Inactive: delete)',
                  read=['TB_M_PART_CANDIDATE', 'TB_M_PART_CANDIDATE_DEST'],
                  write=['TB_R_CROSSDOCK_IF_RESULT (dummy)', 'TB_M_PART_CANDIDATE (SYNC_STATUS)', 'TB_H_PART_CANDIDATE', 'Log'], ab=['AB06'], next=['M12', 'M13']),
             dict(id='M12', lane='GT', band='B5', slot=0, fn='RPA', title='RPA: register / delete part + destination in Crossdock Master (Supply > Master); Inactive or no destination: delete all rows',
                  read=['RPA input from NSP'], write=['GTOPAS Crossdock Master'], ab=[], next=[]),
-            dict(id='M13', lane='AP', band='B5', slot=0, fn='', title='TMMIN SFTP → TMA SFTP → receive IF by TMA AP POLE Crossdock Kanban Part Master: new part add, existing edit, Inactive delete',
-                 read=['Interface file (SFTP)'], write=['AP POLE Crossdock Kanban Part Master / Crossdock Export Part Master'], ab=[], next=[]),
+            dict(id='M13', lane='AP', band='B5', slot=0, fn='', title='RPA on AP POLE: Cross Dock Kanban Part Master (WLM9Q890) add / edit / delete part; Export Customer Cross Dock Master (WLM9Q860) add / edit / delete destination',
+                 read=['XD01 Export Excel (Part List, Mapping, Active to Inactive)'], write=['AP POLE WLM9Q890 / WLM9Q860'], ab=[], next=[]),
         ],
     },
     {
@@ -163,7 +163,7 @@ ABNORMALITY = [
      'Check the cause; Procurement clicks [Run calculation (Part List)] (process 1 + 2), D/S clicks [Run calculation (Mapping)] (process 2).'),
     ('AB05', 'F1', 'M7', 'XD05 P2', 'Destination code not in TB_M_H0125_DESTINATION', 'Log FAILED (LOG11)',
      'Roll back process 2.', 'System admin / D/S Team', 'Register the destination (via GTOPAS → XD13), then run again.'),
-    ('AB06', 'F1', 'M11', 'XD06 / XD07', 'GTOPAS RPA bot stops on any error (try-catch: one fails, all fail), interface file cannot be created, or AP POLE SFTP not available after retry', 'IF_STATUS 2, SYNC_STATUS Failed, Log',
+    ('AB06', 'F1', 'M11', 'XD06 / XD07', 'GTOPAS RPA bot stops on any error (try-catch: one fails, all fail), or the AP POLE RPA bot stops on any error (try-catch)', 'IF_STATUS 2, SYNC_STATUS Failed, Log',
      'Keep the AP POLE file in the outbound folder; GTOPAS rows done before the error stay (next run compares again); parts stay Failed.', 'D/S Team', 'Click [Sync] again later (Failed parts are counted in n); contact PIC if it persists.'),
     ('AB07', 'F2 / F4', 'D3 / C3', 'XD08', 'DB Surrounding cannot be read or the upsert fails (after 3 retries)', 'Log FAILED',
      'Roll back; watermark INTF_UPDATE_DT not changed, rows are taken again by the next run.', 'System admin',
@@ -209,7 +209,7 @@ USER_PROCESS = [
     ('U5', 'After the monthly run', 'DS', 'Adjust the split in edit mode, or upload the mapping Excel.',
      'Mapping → [Edit] / [Upload Excel] (XD03)', 'mapping/c_07_edit_mode.png', 'TB_M_PART_CANDIDATE_DEST (per destination), SYNC_STATUS No Sync, history', 'Over allocation or missing destination: message; AB02 for the upload.', 'M9'),
     ('U6', 'After the monthly run', 'DS', 'Click [Sync] to send the crossdock master to GTOPAS and AP POLE.',
-     'Mapping → [Sync (n)]', 'mapping/c_12_before_sync.png', 'XD06 (RPA) / XD07 (SFTP); SYNC_STATUS Success / Failed', 'AB06: parts Failed, click [Sync] again later.', 'M10'),
+     'Mapping → [Sync (n)]', 'mapping/c_12_before_sync.png', 'XD06 (RPA) / XD07 (RPA); SYNC_STATUS Success / Failed', 'AB06: parts Failed, click [Sync] again later.', 'M10'),
     ('U7', 'Day D · working hours', 'DS', 'Check the destination detail of the delivery plan; hold a destination when needed.',
      'XD10 ASN Crossdock Creation (D/S view)', 'asn_crossdock/c_04_ds_hold.png', 'TB_R_H0253_ORDER_CONTROL_PRE.HOLD_FLAG', '-', 'H2'),
     ('U7a', 'Later · working hours', 'DS', 'Release the held destination (HOLD_FLAG N). No manual step after that: its lines come back in pre-mapping and unit calculation on the next Search.',

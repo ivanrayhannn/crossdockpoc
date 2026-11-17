@@ -245,7 +245,7 @@ New table: customer order lines (pcs) of a supplier case held by the D/S team wi
 #### TB_R_CROSSDOCK_IF_RESULT (transaction, proposed)
 Used by: XD01, XD06, XD07
 
-Dummy table (proposed): send status of the cross dock master per part and target system (XD06 GTOPAS, XD07 AP POLE). The real output is the interface data sent to the target (AP POLE: file by SFTP; GTOPAS: RPA). The overall Sync Status of the part stays in TB_M_PART_CANDIDATE.
+Dummy table (proposed): send status of the cross dock master per part and target system (XD06 GTOPAS, XD07 AP POLE). The real output is the change made by the RPA on the target screens (GTOPAS WVJA5204, AP POLE WLM9Q890 / WLM9Q860). The overall Sync Status of the part stays in TB_M_PART_CANDIDATE.
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
@@ -255,7 +255,7 @@ Dummy table (proposed): send status of the cross dock master per part and target
 | IF_STATUS | VARCHAR(1) |  | N | '3' Waiting / '1' Success / '2' Failed |
 | IF_DT | DATETIME |  | Y | Date-time of the result of the target system |
 | LAST_SYNC_DT | DATETIME |  | Y | Date-time of the last Success of the part for this target (kept when a later run is Failed); NULL when never synced. A part is listed in "Active to Inactive" when it went Inactive after this date (17-Nov). |
-| IF_FILE_NAME | VARCHAR(100) |  | Y | Name of the interface file (AP POLE) or RPA run ID (GTOPAS) |
+| IF_FILE_NAME | VARCHAR(100) |  | Y | RPA run ID (GTOPAS and AP POLE) |
 | IF_MESSAGE | VARCHAR(500) |  | Y | Reason when Failed; blank when Success |
 | CREATED_BY | VARCHAR(TBD) |  | N | User who created the record |
 | CREATED_DT | DATETIME |  | N | Created date and time |
