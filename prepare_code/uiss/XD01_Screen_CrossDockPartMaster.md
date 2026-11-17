@@ -890,6 +890,11 @@ d. User clicks [Run calculation]: start the batch. When it completes, update 'La
 
 Sync Status is kept per part in TB_M_PART_CANDIDATE because a part is synced as one unit (GTOPAS: destination list; AP POLE: Pcs/Case, Max Case/Day, destinations); the result per target system is in TB_R_CROSSDOCK_IF_RESULT. Every mapping change and every Sync result is recorded in TB_H_PART_CANDIDATE (with the period).
 
+### Last Sync and Active to Inactive (17-Nov)
+
+- Mapping per Destination: new column Last Sync after Sync Status = LAST_SYNC_DT of TB_R_CROSSDOCK_IF_RESULT (latest of GTOPAS / AP POLE); "Never" when the part was never synced.
+- Export Excel of Mapping per Destination: sheet 1 gets column Last Sync Date; new sheet 3 "Active to Inactive" (Part Number, Part Name, Destination Code, Status Before, Status Now, Status Changed Date, Last Sync Date, Action "Delete in GTOPAS / AP POLE"), one row per destination, every part of the master whatever the filter. Active to Inactive (17-Nov): a part whose status went from Active to Inactive (XD05, TB_H_PART_CANDIDATE OLD_STATUS Active, NEW_STATUS Inactive) after LAST_SYNC_DT of TB_R_CROSSDOCK_IF_RESULT is still Active in the target system: the RPA deletes its part + destination rows there. A part never synced (LAST_SYNC_DT NULL) is not listed. The list is also sheet "Active to Inactive" of the Mapping per Destination Export Excel (XD01).
+
 ## 7. Display messages
 
 | ID | Event | Cause | Type | Message | Action |
@@ -981,6 +986,7 @@ Dummy table (proposed): send status of the cross dock master per part and target
 | PERIOD | CHAR(6) |  | N | Calculation period of the mapping sent (YYYYMM) |
 | IF_STATUS | VARCHAR(1) |  | N | '3' Waiting / '1' Success / '2' Failed |
 | IF_DT | DATETIME |  | Y | Date-time of the result of the target system |
+| LAST_SYNC_DT | DATETIME |  | Y | Date-time of the last Success of the part for this target (kept when a later run is Failed); NULL when never synced. A part is listed in "Active to Inactive" when it went Inactive after this date (17-Nov). |
 | IF_FILE_NAME | VARCHAR(100) |  | Y | Name of the interface file (AP POLE) or RPA run ID (GTOPAS) |
 | IF_MESSAGE | VARCHAR(500) |  | Y | Reason when Failed; blank when Success |
 | CREATED_BY | VARCHAR(TBD) |  | N | User who created the record |

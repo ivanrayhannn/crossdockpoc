@@ -214,6 +214,23 @@ function generateBulkParts(): SeedPart[] {
 
 const ALL_SEED: SeedPart[] = [...SEED, ...generateBulkParts()];
 
+/** Monthly run of XD05 that turned some Active parts Inactive (same as "Last DAD calculation" on the Part List). */
+const INACTIVE_RUN = new Date(2026, 9, 1, 2, 0);
+/** Most Inactive parts were Active before (dummy rule on the part number); the others went Candidate -> Inactive. */
+const wentInactive = (p: SeedPart) => p.st === 'Inactive' && hashStr(p.p) % 4 !== 0;
+/** Last successful sync per part (dummy): Success parts synced on 28-Sep, some of the parts that went Inactive again on 03-Oct (after
+ *  the 01-Oct run, so already removed in GTOPAS / AP POLE); Failed parts keep an older success (28-Aug); No Sync parts none. */
+function syncDatesOf(p: SeedPart): { lastSyncDt: string | null; inactiveDt: string | null } {
+  const inactiveDt = wentInactive(p) ? fmtDate(INACTIVE_RUN) : null;
+  const h = hashStr(p.p + '#sync');
+  let lastSyncDt: string | null = null;
+  // only a part that was Active has ever been synced (a Candidate -> Inactive part never was)
+  if (p.st === 'Inactive' && !inactiveDt) return { lastSyncDt, inactiveDt };
+  if (p.syncStatus === 1) lastSyncDt = inactiveDt && p.p !== 'PART-H' && h % 2 === 0 ? '03-Oct-2026 09:40' : '28-Sep-2026 10:15';
+  else if (p.syncStatus === 2 && (inactiveDt || h % 2 === 0)) lastSyncDt = '28-Aug-2026 10:05';
+  return { lastSyncDt, inactiveDt };
+}
+
 /** Builds a plausible change history for one part, newest-first — status
  * flips, Pcs/Case / Min MAD / Max Case/Day edits, and the Total Pcs/Day
  * that falls out of Pcs/Case × Max Case/Day whenever either one moves. */
@@ -252,7 +269,10 @@ function genHistoryFor(part: SeedPart): HistoryEvent[] {
     }
 
     // The move out of Candidate, driven by average MAD vs Min MAD.
-    events.push({ date: dayBetween(), t: 'Status changed', f: 'Status', o: 'Candidate', n: part.st, by: rng.pick(EDITORS) });
+    const wasActive = wentInactive(part);
+    events.push({ date: dayBetween(), t: 'Status changed', f: 'Status', o: 'Candidate', n: wasActive ? 'Active' : part.st, by: rng.pick(EDITORS) });
+    // Active -> Inactive by the monthly run of XD05 (average MAD below Min MAD).
+    if (wasActive) events.push({ date: INACTIVE_RUN, t: 'Status changed', f: 'Status', o: 'Active', n: 'Inactive', by: 'XD05 (batch)' });
   }
 
   events.sort((a, b) => a.date.getTime() - b.date.getTime());
@@ -274,13 +294,14 @@ const activeInPastOnly = (p: SeedPart) => p.st === 'Active' && p.per !== CUR_PER
 export function cloneSeedParts(): Part[] {
   return ALL_SEED.map((p) => ({
     ...p,
+    ...syncDatesOf(p),
     effDate: effDateOf(p),
     ...(activeInPastOnly(p) ? { per: CUR_PER, dests: [] } : { dests: withCodes(p) }),
   }));
 }
 
 /** Read-only mapping rows of past periods for parts that are Active now (listed when a past period is selected). */
-export const PAST_ROWS: Part[] = ALL_SEED.filter(activeInPastOnly).map((p) => ({ ...p, effDate: effDateOf(p), dests: withCodes(p) }));
+export const PAST_ROWS: Part[] = ALL_SEED.filter(activeInPastOnly).map((p) => ({ ...p, ...syncDatesOf(p), effDate: effDateOf(p), dests: withCodes(p) }));
 
 export function blankPart(): Part {
   const tomorrow = new Date();

@@ -259,6 +259,12 @@ flowchart TB
 - Overall SYNC_STATUS: Waiting while a target is Waiting, Success when both targets are sent, Failed when one target failed (the next [Sync] sends the part again to both targets; repeatable, AP POLE gets the complete set again).
 - A part changed on XD01 or by upload while it is being sent gets SYNC_STATUS = No Sync, so the newer data is sent by the next [Sync].
 
+### 4.3a Active to Inactive since the last sync (17-Nov)
+
+- Active to Inactive (17-Nov): a part whose status went from Active to Inactive (XD05, TB_H_PART_CANDIDATE OLD_STATUS Active, NEW_STATUS Inactive) after LAST_SYNC_DT of TB_R_CROSSDOCK_IF_RESULT is still Active in the target system: the RPA deletes its part + destination rows there. A part never synced (LAST_SYNC_DT NULL) is not listed. The list is also sheet "Active to Inactive" of the Mapping per Destination Export Excel (XD01).
+- Source query: TB_M_PART_CANDIDATE (STATUS Inactive) + TB_H_PART_CANDIDATE (latest change Active -> Inactive, its CREATED_DT = Status Changed Date) + TB_R_CROSSDOCK_IF_RESULT (TARGET_SYSTEM of this function, LAST_SYNC_DT); listed when Status Changed Date > LAST_SYNC_DT.
+- On Success of the run: IF_STATUS 1, IF_DT and LAST_SYNC_DT = date-time of the result, for every part sent and every part deleted. On Failed: IF_STATUS 2 and IF_DT only; LAST_SYNC_DT is not changed, so the part stays in the list for the next run.
+
 ### 4.4 Open Points
 
 - Field names on the side of the target follow the target layout (not detailed in this document).
@@ -286,6 +292,7 @@ Dummy table (proposed): send status of the cross dock master per part and target
 | PERIOD | CHAR(6) |  | N | Calculation period of the mapping sent (YYYYMM) |
 | IF_STATUS | VARCHAR(1) |  | N | '3' Waiting / '1' Success / '2' Failed |
 | IF_DT | DATETIME |  | Y | Date-time of the result of the target system |
+| LAST_SYNC_DT | DATETIME |  | Y | Date-time of the last Success of the part for this target (kept when a later run is Failed); NULL when never synced. A part is listed in "Active to Inactive" when it went Inactive after this date (17-Nov). |
 | IF_FILE_NAME | VARCHAR(100) |  | Y | Name of the interface file (AP POLE) or RPA run ID (GTOPAS) |
 | IF_MESSAGE | VARCHAR(500) |  | Y | Reason when Failed; blank when Success |
 | CREATED_BY | VARCHAR(TBD) |  | N | User who created the record |
