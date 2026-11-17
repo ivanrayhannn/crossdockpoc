@@ -844,12 +844,12 @@ c. A part without destination shows message no. 19.
 
 - b. Interface functions (one per target system; refer UISS-Batch XD06 and XD07).
   1. XD06 IF Cross Dock Master to GTOPAS registers / deletes, by RPA, the destinations of each Waiting part in GTOPAS (Inactive: all rows). XD07 IF Cross Dock Master to AP POLE sends, per Active part, Pcs/Case, Max Case/Day and all destinations with Case/Day of the ongoing period (new part: added; existing: updated; Inactive: deleted).
-  2. XD06 hands the part x destination list to the RPA bot; XD07 sends a file by SFTP. The result is written in the dummy table TB_R_CROSSDOCK_IF_RESULT (IF_STATUS 1 sent / 2 Failed, IF_DT, IF_FILE_NAME, IF_MESSAGE).
+  2. XD06 hands the part x destination list to the RPA bot; XD07 is an RPA on the AP POLE screens WLM9Q890 / WLM9Q860. The result is written in the dummy table TB_R_CROSSDOCK_IF_RESULT (IF_STATUS 1 sent / 2 Failed, IF_DT, IF_FILE_NAME, IF_MESSAGE).
   3. Overall SYNC_STATUS of the part: stays 3 (Waiting) while one target is still Waiting; 1 (Success) when both targets are Success; 2 (Failed) when a target failed (SYNC_MESSAGE = target and reason); 0 (No Sync) when the part was changed after it was read.
   4. Every result is recorded in TB_H_PART_CANDIDATE (event SYNC, source IF, REMARK = target and message).
 
 - c. A Failed part shows SYNC_MESSAGE (target and reason) as tooltip on its chip (message no. 28) and is sent again to both targets by the next [Sync] (repeatable: GTOPAS only gets the differences, AP POLE gets the complete set again).
-- d. Interface method: RPA to GTOPAS (XD06), file by SFTP to AP POLE (XD07); fields and topology refer UISS-Batch XD06 / XD07 (topology TBC).
+- d. Interface method: RPA to GTOPAS (XD06), RPA to AP POLE (XD07, screens WLM9Q890 / WLM9Q860); fields and topology refer UISS-Batch XD06 / XD07 (topology TBC).
 
 ### 5.17 Upload Excel
 
@@ -894,6 +894,7 @@ Sync Status is kept per part in TB_M_PART_CANDIDATE because a part is synced as 
 
 - Mapping per Destination: new column Last Sync after Sync Status = LAST_SYNC_DT of TB_R_CROSSDOCK_IF_RESULT (latest of GTOPAS / AP POLE); "Never" when the part was never synced.
 - Export Excel of Mapping per Destination: sheet 1 gets column Last Sync Date; new sheet 3 "Active to Inactive" (Part Number, Part Name, Destination Code, Status Before, Status Now, Status Changed Date, Last Sync Date, Action "Delete in GTOPAS / AP POLE"), one row per destination, every part of the master whatever the filter. Active to Inactive (17-Nov): a part whose status went from Active to Inactive (XD05, TB_H_PART_CANDIDATE OLD_STATUS Active, NEW_STATUS Inactive) after LAST_SYNC_DT of TB_R_CROSSDOCK_IF_RESULT is still Active in the target system: the RPA deletes its part + destination rows there. A part never synced (LAST_SYNC_DT NULL) is not listed. The list is also sheet "Active to Inactive" of the Mapping per Destination Export Excel (XD01).
+- Export Excel of Part List: new column Sync Status after Status (No Sync / Waiting / Success / Failed): the RPA to AP POLE (XD07) takes the parts that are not synced yet from it.
 
 ## 7. Display messages
 
@@ -977,7 +978,7 @@ History of every change of a crossdock part (Add / Edit by screen or upload, map
 | CREATED_DT | DATETIME |  | N | Date and time of the change |
 
 #### TB_R_CROSSDOCK_IF_RESULT (transaction, proposed)
-Dummy table (proposed): send status of the cross dock master per part and target system (XD06 GTOPAS, XD07 AP POLE). The real output is the interface data sent to the target (AP POLE: file by SFTP; GTOPAS: RPA). The overall Sync Status of the part stays in TB_M_PART_CANDIDATE.
+Dummy table (proposed): send status of the cross dock master per part and target system (XD06 GTOPAS, XD07 AP POLE). The real output is the change made by the RPA on the target screens (GTOPAS WVJA5204, AP POLE WLM9Q890 / WLM9Q860). The overall Sync Status of the part stays in TB_M_PART_CANDIDATE.
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
@@ -987,7 +988,7 @@ Dummy table (proposed): send status of the cross dock master per part and target
 | IF_STATUS | VARCHAR(1) |  | N | '3' Waiting / '1' Success / '2' Failed |
 | IF_DT | DATETIME |  | Y | Date-time of the result of the target system |
 | LAST_SYNC_DT | DATETIME |  | Y | Date-time of the last Success of the part for this target (kept when a later run is Failed); NULL when never synced. A part is listed in "Active to Inactive" when it went Inactive after this date (17-Nov). |
-| IF_FILE_NAME | VARCHAR(100) |  | Y | Name of the interface file (AP POLE) or RPA run ID (GTOPAS) |
+| IF_FILE_NAME | VARCHAR(100) |  | Y | RPA run ID (GTOPAS and AP POLE) |
 | IF_MESSAGE | VARCHAR(500) |  | Y | Reason when Failed; blank when Success |
 | CREATED_BY | VARCHAR(TBD) |  | N | User who created the record |
 | CREATED_DT | DATETIME |  | N | Created date and time |

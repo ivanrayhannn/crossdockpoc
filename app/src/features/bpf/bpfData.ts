@@ -8,7 +8,7 @@ export const BPF: BpfData = {
   "PR": "Procurement",
   "DS": "D/S Team",
   "SP": "Supplier",
-  "AP": "AP POLE (via SFTP)"
+  "AP": "AP POLE (via RPA)"
  },
  "flows": [
   {
@@ -256,7 +256,7 @@ export const BPF: BpfData = {
      "band": "B4",
      "slot": 2,
      "fn": "XD06 · XD07",
-     "title": "Send crossdock master: GTOPAS by RPA, AP POLE file by SFTP (Inactive: delete)",
+     "title": "Send crossdock master: GTOPAS by RPA, AP POLE by RPA (Inactive: delete)",
      "read": [
       "TB_M_PART_CANDIDATE",
       "TB_M_PART_CANDIDATE_DEST"
@@ -297,12 +297,12 @@ export const BPF: BpfData = {
      "band": "B5",
      "slot": 0,
      "fn": "",
-     "title": "TMMIN SFTP → TMA SFTP → receive IF by TMA AP POLE Crossdock Kanban Part Master: new part add, existing edit, Inactive delete",
+     "title": "RPA on AP POLE: Cross Dock Kanban Part Master (WLM9Q890) add / edit / delete part; Export Customer Cross Dock Master (WLM9Q860) add / edit / delete destination",
      "read": [
-      "Interface file (SFTP)"
+      "XD01 Export Excel (Part List, Mapping, Active to Inactive)"
      ],
      "write": [
-      "AP POLE Crossdock Kanban Part Master / Crossdock Export Part Master"
+      "AP POLE WLM9Q890 / WLM9Q860"
      ],
      "ab": [],
      "next": []
@@ -1080,7 +1080,7 @@ export const BPF: BpfData = {
    "flow": "F1",
    "step": "M11",
    "fn": "XD06 / XD07",
-   "condition": "GTOPAS RPA bot stops on any error (try-catch: one fails, all fail), interface file cannot be created, or AP POLE SFTP not available after retry",
+   "condition": "GTOPAS RPA bot stops on any error (try-catch: one fails, all fail), or the AP POLE RPA bot stops on any error (try-catch)",
    "detection": "IF_STATUS 2, SYNC_STATUS Failed, Log",
    "system": "Keep the AP POLE file in the outbound folder; GTOPAS rows done before the error stay (next run compares again); parts stay Failed.",
    "pic": "D/S Team",

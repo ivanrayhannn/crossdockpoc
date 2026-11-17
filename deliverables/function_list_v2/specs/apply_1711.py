@@ -51,7 +51,9 @@ for fid in ('XD01', 'XD06', 'XD07'):
             '"Never" when the part was never synced.',
             'Export Excel of Mapping per Destination: sheet 1 gets column Last Sync Date; new sheet 3 "Active to Inactive" (Part Number, Part Name, '
             'Destination Code, Status Before, Status Now, Status Changed Date, Last Sync Date, Action "Delete in GTOPAS / AP POLE"), one row per '
-            'destination, every part of the master whatever the filter. ' + RULE]})
+            'destination, every part of the master whatever the filter. ' + RULE,
+            'Export Excel of Part List: new column Sync Status after Status (No Sync / Waiting / Success / Failed): the RPA to AP POLE (XD07) takes '
+            'the parts that are not synced yet from it.']})
     save(fid, s)
 
 s = load('XD05')
