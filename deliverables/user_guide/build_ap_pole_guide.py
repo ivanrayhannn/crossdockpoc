@@ -105,9 +105,8 @@ DEST = {
 
 
 def put_image(ws, r, name):
-    path = os.path.join(IMG, name)
-    if not os.path.exists(path):
-        path = os.path.join(HERE, 'shots_ap', name)
+    path = next((d for d in (os.path.join(IMG, name), os.path.join(HERE, 'shots_ap', name), os.path.join(HERE, 'shots_gt', name))
+                 if os.path.exists(d)))
     w, h = Image.open(path).size
     # Excel extracts (rendered at 110 dpi) all at the same zoom; screens fit the column width
     scale = min(0.72, IMG_W / w) if name.startswith('x_') else (IMG_W / w if w > IMG_W else 1)
