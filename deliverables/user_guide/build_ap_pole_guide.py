@@ -25,12 +25,12 @@ PART = {
              ('Screen', 'AP POLE WLM9Q890 Cross Dock Kanban Part Master (menu Master Maintenance)'),
              ('User', 'RPA bot (the same steps can be done by the D/S team by hand)'),
              ('Source data', 'NSP Export Excel Part List (sheet Part List: Part Number, Part Name, Status, Sync Status, Pcs/Case, Max Case/Day) '
-                             'and sheet "Active to Inactive" of the Mapping per Destination Export Excel. Refer Crossdock_User_Guide_Download_Part_List_Mapping.xlsx'),
-             ('Condition', 'Only the parts with Sync Status No Sync (changed in NSP since the last sync)')],
+                             'and sheet "Active to Inactive" of the Mapping per Destination Export Excel. Refer sheet "0. Source Data (NSP)"'),
+             ('Condition', 'Only the parts with Sync Status Waiting (set by [Sync] in NSP) and the parts of sheet "Active to Inactive"')],
     'blocks': [
         ('step', 'Download the source data from NSP',
-         'Download the Part List and the Mapping per Destination with [Export Excel] on Crossdock Master Setting (refer Crossdock User Guide). '
-         'Take the parts with Sync Status No Sync.', None),
+         'Click [Sync] and download the Mapping per Destination and the Part List with [Export Excel] on Crossdock Master Setting: refer sheet '
+         '"0. Source Data (NSP)". Take the parts with Sync Status Waiting. Which scenario applies to which part: refer sheet "3. Scenario Detail".', None),
         ('step', 'Open the menu Master Maintenance',
          'Log in to AP POLE (https://ap-pole.toyota-asia.com/lm9/) and open the menu Master Maintenance.', 'a01_menu_master.png'),
         ('step', 'Open Cross Dock Kanban Part Master', 'Scroll down the menu and click Cross Dock Kanban Part Master.', 'a02_menu_crossdock_kanban.png'),
@@ -70,8 +70,8 @@ DEST = {
              ('Screen', 'AP POLE WLM9Q860 Export Customer Cross Dock Master (from WLM9Q890 [Maintain Cross Dock])'),
              ('User', 'RPA bot (the same steps can be done by the D/S team by hand)'),
              ('Source data', 'NSP Export Excel Mapping per Destination (ongoing period, sheet Mapping per Destination: Part Number, Destination Code, '
-                             'Dest Case/Day, Max Case/Day (quota), Sync Status)'),
-             ('Condition', 'Only the parts with Sync Status No Sync (changed in NSP since the last sync)')],
+                             'Dest Case/Day, Max Case/Day (quota), Sync Status, Last Sync Date). Refer sheet "0. Source Data (NSP)"'),
+             ('Condition', 'Only the parts with Sync Status Waiting (set by [Sync] in NSP)')],
     'blocks': [
         ('step', COMMON_SEARCH[0], COMMON_SEARCH[1] + ' Refer sheet "1. Kanban Part Master", steps 2 to 4.', None),
         ('step', 'Tick the part and click [Maintain Cross Dock]', 'Tick the check box of the part in the list and click [Maintain Cross Dock].', 'b01_maintain_cross_dock.jpg'),
@@ -106,77 +106,118 @@ DEST = {
 
 def put_image(ws, r, name):
     path = os.path.join(IMG, name)
+    if not os.path.exists(path):
+        path = os.path.join(HERE, 'shots_ap', name)
     w, h = Image.open(path).size
-    scale = IMG_W / w if w > IMG_W else 1
+    # Excel extracts (rendered at 110 dpi) all at the same zoom; screens fit the column width
+    scale = min(0.72, IMG_W / w) if name.startswith('x_') else (IMG_W / w if w > IMG_W else 1)
     pic = XLImage(path)
     pic.width, pic.height = int(w * scale), int(h * scale)
     ws.add_image(pic, f'C{r}')
     return r + math.ceil(pic.height / ROW_PX) + 2
 
 
+def spans(head):
+    """Sheet columns of each table column (B=2 .. E=5) and their width: No-tables use B / C / D..E, others B..C / D / E."""
+    if len(head) == 4:
+        return [(2, 2), (3, 3), (4, 4), (5, 5)], [6, 34, 50, 50]
+    if head[0] == 'No':
+        return [(2, 2), (3, 3), (4, 5)], [6, 34, 100]
+    return [(2, 3), (4, 4), (5, 5)], [40, 50, 50]
+
+
+def cell(ws, r, c0, c1, v, font, fill=None, align=WRAP):
+    x = ws.cell(r, c0, v)
+    x.font, x.alignment = font, align
+    for c in range(c0, c1 + 1):
+        ws.cell(r, c).border = BOX
+        if fill:
+            ws.cell(r, c).fill = fill
+    if c1 > c0:
+        ws.merge_cells(start_row=r, start_column=c0, end_row=r, end_column=c1)
+    return x
+
+
+def lines(v, w):
+    return math.ceil(len(str(v)) / (w * 1.05)) if v not in (None, '') else 1
+
+
 def build_sheet(wb, g):
     ws = wb.create_sheet(g['sheet'])
     ws.sheet_view.showGridLines = False
-    for col, w in (('A', 2), ('B', 6), ('C', 34), ('D', 100)):
+    for col, w in (('A', 2), ('B', 6), ('C', 34), ('D', 50), ('E', 50)):
         ws.column_dimensions[col].width = w
     ws['B2'] = g['title']
     ws['B2'].font = F(14, True)
     r = 4
     for k, v in [('Project', 'Crossdock Optimization (NSP)'), ('Document', 'User Guide')] + g['meta']:
-        ws.cell(r, 2, k).font = F(9, True)
-        ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=3)
-        x = ws.cell(r, 4, v)
-        x.font, x.alignment = F(9), WRAP
-        ws.row_dimensions[r].height = max(15, 12 * math.ceil(len(v) / 110) + 3)
-        for c in (2, 3, 4):
-            ws.cell(r, c).border = BOX
-            ws.cell(r, c).fill = HEAD if c < 4 else PatternFill()
+        cell(ws, r, 2, 3, k, F(9, True), HEAD)
+        cell(ws, r, 4, 5, v, F(9))
+        ws.row_dimensions[r].height = max(15, 12 * lines(v, 100) + 3)
         r += 1
     r += 1
-    ws.cell(r, 2, 'Screens of AP POLE given by the user (some are photos of the screen). Red / yellow marks come from the original pictures.').font = F(9, italic=True, color='595959')
-    ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=4)
+    cap = g.get('caption', 'Screens of AP POLE given by the user (some are photos of the screen). Red / yellow marks come from the original pictures.')
+    x = ws.cell(r, 2, cap)
+    x.font, x.alignment = F(9, italic=True, color='595959'), WRAP
+    ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=5)
+    ws.row_dimensions[r].height = max(15, 12 * lines(cap, 140) + 3)
     r += 2
-    for c, h in ((2, 'Step'), (3, 'Action'), (4, 'Detail')):
-        x = ws.cell(r, c, h)
-        x.font, x.fill, x.border = F(10, True), HEAD, BOX
-    r += 1
+    if any(b[0] == 'step' for b in g['blocks']):
+        for c0, c1, h in ((2, 2, 'Step'), (3, 3, 'Action'), (4, 5, 'Detail')):
+            cell(ws, r, c0, c1, h, F(10, True), HEAD)
+        r += 1
     n = 0
     for b in g['blocks']:
         if b[0] == 'step':
             _, action, detail, img = b
             n += 1
-            for c, v in ((2, n), (3, action), (4, detail)):
-                x = ws.cell(r, c, v)
-                x.font, x.fill, x.border, x.alignment = F(10, c < 4), STEP, BOX, WRAP
-            ws.cell(r, 2).alignment = Alignment(horizontal='center', vertical='top')
-            ws.row_dimensions[r].height = max(28, 13 * math.ceil(len(detail) / 105) + 6)
+            cell(ws, r, 2, 2, n, F(10, True), STEP, Alignment(horizontal='center', vertical='top'))
+            cell(ws, r, 3, 3, action, F(10, True), STEP)
+            cell(ws, r, 4, 5, detail, F(10), STEP)
+            ws.row_dimensions[r].height = max(28, 13 * max(lines(detail, 92), lines(action, 30)) + 6)
             r += 1
             r = put_image(ws, r, img) if img else r + 1
         elif b[0] == 'table':
-            _, title, head, rows, widths = b
-            ws.cell(r, 3, title).font = F(10, True)
+            _, title, head, rows, _w = b
+            ws.cell(r, 3 if head[0] == 'No' else 2, title).font = F(10, True)
             r += 1
-            for c, h in enumerate(head):
-                x = ws.cell(r, 2 + c, h)
-                x.font, x.fill, x.border, x.alignment = F(9, True), HEAD, BOX, WRAP
+            sp, widths = spans(head)
+            for (c0, c1), h in zip(sp, head):
+                cell(ws, r, c0, c1, h, F(9, True), HEAD)
             r += 1
             for row in rows:
-                for c, v in enumerate(row):
-                    x = ws.cell(r, 2 + c, v)
-                    x.font, x.border, x.alignment = F(9), BOX, WRAP
-                ws.row_dimensions[r].height = max(15, 12 * max(math.ceil(len(str(v)) / (w * 1.05)) for v, w in zip(row, widths)) + 3)
+                for (c0, c1), v in zip(sp, row):
+                    cell(ws, r, c0, c1, v, F(9))
+                ws.row_dimensions[r].height = max(15, 12 * max(lines(v, w) for v, w in zip(row, widths)) + 3)
                 r += 1
             r += 1
+        elif b[0] == 'heading':
+            x = ws.cell(r, 2, b[1])
+            x.font = F(11, True)
+            for c in range(2, 6):
+                ws.cell(r, c).fill = HEAD
+            ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=5)
+            ws.row_dimensions[r].height = 18
+            r += 2
+        elif b[0] == 'text':
+            x = ws.cell(r, 2, b[1])
+            x.font, x.alignment = F(9), WRAP
+            ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=5)
+            ws.row_dimensions[r].height = max(15, 12 * lines(b[1], 135) + 3)
+            r += 2
         elif b[0] == 'image':
             _, title, img = b
             ws.cell(r, 3, title).font = F(10, True)
-            r = put_image(ws, r + 1, img)
+            r = put_image(ws, r + 2, img)
     ws.cell(r, 2, 'Notes').font = F(10, True)
     r += 1
     for note in g['notes']:
         x = ws.cell(r, 2, '- ' + note)
-        x.font, x.fill = F(9), NOTE
-        ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=4)
+        x.font, x.alignment = F(9), WRAP
+        for c in range(2, 6):
+            ws.cell(r, c).fill = NOTE
+        ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=5)
+        ws.row_dimensions[r].height = max(15, 12 * lines(note, 140) + 3)
         r += 1
     ws.page_setup.orientation = 'portrait'
     ws.page_setup.paperSize = 9
@@ -187,7 +228,8 @@ def build_sheet(wb, g):
 def main():
     wb = Workbook()
     wb.remove(wb.active)
-    for g in (PART, DEST):
+    from ap_pole_nsp import SOURCE, DETAIL
+    for g in (SOURCE, PART, DEST, DETAIL):
         build_sheet(wb, g)
     wb.save(OUT)
     print('saved', OUT)
