@@ -12,6 +12,7 @@
 |---|---|---|---|---|
 | 0.1 | FID Rayhan | 18-Oct-26 |  | Initial Draft |
 | 0.2 | FID Rayhan | 17-Nov-26 |  | Sync Status = No Sync only when a value sent to GTOPAS / AP POLE changed (Status to or from Active, Pcs/Case or Max Case/Day of an Active part); else kept (Sync Status rule of XD01, 17-Nov). |
+| 0.3 | FID Rayhan | 18-Nov-26 |  | Sheet "Active to Inactive" removed (18-Nov): Inactive parts with No Sync / Failed are taken by [Sync] by their status. |
 
 ## 1. General
 
@@ -220,7 +221,7 @@ Every row is checked and all errors are collected, so the user can correct the f
 - If all rows are valid, the data is saved to TB_M_PART_CANDIDATE: flag A inserts a new part (status Candidate), flag E updates the changed values, including status Active <-> Inactive. Rows with no change are skipped.
 - The status of a Candidate part is changed only in the Edit part data modal on the screen, not by upload.
 - Every inserted or changed part gets a history record per changed field in TB_H_PART_CANDIDATE (event ADD / EDIT, source UPLOAD, UPLOAD_ID of this run; refer Appendix).
-- A new record gets Sync Status = No Sync; an updated record only when a value sent to GTOPAS / AP POLE changed (Status to or from Active, Pcs/Case or Max Case/Day of an Active part). It is sent to GTOPAS and AP POLE by the RPA (XD06 / XD07) when D/S clicks [Sync] in Mapping per Destination. Status Active -> Inactive is listed in sheet Active to Inactive like the change of XD05.
+- A new record gets Sync Status = No Sync; an updated record only when a value sent to GTOPAS / AP POLE changed (Status to or from Active, Pcs/Case or Max Case/Day of an Active part). It is sent to GTOPAS and AP POLE by the RPA (XD06 / XD07) when D/S clicks [Sync] in Mapping per Destination. Status Active -> Inactive (No Sync) is taken by the next [Sync] like the change of XD05.
 - A result report (.xlsx) is created for both cases.
 
 | No | Check | Column |

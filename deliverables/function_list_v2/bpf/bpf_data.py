@@ -51,7 +51,7 @@ FLOWS = [
             dict(id='M12', lane='GT', band='B5', slot=0, fn='RPA', title='RPA: register / delete part + destination in Crossdock Master (Supply > Master); Inactive or no destination: delete all rows',
                  read=['RPA input from NSP'], write=['GTOPAS Crossdock Master'], ab=[], next=[]),
             dict(id='M13', lane='AP', band='B5', slot=0, fn='', title='RPA on AP POLE: Cross Dock Kanban Part Master (WLM9Q890) add / edit / delete part; Export Customer Cross Dock Master (WLM9Q860) add / edit / delete destination',
-                 read=['XD01 Export Excel (Part List, Mapping, Active to Inactive)'], write=['AP POLE WLM9Q890 / WLM9Q860'], ab=[], next=[]),
+                 read=['XD01 Export Excel (Part List, Mapping per Destination)'], write=['AP POLE WLM9Q890 / WLM9Q860'], ab=[], next=[]),
         ],
     },
     {

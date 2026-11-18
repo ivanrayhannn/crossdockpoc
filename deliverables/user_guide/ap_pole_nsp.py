@@ -8,7 +8,7 @@ SOURCE = {
                'Red box = the item to click. Excel pictures: orange header = column read for AP POLE, yellow rows = examples of sheet "3. Scenario Detail".',
     'meta': [('Function', 'XD01 Crossdock Master Setting ([Sync], Export Excel) as the source of XD07 RPA Cross Dock Master to AP POLE'),
              ('User', 'D/S team: only [Sync]. The RPA bot downloads the two files, fills a work sheet AP POLE Compare and works on AP POLE (17-Nov)'),
-             ('Result', 'Crossdock_Mapping_per_Destination_<Period>_YYYYMMDD.xlsx (sheets Mapping per Destination, Active to Inactive) and '
+             ('Result', 'Crossdock_Mapping_per_Destination_<Period>_YYYYMMDD.xlsx (sheet Mapping per Destination) and '
                         'Crossdock_Part_List_YYYYMMDD.xlsx (sheet Part List)')],
     'blocks': [
         ('step', 'D/S: open Crossdock Master Setting, tab Mapping per Destination',
@@ -31,15 +31,12 @@ SOURCE = {
          'One row per part and destination of the Waiting parts. Used for AP POLE WLM9Q860: Part Number, Destination Code (-> Buyer-PD), '
          'Dest Case/Day (-> Max Shipping Box Qty), Max Case/Day (quota) (-> Max Shipping Box Qty of the part) and Last Sync Date. '
          'A part without mapping has one row with an empty Destination Code (e.g. PART-B).', 'x_map_waiting.png'),
-        ('step', 'Bot: read sheet "Active to Inactive" (delete)',
-         'Parts that went from Active to Inactive (monthly run of XD05) after their last successful sync: AP POLE still has them. One row per '
-         'destination; Action = Delete in GTOPAS / AP POLE. Always every part of the master, whatever the search filter.', 'x_inactive.png'),
         ('step', 'Bot: download the Part List (part level)',
          'The bot opens the tab Part List, clicks [Search] without a filter, then [Export Excel]. The browser downloads '
          'Crossdock_Part_List_YYYYMMDD.xlsx.', 'n6_part_export.png'),
         ('step', 'Bot: read sheet "Part List" (Sync Status = Waiting)',
          'The bot filters column Sync Status = Waiting. Used for AP POLE WLM9Q890: Part Number (-> Part No.), Pcs/Case (-> Shipping Box Qty), '
-         'Max Case/Day (-> Max Shipping Box Qty) and Status. The same parts are Waiting in both files.', 'x_part_waiting.png'),
+         'Max Case/Day (-> Max Shipping Box Qty) and Status. Status Inactive (e.g. PART-023) = delete in AP POLE. The same parts are Waiting in both files.', 'x_part_waiting.png'),
     ],
     'notes': ['Change nothing in NSP from [Sync] until the RPA has finished: a part changed in between goes back to No Sync.',
               'The bot adds a work sheet AP POLE Compare to the downloaded file: per part / Buyer-PD the NSP value, the AP POLE value, the action '
@@ -56,7 +53,7 @@ DETAIL = {
     'caption': 'Examples with the data of the files of sheet "0. Source Data (NSP)" (prototype dummy data). Excel pictures are extracts of the sheet; '
                'orange header = the columns used. "AP POLE now" values are an example of what the screen can show.',
     'meta': [('Function', 'XD07 RPA Cross Dock Master to AP POLE'),
-             ('Input', 'Sheets Part List (Waiting), Mapping per Destination (Waiting) and Active to Inactive'),
+             ('Input', 'Sheets Part List (Waiting) and Mapping per Destination (Waiting)'),
              ('Rule', 'Part level first (WLM9Q890), then destination level (WLM9Q860). On WLM9Q860: Delete, then Edit, then Add, so that Total '
                       'Shipping Allocated never goes above Max Shipping Box Qty of the part.')],
     'blocks': [
@@ -66,7 +63,7 @@ DETAIL = {
              'Candidate -> Active: [Add] Part No., Shipping Box Qty = Pcs/Case, Max Shipping Box Qty = Max Case/Day'],
             ['P2', 'Part List: Status Active, Sync Status Waiting. Mapping: Last Sync Date filled', 'Part not found (deleted when it went Inactive)',
              'Inactive -> Active: [Add] as P1'],
-            ['P3', 'Sheet Active to Inactive', 'Part found', 'Active -> Inactive: tick the part, [Delete]'],
+            ['P3', 'Part List: Status Inactive, Sync Status Waiting', 'Part found (not found: nothing to delete)', 'Active -> Inactive: tick the part, [Delete]'],
             ['P4', 'Part List: Status Active, Sync Status Waiting', 'Part found',
              'Still Active: compare Shipping Box Qty with Pcs/Case and Max Shipping Box Qty with Max Case/Day; [Edit] when one differs, else no change'],
          ], [6, 52, 30, 52]),
@@ -110,10 +107,10 @@ DETAIL = {
             ['WLM9Q860', '98111-10 has no row: [Add] (D1)', '98111-10 / ** / 2 / 6; total 20 -> 26'],
             ['WLM9Q860', 'Check Total Shipping Allocated, [Back]', '26 (= Max Shipping Box Qty 26)']], [20, 60, 60]),
 
-        ('heading', 'D. Example 3: PART-023, Active to Inactive (P3)'),
-        ('text', 'NSP: sheet Active to Inactive, 2 rows (9715310, 9722D10), Status Changed Date 01-Oct-2026 02:00 later than Last Sync Date 28-Sep-2026 10:15. '
+        ('heading', 'D. Example 3: PART-023, Inactive part (P3)'),
+        ('text', 'NSP: sheet Part List, Status Inactive, Sync Status Waiting (went Inactive on 01-Oct-2026 after the last sync of 28-Sep-2026). '
                  'AP POLE now: the part with Buyer-PD 97153-10 and 9722D-10.'),
-        ('image', 'Sheet Active to Inactive', 'x_ex3_inactive.png'),
+        ('image', 'Sheet Part List', 'x_ex3_part.png'),
         ('table', 'Action in AP POLE', ACT, [
             ['WLM9Q890', '[Search] PART-023: found', ''],
             ['WLM9Q890', 'Tick the part, [Delete]', 'The part is removed. Buyer-PD rows of the part: deleted with the part (TBC); when AP POLE refuses, '

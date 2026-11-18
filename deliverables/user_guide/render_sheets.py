@@ -9,7 +9,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 part = sorted(glob.glob(os.path.join(HERE, 'downloads', 'Crossdock_Part_List_*.xlsx')))[-1]
 mapping = sorted(glob.glob(os.path.join(HERE, 'downloads', 'Crossdock_Mapping_per_Destination_*.xlsx')))[-1]
 JOBS = [(part, 'Part List', 'x_part_list'), (part, 'Upload', 'x_part_upload'), (mapping, 'Mapping per Destination', 'x_map_list'),
-        (mapping, 'Upload', 'x_map_upload'), (mapping, 'Active to Inactive', 'x_map_inactive')]
+        (mapping, 'Upload', 'x_map_upload')]
 tmp = tempfile.mkdtemp()
 for src, sheet, name in JOBS:
     ws0 = openpyxl.load_workbook(src)[sheet]
