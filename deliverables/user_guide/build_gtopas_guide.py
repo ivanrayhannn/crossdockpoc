@@ -18,7 +18,7 @@ SOURCE = {
     'caption': NSP_CAP,
     'meta': [('Function', 'XD01 Crossdock Master Setting ([Sync], Export Excel) as the source of XD06 RPA Cross Dock Master to GTOPAS'),
              ('User', 'D/S team: only [Sync]. Everything after [Sync] is done by the RPA bot: download, Excel, GTOPAS (decided 17-Nov)'),
-             ('Result', 'Crossdock_Mapping_per_Destination_<Period>_YYYYMMDD.xlsx, sheets Mapping per Destination (NSP list) and Active to Inactive'),
+             ('Result', 'Crossdock_Mapping_per_Destination_<Period>_YYYYMMDD.xlsx, sheet Mapping per Destination (NSP list)'),
              ('NSP list', 'Every Active part of the ongoing period with its Destination Codes (one row per part + destination), whatever the Sync Status')],
     'blocks': [
         ('table', 'Who does what', ['No', 'Who', 'What'], [
@@ -41,9 +41,6 @@ SOURCE = {
          'One row per Active part and Destination Code of the ongoing period. Only Part Number and Destination Code are used for GTOPAS '
          '(Dest Case/Day is not sent). A row with an empty Destination Code = Active part without destination: GTOPAS must have no row for it.',
          'x_gt_nsp_all.png'),
-        ('step', 'Bot: read sheet "Active to Inactive"',
-         'Parts that went Inactive after their last sync. They are not in the NSP list any more, so all their rows in GTOPAS are deleted.',
-         'x_inactive.png'),
     ],
     'notes': ['Change nothing in NSP from [Sync] until the RPA has finished: a part changed in between goes back to No Sync.',
               'Sheet "Upload" of the file is not used for GTOPAS.',
@@ -99,7 +96,7 @@ DETAIL = {
     'title': 'Scenario detail: from the NSP Excel to GTOPAS',
     'caption': 'Examples with the data of the file of sheet "0. Source Data (NSP)" (prototype dummy data). ' + GT_CAP,
     'meta': [('Function', 'XD06 RPA Cross Dock Master to GTOPAS'),
-             ('Input', 'Sheet Mapping per Destination (ongoing period, all Sync Status) and sheet Active to Inactive'),
+             ('Input', 'Sheet Mapping per Destination (ongoing period, all Sync Status)'),
              ('Rule', 'Destination of the ongoing period in NSP: already in GTOPAS = keep; not in GTOPAS = add P/No. + Destination Code; '
                       'in GTOPAS but not in NSP = delete')],
     'blocks': [
@@ -108,7 +105,7 @@ DETAIL = {
             ['S1', 'In NSP and in GTOPAS', 'Keep: no change (also when only Dest Case/Day, Pcs/Case or Max Case/Day changed: GTOPAS keeps no quantity)'],
             ['S2', 'In NSP, not in GTOPAS (new Active part, new destination, Inactive -> Active)', 'Add the row: P/No., Destination Code + fixed values'],
             ['S3', 'In GTOPAS, not in NSP (destination removed in NSP)', 'Delete the row (MT = DEL)'],
-            ['S3', 'Part Inactive (sheet Active to Inactive), Candidate, or not in NSP', 'Delete all rows of the part'],
+            ['S3', 'Part Inactive (not in the sheet), Candidate, or not in NSP', 'Delete all rows of the part'],
             ['S3', 'Active part without destination (empty Destination Code)', 'Delete all rows of the part; nothing to add']], [6, 34, 100]),
         ('image', 'Comparison of the examples below (green = keep, blue = add, red = delete)', 'x_gt_compare.png'),
         ('image', 'The same rows in the sheet GTOPAS Compare, filled by the bot after the actions (Result, message, date-time)', 'x_gt_work.png'),
@@ -144,10 +141,9 @@ DETAIL = {
         ('image', 'Sheet Mapping per Destination', 'x_gt_ex4_nsp.png'),
         ('table', 'Action in GTOPAS', ACT, [['WVJA5204', 'Nothing to add; delete any row of the part (S3)', 'PART-B (none)']], [20, 60, 60]),
 
-        ('heading', 'F. Example 5: PART-023, Active to Inactive (S3)'),
-        ('text', 'NSP: not in sheet Mapping per Destination (Inactive); in sheet Active to Inactive with 9715310 and 9722D10. '
+        ('heading', 'F. Example 5: PART-023, Inactive part (S3)'),
+        ('text', 'NSP: PART-023 is Inactive (went Inactive on 01-Oct-2026), so it is not in sheet Mapping per Destination. '
                  'GTOPAS now: PART-023 + 9715310, PART-023 + 9722D10.'),
-        ('image', 'Sheet Active to Inactive', 'x_gt_ex5_inactive.png'),
         ('image', 'GTOPAS now', 'x_gt_ex5_gt.png'),
         ('table', 'Action in GTOPAS', ACT, [
             ['WVJA5204', 'Delete (S3), MT = DEL', 'PART-023 + 9715310'],

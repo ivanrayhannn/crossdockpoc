@@ -3898,7 +3898,7 @@
    "items": [
     "If the record was changed by another user after it was opened, display message no. 4. Stop.",
     "Check Max Case/Day against the mapped total of the ongoing period again on the server; if it is below, display message no. 14. Stop.",
-    "Update TB_M_PART_CANDIDATE, CHANGED_BY and CHANGED_DT. SYNC_STATUS = 0 (No Sync) only when a value sent to GTOPAS / AP POLE changed (Status to or from Active, Pcs/Case or Max Case/Day of an Active part); a change of Min MAD or Effective Start Date only, or a Save without change, keeps the Sync Status. Status Active -> Inactive: the history record (FIELD_NAME PART_STATUS) gives the Status Changed Date of sheet Active to Inactive.",
+    "Update TB_M_PART_CANDIDATE, CHANGED_BY and CHANGED_DT. SYNC_STATUS = 0 (No Sync) only when a value sent to GTOPAS / AP POLE changed (Status to or from Active, Pcs/Case or Max Case/Day of an Active part); a change of Min MAD or Effective Start Date only, or a Save without change, keeps the Sync Status. Status changes are written to the history (FIELD_NAME PART_STATUS).",
     "Insert the change history when any register or update in Part List",
     "Close the modal, move the part to the top of the list and display message no. 9."
    ]
@@ -4198,7 +4198,7 @@
     ],
     [
      "Status Active -> Inactive (screen, upload or XD05)",
-     "No Sync; listed in Active to Inactive; taken by [Sync]",
+     "No Sync; taken by [Sync]",
      "Delete in GTOPAS and AP POLE"
     ],
     [
@@ -4529,13 +4529,13 @@
   },
   {
    "type": "heading",
-   "text": "Last Sync and Active to Inactive (17-Nov)"
+   "text": "Last Sync (17-Nov)"
   },
   {
    "type": "bullets",
    "items": [
     "Mapping per Destination: new column Last Sync after Sync Status = LAST_SYNC_DT of TB_R_CROSSDOCK_IF_RESULT (latest of GTOPAS / AP POLE); \"Never\" when the part was never synced.",
-    "Export Excel of Mapping per Destination: sheet 1 gets column Last Sync Date; new sheet 3 \"Active to Inactive\" (Part Number, Part Name, Destination Code, Status Before, Status Now, Status Changed Date, Last Sync Date, Action \"Delete in GTOPAS / AP POLE\"), one row per destination, every part of the master whatever the filter. Active to Inactive (17-Nov): a part whose status went from Active to Inactive (XD05, Save on XD01 or upload XD02: TB_H_PART_CANDIDATE FIELD_NAME PART_STATUS, OLD_VALUE Active, NEW_VALUE Inactive) after LAST_SYNC_DT of TB_R_CROSSDOCK_IF_RESULT is still Active in the target system: the RPA deletes its part + destination rows there. A part never synced (LAST_SYNC_DT NULL) is not listed. The list is also sheet \"Active to Inactive\" of the Mapping per Destination Export Excel (XD01).",
+    "Export Excel of Mapping per Destination: sheet 1 gets column Last Sync Date. Sheet \"Active to Inactive\" removed (18-Nov): Inactive parts with No Sync / Failed are taken by [Sync] by their status.",
     "Export Excel of Part List: new column Sync Status after Status (No Sync / Waiting / Success / Failed): the RPA to AP POLE (XD07) takes the parts that are not synced yet from it."
    ]
   }
@@ -5032,7 +5032,7 @@
      "DATETIME",
      "",
      "Y",
-     "Date-time of the last Success of the part for this target (kept when a later run is Failed); NULL when never synced. A part is listed in \"Active to Inactive\" when it went Inactive after this date (17-Nov)."
+     "Date-time of the last Success of the part for this target (kept when a later run is Failed); NULL when never synced. Shown as Last Sync on XD01."
     ],
     [
      "IF_FILE_NAME",
@@ -5086,7 +5086,7 @@
   "function_name": "XD01 Cross Dock Part Master Screen",
   "created_date": "18-Oct-26",
   "created_by": "FID Rayhan",
-  "updated_date": "17-Nov-26",
+  "updated_date": "18-Nov-26",
   "updated_by": "FID Rayhan"
  },
  "revisions": [
@@ -5102,7 +5102,7 @@
    "author": "FID Rayhan",
    "date": "17-Nov-26",
    "reviewed_by": "",
-   "description": "Sync Status rule: No Sync only when a value sent to GTOPAS / AP POLE changes; a manual Active -> Inactive is listed in Active to Inactive and taken by [Sync] (FB-204 / FB-205)."
+   "description": "Sync Status rule: No Sync only when a value sent to GTOPAS / AP POLE changes; a manual Active -> Inactive is taken by [Sync] (FB-204 / FB-205)."
   },
   {
    "revision": "0.3",
@@ -5110,6 +5110,13 @@
    "date": "17-Nov-26",
    "reviewed_by": "",
    "description": "[Sync] takes every part with status Active (ongoing period) or Inactive whose Sync Status is No Sync or Failed, whatever the filter shows (Candidate never)."
+  },
+  {
+   "revision": "0.4",
+   "author": "FID Rayhan",
+   "date": "18-Nov-26",
+   "reviewed_by": "",
+   "description": "Sheet \"Active to Inactive\" removed (18-Nov): Inactive parts with No Sync / Failed are taken by [Sync] by their status. Export Excel of Mapping per Destination has 2 sheets again; column Last Sync stays."
   }
  ]
 }

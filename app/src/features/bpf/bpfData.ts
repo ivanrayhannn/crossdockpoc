@@ -299,7 +299,7 @@ export const BPF: BpfData = {
      "fn": "",
      "title": "RPA on AP POLE: Cross Dock Kanban Part Master (WLM9Q890) add / edit / delete part; Export Customer Cross Dock Master (WLM9Q860) add / edit / delete destination",
      "read": [
-      "XD01 Export Excel (Part List, Mapping, Active to Inactive)"
+      "XD01 Export Excel (Part List, Mapping per Destination)"
      ],
      "write": [
       "AP POLE WLM9Q890 / WLM9Q860"

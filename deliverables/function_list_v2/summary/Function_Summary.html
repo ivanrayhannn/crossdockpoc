@@ -110,7 +110,7 @@ const FUNCS = [
         'Upload part list (XD02): pakai sheet Upload; Upload (A/E) A = part baru, E = edit. Status Candidate tidak bisa diubah lewat upload, Active ↔ Inactive boleh, tidak ada yang bisa jadi Candidate. All-or-nothing; berhasil msg 11.',
         'DAD Calculation (XD05 proses 1): scheduler bulanan, auto retry 3×; [Run calculation] aktif hanya setelah gagal 3× (badge "Scheduled run failed 3x"). Perubahan status ke / dari Active otomatis No Sync.',
         'Aturan Sync Status (17-Nov): part jadi No Sync hanya kalau nilai yang dikirim ke GTOPAS / AP POLE berubah: status ke / dari Active, Pcs/Case atau Max Case/Day part Active, destinasi atau Case/Day. Min MAD, Effective Start Date, Candidate ↔ Inactive dan Save tanpa perubahan tidak mengubah Sync Status.',
-        'Status diubah manual Active → Inactive: tanggalnya dicatat di history, part masuk sheet Active to Inactive dan ikut [Sync] berikutnya (dihapus di GTOPAS / AP POLE).' ] },
+        'Status diubah manual Active → Inactive: part jadi No Sync dan ikut [Sync] berikutnya (dihapus di GTOPAS / AP POLE). Sheet "Active to Inactive" di Export Excel dihapus (18-Nov).' ] },
       { key: 'MP', title: 'Proses normal – Tab Mapping per Destination (D/S)', points: [
         'Buka menu: hanya akun D/S. Default periode ongoing, Sync Status No Sync. Periode ongoing: semua part Active dengan destinasinya (tanpa destinasi: 0 / quota). Periode baru mulai kosong; periode lalu hanya bisa dilihat.',
         'Kolom Total Case/Day (used / quota): used = jumlah Case/Day semua destinasi, quota = Max Case/Day dari Part List. Pcs/Day = Pcs/Case × used; Percentage = used / quota (maksimal 100%).',
@@ -229,7 +229,7 @@ const FUNCS = [
   { id: 'XD06', name: 'IF Cross Dock Master to GTOPAS', type: 'Batch (RPA)', trigger: '[Sync] di XD01: bot download Excel, isi sheet kerja, lalu GTOPAS (17-Nov)',
     sections: [
       { key: 'N', title: 'Proses normal', points: [
-        'D/S hanya klik [Sync]. Bot login ke NSP, buka Crossdock Master Setting tab Mapping per Destination (periode berjalan, Sync Status All), [Export Excel], dan membuka file-nya: sheet Mapping per Destination = daftar NSP (part Active + destinasi), sheet Active to Inactive = part yang dihapus. Bot tidak membaca DB NSP (17-Nov).',
+        'D/S hanya klik [Sync]. Bot login ke NSP, buka Crossdock Master Setting tab Mapping per Destination (periode berjalan, Sync Status All), [Export Excel], dan membuka file-nya: sheet Mapping per Destination = daftar NSP (part Active + destinasi); part Inactive tidak ada di sheet ini, jadi barisnya di GTOPAS dihapus. Bot tidak membaca DB NSP (17-Nov).',
         'Bot membuka GTOPAS menu Supply > Master > Crossdock Master (WVJA5204), isi Depot Code 01, [Search], dan membaca semua halaman ([NextPage]).',
         'Bandingkan per P/No. + Destination Code (GTOPAS menampilkan P/No. dengan "-", contoh 52119-BZV60). Destination Code = buyer code + PD code, harus sama persis di NSP dan GTOPAS, tanpa konversi (11-Nov).',
         'Register dengan nilai tetap: Depot Code 01, Maker Code A, Dom/Os 2, TOPAS Order Type 3, Trans Code 2 (11-Nov).',
@@ -248,7 +248,7 @@ const FUNCS = [
   { id: 'XD07', name: 'RPA Cross Dock Master to AP POLE', type: 'Batch (RPA)', trigger: '[Sync] di XD01 (RPA di layar AP POLE, 17-Nov)',
     sections: [
       { key: 'N', title: 'Proses normal', points: [
-        'Sumber: file Export Excel XD01 (Part List, Mapping per Destination, sheet Active to Inactive) yang di-download bot sendiri setelah [Sync] (17-Nov), part Waiting. Bot mengisi sheet kerja AP POLE Compare (aksi dan hasil per part / Buyer-PD). Tidak pakai file SFTP lagi.',
+        'Sumber: file Export Excel XD01 (Part List, Mapping per Destination) yang di-download bot sendiri setelah [Sync] (17-Nov), part Waiting. Bot mengisi sheet kerja AP POLE Compare (aksi dan hasil per part / Buyer-PD). Tidak pakai file SFTP lagi.',
         'Level part, layar WLM9Q890 Cross Dock Kanban Part Master: Effective From awal bulan s/d akhir bulan, isi Part No, [Search]. Part No = PART_NO, Shipping Box Qty = Pcs/Case, Max Shipping Box Qty = Max Case/Day (Max Allowance Qty dihitung AP POLE).',
         'Skenario part: Candidate → Active = Add; Inactive → Active = Add kalau belum ada, Edit kalau sudah ada; Active → Inactive = centang, Delete; tetap Active tapi Pcs/Case / Max Case/Day berubah = Edit.',
         'Level destinasi: centang part, [Maintain Cross Dock] → WLM9Q860 Export Customer Cross Dock Master. Buyer-PD = DEST_CODE (9722D-88), Order Type **, Transport Code 2, Max Shipping Box Qty = Case/Day destinasi.',

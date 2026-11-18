@@ -24,9 +24,9 @@ PART = {
     'meta': [('Function', 'XD07 RPA Cross Dock Master to AP POLE, part level'),
              ('Screen', 'AP POLE WLM9Q890 Cross Dock Kanban Part Master (menu Master Maintenance)'),
              ('User', 'RPA bot, started by [Sync] (the same steps can be done by the D/S team by hand as a fallback)'),
-             ('Source data', 'NSP Export Excel Part List (sheet Part List: Part Number, Part Name, Status, Sync Status, Pcs/Case, Max Case/Day) '
-                             'and sheet "Active to Inactive" of the Mapping per Destination Export Excel. Refer sheet "0. Source Data (NSP)"'),
-             ('Condition', 'Only the parts with Sync Status Waiting (set by [Sync] in NSP) and the parts of sheet "Active to Inactive"')],
+             ('Source data', 'NSP Export Excel Part List (sheet Part List: Part Number, Part Name, Status, Sync Status, Pcs/Case, Max Case/Day). '
+                             'Refer sheet "0. Source Data (NSP)"'),
+             ('Condition', 'Only the parts with Sync Status Waiting (set by [Sync] in NSP): Status Active = add / edit, Status Inactive = delete')],
     'blocks': [
         ('step', 'Bot: download the source data from NSP',
          'After [Sync] by the D/S team, the bot downloads the Mapping per Destination and the Part List with [Export Excel] on Crossdock Master Setting: refer sheet '
@@ -41,7 +41,7 @@ PART = {
         ('table', 'Scenarios (status of the part in the source file)', ['No', 'Change in NSP', 'Action in AP POLE'], [
             ['1', 'Candidate -> Active', '[Add]: Part No., Shipping Box Qty = Pcs/Case, Max Shipping Box Qty = Max Case/Day, [Save]'],
             ['2', 'Inactive -> Active', 'Search the part. Not in AP POLE: [Add] as scenario 1. In AP POLE: [Edit] Shipping Box Qty and Max Shipping Box Qty'],
-            ['3', 'Active -> Inactive (sheet "Active to Inactive")', 'Search the part, tick it, [Delete]'],
+            ['3', 'Active -> Inactive (Part List: Status Inactive, Waiting)', 'Search the part, tick it, [Delete]'],
             ['4', 'Still Active, Pcs/Case or Max Case/Day changed', 'Search the part, tick it, [Edit] Shipping Box Qty / Max Shipping Box Qty, [Save]']], [6, 34, 100]),
         ('step', 'Add / Edit: fill the pop up and [Save]',
          'Pop up WLM9Q891: Shipping Box Qty = Pcs/Case, Max Shipping Box Qty = Max Case/Day. Max Allowance Qty is calculated by AP POLE '

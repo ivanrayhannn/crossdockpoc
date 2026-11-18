@@ -72,26 +72,6 @@ const UPLOAD_COLUMNS: (Column<UploadLine> & { width: number })[] = [
   { header: { value: 'Upload (A/E)', ...HEADER }, cell: ({ dest }) => ({ value: dest ? 'E' : 'A' }), width: 13 },
 ];
 
-/** Sheet "Active to Inactive": one row per destination of a part that went Active -> Inactive after its last successful sync,
- *  so GTOPAS / AP POLE still hold it as Active. Source for the RPA (XD06 / XD07) to delete. A part never synced is not listed. */
-interface InactiveLine {
-  part: Part;
-  dest: Part['dests'][number] | null;
-}
-export const inactiveSinceSync = (parts: Part[]) =>
-  parts.filter((p) => p.st === 'Inactive' && p.inactiveDt && p.lastSyncDt && (stamp(p.inactiveDt) ?? 0) > (stamp(p.lastSyncDt) ?? 0))
-    .sort((a, b) => a.p.localeCompare(b.p));
-const INACTIVE_COLUMNS: (Column<InactiveLine> & { width: number })[] = [
-  { header: { value: 'Part Number', ...HEADER }, cell: ({ part }) => cell(part.p), width: 18 },
-  { header: { value: 'Part Name', ...HEADER }, cell: ({ part }) => cell(part.n), width: 26 },
-  { header: { value: 'Destination Code', ...HEADER }, cell: ({ dest }) => cell(dest && (dest.cd || DCODE[dest.d])), width: 17 },
-  { header: { value: 'Status Before', ...HEADER }, cell: () => cell('Active'), width: 14 },
-  { header: { value: 'Status Now', ...HEADER }, cell: () => cell('Inactive'), width: 12 },
-  { header: { value: 'Status Changed Date', ...HEADER }, cell: ({ part }) => cell(part.inactiveDt), width: 20 },
-  { header: { value: 'Last Sync Date', ...HEADER }, cell: ({ part }) => cell(part.lastSyncDt), width: 18 },
-  { header: { value: 'Action', ...HEADER }, cell: () => cell('Delete in GTOPAS / AP POLE'), width: 28 },
-];
-
 /**
  * Downloads Mapping per Destination as .xlsx. Sheet 1 holds the rows of the active filter (information only).
  * Sheet "Upload" holds every Active part of the ongoing period, one row per destination (a part without
@@ -110,10 +90,6 @@ export async function exportMappingXlsx(rows: Part[], period: string, allParts: 
           .flatMap<UploadLine>((part) => (part.dests.length ? part.dests.map((dest) => ({ part, dest })) : [{ part, dest: null }]))
       : [];
 
-  // every part of the master (not the screen filter): the RPA needs the full list
-  const inactiveLines = inactiveSinceSync(allParts).flatMap<InactiveLine>((part) =>
-    part.dests.length ? part.dests.map((dest) => ({ part, dest })) : [{ part, dest: null }]);
-
   const d = new Date();
   const stamp = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
   const periodLabel = period === 'all' ? 'All_periods' : period.replace(' ', '_');
@@ -121,6 +97,5 @@ export async function exportMappingXlsx(rows: Part[], period: string, allParts: 
   await writeExcelFile([
     { sheet: 'Mapping per Destination', data: getSheetData(lines, LIST_COLUMNS), columns: LIST_COLUMNS.map((c) => ({ width: c.width })) },
     { sheet: 'Upload', data: getSheetData(uploadLines, UPLOAD_COLUMNS), columns: UPLOAD_COLUMNS.map((c) => ({ width: c.width })) },
-    { sheet: 'Active to Inactive', data: getSheetData(inactiveLines, INACTIVE_COLUMNS), columns: INACTIVE_COLUMNS.map((c) => ({ width: c.width })) },
   ]).toFile(`Crossdock_Mapping_per_Destination_${periodLabel}_${stamp}.xlsx`);
 }

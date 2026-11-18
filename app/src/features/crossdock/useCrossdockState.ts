@@ -149,7 +149,7 @@ export function useCrossdockState() {
     const prev = editId ? parts.find((p) => p.p === editId) : undefined;
     const saved: Part = { ...form, pc: num(form.pc), mc: num(form.mc), minMad: num(form.minMad) };
     // Sync Status follows syncRule: only Status changes to / from Active and Pcs/Case / Max Case/Day of an Active part need a new Sync.
-    const f: Part = { ...saved, by: EDITOR, dt: nowStamp(), ...syncAfterSave(prev, saved) };
+    const f: Part = { ...saved, by: EDITOR, dt: nowStamp(), syncStatus: syncAfterSave(prev, saved) };
     // The saved part goes to the top of the list, whether it was added or edited.
     setParts((prevParts) => [f, ...prevParts.filter((p) => p.p !== f.p)]);
     // Show it right away: drop filters that could hide it and sort newest first.

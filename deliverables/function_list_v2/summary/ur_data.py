@@ -34,7 +34,7 @@ FUNCS = [
   'XD01, XD07', 'Draft 0.1'),
  ('XD07', 'RPA Cross Dock Master to AP POLE', 'Batch (RPA)', 'System (dari [Sync] D/S)', 'On demand: [Sync] di XD01',
   'Menyamakan cross dock master AP POLE dengan NSP lewat RPA di layar AP POLE (WLM9Q890 level part, WLM9Q860 level destinasi), 17-Nov.',
-  '1. Sumber: Export Excel XD01 (Part List, Mapping, Active to Inactive), part belum ter-sync.\n2. WLM9Q890: Candidate/Inactive → Active = Add/Edit, Active → Inactive = Delete, Pcs/Case / Max Case/Day berubah = Edit.\n3. WLM9Q860 ([Maintain Cross Dock]): destinasi Add / Delete / Edit, Total Shipping Allocated ≤ Max Case/Day.\n4. Try-catch; Success isi LAST_SYNC_DT; status gabungan dengan XD06.',
+  '1. Sumber: Export Excel XD01 (Part List, Mapping per Destination), part Waiting; part Status Inactive = Delete.\n2. WLM9Q890: Candidate/Inactive → Active = Add/Edit, Active → Inactive = Delete, Pcs/Case / Max Case/Day berubah = Edit.\n3. WLM9Q860 ([Maintain Cross Dock]): destinasi Add / Delete / Edit, Total Shipping Allocated ≤ Max Case/Day.\n4. Try-catch; Success isi LAST_SYNC_DT; status gabungan dengan XD06.',
   'TB_M_PART_CANDIDATE, TB_M_PART_CANDIDATE_DEST, TB_R_CROSSDOCK_IF_RESULT', 'AP POLE WLM9Q890 / WLM9Q860 (RPA), TB_R_CROSSDOCK_IF_RESULT, TB_M_PART_CANDIDATE',
   'XD01, XD06', 'Draft 0.2 (RPA, 17-Nov)'),
  ('XD08', 'Order Control Information to NSP Batch', 'Batch', 'System', 'Scheduler harian 27:30 (D 03:30), retry 3x',

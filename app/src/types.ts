@@ -46,8 +46,6 @@ export interface Part {
   effDate?: string;
   /** Date-time of the last successful sync of the mapping to GTOPAS / AP POLE (XD06 / XD07); null when never synced. */
   lastSyncDt?: string | null;
-  /** Date-time the status went from Active to Inactive (XD05 process 1); null when the part never went Active -> Inactive. */
-  inactiveDt?: string | null;
 }
 
 export interface PartQuery {

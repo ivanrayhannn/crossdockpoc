@@ -14,6 +14,7 @@
 | 0.2 | FID Rayhan | 17-Nov-26 |  | [Sync] runs the RPA from the download: the bot downloads the XD01 Export Excel (no direct read of the NSP database), fills the work sheet GTOPAS Compare and then adds / deletes on WVJA5204. User guide Crossdock_User_Guide_GTOPAS.xlsx. |
 | 0.3 | FID Rayhan | 17-Nov-26 |  | Sync Status rule of XD01 (No Sync only for a value sent to the target); a manual Active -> Inactive is also listed in Active to Inactive and deleted. |
 | 0.4 | FID Rayhan | 18-Nov-26 |  | Waiting parts follow the [Sync] definition of XD01: every part with status Active (ongoing period) or Inactive whose Sync Status is No Sync or Failed, whatever the filter (Candidate never); table of the part status in 4.2. |
+| 0.5 | FID Rayhan | 18-Nov-26 |  | Sheet "Active to Inactive" removed (18-Nov): Inactive parts with No Sync / Failed are taken by [Sync] by their status. Inactive parts are not in sheet Mapping per Destination, so their rows are deleted by the compare. |
 
 ## 1. General
 
@@ -47,7 +48,7 @@ flowchart TB
 
 | Name | Type | Description |
 |---|---|---|
-| XD01 Export Excel: Mapping per Destination | File | Downloaded by the bot after [Sync]: Calculation period = ongoing, Sync Status = All. Sheet Mapping per Destination (Part Number, Destination Code, Sync Status) = NSP list; sheet Active to Inactive = parts to delete |
+| XD01 Export Excel: Mapping per Destination | File | Downloaded by the bot after [Sync]: Calculation period = ongoing, Sync Status = All. Sheet Mapping per Destination (Part Number, Destination Code, Sync Status) = NSP list |
 | TB_R_CROSSDOCK_IF_RESULT | DB | Parts Waiting for 'GTOPAS' (IF_STATUS = '3'), set by [Sync] on XD01: every part with status Active (ongoing period) or Inactive whose Sync Status is No Sync or Failed, whatever the filter (Candidate never) |
 | GTOPAS Crossdock Master (WVJA5204) | System | All rows of Depot Code 01 (one row per part + destination), read by the bot page by page |
 
@@ -134,7 +135,7 @@ flowchart TB
   - Active part: its destinations of the ongoing period are registered / kept in GTOPAS. Inactive part: all its rows are deleted (none to delete when it was never synced; it still gets Success).
 2. The bot logs in to NSP, opens XD01 Crossdock Master Setting, tab Mapping per Destination, Calculation period = ongoing, Sync Status = All, clicks [Search] and [Export Excel], and opens the downloaded file Crossdock_Mapping_per_Destination_<Period>_YYYYMMDD.xlsx.
   - NSP list = rows of sheet Mapping per Destination with a Destination Code (Active parts of the ongoing period, one row per part + destination). A row with an empty Destination Code = Active part without destination. Inactive parts are not in this sheet.
-  - Waiting parts = Sync Status Waiting in the file (Active and Inactive). Sheet Active to Inactive: parts that went Inactive after their last sync, for checking; every Inactive part is deleted anyway because it is not in the NSP list.
+  - Waiting parts = Sync Status Waiting in the file (Active and Inactive). Inactive parts are not in sheet Mapping per Destination, so all their rows in GTOPAS are deleted by the compare.
 3. The bot opens GTOPAS menu Supply > Master > Crossdock Master (WVJA5204), enters Depot Code 01 (other conditions blank), clicks [Search] and reads every page ([NextPage]).
   - GTOPAS list = one row per P/No. + Destination Code. P/No. is shown with "-" (52119-BZV60): the bot removes "-" before comparing (52119BZV60).
 4. Compare per P/No. (without "-") + Destination Code:
@@ -285,12 +286,7 @@ flowchart TB
 - Rows registered / deleted before the error stay in GTOPAS (the screen has no rollback). The next run compares again, skips them and completes the rest.
 - A part changed on XD01 or by upload while the bot runs gets SYNC_STATUS = No Sync, so the newer data is sent by the next [Sync].
 - TB_R_CROSSDOCK_IF_RESULT keeps the result per part and target (GTOPAS by XD06, AP POLE by XD07); the overall Sync Status needs both.
-
-### 4.3a Active to Inactive since the last sync (17-Nov)
-
-- Active to Inactive (17-Nov): a part whose status went from Active to Inactive (XD05, Save on XD01 or upload XD02: TB_H_PART_CANDIDATE FIELD_NAME PART_STATUS, OLD_VALUE Active, NEW_VALUE Inactive) after LAST_SYNC_DT of TB_R_CROSSDOCK_IF_RESULT is still Active in the target system: the RPA deletes its part + destination rows there. A part never synced (LAST_SYNC_DT NULL) is not listed. The list is also sheet "Active to Inactive" of the Mapping per Destination Export Excel (XD01).
-- Source query: TB_M_PART_CANDIDATE (STATUS Inactive) + TB_H_PART_CANDIDATE (latest change Active -> Inactive, its CREATED_DT = Status Changed Date) + TB_R_CROSSDOCK_IF_RESULT (TARGET_SYSTEM of this function, LAST_SYNC_DT); listed when Status Changed Date > LAST_SYNC_DT.
-- On Success of the run: IF_STATUS 1, IF_DT and LAST_SYNC_DT = date-time of the result, for every part sent and every part deleted. On Failed: IF_STATUS 2 and IF_DT only; LAST_SYNC_DT is not changed, so the part stays in the list for the next run.
+- On Success of the run: IF_STATUS 1, IF_DT and LAST_SYNC_DT = date-time of the result for every Waiting part. On Failed: IF_STATUS 2 and IF_DT only; LAST_SYNC_DT is not changed.
 
 ### 4.4 Open Points
 
@@ -319,7 +315,7 @@ Dummy table (proposed): send status of the cross dock master per part and target
 | PERIOD | CHAR(6) |  | N | Calculation period of the mapping sent (YYYYMM) |
 | IF_STATUS | VARCHAR(1) |  | N | '3' Waiting / '1' Success / '2' Failed |
 | IF_DT | DATETIME |  | Y | Date-time of the result of the target system |
-| LAST_SYNC_DT | DATETIME |  | Y | Date-time of the last Success of the part for this target (kept when a later run is Failed); NULL when never synced. A part is listed in "Active to Inactive" when it went Inactive after this date (17-Nov). |
+| LAST_SYNC_DT | DATETIME |  | Y | Date-time of the last Success of the part for this target (kept when a later run is Failed); NULL when never synced. Shown as Last Sync on XD01. |
 | IF_FILE_NAME | VARCHAR(100) |  | Y | RPA run ID (GTOPAS and AP POLE) |
 | IF_MESSAGE | VARCHAR(500) |  | Y | Reason when Failed; blank when Success |
 | CREATED_BY | VARCHAR(TBD) |  | N | User who created the record |

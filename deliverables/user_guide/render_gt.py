@@ -44,7 +44,6 @@ def sheet(n):
     rows = list(wb[n].iter_rows(values_only=True))
     return list(rows[0]), [dict(zip(rows[0], r)) for r in rows[1:]]
 mh, mrows = sheet('Mapping per Destination')
-ih, irows = sheet('Active to Inactive')
 EX = ('PART-009', 'PART-012', 'PART-F', 'PART-B')
 MC = ['Period', 'Part Number', 'Destination Code', 'Dest Case/Day', 'Sync Status', 'Last Sync Date']
 
@@ -54,10 +53,6 @@ render('x_gt_nsp_all', MC, [[d[h] for h in MC] for d in mrows], ['Part Number', 
 for i, p in enumerate(EX, 1):
     render(f'x_gt_ex{i}_nsp', MC, [[d[h] for h in MC] for d in mrows if d['Part Number'] == p], ['Part Number', 'Destination Code'],
            widths={'Last Sync Date': 18})
-IC = ['Part Number', 'Destination Code', 'Status Before', 'Status Now', 'Status Changed Date', 'Last Sync Date', 'Action']
-render('x_gt_ex5_inactive', IC, [[d[h] for h in IC] for d in irows if d['Part Number'] == 'PART-023'], ['Part Number', 'Destination Code', 'Action'],
-       widths={'Action': 28, 'Status Changed Date': 20, 'Last Sync Date': 18})
-
 # GTOPAS screen Crossdock Master (WVJA5204): list before the run (example data)
 GH = ['No', 'MT', 'Depot Code', 'Maker Code', 'P/No.', 'Domestic/Overseas', 'Destination Code', 'TOPAS Order Type', 'Order Transportation Code']
 g = lambda p, d: ['', '', '01', 'A', p, '2', d, '3', '2']

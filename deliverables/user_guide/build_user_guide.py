@@ -56,7 +56,7 @@ GUIDES = [
     {'sheet': '2. Download Mapping',
      'title': 'Download Crossdock Mapping per Destination to Excel',
      'meta': [('Function', 'XD01 Crossdock Master Setting, sub-menu Mapping per Destination'), ('User', 'D/S team'),
-              ('Result', 'File Crossdock_Mapping_per_Destination_<Period>_YYYYMMDD.xlsx, 3 sheets: Mapping per Destination, Upload and Active to Inactive')],
+              ('Result', 'File Crossdock_Mapping_per_Destination_<Period>_YYYYMMDD.xlsx, 2 sheets: Mapping per Destination and Upload')],
      'steps': [
          ('Open the menu',
           'In the left menu click Master > Crossdock Master Setting. With the D/S account the screen opens on the tab Mapping per Destination.', 'm1_menu'),
@@ -76,14 +76,8 @@ GUIDES = [
           'Every Active part of the ongoing period, one row per destination: Upload (A/E) = E for a current mapping, A for a part without mapping. '
           'Fill Destination Code and Dest Case/Day, save and upload with [Upload Excel]. Total Case/Day (used) and Max Case/Day (quota) are for '
           'reference and are not read by the upload. Do not rename the sheet or the column headers.', 'x_map_upload'),
-         ('Read sheet "Active to Inactive" (source for the RPA)',
-          'Parts whose status went from Active to Inactive (monthly run of XD05) after their last successful sync, one row per destination: '
-          'Status Changed Date is later than Last Sync Date, so GTOPAS / AP POLE still hold the part as Active. Action = Delete in GTOPAS / AP POLE: '
-          'this sheet is the source data for the RPA (XD06 / XD07). It always lists every part of the master, whatever the search filter. '
-          'A part that was never synced is not listed (nothing to delete).', 'x_map_inactive'),
      ],
      'notes': ['The period in the file name is the period chosen in step 2 (All_periods when All periods is chosen).',
-               'Sheet "Active to Inactive" is empty when every part that went Inactive has been synced again after the change.',
                'The total Dest Case/Day of a part may not be more than its Max Case/Day.']},
 ]
 

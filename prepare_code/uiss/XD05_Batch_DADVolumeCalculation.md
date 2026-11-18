@@ -12,6 +12,7 @@
 |---|---|---|---|---|
 | 0.1 | FID Rayhan | 18-Oct-26 |  | Initial Draft |
 | 0.2 | FID Rayhan | 17-Nov-26 |  | SYNC_STATUS = 0 (No Sync) for every status change to or from Active (data edit mapping aligned with 4.3, FB-207); AP POLE delete by RPA (XD07, WLM9Q890) instead of SFTP file. |
+| 0.3 | FID Rayhan | 18-Nov-26 |  | Sheet "Active to Inactive" removed (18-Nov): Inactive parts with No Sync / Failed are taken by [Sync] by their status. |
 
 ## 1. General
 
@@ -375,7 +376,7 @@ One batch with two processes run in sequence: process 1 sets the part status fro
 - Only parts whose status changes are updated in TB_M_PART_CANDIDATE (PART_STATUS, LAST_SOURCE = CALC, CHANGED_BY / CHANGED_DT) and get a history record (event CALC, source BATCH).
 - SYNC_STATUS: a part whose status changes to or from Active gets SYNC_STATUS = 0 (No Sync): Active -> Inactive is deleted by the next [Sync] in GTOPAS (XD06, RPA, all rows) and in AP POLE (XD07, RPA, WLM9Q890 [Delete]) (decided 30-Oct); Candidate -> Active and Inactive -> Active are added. Other status changes do not change SYNC_STATUS (17-Nov).
 - All-or-nothing: any error rolls back the whole run.
-- Every status change is written to TB_H_PART_CANDIDATE (FIELD_NAME PART_STATUS, OLD_VALUE / NEW_VALUE, CREATED_DT = run date-time). Active -> Inactive is read by XD06 / XD07 and the Export Excel of XD01 (sheet "Active to Inactive", 17-Nov).
+- Every status change is written to TB_H_PART_CANDIDATE (FIELD_NAME PART_STATUS, OLD_VALUE / NEW_VALUE, CREATED_DT = run date-time). An Inactive part with No Sync is taken by the next [Sync]: XD06 / XD07 delete it in GTOPAS / AP POLE.
 
 ### 4.4 Process 1 - Retry and Manual Trigger
 
