@@ -6,7 +6,7 @@
   "function_name": "XD06 IF Cross Dock Master to GTOPAS",
   "created_date": "18-Oct-26",
   "created_by": "FID Rayhan",
-  "updated_date": "17-Nov-26",
+  "updated_date": "18-Nov-26",
   "updated_by": "FID Rayhan"
  },
  "revisions": [
@@ -30,13 +30,20 @@
    "date": "17-Nov-26",
    "reviewed_by": "",
    "description": "Sync Status rule of XD01 (No Sync only for a value sent to the target); a manual Active -> Inactive is also listed in Active to Inactive and deleted."
+  },
+  {
+   "revision": "0.4",
+   "author": "FID Rayhan",
+   "date": "18-Nov-26",
+   "reviewed_by": "",
+   "description": "Waiting parts follow the [Sync] definition of XD01: every part with status Active (ongoing period) or Inactive whose Sync Status is No Sync or Failed, whatever the filter (Candidate never); table of the part status in 4.2."
   }
  ],
  "doc_type": "batch",
  "general": {
   "objective": [
    "To keep the Crossdock Master of GTOPAS equal to NSP by an RPA process (no interface file, decided 11-Nov): [Sync] on XD01 starts the bot; the bot downloads the Export Excel of Mapping per Destination (ongoing period) from NSP, fills the work sheet \"GTOPAS Compare\" in the file and maintains GTOPAS screen Crossdock Master (WVJA5204, menu Supply > Master > Crossdock Master) (decided 17-Nov).",
-   "Per part + destination: in NSP (Active) and not in GTOPAS -> registered; in both -> skipped (no change); in GTOPAS and not in NSP -> deleted. Parts that became Inactive are no longer in the NSP list, so their rows in GTOPAS are deleted.",
+   "Per part + destination: in NSP (Active) and not in GTOPAS -> registered; in both -> skipped (no change); in GTOPAS and not in NSP -> deleted. Inactive parts are not in the NSP list, so their rows in GTOPAS are deleted. [Sync] sends every part with status Active (ongoing period) or Inactive whose Sync Status is No Sync or Failed, whatever the filter (Candidate never) (definition of XD01, 17-Nov).",
    "Only the part + destination list is maintained; Pcs/Case, Max Case/Day, Effective Start Date and Case/Day are not sent (GTOPAS keeps no Case/Day).",
    "The bot runs with try-catch: any error stops the run and the whole run is Failed (one fails, all fail). The result is kept per part in TB_R_CROSSDOCK_IF_RESULT and, together with XD07 (AP POLE), gives the overall Sync Status on XD01."
   ],
@@ -119,7 +126,7 @@
    {
     "name": "TB_R_CROSSDOCK_IF_RESULT",
     "type": "DB",
-    "description": "Parts Waiting for 'GTOPAS' (IF_STATUS = '3'), set by [Sync] on XD01"
+    "description": "Parts Waiting for 'GTOPAS' (IF_STATUS = '3'), set by [Sync] on XD01: every part with status Active (ongoing period) or Inactive whose Sync Status is No Sync or Failed, whatever the filter (Candidate never)"
    },
    {
     "name": "GTOPAS Crossdock Master (WVJA5204)",
@@ -427,12 +434,18 @@
    ]
   },
   "steps": [
-   "[Sync] on XD01 sets the parts to Waiting (SYNC_STATUS = '3', IF_STATUS = '3' for 'GTOPAS' and 'APPOLE' in TB_R_CROSSDOCK_IF_RESULT) and starts the RPA bot. Write LOG1. The whole bot run is inside one try-catch (step 6).",
+   {
+    "text": "[Sync] on XD01 sets the parts to Waiting (SYNC_STATUS = '3', IF_STATUS = '3' for 'GTOPAS' and 'APPOLE' in TB_R_CROSSDOCK_IF_RESULT) and starts the RPA bot. Write LOG1. The whole bot run is inside one try-catch (step 6).",
+    "children": [
+     "Waiting parts = every part with status Active (ongoing period) or Inactive whose Sync Status is No Sync or Failed, whatever the filter (Candidate never).",
+     "Active part: its destinations of the ongoing period are registered / kept in GTOPAS. Inactive part: all its rows are deleted (none to delete when it was never synced; it still gets Success)."
+    ]
+   },
    {
     "text": "The bot logs in to NSP, opens XD01 Crossdock Master Setting, tab Mapping per Destination, Calculation period = ongoing, Sync Status = All, clicks [Search] and [Export Excel], and opens the downloaded file Crossdock_Mapping_per_Destination_<Period>_YYYYMMDD.xlsx.",
     "children": [
-     "NSP list = rows of sheet Mapping per Destination with a Destination Code (Active parts of the ongoing period, one row per part + destination). A row with an empty Destination Code = Active part without destination. Waiting parts = Sync Status Waiting.",
-     "Sheet Active to Inactive: parts that went Inactive after their last sync (not in the NSP list, their rows are deleted)."
+     "NSP list = rows of sheet Mapping per Destination with a Destination Code (Active parts of the ongoing period, one row per part + destination). A row with an empty Destination Code = Active part without destination. Inactive parts are not in this sheet.",
+     "Waiting parts = Sync Status Waiting in the file (Active and Inactive). Sheet Active to Inactive: parts that went Inactive after their last sync, for checking; every Inactive part is deleted anyway because it is not in the NSP list."
     ]
    },
    {
@@ -823,7 +836,7 @@
    "level": 0,
    "items": [
     "The D/S team maintains the destinations of each part on XD01 (Mapping per Destination of the ongoing period, created by XD05 process 2 and adjusted by screen or upload XD03). Every change of a value sent to GTOPAS / AP POLE sets the part to No Sync (Sync Status rule of XD01, 17-Nov).",
-    "The D/S team clicks [Sync] when the changes are complete; the RPA bot makes the Crossdock Master of GTOPAS equal to NSP, and XD07 updates AP POLE by RPA (screens WLM9Q890 / WLM9Q860).",
+    "The D/S team clicks [Sync] when the changes are complete. [Sync] sends every part with status Active (ongoing period) or Inactive whose Sync Status is No Sync or Failed, whatever the filter (Candidate never). The RPA bot makes the Crossdock Master of GTOPAS equal to NSP, and XD07 updates AP POLE by RPA (screens WLM9Q890 / WLM9Q860).",
     "RPA only (decided 11-Nov): the D/S team only clicks [Sync]. The bot downloads the XD01 Export Excel, fills the work sheet GTOPAS Compare and works on GTOPAS screen Crossdock Master (WVJA5204); it does not read the NSP database (decided 17-Nov). Steps with the screens: deliverables/user_guide/Crossdock_User_Guide_GTOPAS.xlsx.",
     "The bot always compares the whole list (all Active parts of NSP with all rows of GTOPAS Depot 01), not only the Waiting parts, so a run that stopped earlier is completed by the next run."
    ]
@@ -875,6 +888,54 @@
      "Active part without destination",
      "Y",
      "All rows of the part are deleted"
+    ]
+   ]
+  },
+  {
+   "type": "table",
+   "level": 0,
+   "columns": [
+    {
+     "title": "Part status",
+     "width": 12
+    },
+    {
+     "title": "Sync Status before [Sync]",
+     "width": 16
+    },
+    {
+     "title": "Sent by [Sync]",
+     "width": 10
+    },
+    {
+     "title": "Result in GTOPAS",
+     "width": 30
+    }
+   ],
+   "rows": [
+    [
+     "Active (ongoing period)",
+     "No Sync / Failed",
+     "Y (Waiting)",
+     "Destinations registered / kept; rows not in NSP deleted"
+    ],
+    [
+     "Inactive",
+     "No Sync / Failed",
+     "Y (Waiting)",
+     "All rows of the part deleted (none when never synced)"
+    ],
+    [
+     "Active / Inactive",
+     "Success / Waiting",
+     "N",
+     "Still compared in the full list (no change expected)"
+    ],
+    [
+     "Candidate",
+     "Any",
+     "N",
+     "Never in GTOPAS"
     ]
    ]
   },
