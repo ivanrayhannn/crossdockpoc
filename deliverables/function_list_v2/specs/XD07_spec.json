@@ -6,7 +6,7 @@
   "function_name": "XD07 RPA Cross Dock Master to AP POLE",
   "created_date": "18-Oct-26",
   "created_by": "FID Rayhan",
-  "updated_date": "18-Nov-26",
+  "updated_date": "19-Nov-26",
   "updated_by": "FID Rayhan"
  },
  "revisions": [
@@ -44,6 +44,13 @@
    "date": "18-Nov-26",
    "reviewed_by": "",
    "description": "Sheet \"Active to Inactive\" removed (18-Nov): Inactive parts with No Sync / Failed are taken by [Sync] by their status. Parts to delete = sheet Part List, Status Inactive, Sync Status Waiting."
+  },
+  {
+   "revision": "0.6",
+   "author": "FID Rayhan",
+   "date": "19-Nov-26",
+   "reviewed_by": "",
+   "description": "Notification email of the RPA (Power Automate): cases SUCCESS / FAILED / bot not started, recipients, subject, body, attachment, retry (4.6); LOG6."
   }
  ],
  "doc_type": "batch",
@@ -599,7 +606,7 @@
     "mappings": [
      {
       "dest_field": "IF_STATUS",
-      "description": "'1' transfer OK / '2' file or transfer error"
+      "description": "'1' run without error / '2' run stopped by an error (try-catch, all parts)"
      },
      {
       "dest_field": "IF_DT",
@@ -979,7 +986,139 @@
   },
   {
    "type": "heading",
-   "text": "4.6 Open Points"
+   "text": "4.6 Notification Email (Power Automate, 19-Nov)"
+  },
+  {
+   "type": "bullets",
+   "marker": "-",
+   "level": 0,
+   "items": [
+    "The cloud flow of the RPA sends one email per run of XD07 (AP POLE), so the user knows the result without opening NSP.",
+    "One email per target: XD06 (GTOPAS) and XD07 (AP POLE) run as separate bots, so a [Sync] gives two emails.",
+    "One email per run: the retries of the same run do not send an email; only the final result does."
+   ]
+  },
+  {
+   "type": "table",
+   "level": 0,
+   "columns": [
+    {
+     "title": "No",
+     "width": 4
+    },
+    {
+     "title": "Case",
+     "width": 16
+    },
+    {
+     "title": "When the email is sent",
+     "width": 26
+    },
+    {
+     "title": "Subject result",
+     "width": 10
+    }
+   ],
+   "rows": [
+    [
+     "E1",
+     "Run without error",
+     "End of the run, after the last part",
+     "SUCCESS"
+    ],
+    [
+     "E2",
+     "Run stopped by an error (try-catch)",
+     "After the automatic retries of the cloud flow are used up (retry count and interval in the flow settings, proposal 2 times, 10 minutes)",
+     "FAILED"
+    ],
+    [
+     "E3",
+     "Bot could not start (machine offline, login of NSP / AP POLE failed, desktop flow time out)",
+     "Cloud flow branch \"run after = failed / timed out\" of the desktop flow action",
+     "FAILED"
+    ],
+    [
+     "-",
+     "Nothing to process (no part Waiting)",
+     "No email",
+     "-"
+    ]
+   ]
+  },
+  {
+   "type": "table",
+   "level": 0,
+   "columns": [
+    {
+     "title": "Item",
+     "width": 12
+    },
+    {
+     "title": "Content",
+     "width": 44
+    }
+   ],
+   "rows": [
+    [
+     "Sender",
+     "Shared mailbox of the RPA (Office 365 Outlook connector \"Send an email (V2)\"), TBC"
+    ],
+    [
+     "To",
+     "User who clicked [Sync] (e-mail sent by NSP in the request of the flow) + D/S team mailing list"
+    ],
+    [
+     "Cc",
+     "RPA PIC; for FAILED also the NSP PIC"
+    ],
+    [
+     "Subject",
+     "[Crossdock Sync][AP POLE][SUCCESS | FAILED] Run <RUN_ID> - <n> part(s)"
+    ],
+    [
+     "Body 1. Run",
+     "RUN_ID, target AP POLE, started / ended, [Sync] by <user> at <date-time>, period(s) sent"
+    ],
+    [
+     "Body 2. Summary",
+     "Parts processed; part added / edited / deleted, Buyer-PD added / edited / deleted"
+    ],
+    [
+     "Body 3. Error (FAILED)",
+     "Step, part, destination and message of the error (LOG4 / LOG5); parts not processed"
+    ],
+    [
+     "Body 4. Action",
+     "SUCCESS: no action. FAILED: click [Sync] again on Crossdock Master Setting; contact the RPA PIC when it fails again"
+    ],
+    [
+     "Body 5. Links",
+     "Folder of the RPA work file (SharePoint / OneDrive, TBC); link to the run in Power Automate (for the RPA PIC)"
+    ],
+    [
+     "Attachment",
+     "The downloaded Excel with the work sheet AP POLE Compare (action, result and message per row). Above the mail size limit: link only"
+    ],
+    [
+     "Language",
+     "English"
+    ]
+   ]
+  },
+  {
+   "type": "bullets",
+   "marker": "-",
+   "level": 0,
+   "items": [
+    "Example subject: [Crossdock Sync][AP POLE][FAILED] Run 20261127103000 - 12 part(s).",
+    "Recipients (mailing list, RPA PIC, NSP PIC) are set in the flow settings, not in the code of the bot.",
+    "LOG6 is written when the email is sent; when sending fails, the run result stays and the RPA PIC sees it in the Power Automate run history."
+   ]
+  },
+  {
+   "type": "heading",
+   "text": "4.7 Open Points"
   },
   {
    "type": "bullets",
@@ -1047,6 +1186,17 @@
    "action": {
     "system": "Stop. STATUS = ERROR. All Waiting parts Failed.",
     "user": "User contact PIC"
+   }
+  },
+  {
+   "event": "Notification email",
+   "cause": "End of the run (SUCCESS / FAILED)",
+   "type": "Info",
+   "msg_id": "LOG6",
+   "message": "Notification email <SUCCESS / FAILED> of run <RUN_ID> sent to <recipients>.",
+   "action": {
+    "system": "Write the log.",
+    "user": "Read the email; FAILED: click [Sync] again."
    }
   }
  ],

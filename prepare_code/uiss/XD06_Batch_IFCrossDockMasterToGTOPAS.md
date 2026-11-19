@@ -15,6 +15,7 @@
 | 0.3 | FID Rayhan | 17-Nov-26 |  | Sync Status rule of XD01 (No Sync only for a value sent to the target); a manual Active -> Inactive is also listed in Active to Inactive and deleted. |
 | 0.4 | FID Rayhan | 18-Nov-26 |  | Waiting parts follow the [Sync] definition of XD01: every part with status Active (ongoing period) or Inactive whose Sync Status is No Sync or Failed, whatever the filter (Candidate never); table of the part status in 4.2. |
 | 0.5 | FID Rayhan | 18-Nov-26 |  | Sheet "Active to Inactive" removed (18-Nov): Inactive parts with No Sync / Failed are taken by [Sync] by their status. Inactive parts are not in sheet Mapping per Destination, so their rows are deleted by the compare. |
+| 0.6 | FID Rayhan | 19-Nov-26 |  | Notification email of the RPA (Power Automate): cases SUCCESS / FAILED / bot not started, recipients, subject, body, attachment, retry (4.4); LOG6. |
 
 ## 1. General
 
@@ -288,7 +289,38 @@ flowchart TB
 - TB_R_CROSSDOCK_IF_RESULT keeps the result per part and target (GTOPAS by XD06, AP POLE by XD07); the overall Sync Status needs both.
 - On Success of the run: IF_STATUS 1, IF_DT and LAST_SYNC_DT = date-time of the result for every Waiting part. On Failed: IF_STATUS 2 and IF_DT only; LAST_SYNC_DT is not changed.
 
-### 4.4 Open Points
+### 4.4 Notification Email (Power Automate, 19-Nov)
+
+- The cloud flow of the RPA sends one email per run of XD06 (GTOPAS), so the user knows the result without opening NSP.
+- One email per target: XD06 (GTOPAS) and XD07 (AP POLE) run as separate bots, so a [Sync] gives two emails.
+- One email per run: the retries of the same run do not send an email; only the final result does.
+
+| No | Case | When the email is sent | Subject result |
+|---|---|---|---|
+| E1 | Run without error | End of the run, after the last part | SUCCESS |
+| E2 | Run stopped by an error (try-catch) | After the automatic retries of the cloud flow are used up (retry count and interval in the flow settings, proposal 2 times, 10 minutes) | FAILED |
+| E3 | Bot could not start (machine offline, login of NSP / GTOPAS failed, desktop flow time out) | Cloud flow branch "run after = failed / timed out" of the desktop flow action | FAILED |
+| - | Nothing to process (no part Waiting) | No email | - |
+
+| Item | Content |
+|---|---|
+| Sender | Shared mailbox of the RPA (Office 365 Outlook connector "Send an email (V2)"), TBC |
+| To | User who clicked [Sync] (e-mail sent by NSP in the request of the flow) + D/S team mailing list |
+| Cc | RPA PIC; for FAILED also the NSP PIC |
+| Subject | [Crossdock Sync][GTOPAS][SUCCESS \| FAILED] Run <RUN_ID> - <n> part(s) |
+| Body 1. Run | RUN_ID, target GTOPAS, started / ended, [Sync] by <user> at <date-time>, period(s) sent |
+| Body 2. Summary | Parts processed; registered / kept / deleted rows per P/No. + Destination Code |
+| Body 3. Error (FAILED) | Step, part, destination and message of the error (LOG4 / LOG5); parts not processed |
+| Body 4. Action | SUCCESS: no action. FAILED: click [Sync] again on Crossdock Master Setting; contact the RPA PIC when it fails again |
+| Body 5. Links | Folder of the RPA work file (SharePoint / OneDrive, TBC); link to the run in Power Automate (for the RPA PIC) |
+| Attachment | The downloaded Excel with the work sheet GTOPAS Compare (action, result and message per row). Above the mail size limit: link only |
+| Language | English |
+
+- Example subject: [Crossdock Sync][GTOPAS][FAILED] Run 20261127103000 - 12 part(s).
+- Recipients (mailing list, RPA PIC, NSP PIC) are set in the flow settings, not in the code of the bot.
+- LOG6 is written when the email is sent; when sending fails, the run result stays and the RPA PIC sees it in the Power Automate run history.
+
+### 4.5 Open Points
 
 - FB-176: every GTOPAS row (Depot 01) not in NSP is deleted: at go-live all crossdock parts of GTOPAS must exist in NSP, else they are deleted by the first run - TBC.
 - RPA design: login user, time limit and screen handling of the bot - detailed in the RPA design.
@@ -302,6 +334,7 @@ flowchart TB
 | LOG3 | Register / delete | Row registered or deleted on the screen | Info | <REGISTER / DELETE> <PART_NO> <DEST_CODE>: <GTOPAS message>. | system: Write the log.; user: - |
 | LOG4 | Error (try-catch) | Login, screen, timeout, GTOPAS error message, NSP download or Excel error | Error | RPA to GTOPAS stopped at <STEP> <PART_NO> <DEST_CODE>: <ERROR_DETAIL>. All Waiting parts Failed. | system: Stop the bot. IF_STATUS = 2 for every Waiting part.; user: Click [Sync] again; contact PIC if it persists. |
 | LOG5 | Unexpected error | Any other system error | Critical | Unexpected error: <ERROR_DETAIL>. | system: Stop. STATUS = ERROR. All Waiting parts Failed.; user: User contact PIC |
+| LOG6 | Notification email | End of the run (SUCCESS / FAILED) | Info | Notification email <SUCCESS / FAILED> of run <RUN_ID> sent to <recipients>. | system: Write the log.; user: Read the email; FAILED: click [Sync] again. |
 
 ## 7. Tables
 

@@ -237,6 +237,7 @@ const FUNCS = [
         'Ada di NSP dan ada di GTOPAS → skip. Ada di NSP, belum di GTOPAS → didaftarkan. Ada di GTOPAS, tidak ada di NSP → dihapus (MT = DEL). Pesan sukses GTOPAS: MZD34006FEI Registration completed.',
         'Part yang jadi Inactive atau Active tanpa destinasi tidak ada di daftar NSP, jadi semua row-nya di GTOPAS terhapus.',
         'Pcs/Case, Max Case/Day, Effective Start Date dan Case/Day tidak dikirim.',
+        'Email notifikasi (Power Automate, 19-Nov): 1 email per run ke user yang klik [Sync] + mailing list D/S, Cc PIC RPA. SUCCESS di akhir run; FAILED setelah retry otomatis habis atau bot tidak bisa jalan. Isi: RUN_ID, ringkasan, error, aksi ([Sync] lagi), lampiran Excel GTOPAS Compare.',
         'Selesai tanpa error: semua part Waiting GTOPAS = Success; Sync Status gabungan dengan XD07, history SYNC (source RPA), Log jumlah register / skip / delete.' ] },
       { key: 'AB', title: 'Abnormality', points: [
         { k: 'Error apa pun di bot (login, layar, timeout, pesan error GTOPAS, download NSP / Excel gagal)', d: 'LOG4', s: 'Try-catch: bot berhenti, semua part Waiting Failed (1 gagal, gagal semua); row yang sudah diproses tetap di GTOPAS', u: '[Sync] lagi; run berikutnya membandingkan ulang dan melanjutkan' },
@@ -253,6 +254,7 @@ const FUNCS = [
         'Skenario part: Candidate → Active = Add; Inactive → Active = Add kalau belum ada, Edit kalau sudah ada; Active → Inactive = centang, Delete; tetap Active tapi Pcs/Case / Max Case/Day berubah = Edit.',
         'Level destinasi: centang part, [Maintain Cross Dock] → WLM9Q860 Export Customer Cross Dock Master. Buyer-PD = DEST_CODE (9722D-88), Order Type **, Transport Code 2, Max Shipping Box Qty = Case/Day destinasi.',
         'Skenario destinasi: destinasi bertambah dan Total Shipping Allocated < Max Case/Day = Add; = Max Case/Day = hapus dulu destinasi yang tidak ada di NSP, lalu Add; destinasi berkurang = Delete; Case/Day berubah = Edit.',
+        'Email notifikasi (Power Automate, 19-Nov): sama dengan XD06, subject [Crossdock Sync][AP POLE][SUCCESS | FAILED], lampiran Excel AP POLE Compare.',
         'Try-catch: 1 error = semua part Waiting Failed. Success: IF_STATUS 1, LAST_SYNC_DT diisi; Sync Status gabungan dengan XD06; history SYNC.' ] },
       { key: 'AB', title: 'Abnormality', points: [
         { k: 'Login / layar AP POLE gagal, timeout, pesan error AP POLE', d: 'LOG4', s: 'Bot berhenti, semua part Waiting Failed', u: '[Sync] lagi; hubungi PIC' },

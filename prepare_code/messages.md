@@ -140,6 +140,7 @@
 | LOG3 | Register / delete | Row registered or deleted on the screen | Info | <REGISTER / DELETE> <PART_NO> <DEST_CODE>: <GTOPAS message>. | system: Write the log.; user: - |
 | LOG4 | Error (try-catch) | Login, screen, timeout, GTOPAS error message, NSP download or Excel error | Error | RPA to GTOPAS stopped at <STEP> <PART_NO> <DEST_CODE>: <ERROR_DETAIL>. All Waiting parts Failed. | system: Stop the bot. IF_STATUS = 2 for every Waiting part.; user: Click [Sync] again; contact PIC if it persists. |
 | LOG5 | Unexpected error | Any other system error | Critical | Unexpected error: <ERROR_DETAIL>. | system: Stop. STATUS = ERROR. All Waiting parts Failed.; user: User contact PIC |
+| LOG6 | Notification email | End of the run (SUCCESS / FAILED) | Info | Notification email <SUCCESS / FAILED> of run <RUN_ID> sent to <recipients>. | system: Write the log.; user: Read the email; FAILED: click [Sync] again. |
 
 ## XD07 – IF Cross Dock Master to AP POLE
 
@@ -152,6 +153,7 @@
 | LOG3 | Change done | Part or destination changed on the screen | Info | <ADD / EDIT / DELETE> <PART_NO> <BUYER_PD>: <AP POLE message>. | system: Write the log.; user: - |
 | LOG4 | Error (try-catch) | Login, screen, timeout, AP POLE error message or source file error | Error | RPA to AP POLE stopped at <STEP> <PART_NO> <BUYER_PD>: <ERROR_DETAIL>. All Waiting parts Failed. | system: Stop the bot. IF_STATUS = 2 for every Waiting part.; user: Click [Sync] again; contact PIC if it persists. |
 | LOG5 | Unexpected error | Any other system error | Critical | Unexpected error: <ERROR_DETAIL>. | system: Stop. STATUS = ERROR. All Waiting parts Failed.; user: User contact PIC |
+| LOG6 | Notification email | End of the run (SUCCESS / FAILED) | Info | Notification email <SUCCESS / FAILED> of run <RUN_ID> sent to <recipients>. | system: Write the log.; user: Read the email; FAILED: click [Sync] again. |
 
 ## XD08 – Order Control Information to NSP Batch
 
