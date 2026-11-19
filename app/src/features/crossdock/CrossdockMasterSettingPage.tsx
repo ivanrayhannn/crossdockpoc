@@ -12,6 +12,7 @@ import { SaveSuccessModal } from './components/SaveSuccessModal';
 import { MappingUploadModal } from './components/MappingUploadModal';
 import { UploadModal } from './components/UploadModal';
 import { ViewTabs } from './components/ViewTabs';
+import { PAST_ROWS } from '../../data/seed';
 import { exportPartsXlsx, selectParts } from './partList';
 import { useCrossdockState } from './useCrossdockState';
 
@@ -24,7 +25,7 @@ export function CrossdockMasterSettingPage({ onNavigate }: { onNavigate: (route:
 
   // Sheet 1 follows the Part List table (same filter and sort, all pages); sheet "Upload" holds every part.
   const exportExcel = useCallback(() => {
-    exportPartsXlsx(selectParts(parts, aq), parts).catch((err) => {
+    exportPartsXlsx(selectParts(parts.concat(PAST_ROWS), aq), parts).catch((err) => {
       console.error('Export Excel failed', err);
       window.alert('Export Excel failed. Please try again.');
     });

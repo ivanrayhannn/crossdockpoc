@@ -8,7 +8,7 @@ export function selectParts(parts: Part[], q: PartQuery): Part[] {
   const part = q.part.toLowerCase();
   const name = q.name.toLowerCase();
   const filtered = parts.filter(
-    (p) => (!part || p.p.toLowerCase().includes(part)) && (!name || p.n.toLowerCase().includes(name)) && (q.st === 'all' || p.st.toLowerCase() === q.st),
+    (p) => (!part || p.p.toLowerCase().includes(part)) && (!name || p.n.toLowerCase().includes(name)) && (q.st === 'all' || p.st.toLowerCase() === q.st) && (q.per === 'all' || p.per === q.per),
   );
   if (q.sort === 'default' || q.sort === 'pn_asc') return filtered.sort((a, b) => a.p.localeCompare(b.p));
   if (q.sort === 'dt_desc') return filtered.sort((a, b) => parseDt(b.dt) - parseDt(a.dt));
@@ -37,6 +37,7 @@ export function partAudit(p: Part): { createdDt: string; createdBy: string; upda
 
 /** Sheet 1: the Part List as shown on the screen, plus Effective Start Date. Information only. */
 const LIST_COLUMNS: (Column<Part> & { width: number })[] = [
+  { header: { value: 'Period', ...HEADER }, cell: (p) => ({ value: p.per }), width: 12 },
   { header: { value: 'Part Number', ...HEADER }, cell: (p) => ({ value: p.p }), width: 18 },
   { header: { value: 'Part Name', ...HEADER }, cell: (p) => ({ value: p.n }), width: 32 },
   { header: { value: 'Min MAD', ...HEADER, align: 'right' }, cell: (p) => (p.minMad === '' ? null : { value: num(p.minMad), format: NUMBER_FORMAT }), width: 12 },
