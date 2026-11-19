@@ -6,7 +6,7 @@ Pcs/Case / Max Case/Day after day D goes to M and M+1 (4b); Max Case/Day below t
 Run: python3 build_sim_period_rollover.py"""
 import os
 from openpyxl import Workbook
-from openpyxl.styles import Font
+from openpyxl.styles import Font, PatternFill
 from build_sim_fb182 import BAD, HOLD, OK, sheet, table
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -39,6 +39,22 @@ def mark(rows, col, values):
     return {i: values[r[col]] for i, r in enumerate(rows, 1) if r[col] in values}
 
 
+def step(ws, r, text):
+    """Step heading inside a target sheet (one sheet per target, all steps one after the other)."""
+    x = ws.cell(r, 1, text)
+    x.font, x.fill = Font(name='Arial', size=11, bold=True), PatternFill('solid', fgColor='D9E1F2')
+    for c in range(2, 8):
+        ws.cell(r, c).fill = PatternFill('solid', fgColor='D9E1F2')
+    return r + 2
+
+
+def text(ws, r, lines):
+    for t in lines:
+        ws.cell(r, 1, t).font = Font(name='Arial', size=9, italic=True)
+        r += 1
+    return r + 1
+
+
 def main():
     wb = Workbook()
     wb.remove(wb.active)
@@ -68,88 +84,92 @@ def main():
         ['Screen', 'Part List: info column "Next Status (Dec 2026)" from the DAD result with APPLIED_DT NULL.'],
     ], widths=WIDE)
 
-    # parts used in the example (Nov)
+    # ---------- data of the example ----------
     parts = [['P-A', 'Active', 10, 20, '-'], ['P-B', 'Active', 6, 10, '-'], ['P-C', 'Inactive', 5, 10, '-'], ['P-E', 'Active', 8, 30, '-']]
+    nxt = {'P-A': 'Active', 'P-B': 'Inactive', 'P-C': 'Active', 'P-E': 'Active'}
     dest_m = [['P-A', M, '9722D10', 10, 'Current'], ['P-A', M, '9811110', 8, 'Current'], ['P-B', M, '9722D10', 6, 'Current'],
               ['P-E', M, '9722D10', 10, 'Current'], ['P-E', M, '9811110', 8, 'Current']]
-    gt = [['P-A', '9722D10'], ['P-A', '9811110'], ['P-B', '9722D10'], ['P-E', '9722D10'], ['P-E', '9811110']]
-
-    # ---------- 1. before day D ----------
-    ws, r = sheet(wb, '1. 20-Nov before D', 'Step 1 - 20-Nov: before XD05 (only Current Nov exists, everything synced)', [
-        'P-A, P-B, P-E Active; P-C Inactive. GTOPAS and AP POLE hold the Nov data.'])
-    r = block(ws, r, 'TB_M_PART_CANDIDATE', PART_COLS, parts)
-    r = block(ws, r, 'TB_M_PART_CANDIDATE_DEST', DEST_COLS, dest_m)
-    r = block(ws, r, 'GTOPAS WVJA5204 (Depot 01)', GT_COLS[:2], gt)
-    r = block(ws, r, 'AP POLE WLM9Q890 (part)', AP_PART_COLS, [['11/26', p, pc, mc, '-'] for p, s, pc, mc, _ in parts if s == 'Active'])
-    block(ws, r, 'AP POLE WLM9Q860 (Buyer-PD)', AP_DEST_COLS, [['11/26', p, BP[d], c, '-'] for p, _, d, c, _ in dest_m])
-
-    # ---------- 2. day D: XD05 ----------
-    dad = [[N, 'P-A', 26, 20, 'Active', 'Active', 'NULL'], [N, 'P-B', 12, 20, 'Active', 'Inactive', 'NULL'],
-           [N, 'P-C', 31, 20, 'Inactive', 'Active', 'NULL'], [N, 'P-E', 40, 20, 'Active', 'Active', 'NULL']]
     dest_n = [['P-A', N, '9722D10', 12, 'Next'], ['P-A', N, '9715310', 8, 'Next'], ['P-C', N, '9811110', 5, 'Next'],
               ['P-E', N, '9722D10', 15, 'Next'], ['P-E', N, '9811110', 10, 'Next']]
-    parts_d = [[p, s, pc, mc, {'P-A': 'Active', 'P-B': 'Inactive', 'P-C': 'Active', 'P-E': 'Active'}[p]] for p, s, pc, mc, _ in parts]
-    ws, r = sheet(wb, '2. 27-Nov XD05', 'Step 2 - Day D (27-Nov): XD05 creates the Next period 202612', [
-        'Process 1: DAD result for 202612; PART_STATUS of TB_M_PART_CANDIDATE is NOT changed (applied on 1-Dec).',
-        'Process 2: mapping 202612 for the parts with NEW_STATUS Active (P-A, P-C, P-E). P-B (Inactive for Dec) gets no Dec mapping.',
-        'The Dec parts get No Sync for APPOLE period 202612. GTOPAS is not touched (Current is still Nov).'])
-    r = block(ws, r, 'TB_R_PART_DAD_RESULT (inserted)', DAD_COLS, dad, {i: NEW for i in range(1, 5)})
-    r = block(ws, r, 'TB_M_PART_CANDIDATE (status not changed; screen shows Next Status)', PART_COLS, parts_d,
-              {2: DEL, 3: NEW}, 'P-B Active -> Inactive and P-C Inactive -> Active only from 1-Dec')
-    r = block(ws, r, 'TB_M_PART_CANDIDATE_DEST', DEST_COLS, dest_m + dest_n, {i: NEW for i in range(len(dest_m) + 1, len(dest_m) + len(dest_n) + 1)})
-    block(ws, r, 'TB_R_CROSSDOCK_IF_RESULT', IF_COLS, [[p, 'APPOLE', N, '0 No Sync', 'Dec data to send'] for p in ('P-A', 'P-B', 'P-C', 'P-E')] +
-          [[p, 'GTOPAS', M, '1 Success', 'No change'] for p in ('P-A', 'P-B', 'P-E')], {1: NEW, 2: NEW, 3: NEW, 4: NEW})
+    dad = [[N, 'P-A', 26, 20, 'Active', 'Active', 'NULL'], [N, 'P-B', 12, 20, 'Active', 'Inactive', 'NULL'],
+           [N, 'P-C', 31, 20, 'Inactive', 'Active', 'NULL'], [N, 'P-E', 40, 20, 'Active', 'Active', 'NULL']]
+    gt = [['P-A', '9722D10'], ['P-A', '9811110'], ['P-B', '9722D10'], ['P-E', '9722D10'], ['P-E', '9811110']]
 
-    # ---------- 3. day D: [Sync] -> XD07 Dec ----------
-    ws, r = sheet(wb, '3. 27-Nov Sync', 'Step 3 - Day D (27-Nov): [Sync], XD07 sends Dec to AP POLE (Eff. 12/26)', [
-        'XD07 works on Current first (nothing Waiting for Nov here), then Next. XD06: nothing Waiting for GTOPAS (Current Nov unchanged).',
-        'Assumption (TBC): AP POLE keeps one record per effective month; a part without a 12/26 record is not crossdock in Dec.'])
-    ap_n = [['12/26', 'P-A', 10, 20, 'Add'], ['12/26', 'P-C', 5, 10, 'Add'], ['12/26', 'P-E', 8, 30, 'Add'], ['12/26', 'P-B', 6, 10, 'No record (Inactive in Dec)']]
+    # ================= 1. GTOPAS =================
+    ws, r = sheet(wb, '1. GTOPAS', 'GTOPAS (XD06): the whole simulation - GTOPAS has no period and always holds the Current period', [
+        'Compare key P/No. + Destination Code. Quantities are not sent. Day D = 27-Nov (example), Period Rollover = 1-Dec.'])
+    r = step(ws, r, 'Step 1 - 20-Nov: before XD05 (Current = Nov, everything synced)')
+    r = block(ws, r, 'NSP TB_M_PART_CANDIDATE', PART_COLS, parts)
+    r = block(ws, r, 'NSP TB_M_PART_CANDIDATE_DEST (Nov)', DEST_COLS, dest_m)
+    r = block(ws, r, 'GTOPAS WVJA5204 (Depot 01) = Nov combinations', GT_COLS[:2], gt)
+    r = step(ws, r, 'Step 2 - 27-Nov (day D): XD05 creates Dec (Next)')
+    r = text(ws, r, ['NSP gets the DAD result 202612 and the Dec mapping (see sheet 2 for the values). Part status is not changed yet.',
+                     'GTOPAS: no change. Orders of Nov still use the Nov combinations; nothing is Waiting for GTOPAS.'])
+    r = block(ws, r, 'TB_R_CROSSDOCK_IF_RESULT (GTOPAS)', IF_COLS, [[p, 'GTOPAS', M, '1 Success', 'No change on day D'] for p in ('P-A', 'P-B', 'P-E')],
+              {1: KEEP, 2: KEEP, 3: KEEP})
+    r = step(ws, r, 'Step 3 - 28-Nov / 29-Nov: Pcs/Case and Max Case/Day edits')
+    r = text(ws, r, ['GTOPAS keeps no quantity: the edits of P-A (Pcs/Case) and P-E (Max Case/Day) give no change in GTOPAS (AP POLE only, sheet 2).'])
+    r = step(ws, r, 'Step 4 - 1-Dec 00:10: Period Rollover')
+    r = block(ws, r, '4.1 Apply NEW_STATUS of 202612 (TB_R_PART_DAD_RESULT -> TB_M_PART_CANDIDATE), APPLIED_DT filled', DAD_COLS,
+              [x[:6] + ['01-Dec-2026 00:10'] for x in dad], {i: KEEP for i in range(1, 5)})
+    r = block(ws, r, 'TB_M_PART_CANDIDATE after 4.1', PART_COLS, [[p, nxt[p], pc, mc, '-'] for p, _, pc, mc, _ in parts], {2: NEW, 3: NEW},
+              'P-B Inactive, P-C Active from today')
+    r = block(ws, r, '4.2 Dec becomes Current, Nov becomes Past', DEST_COLS,
+              [x[:4] + ['Past'] for x in dest_m] + [x[:4] + ['Current'] for x in dest_n], {i: NEW for i in range(len(dest_m) + 1, len(dest_m) + len(dest_n) + 1)})
+    keys = sorted({(x[0], x[2]) for x in dest_m} | {(x[0], x[2]) for x in dest_n})
+    inm, inn = {(x[0], x[2]) for x in dest_m}, {(x[0], x[2]) for x in dest_n}
+    cmp_rows = [[p, d, 'Y' if (p, d) in inm else 'N', 'Y' if (p, d) in inn else 'N',
+                 'Same' if (p, d) in inm and (p, d) in inn else 'Added' if (p, d) in inn else 'Removed'] for p, d in keys]
+    r = block(ws, r, '4.3 Compare the combinations Nov vs Dec per part', ['PART_NO', 'DEST_CODE', 'In Nov', 'In Dec', 'Result'], cmp_rows,
+              mark(cmp_rows, 4, {'Same': KEEP, 'Added': NEW, 'Removed': DEL}))
+    r = block(ws, r, '4.4 Parts with a different combination -> No Sync for GTOPAS (period 202612), then Waiting', IF_COLS, [
+        ['P-A', 'GTOPAS', N, '0 -> 3 Waiting', '9811110 removed, 9715310 added'], ['P-B', 'GTOPAS', N, '0 -> 3 Waiting', 'Inactive: all rows removed'],
+        ['P-C', 'GTOPAS', N, '0 -> 3 Waiting', 'Active: 9811110 added'], ['P-E', 'GTOPAS', N, '1 (no change)', 'Same combinations']], {1: NEW, 2: NEW, 3: NEW, 4: KEEP})
+    r = text(ws, r, ['4.5 XD06 starts automatically: the bot downloads the Export Excel (Dec, all Sync Status) and searches every Waiting P/No. in GTOPAS.'])
+    work = [['P-A', '9715310', 'Y', 'N', 'Add'], ['P-A', '9722D10', 'Y', 'Y', 'Keep'], ['P-A', '9811110', 'N', 'Y', 'Delete'],
+            ['P-B', '9722D10', 'N (Inactive)', 'Y', 'Delete'], ['P-C', '9811110', 'Y', 'N', 'Add']]
+    r = block(ws, r, '4.5 Sheet GTOPAS Compare (Waiting parts)', ['P/No.', 'Destination Code', 'In NSP (Dec)', 'In GTOPAS', 'Action'], work,
+              mark(work, 4, {'Keep': KEEP, 'Add': NEW, 'Delete': DEL}))
+    gt_after = [['P-A', '9722D10', 'Keep'], ['P-A', '9811110', 'Delete (MT = DEL)'], ['P-A', '9715310', 'Add'], ['P-B', '9722D10', 'Delete (MT = DEL)'],
+                ['P-C', '9811110', 'Add'], ['P-E', '9722D10', 'Not Waiting, not touched'], ['P-E', '9811110', 'Not Waiting, not touched']]
+    r = block(ws, r, '4.6 GTOPAS WVJA5204 after XD06', GT_COLS, gt_after,
+              {1: KEEP, 2: DEL, 3: NEW, 4: DEL, 5: NEW, 6: KEEP, 7: KEEP})
+    block(ws, r, '4.6 TB_R_CROSSDOCK_IF_RESULT (GTOPAS, 202612)', IF_COLS, [[p, 'GTOPAS', N, '1 Success', 'LAST_SYNC_DT 01-Dec'] for p in ('P-A', 'P-B', 'P-C')],
+          {1: KEEP, 2: KEEP, 3: KEEP})
+
+    # ================= 2. AP POLE =================
+    ws, r = sheet(wb, '2. AP POLE', 'AP POLE (XD07): the whole simulation - one record per Effective Month / Year (MM/YY)', [
+        'Next (Dec) is sent on day D with Eff. 12/26; an edit after day D goes to Eff. 11/26 and 12/26 (4b). Assumption (TBC): a part without a 12/26 record is not crossdock in Dec.'])
+    r = step(ws, r, 'Step 1 - 20-Nov: before XD05 (Eff. 11/26 in AP POLE)')
+    r = block(ws, r, 'AP POLE WLM9Q890 (part)', AP_PART_COLS, [['11/26', p, pc, mc, '-'] for p, s_, pc, mc, _ in parts if s_ == 'Active'])
+    r = block(ws, r, 'AP POLE WLM9Q860 (Buyer-PD)', AP_DEST_COLS, [['11/26', p, BP[d], c, '-'] for p, _, d, c, _ in dest_m])
+    r = step(ws, r, 'Step 2 - 27-Nov (day D): XD05 creates Dec, [Sync] -> XD07 sends Eff. 12/26')
+    r = block(ws, r, 'NSP TB_R_PART_DAD_RESULT 202612 (status not applied yet)', DAD_COLS, dad, {i: NEW for i in range(1, 5)})
+    r = block(ws, r, 'NSP TB_M_PART_CANDIDATE_DEST (Dec, Next)', DEST_COLS, dest_n, {i: NEW for i in range(1, 6)})
+    ap_n = [['12/26', 'P-A', 10, 20, 'Add'], ['12/26', 'P-C', 5, 10, 'Add (Inactive -> Active for Dec)'], ['12/26', 'P-E', 8, 30, 'Add'],
+            ['12/26', 'P-B', 6, 10, 'No record (Inactive for Dec)']]
     r = block(ws, r, 'AP POLE WLM9Q890 (part), Eff. 12/26', AP_PART_COLS, ap_n, {1: NEW, 2: NEW, 3: NEW, 4: DEL})
     r = block(ws, r, 'AP POLE WLM9Q860 (Buyer-PD), Eff. 12/26', AP_DEST_COLS, [['12/26', p, BP[d], c, 'Add'] for p, _, d, c, _ in dest_n],
               {i: NEW for i in range(1, 6)})
-    block(ws, r, 'TB_R_CROSSDOCK_IF_RESULT', IF_COLS, [[p, 'APPOLE', N, '1 Success', 'LAST_SYNC_DT 27-Nov'] for p in ('P-A', 'P-B', 'P-C', 'P-E')],
-          {i: KEEP for i in range(1, 5)})
-
-    # ---------- 4. 28-Nov: Pcs/Case edit (4b) ----------
-    ws, r = sheet(wb, '4. 28-Nov Pcs-Case', 'Step 4 - 28-Nov: D/S changes Pcs/Case of P-A 10 -> 12 (after day D, before 1-Dec)', [
-        'Decision 4b: the Next period exists, so the change goes to AP POLE for Eff. 11/26 and Eff. 12/26. GTOPAS keeps no quantity: no change.'])
-    r = block(ws, r, 'TB_M_PART_CANDIDATE', PART_COLS, [['P-A', 'Active', 12, 20, 'Active']], {1: NEW})
+    r = block(ws, r, 'TB_R_CROSSDOCK_IF_RESULT (APPOLE)', IF_COLS, [[p, 'APPOLE', N, '1 Success', 'LAST_SYNC_DT 27-Nov'] for p in ('P-A', 'P-B', 'P-C', 'P-E')],
+              {i: KEEP for i in range(1, 5)})
+    r = step(ws, r, 'Step 3 - 28-Nov: Pcs/Case of P-A 10 -> 12 (after day D) -> Eff. 11/26 and 12/26 (4b)')
     r = block(ws, r, 'TB_R_CROSSDOCK_IF_RESULT after the save', IF_COLS, [['P-A', 'APPOLE', M, '0 No Sync', 'Eff. 11/26'],
                                                                       ['P-A', 'APPOLE', N, '0 No Sync', 'Eff. 12/26']], {1: NEW, 2: NEW})
-    block(ws, r, 'AP POLE WLM9Q890 after [Sync] (Current first, then Next)', AP_PART_COLS,
-          [['11/26', 'P-A', 12, 20, 'Edit (1st)'], ['12/26', 'P-A', 12, 20, 'Edit (2nd)']], {1: NEW, 2: NEW})
-
-    # ---------- 5. 29-Nov: Max Case/Day below the Next total ----------
-    ws, r = sheet(wb, '5. 29-Nov Max below', 'Step 5 - 29-Nov: D/S lowers Max Case/Day of P-E 30 -> 20; Dec mapping total = 25', [
-        'Nov mapping of P-E = 18 <= 20: the screen allows the save (message 14 checks the Current period only). The Dec mapping made by XD05 = 25 > 20.',
-        'Decision: maintained by hand. Next is view only, so a rule is needed (see the table).'])
-    r = block(ws, r, 'TB_M_PART_CANDIDATE_DEST of P-E', DEST_COLS, [['P-E', N, '9722D10', 15, 'Next'], ['P-E', N, '9811110', 10, 'Next']], {1: DEL, 2: DEL},
-              'Total 25 > new Max Case/Day 20')
-    r = block(ws, r, 'Problem in AP POLE', ['Screen', 'What happens'], [
-        ['WLM9Q890 Eff. 12/26', 'Edit Max Shipping Box Qty 30 -> 20 is refused: Total Shipping Allocated 25 > 20 (AP POLE rule).'],
-        ['Result', 'XD07 fails for P-E (and with "one fails, all fail" for the whole run).']], {1: DEL, 2: DEL})
-    block(ws, r, 'Options for "maintain by hand" (to decide)', ['Option', 'How', 'Remark'], [
-        ['A (proposal)', 'Save allowed with a warning; P-E gets "Over quota" for Dec; D/S may edit the Dec mapping of that part only', 'Small exception to "Next = XD05 only"'],
-        ['B', 'Block Max Case/Day below the Next total (message); D/S changes it on 1-Dec when Dec is Current', 'Simple; the change waits until 1-Dec'],
-        ['C', 'D/S runs XD05 again ([Run calculation]) after the change', 'Recalculates every part of Dec']], {1: KEEP})
-
-    # ---------- 6. 1-Dec: Period Rollover ----------
-    parts_r = [['P-A', 'Active', 12, 20, '-'], ['P-B', 'Inactive', 6, 10, '-'], ['P-C', 'Active', 5, 10, '-'], ['P-E', 'Active', 8, 30, '-']]
-    ws, r = sheet(wb, '6. 1-Dec Rollover', 'Step 6 - 1-Dec: Period Rollover (new step) and automatic XD06', [
-        'Apply NEW_STATUS of 202612 (APPLIED_DT NULL) to TB_M_PART_CANDIDATE, set APPLIED_DT; Dec becomes Current, Nov Past.',
-        'Parts whose part + destination combination of Dec differs from Nov -> GTOPAS No Sync, then XD06 runs automatically. AP POLE: nothing (Dec sent on 27-Nov).'])
-    r = block(ws, r, 'TB_R_PART_DAD_RESULT', DAD_COLS, [x[:6] + ['01-Dec-2026 00:10'] for x in dad], {i: KEEP for i in range(1, 5)})
-    r = block(ws, r, 'TB_M_PART_CANDIDATE', PART_COLS, parts_r, {2: NEW, 3: NEW}, 'P-B Inactive, P-C Active from today')
-    r = block(ws, r, 'TB_R_CROSSDOCK_IF_RESULT (GTOPAS, period 202612)', IF_COLS, [
-        ['P-A', 'GTOPAS', N, '0 -> 3 -> 1', '9811110 removed, 9715310 added'], ['P-B', 'GTOPAS', N, '0 -> 3 -> 1', 'Inactive: all rows deleted'],
-        ['P-C', 'GTOPAS', N, '0 -> 3 -> 1', 'Active: 9811110 added'], ['P-E', 'GTOPAS', N, '1 (no change)', 'Same combinations as Nov']], {1: NEW, 2: NEW, 3: NEW, 4: KEEP})
-    gt_after = [['P-A', '9722D10', 'Keep'], ['P-A', '9811110', 'Delete'], ['P-A', '9715310', 'Add'], ['P-B', '9722D10', 'Delete'],
-                ['P-C', '9811110', 'Add'], ['P-E', '9722D10', 'Keep'], ['P-E', '9811110', 'Keep']]
-    block(ws, r, 'GTOPAS WVJA5204 (XD06, automatic)', GT_COLS, gt_after, mark(gt_after, 2, {'Keep': KEEP, 'Add': NEW, 'Delete': DEL}))
+    r = block(ws, r, 'AP POLE WLM9Q890 after [Sync] (Current first, then Next)', AP_PART_COLS,
+              [['11/26', 'P-A', 12, 20, 'Edit (1st)'], ['12/26', 'P-A', 12, 20, 'Edit (2nd)']], {1: NEW, 2: NEW})
+    r = step(ws, r, 'Step 4 - 29-Nov: Max Case/Day of P-E 30 -> 20; Nov total 18 (save allowed), Dec total 25 (over)')
+    r = block(ws, r, 'NSP TB_M_PART_CANDIDATE_DEST of P-E (Dec)', DEST_COLS, [['P-E', N, '9722D10', 15, 'Next'], ['P-E', N, '9811110', 10, 'Next']],
+              {1: DEL, 2: DEL}, 'Total 25 > new Max Case/Day 20')
+    r = block(ws, r, 'AP POLE', ['Screen', 'What happens'], [
+        ['WLM9Q890 Eff. 11/26', 'Edit Max Shipping Box Qty 30 -> 20: OK (Total Shipping Allocated 18).'],
+        ['WLM9Q890 Eff. 12/26', 'Edit 30 -> 20 refused: Total Shipping Allocated 25 > 20. Maintained by hand (open point 1).']], {1: KEEP, 2: DEL}, widths=[24, 70])
+    r = step(ws, r, 'Step 5 - 1-Dec: Period Rollover')
+    block(ws, r, 'AP POLE', ['Screen', 'What happens'], [
+        ['WLM9Q890 / WLM9Q860', 'Nothing new: the Dec data (Eff. 12/26) was sent on 27-Nov. From 1-Dec AP POLE uses the 12/26 records.']], {1: KEEP}, widths=[24, 70])
 
     # ---------- 7. open points ----------
-    ws, r = sheet(wb, '7. Open points', 'Open points', [])
+    ws, r = sheet(wb, '3. Open points', 'Open points', [])
     block(ws, r, 'To decide', ['No', 'Point', 'Proposal'], [
         ['1', 'Max Case/Day below the Next total (step 5)', 'Option A: warning + Dec mapping of that part editable'],
         ['2', 'Period Rollover: new batch (XD16) or XD05 process 3', 'New batch: other schedule (day 1, 00:10)'],
