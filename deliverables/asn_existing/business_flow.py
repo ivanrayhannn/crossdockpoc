@@ -69,30 +69,32 @@ def asn04(to_be):
            '    s3 [label="Read result / log"];\n')
     nsp = ('    b1 [label="Format, mandatory\\nand duplication\\nchecks (4b)"];\n')
     if to_be:
-        nsp += (f'    b2 [label="Crossdock row?\\nPalletize Code X or\\nCROSS_DOCK_FLAG X", shape=diamond, width=2.2, {CHG}];\n'
-                f'    b3 [label="Skip row,\\nwarning log 12", {CHG}];\n'
+        nsp += (f'    b2 [label="Palletize Code X?", shape=diamond, width=1.9, {CHG}];\n'
+                f'    b3 [label="Manifest with\\nCROSS_DOCK_FLAG X?", shape=diamond, width=2.1, {CHG}];\n'
+                f'    e12 [label="Validation error\\nmsg 12 (line)", {CHG}];\n'
+                f'    e13 [label="Validation error\\nmsg 13 (line)", {CHG}];\n'
                 f'    b4 [label="Crossdock checks\\nmsg 8 (delivery qty)\\nmsg 9 (case no / palletize)\\nDELETED", {DEL}];\n'
-                '    b5 [label="Existing business\\nchecks (regular rows)"];\n'
-                '    b6 [label="Error?", shape=diamond, width=1.2];\n'
+                '    b5 [label="Existing business\\nchecks"];\n'
+                '    b6 [label="Any error?", shape=diamond, width=1.3];\n'
                 '    b7 [label="Finished with error\\n(msg 7b), nothing saved"];\n'
-                '    b8 [label="Insert temporary ->\\nTB_T_ASN draft (regular rows);\\nSubmit as in ASN Creation"];\n'
-                f'    b9 [label="All rows skipped:\\nnothing saved,\\n\\"no data\\" result (TBC)", {CHG}];\n')
+                '    b8 [label="Insert temporary ->\\nTB_T_ASN draft;\\nSubmit as in ASN Creation"];\n')
     else:
         nsp += ('    b4 [label="Crossdock checks\\nmsg 8 (delivery qty)\\nmsg 9 (case no / palletize)"];\n'
                 '    b5 [label="Existing business\\nchecks (all rows,\\nincl. Palletize X)"];\n'
                 '    b6 [label="Error?", shape=diamond, width=1.2];\n'
                 '    b7 [label="Finished with error\\n(msg 7b), nothing saved"];\n'
                 '    b8 [label="Insert temporary ->\\nTB_T_ASN draft (all rows,\\nincl. crossdock);\\nSubmit as in ASN Creation"];\n')
-    g = HEAD % title + lane('sup', 'Supplier', '#F7FBFF', sup + (f'    s4 [label="Crossdock rows:\\nASN on the other screen\\nASN Creation (Crossdock)", {NEWL}];\n' if to_be else ''))
+    g = HEAD % title + lane('sup', 'Supplier', '#F7FBFF', sup + (f'    s4 [label="Remove crossdock rows;\\ntheir ASN on the other screen\\nASN Creation (Crossdock)", {NEWL}];\n' if to_be else ''))
     g += lane('nsp', 'NSP - ASN existing (ASN04 batch)', '#FFFFFF', nsp)
     if to_be:
         g += lane('xd', 'NSP - ASN Crossdock (new)', '#F4FAF0', f'    x1 [label="ASN Creation (Crossdock)\\n(XD10)", {NEWL}];\n')
     g += lane('db', 'Database', '#FAFAFA', db_nodes())
     if to_be:
-        g += ('  s1 -> s2 -> b1 -> b2;\n  b2 -> b3 [label="Yes"]; b2 -> b5 [label="No"]; b3 -> b9 [style=dashed, label="if every row"];\n'
-              '  b5 -> b6; b6 -> b7 [label="Yes"]; b6 -> b8 [label="No"]; b7 -> s3; b8 -> s3; b9 -> s3; b3 -> s4 [style=dashed]; s4 -> x1;\n'
-              '  b4 -> b5 [style=invis];\n  db_pm -> b2 [style=dashed, label="read flag", constraint=false]; b8 -> db_asn [style=dashed, constraint=false];\n'
-              '  { rank=same; b2; db_pm; } b2 -> db_pm [style=invis]; { rank=same; b8; db_asn; } b8 -> db_asn [style=invis]; { rank=same; b1; db_pp; } b1 -> db_pp [style=invis];\n')
+        g += ('  s1 -> s2 -> b1 -> b2;\n  b2 -> e12 [label="Yes"]; b2 -> b3 [label="No"]; b3 -> e13 [label="Yes"]; b3 -> b5 [label="No"];\n'
+              '  e12 -> b6; e13 -> b6; b5 -> b6; b6 -> b7 [label="Yes"]; b6 -> b8 [label="No"]; b7 -> s3; b8 -> s3;\n'
+              '  s3 -> s4 [style=dashed, label="crossdock rows"]; s4 -> x1;\n'
+              '  b4 -> b5 [style=invis];\n  db_pm -> b3 [style=dashed, label="read flag", constraint=false]; b8 -> db_asn [style=dashed, constraint=false];\n'
+              '  { rank=same; b3; db_pm; } b3 -> db_pm [style=invis]; { rank=same; b8; db_asn; } b8 -> db_asn [style=invis]; { rank=same; b1; db_pp; } b1 -> db_pp [style=invis];\n')
     else:
         g += ('  s1 -> s2 -> b1 -> b4 -> b5 -> b6; b6 -> b7 [label="Yes"]; b6 -> b8 [label="No"]; b7 -> s3; b8 -> s3;\n'
               '  db_pm -> b5 [style=dashed, label="read", constraint=false]; b8 -> db_asn [style=dashed, constraint=false];\n'
