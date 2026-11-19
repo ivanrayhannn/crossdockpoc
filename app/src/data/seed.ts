@@ -17,6 +17,8 @@ export const DCODE: Record<string, string> = {
 
 /** Master destination catalog — populates the destination dropdown when
  * adding a row in "Mapping per Destination" (Add destination). */
+/** Order types of the Export Crossdock Master (system master). Empty = '**'. */
+export const ORDER_TYPES = ['**', 'C', '9', 'V'];
 export const MASTER_DESTS: { code: string; name: string }[] = DESTS.map((name) => ({ code: DCODE[name], name }));
 
 export const CUR_PER = 'Sep 2026';
@@ -102,7 +104,7 @@ interface SeedPart {
   minMad: number;
   by: string;
   dt: string;
-  dests: { d: string; al: number; st: 'Active' | 'Inactive' }[];
+  dests: { d: string; al: number; st: 'Active' | 'Inactive'; ot?: string }[];
   per: string;
   syncStatus: 0 | 1 | 2;
 }
@@ -111,7 +113,7 @@ const SEED: SeedPart[] = [
   {
     p: 'PART-A', n: 'Dummy Part A', pc: 60, mc: 24, st: 'Active', cat: 'Crossdock',
     mad: [1180, 1240, 1310, 1290, 1420, 1380], minMad: 800, by: 'A. Wibowo', dt: '05-Aug-2026 09:12',
-    dests: [{ d: 'Japan', al: 12, st: 'Active' }, { d: 'Taiwan', al: 8, st: 'Active' }, { d: 'Korea', al: 4, st: 'Active' }],
+    dests: [{ d: 'Japan', al: 8, st: 'Active' }, { d: 'Japan', al: 4, st: 'Active', ot: 'C' }, { d: 'Taiwan', al: 8, st: 'Active' }, { d: 'Korea', al: 4, st: 'Active' }],
     per: 'Sep 2026', syncStatus: 1,
   },
   {

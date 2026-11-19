@@ -15,6 +15,6 @@ export function syncAfterSave(prev: Part | undefined, next: Part): Part['syncSta
 
 /** A destination save sets No Sync only when a destination or its Case/Day really changed. */
 export function destsChanged(prev: DestAllocation[], next: DestAllocation[]): boolean {
-  const key = (ds: DestAllocation[]) => ds.map((d) => `${d.cd || d.d}:${num(d.al)}`).sort().join('|');
+  const key = (ds: DestAllocation[]) => ds.map((d) => `${d.cd || d.d}:${d.ot || '**'}:${num(d.al)}`).sort().join('|');
   return key(prev) !== key(next);
 }

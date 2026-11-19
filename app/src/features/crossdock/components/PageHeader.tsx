@@ -19,7 +19,7 @@ export function PageHeader({ ro, view, onAddPart, onOpenUpload, onExport }: Page
           <span>/</span>
           <span style={{ color: 'var(--color-text)' }}>Setting Part</span>
         </div>
-        <h1 style={{ fontSize: 31, margin: '0 0 4px' }}>Crossdock Master — Setting Part</h1>
+        <h1 style={{ fontSize: 31, margin: '0 0 4px' }}>Crossdock Master</h1>
       </div>
       <div style={{ marginLeft: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10 }}>
         {view === 'part' && (

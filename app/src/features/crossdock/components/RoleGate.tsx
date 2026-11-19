@@ -2,8 +2,8 @@ import type { UserRole } from '../../../types';
 
 // Prototype-only entry screen: in the real system the sub-menu opens according to the logged-in account.
 const SUB_MENUS: { key: UserRole; title: string; desc: string }[] = [
-  { key: 'procurement', title: 'Part List', desc: 'Manage part identity: Part No, Min MAD, Pcs/Case, Max Case/Day.' },
-  { key: 'ds', title: 'Mapping per Destination', desc: "Split each part's Max Case/Day across destinations (Japan, Taiwan, Korea)." },
+  { key: 'procurement', title: 'Kanban Crossdock Master', desc: 'Manage part identity: Part No, Min MAD, Pcs/Case, Max Case/Day.' },
+  { key: 'ds', title: 'Export Crossdock Master', desc: "Split each part's Max Case/Day across destinations (Japan, Taiwan, Korea)." },
 ];
 
 export function RoleGate({ onSelect }: { onSelect: (role: UserRole) => void }) {

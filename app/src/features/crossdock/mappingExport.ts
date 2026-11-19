@@ -45,6 +45,7 @@ const LIST_COLUMNS: (Column<MappingLine> & { width: number })[] = [
   { header: { value: 'Part Number', ...HEADER }, cell: ({ part }) => cell(part.p), width: 18 },
   { header: { value: 'Part Name', ...HEADER }, cell: ({ part }) => cell(part.n), width: 30 },
   { header: { value: 'Destination Code', ...HEADER }, cell: ({ dest }) => cell(dest && (dest.cd || DCODE[dest.d])), width: 17 },
+  { header: { value: 'Order Type', ...HEADER }, cell: ({ dest }) => cell(dest && (dest.ot || '**')), width: 12 },
   { header: { value: 'Pcs/Case', ...HEADER, align: 'right' }, cell: ({ part }) => cell(num(part.pc), NUMBER_FORMAT), width: 11 },
   // Dest Case/Day next to used / quota (as in sheet Upload); final layout agreed with the user (5-Nov)
   { header: { value: 'Dest Case/Day', ...HEADER, align: 'right' }, cell: ({ dest }) => cell(dest && num(dest.al), NUMBER_FORMAT), width: 15 },
@@ -65,6 +66,7 @@ const LIST_COLUMNS: (Column<MappingLine> & { width: number })[] = [
 const UPLOAD_COLUMNS: (Column<UploadLine> & { width: number })[] = [
   { header: { value: 'Part Number', ...HEADER }, cell: ({ part }) => ({ value: part.p }), width: 18 },
   { header: { value: 'Destination Code', ...HEADER }, cell: ({ dest }) => cell(dest && (dest.cd || DCODE[dest.d])), width: 17 },
+  { header: { value: 'Order Type', ...HEADER }, cell: ({ dest }) => cell(dest && (dest.ot || '**')), width: 12 },
   { header: { value: 'Dest Case/Day', ...HEADER, align: 'right' }, cell: ({ dest }) => cell(dest && num(dest.al)), width: 15 },
   // reference only (not read by XD03): used = Case/Day mapped when the file is exported (a number, so every viewer shows it), quota = Max Case/Day of Part List
   { header: { value: 'Total Case/Day (used)', ...HEADER, align: 'right' }, cell: ({ part }) => ({ value: part.dests.reduce((sum, d) => sum + num(d.al), 0) }), width: 21 },

@@ -15,6 +15,8 @@ export interface DestAllocation {
   /** Destination code override — used for manually-added rows in the
    * "Mapping per Destination" inline editor. */
   cd?: string;
+  /** Order Type of the destination row (system master: **, C, 9, V). The same destination may appear twice with different order types. */
+  ot?: string;
   /** Allocation, case/day. String while an input is mid-edit. */
   al: number | string;
   st: PartStatus;

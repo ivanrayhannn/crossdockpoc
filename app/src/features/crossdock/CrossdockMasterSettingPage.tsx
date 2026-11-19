@@ -16,7 +16,7 @@ import { PAST_ROWS } from '../../data/seed';
 import { exportPartsXlsx, selectParts } from './partList';
 import { useCrossdockState } from './useCrossdockState';
 
-const SUB_MENU_LABEL = { procurement: 'Part List', ds: 'Mapping per Destination' } as const;
+const SUB_MENU_LABEL = { procurement: 'Kanban Crossdock Master', ds: 'Export Crossdock Master' } as const;
 const ACTIVE_ITEM = 'Crossdock Master Setting';
 
 export function CrossdockMasterSettingPage({ onNavigate }: { onNavigate: (route: RouteKey) => void }) {
