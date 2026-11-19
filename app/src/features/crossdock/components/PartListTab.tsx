@@ -59,7 +59,7 @@ export function PartListTab({ parts, q, aq, onSearch, setQ, resetQ, ro, onOpenPa
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
 
-  // Ongoing period = the editable parts; past periods are read only (same rows as Mapping per Destination).
+  // Ongoing period = the editable parts; past periods are read only (same rows as Export Crossdock Master).
   const rowsSrc = useMemo(() => selectParts(parts.concat(PAST_ROWS), aq), [parts, aq]);
 
   useEffect(() => {

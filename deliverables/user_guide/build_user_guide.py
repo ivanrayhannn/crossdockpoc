@@ -1,4 +1,4 @@
-"""User guide: download the Crossdock Part List and the Mapping per Destination to Excel (XD01), from the menu to the opened file.
+"""User guide: download the Kanban Crossdock Master and the Export Crossdock Master to Excel (XD01), from the menu to the opened file.
 Two sheets, one per download. Screenshots: guide_shots.mjs (prototype) + the real exported files rendered per sheet.
 Run: python3 build_user_guide.py"""
 import math
@@ -31,20 +31,20 @@ COMMON_OPEN = [
 ]
 
 GUIDES = [
-    {'sheet': '1. Download Part List',
-     'title': 'Download Crossdock Part List to Excel',
-     'meta': [('Function', 'XD01 Crossdock Master Setting, sub-menu Part List'), ('User', 'Procurement team'),
-              ('Result', 'File Crossdock_Part_List_YYYYMMDD.xlsx (YYYYMMDD = download date), 2 sheets: Part List and Upload')],
+    {'sheet': '1. Download Kanban Master',
+     'title': 'Download Kanban Crossdock Master to Excel',
+     'meta': [('Function', 'XD01 Crossdock Master Setting, sub-menu Kanban Crossdock Master'), ('User', 'Procurement team'),
+              ('Result', 'File Crossdock_Kanban_Master_YYYYMMDD.xlsx (YYYYMMDD = download date), 2 sheets: Kanban Crossdock Master and Upload')],
      'steps': [
          ('Open the menu',
-          'In the left menu click Master > Crossdock Master Setting. With the Procurement account the screen opens on the tab Part List.', 'p1_menu'),
+          'In the left menu click Master > Crossdock Master Setting. With the Procurement account the screen opens on the tab Kanban Crossdock Master.', 'p1_menu'),
          ('Set the search criteria and click [Search] (optional)',
-          'Fill Part Number, Part Name, Status or Sort by when only some parts are needed, then click [Search]. '
-          'Sheet "Part List" of the file follows this filter. Without a filter every registered part is downloaded.', 'p2_search'),
+          'Choose the Calculation period (default the ongoing period; All periods for every month) and fill Part Number, Part Name, Status or Sort by when only some parts are needed, then click [Search]. '
+          'Sheet "Kanban Crossdock Master" of the file follows this filter. Without a filter every registered part is downloaded.', 'p2_search'),
          ('Click [Export Excel]',
-          'Click [Export Excel] at the top right. The browser downloads Crossdock_Part_List_YYYYMMDD.xlsx to the Downloads folder.', 'p3_export'),
+          'Click [Export Excel] at the top right. The browser downloads Crossdock_Kanban_Master_YYYYMMDD.xlsx to the Downloads folder.', 'p3_export'),
      ] + COMMON_OPEN + [
-         ('Read sheet "Part List"',
+         ('Read sheet "Kanban Crossdock Master"',
           'The parts of the active filter with Part Name, Min MAD, Pcs/Case, Max Case/Day, Total Pcs/Day, Status, Effective Start Date and the '
           'created / updated information. For information only: this sheet is not read by the upload.', 'x_part_list'),
          ('Use sheet "Upload" for a change (optional)',
@@ -52,24 +52,24 @@ GUIDES = [
           '[Upload Excel] on the same screen. Do not rename the sheet or the column headers: the upload reads them by name.', 'x_part_upload'),
      ],
      'notes': ['[Export Excel] needs no input; the button is always active.',
-               'Sheet "Upload" always holds every registered part, also when a filter is used for sheet "Part List".']},
-    {'sheet': '2. Download Mapping',
-     'title': 'Download Crossdock Mapping per Destination to Excel',
-     'meta': [('Function', 'XD01 Crossdock Master Setting, sub-menu Mapping per Destination'), ('User', 'D/S team'),
-              ('Result', 'File Crossdock_Mapping_per_Destination_<Period>_YYYYMMDD.xlsx, 2 sheets: Mapping per Destination and Upload')],
+               'Sheet "Upload" always holds every registered part, also when a filter is used for sheet "Kanban Crossdock Master".']},
+    {'sheet': '2. Download Export Master',
+     'title': 'Download Export Crossdock Master to Excel',
+     'meta': [('Function', 'XD01 Crossdock Master Setting, sub-menu Export Crossdock Master'), ('User', 'D/S team'),
+              ('Result', 'File Crossdock_Export_Master_<Period>_YYYYMMDD.xlsx, 2 sheets: Export Crossdock Master and Upload')],
      'steps': [
          ('Open the menu',
-          'In the left menu click Master > Crossdock Master Setting. With the D/S account the screen opens on the tab Mapping per Destination.', 'm1_menu'),
+          'In the left menu click Master > Crossdock Master Setting. With the D/S account the screen opens on the tab Export Crossdock Master.', 'm1_menu'),
          ('Choose the Calculation period and click [Search]',
           'Choose the period, for example Sep 2026 (ongoing). Fill Part Number or Sync Status when needed, then click [Search]. '
           'Choose the ongoing period when the file is used for an upload: for a past period or All periods the sheet "Upload" is empty. '
           'Column Last Sync shows the last successful sync of the part to GTOPAS / AP POLE (Never = not synced yet).', 'm2_period'),
          ('Click [Export Excel]',
-          'Click [Export Excel] above the table. The browser downloads Crossdock_Mapping_per_Destination_<Period>_YYYYMMDD.xlsx, '
-          'for example Crossdock_Mapping_per_Destination_Sep_2026_20261117.xlsx.', 'm3_export'),
+          'Click [Export Excel] above the table. The browser downloads Crossdock_Export_Master_<Period>_YYYYMMDD.xlsx, '
+          'for example Crossdock_Export_Master_Sep_2026_20261117.xlsx.', 'm3_export'),
      ] + COMMON_OPEN + [
-         ('Read sheet "Mapping per Destination"',
-          'One row per part and destination of the chosen period and filter: Destination Code, Dest Case/Day, Total Case/Day (used), '
+         ('Read sheet "Export Crossdock Master"',
+          'One row per part, destination and Order Type of the chosen period and filter: Destination Code, Order Type (**, C, 9, V), Dest Case/Day, Total Case/Day (used), '
           'Max Case/Day (quota), Pcs/Day, Sync Status, Last Sync Date and the created / updated information. A part without mapping has one row without destination. '
           'For information only.', 'x_map_list'),
          ('Use sheet "Upload" for a change (optional)',

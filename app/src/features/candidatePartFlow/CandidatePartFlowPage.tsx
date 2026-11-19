@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 const SIMULATION_URL = `${import.meta.env.BASE_URL}simulations/candidate-part-flow.html?v=8`;
 
 /**
- * Shows the Master Candidate Part batch-flow simulation (calculation batch, Part List upload, Mapping upload,
+ * Shows the Master Candidate Part batch-flow simulation (calculation batch, Kanban Crossdock Master upload, Mapping upload,
  * Excel export) inside the app shell. The iframe is sized to its content so the shell's page scroll is used
  * instead of a second, nested scrollbar.
  */

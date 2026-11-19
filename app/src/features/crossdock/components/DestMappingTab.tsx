@@ -210,7 +210,7 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
                   <th style={{ ...th, width: 150 }}>Part Number</th>
                   <th style={th}>Part Name</th>
                   <th style={{ ...th, textAlign: 'right', width: 86 }}>Pcs/Case</th>
-                  <th style={{ ...th, textAlign: 'right', width: 176 }} title="Case/Day mapped to destinations / Max Case/Day of the part in Part List">Total Case/Day (used / quota)</th>
+                  <th style={{ ...th, textAlign: 'right', width: 176 }} title="Case/Day mapped to destinations / Max Case/Day of the part in Kanban Crossdock Master">Total Case/Day (used / quota)</th>
                   <th style={{ ...th, textAlign: 'right', width: 110 }}>Pcs/Day</th>
                   <th style={{ ...th, textAlign: 'right', width: 110 }}>Percentage</th>
                   <th style={{ ...th, width: 120 }}>Sync Status</th>

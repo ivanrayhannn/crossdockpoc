@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import type { SaveNotice } from '../useCrossdockState';
 
-/** Popup shown after a part is added or edited from the Part List form, or after an upload is saved. */
+/** Popup shown after a part is added or edited from the Kanban Crossdock Master form, or after an upload is saved. */
 export function SaveSuccessModal({ notice, onClose }: { notice: SaveNotice; onClose: () => void }) {
   const okRef = useRef<HTMLButtonElement>(null);
   useEffect(() => okRef.current?.focus(), []);
@@ -32,12 +32,12 @@ export function SaveSuccessModal({ notice, onClose }: { notice: SaveNotice; onCl
               : 'Mapping destination calculation completed. The destination mapping of the new period has been created.'
           ) : notice.mode === 'upload' ? (
             notice.target === 'mapping'
-              ? 'Upload completed. The file has been validated and the destination mapping has been saved to Mapping per Destination.'
-              : 'Upload completed. The file has been validated and the part settings have been saved to the Part List.'
+              ? 'Upload completed. The file has been validated and the destination mapping has been saved to Export Crossdock Master.'
+              : 'Upload completed. The file has been validated and the part settings have been saved to the Kanban Crossdock Master.'
           ) : (
             <>
               <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{notice.part}</span>
-              {notice.name && ` · ${notice.name}`} has been {notice.mode === 'add' ? 'added' : 'updated'}. It is now at the top of the Part List.
+              {notice.name && ` · ${notice.name}`} has been {notice.mode === 'add' ? 'added' : 'updated'}. It is now at the top of the Kanban Crossdock Master.
             </>
           )}
         </p>

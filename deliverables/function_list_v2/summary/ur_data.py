@@ -2,14 +2,14 @@
 
 # (ID, name, type, user, trigger, objective, key BL, input, output, related, status)
 FUNCS = [
- ('XD01', 'Cross Dock Part Master Screen', 'Screen', 'Procurement (tab Part List), D/S (tab Mapping), Viewer (Search / Export)',
+ ('XD01', 'Cross Dock Part Master Screen', 'Screen', 'Procurement (tab Kanban Crossdock Master), D/S (tab Mapping), Viewer (Search / Export)',
   'On demand (user)',
   'Mendaftarkan dan memelihara part crossdock (Min MAD, Pcs/Case, Max Case/Day, Effective Start Date) dan membagi Max Case/Day ke destinasi; mengirim master ke GTOPAS / AP POLE lewat [Sync].',
   '1. Part baru selalu Candidate; Active / Inactive ditentukan XD05.\n2. Total Case/Day destinasi ≤ Max Case/Day.\n3. Save / upload → SYNC_STATUS 0 No Sync hanya kalau nilai yang dikirim berubah (status ke / dari Active, Pcs/Case / Max Case/Day part Active, destinasi / Case/Day); Min MAD, Effective Start Date, Save tanpa perubahan → tetap (17-Nov).\n4. [Sync] kirim part Active (No Sync / Failed) + Inactive (flag N) lewat XD06 + XD07; status gabungan 2 target.',
   'TB_M_PART_MASTER, TB_M_H0125_DESTINATION, TB_R_PART_DAD_RESULT', 'TB_M_PART_CANDIDATE, TB_M_PART_CANDIDATE_DEST, TB_H_PART_CANDIDATE, TB_R_CROSSDOCK_IF_RESULT',
   'XD02, XD03, XD05, XD06, XD07', 'Draft 0.1'),
- ('XD02', 'Cross Dock Part Master Upload Batch', 'Batch', 'Procurement', 'On demand: [Validate file] di XD01 tab Part List',
-  'Menyimpan setting part dari Excel (Add / Edit) ke Part List secara massal.',
+ ('XD02', 'Cross Dock Part Master Upload Batch', 'Batch', 'Procurement', 'On demand: [Validate file] di XD01 tab Kanban Crossdock Master',
+  'Menyimpan setting part dari Excel (Add / Edit) ke Kanban Crossdock Master secara massal.',
   '1. All-or-nothing: 1 error = seluruh file ditolak.\n2. Kolom upload: A = part baru (Candidate), E = ubah; baris tanpa perubahan di-skip.\n3. Max Case/Day tidak boleh < total mapping.\n4. Result report + sheet Re-upload.',
   'File Excel sheet Upload, TB_M_PART_CANDIDATE, TB_M_PART_CANDIDATE_DEST', 'TB_M_PART_CANDIDATE, TB_H_PART_CANDIDATE, Upload Log',
   'XD01', 'Draft 0.1'),
@@ -34,7 +34,7 @@ FUNCS = [
   'XD01, XD07', 'Draft 0.1'),
  ('XD07', 'RPA Cross Dock Master to AP POLE', 'Batch (RPA)', 'System (dari [Sync] D/S)', 'On demand: [Sync] di XD01',
   'Menyamakan cross dock master AP POLE dengan NSP lewat RPA di layar AP POLE (WLM9Q890 level part, WLM9Q860 level destinasi), 17-Nov.',
-  '1. Sumber: Export Excel XD01 (Part List, Mapping per Destination), part Waiting; part Status Inactive = Delete.\n2. WLM9Q890: Candidate/Inactive → Active = Add/Edit, Active → Inactive = Delete, Pcs/Case / Max Case/Day berubah = Edit.\n3. WLM9Q860 ([Maintain Cross Dock]): destinasi Add / Delete / Edit, Total Shipping Allocated ≤ Max Case/Day.\n4. Try-catch; Success isi LAST_SYNC_DT; status gabungan dengan XD06.',
+  '1. Sumber: Export Excel XD01 (Kanban Crossdock Master, Export Crossdock Master), part Waiting; part Status Inactive = Delete.\n2. WLM9Q890: Candidate/Inactive → Active = Add/Edit, Active → Inactive = Delete, Pcs/Case / Max Case/Day berubah = Edit.\n3. WLM9Q860 ([Maintain Cross Dock]): destinasi Add / Delete / Edit, Total Shipping Allocated ≤ Max Case/Day.\n4. Try-catch; Success isi LAST_SYNC_DT; status gabungan dengan XD06.',
   'TB_M_PART_CANDIDATE, TB_M_PART_CANDIDATE_DEST, TB_R_CROSSDOCK_IF_RESULT', 'AP POLE WLM9Q890 / WLM9Q860 (RPA), TB_R_CROSSDOCK_IF_RESULT, TB_M_PART_CANDIDATE',
   'XD01, XD06', 'Draft 0.2 (RPA, 17-Nov)'),
  ('XD08', 'Order Control Information to NSP Batch', 'Batch', 'System', 'Scheduler harian 27:30 (D 03:30), retry 3x',
@@ -76,19 +76,19 @@ UR, BL, VAL, ABN, MSG = 'User Requirement', 'Business Logic', 'Validation', 'Abn
 # (ID, category, item, description, example / simulation, tables)
 DETAIL = [
  # XD01
- ('XD01', UR, 'Akses per role', 'Procurement membuka tab Part List; D/S membuka tab Mapping per Destination; Viewer hanya Search / Export.', '', ''),
- ('XD01', UR, 'Search & list Part List', 'Filter Part No, Status (All / Candidate / Active / Inactive), Sort; diterapkan saat [Search]. 25/50/100 baris per halaman. Counter "N parts". Kelengkapan mapping dipantau D/S di tab Mapping per Destination (FB-024).', '', 'TB_M_PART_CANDIDATE'),
+ ('XD01', UR, 'Akses per role', 'Procurement membuka tab Kanban Crossdock Master; D/S membuka tab Export Crossdock Master; Viewer hanya Search / Export.', '', ''),
+ ('XD01', UR, 'Search & list Kanban Crossdock Master', 'Filter Part No, Status (All / Candidate / Active / Inactive), Sort; diterapkan saat [Search]. 25/50/100 baris per halaman. Counter "N parts". Kelengkapan mapping dipantau D/S di tab Export Crossdock Master (FB-024).', '', 'TB_M_PART_CANDIDATE'),
  ('XD01', UR, 'Add Part', 'Pilih Part No dari TB_M_PART_MASTER yang belum terdaftar; isi Min MAD, Pcs/Case, Max Case/Day, Effective Start Date.', 'Total Pcs/Day = Pcs/Case × Max Case/Day.', 'TB_M_PART_MASTER, TB_M_PART_CANDIDATE'),
  ('XD01', BL, 'Status part baru', 'Part baru selalu Candidate (terkunci). Status Active / Inactive hasil XD05; user boleh ubah Active ↔ Inactive, tidak boleh kembali ke Candidate.', '', 'TB_M_PART_CANDIDATE'),
  ('XD01', BL, 'Effective Start Date', 'Default besok (system date + 1), minimal hari ini, wajib. Hanya bisa diubah selama status tersimpan Candidate (MSG10). Part dengan tanggal belum tiba tidak dihitung XD05.', '', ''),
  ('XD01', VAL, 'Max Case/Day vs mapping', 'Max Case/Day tidak boleh lebih kecil dari total Case/Day yang sudah di-mapping periode berjalan (MSG14, Save disabled). Modal Edit menampilkan "Mapped Case/Day (current period)" sebagai batas bawah (FB-025). Kurangi mapping dulu.', '', 'TB_M_PART_CANDIDATE_DEST'),
- ('XD01', BL, 'Sync status setiap perubahan', 'Save (Part List / Mapping) dan upload → SYNC_STATUS = 0 No Sync hanya kalau nilai yang dikirim ke GTOPAS / AP POLE berubah (status ke / dari Active, Pcs/Case / Max Case/Day part Active, destinasi / Case/Day); Min MAD, Effective Start Date, Candidate ↔ Inactive, Save tanpa perubahan → Sync Status tetap (17-Nov); history ke TB_H_PART_CANDIDATE (SOURCE SCREEN / UPLOAD / IF / BATCH). Retensi history 24 bulan.', '', 'TB_H_PART_CANDIDATE'),
- ('XD01', UR, 'Mapping per Destination', 'Membagi Max Case/Day part Active ke destinasi untuk periode kalkulasi berjalan. Periode lalu read only. Periode baru mulai kosong (tidak disalin), terisi oleh XD05 proses 2 atau edit / upload.', '', 'TB_M_PART_CANDIDATE_DEST'),
+ ('XD01', BL, 'Sync status setiap perubahan', 'Save (Kanban Crossdock Master / Mapping) dan upload → SYNC_STATUS = 0 No Sync hanya kalau nilai yang dikirim ke GTOPAS / AP POLE berubah (status ke / dari Active, Pcs/Case / Max Case/Day part Active, destinasi / Case/Day); Min MAD, Effective Start Date, Candidate ↔ Inactive, Save tanpa perubahan → Sync Status tetap (17-Nov); history ke TB_H_PART_CANDIDATE (SOURCE SCREEN / UPLOAD / IF / BATCH). Retensi history 24 bulan.', '', 'TB_H_PART_CANDIDATE'),
+ ('XD01', UR, 'Export Crossdock Master', 'Membagi Max Case/Day part Active ke destinasi untuk periode kalkulasi berjalan. Periode lalu read only. Periode baru mulai kosong (tidak disalin), terisi oleh XD05 proses 2 atau edit / upload.', '', 'TB_M_PART_CANDIDATE_DEST'),
  ('XD01', BL, 'Aturan Save mapping', '1 destinasi sekali per part; total Case/Day ≤ Max Case/Day (lebih → MSG3, Save disabled; kurang boleh, tampil "n case/day left"). [Split evenly] = floor(Max/baris), sisa +1 dari baris pertama.', '24/3 = 8/8/8; 25/3 = 9/8/8.', ''),
  ('XD01', BL, 'Sync ke GTOPAS & AP POLE', '[Sync (n)]: n = semua part berstatus Active (periode berjalan) dan Inactive yang Sync Status-nya No Sync / Failed, tidak tergantung filter (17-Nov). Active → ditambah / diubah, Inactive → dihapus di GTOPAS / AP POLE; Candidate tidak pernah di-sync. Part → 3 Waiting, 1 baris per part × target di TB_R_CROSSDOCK_IF_RESULT, jalankan XD06 + XD07.', '', 'TB_R_CROSSDOCK_IF_RESULT'),
  ('XD01', BL, 'Sync Status gabungan', 'Salah satu target Waiting → 3 Waiting; dua target Success → 1 Success; salah satu Failed → 2 Failed (SYNC_MESSAGE = target + alasan); part diubah saat dikirim → 0 No Sync.', '', 'TB_M_PART_CANDIDATE'),
- ('XD01', UR, 'Run calculation manual', '[Run calculation] tab Part List → XD05 proses 1 + 2; tab Mapping → XD05 proses 2. Aktif kalau auto retry 3x gagal. Last success date ditampilkan per tab.', '', ''),
- ('XD01', UR, 'Upload / Export Excel', 'Export list ke Excel; Upload Excel memanggil XD02 (Part List) / XD03 (Mapping, hanya periode berjalan).', '', ''),
+ ('XD01', UR, 'Run calculation manual', '[Run calculation] tab Kanban Crossdock Master → XD05 proses 1 + 2; tab Mapping → XD05 proses 2. Aktif kalau auto retry 3x gagal. Last success date ditampilkan per tab.', '', ''),
+ ('XD01', UR, 'Upload / Export Excel', 'Export list ke Excel; Upload Excel memanggil XD02 (Kanban Crossdock Master) / XD03 (Mapping, hanya periode berjalan).', '', ''),
  # XD02
  ('XD02', UR, 'Upload setting part massal', 'User Procurement upload file Excel (sheet "Upload") untuk Add (upload = A) dan Edit (upload = E) part.', '', ''),
  ('XD02', VAL, 'Cek file', '.xlsx, ≤ 5 MB, sheet "Upload" ada, 1–5.000 baris, header 7 kolom template (kolom tambahan diabaikan).', '', ''),
@@ -114,7 +114,7 @@ DETAIL = [
  ('XD05', BL, 'Kontrol batch', 'All-or-nothing per proses; proses 2 hanya jalan kalau proses 1 sukses. Auto retry 3x; trigger manual dari XD01; last success date per proses.', '', ''),
  # XD06
  ('XD06', UR, 'GTOPAS tahu part crossdock', 'GTOPAS perlu tahu part dan destinasi yang order-nya ditangani crossdock (order status 7).', '', ''),
- ('XD06', BL, 'RPA dari download (11 / 17-Nov)', '[Sync] menjalankan bot: bot download Export Excel Mapping per Destination (periode berjalan, Sync Status All) dari NSP, mengisi sheet kerja GTOPAS Compare (Keep / Add / Delete), lalu membuka GTOPAS Supply > Master > Crossdock Master (WVJA5204), Depot Code 01, membaca semua halaman. Tanpa file interface. Hanya daftar part + destinasi, tanpa Case/Day.', '', 'TB_M_PART_CANDIDATE, TB_M_PART_CANDIDATE_DEST'),
+ ('XD06', BL, 'RPA dari download (11 / 17-Nov)', '[Sync] menjalankan bot: bot download Export Excel Export Crossdock Master (periode berjalan, Sync Status All) dari NSP, mengisi sheet kerja GTOPAS Compare (Keep / Add / Delete), lalu membuka GTOPAS Supply > Master > Crossdock Master (WVJA5204), Depot Code 01, membaca semua halaman. Tanpa file interface. Hanya daftar part + destinasi, tanpa Case/Day.', '', 'TB_M_PART_CANDIDATE, TB_M_PART_CANDIDATE_DEST'),
  ('XD06', BL, 'Bandingkan', 'Per P/No. (tanpa "-") + Destination Code: ada di keduanya → skip; hanya di NSP → register; hanya di GTOPAS → delete (MT = DEL). Part Inactive / Active tanpa destinasi tidak ada di daftar NSP → semua row-nya dihapus. Destination Code (buyer + PD code) harus sama persis, tanpa konversi. Register: Depot 01, Maker Code A, Dom/Os 2, TOPAS Order Type 3, Trans Code 2. Pesan sukses MZD34006FEI.', 'Part 52119BZV60: NSP 9722D10, 9811110; GTOPAS 9811110, 9618274 → register 9722D10, skip 9811110, delete 9618274.', ''),
  ('XD06', ABN, 'Try-catch', 'Error apa pun (login, layar, timeout, pesan error GTOPAS, download NSP / Excel gagal) → bot berhenti, semua part Waiting GTOPAS Failed (1 gagal, gagal semua). Row yang sudah diproses tetap di GTOPAS; [Sync] berikutnya membandingkan ulang.', '', 'TB_R_CROSSDOCK_IF_RESULT'),
  ('XD06', ABN, 'Open', 'FB-176 data GTOPAS yang belum ada di NSP saat go-live akan terhapus (TBC).', '', ''),

@@ -16,7 +16,7 @@ export const DCODE: Record<string, string> = {
 };
 
 /** Master destination catalog — populates the destination dropdown when
- * adding a row in "Mapping per Destination" (Add destination). */
+ * adding a row in "Export Crossdock Master" (Add destination). */
 /** Order types of the Export Crossdock Master (system master). Empty = '**'. */
 export const ORDER_TYPES = ['**', 'C', '9', 'V'];
 export const MASTER_DESTS: { code: string; name: string }[] = DESTS.map((name) => ({ code: DCODE[name], name }));
@@ -24,7 +24,7 @@ export const MASTER_DESTS: { code: string; name: string }[] = DESTS.map((name) =
 export const CUR_PER = 'Sep 2026';
 
 /** Periods available in the simulated data, oldest first — drives the
- * "Period" filter on the Mapping per Destination sub-screen. */
+ * "Period" filter on the Export Crossdock Master sub-screen. */
 export const PERIODS = ['Aug 2026', 'Sep 2026'];
 
 const EDITORS = ['A. Wibowo', 'R. Pratama', 'S. Hartono', 'D. Anggraini', 'L. Kusuma', 'M. Santoso', 'F. Rahman', 'N. Puspita'];
@@ -170,7 +170,7 @@ const SEED: SeedPart[] = [
   },
 ];
 
-/** Fabricates PART-009..PART-050 so the Part List has ~50 rows (2 pages
+/** Fabricates PART-009..PART-050 so the Kanban Crossdock Master has ~50 rows (2 pages
  * at 25/page) to exercise pagination and per-period filtering realistically. */
 function generateBulkParts(): SeedPart[] {
   const rng = makeRng(20260901);
@@ -216,7 +216,7 @@ function generateBulkParts(): SeedPart[] {
 
 const ALL_SEED: SeedPart[] = [...SEED, ...generateBulkParts()];
 
-/** Monthly run of XD05 that turned some Active parts Inactive (same as "Last DAD calculation" on the Part List). */
+/** Monthly run of XD05 that turned some Active parts Inactive (same as "Last DAD calculation" on the Kanban Crossdock Master). */
 const INACTIVE_RUN = new Date(2026, 9, 1, 2, 0);
 /** Most Inactive parts were Active before (dummy rule on the part number); the others went Candidate -> Inactive. */
 const wentInactive = (p: SeedPart) => p.st === 'Inactive' && hashStr(p.p) % 4 !== 0;

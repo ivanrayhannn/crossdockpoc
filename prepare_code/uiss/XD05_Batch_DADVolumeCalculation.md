@@ -13,13 +13,14 @@
 | 0.1 | FID Rayhan | 18-Oct-26 |  | Initial Draft |
 | 0.2 | FID Rayhan | 17-Nov-26 |  | SYNC_STATUS = 0 (No Sync) for every status change to or from Active (data edit mapping aligned with 4.3, FB-207); AP POLE delete by RPA (XD07, WLM9Q890) instead of SFTP file. |
 | 0.3 | FID Rayhan | 18-Nov-26 |  | Sheet "Active to Inactive" removed (18-Nov): Inactive parts with No Sync / Failed are taken by [Sync] by their status. |
+| 0.4 | FID Rayhan | 19-Nov-26 |  | Runs on day D and makes the Next period (Kanban and Export Crossdock Master); process 3 Period Rollover on day 1 (19-Nov). |
 
 ## 1. General
 
 ### Objective
 
 - Process 1: To calculate the average MAD of every crossdock part over the range of months set in the system master and to set the part status in TB_M_PART_CANDIDATE: Active when the average MAD is equal to or above Min MAD, Inactive when it is below.
-- Process 2: To create the new calculation period of Mapping per Destination and split the Max Case/Day of every Active part over its destinations in proportion to the actual demand (MAD) of each destination (buyer code + PD code) over the range of months set in the system master.
+- Process 2: To create the new calculation period of Export Crossdock Master and split the Max Case/Day of every Active part over its destinations in proportion to the actual demand (MAD) of each destination (buyer code + PD code) over the range of months set in the system master.
 - Each process is all-or-nothing and is retried automatically up to 3 times; after that it can be started manually from the Cross Dock Part Master screen (XD01).
 
 ### Operation flow
@@ -77,8 +78,8 @@ flowchart TB
 |---|---|
 | Trigger | The scheduler checks TB_R_ACTUAL_DEMAND_SUMMARY (NSP): XD05 starts when the table has rows with CREATE_DT later than DATA_DT of the last successful XD05 run (new data from XD04). No new data: XD05 is not started (decided 6-Nov). One run = process 1, then process 2. Check frequency set in the system master. |
 | Auto retry | A failed process is retried automatically up to 3 times; process 2 starts only after process 1 has succeeded. |
-| Manual trigger | [Run calculation (Part List)] on XD01 runs process 1 and then process 2; [Run calculation (Mapping)] on XD01 runs process 2 only. Each button is enabled only when its process and the 3 retries have failed. |
-| Last success date | One date per process in the Log; process 1 shown on the Part List tab, process 2 on the Mapping per Destination tab. |
+| Manual trigger | [Run calculation (Kanban Crossdock Master)] on XD01 runs process 1 and then process 2; [Run calculation (Mapping)] on XD01 runs process 2 only. Each button is enabled only when its process and the 3 retries have failed. |
+| Last success date | One date per process in the Log; process 1 shown on the Kanban Crossdock Master tab, process 2 on the Export Crossdock Master tab. |
 | Order | Runs after XD04 has brought new data (scheduled run, retry or manual run outside NSP). When XD04 still fails, there is no new data and XD05 is not started (decided 6-Nov). |
 
 ## 2. Function flow
@@ -144,7 +145,7 @@ flowchart TB
   b_p10 --> b_log
 ```
 
-1. Process 1 (part status) starts when the trigger finds new data in TB_R_ACTUAL_DEMAND_SUMMARY (NSP) (CREATE_DT later than DATA_DT of the last successful run), from an automatic retry, or [Run calculation (Part List)] on XD01.
+1. Process 1 (part status) starts when the trigger finds new data in TB_R_ACTUAL_DEMAND_SUMMARY (NSP) (CREATE_DT later than DATA_DT of the last successful run), from an automatic retry, or [Run calculation (Kanban Crossdock Master)] on XD01.
 2. Get the range of months N from the system master.
   - MONTH_TO = month before the run month; MONTH_FROM = N months back. Example: run in Oct 2026, N = 6 -> 202604 to 202609.
 3. Select every part of TB_M_PART_CANDIDATE (Candidate, Active and Inactive).
@@ -161,7 +162,7 @@ flowchart TB
 7. Check whether any error occurred during steps 2 to 6.
 8. No error: commit process 1, record SUCCESS of process 1 in the Log (END_DT = last success date). Continue with step 10 (process 2).
 9. Error: roll back process 1, record FAILED in the Log; process 2 is not started.
-  - The scheduler retries automatically up to 3 times. After the 3rd failed retry, [Run calculation (Part List)] is enabled on XD01. Exit.
+  - The scheduler retries automatically up to 3 times. After the 3rd failed retry, [Run calculation (Kanban Crossdock Master)] is enabled on XD01. Exit.
 10. Process 2 (destination mapping) starts after process 1 has succeeded, from an automatic retry of process 2, or [Run calculation (Mapping)] on XD01 (process 2 only). It uses the part status just set by process 1.
 11. Get the range of months N from the system master; the new period = run month.
   - Example: run in Oct 2026, N = 6 -> months 202604 to 202609, new period 202610.
@@ -381,8 +382,8 @@ One batch with two processes run in sequence: process 1 sets the part status fro
 ### 4.4 Process 1 - Retry and Manual Trigger
 
 - A failed run is retried automatically up to 3 times by the scheduler (RUN_TYPE = RETRY, RETRY_NO 1-3 in the Log).
-- After the 3rd failed retry, [Run calculation] is enabled on the Part List tab of XD01 (RUN_TYPE = MANUAL).
-- The last success date (END_DT of the latest SUCCESS record in the Log) is shown on the Part List tab of XD01.
+- After the 3rd failed retry, [Run calculation] is enabled on the Kanban Crossdock Master tab of XD01 (RUN_TYPE = MANUAL).
+- The last success date (END_DT of the latest SUCCESS record in the Log) is shown on the Kanban Crossdock Master tab of XD01.
 
 ### 4.5 Process 2 - Destinations and Result MAD
 
@@ -412,8 +413,22 @@ One batch with two processes run in sequence: process 1 sets the part status fro
 ### 4.8 Process 2 - Retry and Manual Trigger
 
 - The batch has its own scheduler (system master). A failed run is retried automatically up to 3 times (RUN_TYPE = RETRY, RETRY_NO 1-3 in the Log).
-- After the 3rd failed retry, [Run calculation] is enabled on the Mapping per Destination tab of XD01 (RUN_TYPE = MANUAL).
-- The last success date (END_DT of the latest SUCCESS record in the Log) is shown on the Mapping per Destination tab of XD01.
+- After the 3rd failed retry, [Run calculation] is enabled on the Export Crossdock Master tab of XD01 (RUN_TYPE = MANUAL).
+- The last success date (END_DT of the latest SUCCESS record in the Log) is shown on the Export Crossdock Master tab of XD01.
+
+### 4.9 Next Period and Period Rollover (19-Nov)
+
+- Schedule: day D of every month (system master, before the end of the month). The new period = the month after the run month (e.g. run 27-Nov -> period 202612 = Next).
+- Process 1: TB_R_PART_DAD_RESULT for the Next period, and one Kanban Crossdock Master row per part for the Next period: PART_STATUS from the result, Pcs/Case and Max Case/Day copied from the Current period. The Current period is not changed.
+- Process 2: Export Crossdock Master rows of the Next period for the Active parts (Order Type '**'). The Next period is view only on the screen.
+- Process 3 (new, day 1, 00:10): Period Rollover: Next becomes Current, Current becomes Past. Parts whose part + destination combination differs from the previous period get GTOPAS No Sync, then XD06 starts automatically. AP POLE got the Next period already on day D (XD07).
+- The manual [Run calculation] of the screen re-runs the Next period.
+
+| When | What |
+|---|---|
+| Day D (e.g. 27-Nov) | Process 1 + 2: period 202612 (Next) made |
+| Day D - end of month | D/S adjusts the Current period only |
+| Day 1 (1-Dec) | Process 3: 202612 Current, 202611 Past; XD06 for the changed combinations |
 
 ## 5. Logging messages
 
@@ -424,7 +439,7 @@ One batch with two processes run in sequence: process 1 sets the part status fro
 | LOG3 | Process 1: Range of months | Range is not set in the system master | Error | Range of months for the DAD volume calculation is not set. | system: Stop. STATUS = FAILED.; user: User contact PIC |
 | LOG4 | Process 1: Part skipped | Effective Start Date after the run date | Info | Part No <PART_NO> skipped: effective start date <DATE>. | system: Continue.; user: - |
 | LOG5 | Process 1: Save | Insert / update fails | Error | Cannot save the calculation of Part No <PART_NO>: <ERROR_DETAIL>. | system: Roll back. STATUS = FAILED. Retry.; user: User contact PIC |
-| LOG6 | Process 1: Retry exhausted | Scheduled run and 3 retries failed | Warning | DAD volume calculation failed 3 times. Manual run is enabled on Part List. | system: Enable [Run calculation] on Part List.; user: Check the cause, then click [Run calculation]. |
+| LOG6 | Process 1: Retry exhausted | Scheduled run and 3 retries failed | Warning | DAD volume calculation failed 3 times. Manual run is enabled on Kanban Crossdock Master. | system: Enable [Run calculation] on Kanban Crossdock Master.; user: Check the cause, then click [Run calculation]. |
 | LOG7 | Process 1: Unexpected error | Any other system error | Critical | Unexpected error: <ERROR_DETAIL>. | system: Roll back. STATUS = FAILED. Retry.; user: User contact PIC |
 | LOG8 | Process 2: Batch start | Batch is called | Info | Mapping destination calculation started (<RUN_TYPE>, retry <RETRY_NO>). Period <PERIOD>, range <MONTH_FROM> - <MONTH_TO>. | system: Write the log.; user: - |
 | LOG9 | Process 2: Batch end | Batch finishes | Info | Mapping destination calculation ended. Status <STATUS>, parts <COUNT>, mapping changed <CHANGED>. | system: Write the log.; user: - |
@@ -432,7 +447,7 @@ One batch with two processes run in sequence: process 1 sets the part status fro
 | LOG11 | Process 2: Destination check | Destination code not in TB_M_H0125_DESTINATION | Error | Destination code <DEST_CODE> of Part No <PART_NO> not found in TB_M_H0125_DESTINATION. | system: Roll back. STATUS = FAILED. Retry.; user: Register the destination in TB_M_H0125_DESTINATION, then run again. |
 | LOG12 | Process 2: Destinations limited | More destinations than Max Case/Day | Info | Part No <PART_NO>: <COUNT> destinations, limited to Max Case/Day <MAX>. | system: Continue.; user: - |
 | LOG13 | Process 2: Save | Insert / update fails | Error | Cannot save the mapping of Part No <PART_NO>, period <PERIOD>: <ERROR_DETAIL>. | system: Roll back. STATUS = FAILED. Retry.; user: User contact PIC |
-| LOG14 | Process 2: Retry exhausted | Scheduled run and 3 retries failed | Warning | Mapping destination calculation failed 3 times. Manual run is enabled on Mapping per Destination. | system: Enable [Run calculation] on Mapping per Destination.; user: Check the cause, then click [Run calculation]. |
+| LOG14 | Process 2: Retry exhausted | Scheduled run and 3 retries failed | Warning | Mapping destination calculation failed 3 times. Manual run is enabled on Export Crossdock Master. | system: Enable [Run calculation] on Export Crossdock Master.; user: Check the cause, then click [Run calculation]. |
 | LOG15 | Process 2: Unexpected error | Any other system error | Critical | Unexpected error: <ERROR_DETAIL>. | system: Roll back. STATUS = FAILED. Retry.; user: User contact PIC |
 
 ## 6. Appendix
@@ -446,7 +461,7 @@ Result of the DAD Volume Calculation, one record per calculated part and period.
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
-| PERIOD | CHAR(6) | Y | N | Calculation period YYYYMM (month of the run) |
+| PERIOD | CHAR(6) | Y | N | Period of the result = the new (Next) period, month after the run month (19-Nov) |
 | PART_NO | VARCHAR(TBD) | Y | N | Part number |
 | MONTH_FROM | CHAR(6) |  | N | First month of the range, YYYYMM |
 | MONTH_TO | CHAR(6) |  | N | Last month of the range, YYYYMM |
@@ -460,11 +475,12 @@ Result of the DAD Volume Calculation, one record per calculated part and period.
 | CREATED_DT | DATETIME |  | N | Date and time of the calculation |
 
 #### TB_M_PART_CANDIDATE (transaction, existing)
-Candidate part setting, one record per part (Part List data, no calculation period).
+Kanban Crossdock Master: one record per part and calculation period (19-Nov; before: one record per part).
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
 | PART_NO | VARCHAR(TBD) | Y | N | Part number; length follows TB_M_PART_MASTER |
+| PERIOD | CHAR(6) | Y | N | Calculation period YYYYMM (19-Nov): one row per part and period. Current: screen / upload; Next: made by XD05 on day D (view only until day 1); Past: view only |
 | PART_NAME | VARCHAR(TBD) |  | N | Retrieved from TB_M_PART_MASTER by PART_NO |
 | MIN_MAD | INT |  | N | Minimum MAD (mandatory); reference compared with the average MAD of the DAD Volume Calculation |
 | PCS_CASE | INT |  | N | Pieces per case (> 0) |
@@ -509,13 +525,13 @@ Actual demand summary replicated from DB Surrounding to NSP (same columns). Key 
 | EM_MS_FLAG | CHAR(1) |  | Y | EM / MS flag (not used by Crossdock) |
 
 #### TB_H_PART_CANDIDATE (history, proposed)
-History of every change of a crossdock part (Add / Edit by screen or upload, mapping changes, Sync results, status changes and mappings made by the calculation batches). Read by the History setting modal of Part List (index PART_NO, CREATED_DT). No retention limit: the history is kept (no housekeeping job, decided 30-Oct).
+History of every change of a crossdock part (Add / Edit by screen or upload, mapping changes, Sync results, status changes and mappings made by the calculation batches). Read by the History setting modal of Kanban Crossdock Master (index PART_NO, CREATED_DT). No retention limit: the history is kept (no housekeeping job, decided 30-Oct).
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
 | HIST_ID | BIGINT | Y | N | Running number (identity) |
 | PART_NO | VARCHAR(TBD) |  | N | Part number; length follows TB_M_PART_MASTER |
-| PERIOD | CHAR(6) |  | Y | Calculation period YYYYMM for MAPPING / SYNC / CALC; NULL for ADD / EDIT (Part List has no period) |
+| PERIOD | CHAR(6) |  | Y | Calculation period YYYYMM for MAPPING / SYNC / CALC; NULL for ADD / EDIT (Kanban Crossdock Master has no period) |
 | EVENT_TYPE | VARCHAR(10) |  | N | ADD / EDIT / MAPPING / SYNC / CALC |
 | SOURCE | VARCHAR(10) |  | N | SCREEN / UPLOAD / IF / RPA / BATCH |
 | UPLOAD_ID | VARCHAR(TBD) |  | Y | Upload of the change (Log); NULL when not from an upload |
@@ -528,13 +544,14 @@ History of every change of a crossdock part (Add / Edit by screen or upload, map
 | CREATED_DT | DATETIME |  | N | Date and time of the change |
 
 #### TB_M_PART_CANDIDATE_DEST (transaction, existing)
-Destination mapping, one record per part, calculation period and destination (Mapping per Destination data).
+Export Crossdock Master: one record per part, calculation period, destination and order type.
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
 | PART_NO | VARCHAR(TBD) | Y | N | Part number (FK to TB_M_PART_CANDIDATE) |
 | PERIOD | CHAR(6) | Y | N | Calculation period YYYYMM, e.g. 202610; displayed as 'Oct 2026' |
 | DEST_CODE | CHAR(7) | Y | N | Destination code (buyer code + PD code, 7 digits); exists in TB_M_H0125_DESTINATION |
+| ORDER_TYPE | VARCHAR(2) | Y | N | Order Type of the row (system master: '**', 'C', '9', 'V'; default '**'). One row per part, period, destination and order type (19-Nov) |
 | CASE_DAY | INT |  | N | Allocated Case/Day of the destination (> 0) |
 | CREATED_BY | VARCHAR(TBD) |  | N | User who created the record |
 | CREATED_DT | DATETIME |  | N | Created date and time |
@@ -593,7 +610,7 @@ Destination Master (existing NSP table, read only). Only the listed columns are 
 | N7 | PART-D | Candidate | 300 | 01-Nov-2026 |  | Effective Start Date after the run date: not calculated, no result record. |
 | N8 | PART-E | Inactive | 300 | 01-Jan-2026 |  | Status was set to Inactive manually last week: the batch may overwrite it with the calculated status. |
 | E1 | (all) |  |  |  |  | Database error while updating one part: whole run rolled back, Log FAILED, auto retry (max 3). |
-| E2 | (all) |  |  |  |  | Scheduled run and 3 retries failed: [Run calculation] enabled in Part List; last success date unchanged. |
+| E2 | (all) |  |  |  |  | Scheduled run and 3 retries failed: [Run calculation] enabled in Kanban Crossdock Master; last success date unchanged. |
 
 ### Process 2 - A. Part 52119BZV60 (Active, Max Case/Day 16)
 
@@ -618,9 +635,9 @@ Destination Master (existing NSP table, read only). Only the listed columns are 
 | No | Scenario | Expected result |
 |---|---|---|
 | N1 | Part 52119BZV60 (section A) | Period 202610 created: 9722D10 = 8, 9811110 = 5, 9618201 = 2, 9715310 = 1. Mapping differs from 202609 -> Sync Status No Sync; history MAPPING/BATCH per destination. |
-| N2 | Active part without demand in the range | No destination row for 202610; the part is listed on Mapping per Destination with Total Case/Day 0 (to be assigned by D/S). |
+| N2 | Active part without demand in the range | No destination row for 202610; the part is listed on Export Crossdock Master with Total Case/Day 0 (to be assigned by D/S). |
 | N3 | Candidate or Inactive part | Not calculated (Active parts only). |
 | N4 | Result equal to the mapping of the previous period | Rows inserted for the new period; Sync Status not changed; no history record. |
 | N5 | Manual re-run in the same month | Rows of period 202610 deleted and calculated again (replace). |
 | E1 | Destination code 9715310 not in TB_M_H0125_DESTINATION | Error: whole run rolled back (no new period), Log FAILED, auto retry (max 3). |
-| E2 | Scheduled run and 3 retries failed | [Run calculation] enabled on Mapping per Destination; last success date unchanged. |
+| E2 | Scheduled run and 3 retries failed | [Run calculation] enabled on Export Crossdock Master; last success date unchanged. |

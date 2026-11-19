@@ -1,6 +1,6 @@
 import type { CrossdockState } from '../useCrossdockState';
 
-// Same columns and order as sheet "Upload" of the Mapping per Destination Export Excel.
+// Same columns and order as sheet "Upload" of the Export Crossdock Master Export Excel.
 const UP_COLS = ['Part Number', 'Destination Code', 'Order Type', 'Dest Case/Day', 'Total Case/Day (used)', 'Max Case/Day (quota)', 'Upload (A/E)'];
 
 const UP_RULES: { label: string; cols: string }[] = [

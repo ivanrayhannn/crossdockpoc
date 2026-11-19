@@ -18,9 +18,9 @@ async function download() {
   const [d] = await Promise.all([pg.waitForEvent('download'), btn('Export Excel').click()]);
   await d.saveAs(`${dl}/${d.suggestedFilename()}`); console.log('downloaded', d.suggestedFilename());
 }
-// 1) Mapping per Destination (D/S account): [Sync] sets the parts to Waiting, then the file of the Waiting parts is exported
-await open('Mapping per Destination');
-await mark(pg.getByText('Crossdock Master Setting', { exact: true }).first()); await mark(btn('Mapping per Destination')); await shot('n1_map_menu');
+// 1) Export Crossdock Master (D/S account): [Sync] sets the parts to Waiting, then the file of the Waiting parts is exported
+await open('Export Crossdock Master');
+await mark(pg.getByText('Crossdock Master Setting', { exact: true }).first()); await mark(btn('Export Crossdock Master')); await shot('n1_map_menu');
 const sel = pg.locator('select');
 const ongoing = await sel.nth(0).locator('option').filter({ hasText: 'ongoing' }).first().getAttribute('value');
 await sel.nth(0).selectOption(ongoing); await sel.nth(1).selectOption('all');
@@ -40,10 +40,10 @@ await pg.getByPlaceholder(/PART/).first().fill(''); await sel.nth(1).selectOptio
 await btn('Search').click(); await pg.waitForTimeout(500);
 await mark(btn('Export Excel')); await shot('n5_map_export');
 await download();
-// 2) Part List: Pcs/Case, Max Case/Day and Status of the parts (same session, so the parts stay Waiting)
+// 2) Kanban Crossdock Master: Pcs/Case, Max Case/Day and Status of the parts (same session, so the parts stay Waiting)
 await pg.getByRole('button', { name: 'Switch sub-menu' }).click(); await pg.waitForTimeout(500);
-await pg.getByRole('button', { name: /^Part List/ }).click(); await pg.waitForTimeout(600);
+await pg.getByRole('button', { name: /^Kanban Crossdock Master/ }).click(); await pg.waitForTimeout(600);
 await btn('Search').click(); await pg.waitForTimeout(400);
-await mark(btn('Part List')); await mark(btn('Export Excel')); await shot('n6_part_export');
+await mark(btn('Kanban Crossdock Master')); await mark(btn('Export Excel')); await shot('n6_part_export');
 await download();
 await b.close();

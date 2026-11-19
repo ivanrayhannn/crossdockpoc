@@ -8,7 +8,7 @@ from PIL import Image, ImageChops
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, 'shots_gt')
-mapping = sorted(glob.glob(os.path.join(HERE, 'dl_gt', 'Crossdock_Mapping_per_Destination_*.xlsx')))[-1]
+mapping = sorted(glob.glob(os.path.join(HERE, 'dl_gt', 'Crossdock_Export_Master_*.xlsx')))[-1]
 fill = lambda c: PatternFill('solid', fgColor=c)
 HDR, KEY, YEL = fill('D9E1F2'), fill('F8CBAD'), fill('FFF2CC')
 ACT = {'Keep': fill('E2EFDA'), 'Add': fill('DDEBF7'), 'Delete': fill('FADBD8')}
@@ -43,7 +43,7 @@ wb = openpyxl.load_workbook(mapping)
 def sheet(n):
     rows = list(wb[n].iter_rows(values_only=True))
     return list(rows[0]), [dict(zip(rows[0], r)) for r in rows[1:]]
-mh, mrows = sheet('Mapping per Destination')
+mh, mrows = sheet('Export Crossdock Master')
 EX = ('PART-009', 'PART-012', 'PART-F', 'PART-B')
 MC = ['Period', 'Part Number', 'Destination Code', 'Dest Case/Day', 'Sync Status', 'Last Sync Date']
 

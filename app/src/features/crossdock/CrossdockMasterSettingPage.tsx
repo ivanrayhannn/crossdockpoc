@@ -23,7 +23,7 @@ export function CrossdockMasterSettingPage({ onNavigate }: { onNavigate: (route:
   const state = useCrossdockState();
   const { parts, q, aq, setQ, runSearch, resetQ, ro, role, setRole, switchRole, view, modal, addPart, openUpload, openFor, notice, dismissNotice, dadRun, runCalc } = state;
 
-  // Sheet 1 follows the Part List table (same filter and sort, all pages); sheet "Upload" holds every part.
+  // Sheet 1 follows the Kanban Crossdock Master table (same filter and sort, all pages); sheet "Upload" holds every part.
   const exportExcel = useCallback(() => {
     exportPartsXlsx(selectParts(parts.concat(PAST_ROWS), aq), parts).catch((err) => {
       console.error('Export Excel failed', err);

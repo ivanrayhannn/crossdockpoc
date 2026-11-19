@@ -18,26 +18,26 @@ SOURCE = {
     'caption': NSP_CAP,
     'meta': [('Function', 'XD01 Crossdock Master Setting ([Sync], Export Excel) as the source of XD06 RPA Cross Dock Master to GTOPAS'),
              ('User', 'D/S team: only [Sync]. Everything after [Sync] is done by the RPA bot: download, Excel, GTOPAS (decided 17-Nov)'),
-             ('Result', 'Crossdock_Mapping_per_Destination_<Period>_YYYYMMDD.xlsx, sheet Mapping per Destination (NSP list)'),
+             ('Result', 'Crossdock_Export_Master_<Period>_YYYYMMDD.xlsx, sheet Export Crossdock Master (NSP list)'),
              ('NSP list', 'Every Active part of the ongoing period with its Destination Codes (one row per part + destination), whatever the Sync Status')],
     'blocks': [
         ('table', 'Who does what', ['No', 'Who', 'What'], [
-            ['1', 'D/S team', 'Crossdock Master Setting, tab Mapping per Destination, ongoing period: click [Sync] (steps 1 and 2)'],
-            ['2', 'RPA bot', 'Log in to NSP, [Export Excel] of Mapping per Destination (ongoing period, Sync Status All) and open the file (steps 3 to 5)'],
+            ['1', 'D/S team', 'Crossdock Master Setting, tab Export Crossdock Master, ongoing period: click [Sync] (steps 1 and 2)'],
+            ['2', 'RPA bot', 'Log in to NSP, [Export Excel] of Export Crossdock Master (ongoing period, Sync Status All) and open the file (steps 3 to 5)'],
             ['3', 'RPA bot', 'GTOPAS WVJA5204: Search Depot 01, read every page (sheet "1. GTOPAS Crossdock Master")'],
             ['4', 'RPA bot', 'Add the sheet GTOPAS Compare to the file: Keep / Add / Delete per P/No. + Destination Code (sheet "2. Scenario Detail")'],
             ['5', 'RPA bot', 'Add / delete the rows in GTOPAS; write Result and GTOPAS message per row in GTOPAS Compare'],
             ['6', 'RPA bot', 'Write the result to NSP: Sync Status Success (Last Sync) or Failed; the file stays as evidence of the run']], [6, 34, 100]),
-        ('step', 'D/S: open Crossdock Master Setting, tab Mapping per Destination',
-         'In the left menu click Master > Crossdock Master Setting. With the D/S account the screen opens on the tab Mapping per Destination.', 'g1_map_menu.png'),
+        ('step', 'D/S: open Crossdock Master Setting, tab Export Crossdock Master',
+         'In the left menu click Master > Crossdock Master Setting. With the D/S account the screen opens on the tab Export Crossdock Master.', 'g1_map_menu.png'),
         ('step', 'D/S: search the ongoing period and click [Sync]',
          'Calculation period = the ongoing period (e.g. Sep 2026 (ongoing)), Sync Status = All, click [Search]. Click [Sync (n)]: every part with '
          'status Active (ongoing period) or Inactive and Sync Status No Sync or Failed becomes Waiting (Candidate never) and the RPA bot starts. This is the last manual step.', 'g2_map_sync.png'),
         ('step', 'Bot: download the Excel ([Export Excel], Sync Status All)',
          'The bot logs in to NSP, opens the same screen, ongoing period, Sync Status = All (GTOPAS keeps only Part + Destination Code, so the '
          'whole list is compared, not only the Waiting parts), Part Number empty, clicks [Search] and [Export Excel], and opens '
-         'Crossdock_Mapping_per_Destination_Sep_2026_YYYYMMDD.xlsx.', 'g3_map_export.png'),
-        ('step', 'Bot: read sheet "Mapping per Destination" = NSP list',
+         'Crossdock_Export_Master_Sep_2026_YYYYMMDD.xlsx.', 'g3_map_export.png'),
+        ('step', 'Bot: read sheet "Export Crossdock Master" = NSP list',
          'One row per Active part and Destination Code of the ongoing period. Only Part Number and Destination Code are used for GTOPAS '
          '(Dest Case/Day is not sent). A row with an empty Destination Code = Active part without destination: GTOPAS must have no row for it.',
          'x_gt_nsp_all.png'),
@@ -72,9 +72,9 @@ SCREEN = {
         ('table', 'Values of a new row', ['GTOPAS item', 'Value', 'Source'], [
             ['Depot Code', '01', 'Fixed'],
             ['Maker Code', 'A', 'Fixed (decided 11-Nov)'],
-            ['P/No.', 'Part Number of NSP', 'Mapping per Destination, Part Number (GTOPAS shows it with "-")'],
+            ['P/No.', 'Part Number of NSP', 'Export Crossdock Master, Part Number (GTOPAS shows it with "-")'],
             ['Domestic/Overseas', '2', 'Fixed (decided 11-Nov)'],
-            ['Destination Code', 'Destination Code of NSP', 'Mapping per Destination, Destination Code: the same 7 characters, no conversion'],
+            ['Destination Code', 'Destination Code of NSP', 'Export Crossdock Master, Destination Code: the same 7 characters, no conversion'],
             ['TOPAS Order Type', '3', 'Fixed (decided 11-Nov). The screenshot shows "*" on an existing row: 3 or * TBC (FB-203)'],
             ['Order Transportation Code', '2', 'Fixed (decided 11-Nov)']], [40, 50, 50]),
         ('step', 'Delete a row',
@@ -96,7 +96,7 @@ DETAIL = {
     'title': 'Scenario detail: from the NSP Excel to GTOPAS',
     'caption': 'Examples with the data of the file of sheet "0. Source Data (NSP)" (prototype dummy data). ' + GT_CAP,
     'meta': [('Function', 'XD06 RPA Cross Dock Master to GTOPAS'),
-             ('Input', 'Sheet Mapping per Destination (ongoing period, all Sync Status)'),
+             ('Input', 'Sheet Export Crossdock Master (ongoing period, all Sync Status)'),
              ('Rule', 'Destination of the ongoing period in NSP: already in GTOPAS = keep; not in GTOPAS = add P/No. + Destination Code; '
                       'in GTOPAS but not in NSP = delete')],
     'blocks': [
@@ -112,7 +112,7 @@ DETAIL = {
 
         ('heading', 'B. Example 1: PART-009, new part with 3 destinations (S2)'),
         ('text', 'NSP: 3 rows 9722D10, 9811110, 9715310 (Last Sync Date empty). GTOPAS now: [Search] P/No. PART-009 shows no data.'),
-        ('image', 'Sheet Mapping per Destination', 'x_gt_ex1_nsp.png'),
+        ('image', 'Sheet Export Crossdock Master', 'x_gt_ex1_nsp.png'),
         ('table', 'Action in GTOPAS', ACT, [
             ['WVJA5204', 'Add (S2)', 'PART-009 + 9722D10 (Depot 01, Maker A, Dom/Os 2, Order Type 3, Trans 2)'],
             ['WVJA5204', 'Add (S2)', 'PART-009 + 9811110'],
@@ -120,14 +120,14 @@ DETAIL = {
 
         ('heading', 'C. Example 2: PART-012, no change (S1)'),
         ('text', 'NSP: 9722D10, Sync Status Success. GTOPAS now: PART-012 + 9722D10.'),
-        ('image', 'Sheet Mapping per Destination', 'x_gt_ex2_nsp.png'),
+        ('image', 'Sheet Export Crossdock Master', 'x_gt_ex2_nsp.png'),
         ('image', 'GTOPAS now', 'x_gt_ex2_gt.png'),
         ('table', 'Action in GTOPAS', ACT, [['WVJA5204', 'Keep (S1), no action', 'PART-012 + 9722D10']], [20, 60, 60]),
 
         ('heading', 'D. Example 3: PART-F, destinations changed (S1 + S2 + S3)'),
         ('text', 'NSP: 9715310 (12), 9722D10 (8), 9811110 (6), Last Sync 28-Aug-2026. GTOPAS now (example): 9715310, 9722D10, 9710110. '
                  'The Case/Day values do not matter for GTOPAS.'),
-        ('image', 'Sheet Mapping per Destination', 'x_gt_ex3_nsp.png'),
+        ('image', 'Sheet Export Crossdock Master', 'x_gt_ex3_nsp.png'),
         ('image', 'GTOPAS now', 'x_gt_ex3_gt.png'),
         ('table', 'Action in GTOPAS', ACT, [
             ['WVJA5204', 'Keep (S1)', 'PART-F + 9715310'],
@@ -138,11 +138,11 @@ DETAIL = {
         ('heading', 'E. Example 4: PART-B, Active part without destination (S3)'),
         ('text', 'NSP: one row with an empty Destination Code. GTOPAS now: no row of PART-B. When GTOPAS still has rows of the part (e.g. a '
                  'destination removed in NSP), delete them all.'),
-        ('image', 'Sheet Mapping per Destination', 'x_gt_ex4_nsp.png'),
+        ('image', 'Sheet Export Crossdock Master', 'x_gt_ex4_nsp.png'),
         ('table', 'Action in GTOPAS', ACT, [['WVJA5204', 'Nothing to add; delete any row of the part (S3)', 'PART-B (none)']], [20, 60, 60]),
 
         ('heading', 'F. Example 5: PART-023, Inactive part (S3)'),
-        ('text', 'NSP: PART-023 is Inactive (went Inactive on 01-Oct-2026), so it is not in sheet Mapping per Destination. '
+        ('text', 'NSP: PART-023 is Inactive (went Inactive on 01-Oct-2026), so it is not in sheet Export Crossdock Master. '
                  'GTOPAS now: PART-023 + 9715310, PART-023 + 9722D10.'),
         ('image', 'GTOPAS now', 'x_gt_ex5_gt.png'),
         ('table', 'Action in GTOPAS', ACT, [

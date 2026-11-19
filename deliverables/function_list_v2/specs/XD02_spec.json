@@ -7,7 +7,7 @@
   "function_name": "XD02 Cross Dock Part Master Upload Batch",
   "created_date": "18-Oct-26",
   "created_by": "FID Rayhan",
-  "updated_date": "18-Nov-26",
+  "updated_date": "19-Nov-26",
   "updated_by": "FID Rayhan"
  },
  "revisions": [
@@ -31,11 +31,18 @@
    "date": "18-Nov-26",
    "reviewed_by": "",
    "description": "Sheet \"Active to Inactive\" removed (18-Nov): Inactive parts with No Sync / Failed are taken by [Sync] by their status."
+  },
+  {
+   "revision": "0.4",
+   "author": "FID Rayhan",
+   "date": "19-Nov-26",
+   "reviewed_by": "",
+   "description": "Kanban Crossdock Master per period: the upload changes the ongoing period only (19-Nov)."
   }
  ],
  "general": {
   "objective": [
-   "To process the Part List file uploaded from the Cross Dock Part Master screen (Part List tab): from the [Validate file] button of the Upload Excel modal until the data is saved to TB_M_PART_CANDIDATE.",
+   "To process the Kanban Crossdock Master file uploaded from the Cross Dock Part Master screen (Kanban Crossdock Master tab): from the [Validate file] button of the Upload Excel modal until the data is saved to TB_M_PART_CANDIDATE.",
    "In case any error occurs, nothing is saved to the master. The error is recorded in the upload log and a result report is created."
   ],
   "operation_flow": {
@@ -44,7 +51,7 @@
     "nodes": [
      {
       "id": "a",
-      "label": "Part List screen [Validate file]",
+      "label": "Kanban Crossdock Master screen [Validate file]",
       "type": "screen"
      },
      {
@@ -114,9 +121,9 @@
   },
   "inputs": [
    {
-    "name": "Part List file (sheet Upload)",
+    "name": "Kanban Crossdock Master file (sheet Upload)",
     "type": "Excel",
-    "description": "Uploaded by the user on the Part List screen ([Validate file]). Only sheet Upload is read. Max 5 MB, 5,000 rows."
+    "description": "Uploaded by the user on the Kanban Crossdock Master screen ([Validate file]). Only sheet Upload is read. Max 5 MB, 5,000 rows."
    },
    {
     "name": "TB_M_PART_MASTER",
@@ -172,7 +179,7 @@
     "rows": [
      [
       "Uploaded file",
-      "File selected by the user on the Part List screen"
+      "File selected by the user on the Kanban Crossdock Master screen"
      ],
      [
       "User",
@@ -195,7 +202,7 @@
     "rows": [
      [
       "Trigger",
-      "Starts when the user clicks [Validate file] in the Upload Excel modal of the Part List screen (on demand, no schedule)."
+      "Starts when the user clicks [Validate file] in the Upload Excel modal of the Kanban Crossdock Master screen (on demand, no schedule)."
      ]
     ]
    }
@@ -318,7 +325,7 @@
    ]
   },
   "steps": [
-   "User clicks [Validate file] in the Upload Excel modal of the Part List screen. The batch starts and receives the uploaded file.",
+   "User clicks [Validate file] in the Upload Excel modal of the Kanban Crossdock Master screen. The batch starts and receives the uploaded file.",
    {
     "text": "Check the file: format .xlsx, size, number of rows, sheet \"Upload\" and template columns (see 4.1).",
     "children": [
@@ -346,7 +353,7 @@
      "A new part gets Sync Status = No Sync. An updated part gets No Sync only when a value sent to GTOPAS / AP POLE changed (Status to or from Active, Pcs/Case or Max Case/Day of an Active part); otherwise the Sync Status is kept."
     ]
    },
-   "Create the result report and record the result (completed or rejected) in the upload log. The Part List screen shows the result to the user. Exit."
+   "Create the result report and record the result (completed or rejected) in the upload log. The Kanban Crossdock Master screen shows the result to the user. Exit."
   ]
  },
  "data_map": {
@@ -552,7 +559,7 @@
      },
      {
       "dest_field": "PERIOD",
-      "description": "NULL (Part List has no period)"
+      "description": "NULL (Kanban Crossdock Master has no period)"
      },
      {
       "dest_field": "EVENT_TYPE",
@@ -647,7 +654,7 @@
   {
    "type": "text",
    "level": 0,
-   "text": "This batch starts when the user clicks [Validate file] in the Upload Excel modal of the Part List screen. It checks the uploaded file and, if everything is valid, saves the data to TB_M_PART_CANDIDATE. If not, the upload is rejected and recorded in the upload log."
+   "text": "This batch starts when the user clicks [Validate file] in the Upload Excel modal of the Kanban Crossdock Master screen. It checks the uploaded file and, if everything is valid, saves the data to TB_M_PART_CANDIDATE. If not, the upload is rejected and recorded in the upload log."
   },
   {
    "type": "bullets",
@@ -697,7 +704,7 @@
     "If all rows are valid, the data is saved to TB_M_PART_CANDIDATE: flag A inserts a new part (status Candidate), flag E updates the changed values, including status Active <-> Inactive. Rows with no change are skipped.",
     "The status of a Candidate part is changed only in the Edit part data modal on the screen, not by upload.",
     "Every inserted or changed part gets a history record per changed field in TB_H_PART_CANDIDATE (event ADD / EDIT, source UPLOAD, UPLOAD_ID of this run; refer Appendix).",
-    "A new record gets Sync Status = No Sync; an updated record only when a value sent to GTOPAS / AP POLE changed (Status to or from Active, Pcs/Case or Max Case/Day of an Active part). It is sent to GTOPAS and AP POLE by the RPA (XD06 / XD07) when D/S clicks [Sync] in Mapping per Destination. Status Active -> Inactive (No Sync) is taken by the next [Sync] like the change of XD05.",
+    "A new record gets Sync Status = No Sync; an updated record only when a value sent to GTOPAS / AP POLE changed (Status to or from Active, Pcs/Case or Max Case/Day of an Active part). It is sent to GTOPAS and AP POLE by the RPA (XD06 / XD07) when D/S clicks [Sync] in Export Crossdock Master. Status Active -> Inactive (No Sync) is taken by the next [Sync] like the change of XD05.",
     "A result report (.xlsx) is created for both cases."
    ]
   },
@@ -766,9 +773,23 @@
     ],
     [
      "9",
-     "Flag E: Max Case/Day is not below the total Case/Day already mapped per destination in the ongoing calculation period of Mapping per Destination (TB_M_PART_CANDIDATE_DEST) (e.g. mapped 100, new Max Case/Day 80 is rejected). The user must first reduce the mapping in the Mapping per Destination sub-menu, then lower Max Case/Day in Part List.",
+     "Flag E: Max Case/Day is not below the total Case/Day already mapped per destination in the ongoing calculation period of Export Crossdock Master (TB_M_PART_CANDIDATE_DEST) (e.g. mapped 100, new Max Case/Day 80 is rejected). The user must first reduce the mapping in the Export Crossdock Master sub-menu, then lower Max Case/Day in Kanban Crossdock Master.",
      "Max Case/Day"
     ]
+   ]
+  },
+  {
+   "type": "heading",
+   "text": "4.4 Period (19-Nov)"
+  },
+  {
+   "type": "bullets",
+   "marker": "-",
+   "level": 0,
+   "items": [
+    "Kanban Crossdock Master (former Part List) has a period like the Export Crossdock Master: TB_M_PART_CANDIDATE is kept per PART_NO + PERIOD (Status, Pcs/Case, Max Case/Day, Sync Status of that month).",
+    "The upload changes the rows of the ongoing period only; Next (made by XD05) and past periods are not changed.",
+    "Max Case/Day of a period may not be below the mapped total of that period (message 14): to lower it, D/S first reduces the destinations on the Export Crossdock Master, then changes Max Case/Day on the Kanban Crossdock Master."
    ]
   }
  ],
@@ -932,7 +953,7 @@
  ],
  "sample_sheet": {
   "title": "Sample Input",
-  "heading": "Sample upload scenarios - Part List Upload",
+  "heading": "Sample upload scenarios - Kanban Crossdock Master Upload",
   "intro": [
    "Each scenario is a separate upload file. Today = 13-Sep-2026, mapping of the ongoing calculation period = Sep 2026.",
    "Input columns follow sheet Upload of the Export Excel; a blank cell is a blank value in the file."
@@ -1152,7 +1173,7 @@
      ],
      [
       "N7",
-      "Lower Max Case/Day after the mapping was reduced to 20 in Mapping per Destination",
+      "Lower Max Case/Day after the mapping was reduced to 20 in Export Crossdock Master",
       "PART-A",
       800,
       60,
@@ -1369,7 +1390,7 @@
       "",
       "E",
       "",
-      "Check 9: Max Case/Day 20 is below mapped 24. Reduce the mapping first in Mapping per Destination."
+      "Check 9: Max Case/Day 20 is below mapped 24. Reduce the mapping first in Export Crossdock Master."
      ],
      [
       "E14",
@@ -1434,7 +1455,7 @@
      ],
      [
       "F4",
-      "No sheet named Upload (e.g. only sheet Part List)",
+      "No sheet named Upload (e.g. only sheet Kanban Crossdock Master)",
       "Rejected: sheet Upload not found."
      ],
      [
@@ -1451,7 +1472,7 @@
    "name": "TB_M_PART_CANDIDATE",
    "kind": "transaction",
    "proposed": false,
-   "description": "Candidate part setting, one record per part (Part List data, no calculation period). Target of a successful upload.",
+   "description": "Kanban Crossdock Master: one record per part and calculation period (19-Nov; before: one record per part).",
    "columns": [
     [
      "PART_NO",
@@ -1459,6 +1480,13 @@
      "Y",
      "N",
      "Part number; length follows TB_M_PART_MASTER"
+    ],
+    [
+     "PERIOD",
+     "CHAR(6)",
+     "Y",
+     "N",
+     "Calculation period YYYYMM (19-Nov): one row per part and period. Current: screen / upload; Next: made by XD05 on day D (view only until day 1); Past: view only"
     ],
     [
      "PART_NAME",
@@ -1578,7 +1606,7 @@
    "name": "TB_H_PART_CANDIDATE",
    "kind": "history",
    "proposed": true,
-   "description": "History of every change of a crossdock part (Add / Edit by screen or upload, mapping changes, Sync results, status changes and mappings made by the calculation batches). Read by the History setting modal of Part List (index PART_NO, CREATED_DT). No retention limit: the history is kept (no housekeeping job, decided 30-Oct).",
+   "description": "History of every change of a crossdock part (Add / Edit by screen or upload, mapping changes, Sync results, status changes and mappings made by the calculation batches). Read by the History setting modal of Kanban Crossdock Master (index PART_NO, CREATED_DT). No retention limit: the history is kept (no housekeeping job, decided 30-Oct).",
    "columns": [
     [
      "HIST_ID",
@@ -1599,7 +1627,7 @@
      "CHAR(6)",
      "",
      "Y",
-     "Calculation period YYYYMM for MAPPING / SYNC / CALC; NULL for ADD / EDIT (Part List has no period)"
+     "Calculation period YYYYMM for MAPPING / SYNC / CALC; NULL for ADD / EDIT (Kanban Crossdock Master has no period)"
     ],
     [
      "EVENT_TYPE",

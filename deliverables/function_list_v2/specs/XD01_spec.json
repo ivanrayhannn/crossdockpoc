@@ -2,22 +2,22 @@
  "doc_type": "screen",
  "general": {
   "objective": [
-   "One screen with two tabs: Part List (part number level) and Mapping per Destination (part + calculation period + destination level).",
-   "Part List tab: To register crossdock candidate parts (Part No, Min MAD, Pcs/Case, Max Case/Day, Effective Start Date).",
-   "Part List tab: To search and display registered crossdock parts with their status and capacity.",
-   "Part List tab: To change part data and part status (Candidate / Active / Inactive) of a registered part.",
-   "Part List tab: To display the change history of a part.",
-   "Part List tab: To export the Part List to Excel and upload part settings from Excel (Add and Edit).",
-   "Part List tab: This sub-menu is opened only for users logged in with a Procurement account; users with a D/S account open the Mapping per Destination sub-menu instead.",
-   "Mapping per Destination tab: To split the Max Case/Day of each Active part over destinations (Japan, Taiwan, Korea) for the ongoing calculation period.",
-   "Mapping per Destination tab: To display the destination mapping per part and calculation period, including past periods (read only).",
-   "Mapping per Destination tab: To start the interfaces of the cross dock master to GTOPAS (XD06) and AP POLE (XD07) for changed parts, and show the Sync Status of each part.",
-   "Mapping per Destination tab: To export the mapping to Excel and upload the mapping of the ongoing period from Excel.",
-   "Mapping per Destination tab: This sub-menu is opened only for users logged in with a D/S account; users with a Procurement account open the Part List sub-menu instead."
+   "One screen with two tabs: Kanban Crossdock Master (part number level) and Export Crossdock Master (part + calculation period + destination level).",
+   "Kanban Crossdock Master tab: To register crossdock candidate parts (Part No, Min MAD, Pcs/Case, Max Case/Day, Effective Start Date).",
+   "Kanban Crossdock Master tab: To search and display registered crossdock parts with their status and capacity.",
+   "Kanban Crossdock Master tab: To change part data and part status (Candidate / Active / Inactive) of a registered part.",
+   "Kanban Crossdock Master tab: To display the change history of a part.",
+   "Kanban Crossdock Master tab: To export the Kanban Crossdock Master to Excel and upload part settings from Excel (Add and Edit).",
+   "Kanban Crossdock Master tab: This sub-menu is opened only for users logged in with a Procurement account; users with a D/S account open the Export Crossdock Master sub-menu instead.",
+   "Export Crossdock Master tab: To split the Max Case/Day of each Active part over destinations (Japan, Taiwan, Korea) for the ongoing calculation period.",
+   "Export Crossdock Master tab: To display the destination mapping per part and calculation period, including past periods (read only).",
+   "Export Crossdock Master tab: To start the interfaces of the cross dock master to GTOPAS (XD06) and AP POLE (XD07) for changed parts, and show the Sync Status of each part.",
+   "Export Crossdock Master tab: To export the mapping to Excel and upload the mapping of the ongoing period from Excel.",
+   "Export Crossdock Master tab: This sub-menu is opened only for users logged in with a D/S account; users with a Procurement account open the Kanban Crossdock Master sub-menu instead."
   ],
   "display_order": [
    {
-    "section": "Part List - Result List (Sort by = Newer to Older, default)",
+    "section": "Kanban Crossdock Master - Result List (Sort by = Newer to Older, default)",
     "fields": [
      {
       "field": "Updated Date (CHANGED_DT)",
@@ -26,7 +26,7 @@
     ]
    },
    {
-    "section": "Part List - Result List (Sort by = Older to Newer)",
+    "section": "Kanban Crossdock Master - Result List (Sort by = Older to Newer)",
     "fields": [
      {
       "field": "Updated Date (CHANGED_DT)",
@@ -35,7 +35,7 @@
     ]
    },
    {
-    "section": "Part List - Result List (Sort by = Default)",
+    "section": "Kanban Crossdock Master - Result List (Sort by = Default)",
     "fields": [
      {
       "field": "Part Number",
@@ -44,7 +44,7 @@
     ]
    },
    {
-    "section": "Part List - History Setting modal",
+    "section": "Kanban Crossdock Master - History Setting modal",
     "fields": [
      {
       "field": "Event date and time",
@@ -73,23 +73,23 @@
   ],
   "buttons": [
    {
-    "name": "Tab (Part List / Mapping per Destination)",
-    "function": "Switch between the Part List tab and the Mapping per Destination tab."
+    "name": "Tab (Kanban Crossdock Master / Export Crossdock Master)",
+    "function": "Switch between the Kanban Crossdock Master tab and the Export Crossdock Master tab."
    },
    {
     "name": "Add Part",
     "function": "Open the \"Add Part Candidate Crossdock\" modal (Add Mode), ready to register a new part."
    },
    {
-    "name": "Upload Excel (Part List)",
+    "name": "Upload Excel (Kanban Crossdock Master)",
     "function": "Open the \"Upload Excel - part settings\" modal (Upload Mode)."
    },
    {
-    "name": "Export Excel (Part List)",
-    "function": "Download the Part List as .xlsx: sheet \"Part List\" (active filter) and sheet \"Upload\" (base file for Edit uploads)."
+    "name": "Export Excel (Kanban Crossdock Master)",
+    "function": "Download the Kanban Crossdock Master as .xlsx: sheet \"Kanban Crossdock Master\" (active filter) and sheet \"Upload\" (base file for Edit uploads)."
    },
    {
-    "name": "Run calculation (Part List)",
+    "name": "Run calculation (Kanban Crossdock Master)",
     "function": "Start the DAD Volume Calculation batch manually. Enabled only when the scheduled run and its 3 auto retries have failed."
    },
    {
@@ -114,15 +114,15 @@
    },
    {
     "name": "Save",
-    "function": "Part List tab: Save the part data entered in the Add / Edit modal.; Mapping per Destination tab: Save the destination mapping of the part."
+    "function": "Kanban Crossdock Master tab: Save the part data entered in the Add / Edit modal.; Export Crossdock Master tab: Save the destination mapping of the part."
    },
    {
     "name": "Cancel",
-    "function": "Part List tab: Close the Add / Edit modal without saving.; Mapping per Destination tab: Leave edit mode and discard all changes of the panel."
+    "function": "Kanban Crossdock Master tab: Close the Add / Edit modal without saving.; Export Crossdock Master tab: Leave edit mode and discard all changes of the panel."
    },
    {
     "name": "Close",
-    "function": "Part List tab: Close the History setting / Upload Excel modal (also the X icon of every modal).; Mapping per Destination tab: Close the Upload Excel modal without uploading."
+    "function": "Kanban Crossdock Master tab: Close the History setting / Upload Excel modal (also the X icon of every modal).; Export Crossdock Master tab: Close the Upload Excel modal without uploading."
    },
    {
     "name": "Validate file",
@@ -146,7 +146,7 @@
    },
    {
     "name": "Export Excel (Mapping)",
-    "function": "Download the mapping as .xlsx: sheet \"Mapping per Destination\" (active filter) and sheet \"Upload\" (base file for the upload)."
+    "function": "Download the mapping as .xlsx: sheet \"Export Crossdock Master\" (active filter) and sheet \"Upload\" (base file for the upload)."
    },
    {
     "name": "Expand (arrow)",
@@ -171,17 +171,17 @@
   ],
   "screen_modes": [
    {
-    "mode": "Part List - Initial Mode",
+    "mode": "Kanban Crossdock Master - Initial Mode",
     "sections": [
      {
       "section": "Search Criteria",
       "description": "Part Number and Part Name blank, Status = All, Sort by = Newer to Older",
       "buttons": {
-       "Tab (Part List / Mapping per Destination)": "E",
+       "Tab (Kanban Crossdock Master / Export Crossdock Master)": "E",
        "Add Part": "E",
-       "Upload Excel (Part List)": "E",
-       "Export Excel (Part List)": "E",
-       "Run calculation (Part List)": "D",
+       "Upload Excel (Kanban Crossdock Master)": "E",
+       "Export Excel (Kanban Crossdock Master)": "E",
+       "Run calculation (Kanban Crossdock Master)": "D",
        "Reset": "E",
        "Search": "E",
        "Part Number link / Edit": "E",
@@ -207,11 +207,11 @@
       "section": "Result List",
       "description": "All registered parts, 25 rows per page, page 1. Refer below 1)",
       "buttons": {
-       "Tab (Part List / Mapping per Destination)": "E",
+       "Tab (Kanban Crossdock Master / Export Crossdock Master)": "E",
        "Add Part": "E",
-       "Upload Excel (Part List)": "E",
-       "Export Excel (Part List)": "E",
-       "Run calculation (Part List)": "D",
+       "Upload Excel (Kanban Crossdock Master)": "E",
+       "Export Excel (Kanban Crossdock Master)": "E",
+       "Run calculation (Kanban Crossdock Master)": "D",
        "Reset": "E",
        "Search": "E",
        "Part Number link / Edit": "E",
@@ -236,17 +236,17 @@
     ]
    },
    {
-    "mode": "Part List - Search Result Mode",
+    "mode": "Kanban Crossdock Master - Search Result Mode",
     "sections": [
      {
       "section": "Result List",
       "description": "Parts matching all criteria (AND); page returns to 1",
       "buttons": {
-       "Tab (Part List / Mapping per Destination)": "E",
+       "Tab (Kanban Crossdock Master / Export Crossdock Master)": "E",
        "Add Part": "E",
-       "Upload Excel (Part List)": "E",
-       "Export Excel (Part List)": "E",
-       "Run calculation (Part List)": "D",
+       "Upload Excel (Kanban Crossdock Master)": "E",
+       "Export Excel (Kanban Crossdock Master)": "E",
+       "Run calculation (Kanban Crossdock Master)": "D",
        "Reset": "E",
        "Search": "E",
        "Part Number link / Edit": "E",
@@ -272,11 +272,11 @@
       "section": "Empty State",
       "description": "No matching parts; table and paging hidden; [Reset filter] shown",
       "buttons": {
-       "Tab (Part List / Mapping per Destination)": "E",
+       "Tab (Kanban Crossdock Master / Export Crossdock Master)": "E",
        "Add Part": "E",
-       "Upload Excel (Part List)": "E",
-       "Export Excel (Part List)": "E",
-       "Run calculation (Part List)": "D",
+       "Upload Excel (Kanban Crossdock Master)": "E",
+       "Export Excel (Kanban Crossdock Master)": "E",
+       "Run calculation (Kanban Crossdock Master)": "D",
        "Reset": "E",
        "Search": "E",
        "Part Number link / Edit": "D",
@@ -301,17 +301,17 @@
     ]
    },
    {
-    "mode": "Part List - Add Mode (modal)",
+    "mode": "Kanban Crossdock Master - Add Mode (modal)",
     "sections": [
      {
       "section": "Part No not selected",
       "description": "Status locked to Candidate; Max Case/Day locked; Save disabled",
       "buttons": {
-       "Tab (Part List / Mapping per Destination)": "E",
+       "Tab (Kanban Crossdock Master / Export Crossdock Master)": "E",
        "Add Part": "D",
-       "Upload Excel (Part List)": "D",
-       "Export Excel (Part List)": "D",
-       "Run calculation (Part List)": "D",
+       "Upload Excel (Kanban Crossdock Master)": "D",
+       "Export Excel (Kanban Crossdock Master)": "D",
+       "Run calculation (Kanban Crossdock Master)": "D",
        "Reset": "D",
        "Search": "D",
        "Part Number link / Edit": "D",
@@ -337,11 +337,11 @@
       "section": "Part No selected, Pcs/Case blank",
       "description": "Part Name autofilled; Max Case/Day still locked; Save disabled",
       "buttons": {
-       "Tab (Part List / Mapping per Destination)": "E",
+       "Tab (Kanban Crossdock Master / Export Crossdock Master)": "E",
        "Add Part": "D",
-       "Upload Excel (Part List)": "D",
-       "Export Excel (Part List)": "D",
-       "Run calculation (Part List)": "D",
+       "Upload Excel (Kanban Crossdock Master)": "D",
+       "Export Excel (Kanban Crossdock Master)": "D",
+       "Run calculation (Kanban Crossdock Master)": "D",
        "Reset": "D",
        "Search": "D",
        "Part Number link / Edit": "D",
@@ -367,11 +367,11 @@
       "section": "All required items filled",
       "description": "Total Pcs/Day calculated; Save enabled",
       "buttons": {
-       "Tab (Part List / Mapping per Destination)": "E",
+       "Tab (Kanban Crossdock Master / Export Crossdock Master)": "E",
        "Add Part": "D",
-       "Upload Excel (Part List)": "D",
-       "Export Excel (Part List)": "D",
-       "Run calculation (Part List)": "D",
+       "Upload Excel (Kanban Crossdock Master)": "D",
+       "Export Excel (Kanban Crossdock Master)": "D",
+       "Run calculation (Kanban Crossdock Master)": "D",
        "Reset": "D",
        "Search": "D",
        "Part Number link / Edit": "D",
@@ -396,17 +396,17 @@
     ]
    },
    {
-    "mode": "Part List - Edit Mode (modal)",
+    "mode": "Kanban Crossdock Master - Edit Mode (modal)",
     "sections": [
      {
       "section": "Saved status Candidate",
       "description": "Part No locked; Status, Effective Start Date, Min MAD, Pcs/Case, Max Case/Day editable",
       "buttons": {
-       "Tab (Part List / Mapping per Destination)": "E",
+       "Tab (Kanban Crossdock Master / Export Crossdock Master)": "E",
        "Add Part": "D",
-       "Upload Excel (Part List)": "D",
-       "Export Excel (Part List)": "D",
-       "Run calculation (Part List)": "D",
+       "Upload Excel (Kanban Crossdock Master)": "D",
+       "Export Excel (Kanban Crossdock Master)": "D",
+       "Run calculation (Kanban Crossdock Master)": "D",
        "Reset": "D",
        "Search": "D",
        "Part Number link / Edit": "D",
@@ -432,11 +432,11 @@
       "section": "Saved status Active / Inactive",
       "description": "Same as 4.a but Effective Start Date locked (it can only change while the status is Candidate)",
       "buttons": {
-       "Tab (Part List / Mapping per Destination)": "E",
+       "Tab (Kanban Crossdock Master / Export Crossdock Master)": "E",
        "Add Part": "D",
-       "Upload Excel (Part List)": "D",
-       "Export Excel (Part List)": "D",
-       "Run calculation (Part List)": "D",
+       "Upload Excel (Kanban Crossdock Master)": "D",
+       "Export Excel (Kanban Crossdock Master)": "D",
+       "Run calculation (Kanban Crossdock Master)": "D",
        "Reset": "D",
        "Search": "D",
        "Part Number link / Edit": "D",
@@ -461,17 +461,17 @@
     ]
    },
    {
-    "mode": "Part List - History Mode (modal)",
+    "mode": "Kanban Crossdock Master - History Mode (modal)",
     "sections": [
      {
       "section": "History setting",
       "description": "Change timeline of the selected part, read only",
       "buttons": {
-       "Tab (Part List / Mapping per Destination)": "E",
+       "Tab (Kanban Crossdock Master / Export Crossdock Master)": "E",
        "Add Part": "D",
-       "Upload Excel (Part List)": "D",
-       "Export Excel (Part List)": "D",
-       "Run calculation (Part List)": "D",
+       "Upload Excel (Kanban Crossdock Master)": "D",
+       "Export Excel (Kanban Crossdock Master)": "D",
+       "Run calculation (Kanban Crossdock Master)": "D",
        "Reset": "D",
        "Search": "D",
        "Part Number link / Edit": "D",
@@ -496,17 +496,17 @@
     ]
    },
    {
-    "mode": "Part List - Upload Mode (modal)",
+    "mode": "Kanban Crossdock Master - Upload Mode (modal)",
     "sections": [
      {
       "section": "Upload Excel",
       "description": "Template columns, rules, file area",
       "buttons": {
-       "Tab (Part List / Mapping per Destination)": "E",
+       "Tab (Kanban Crossdock Master / Export Crossdock Master)": "E",
        "Add Part": "D",
-       "Upload Excel (Part List)": "D",
-       "Export Excel (Part List)": "D",
-       "Run calculation (Part List)": "D",
+       "Upload Excel (Kanban Crossdock Master)": "D",
+       "Export Excel (Kanban Crossdock Master)": "D",
+       "Run calculation (Kanban Crossdock Master)": "D",
        "Reset": "D",
        "Search": "D",
        "Part Number link / Edit": "D",
@@ -532,11 +532,11 @@
       "section": "Success popup",
       "description": "\"Saved successfully\" after Save or Validate file",
       "buttons": {
-       "Tab (Part List / Mapping per Destination)": "E",
+       "Tab (Kanban Crossdock Master / Export Crossdock Master)": "E",
        "Add Part": "D",
-       "Upload Excel (Part List)": "D",
-       "Export Excel (Part List)": "D",
-       "Run calculation (Part List)": "D",
+       "Upload Excel (Kanban Crossdock Master)": "D",
+       "Export Excel (Kanban Crossdock Master)": "D",
+       "Run calculation (Kanban Crossdock Master)": "D",
        "Reset": "D",
        "Search": "D",
        "Part Number link / Edit": "D",
@@ -567,11 +567,11 @@
       "section": "Search Criteria",
       "description": "Calculation period = ongoing period, Part Number blank, Sync Status = No Sync",
       "buttons": {
-       "Tab (Part List / Mapping per Destination)": "E",
+       "Tab (Kanban Crossdock Master / Export Crossdock Master)": "E",
        "Add Part": "-",
-       "Upload Excel (Part List)": "-",
-       "Export Excel (Part List)": "-",
-       "Run calculation (Part List)": "-",
+       "Upload Excel (Kanban Crossdock Master)": "-",
+       "Export Excel (Kanban Crossdock Master)": "-",
+       "Run calculation (Kanban Crossdock Master)": "-",
        "Reset": "E",
        "Search": "E",
        "Part Number link / Edit": "-",
@@ -597,11 +597,11 @@
       "section": "Result List",
       "description": "Parts of the ongoing period with Sync Status No Sync. Refer below 1)",
       "buttons": {
-       "Tab (Part List / Mapping per Destination)": "E",
+       "Tab (Kanban Crossdock Master / Export Crossdock Master)": "E",
        "Add Part": "-",
-       "Upload Excel (Part List)": "-",
-       "Export Excel (Part List)": "-",
-       "Run calculation (Part List)": "-",
+       "Upload Excel (Kanban Crossdock Master)": "-",
+       "Export Excel (Kanban Crossdock Master)": "-",
+       "Run calculation (Kanban Crossdock Master)": "-",
        "Reset": "E",
        "Search": "E",
        "Part Number link / Edit": "-",
@@ -632,11 +632,11 @@
       "section": "Result List - ongoing period",
       "description": "Active parts matching all criteria",
       "buttons": {
-       "Tab (Part List / Mapping per Destination)": "E",
+       "Tab (Kanban Crossdock Master / Export Crossdock Master)": "E",
        "Add Part": "-",
-       "Upload Excel (Part List)": "-",
-       "Export Excel (Part List)": "-",
-       "Run calculation (Part List)": "-",
+       "Upload Excel (Kanban Crossdock Master)": "-",
+       "Export Excel (Kanban Crossdock Master)": "-",
+       "Run calculation (Kanban Crossdock Master)": "-",
        "Reset": "E",
        "Search": "E",
        "Part Number link / Edit": "-",
@@ -662,11 +662,11 @@
       "section": "Result List - past period / All periods",
       "description": "All parts of the period; Upload Excel disabled",
       "buttons": {
-       "Tab (Part List / Mapping per Destination)": "E",
+       "Tab (Kanban Crossdock Master / Export Crossdock Master)": "E",
        "Add Part": "-",
-       "Upload Excel (Part List)": "-",
-       "Export Excel (Part List)": "-",
-       "Run calculation (Part List)": "-",
+       "Upload Excel (Kanban Crossdock Master)": "-",
+       "Export Excel (Kanban Crossdock Master)": "-",
+       "Run calculation (Kanban Crossdock Master)": "-",
        "Reset": "E",
        "Search": "E",
        "Part Number link / Edit": "-",
@@ -692,11 +692,11 @@
       "section": "Empty State",
       "description": "No parts match the filters; table hidden",
       "buttons": {
-       "Tab (Part List / Mapping per Destination)": "E",
+       "Tab (Kanban Crossdock Master / Export Crossdock Master)": "E",
        "Add Part": "-",
-       "Upload Excel (Part List)": "-",
-       "Export Excel (Part List)": "-",
-       "Run calculation (Part List)": "-",
+       "Upload Excel (Kanban Crossdock Master)": "-",
+       "Export Excel (Kanban Crossdock Master)": "-",
+       "Run calculation (Kanban Crossdock Master)": "-",
        "Reset": "E",
        "Search": "E",
        "Part Number link / Edit": "-",
@@ -727,11 +727,11 @@
       "section": "Ongoing period",
       "description": "Panel read only; [Edit mapping] shown",
       "buttons": {
-       "Tab (Part List / Mapping per Destination)": "E",
+       "Tab (Kanban Crossdock Master / Export Crossdock Master)": "E",
        "Add Part": "-",
-       "Upload Excel (Part List)": "-",
-       "Export Excel (Part List)": "-",
-       "Run calculation (Part List)": "-",
+       "Upload Excel (Kanban Crossdock Master)": "-",
+       "Export Excel (Kanban Crossdock Master)": "-",
+       "Run calculation (Kanban Crossdock Master)": "-",
        "Reset": "E",
        "Search": "E",
        "Part Number link / Edit": "-",
@@ -757,11 +757,11 @@
       "section": "Past period",
       "description": "Panel read only; badge 'Past period - read only' instead of [Edit mapping]",
       "buttons": {
-       "Tab (Part List / Mapping per Destination)": "E",
+       "Tab (Kanban Crossdock Master / Export Crossdock Master)": "E",
        "Add Part": "-",
-       "Upload Excel (Part List)": "-",
-       "Export Excel (Part List)": "-",
-       "Run calculation (Part List)": "-",
+       "Upload Excel (Kanban Crossdock Master)": "-",
+       "Export Excel (Kanban Crossdock Master)": "-",
+       "Run calculation (Kanban Crossdock Master)": "-",
        "Reset": "E",
        "Search": "E",
        "Part Number link / Edit": "-",
@@ -792,11 +792,11 @@
       "section": "Valid mapping",
       "description": "Destination and Case/Day editable; total <= Max Case/Day",
       "buttons": {
-       "Tab (Part List / Mapping per Destination)": "E",
+       "Tab (Kanban Crossdock Master / Export Crossdock Master)": "E",
        "Add Part": "-",
-       "Upload Excel (Part List)": "-",
-       "Export Excel (Part List)": "-",
-       "Run calculation (Part List)": "-",
+       "Upload Excel (Kanban Crossdock Master)": "-",
+       "Export Excel (Kanban Crossdock Master)": "-",
+       "Run calculation (Kanban Crossdock Master)": "-",
        "Reset": "E",
        "Search": "E",
        "Part Number link / Edit": "-",
@@ -822,11 +822,11 @@
       "section": "Mapping cannot be saved",
       "description": "Total > Max Case/Day, no destination, or a row without destination; Save disabled",
       "buttons": {
-       "Tab (Part List / Mapping per Destination)": "E",
+       "Tab (Kanban Crossdock Master / Export Crossdock Master)": "E",
        "Add Part": "-",
-       "Upload Excel (Part List)": "-",
-       "Export Excel (Part List)": "-",
-       "Run calculation (Part List)": "-",
+       "Upload Excel (Kanban Crossdock Master)": "-",
+       "Export Excel (Kanban Crossdock Master)": "-",
+       "Run calculation (Kanban Crossdock Master)": "-",
        "Reset": "E",
        "Search": "E",
        "Part Number link / Edit": "-",
@@ -857,11 +857,11 @@
       "section": "Upload Excel",
       "description": "Template columns, rules, file area",
       "buttons": {
-       "Tab (Part List / Mapping per Destination)": "E",
+       "Tab (Kanban Crossdock Master / Export Crossdock Master)": "E",
        "Add Part": "-",
-       "Upload Excel (Part List)": "-",
-       "Export Excel (Part List)": "-",
-       "Run calculation (Part List)": "-",
+       "Upload Excel (Kanban Crossdock Master)": "-",
+       "Export Excel (Kanban Crossdock Master)": "-",
+       "Run calculation (Kanban Crossdock Master)": "-",
        "Reset": "D",
        "Search": "D",
        "Part Number link / Edit": "-",
@@ -887,11 +887,11 @@
       "section": "Success popup",
       "description": "'Saved successfully' after Validate file",
       "buttons": {
-       "Tab (Part List / Mapping per Destination)": "E",
+       "Tab (Kanban Crossdock Master / Export Crossdock Master)": "E",
        "Add Part": "-",
-       "Upload Excel (Part List)": "-",
-       "Export Excel (Part List)": "-",
-       "Run calculation (Part List)": "-",
+       "Upload Excel (Kanban Crossdock Master)": "-",
+       "Export Excel (Kanban Crossdock Master)": "-",
+       "Run calculation (Kanban Crossdock Master)": "-",
        "Reset": "D",
        "Search": "D",
        "Part Number link / Edit": "-",
@@ -936,12 +936,12 @@
     "nodes": [
      {
       "id": "pl",
-      "label": "Part List tab",
+      "label": "Kanban Crossdock Master tab",
       "type": "screen"
      },
      {
       "id": "mp",
-      "label": "Mapping per Destination tab",
+      "label": "Export Crossdock Master tab",
       "type": "screen"
      }
     ],
@@ -960,13 +960,13 @@
    }
   },
   {
-   "title": "Screen Flow for Part List",
+   "title": "Screen Flow for Kanban Crossdock Master",
    "flow": {
     "direction": "LR",
     "nodes": [
      {
       "id": "list",
-      "label": "Part List",
+      "label": "Kanban Crossdock Master",
       "type": "screen"
      },
      {
@@ -1049,7 +1049,7 @@
     ]
    },
    "notes": [
-    "Cancel / Close / X on any modal returns to the Part List without saving."
+    "Cancel / Close / X on any modal returns to the Kanban Crossdock Master without saving."
    ]
   },
   {
@@ -1210,13 +1210,13 @@
    ]
   },
   {
-   "title": "Screen Flow for Mapping per Destination",
+   "title": "Screen Flow for Export Crossdock Master",
    "flow": {
     "direction": "LR",
     "nodes": [
      {
       "id": "list",
-      "label": "Mapping per Destination list",
+      "label": "Export Crossdock Master list",
       "type": "screen"
      },
      {
@@ -1428,7 +1428,7 @@
  ],
  "screen_layout": [
   {
-   "caption": "1. Initial Mode - Part List (Status = All, Sort by = Newer to Older)",
+   "caption": "1. Initial Mode - Kanban Crossdock Master (Status = All, Sort by = Newer to Older)",
    "image": "deliverables/uiss_screens/part_list/c_01_initial.png"
   },
   {
@@ -1553,7 +1553,7 @@
    "group": "<Tab Bar>"
   },
   {
-   "name": "Tab (Part List / Mapping per Destination)",
+   "name": "Tab (Kanban Crossdock Master / Export Crossdock Master)",
    "source": "",
    "field": "",
    "type": "",
@@ -1561,14 +1561,14 @@
    "io": "I",
    "control": "Tab",
    "justified": "Left",
-   "initial": "Part List",
+   "initial": "Kanban Crossdock Master",
    "required": "",
    "format": "",
    "validation": "",
-   "description": "Part List tab (default) / Mapping per Destination tab."
+   "description": "Kanban Crossdock Master tab (default) / Export Crossdock Master tab."
   },
   {
-   "group": "<Part List - Header Section>"
+   "group": "<Kanban Crossdock Master - Header Section>"
   },
   {
    "name": "Add Part",
@@ -1586,7 +1586,7 @@
    "description": "Opens the Add Part modal. Refer Operation Description 5.4."
   },
   {
-   "name": "Upload Excel (Part List)",
+   "name": "Upload Excel (Kanban Crossdock Master)",
    "source": "",
    "field": "",
    "type": "",
@@ -1601,7 +1601,7 @@
    "description": "Opens the Upload Excel modal. Refer Operation Description 5.7."
   },
   {
-   "name": "Export Excel (Part List)",
+   "name": "Export Excel (Kanban Crossdock Master)",
    "source": "",
    "field": "",
    "type": "",
@@ -1613,10 +1613,10 @@
    "required": "",
    "format": "",
    "validation": "",
-   "description": "Downloads Crossdock_Part_List_YYYYMMDD.xlsx. Refer Operation Description 5.8."
+   "description": "Downloads Crossdock_Kanban_Master_YYYYMMDD.xlsx. Refer Operation Description 5.8."
   },
   {
-   "group": "<Part List - Search Criteria Section>"
+   "group": "<Kanban Crossdock Master - Search Criteria Section>"
   },
   {
    "name": "Part Number",
@@ -1709,7 +1709,7 @@
    "description": "Applies the criteria to the result list. Typing or selecting a criterion alone does not change the list; Enter in a text box = [Search]."
   },
   {
-   "group": "<Part List - Result List Section>"
+   "group": "<Kanban Crossdock Master - Result List Section>"
   },
   {
    "name": "Registered parts counter",
@@ -1757,7 +1757,7 @@
    "description": "'Scheduled run failed 3x'; shown when the scheduled run and its 3 auto retries have failed."
   },
   {
-   "name": "Run calculation (Part List)",
+   "name": "Run calculation (Kanban Crossdock Master)",
    "source": "",
    "field": "",
    "type": "",
@@ -1967,7 +1967,7 @@
    "description": "Opens the History setting modal of the row."
   },
   {
-   "group": "<Part List - Footer Section>"
+   "group": "<Kanban Crossdock Master - Footer Section>"
   },
   {
    "name": "Rows per page",
@@ -2015,7 +2015,7 @@
    "description": "Previous / next page. Refer Screen Mode remark 1)."
   },
   {
-   "group": "<Part List - Empty State Section>"
+   "group": "<Kanban Crossdock Master - Empty State Section>"
   },
   {
    "name": "Empty state message",
@@ -2063,7 +2063,7 @@
    "description": "Shown with message no. 2; same as header [Upload Excel] / [Add Part]."
   },
   {
-   "group": "<Part List - Add Part / Edit Part Data Modal>"
+   "group": "<Kanban Crossdock Master - Add Part / Edit Part Data Modal>"
   },
   {
    "name": "Modal title",
@@ -2276,7 +2276,7 @@
    "description": "Same as [Cancel]."
   },
   {
-   "group": "<Part List - History Setting Modal>"
+   "group": "<Kanban Crossdock Master - History Setting Modal>"
   },
   {
    "name": "Part identity",
@@ -2369,7 +2369,7 @@
    "description": "Closes the modal."
   },
   {
-   "group": "<Part List - Upload Excel Modal>"
+   "group": "<Kanban Crossdock Master - Upload Excel Modal>"
   },
   {
    "name": "Template columns",
@@ -2462,7 +2462,7 @@
    "description": "Save button of the upload. Refer Operation Description 5.7."
   },
   {
-   "group": "<Part List - Saved Successfully Popup>"
+   "group": "<Kanban Crossdock Master - Saved Successfully Popup>"
   },
   {
    "name": "Success message",
@@ -2510,7 +2510,7 @@
    "required": "N",
    "format": "Mon YYYY",
    "validation": "",
-   "description": "Options: All periods / every calculation period; the ongoing one is marked '(ongoing)'. The label shows (ongoing) / (past) / (all). Calculation periods are created by the calculation batch; the latest period created is the ongoing period and earlier ones become past. A new period starts empty: the mapping of the previous period is not copied. Every Active part is listed with its Max Case/Day from Part List (the quota) but no destination yet (Total Case/Day 0, 0%), until the D/S user assigns it by Edit mapping or Upload Excel."
+   "description": "Options: All periods / every calculation period; the ongoing one is marked '(ongoing)'. The label shows (ongoing) / (past) / (all). Calculation periods are created by the calculation batch; the latest period created is the ongoing period and earlier ones become past. A new period starts empty: the mapping of the previous period is not copied. Every Active part is listed with its Max Case/Day from Kanban Crossdock Master (the quota) but no destination yet (Total Case/Day 0, 0%), until the D/S user assigns it by Edit mapping or Upload Excel."
   },
   {
    "name": "Part Number",
@@ -2768,7 +2768,7 @@
    "required": "",
    "format": "ZZ,ZZ9 / ZZ,ZZ9",
    "validation": "",
-   "description": "Used (bold) = sum of Case/Day of all destinations of the part and period; quota = Max Case/Day of the part in Part List."
+   "description": "Used (bold) = sum of Case/Day of all destinations of the part and period; quota = Max Case/Day of the part in Kanban Crossdock Master."
   },
   {
    "name": "Pcs/Day",
@@ -2798,7 +2798,7 @@
    "required": "",
    "format": "ZZ9%",
    "validation": "",
-   "description": "Calculated: Total Case/Day / Max Case/Day (MAX_CASE_DAY). Never above 100%: Save, upload and the Max Case/Day edit in Part List are blocked above the limit."
+   "description": "Calculated: Total Case/Day / Max Case/Day (MAX_CASE_DAY). Never above 100%: Save, upload and the Max Case/Day edit in Kanban Crossdock Master are blocked above the limit."
   },
   {
    "name": "Sync Status",
@@ -3387,7 +3387,7 @@
      },
      {
       "dest_field": "PERIOD",
-      "description": "NULL (Part List has no period)"
+      "description": "NULL (Kanban Crossdock Master has no period)"
      },
      {
       "dest_field": "EVENT_TYPE",
@@ -3774,7 +3774,7 @@
   {
    "type": "text",
    "level": 1,
-   "text": "5.1 - 5.10: Part List tab. 5.11 - 5.20: Mapping per Destination tab."
+   "text": "5.1 - 5.10: Kanban Crossdock Master tab. 5.11 - 5.20: Export Crossdock Master tab."
   },
   {
    "type": "heading",
@@ -3853,7 +3853,7 @@
    "items": [
     "If the Part No was registered by another user in the meantime, display message no. 3. Stop.",
     "Insert the part into TB_M_PART_CANDIDATE with PART_STATUS = Candidate and SYNC_STATUS = 0 (No Sync) (refer Data Edit Mapping).",
-    "Insert the change history when any register or update data in Part List",
+    "Insert the change history when any register or update data in Kanban Crossdock Master",
     "Close the modal, reset the Part Number / Part Name / Status filters, sort Newer to Older and display message no. 9. The new part is shown at the top."
    ]
   },
@@ -3882,7 +3882,7 @@
     "'Effective Start Date' is editable only while the saved status is Candidate (minimum today); otherwise locked with message no. 10 as tooltip.",
     "'Min MAD' (mandatory, whole number 0 or more), 'Pcs/Case' and 'Max Case/Day' can be changed; 'Total Pcs/Day' is recalculated.",
     "Active part only: below Max Case/Day show 'Mapped Case/Day (current period): n' = total Case/Day of the part in TB_M_PART_CANDIDATE_DEST for the ongoing period (' · no destination yet' when none), so the user sees the lowest allowed Max Case/Day before Save.",
-    "Max Case/Day can not be less than the total Case/Day already mapped to destinations in the ongoing period (TB_M_PART_CANDIDATE_DEST); otherwise the field is marked red, message no. 14 is shown below Pcs/Case & Max Case/Day and [Save] is disabled. The user must first reduce the mapping in Mapping per Destination (same rule as upload check 9)."
+    "Max Case/Day can not be less than the total Case/Day already mapped to destinations in the ongoing period (TB_M_PART_CANDIDATE_DEST); otherwise the field is marked red, message no. 14 is shown below Pcs/Case & Max Case/Day and [Save] is disabled. The user must first reduce the mapping in Export Crossdock Master (same rule as upload check 9)."
    ]
   },
   {
@@ -3899,7 +3899,7 @@
     "If the record was changed by another user after it was opened, display message no. 4. Stop.",
     "Check Max Case/Day against the mapped total of the ongoing period again on the server; if it is below, display message no. 14. Stop.",
     "Update TB_M_PART_CANDIDATE, CHANGED_BY and CHANGED_DT. SYNC_STATUS = 0 (No Sync) only when a value sent to GTOPAS / AP POLE changed (Status to or from Active, Pcs/Case or Max Case/Day of an Active part); a change of Min MAD or Effective Start Date only, or a Save without change, keeps the Sync Status. Status changes are written to the history (FIELD_NAME PART_STATUS).",
-    "Insert the change history when any register or update in Part List",
+    "Insert the change history when any register or update in Kanban Crossdock Master",
     "Close the modal, move the part to the top of the list and display message no. 9."
    ]
   },
@@ -3971,7 +3971,7 @@
      "CHAR(6)",
      "",
      "Y",
-     "Calculation period YYYYMM for MAPPING / SYNC / CALC; NULL for ADD / EDIT (Part List has no period)"
+     "Calculation period YYYYMM for MAPPING / SYNC / CALC; NULL for ADD / EDIT (Kanban Crossdock Master has no period)"
     ],
     [
      "EVENT_TYPE",
@@ -4065,7 +4065,7 @@
    "level": 2,
    "items": [
     "User clicks [Upload Excel]: open the modal with the template columns, the rules and the file area (.xlsx, max 5 MB, max 5,000 rows).",
-    "Edit rows use sheet 'Upload' of the Part List Export Excel as base file (pre-filled with Upload (A/E) = E). Sample: sheet 'Upload Part List'.",
+    "Edit rows use sheet 'Upload' of the Kanban Crossdock Master Export Excel as base file (pre-filled with Upload (A/E) = E). Sample: sheet 'Upload Kanban Crossdock Master'.",
     "Status rule: a Candidate part's status cannot be changed by upload; Active <-> Inactive can be changed; no part can be changed to Candidate.",
     "User clicks [Validate file] (save button of the upload): the file is passed to the upload batch; validation, saving (all-or-nothing) and logging follow UISS-Batch \"XD02 Cross Dock Part Master Upload Batch\".",
     "When the upload is completed, close the modal and display message no. 11. When it is rejected, show the batch result (error list) - refer UISS-Batch.",
@@ -4081,8 +4081,8 @@
    "marker": "a.",
    "level": 2,
    "items": [
-    "User clicks [Export Excel]: download Crossdock_Part_List_YYYYMMDD.xlsx.",
-    "Sheet 'Part List': rows of the active filter and sort (all pages) with Part Number, Part Name, Min MAD, Pcs/Case, Max Case/Day, Total Pcs/Day, Status, Effective Start Date, CREATED_DT, CREATED_BY, UPDATED_DT, UPDATED_BY. Information only. Sample: 'Export Part List'.",
+    "User clicks [Export Excel]: download Crossdock_Kanban_Master_YYYYMMDD.xlsx.",
+    "Sheet 'Kanban Crossdock Master': rows of the active filter and sort (all pages) with Part Number, Part Name, Min MAD, Pcs/Case, Max Case/Day, Total Pcs/Day, Status, Effective Start Date, CREATED_DT, CREATED_BY, UPDATED_DT, UPDATED_BY. Information only. Sample: 'Export Kanban Crossdock Master'.",
     "Sheet 'Upload': every registered part, columns as sheet 1 (Part Number, Min MAD, Pcs/Case, Max Case/Day, Status, Upload (A/E) = E, Effective Start Date). Base file for Edit uploads.",
     "If the file cannot be created, display message no. 13."
    ]
@@ -4133,12 +4133,12 @@
     [
      "Part Status",
      "Active",
-     "Active part. Only Active parts can be mapped in the Mapping per Destination sub-menu."
+     "Active part. Only Active parts can be mapped in the Export Crossdock Master sub-menu."
     ],
     [
      "Part Status",
      "Inactive",
-     "Inactive part. Not mapped in the Mapping per Destination sub-menu."
+     "Inactive part. Not mapped in the Export Crossdock Master sub-menu."
     ],
     [
      "Sync Status",
@@ -4148,7 +4148,7 @@
     [
      "Sync Status",
      "Waiting (3)",
-     "[Sync] clicked in the Mapping per Destination tab; waiting for XD06 (GTOPAS) and / or XD07 (AP POLE)."
+     "[Sync] clicked in the Export Crossdock Master tab; waiting for XD06 (GTOPAS) and / or XD07 (AP POLE)."
     ],
     [
      "Sync Status",
@@ -4245,7 +4245,7 @@
     "The sub-menu is opened only for users logged in with a D/S account.",
     "Search criteria: 'Calculation period' = ongoing period, 'Part Number' blank, 'Sync Status' = No Sync.",
     "Ongoing period: list every Active part of TB_M_PART_CANDIDATE, with its destinations of TB_M_PART_CANDIDATE_DEST for that period (a part without destinations is listed with Total Case/Day 0).",
-    "A new period starts empty: the mapping of the previous period is not copied. Every Active part is listed with its Max Case/Day from Part List (the quota) but no destination yet (Total Case/Day 0, 0%), until the D/S user assigns it by Edit mapping or Upload Excel.",
+    "A new period starts empty: the mapping of the previous period is not copied. Every Active part is listed with its Max Case/Day from Kanban Crossdock Master (the quota) but no destination yet (Total Case/Day 0, 0%), until the D/S user assigns it by Edit mapping or Upload Excel.",
     "Past period: list every part that has rows in TB_M_PART_CANDIDATE_DEST for that period, whatever its current status. 'All periods' lists both."
    ]
   },
@@ -4275,7 +4275,7 @@
    "level": 2,
    "items": [
     "Total Case/Day = used / quota (sum of CASE_DAY of the part and period / Max Case/Day); Pcs/Day = Pcs/Case x used.",
-    "Percentage = Total Case/Day / Max Case/Day; it never exceeds 100% because the total can not go above Max Case/Day (Save, upload and the Max Case/Day edit in Part List are blocked).",
+    "Percentage = Total Case/Day / Max Case/Day; it never exceeds 100% because the total can not go above Max Case/Day (Save, upload and the Max Case/Day edit in Kanban Crossdock Master are blocked).",
     "The list is paged: 25 rows per page by default (25 / 50 / 100), with paging information and [Prev] / [Next]. A part with its Destination Mapping panel counts as one row. [Search], Reset and a change of Rows per page return to page 1."
    ]
   },
@@ -4431,8 +4431,8 @@
    "marker": "a.",
    "level": 2,
    "items": [
-    "User clicks [Export Excel]: download Crossdock_Mapping_per_Destination_<period>_YYYYMMDD.xlsx (<period> e.g. Sep_2026 or All_periods).",
-    "Sheet 'Mapping per Destination': rows of the active filter, one row per destination (a part without destination gives one row with blank destination columns). Columns: Period, Part Number, Part Name, Destination Code, Pcs/Case, Dest Case/Day, Total Case/Day (used), Max Case/Day (quota), Dest Pcs/Day, Pcs/Day, Sync Status, CREATED_DT, CREATED_BY, UPDATED_DT, UPDATED_BY (audit of the mapping row). Information only. Sample: sheet 'Export Mapping'.",
+    "User clicks [Export Excel]: download Crossdock_Export_Master_<period>_YYYYMMDD.xlsx (<period> e.g. Sep_2026 or All_periods).",
+    "Sheet 'Export Crossdock Master': rows of the active filter, one row per destination (a part without destination gives one row with blank destination columns). Columns: Period, Part Number, Part Name, Destination Code, Pcs/Case, Dest Case/Day, Total Case/Day (used), Max Case/Day (quota), Dest Pcs/Day, Pcs/Day, Sync Status, CREATED_DT, CREATED_BY, UPDATED_DT, UPDATED_BY (audit of the mapping row). Information only. Sample: sheet 'Export Mapping'.",
     "Sheet 'Upload': every Active part of the ongoing period, columns Part Number, Destination Code, Dest Case/Day, Total Case/Day (used), Max Case/Day (quota), Upload (A/E); one row per destination, and one blank row (Upload (A/E) = A) for a part without mapping. Empty for a past period or All periods. Upload (A/E) = E for a mapped destination.",
     "If the file cannot be created, display message no. 26."
    ]
@@ -4478,7 +4478,7 @@
     [
      "Table",
      "TB_M_PART_CANDIDATE",
-     "Part List data, part number level (key PART_NO). Holds Max Case/Day, status and Sync Status."
+     "Kanban Crossdock Master data, part number level (key PART_NO). Holds Max Case/Day, status and Sync Status."
     ],
     [
      "Table",
@@ -4534,15 +4534,69 @@
   {
    "type": "bullets",
    "items": [
-    "Mapping per Destination: new column Last Sync after Sync Status = LAST_SYNC_DT of TB_R_CROSSDOCK_IF_RESULT (latest of GTOPAS / AP POLE); \"Never\" when the part was never synced.",
-    "Export Excel of Mapping per Destination: sheet 1 gets column Last Sync Date. Sheet \"Active to Inactive\" removed (18-Nov): Inactive parts with No Sync / Failed are taken by [Sync] by their status.",
-    "Export Excel of Part List: new column Sync Status after Status (No Sync / Waiting / Success / Failed): the RPA to AP POLE (XD07) takes the parts that are not synced yet from it."
+    "Export Crossdock Master: new column Last Sync after Sync Status = LAST_SYNC_DT of TB_R_CROSSDOCK_IF_RESULT (latest of GTOPAS / AP POLE); \"Never\" when the part was never synced.",
+    "Export Excel of Export Crossdock Master: sheet 1 gets column Last Sync Date. Sheet \"Active to Inactive\" removed (18-Nov): Inactive parts with No Sync / Failed are taken by [Sync] by their status.",
+    "Export Excel of Kanban Crossdock Master: new column Sync Status after Status (No Sync / Waiting / Success / Failed): the RPA to AP POLE (XD07) takes the parts that are not synced yet from it."
+   ]
+  },
+  {
+   "type": "heading",
+   "text": "5.21 Period, Order Type and names (19-Nov)"
+  },
+  {
+   "type": "bullets",
+   "marker": "-",
+   "level": 0,
+   "items": [
+    "Names: sub-menu Part List = Kanban Crossdock Master (Procurement), sub-menu Mapping per Destination = Export Crossdock Master (D/S). Page title Crossdock Master. Export Excel: Crossdock_Kanban_Master_YYYYMMDD.xlsx (sheet Kanban Crossdock Master) and Crossdock_Export_Master_<Period>_YYYYMMDD.xlsx (sheet Export Crossdock Master).",
+    "Kanban Crossdock Master (former Part List) has a period like the Export Crossdock Master: TB_M_PART_CANDIDATE is kept per PART_NO + PERIOD (Status, Pcs/Case, Max Case/Day, Sync Status of that month).",
+    "Kanban Crossdock Master screen: new search criterion Calculation period (All periods / periods, default the ongoing period) and new first column Period. Rows of a past period: Part Number and [Edit] not available, [History] available. Add Part: into the ongoing period.",
+    "Periods (19-Nov): Past = view only; Current (M) = changed by screen and upload; Next (M+1) = made by XD05 on day D (system master), view only until day 1. On day 1 the Period Rollover (XD05 process 3) makes Next the Current period.",
+    "Order Type per destination row (system master '**', 'C', '9', 'V'): the same destination may have two rows in a period when the order type differs; key PART_NO + PERIOD + DEST_CODE + ORDER_TYPE. Export Crossdock Master: new column Order Type (combobox of the system master) after Destination (CD); Save is blocked when a destination + order type is used twice (\"The same destination is used twice with the same order type\").",
+    "Export Excel / Upload of the Export Crossdock Master: new column Order Type after Destination Code (sheet 1 and sheet Upload).",
+    "Max Case/Day of a period may not be below the mapped total of that period (message 14): to lower it, D/S first reduces the destinations on the Export Crossdock Master, then changes Max Case/Day on the Kanban Crossdock Master.",
+    "[Sync] and Sync Status are per part and period (TB_R_CROSSDOCK_IF_RESULT key PART_NO + TARGET_SYSTEM + PERIOD): XD07 sends the Current period first, then the Next period; XD06 uses the Current period only."
+   ]
+  },
+  {
+   "type": "table",
+   "level": 0,
+   "columns": [
+    {
+     "title": "Period",
+     "width": 14
+    },
+    {
+     "title": "Kanban Crossdock Master",
+     "width": 22
+    },
+    {
+     "title": "Export Crossdock Master",
+     "width": 22
+    }
+   ],
+   "rows": [
+    [
+     "Past",
+     "View only",
+     "View only"
+    ],
+    [
+     "Current (M)",
+     "Edit / Add Part / upload",
+     "Edit / upload"
+    ],
+    [
+     "Next (M+1)",
+     "View only (made by XD05)",
+     "View only (made by XD05)"
+    ]
    ]
   }
  ],
  "display_messages": [
   {
-   "group": "Part List - Search Operation"
+   "group": "Kanban Crossdock Master - Search Operation"
   },
   {
    "event": "Change search criteria",
@@ -4553,7 +4607,7 @@
    "action": "Change the criteria or click [Reset filter]"
   },
   {
-   "event": "Open Part List",
+   "event": "Open Kanban Crossdock Master",
    "cause": "No part registered yet",
    "type": "Info",
    "msg_id": "MSG2",
@@ -4561,7 +4615,7 @@
    "action": "Click [Upload Excel] or [Add one part]"
   },
   {
-   "group": "Part List - Add / Edit Operation"
+   "group": "Kanban Crossdock Master - Add / Edit Operation"
   },
   {
    "event": "Click [Save] button",
@@ -4616,7 +4670,7 @@
    "cause": "Part saved successfully",
    "type": "Info",
    "msg_id": "MSG9",
-   "message": "Saved successfully - {Part No} · {Part Name} has been added/updated. It is now at the top of the Part List.",
+   "message": "Saved successfully - {Part No} · {Part Name} has been added/updated. It is now at the top of the Kanban Crossdock Master.",
    "action": "Click [OK]"
   },
   {
@@ -4628,18 +4682,18 @@
    "action": "-"
   },
   {
-   "group": "Part List - Upload Operation"
+   "group": "Kanban Crossdock Master - Upload Operation"
   },
   {
    "event": "Click [Validate file] button",
    "cause": "Upload validated and saved",
    "type": "Info",
    "msg_id": "MSG11",
-   "message": "Saved successfully - Upload completed. The file has been validated and the part settings have been saved to the Part List.",
+   "message": "Saved successfully - Upload completed. The file has been validated and the part settings have been saved to the Kanban Crossdock Master.",
    "action": "Click [OK]"
   },
   {
-   "group": "Part List - History Operation"
+   "group": "Kanban Crossdock Master - History Operation"
   },
   {
    "event": "Click History icon",
@@ -4650,7 +4704,7 @@
    "action": "Click [Close]"
   },
   {
-   "group": "Part List - Export Operation"
+   "group": "Kanban Crossdock Master - Export Operation"
   },
   {
    "event": "Click [Export Excel] button",
@@ -4665,8 +4719,8 @@
    "cause": "Max Case/Day below the total Case/Day mapped in the ongoing period",
    "type": "Error",
    "msg_id": "MSG14",
-   "message": "Max Case/Day can not be less than the mapped total ({n} case/day) of the ongoing period. Reduce the mapping in Mapping per Destination first.",
-   "action": "Reduce the mapping in Mapping per Destination first, or enter a higher Max Case/Day"
+   "message": "Max Case/Day can not be less than the mapped total ({n} case/day) of the ongoing period. Reduce the mapping in Export Crossdock Master first.",
+   "action": "Reduce the mapping in Export Crossdock Master first, or enter a higher Max Case/Day"
   },
   {
    "event": "Hover disabled [Save]",
@@ -4677,7 +4731,7 @@
    "action": "Fill Min MAD"
   },
   {
-   "group": "Part List - Calculation Operation"
+   "group": "Kanban Crossdock Master - Calculation Operation"
   },
   {
    "event": "Click [Run calculation] button",
@@ -4757,7 +4811,7 @@
    "cause": "Upload validated and saved",
    "type": "Info",
    "msg_id": "MSG24",
-   "message": "Saved successfully - Upload completed. The file has been validated and the destination mapping has been saved to Mapping per Destination.",
+   "message": "Saved successfully - Upload completed. The file has been validated and the destination mapping has been saved to Export Crossdock Master.",
    "action": "Click [OK]"
   },
   {
@@ -4836,7 +4890,7 @@
    "cause": "Excel file generation error",
    "type": "Error",
    "msg_id": "LOG2",
-   "message": "Export Excel of Part List failed: <error message>.",
+   "message": "Export Excel of Kanban Crossdock Master failed: <error message>.",
    "exception": "Y",
    "action": "Display Message no. 13"
   },
@@ -4845,7 +4899,7 @@
    "cause": "Upload processing",
    "type": "Info",
    "msg_id": "-",
-   "message": "Logging is handled by the Part List Upload batch (refer UISS-Batch \"XD02 Cross Dock Part Master Upload Batch\").",
+   "message": "Logging is handled by the Kanban Crossdock Master Upload batch (refer UISS-Batch \"XD02 Cross Dock Part Master Upload Batch\").",
    "exception": "N",
    "action": "-"
   },
@@ -4872,7 +4926,7 @@
    "cause": "Excel file generation error",
    "type": "Error",
    "msg_id": "LOG5",
-   "message": "Export Excel of Mapping per Destination failed: <error message>.",
+   "message": "Export Excel of Export Crossdock Master failed: <error message>.",
    "exception": "Y",
    "action": "Display Message no. 26"
   },
@@ -4881,7 +4935,7 @@
    "cause": "Upload processing",
    "type": "Info",
    "msg_id": "-",
-   "message": "Logging is handled by the Mapping per Destination Upload batch (refer UISS-Batch \"XD03 Part and Destination Mapping Upload Batch\").",
+   "message": "Logging is handled by the Export Crossdock Master Upload batch (refer UISS-Batch \"XD03 Part and Destination Mapping Upload Batch\").",
    "exception": "N",
    "action": "-"
   }
@@ -4891,7 +4945,7 @@
    "name": "TB_H_PART_CANDIDATE",
    "kind": "history",
    "proposed": true,
-   "description": "History of every change of a crossdock part (Add / Edit by screen or upload, mapping changes, Sync results, status changes and mappings made by the calculation batches). Read by the History setting modal of Part List (index PART_NO, CREATED_DT). No retention limit: the history is kept (no housekeeping job, decided 30-Oct).",
+   "description": "History of every change of a crossdock part (Add / Edit by screen or upload, mapping changes, Sync results, status changes and mappings made by the calculation batches). Read by the History setting modal of Kanban Crossdock Master (index PART_NO, CREATED_DT). No retention limit: the history is kept (no housekeeping job, decided 30-Oct).",
    "columns": [
     [
      "HIST_ID",
@@ -4912,7 +4966,7 @@
      "CHAR(6)",
      "",
      "Y",
-     "Calculation period YYYYMM for MAPPING / SYNC / CALC; NULL for ADD / EDIT (Part List has no period)"
+     "Calculation period YYYYMM for MAPPING / SYNC / CALC; NULL for ADD / EDIT (Kanban Crossdock Master has no period)"
     ],
     [
      "EVENT_TYPE",
@@ -5009,16 +5063,16 @@
     [
      "PERIOD",
      "CHAR(6)",
-     "",
+     "Y",
      "N",
-     "Calculation period of the mapping sent (YYYYMM)"
+     "Calculation period of the data sent (YYYYMM); part of the key: one row per part, target and period (19-Nov)"
     ],
     [
      "IF_STATUS",
      "VARCHAR(1)",
      "",
      "N",
-     "'3' Waiting / '1' Success / '2' Failed"
+     "'0' No Sync / '3' Waiting / '1' Success / '2' Failed (per period, 19-Nov)"
     ],
     [
      "IF_DT",
@@ -5086,7 +5140,7 @@
   "function_name": "XD01 Cross Dock Part Master Screen",
   "created_date": "18-Oct-26",
   "created_by": "FID Rayhan",
-  "updated_date": "18-Nov-26",
+  "updated_date": "19-Nov-26",
   "updated_by": "FID Rayhan"
  },
  "revisions": [
@@ -5116,7 +5170,14 @@
    "author": "FID Rayhan",
    "date": "18-Nov-26",
    "reviewed_by": "",
-   "description": "Sheet \"Active to Inactive\" removed (18-Nov): Inactive parts with No Sync / Failed are taken by [Sync] by their status. Export Excel of Mapping per Destination has 2 sheets again; column Last Sync stays."
+   "description": "Sheet \"Active to Inactive\" removed (18-Nov): Inactive parts with No Sync / Failed are taken by [Sync] by their status. Export Excel of Export Crossdock Master has 2 sheets again; column Last Sync stays."
+  },
+  {
+   "revision": "0.5",
+   "author": "FID Rayhan",
+   "date": "19-Nov-26",
+   "reviewed_by": "",
+   "description": "Names Kanban / Export Crossdock Master; period on the Kanban Crossdock Master; Order Type per destination row; Max Case/Day down: destinations first (19-Nov)."
   }
  ]
 }

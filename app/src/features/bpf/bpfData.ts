@@ -299,7 +299,7 @@ export const BPF: BpfData = {
      "fn": "",
      "title": "RPA on AP POLE: Cross Dock Kanban Part Master (WLM9Q890) add / edit / delete part; Export Customer Cross Dock Master (WLM9Q860) add / edit / delete destination",
      "read": [
-      "XD01 Export Excel (Part List, Mapping per Destination)"
+      "XD01 Export Excel (Kanban Crossdock Master, Export Crossdock Master)"
      ],
      "write": [
       "AP POLE WLM9Q890 / WLM9Q860"
@@ -1062,7 +1062,7 @@ export const BPF: BpfData = {
    "detection": "Log FAILED; [Run calculation] enabled",
    "system": "Roll back the process; process 2 starts only after process 1 succeeded.",
    "pic": "Procurement / D/S Team",
-   "action": "Check the cause; Procurement clicks [Run calculation (Part List)] (process 1 + 2), D/S clicks [Run calculation (Mapping)] (process 2)."
+   "action": "Check the cause; Procurement clicks [Run calculation (Kanban Crossdock Master)] (process 1 + 2), D/S clicks [Run calculation (Mapping)] (process 2)."
   },
   {
    "id": "AB05",

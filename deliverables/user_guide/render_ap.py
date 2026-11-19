@@ -7,24 +7,24 @@ from openpyxl.utils import get_column_letter
 from PIL import Image, ImageChops
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-part = sorted(glob.glob(os.path.join(HERE, 'dl_ap', 'Crossdock_Part_List_*.xlsx')))[-1]
-mapping = sorted(glob.glob(os.path.join(HERE, 'dl_ap', 'Crossdock_Mapping_per_Destination_*.xlsx')))[-1]
+part = sorted(glob.glob(os.path.join(HERE, 'dl_ap', 'Crossdock_Kanban_Master_*.xlsx')))[-1]
+mapping = sorted(glob.glob(os.path.join(HERE, 'dl_ap', 'Crossdock_Export_Master_*.xlsx')))[-1]
 YEL, HDR, KEY = PatternFill('solid', fgColor='FFF2CC'), PatternFill('solid', fgColor='D9E1F2'), PatternFill('solid', fgColor='F8CBAD')
 P_COLS = ['Part Number', 'Part Name', 'Pcs/Case', 'Max Case/Day', 'Status', 'Sync Status']
 M_COLS = ['Part Number', 'Destination Code', 'Pcs/Case', 'Dest Case/Day', 'Total Case/Day (used)', 'Max Case/Day (quota)', 'Sync Status', 'Last Sync Date']
 I_COLS = None
 # name, file, sheet, keep row?, highlight row?, columns (None = all), key columns
 JOBS = [
-    ('x_part_waiting', part, 'Part List', lambda r: r['Sync Status'] == 'Waiting', lambda r: r['Part Number'] in ('PART-009', 'PART-F', 'PART-023'), None,
+    ('x_part_waiting', part, 'Kanban Crossdock Master', lambda r: r['Sync Status'] == 'Waiting', lambda r: r['Part Number'] in ('PART-009', 'PART-F', 'PART-023'), None,
      ['Part Number', 'Pcs/Case', 'Max Case/Day', 'Status', 'Sync Status']),
-    ('x_map_waiting', mapping, 'Mapping per Destination', lambda r: True, lambda r: r['Part Number'] in ('PART-009', 'PART-F', 'PART-B'), None,
+    ('x_map_waiting', mapping, 'Export Crossdock Master', lambda r: True, lambda r: r['Part Number'] in ('PART-009', 'PART-F', 'PART-B'), None,
      ['Part Number', 'Destination Code', 'Dest Case/Day', 'Max Case/Day (quota)', 'Sync Status', 'Last Sync Date']),
-    ('x_ex1_part', part, 'Part List', lambda r: r['Part Number'] == 'PART-009', lambda r: True, P_COLS, ['Pcs/Case', 'Max Case/Day']),
-    ('x_ex1_map', mapping, 'Mapping per Destination', lambda r: r['Part Number'] == 'PART-009', lambda r: True, M_COLS, ['Destination Code', 'Dest Case/Day', 'Last Sync Date']),
-    ('x_ex2_part', part, 'Part List', lambda r: r['Part Number'] == 'PART-F', lambda r: True, P_COLS, ['Pcs/Case', 'Max Case/Day']),
-    ('x_ex2_map', mapping, 'Mapping per Destination', lambda r: r['Part Number'] == 'PART-F', lambda r: True, M_COLS, ['Destination Code', 'Dest Case/Day', 'Last Sync Date']),
-    ('x_ex3_part', part, 'Part List', lambda r: r['Part Number'] == 'PART-023', lambda r: True, P_COLS, ['Status', 'Sync Status']),
-    ('x_ex4_map', mapping, 'Mapping per Destination', lambda r: r['Part Number'] == 'PART-B', lambda r: True, M_COLS, ['Destination Code', 'Dest Case/Day']),
+    ('x_ex1_part', part, 'Kanban Crossdock Master', lambda r: r['Part Number'] == 'PART-009', lambda r: True, P_COLS, ['Pcs/Case', 'Max Case/Day']),
+    ('x_ex1_map', mapping, 'Export Crossdock Master', lambda r: r['Part Number'] == 'PART-009', lambda r: True, M_COLS, ['Destination Code', 'Dest Case/Day', 'Last Sync Date']),
+    ('x_ex2_part', part, 'Kanban Crossdock Master', lambda r: r['Part Number'] == 'PART-F', lambda r: True, P_COLS, ['Pcs/Case', 'Max Case/Day']),
+    ('x_ex2_map', mapping, 'Export Crossdock Master', lambda r: r['Part Number'] == 'PART-F', lambda r: True, M_COLS, ['Destination Code', 'Dest Case/Day', 'Last Sync Date']),
+    ('x_ex3_part', part, 'Kanban Crossdock Master', lambda r: r['Part Number'] == 'PART-023', lambda r: True, P_COLS, ['Status', 'Sync Status']),
+    ('x_ex4_map', mapping, 'Export Crossdock Master', lambda r: r['Part Number'] == 'PART-B', lambda r: True, M_COLS, ['Destination Code', 'Dest Case/Day']),
 ]
 tmp = tempfile.mkdtemp()
 for name, src, sheet, keep, hl, cols, keys in JOBS:

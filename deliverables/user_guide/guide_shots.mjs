@@ -1,4 +1,4 @@
-// Screenshots for the user guide "Download Part List / Mapping per Destination" from the prototype, with the real exported files.
+// Screenshots for the user guide "Download Kanban Crossdock Master / Export Crossdock Master" from the prototype, with the real exported files.
 // Usage: node guide_shots.mjs http://localhost:5179/crossdockpoc/ ./shots ./downloads
 import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
 const [url, dir, dl] = process.argv.slice(2);
@@ -21,18 +21,18 @@ async function download() {
   await d.saveAs(`${dl}/${d.suggestedFilename()}`); console.log('downloaded', d.suggestedFilename());
 }
 
-// ---------- Part List (Procurement account) ----------
-await open('Part List');
-await mark(pg.getByText('Crossdock Master Setting', { exact: true }).first()); await mark(tab('Part List')); await shot('p1_menu');
+// ---------- Kanban Crossdock Master (Procurement account) ----------
+await open('Kanban Crossdock Master');
+await mark(pg.getByText('Crossdock Master Setting', { exact: true }).first()); await mark(tab('Kanban Crossdock Master')); await shot('p1_menu');
 await mark(pg.getByRole('button', { name: 'Search', exact: true })); await shot('p2_search');
 await pg.getByRole('button', { name: 'Search', exact: true }).click(); await pg.waitForTimeout(400);
 await mark(exportBtn()); await shot('p3_export');
 await download();
 await pg.context().close();
 
-// ---------- Mapping per Destination (D/S account) ----------
-await open('Mapping per Destination');
-await mark(pg.getByText('Crossdock Master Setting', { exact: true }).first()); await mark(tab('Mapping per Destination')); await shot('m1_menu');
+// ---------- Export Crossdock Master (D/S account) ----------
+await open('Export Crossdock Master');
+await mark(pg.getByText('Crossdock Master Setting', { exact: true }).first()); await mark(tab('Export Crossdock Master')); await shot('m1_menu');
 const sel = pg.locator('select');
 const ongoing = await sel.nth(0).locator('option').filter({ hasText: 'ongoing' }).first().getAttribute('value');
 await sel.nth(0).selectOption(ongoing); await sel.nth(1).selectOption({ label: 'All' });

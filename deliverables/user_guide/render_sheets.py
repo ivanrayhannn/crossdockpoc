@@ -6,9 +6,9 @@ from openpyxl.styles import Font, PatternFill
 from PIL import Image, ImageChops
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-part = sorted(glob.glob(os.path.join(HERE, 'downloads', 'Crossdock_Part_List_*.xlsx')))[-1]
-mapping = sorted(glob.glob(os.path.join(HERE, 'downloads', 'Crossdock_Mapping_per_Destination_*.xlsx')))[-1]
-JOBS = [(part, 'Part List', 'x_part_list'), (part, 'Upload', 'x_part_upload'), (mapping, 'Mapping per Destination', 'x_map_list'),
+part = sorted(glob.glob(os.path.join(HERE, 'downloads', 'Crossdock_Kanban_Master_*.xlsx')))[-1]
+mapping = sorted(glob.glob(os.path.join(HERE, 'downloads', 'Crossdock_Export_Master_*.xlsx')))[-1]
+JOBS = [(part, 'Kanban Crossdock Master', 'x_part_list'), (part, 'Upload', 'x_part_upload'), (mapping, 'Export Crossdock Master', 'x_map_list'),
         (mapping, 'Upload', 'x_map_upload')]
 tmp = tempfile.mkdtemp()
 for src, sheet, name in JOBS:

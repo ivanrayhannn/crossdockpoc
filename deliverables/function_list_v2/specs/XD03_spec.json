@@ -7,7 +7,7 @@
   "function_name": "XD03 Part and Destination Mapping Upload Batch",
   "created_date": "18-Oct-26",
   "created_by": "FID Rayhan",
-  "updated_date": "17-Nov-26",
+  "updated_date": "19-Nov-26",
   "updated_by": "FID Rayhan"
  },
  "revisions": [
@@ -24,11 +24,18 @@
    "date": "17-Nov-26",
    "reviewed_by": "",
    "description": "Sync Status = No Sync only when the destinations or Case/Day of the part changed (Sync Status rule of XD01, 17-Nov)."
+  },
+  {
+   "revision": "0.3",
+   "author": "FID Rayhan",
+   "date": "19-Nov-26",
+   "reviewed_by": "",
+   "description": "Column Order Type in the template; key part + destination + order type; ongoing period only (19-Nov)."
   }
  ],
  "general": {
   "objective": [
-   "To process the destination mapping file uploaded from the Cross Dock Part Master screen (Mapping per Destination tab): from the [Validate file] button of the Upload Excel modal until the mapping of the ongoing calculation period is saved to TB_M_PART_CANDIDATE_DEST.",
+   "To process the destination mapping file uploaded from the Cross Dock Part Master screen (Export Crossdock Master tab): from the [Validate file] button of the Upload Excel modal until the mapping of the ongoing calculation period is saved to TB_M_PART_CANDIDATE_DEST.",
    "In case any error occurs, nothing is saved. The error is recorded in the upload log and a result report is created."
   ],
   "operation_flow": {
@@ -37,7 +44,7 @@
     "nodes": [
      {
       "id": "a",
-      "label": "Mapping per Destination [Validate file]",
+      "label": "Export Crossdock Master [Validate file]",
       "type": "screen"
      },
      {
@@ -109,7 +116,7 @@
    {
     "name": "Mapping file (sheet Upload)",
     "type": "Excel",
-    "description": "Uploaded by the D/S user on the Mapping per Destination screen ([Validate file]). Only sheet Upload is read. Max 5 MB, 5,000 rows."
+    "description": "Uploaded by the D/S user on the Export Crossdock Master screen ([Validate file]). Only sheet Upload is read. Max 5 MB, 5,000 rows."
    },
    {
     "name": "TB_M_PART_CANDIDATE",
@@ -170,7 +177,7 @@
     "rows": [
      [
       "Uploaded file",
-      "File selected by the user on the Mapping per Destination screen"
+      "File selected by the user on the Export Crossdock Master screen"
      ],
      [
       "User",
@@ -205,7 +212,7 @@
     "rows": [
      [
       "Trigger",
-      "Starts when the user clicks [Validate file] in the Upload Excel modal of the Mapping per Destination screen (on demand, no schedule). The button is enabled only for the ongoing period."
+      "Starts when the user clicks [Validate file] in the Upload Excel modal of the Export Crossdock Master screen (on demand, no schedule). The button is enabled only for the ongoing period."
      ]
     ]
    }
@@ -328,7 +335,7 @@
    ]
   },
   "steps": [
-   "User clicks [Validate file] in the Upload Excel modal of the Mapping per Destination screen (ongoing period). The batch starts and receives the uploaded file.",
+   "User clicks [Validate file] in the Upload Excel modal of the Export Crossdock Master screen (ongoing period). The batch starts and receives the uploaded file.",
    {
     "text": "Check the file: format .xlsx, size, number of rows, sheet \"Upload\" and template columns (see 4.1).",
     "children": [
@@ -356,7 +363,7 @@
      "A part whose rows are all blank is not changed."
     ]
    },
-   "Create the result report and record the result (completed or rejected) in the upload log. The Mapping per Destination screen shows the result to the user. Exit."
+   "Create the result report and record the result (completed or rejected) in the upload log. The Export Crossdock Master screen shows the result to the user. Exit."
   ]
  },
  "data_map": {
@@ -725,7 +732,7 @@
   {
    "type": "text",
    "level": 0,
-   "text": "This batch starts when the user clicks [Validate file] in the Upload Excel modal of the Mapping per Destination screen. It checks the uploaded file and, if everything is valid, updates the mapping of the changed parts for the ongoing calculation period. If not, the upload is rejected and recorded in the upload log."
+   "text": "This batch starts when the user clicks [Validate file] in the Upload Excel modal of the Export Crossdock Master screen. It checks the uploaded file and, if everything is valid, updates the mapping of the changed parts for the ongoing calculation period. If not, the upload is rejected and recorded in the upload log."
   },
   {
    "type": "bullets",
@@ -844,6 +851,20 @@
      "upload is A or E. A only for a destination that is not yet mapped for the part, E only for a destination that is already mapped (ongoing period). A placeholder row left blank is skipped.",
      "Upload (A/E)"
     ]
+   ]
+  },
+  {
+   "type": "heading",
+   "text": "4.4 Order Type and Period (19-Nov)"
+  },
+  {
+   "type": "bullets",
+   "marker": "-",
+   "level": 0,
+   "items": [
+    "Order Type per destination row (system master '**', 'C', '9', 'V'): the same destination may have two rows in a period when the order type differs; key PART_NO + PERIOD + DEST_CODE + ORDER_TYPE.",
+    "Template: new column Order Type after Destination Code (mandatory, '**', 'C', '9' or 'V'). A destination + order type twice for a part in the file = row error (message of the duplicate check).",
+    "The upload changes the ongoing period only; Next (made by XD05) and past periods are not changed."
    ]
   }
  ],
@@ -987,7 +1008,7 @@
     ],
     [
      "Max Case/Day (quota)",
-     "Max Case/Day of the part in Part List, for reference only (not read by the batch)."
+     "Max Case/Day of the part in Kanban Crossdock Master, for reference only (not read by the batch)."
     ],
     [
      "Upload (A/E)",
@@ -1003,7 +1024,7 @@
  ],
  "sample_sheet": {
   "title": "Sample Input",
-  "heading": "Sample upload scenarios - Mapping per Destination Upload",
+  "heading": "Sample upload scenarios - Export Crossdock Master Upload",
   "intro": [
    "Each scenario is a separate upload file. Ongoing period = Sep 2026. One row per destination; a scenario with several rows uses one Excel row per destination.",
    "Input columns follow sheet Upload of the Export Excel; a blank cell is a blank value in the file."
@@ -1070,7 +1091,7 @@
       "",
       "",
       "",
-      "Not in Mapping per Destination"
+      "Not in Export Crossdock Master"
      ]
     ]
    },
@@ -1437,7 +1458,7 @@
      ],
      [
       "F4",
-      "No sheet named Upload (e.g. only sheet Mapping per Destination)",
+      "No sheet named Upload (e.g. only sheet Export Crossdock Master)",
       "Rejected: sheet Upload not found."
      ],
      [
@@ -1454,7 +1475,7 @@
    "name": "TB_M_PART_CANDIDATE",
    "kind": "transaction",
    "proposed": false,
-   "description": "Candidate part setting, one record per part (Part List data, no calculation period). Read for status and Max Case/Day; Sync Status updated.",
+   "description": "Kanban Crossdock Master: one record per part and calculation period (19-Nov; before: one record per part).",
    "columns": [
     [
      "PART_NO",
@@ -1462,6 +1483,13 @@
      "Y",
      "N",
      "Part number; length follows TB_M_PART_MASTER"
+    ],
+    [
+     "PERIOD",
+     "CHAR(6)",
+     "Y",
+     "N",
+     "Calculation period YYYYMM (19-Nov): one row per part and period. Current: screen / upload; Next: made by XD05 on day D (view only until day 1); Past: view only"
     ],
     [
      "PART_NAME",
@@ -1581,7 +1609,7 @@
    "name": "TB_M_PART_CANDIDATE_DEST",
    "kind": "transaction",
    "proposed": false,
-   "description": "Destination mapping, one record per part, calculation period and destination (Mapping per Destination data). Target of a successful upload.",
+   "description": "Export Crossdock Master: one record per part, calculation period, destination and order type.",
    "columns": [
     [
      "PART_NO",
@@ -1603,6 +1631,13 @@
      "Y",
      "N",
      "Destination code (buyer code + PD code, 7 digits); exists in TB_M_H0125_DESTINATION (Destination Master)"
+    ],
+    [
+     "ORDER_TYPE",
+     "VARCHAR(2)",
+     "Y",
+     "N",
+     "Order Type of the row (system master: '**', 'C', '9', 'V'; default '**'). One row per part, period, destination and order type (19-Nov)"
     ],
     [
      "CASE_DAY",
@@ -1645,7 +1680,7 @@
    "name": "TB_H_PART_CANDIDATE",
    "kind": "history",
    "proposed": true,
-   "description": "History of every change of a crossdock part (Add / Edit by screen or upload, mapping changes, Sync results, status changes and mappings made by the calculation batches). Read by the History setting modal of Part List (index PART_NO, CREATED_DT). No retention limit: the history is kept (no housekeeping job, decided 30-Oct).",
+   "description": "History of every change of a crossdock part (Add / Edit by screen or upload, mapping changes, Sync results, status changes and mappings made by the calculation batches). Read by the History setting modal of Kanban Crossdock Master (index PART_NO, CREATED_DT). No retention limit: the history is kept (no housekeeping job, decided 30-Oct).",
    "columns": [
     [
      "HIST_ID",
@@ -1666,7 +1701,7 @@
      "CHAR(6)",
      "",
      "Y",
-     "Calculation period YYYYMM for MAPPING / SYNC / CALC; NULL for ADD / EDIT (Part List has no period)"
+     "Calculation period YYYYMM for MAPPING / SYNC / CALC; NULL for ADD / EDIT (Kanban Crossdock Master has no period)"
     ],
     [
      "EVENT_TYPE",

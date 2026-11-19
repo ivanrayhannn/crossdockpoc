@@ -56,13 +56,13 @@ New history table (replaces TB_R_CROSSDOCK_CANCEL_RESULT): one record per moved 
 #### TB_H_PART_CANDIDATE (history, proposed)
 Used by: XD01, XD02, XD03, XD05, XD06, XD07
 
-History of every change of a crossdock part (Add / Edit by screen or upload, mapping changes, Sync results, status changes and mappings made by the calculation batches). Read by the History setting modal of Part List (index PART_NO, CREATED_DT). No retention limit: the history is kept (no housekeeping job, decided 30-Oct).
+History of every change of a crossdock part (Add / Edit by screen or upload, mapping changes, Sync results, status changes and mappings made by the calculation batches). Read by the History setting modal of Kanban Crossdock Master (index PART_NO, CREATED_DT). No retention limit: the history is kept (no housekeeping job, decided 30-Oct).
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
 | HIST_ID | BIGINT | Y | N | Running number (identity) |
 | PART_NO | VARCHAR(TBD) |  | N | Part number; length follows TB_M_PART_MASTER |
-| PERIOD | CHAR(6) |  | Y | Calculation period YYYYMM for MAPPING / SYNC / CALC; NULL for ADD / EDIT (Part List has no period) |
+| PERIOD | CHAR(6) |  | Y | Calculation period YYYYMM for MAPPING / SYNC / CALC; NULL for ADD / EDIT (Kanban Crossdock Master has no period) |
 | EVENT_TYPE | VARCHAR(10) |  | N | ADD / EDIT / MAPPING / SYNC / CALC |
 | SOURCE | VARCHAR(10) |  | N | SCREEN / UPLOAD / IF / RPA / BATCH |
 | UPLOAD_ID | VARCHAR(TBD) |  | Y | Upload of the change (Log); NULL when not from an upload |
@@ -124,11 +124,12 @@ Destination master (I/F H01-25, DVJO820) replicated from DB Surrounding. Structu
 #### TB_M_PART_CANDIDATE (transaction, existing)
 Used by: XD02, XD03, XD05, XD06, XD07
 
-Candidate part setting, one record per part (Part List data, no calculation period). Target of a successful upload.
+Kanban Crossdock Master: one record per part and calculation period (19-Nov; before: one record per part).
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
 | PART_NO | VARCHAR(TBD) | Y | N | Part number; length follows TB_M_PART_MASTER |
+| PERIOD | CHAR(6) | Y | N | Calculation period YYYYMM (19-Nov): one row per part and period. Current: screen / upload; Next: made by XD05 on day D (view only until day 1); Past: view only |
 | PART_NAME | VARCHAR(TBD) |  | N | Retrieved from TB_M_PART_MASTER by PART_NO |
 | MIN_MAD | INT |  | N | Minimum MAD (mandatory); reference compared with the MAD result of the calculation |
 | PCS_CASE | INT |  | N | Pieces per case (> 0) |
@@ -149,13 +150,14 @@ Candidate part setting, one record per part (Part List data, no calculation peri
 #### TB_M_PART_CANDIDATE_DEST (transaction, existing)
 Used by: XD03, XD05, XD06, XD07
 
-Destination mapping, one record per part, calculation period and destination (Mapping per Destination data). Target of a successful upload.
+Export Crossdock Master: one record per part, calculation period, destination and order type.
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
 | PART_NO | VARCHAR(TBD) | Y | N | Part number; FK to TB_M_PART_CANDIDATE |
 | PERIOD | CHAR(6) | Y | N | Calculation period, YYYYMM e.g. 202609; displayed as Sep 2026 |
 | DEST_CODE | CHAR(7) | Y | N | Destination code (buyer code + PD code, 7 digits); exists in TB_M_H0125_DESTINATION (Destination Master) |
+| ORDER_TYPE | VARCHAR(2) | Y | N | Order Type of the row (system master: '**', 'C', '9', 'V'; default '**'). One row per part, period, destination and order type (19-Nov) |
 | CASE_DAY | INT |  | N | Allocated Case/Day of the destination (> 0) |
 | CREATED_BY | VARCHAR(TBD) |  | N | User who created the record |
 | CREATED_DT | DATETIME |  | N | Created date and time |
@@ -251,8 +253,8 @@ Dummy table (proposed): send status of the cross dock master per part and target
 |---|---|---|---|---|
 | PART_NO | VARCHAR(TBD) | Y | N | Part number (TB_M_PART_CANDIDATE) |
 | TARGET_SYSTEM | VARCHAR(10) | Y | N | 'GTOPAS' (XD06) / 'APPOLE' (XD07) |
-| PERIOD | CHAR(6) |  | N | Calculation period of the mapping sent (YYYYMM) |
-| IF_STATUS | VARCHAR(1) |  | N | '3' Waiting / '1' Success / '2' Failed |
+| PERIOD | CHAR(6) | Y | N | Calculation period of the data sent (YYYYMM); part of the key: one row per part, target and period (19-Nov) |
+| IF_STATUS | VARCHAR(1) |  | N | '0' No Sync / '3' Waiting / '1' Success / '2' Failed (per period, 19-Nov) |
 | IF_DT | DATETIME |  | Y | Date-time of the result of the target system |
 | LAST_SYNC_DT | DATETIME |  | Y | Date-time of the last Success of the part for this target (kept when a later run is Failed); NULL when never synced. Shown as Last Sync on XD01. |
 | IF_FILE_NAME | VARCHAR(100) |  | Y | RPA run ID (GTOPAS and AP POLE) |
@@ -438,7 +440,7 @@ Result of the DAD Volume Calculation, one record per calculated part and period.
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
-| PERIOD | CHAR(6) | Y | N | Calculation period YYYYMM (month of the run) |
+| PERIOD | CHAR(6) | Y | N | Period of the result = the new (Next) period, month after the run month (19-Nov) |
 | PART_NO | VARCHAR(TBD) | Y | N | Part number |
 | MONTH_FROM | CHAR(6) |  | N | First month of the range, YYYYMM |
 | MONTH_TO | CHAR(6) |  | N | Last month of the range, YYYYMM |

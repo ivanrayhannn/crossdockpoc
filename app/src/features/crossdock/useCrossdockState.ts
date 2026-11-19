@@ -49,7 +49,7 @@ export function useCrossdockState() {
   // No auth backend in this build — always full read/write access.
   const ro = false;
   // Prototype-only preview switch: the real system opens exactly one sub-menu
-  // (Part List or Mapping per Destination) according to the logged-in account.
+  // (Kanban Crossdock Master or Export Crossdock Master) according to the logged-in account.
   const view: TabView = role === 'ds' ? 'dest' : 'part';
   const switchRole = useCallback(() => {
     setRole(null);
@@ -169,7 +169,7 @@ export function useCrossdockState() {
   const openMappingUpload = useCallback(() => setModal('upload-mapping'), []);
 
   /** "Validate file" is the save button of the upload: it closes the modal and confirms the save (OP-02).
-   * The prototype does not read the file, so the Part List itself stays unchanged. */
+   * The prototype does not read the file, so the Kanban Crossdock Master itself stays unchanged. */
   const submitUpload = useCallback((target: 'part' | 'mapping') => {
     setModal(null);
     setNotice({ mode: 'upload', target });

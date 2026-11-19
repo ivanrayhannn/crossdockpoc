@@ -68,14 +68,14 @@ const UPLOAD_COLUMNS: (Column<UploadLine> & { width: number })[] = [
   { header: { value: 'Destination Code', ...HEADER }, cell: ({ dest }) => cell(dest && (dest.cd || DCODE[dest.d])), width: 17 },
   { header: { value: 'Order Type', ...HEADER }, cell: ({ dest }) => cell(dest && (dest.ot || '**')), width: 12 },
   { header: { value: 'Dest Case/Day', ...HEADER, align: 'right' }, cell: ({ dest }) => cell(dest && num(dest.al)), width: 15 },
-  // reference only (not read by XD03): used = Case/Day mapped when the file is exported (a number, so every viewer shows it), quota = Max Case/Day of Part List
+  // reference only (not read by XD03): used = Case/Day mapped when the file is exported (a number, so every viewer shows it), quota = Max Case/Day of Kanban Crossdock Master
   { header: { value: 'Total Case/Day (used)', ...HEADER, align: 'right' }, cell: ({ part }) => ({ value: part.dests.reduce((sum, d) => sum + num(d.al), 0) }), width: 21 },
   { header: { value: 'Max Case/Day (quota)', ...HEADER, align: 'right' }, cell: ({ part }) => ({ value: num(part.mc) }), width: 21 },
   { header: { value: 'Upload (A/E)', ...HEADER }, cell: ({ dest }) => ({ value: dest ? 'E' : 'A' }), width: 13 },
 ];
 
 /**
- * Downloads Mapping per Destination as .xlsx. Sheet 1 holds the rows of the active filter (information only).
+ * Downloads Export Crossdock Master as .xlsx. Sheet 1 holds the rows of the active filter (information only).
  * Sheet "Upload" holds every Active part of the ongoing period, one row per destination (a part without
  * mapping gets one blank placeholder row); it stays empty when a past period or "All periods" is selected.
  */
@@ -97,7 +97,7 @@ export async function exportMappingXlsx(rows: Part[], period: string, allParts: 
   const periodLabel = period === 'all' ? 'All_periods' : period.replace(' ', '_');
 
   await writeExcelFile([
-    { sheet: 'Mapping per Destination', data: getSheetData(lines, LIST_COLUMNS), columns: LIST_COLUMNS.map((c) => ({ width: c.width })) },
+    { sheet: 'Export Crossdock Master', data: getSheetData(lines, LIST_COLUMNS), columns: LIST_COLUMNS.map((c) => ({ width: c.width })) },
     { sheet: 'Upload', data: getSheetData(uploadLines, UPLOAD_COLUMNS), columns: UPLOAD_COLUMNS.map((c) => ({ width: c.width })) },
-  ]).toFile(`Crossdock_Mapping_per_Destination_${periodLabel}_${stamp}.xlsx`);
+  ]).toFile(`Crossdock_Export_Master_${periodLabel}_${stamp}.xlsx`);
 }

@@ -13,44 +13,45 @@
 | 0.1 | FID Rayhan | 18-Oct-26 |  | Initial Draft |
 | 0.2 | FID Rayhan | 17-Nov-26 |  | Sync Status rule: No Sync only when a value sent to GTOPAS / AP POLE changes; a manual Active -> Inactive is taken by [Sync] (FB-204 / FB-205). |
 | 0.3 | FID Rayhan | 17-Nov-26 |  | [Sync] takes every part with status Active (ongoing period) or Inactive whose Sync Status is No Sync or Failed, whatever the filter shows (Candidate never). |
-| 0.4 | FID Rayhan | 18-Nov-26 |  | Sheet "Active to Inactive" removed (18-Nov): Inactive parts with No Sync / Failed are taken by [Sync] by their status. Export Excel of Mapping per Destination has 2 sheets again; column Last Sync stays. |
+| 0.4 | FID Rayhan | 18-Nov-26 |  | Sheet "Active to Inactive" removed (18-Nov): Inactive parts with No Sync / Failed are taken by [Sync] by their status. Export Excel of Export Crossdock Master has 2 sheets again; column Last Sync stays. |
+| 0.5 | FID Rayhan | 19-Nov-26 |  | Names Kanban / Export Crossdock Master; period on the Kanban Crossdock Master; Order Type per destination row; Max Case/Day down: destinations first (19-Nov). |
 
 ## 1. General
 
 ### Objective
 
-- One screen with two tabs: Part List (part number level) and Mapping per Destination (part + calculation period + destination level).
-- Part List tab: To register crossdock candidate parts (Part No, Min MAD, Pcs/Case, Max Case/Day, Effective Start Date).
-- Part List tab: To search and display registered crossdock parts with their status and capacity.
-- Part List tab: To change part data and part status (Candidate / Active / Inactive) of a registered part.
-- Part List tab: To display the change history of a part.
-- Part List tab: To export the Part List to Excel and upload part settings from Excel (Add and Edit).
-- Part List tab: This sub-menu is opened only for users logged in with a Procurement account; users with a D/S account open the Mapping per Destination sub-menu instead.
-- Mapping per Destination tab: To split the Max Case/Day of each Active part over destinations (Japan, Taiwan, Korea) for the ongoing calculation period.
-- Mapping per Destination tab: To display the destination mapping per part and calculation period, including past periods (read only).
-- Mapping per Destination tab: To start the interfaces of the cross dock master to GTOPAS (XD06) and AP POLE (XD07) for changed parts, and show the Sync Status of each part.
-- Mapping per Destination tab: To export the mapping to Excel and upload the mapping of the ongoing period from Excel.
-- Mapping per Destination tab: This sub-menu is opened only for users logged in with a D/S account; users with a Procurement account open the Part List sub-menu instead.
+- One screen with two tabs: Kanban Crossdock Master (part number level) and Export Crossdock Master (part + calculation period + destination level).
+- Kanban Crossdock Master tab: To register crossdock candidate parts (Part No, Min MAD, Pcs/Case, Max Case/Day, Effective Start Date).
+- Kanban Crossdock Master tab: To search and display registered crossdock parts with their status and capacity.
+- Kanban Crossdock Master tab: To change part data and part status (Candidate / Active / Inactive) of a registered part.
+- Kanban Crossdock Master tab: To display the change history of a part.
+- Kanban Crossdock Master tab: To export the Kanban Crossdock Master to Excel and upload part settings from Excel (Add and Edit).
+- Kanban Crossdock Master tab: This sub-menu is opened only for users logged in with a Procurement account; users with a D/S account open the Export Crossdock Master sub-menu instead.
+- Export Crossdock Master tab: To split the Max Case/Day of each Active part over destinations (Japan, Taiwan, Korea) for the ongoing calculation period.
+- Export Crossdock Master tab: To display the destination mapping per part and calculation period, including past periods (read only).
+- Export Crossdock Master tab: To start the interfaces of the cross dock master to GTOPAS (XD06) and AP POLE (XD07) for changed parts, and show the Sync Status of each part.
+- Export Crossdock Master tab: To export the mapping to Excel and upload the mapping of the ongoing period from Excel.
+- Export Crossdock Master tab: This sub-menu is opened only for users logged in with a D/S account; users with a Procurement account open the Kanban Crossdock Master sub-menu instead.
 
-### Display order – Part List - Result List (Sort by = Newer to Older, default)
+### Display order – Kanban Crossdock Master - Result List (Sort by = Newer to Older, default)
 
 | Field | Order |
 |---|---|
 | Updated Date (CHANGED_DT) | Descending |
 
-### Display order – Part List - Result List (Sort by = Older to Newer)
+### Display order – Kanban Crossdock Master - Result List (Sort by = Older to Newer)
 
 | Field | Order |
 |---|---|
 | Updated Date (CHANGED_DT) | Ascending |
 
-### Display order – Part List - Result List (Sort by = Default)
+### Display order – Kanban Crossdock Master - Result List (Sort by = Default)
 
 | Field | Order |
 |---|---|
 | Part Number | Ascending |
 
-### Display order – Part List - History Setting modal
+### Display order – Kanban Crossdock Master - History Setting modal
 
 | Field | Order |
 |---|---|
@@ -72,25 +73,25 @@
 
 | Button | Function |
 |---|---|
-| Tab (Part List / Mapping per Destination) | Switch between the Part List tab and the Mapping per Destination tab. |
+| Tab (Kanban Crossdock Master / Export Crossdock Master) | Switch between the Kanban Crossdock Master tab and the Export Crossdock Master tab. |
 | Add Part | Open the "Add Part Candidate Crossdock" modal (Add Mode), ready to register a new part. |
-| Upload Excel (Part List) | Open the "Upload Excel - part settings" modal (Upload Mode). |
-| Export Excel (Part List) | Download the Part List as .xlsx: sheet "Part List" (active filter) and sheet "Upload" (base file for Edit uploads). |
-| Run calculation (Part List) | Start the DAD Volume Calculation batch manually. Enabled only when the scheduled run and its 3 auto retries have failed. |
+| Upload Excel (Kanban Crossdock Master) | Open the "Upload Excel - part settings" modal (Upload Mode). |
+| Export Excel (Kanban Crossdock Master) | Download the Kanban Crossdock Master as .xlsx: sheet "Kanban Crossdock Master" (active filter) and sheet "Upload" (base file for Edit uploads). |
+| Run calculation (Kanban Crossdock Master) | Start the DAD Volume Calculation batch manually. Enabled only when the scheduled run and its 3 auto retries have failed. |
 | Reset | Clear criteria and reset the screen to its initial value. |
 | Search | To retrieve records according to the specified criteria. The criteria are applied only when [Search] is clicked (or Enter is pressed in a text box); Sort by is applied at once. |
 | Part Number link / Edit | Change the screen into edit mode to modify the selected row ("Edit part data" modal). |
 | History | Open the "History setting" modal of the selected part. |
 | Prev / Next | Move to the previous / next page of the result list. |
-| Save | Part List tab: Save the part data entered in the Add / Edit modal.; Mapping per Destination tab: Save the destination mapping of the part. |
-| Cancel | Part List tab: Close the Add / Edit modal without saving.; Mapping per Destination tab: Leave edit mode and discard all changes of the panel. |
-| Close | Part List tab: Close the History setting / Upload Excel modal (also the X icon of every modal).; Mapping per Destination tab: Close the Upload Excel modal without uploading. |
+| Save | Kanban Crossdock Master tab: Save the part data entered in the Add / Edit modal.; Export Crossdock Master tab: Save the destination mapping of the part. |
+| Cancel | Kanban Crossdock Master tab: Close the Add / Edit modal without saving.; Export Crossdock Master tab: Leave edit mode and discard all changes of the panel. |
+| Close | Kanban Crossdock Master tab: Close the History setting / Upload Excel modal (also the X icon of every modal).; Export Crossdock Master tab: Close the Upload Excel modal without uploading. |
 | Validate file | Save button of the upload: validate the uploaded file and save it (all-or-nothing), then show the success popup. |
 | OK | Close the success popup. |
 | Run calculation (Mapping) | Start process 2 (mapping destination) of the XD05 DAD Volume Calculation batch manually. Enabled only when the scheduled run and its 3 auto retries have failed. |
 | Sync | Start XD06 (GTOPAS) and XD07 (AP POLE) for every part with status Active (ongoing period) or Inactive whose Sync Status is No Sync or Failed, whatever the filter shows; the parts become Waiting. The label shows the number of parts, e.g. Sync (21). |
 | Upload Excel (Mapping) | Open the "Upload Excel - destination mapping" modal. Enabled only when the ongoing calculation period is selected. |
-| Export Excel (Mapping) | Download the mapping as .xlsx: sheet "Mapping per Destination" (active filter) and sheet "Upload" (base file for the upload). |
+| Export Excel (Mapping) | Download the mapping as .xlsx: sheet "Export Crossdock Master" (active filter) and sheet "Upload" (base file for the upload). |
 | Expand (arrow) | Open / close the Destination Mapping panel of the part row. |
 | Edit mapping | Change the Destination Mapping panel into edit mode (ongoing period only). |
 | Split evenly | Divide Max Case/Day evenly over all destinations of the part. |
@@ -99,20 +100,20 @@
 
 ### Screen modes (E = enabled, D = disabled)
 
-| Mode | Section | Description | Tab (Part List / Mapping per Destination) | Add Part | Upload Excel (Part List) | Export Excel (Part List) | Run calculation (Part List) | Reset | Search | Part Number link / Edit | History | Prev / Next | Save | Cancel | Close | Validate file | OK | Run calculation (Mapping) | Sync | Upload Excel (Mapping) | Export Excel (Mapping) | Expand (arrow) | Edit mapping | Split evenly | Add destination | Remove destination |
+| Mode | Section | Description | Tab (Kanban Crossdock Master / Export Crossdock Master) | Add Part | Upload Excel (Kanban Crossdock Master) | Export Excel (Kanban Crossdock Master) | Run calculation (Kanban Crossdock Master) | Reset | Search | Part Number link / Edit | History | Prev / Next | Save | Cancel | Close | Validate file | OK | Run calculation (Mapping) | Sync | Upload Excel (Mapping) | Export Excel (Mapping) | Expand (arrow) | Edit mapping | Split evenly | Add destination | Remove destination |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Part List - Initial Mode | Search Criteria | Part Number and Part Name blank, Status = All, Sort by = Newer to Older | E | E | E | E | D | E | E | E | E | E | D | D | D | D | D | - | - | - | - | - | - | - | - | - |
-| Part List - Initial Mode | Result List | All registered parts, 25 rows per page, page 1. Refer below 1) | E | E | E | E | D | E | E | E | E | E | D | D | D | D | D | - | - | - | - | - | - | - | - | - |
-| Part List - Search Result Mode | Result List | Parts matching all criteria (AND); page returns to 1 | E | E | E | E | D | E | E | E | E | E | D | D | D | D | D | - | - | - | - | - | - | - | - | - |
-| Part List - Search Result Mode | Empty State | No matching parts; table and paging hidden; [Reset filter] shown | E | E | E | E | D | E | E | D | D | D | D | D | D | D | D | - | - | - | - | - | - | - | - | - |
-| Part List - Add Mode (modal) | Part No not selected | Status locked to Candidate; Max Case/Day locked; Save disabled | E | D | D | D | D | D | D | D | D | D | D | E | E | D | D | - | - | - | - | - | - | - | - | - |
-| Part List - Add Mode (modal) | Part No selected, Pcs/Case blank | Part Name autofilled; Max Case/Day still locked; Save disabled | E | D | D | D | D | D | D | D | D | D | D | E | E | D | D | - | - | - | - | - | - | - | - | - |
-| Part List - Add Mode (modal) | All required items filled | Total Pcs/Day calculated; Save enabled | E | D | D | D | D | D | D | D | D | D | E | E | E | D | D | - | - | - | - | - | - | - | - | - |
-| Part List - Edit Mode (modal) | Saved status Candidate | Part No locked; Status, Effective Start Date, Min MAD, Pcs/Case, Max Case/Day editable | E | D | D | D | D | D | D | D | D | D | E | E | E | D | D | - | - | - | - | - | - | - | - | - |
-| Part List - Edit Mode (modal) | Saved status Active / Inactive | Same as 4.a but Effective Start Date locked (it can only change while the status is Candidate) | E | D | D | D | D | D | D | D | D | D | E | E | E | D | D | - | - | - | - | - | - | - | - | - |
-| Part List - History Mode (modal) | History setting | Change timeline of the selected part, read only | E | D | D | D | D | D | D | D | D | D | D | D | E | D | D | - | - | - | - | - | - | - | - | - |
-| Part List - Upload Mode (modal) | Upload Excel | Template columns, rules, file area | E | D | D | D | D | D | D | D | D | D | D | D | E | E | D | - | - | - | - | - | - | - | - | - |
-| Part List - Upload Mode (modal) | Success popup | "Saved successfully" after Save or Validate file | E | D | D | D | D | D | D | D | D | D | D | D | D | D | E | - | - | - | - | - | - | - | - | - |
+| Kanban Crossdock Master - Initial Mode | Search Criteria | Part Number and Part Name blank, Status = All, Sort by = Newer to Older | E | E | E | E | D | E | E | E | E | E | D | D | D | D | D | - | - | - | - | - | - | - | - | - |
+| Kanban Crossdock Master - Initial Mode | Result List | All registered parts, 25 rows per page, page 1. Refer below 1) | E | E | E | E | D | E | E | E | E | E | D | D | D | D | D | - | - | - | - | - | - | - | - | - |
+| Kanban Crossdock Master - Search Result Mode | Result List | Parts matching all criteria (AND); page returns to 1 | E | E | E | E | D | E | E | E | E | E | D | D | D | D | D | - | - | - | - | - | - | - | - | - |
+| Kanban Crossdock Master - Search Result Mode | Empty State | No matching parts; table and paging hidden; [Reset filter] shown | E | E | E | E | D | E | E | D | D | D | D | D | D | D | D | - | - | - | - | - | - | - | - | - |
+| Kanban Crossdock Master - Add Mode (modal) | Part No not selected | Status locked to Candidate; Max Case/Day locked; Save disabled | E | D | D | D | D | D | D | D | D | D | D | E | E | D | D | - | - | - | - | - | - | - | - | - |
+| Kanban Crossdock Master - Add Mode (modal) | Part No selected, Pcs/Case blank | Part Name autofilled; Max Case/Day still locked; Save disabled | E | D | D | D | D | D | D | D | D | D | D | E | E | D | D | - | - | - | - | - | - | - | - | - |
+| Kanban Crossdock Master - Add Mode (modal) | All required items filled | Total Pcs/Day calculated; Save enabled | E | D | D | D | D | D | D | D | D | D | E | E | E | D | D | - | - | - | - | - | - | - | - | - |
+| Kanban Crossdock Master - Edit Mode (modal) | Saved status Candidate | Part No locked; Status, Effective Start Date, Min MAD, Pcs/Case, Max Case/Day editable | E | D | D | D | D | D | D | D | D | D | E | E | E | D | D | - | - | - | - | - | - | - | - | - |
+| Kanban Crossdock Master - Edit Mode (modal) | Saved status Active / Inactive | Same as 4.a but Effective Start Date locked (it can only change while the status is Candidate) | E | D | D | D | D | D | D | D | D | D | E | E | E | D | D | - | - | - | - | - | - | - | - | - |
+| Kanban Crossdock Master - History Mode (modal) | History setting | Change timeline of the selected part, read only | E | D | D | D | D | D | D | D | D | D | D | D | E | D | D | - | - | - | - | - | - | - | - | - |
+| Kanban Crossdock Master - Upload Mode (modal) | Upload Excel | Template columns, rules, file area | E | D | D | D | D | D | D | D | D | D | D | D | E | E | D | - | - | - | - | - | - | - | - | - |
+| Kanban Crossdock Master - Upload Mode (modal) | Success popup | "Saved successfully" after Save or Validate file | E | D | D | D | D | D | D | D | D | D | D | D | D | D | E | - | - | - | - | - | - | - | - | - |
 | Mapping - Initial Mode | Search Criteria | Calculation period = ongoing period, Part Number blank, Sync Status = No Sync | E | - | - | - | - | E | E | - | - | E | D | D | D | D | D | E | E | E | E | E | D | D | D | D |
 | Mapping - Initial Mode | Result List | Parts of the ongoing period with Sync Status No Sync. Refer below 1) | E | - | - | - | - | E | E | - | - | E | D | D | D | D | D | E | E | E | E | E | D | D | D | D |
 | Mapping - Search Result Mode | Result List - ongoing period | Active parts matching all criteria | E | - | - | - | - | E | E | - | - | E | D | D | D | D | D | E | E | E | E | E | D | D | D | D |
@@ -141,17 +142,17 @@
 
 ```mermaid
 flowchart LR
-  pl[["Part List tab"]]
-  mp[["Mapping per Destination tab"]]
+  pl[["Kanban Crossdock Master tab"]]
+  mp[["Export Crossdock Master tab"]]
   pl -->|Tab| mp
   mp -->|Tab| pl
 ```
 
-### Screen Flow for Part List
+### Screen Flow for Kanban Crossdock Master
 
 ```mermaid
 flowchart LR
-  list[["Part List"]]
+  list[["Kanban Crossdock Master"]]
   add[["Add Part modal"]]
   edit[["Edit part data modal"]]
   hist[["History setting modal"]]
@@ -168,7 +169,7 @@ flowchart LR
   up -->|Validate file| ok
   ok -->|OK| list
 ```
-- Cancel / Close / X on any modal returns to the Part List without saving.
+- Cancel / Close / X on any modal returns to the Kanban Crossdock Master without saving.
 
 ### Screen Flow for Save (Add / Edit part data)
 
@@ -206,11 +207,11 @@ flowchart TB
 - Part data valid = Add: Part No selected, Min MAD filled (whole number, 0 or more), Pcs/Case > 0 and Max Case/Day > 0 (otherwise the tooltip shows message no. 5, 15, 6 or 7 for the first missing item). Edit: the same items, Effective Start Date not before today while the part is Candidate (message no. 10), and Max Case/Day not below the Case/Day already mapped in the ongoing period (message no. 14).
 - The check runs on every change in the modal, so [Save] is already disabled before it can be clicked (see Operation Description 5.4 and 5.5).
 
-### Screen Flow for Mapping per Destination
+### Screen Flow for Export Crossdock Master
 
 ```mermaid
 flowchart LR
-  list[["Mapping per Destination list"]]
+  list[["Export Crossdock Master list"]]
   view[["Destination Mapping panel (view)"]]
   edit[["Edit mapping mode"]]
   up[["Upload Excel modal"]]
@@ -260,9 +261,9 @@ flowchart TB
 
 ## 3. Screen layout
 
-### 1. Initial Mode - Part List (Status = All, Sort by = Newer to Older)
+### 1. Initial Mode - Kanban Crossdock Master (Status = All, Sort by = Newer to Older)
 
-![1. Initial Mode - Part List (Status = All, Sort by = Newer to Older)](../../deliverables/uiss_screens/part_list/c_01_initial.png)
+![1. Initial Mode - Kanban Crossdock Master (Status = All, Sort by = Newer to Older)](../../deliverables/uiss_screens/part_list/c_01_initial.png)
 
 ### 2. Search Result Mode - Status = Candidate
 
@@ -385,23 +386,23 @@ flowchart TB
 | No | Item | Source | Field | Type | Len | I/O | Control | Justified | Initial | Req | Format | Validation | Description |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | **<Tab Bar>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| 1 | Tab (Part List / Mapping per Destination) |  |  |  |  | I | Tab | Left | Part List |  |  |  | Part List tab (default) / Mapping per Destination tab. |
-| **<Part List - Header Section>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| 1 | Tab (Kanban Crossdock Master / Export Crossdock Master) |  |  |  |  | I | Tab | Left | Kanban Crossdock Master |  |  |  | Kanban Crossdock Master tab (default) / Export Crossdock Master tab. |
+| **<Kanban Crossdock Master - Header Section>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | 2 | Add Part |  |  |  |  | I | Button | Center |  |  |  |  | Opens the Add Part modal. Refer Operation Description 5.4. |
-| 3 | Upload Excel (Part List) |  |  |  |  | I | Button | Center |  |  |  |  | Opens the Upload Excel modal. Refer Operation Description 5.7. |
-| 4 | Export Excel (Part List) |  |  |  |  | I | Button | Center |  |  |  |  | Downloads Crossdock_Part_List_YYYYMMDD.xlsx. Refer Operation Description 5.8. |
-| **<Part List - Search Criteria Section>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| 3 | Upload Excel (Kanban Crossdock Master) |  |  |  |  | I | Button | Center |  |  |  |  | Opens the Upload Excel modal. Refer Operation Description 5.7. |
+| 4 | Export Excel (Kanban Crossdock Master) |  |  |  |  | I | Button | Center |  |  |  |  | Downloads Crossdock_Kanban_Master_YYYYMMDD.xlsx. Refer Operation Description 5.8. |
+| **<Kanban Crossdock Master - Search Criteria Section>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | 5 | Part Number | Key-in |  | Varchar | TBD | I | Text box with suggestion list | Left | Blank | N | X..TBD..X | Contains, case-insensitive | Suggestions = PART_NO of registered parts (TB_M_PART_CANDIDATE). Placeholder 'e.g. PART-B'. Combined with the other criteria by AND. |
 | 6 | Part Name | Key-in |  | Varchar | TBD | I | Text box | Left | Blank | N | X..TBD..X | Contains, case-insensitive | Placeholder 'Part name'. Combined with the other criteria by AND. |
 | 7 | Status | Key-in |  | Varchar |  | I | Combo Box | Left | All | N |  |  | Options: All / Candidate / Active / Inactive. Filters PART_STATUS. |
 | 8 | Sort by | Key-in |  | Varchar |  | I | Combo Box | Left | Newer to Older | N |  |  | Options: Default (Part Number A-Z) / Newer to Older / Older to Newer (by Updated Date). |
 | 9 | Reset |  |  |  |  | I | Button | Center |  |  |  |  | Returns every criterion to its initial value. |
 | 10 | Search |  |  |  |  | I | Button | Center |  |  |  |  | Applies the criteria to the result list. Typing or selecting a criterion alone does not change the list; Enter in a text box = [Search]. |
-| **<Part List - Result List Section>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| **<Kanban Crossdock Master - Result List Section>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | 11 | Registered parts counter |  |  | Varchar |  | O | Label | Left |  |  | N parts |  | N = number of filtered rows (all pages). |
 | 12 | Last DAD calculation |  |  | Datetime |  | O | Label | Left |  |  | DD-Mon-YYYY HH:MM |  | Date-time of the last successful run of the DAD Volume Calculation batch (one date per batch run, all-or-nothing). |
 | 13 | Failed badge |  |  | Varchar |  | O | Label | Left |  |  |  |  | 'Scheduled run failed 3x'; shown when the scheduled run and its 3 auto retries have failed. |
-| 14 | Run calculation (Part List) |  |  |  |  | I | Button | Center |  |  |  |  | Manual trigger of the DAD Volume Calculation batch. Enabled only when the scheduled run has failed 3 times; otherwise disabled with message no. 17 as tooltip. Refer Operation Description 5.9. |
+| 14 | Run calculation (Kanban Crossdock Master) |  |  |  |  | I | Button | Center |  |  |  |  | Manual trigger of the DAD Volume Calculation batch. Enabled only when the scheduled run has failed 3 times; otherwise disabled with message no. 17 as tooltip. Refer Operation Description 5.9. |
 | 15 | Part Number | TB_M_PART_CANDIDATE | PART_NO | Varchar | TBD | O | Hyperlink | Left |  |  | X..TBD..X |  | Click opens the Edit part data modal (same as [Edit]). |
 | 16 | Part Name | TB_M_PART_CANDIDATE | PART_NAME | Varchar | TBD | O | Label | Left |  |  | X..TBD..X |  | Truncated with '...' when long; full name in tooltip. |
 | 17 | Min MAD | TB_M_PART_CANDIDATE | MIN_MAD | Number | TBD | O | Label | Right |  |  | ZZ,ZZ9 |  | Minimum MAD of the part, entered by the user. Reference value compared with the MAD result of the calculation. |
@@ -415,15 +416,15 @@ flowchart TB
 | 25 | Updated By | TB_M_PART_CANDIDATE | CHANGED_BY | Varchar |  | O | Label | Left |  |  |  |  | User of the last change of the part. |
 | 26 | Edit |  |  |  |  | I | Button | Center |  |  |  |  | Opens the Edit part data modal of the row. Shown as [View] for a read-only account (TBD: read-only accounts not defined). |
 | 27 | History (clock icon) |  |  |  |  | I | Button | Center |  |  |  |  | Opens the History setting modal of the row. |
-| **<Part List - Footer Section>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| **<Kanban Crossdock Master - Footer Section>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | 28 | Rows per page | Key-in |  | Number |  | I | Combo Box | Left | 25 | N |  |  | Options 25 / 50 / 100. Change returns to page 1. |
 | 29 | Paging information |  |  | Varchar |  | O | Label | Right |  |  | a-b of N parts · page x/y |  |  |
 | 30 | Prev / Next |  |  |  |  | I | Button | Center |  |  |  |  | Previous / next page. Refer Screen Mode remark 1). |
-| **<Part List - Empty State Section>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| **<Kanban Crossdock Master - Empty State Section>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | 31 | Empty state message |  |  | Varchar |  | O | Label | Center |  |  |  |  | Display message no. 1 (filter result empty) or no. 2 (no part registered). |
 | 32 | Reset filter |  |  |  |  | I | Button | Center |  |  |  |  | Same as [Reset]. Shown with message no. 1. |
 | 33 | Upload Excel / Add one part |  |  |  |  | I | Button | Center |  |  |  |  | Shown with message no. 2; same as header [Upload Excel] / [Add Part]. |
-| **<Part List - Add Part / Edit Part Data Modal>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| **<Kanban Crossdock Master - Add Part / Edit Part Data Modal>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | 34 | Modal title |  |  | Varchar |  | O | Label | Left | Add: 'Add Part Candidate Crossdock'; Edit: 'Edit part data' |  |  |  |  |
 | 35 | Step indicator |  |  |  |  | O | Stepper | Left | Step 1 active |  |  |  | Step 1 Part Candidate (Part No), step 2 Pcs/Case & Max Case/Day, step 3 Total Pcs/Day; a step gets a check when its items are filled. |
 | 36 | Status | TB_M_PART_CANDIDATE | PART_STATUS | Varchar | TBD | I/O | Combo Box | Left | Candidate | Y |  | Add: always Candidate. Edit: Candidate / Active / Inactive | Add: locked to Candidate (tooltip 'New parts are automatically Candidate'). Edit: Candidate / Active / Inactive. |
@@ -438,25 +439,25 @@ flowchart TB
 | 45 | Cancel |  |  |  |  | I | Button | Center |  |  |  |  | Closes the modal without saving. |
 | 46 | Save |  |  |  |  | I | Button | Center |  |  |  |  | Enabled only when Part No, Min MAD, Pcs/Case > 0 and Max Case/Day > 0 are filled and, in Edit, Max Case/Day is not below the mapped total. Refer Operation Description 5.4 / 5.5. |
 | 47 | Close (X) |  |  |  |  | I | Button | Center |  |  |  |  | Same as [Cancel]. |
-| **<Part List - History Setting Modal>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| **<Kanban Crossdock Master - History Setting Modal>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | 48 | Part identity | TB_M_PART_CANDIDATE | PART_NO, PART_NAME | Varchar |  | O | Label | Left |  |  |  |  | Part No · Part Name of the selected row. |
 | 49 | Event title | TB_H_PART_CANDIDATE | TBD | Varchar |  | O | Timeline | Left |  |  |  |  | e.g. 'Part registered', 'Status changed'. Latest event marked with a blue dot. |
 | 50 | Event date-time | TB_H_PART_CANDIDATE | TBD | Datetime |  | O | Label | Right |  |  | DD-Mon-YYYY HH:MI |  |  |
 | 51 | Changed field (old → new) | TB_H_PART_CANDIDATE | TBD | Varchar |  | O | Label | Left |  |  |  |  | Field name, old value struck through, new value. |
 | 52 | User | TB_H_PART_CANDIDATE | TBD | Varchar |  | O | Label | Right |  |  |  |  | User who made the change. |
 | 53 | Close |  |  |  |  | I | Button | Center |  |  |  |  | Closes the modal. |
-| **<Part List - Upload Excel Modal>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| **<Kanban Crossdock Master - Upload Excel Modal>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | 54 | Template columns |  |  | Varchar |  | O | Label (chips) | Left |  |  |  |  | Part Number, Min MAD, Pcs/Case, Max Case/Day, Status, Upload (A/E), Effective Start Date (same names and order as sheet 'Upload' of Export Excel). |
 | 55 | Rules per upload value and status |  |  | Varchar |  | O | Label | Left |  |  |  |  | Add / Edit / Status rules; Candidate status cannot be changed by upload, Active <-> Inactive allowed, nothing can become Candidate. |
 | 56 | Upload file | Key-in |  | File |  | I | Drag-and-drop area + [Choose file] | Center | Blank | Y | .xlsx | Max 5 MB, max 5,000 rows | File checks and row validation are done by the batch (UISS-Batch XD02 Cross Dock Part Master Upload). |
 | 57 | Download template .xlsx |  |  |  |  | I | Button | Center |  |  |  |  | Downloads the empty upload template. TBD: template file location. |
 | 58 | Close |  |  |  |  | I | Button | Center |  |  |  |  | Closes the modal without uploading. |
 | 59 | Validate file |  |  |  |  | I | Button | Center |  |  |  |  | Save button of the upload. Refer Operation Description 5.7. |
-| **<Part List - Saved Successfully Popup>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| **<Kanban Crossdock Master - Saved Successfully Popup>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | 60 | Success message |  |  | Varchar |  | O | Label | Center |  |  |  |  | Display message no. 9 (Add / Edit) or no. 11 (upload). |
 | 61 | OK |  |  |  |  | I | Button | Center |  |  |  |  | Closes the popup. |
 | **<Mapping - Search Criteria Section>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| 62 | Calculation period | Key-in |  | Varchar |  | I | Combo Box | Left | Ongoing period, e.g. 'Sep 2026 (ongoing)' | N | Mon YYYY |  | Options: All periods / every calculation period; the ongoing one is marked '(ongoing)'. The label shows (ongoing) / (past) / (all). Calculation periods are created by the calculation batch; the latest period created is the ongoing period and earlier ones become past. A new period starts empty: the mapping of the previous period is not copied. Every Active part is listed with its Max Case/Day from Part List (the quota) but no destination yet (Total Case/Day 0, 0%), until the D/S user assigns it by Edit mapping or Upload Excel. |
+| 62 | Calculation period | Key-in |  | Varchar |  | I | Combo Box | Left | Ongoing period, e.g. 'Sep 2026 (ongoing)' | N | Mon YYYY |  | Options: All periods / every calculation period; the ongoing one is marked '(ongoing)'. The label shows (ongoing) / (past) / (all). Calculation periods are created by the calculation batch; the latest period created is the ongoing period and earlier ones become past. A new period starts empty: the mapping of the previous period is not copied. Every Active part is listed with its Max Case/Day from Kanban Crossdock Master (the quota) but no destination yet (Total Case/Day 0, 0%), until the D/S user assigns it by Edit mapping or Upload Excel. |
 | 63 | Part Number | Key-in |  | Varchar | TBD | I | Text box with suggestion list | Left | Blank | N | X..TBD..X | Contains, case-insensitive | Suggestions = registered Part Numbers. Placeholder 'e.g. PART-B'. Combined with the other criteria by AND. |
 | 64 | Sync Status | Key-in |  | Varchar |  | I | Combo Box | Left | No Sync | N |  |  | Options: All / No Sync / Waiting / Success / Failed. |
 | 65 | Reset |  |  |  |  | I | Button | Center |  |  |  |  | Returns every criterion to its initial value (Calculation period = ongoing, Sync Status = No Sync). |
@@ -474,9 +475,9 @@ flowchart TB
 | 76 | Part Number | TB_M_PART_CANDIDATE | PART_NO | Varchar | TBD | O | Label | Left |  |  | X..TBD..X |  |  |
 | 77 | Part Name | TB_M_PART_CANDIDATE | PART_NAME | Varchar | TBD | O | Label | Left |  |  | X..TBD..X |  |  |
 | 78 | Pcs/Case | TB_M_PART_CANDIDATE | PCS_CASE | Number | TBD | O | Label | Right |  |  | ZZ,ZZ9 |  |  |
-| 79 | Total Case/Day (used / quota) | TB_M_PART_CANDIDATE_DEST / TB_M_PART_CANDIDATE | SUM(CASE_DAY) / MAX_CASE_DAY | Number |  | O | Label | Right |  |  | ZZ,ZZ9 / ZZ,ZZ9 |  | Used (bold) = sum of Case/Day of all destinations of the part and period; quota = Max Case/Day of the part in Part List. |
+| 79 | Total Case/Day (used / quota) | TB_M_PART_CANDIDATE_DEST / TB_M_PART_CANDIDATE | SUM(CASE_DAY) / MAX_CASE_DAY | Number |  | O | Label | Right |  |  | ZZ,ZZ9 / ZZ,ZZ9 |  | Used (bold) = sum of Case/Day of all destinations of the part and period; quota = Max Case/Day of the part in Kanban Crossdock Master. |
 | 80 | Pcs/Day |  |  | Number |  | O | Label | Right |  |  | ZZ,ZZ9 |  | Calculated: Pcs/Case x Total Case/Day. |
-| 81 | Percentage |  |  | Number |  | O | Label | Right |  |  | ZZ9% |  | Calculated: Total Case/Day / Max Case/Day (MAX_CASE_DAY). Never above 100%: Save, upload and the Max Case/Day edit in Part List are blocked above the limit. |
+| 81 | Percentage |  |  | Number |  | O | Label | Right |  |  | ZZ9% |  | Calculated: Total Case/Day / Max Case/Day (MAX_CASE_DAY). Never above 100%: Save, upload and the Max Case/Day edit in Kanban Crossdock Master are blocked above the limit. |
 | 82 | Sync Status | TB_M_PART_CANDIDATE | SYNC_STATUS | Char | 1 | O | Chip | Left |  |  |  |  | 0 = No Sync (grey), 3 = Waiting (amber), 1 = Success (green), 2 = Failed (red). The Failed chip shows SYNC_MESSAGE as tooltip (message no. 28). |
 | **<Mapping - Footer Section>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | 83 | Rows per page | Key-in |  | Number |  | I | Combo Box | Left | 25 | N |  |  | Options 25 / 50 / 100. Change returns to page 1. |
@@ -559,7 +560,7 @@ flowchart TB
 |---|---|---|
 |  | HIST_ID | Auto (identity) |
 |  | PART_NO | Part of the event |
-|  | PERIOD | NULL (Part List has no period) |
+|  | PERIOD | NULL (Kanban Crossdock Master has no period) |
 |  | EVENT_TYPE | 'ADD' (Add Part) / 'EDIT' (Edit part data) |
 |  | SOURCE | 'SCREEN' |
 |  | UPLOAD_ID | NULL |
@@ -666,7 +667,7 @@ flowchart TB
 
 ## 6. Operation description
 
-5.1 - 5.10: Part List tab. 5.11 - 5.20: Mapping per Destination tab.
+5.1 - 5.10: Kanban Crossdock Master tab. 5.11 - 5.20: Export Crossdock Master tab.
 
 ### 5.1 Initial Display
 
@@ -698,7 +699,7 @@ b. Total Pcs/Day = Pcs/Case x Max Case/Day.
 - b. User clicks [Save].
   1. If the Part No was registered by another user in the meantime, display message no. 3. Stop.
   2. Insert the part into TB_M_PART_CANDIDATE with PART_STATUS = Candidate and SYNC_STATUS = 0 (No Sync) (refer Data Edit Mapping).
-  3. Insert the change history when any register or update data in Part List
+  3. Insert the change history when any register or update data in Kanban Crossdock Master
   4. Close the modal, reset the Part Number / Part Name / Status filters, sort Newer to Older and display message no. 9. The new part is shown at the top.
 
 - c. User clicks [Cancel] or the X icon: close the modal without saving.
@@ -710,13 +711,13 @@ b. Total Pcs/Day = Pcs/Case x Max Case/Day.
   2. 'Effective Start Date' is editable only while the saved status is Candidate (minimum today); otherwise locked with message no. 10 as tooltip.
   3. 'Min MAD' (mandatory, whole number 0 or more), 'Pcs/Case' and 'Max Case/Day' can be changed; 'Total Pcs/Day' is recalculated.
   4. Active part only: below Max Case/Day show 'Mapped Case/Day (current period): n' = total Case/Day of the part in TB_M_PART_CANDIDATE_DEST for the ongoing period (' · no destination yet' when none), so the user sees the lowest allowed Max Case/Day before Save.
-  5. Max Case/Day can not be less than the total Case/Day already mapped to destinations in the ongoing period (TB_M_PART_CANDIDATE_DEST); otherwise the field is marked red, message no. 14 is shown below Pcs/Case & Max Case/Day and [Save] is disabled. The user must first reduce the mapping in Mapping per Destination (same rule as upload check 9).
+  5. Max Case/Day can not be less than the total Case/Day already mapped to destinations in the ongoing period (TB_M_PART_CANDIDATE_DEST); otherwise the field is marked red, message no. 14 is shown below Pcs/Case & Max Case/Day and [Save] is disabled. The user must first reduce the mapping in Export Crossdock Master (same rule as upload check 9).
 
 - b. User clicks [Save].
   1. If the record was changed by another user after it was opened, display message no. 4. Stop.
   2. Check Max Case/Day against the mapped total of the ongoing period again on the server; if it is below, display message no. 14. Stop.
   3. Update TB_M_PART_CANDIDATE, CHANGED_BY and CHANGED_DT. SYNC_STATUS = 0 (No Sync) only when a value sent to GTOPAS / AP POLE changed (Status to or from Active, Pcs/Case or Max Case/Day of an Active part); a change of Min MAD or Effective Start Date only, or a Save without change, keeps the Sync Status. Status changes are written to the history (FIELD_NAME PART_STATUS).
-  4. Insert the change history when any register or update in Part List
+  4. Insert the change history when any register or update in Kanban Crossdock Master
   5. Close the modal, move the part to the top of the list and display message no. 9.
 
 ### 5.6 History Setting
@@ -732,7 +733,7 @@ TB_H_PART_CANDIDATE (proposed) - one record per changed field, insert only:
 |---|---|---|---|---|
 | HIST_ID | BIGINT | Y | N | Running number (identity) |
 | PART_NO | VARCHAR(TBD) |  | N | Part number; length follows TB_M_PART_MASTER |
-| PERIOD | CHAR(6) |  | Y | Calculation period YYYYMM for MAPPING / SYNC / CALC; NULL for ADD / EDIT (Part List has no period) |
+| PERIOD | CHAR(6) |  | Y | Calculation period YYYYMM for MAPPING / SYNC / CALC; NULL for ADD / EDIT (Kanban Crossdock Master has no period) |
 | EVENT_TYPE | VARCHAR(10) |  | N | ADD / EDIT / MAPPING / SYNC / CALC |
 | SOURCE | VARCHAR(10) |  | N | SCREEN / UPLOAD / IF / RPA / BATCH |
 | UPLOAD_ID | VARCHAR(TBD) |  | Y | Upload of the change (Log); NULL when not from an upload |
@@ -751,7 +752,7 @@ Retention: the history of a part is kept; there is no housekeeping job (decided 
 ### 5.7 Upload Excel
 
 a. User clicks [Upload Excel]: open the modal with the template columns, the rules and the file area (.xlsx, max 5 MB, max 5,000 rows).
-b. Edit rows use sheet 'Upload' of the Part List Export Excel as base file (pre-filled with Upload (A/E) = E). Sample: sheet 'Upload Part List'.
+b. Edit rows use sheet 'Upload' of the Kanban Crossdock Master Export Excel as base file (pre-filled with Upload (A/E) = E). Sample: sheet 'Upload Kanban Crossdock Master'.
 c. Status rule: a Candidate part's status cannot be changed by upload; Active <-> Inactive can be changed; no part can be changed to Candidate.
 d. User clicks [Validate file] (save button of the upload): the file is passed to the upload batch; validation, saving (all-or-nothing) and logging follow UISS-Batch "XD02 Cross Dock Part Master Upload Batch".
 e. When the upload is completed, close the modal and display message no. 11. When it is rejected, show the batch result (error list) - refer UISS-Batch.
@@ -759,8 +760,8 @@ f. Changed parts show Sync Status No Sync.
 
 ### 5.8 Export Excel
 
-a. User clicks [Export Excel]: download Crossdock_Part_List_YYYYMMDD.xlsx.
-b. Sheet 'Part List': rows of the active filter and sort (all pages) with Part Number, Part Name, Min MAD, Pcs/Case, Max Case/Day, Total Pcs/Day, Status, Effective Start Date, CREATED_DT, CREATED_BY, UPDATED_DT, UPDATED_BY. Information only. Sample: 'Export Part List'.
+a. User clicks [Export Excel]: download Crossdock_Kanban_Master_YYYYMMDD.xlsx.
+b. Sheet 'Kanban Crossdock Master': rows of the active filter and sort (all pages) with Part Number, Part Name, Min MAD, Pcs/Case, Max Case/Day, Total Pcs/Day, Status, Effective Start Date, CREATED_DT, CREATED_BY, UPDATED_DT, UPDATED_BY. Information only. Sample: 'Export Kanban Crossdock Master'.
 c. Sheet 'Upload': every registered part, columns as sheet 1 (Part Number, Min MAD, Pcs/Case, Max Case/Day, Status, Upload (A/E) = E, Effective Start Date). Base file for Edit uploads.
 d. If the file cannot be created, display message no. 13.
 
@@ -777,10 +778,10 @@ e. A change from Active to Inactive made by the batch sets the part to No Sync (
 | Status | Value | Definition |
 |---|---|---|
 | Part Status | Candidate | Newly registered part without MAD history. Initial status of every new part; cannot be chosen when adding. |
-| Part Status | Active | Active part. Only Active parts can be mapped in the Mapping per Destination sub-menu. |
-| Part Status | Inactive | Inactive part. Not mapped in the Mapping per Destination sub-menu. |
+| Part Status | Active | Active part. Only Active parts can be mapped in the Export Crossdock Master sub-menu. |
+| Part Status | Inactive | Inactive part. Not mapped in the Export Crossdock Master sub-menu. |
 | Sync Status | No Sync (0) | Not sent yet, or a value sent to GTOPAS / AP POLE changed since the last synchronisation (refer Sync Status rule). |
-| Sync Status | Waiting (3) | [Sync] clicked in the Mapping per Destination tab; waiting for XD06 (GTOPAS) and / or XD07 (AP POLE). |
+| Sync Status | Waiting (3) | [Sync] clicked in the Export Crossdock Master tab; waiting for XD06 (GTOPAS) and / or XD07 (AP POLE). |
 | Sync Status | Success (1) | XD06 updated the destinations in GTOPAS and XD07 sent the cross dock master to AP POLE (ongoing period). |
 | Sync Status | Failed (2) | XD06 or XD07 could not send the part (target and reason in SYNC_MESSAGE); sent again by the next [Sync]. |
 
@@ -804,7 +805,7 @@ Sync Status rule (17-Nov): No Sync (0) only when a value sent to GTOPAS / AP POL
 a. The sub-menu is opened only for users logged in with a D/S account.
 b. Search criteria: 'Calculation period' = ongoing period, 'Part Number' blank, 'Sync Status' = No Sync.
 c. Ongoing period: list every Active part of TB_M_PART_CANDIDATE, with its destinations of TB_M_PART_CANDIDATE_DEST for that period (a part without destinations is listed with Total Case/Day 0).
-d. A new period starts empty: the mapping of the previous period is not copied. Every Active part is listed with its Max Case/Day from Part List (the quota) but no destination yet (Total Case/Day 0, 0%), until the D/S user assigns it by Edit mapping or Upload Excel.
+d. A new period starts empty: the mapping of the previous period is not copied. Every Active part is listed with its Max Case/Day from Kanban Crossdock Master (the quota) but no destination yet (Total Case/Day 0, 0%), until the D/S user assigns it by Edit mapping or Upload Excel.
 e. Past period: list every part that has rows in TB_M_PART_CANDIDATE_DEST for that period, whatever its current status. 'All periods' lists both.
 
 ### 5.12 Specifying Criteria
@@ -818,7 +819,7 @@ e. With the default Sync Status = No Sync, parts that are Success or Failed are 
 ### 5.13 Result List
 
 a. Total Case/Day = used / quota (sum of CASE_DAY of the part and period / Max Case/Day); Pcs/Day = Pcs/Case x used.
-b. Percentage = Total Case/Day / Max Case/Day; it never exceeds 100% because the total can not go above Max Case/Day (Save, upload and the Max Case/Day edit in Part List are blocked).
+b. Percentage = Total Case/Day / Max Case/Day; it never exceeds 100% because the total can not go above Max Case/Day (Save, upload and the Max Case/Day edit in Kanban Crossdock Master are blocked).
 c. The list is paged: 25 rows per page by default (25 / 50 / 100), with paging information and [Prev] / [Next]. A part with its Destination Mapping panel counts as one row. [Search], Reset and a change of Rows per page return to page 1.
 
 ### 5.14 Destination Mapping Panel
@@ -878,8 +879,8 @@ f. Changed parts show Sync Status No Sync.
 
 ### 5.18 Export Excel
 
-a. User clicks [Export Excel]: download Crossdock_Mapping_per_Destination_<period>_YYYYMMDD.xlsx (<period> e.g. Sep_2026 or All_periods).
-b. Sheet 'Mapping per Destination': rows of the active filter, one row per destination (a part without destination gives one row with blank destination columns). Columns: Period, Part Number, Part Name, Destination Code, Pcs/Case, Dest Case/Day, Total Case/Day (used), Max Case/Day (quota), Dest Pcs/Day, Pcs/Day, Sync Status, CREATED_DT, CREATED_BY, UPDATED_DT, UPDATED_BY (audit of the mapping row). Information only. Sample: sheet 'Export Mapping'.
+a. User clicks [Export Excel]: download Crossdock_Export_Master_<period>_YYYYMMDD.xlsx (<period> e.g. Sep_2026 or All_periods).
+b. Sheet 'Export Crossdock Master': rows of the active filter, one row per destination (a part without destination gives one row with blank destination columns). Columns: Period, Part Number, Part Name, Destination Code, Pcs/Case, Dest Case/Day, Total Case/Day (used), Max Case/Day (quota), Dest Pcs/Day, Pcs/Day, Sync Status, CREATED_DT, CREATED_BY, UPDATED_DT, UPDATED_BY (audit of the mapping row). Information only. Sample: sheet 'Export Mapping'.
 c. Sheet 'Upload': every Active part of the ongoing period, columns Part Number, Destination Code, Dest Case/Day, Total Case/Day (used), Max Case/Day (quota), Upload (A/E); one row per destination, and one blank row (Upload (A/E) = A) for a part without mapping. Empty for a past period or All periods. Upload (A/E) = E for a mapped destination.
 d. If the file cannot be created, display message no. 26.
 
@@ -894,7 +895,7 @@ d. User clicks [Run calculation]: start the batch. When it completes, update 'La
 
 | Item | Value | Definition |
 |---|---|---|
-| Table | TB_M_PART_CANDIDATE | Part List data, part number level (key PART_NO). Holds Max Case/Day, status and Sync Status. |
+| Table | TB_M_PART_CANDIDATE | Kanban Crossdock Master data, part number level (key PART_NO). Holds Max Case/Day, status and Sync Status. |
 | Table | TB_M_PART_CANDIDATE_DEST | Mapping data, part number + calculation period + destination level (key PART_NO, PERIOD, DEST_CODE). PERIOD = CHAR(6) YYYYMM, e.g. 202609; displayed as 'Sep 2026'. |
 | Table | TB_M_H0125_DESTINATION | Destination Master (existing, read only). Crossdock uses DESTINATION_CD and DESTINATION_NAME only. |
 | Part Status | Active | Only Active parts are mapped in the ongoing period. |
@@ -908,35 +909,52 @@ Sync Status is kept per part in TB_M_PART_CANDIDATE because a part is synced as 
 
 ### Last Sync (17-Nov)
 
-- Mapping per Destination: new column Last Sync after Sync Status = LAST_SYNC_DT of TB_R_CROSSDOCK_IF_RESULT (latest of GTOPAS / AP POLE); "Never" when the part was never synced.
-- Export Excel of Mapping per Destination: sheet 1 gets column Last Sync Date. Sheet "Active to Inactive" removed (18-Nov): Inactive parts with No Sync / Failed are taken by [Sync] by their status.
-- Export Excel of Part List: new column Sync Status after Status (No Sync / Waiting / Success / Failed): the RPA to AP POLE (XD07) takes the parts that are not synced yet from it.
+- Export Crossdock Master: new column Last Sync after Sync Status = LAST_SYNC_DT of TB_R_CROSSDOCK_IF_RESULT (latest of GTOPAS / AP POLE); "Never" when the part was never synced.
+- Export Excel of Export Crossdock Master: sheet 1 gets column Last Sync Date. Sheet "Active to Inactive" removed (18-Nov): Inactive parts with No Sync / Failed are taken by [Sync] by their status.
+- Export Excel of Kanban Crossdock Master: new column Sync Status after Status (No Sync / Waiting / Success / Failed): the RPA to AP POLE (XD07) takes the parts that are not synced yet from it.
+
+### 5.21 Period, Order Type and names (19-Nov)
+
+- Names: sub-menu Part List = Kanban Crossdock Master (Procurement), sub-menu Mapping per Destination = Export Crossdock Master (D/S). Page title Crossdock Master. Export Excel: Crossdock_Kanban_Master_YYYYMMDD.xlsx (sheet Kanban Crossdock Master) and Crossdock_Export_Master_<Period>_YYYYMMDD.xlsx (sheet Export Crossdock Master).
+- Kanban Crossdock Master (former Part List) has a period like the Export Crossdock Master: TB_M_PART_CANDIDATE is kept per PART_NO + PERIOD (Status, Pcs/Case, Max Case/Day, Sync Status of that month).
+- Kanban Crossdock Master screen: new search criterion Calculation period (All periods / periods, default the ongoing period) and new first column Period. Rows of a past period: Part Number and [Edit] not available, [History] available. Add Part: into the ongoing period.
+- Periods (19-Nov): Past = view only; Current (M) = changed by screen and upload; Next (M+1) = made by XD05 on day D (system master), view only until day 1. On day 1 the Period Rollover (XD05 process 3) makes Next the Current period.
+- Order Type per destination row (system master '**', 'C', '9', 'V'): the same destination may have two rows in a period when the order type differs; key PART_NO + PERIOD + DEST_CODE + ORDER_TYPE. Export Crossdock Master: new column Order Type (combobox of the system master) after Destination (CD); Save is blocked when a destination + order type is used twice ("The same destination is used twice with the same order type").
+- Export Excel / Upload of the Export Crossdock Master: new column Order Type after Destination Code (sheet 1 and sheet Upload).
+- Max Case/Day of a period may not be below the mapped total of that period (message 14): to lower it, D/S first reduces the destinations on the Export Crossdock Master, then changes Max Case/Day on the Kanban Crossdock Master.
+- [Sync] and Sync Status are per part and period (TB_R_CROSSDOCK_IF_RESULT key PART_NO + TARGET_SYSTEM + PERIOD): XD07 sends the Current period first, then the Next period; XD06 uses the Current period only.
+
+| Period | Kanban Crossdock Master | Export Crossdock Master |
+|---|---|---|
+| Past | View only | View only |
+| Current (M) | Edit / Add Part / upload | Edit / upload |
+| Next (M+1) | View only (made by XD05) | View only (made by XD05) |
 
 ## 7. Display messages
 
 | ID | Event | Cause | Type | Message | Action |
 |---|---|---|---|---|---|
-| **Part List - Search Operation** |  |  |  |  |  |
+| **Kanban Crossdock Master - Search Operation** |  |  |  |  |  |
 | MSG1 | Change search criteria | No part matches the criteria | Info | No matching parts - Loosen the search criteria or reset all filters. | Change the criteria or click [Reset filter] |
-| MSG2 | Open Part List | No part registered yet | Info | No crossdock parts registered yet | Click [Upload Excel] or [Add one part] |
-| **Part List - Add / Edit Operation** |  |  |  |  |  |
+| MSG2 | Open Kanban Crossdock Master | No part registered yet | Info | No crossdock parts registered yet | Click [Upload Excel] or [Add one part] |
+| **Kanban Crossdock Master - Add / Edit Operation** |  |  |  |  |  |
 | MSG3 | Click [Save] button | Part No already registered (concurrent add) | Error | Duplication found for {Part No} | Close the modal and search the part |
 | MSG4 | Click [Save] button | Record changed by another user | Error | Error in Update because of concurrency check. | Close the modal, refresh and edit again |
 | MSG5 | Hover disabled [Save] | Part No not selected | Info | Part No is required | Select a Part No |
 | MSG6 | Hover disabled [Save] | Pcs/Case not filled | Info | Enter Pcs/Case first (step 2) | Fill Pcs/Case |
 | MSG7 | Hover disabled [Save] | Max Case/Day not filled | Info | Enter Max Case/Day (step 2) | Fill Max Case/Day |
 | MSG8 | Type in 'Part No' | No unregistered part matches the text | Info | Part not found | Check the Part No |
-| MSG9 | Click [Save] button | Part saved successfully | Info | Saved successfully - {Part No} · {Part Name} has been added/updated. It is now at the top of the Part List. | Click [OK] |
+| MSG9 | Click [Save] button | Part saved successfully | Info | Saved successfully - {Part No} · {Part Name} has been added/updated. It is now at the top of the Kanban Crossdock Master. | Click [OK] |
 | MSG10 | Hover 'Effective Start Date' | Saved status is Active / Inactive | Info | Can only be changed while the status is still Candidate | - |
-| **Part List - Upload Operation** |  |  |  |  |  |
-| MSG11 | Click [Validate file] button | Upload validated and saved | Info | Saved successfully - Upload completed. The file has been validated and the part settings have been saved to the Part List. | Click [OK] |
-| **Part List - History Operation** |  |  |  |  |  |
+| **Kanban Crossdock Master - Upload Operation** |  |  |  |  |  |
+| MSG11 | Click [Validate file] button | Upload validated and saved | Info | Saved successfully - Upload completed. The file has been validated and the part settings have been saved to the Kanban Crossdock Master. | Click [OK] |
+| **Kanban Crossdock Master - History Operation** |  |  |  |  |  |
 | MSG12 | Click History icon | Part has no history | Info | No change history for this part yet. | Click [Close] |
-| **Part List - Export Operation** |  |  |  |  |  |
+| **Kanban Crossdock Master - Export Operation** |  |  |  |  |  |
 | MSG13 | Click [Export Excel] button | Excel file cannot be created | Error | Export Excel failed. Please try again. | Click [Export Excel] again; contact administrator if it persists |
-| MSG14 | Change 'Max Case/Day' in Edit / click [Save] | Max Case/Day below the total Case/Day mapped in the ongoing period | Error | Max Case/Day can not be less than the mapped total ({n} case/day) of the ongoing period. Reduce the mapping in Mapping per Destination first. | Reduce the mapping in Mapping per Destination first, or enter a higher Max Case/Day |
+| MSG14 | Change 'Max Case/Day' in Edit / click [Save] | Max Case/Day below the total Case/Day mapped in the ongoing period | Error | Max Case/Day can not be less than the mapped total ({n} case/day) of the ongoing period. Reduce the mapping in Export Crossdock Master first. | Reduce the mapping in Export Crossdock Master first, or enter a higher Max Case/Day |
 | MSG15 | Hover disabled [Save] | Min MAD blank or not a whole number | Info | Enter Min MAD (whole number, 0 or more) | Fill Min MAD |
-| **Part List - Calculation Operation** |  |  |  |  |  |
+| **Kanban Crossdock Master - Calculation Operation** |  |  |  |  |  |
 | MSG16 | Click [Run calculation] button | DAD Volume Calculation completed | Info | Calculation completed - DAD volume calculation completed. Part statuses have been updated from the average MAD against Min MAD. | Click [OK] |
 | MSG17 | Hover disabled [Run calculation] | Scheduled run has not failed 3 times | Info | Enabled only when the scheduled run has failed 3 times | - |
 | **Mapping - Search Operation** |  |  |  |  |  |
@@ -948,7 +966,7 @@ Sync Status is kept per part in TB_M_PART_CANDIDATE because a part is synced as 
 | MSG22 | Open panel of a past period | Period is not ongoing | Info | Past period - read only | - |
 | **Mapping - Upload Operation** |  |  |  |  |  |
 | MSG23 | Hover disabled [Upload Excel] | Past period or All periods selected | Info | Past period - read only. Select the ongoing period to upload. | Select the ongoing period |
-| MSG24 | Click [Validate file] button | Upload validated and saved | Info | Saved successfully - Upload completed. The file has been validated and the destination mapping has been saved to Mapping per Destination. | Click [OK] |
+| MSG24 | Click [Validate file] button | Upload validated and saved | Info | Saved successfully - Upload completed. The file has been validated and the destination mapping has been saved to Export Crossdock Master. | Click [OK] |
 | **Mapping - Save Operation** |  |  |  |  |  |
 | MSG25 | Click [Save] button | Mapping changed by another user | Error | Error in Update because of concurrency check. | Cancel, refresh and edit again |
 | **Mapping - Export Operation** |  |  |  |  |  |
@@ -965,23 +983,23 @@ Sync Status is kept per part in TB_M_PART_CANDIDATE because a part is synced as 
 | ID | Event | Cause | Type | Message | Action | Exception |
 |---|---|---|---|---|---|---|
 | LOG1 | Click [Save] button | Database error on insert/update of TB_M_PART_CANDIDATE | Error | Failed to save part <PART_NO>: <DB error message>. | Show [Corresponding Screen Message] on screen (TBD) | Y |
-| LOG2 | Click [Export Excel] button | Excel file generation error | Error | Export Excel of Part List failed: <error message>. | Display Message no. 13 | Y |
-| - | Click [Validate file] button | Upload processing | Info | Logging is handled by the Part List Upload batch (refer UISS-Batch "XD02 Cross Dock Part Master Upload Batch"). | - | N |
+| LOG2 | Click [Export Excel] button | Excel file generation error | Error | Export Excel of Kanban Crossdock Master failed: <error message>. | Display Message no. 13 | Y |
+| - | Click [Validate file] button | Upload processing | Info | Logging is handled by the Kanban Crossdock Master Upload batch (refer UISS-Batch "XD02 Cross Dock Part Master Upload Batch"). | - | N |
 | LOG3 | Click [Save] button | Database error on save of TB_M_PART_CANDIDATE_DEST | Error | Failed to save mapping of part <PART_NO>, period <PERIOD>: <DB error message>. | Show [Corresponding Screen Message] on screen (TBD) | Y |
 | LOG4 | XD06 / XD07 | GTOPAS or AP POLE rejects a part | Error | Logging is done by XD06 / XD07 (refer UISS-Batch XD06 / XD07); the chip shows the result. | Status Failed; Display Message no. 28 on the chip | N |
-| LOG5 | Click [Export Excel] button | Excel file generation error | Error | Export Excel of Mapping per Destination failed: <error message>. | Display Message no. 26 | Y |
-| - | Click [Validate file] button | Upload processing | Info | Logging is handled by the Mapping per Destination Upload batch (refer UISS-Batch "XD03 Part and Destination Mapping Upload Batch"). | - | N |
+| LOG5 | Click [Export Excel] button | Excel file generation error | Error | Export Excel of Export Crossdock Master failed: <error message>. | Display Message no. 26 | Y |
+| - | Click [Validate file] button | Upload processing | Info | Logging is handled by the Export Crossdock Master Upload batch (refer UISS-Batch "XD03 Part and Destination Mapping Upload Batch"). | - | N |
 
 ## 9. Tables
 
 #### TB_H_PART_CANDIDATE (history, proposed)
-History of every change of a crossdock part (Add / Edit by screen or upload, mapping changes, Sync results, status changes and mappings made by the calculation batches). Read by the History setting modal of Part List (index PART_NO, CREATED_DT). No retention limit: the history is kept (no housekeeping job, decided 30-Oct).
+History of every change of a crossdock part (Add / Edit by screen or upload, mapping changes, Sync results, status changes and mappings made by the calculation batches). Read by the History setting modal of Kanban Crossdock Master (index PART_NO, CREATED_DT). No retention limit: the history is kept (no housekeeping job, decided 30-Oct).
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
 | HIST_ID | BIGINT | Y | N | Running number (identity) |
 | PART_NO | VARCHAR(TBD) |  | N | Part number; length follows TB_M_PART_MASTER |
-| PERIOD | CHAR(6) |  | Y | Calculation period YYYYMM for MAPPING / SYNC / CALC; NULL for ADD / EDIT (Part List has no period) |
+| PERIOD | CHAR(6) |  | Y | Calculation period YYYYMM for MAPPING / SYNC / CALC; NULL for ADD / EDIT (Kanban Crossdock Master has no period) |
 | EVENT_TYPE | VARCHAR(10) |  | N | ADD / EDIT / MAPPING / SYNC / CALC |
 | SOURCE | VARCHAR(10) |  | N | SCREEN / UPLOAD / IF / RPA / BATCH |
 | UPLOAD_ID | VARCHAR(TBD) |  | Y | Upload of the change (Log); NULL when not from an upload |
@@ -1000,8 +1018,8 @@ Dummy table (proposed): send status of the cross dock master per part and target
 |---|---|---|---|---|
 | PART_NO | VARCHAR(TBD) | Y | N | Part number (TB_M_PART_CANDIDATE) |
 | TARGET_SYSTEM | VARCHAR(10) | Y | N | 'GTOPAS' (XD06) / 'APPOLE' (XD07) |
-| PERIOD | CHAR(6) |  | N | Calculation period of the mapping sent (YYYYMM) |
-| IF_STATUS | VARCHAR(1) |  | N | '3' Waiting / '1' Success / '2' Failed |
+| PERIOD | CHAR(6) | Y | N | Calculation period of the data sent (YYYYMM); part of the key: one row per part, target and period (19-Nov) |
+| IF_STATUS | VARCHAR(1) |  | N | '0' No Sync / '3' Waiting / '1' Success / '2' Failed (per period, 19-Nov) |
 | IF_DT | DATETIME |  | Y | Date-time of the result of the target system |
 | LAST_SYNC_DT | DATETIME |  | Y | Date-time of the last Success of the part for this target (kept when a later run is Failed); NULL when never synced. Shown as Last Sync on XD01. |
 | IF_FILE_NAME | VARCHAR(100) |  | Y | RPA run ID (GTOPAS and AP POLE) |
