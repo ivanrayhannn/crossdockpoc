@@ -1,0 +1,28 @@
+digraph G {
+  graph [rankdir=LR, fontname="Helvetica", fontsize=11, nodesep=0.35, ranksep=0.45, pad=0.3, newrank=true, label="ASN03 ASN Creation (screen) - AS-IS", labelloc=t, fontsize=14];
+  node [shape=box, style="rounded,filled", fillcolor="#FFFFFF", color="#5B6B7F", fontname="Helvetica", fontsize=10, margin="0.12,0.06", width=1.6];
+  edge [color="#5B6B7F", fontname="Helvetica", fontsize=9, arrowsize=0.7];
+  subgraph cluster_sup { label="Supplier"; style="filled"; fillcolor="#F7FBFF"; color="#BFBFBF"; fontsize=11; labeljust=l;
+    s1 [label="Open ASN Creation\n(Add mode)"];
+    s2 [label="Pick Manifest No /\nOrder Date / PO No,\n[Search]"];
+    s3 [label="Choose parts,\ninput delivery qty"];
+    s4 [label="Save / Submit ASN"];
+  }
+  subgraph cluster_nsp { label="NSP - ASN existing (ASN03)"; style="filled"; fillcolor="#FFFFFF"; color="#BFBFBF"; fontsize=11; labeljust=l;
+    n2 [label="Get Data Manifest\nsupplier, remaining qty\n(regular + crossdock orders)"];
+    n3 [label="Show manifest grid"];
+    n4 [label="Insert TB_T_ASN"];
+    n5 [label="ASN Submit Creation\n(existing flow)"];
+  }
+  subgraph cluster_db { label="Database"; style="filled"; fillcolor="#FAFAFA"; color="#BFBFBF"; fontsize=11; labeljust=l;
+    db_pm [shape=cylinder, label="TB_R_PRA_DAILY_ORDER_MANIFEST\n(CROSS_DOCK_FLAG)"];
+    db_pp [shape=cylinder, label="TB_R_PRA_DAILY_ORDER_PART\n(Palletize Code, remaining qty)"];
+    db_asn [shape=cylinder, label="TB_T_ASN"];
+  }
+  s1 -> s2 -> n2 -> n3 -> s3 -> s4 -> n4 -> n5;
+  db_pm -> n2 [style=dashed, label="read flag", constraint=false]; db_pp -> n2 [style=dashed, label="read Palletize", constraint=false];
+  n4 -> db_asn [style=dashed, constraint=false]; n5 -> db_pp [style=dashed, label="remaining qty", constraint=false];
+  { rank=same; s2; n2; db_pm; } s2 -> n2 [style=invis]; n2 -> db_pm [style=invis];
+  { rank=same; n5; db_pp; } n5 -> db_pp [style=invis];
+  { rank=same; n4; db_asn; }
+}

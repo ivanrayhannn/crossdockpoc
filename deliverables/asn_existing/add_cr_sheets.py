@@ -309,5 +309,18 @@ if __name__ == '__main__':
     add_sheet(os.path.join(HERE, 'source', 'DR_UISS_ASN04_Delivery_Note_ASN_Upload_Batch.xlsx'),
               os.path.join(HERE, 'DR_UISS_ASN04_Delivery_Note_ASN_Upload_Batch.xlsx'), ASN04)
     from cr_standalone import write
-    write(os.path.join(HERE, 'CR_Crossdock_ASN03_ASN_Creation.xlsx'), ASN03)
-    write(os.path.join(HERE, 'CR_Crossdock_ASN04_ASN_Upload.xlsx'), ASN04)
+    img = lambda n: os.path.join(HERE, 'flow_img', n + '.png')
+    write(os.path.join(HERE, 'CR_Crossdock_ASN03_ASN_Creation.xlsx'), ASN03, [
+        ('AS-IS: ASN Creation lists regular and crossdock orders', img('asn03_as_is'), []),
+        ('TO-BE: crossdock orders are not listed; their ASN is made in ASN Creation (Crossdock)', img('asn03_to_be'), [
+            "Get Data Manifest excludes CROSS_DOCK_FLAG = 'X' (TB_R_PRA_DAILY_ORDER_MANIFEST) and Palletize Code = 'X' (TB_R_PRA_DAILY_ORDER_PART).",
+            'A typed crossdock Manifest No / PO No gives no data (no message).',
+            'The supplier creates the ASN of a crossdock order in ASN Creation (Crossdock, XD10). Save / Submit of regular orders: no change.'])])
+    write(os.path.join(HERE, 'CR_Crossdock_ASN04_ASN_Upload.xlsx'), ASN04, [
+        ('AS-IS: every row is uploaded, crossdock rows included (crossdock checks msg 8 / 9)', img('asn04_as_is'), []),
+        ('TO-BE: crossdock rows are skipped, regular rows are uploaded', img('asn04_to_be'), [
+            "New check after the duplication check: Palletize Code 'X' or CROSS_DOCK_FLAG 'X' -> row skipped, warning log 12.",
+            'Regular rows continue with the existing checks and are written to TB_T_ASN; skipped rows do not make the upload fail.',
+            'Crossdock checks msg 8 (delivery qty) and msg 9 (case no / palletize) are deleted.',
+            'All rows skipped: nothing is saved, existing "no data" result (message number TBC).',
+            'The supplier creates the ASN of the skipped rows in ASN Creation (Crossdock, XD10).'])])

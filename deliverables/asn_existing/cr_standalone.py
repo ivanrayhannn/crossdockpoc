@@ -1,5 +1,9 @@
 """Writes the CR Crossdock sheet as a document of its own (one sheet), same layout as the sheet added to the DR (add_cr_sheets.py)."""
+import math
+import os
 from openpyxl import Workbook
+from openpyxl.drawing.image import Image as XLImage
+from PIL import Image
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from add_cr_sheets import COLS, SHEET_NAME, STYLES, WIDTHS, lines
 
@@ -11,7 +15,37 @@ thin = Side(style='thin', color='999999')
 BOX = Border(left=thin, right=thin, top=thin, bottom=thin)
 
 
-def write(path, rows):
+def flow_sheet(wb, flows):
+    """Sheet 'Business Flow': per (title, image, changes) the As-Is / To-Be picture and the list of changes."""
+    ws = wb.create_sheet('Business Flow', 0)
+    ws.sheet_view.showGridLines = False
+    ws.column_dimensions['A'].width = 2
+    ws.column_dimensions['B'].width = 6
+    ws.column_dimensions['C'].width = 150
+    r = 2
+    for title, img, changes in flows:
+        ws.cell(r, 2, title).font = FONT['s']
+        r += 1
+        w, h = Image.open(img).size
+        k = min(1.0, 1150 / w)
+        pic = XLImage(img)
+        pic.width, pic.height = int(w * k), int(h * k)
+        ws.add_image(pic, f'B{r}')
+        r += math.ceil(pic.height / 20) + 1
+        for n, c in enumerate(changes, 1):
+            for col, v in ((2, n), (3, c)):
+                x = ws.cell(r, col, v)
+                x.font, x.border, x.alignment = FONT['n'], BOX, Alignment(vertical='top', wrap_text=True)
+                x.fill = FILL['new']
+            r += 1
+        r += 2
+    ws.page_setup.orientation = 'landscape'
+    ws.page_setup.paperSize = 9
+    ws.sheet_properties.pageSetUpPr.fitToPage = True
+    ws.page_setup.fitToWidth, ws.page_setup.fitToHeight = 1, 0
+
+
+def write(path, rows, flows=None):
     wb = Workbook()
     ws = wb.active
     ws.title = SHEET_NAME
@@ -49,5 +83,7 @@ def write(path, rows):
     ws.page_setup.paperSize = 9
     ws.sheet_properties.pageSetUpPr.fitToPage = True
     ws.page_setup.fitToWidth, ws.page_setup.fitToHeight = 1, 0
+    if flows:
+        flow_sheet(wb, flows)
     wb.save(path)
     print('written', path)

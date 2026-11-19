@@ -1,0 +1,36 @@
+digraph G {
+  graph [rankdir=LR, fontname="Helvetica", fontsize=11, nodesep=0.35, ranksep=0.45, pad=0.3, newrank=true, label="ASN04 ASN Upload (batch) - TO-BE (CR Crossdock)", labelloc=t, fontsize=14];
+  node [shape=box, style="rounded,filled", fillcolor="#FFFFFF", color="#5B6B7F", fontname="Helvetica", fontsize=10, margin="0.12,0.06", width=1.6];
+  edge [color="#5B6B7F", fontname="Helvetica", fontsize=9, arrowsize=0.7];
+  subgraph cluster_sup { label="Supplier"; style="filled"; fillcolor="#F7FBFF"; color="#BFBFBF"; fontsize=11; labeljust=l;
+    s1 [label="Fill upload template\n(Manifest No, Part No, Qty,\nPalletize Code, Case No...)"];
+    s2 [label="[Upload] on\nASN Creation"];
+    s3 [label="Read result / log"];
+    s4 [label="Crossdock rows:\ncreate ASN in ASN\nCreation (Crossdock)", fillcolor="#E2EFDA" color="#548235"];
+  }
+  subgraph cluster_nsp { label="NSP - ASN existing (ASN04 batch)"; style="filled"; fillcolor="#FFFFFF"; color="#BFBFBF"; fontsize=11; labeljust=l;
+    b1 [label="Format, mandatory\nand duplication\nchecks (4b)"];
+    b2 [label="Crossdock row?\nPalletize Code X or\nCROSS_DOCK_FLAG X", shape=diamond, width=2.2, fillcolor="#FFF2CC" color="#C55A11" penwidth=2];
+    b3 [label="Skip row,\nwarning log 12", fillcolor="#FFF2CC" color="#C55A11" penwidth=2];
+    b4 [label="Crossdock checks\nmsg 8 (delivery qty)\nmsg 9 (case no / palletize)\nDELETED", fillcolor="#F2F2F2" color="#A6A6A6" fontcolor="#7F7F7F" style="rounded,filled,dashed"];
+    b5 [label="Existing business\nchecks (regular rows)"];
+    b6 [label="Error?", shape=diamond, width=1.2];
+    b7 [label="Finished with error\n(msg 7b), nothing saved"];
+    b8 [label="Insert temporary ->\nTB_T_ASN (regular rows)\n-> ASN Submit Creation"];
+    b9 [label="All rows skipped:\nnothing saved,\n\"no data\" result (TBC)", fillcolor="#FFF2CC" color="#C55A11" penwidth=2];
+  }
+  subgraph cluster_xd { label="NSP - ASN Crossdock (new)"; style="filled"; fillcolor="#F4FAF0"; color="#BFBFBF"; fontsize=11; labeljust=l;
+    x1 [label="ASN Creation (Crossdock)\n(XD10)", fillcolor="#E2EFDA" color="#548235"];
+  }
+  subgraph cluster_db { label="Database"; style="filled"; fillcolor="#FAFAFA"; color="#BFBFBF"; fontsize=11; labeljust=l;
+    db_pm [shape=cylinder, label="TB_R_PRA_DAILY_ORDER_MANIFEST\n(CROSS_DOCK_FLAG)"];
+    db_pp [shape=cylinder, label="TB_R_PRA_DAILY_ORDER_PART\n(Palletize Code, remaining qty)"];
+    db_asn [shape=cylinder, label="TB_T_ASN"];
+  }
+  s1 -> s2 -> b1 -> b2;
+  b2 -> b3 [label="Yes"]; b2 -> b5 [label="No"]; b3 -> b9 [style=dashed, label="if every row"];
+  b5 -> b6; b6 -> b7 [label="Yes"]; b6 -> b8 [label="No"]; b7 -> s3; b8 -> s3; b9 -> s3; b3 -> s4 [style=dashed]; s4 -> x1;
+  b4 -> b5 [style=invis];
+  db_pm -> b2 [style=dashed, label="read flag", constraint=false]; b8 -> db_asn [style=dashed, constraint=false];
+  { rank=same; b2; db_pm; } b2 -> db_pm [style=invis]; { rank=same; b8; db_asn; } b8 -> db_asn [style=invis]; { rank=same; b1; db_pp; } b1 -> db_pp [style=invis];
+}
