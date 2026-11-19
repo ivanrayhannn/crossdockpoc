@@ -1,0 +1,28 @@
+digraph G {
+  graph [rankdir=LR, fontname="Helvetica", fontsize=11, nodesep=0.35, ranksep=0.45, pad=0.3, newrank=true, label="ASN04 ASN Upload (batch) - AS-IS", labelloc=t, fontsize=14];
+  node [shape=box, style="rounded,filled", fillcolor="#FFFFFF", color="#5B6B7F", fontname="Helvetica", fontsize=10, margin="0.12,0.06", width=1.6];
+  edge [color="#5B6B7F", fontname="Helvetica", fontsize=9, arrowsize=0.7];
+  subgraph cluster_sup { label="Supplier"; style="filled"; fillcolor="#F7FBFF"; color="#BFBFBF"; fontsize=11; labeljust=l;
+    s1 [label="Fill upload template\n(Manifest No, Part No, Qty,\nPalletize Code, Case No...)"];
+    s2 [label="[Upload] on\nASN Creation"];
+    s3 [label="Read result / log"];
+  }
+  subgraph cluster_nsp { label="NSP - ASN existing (ASN04 batch)"; style="filled"; fillcolor="#FFFFFF"; color="#BFBFBF"; fontsize=11; labeljust=l;
+    b1 [label="Format, mandatory\nand duplication\nchecks (4b)"];
+    b4 [label="Crossdock checks\nmsg 8 (delivery qty)\nmsg 9 (case no / palletize)"];
+    b5 [label="Existing business\nchecks (all rows,\nincl. Palletize X)"];
+    b6 [label="Error?", shape=diamond, width=1.2];
+    b7 [label="Finished with error\n(msg 7b), nothing saved"];
+    b8 [label="Insert temporary ->\nTB_T_ASN draft (all rows,\nincl. crossdock);\nSubmit as in ASN Creation"];
+  }
+  subgraph cluster_db { label="Database"; style="filled"; fillcolor="#FAFAFA"; color="#BFBFBF"; fontsize=11; labeljust=l;
+    db_pm [shape=cylinder, label="TB_R_PRA_DAILY_ORDER_MANIFEST\n(CROSS_DOCK_FLAG)"];
+    db_pp [shape=cylinder, label="TB_R_PRA_DAILY_ORDER_PART\n(Palletize Code, remaining qty)"];
+    db_asn [shape=cylinder, label="TB_T_ASN\n(draft)"];
+    db_dm [shape=cylinder, label="TB_R_DAILY_ORDER_MANIFEST"];
+    db_dp [shape=cylinder, label="TB_R_DAILY_ORDER_PART"];
+  }
+  s1 -> s2 -> b1 -> b4 -> b5 -> b6; b6 -> b7 [label="Yes"]; b6 -> b8 [label="No"]; b7 -> s3; b8 -> s3;
+  db_pm -> b5 [style=dashed, label="read", constraint=false]; b8 -> db_asn [style=dashed, constraint=false];
+  { rank=same; b5; db_pm; } b5 -> db_pm [style=invis]; { rank=same; b8; db_asn; } b8 -> db_asn [style=invis]; { rank=same; b1; db_pp; } b1 -> db_pp [style=invis];
+}

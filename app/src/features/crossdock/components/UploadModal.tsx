@@ -1,6 +1,6 @@
 import type { CrossdockState } from '../useCrossdockState';
 
-// Same columns and order as sheet "Upload" of the Part List Export Excel.
+// Same columns and order as sheet "Upload" of the Kanban Crossdock Master Export Excel.
 const UP_COLS = ['Part Number', 'Min MAD', 'Pcs/Case', 'Max Case/Day', 'Status', 'Upload (A/E)', 'Effective Start Date'];
 
 const UP_RULES: { label: string; cols: string }[] = [

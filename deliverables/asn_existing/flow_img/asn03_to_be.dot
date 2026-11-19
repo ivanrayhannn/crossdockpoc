@@ -1,0 +1,38 @@
+digraph G {
+  graph [rankdir=LR, fontname="Helvetica", fontsize=11, nodesep=0.35, ranksep=0.45, pad=0.3, newrank=true, label="ASN03 ASN Creation (screen) - TO-BE (CR Crossdock)", labelloc=t, fontsize=14];
+  node [shape=box, style="rounded,filled", fillcolor="#FFFFFF", color="#5B6B7F", fontname="Helvetica", fontsize=10, margin="0.12,0.06", width=1.6];
+  edge [color="#5B6B7F", fontname="Helvetica", fontsize=9, arrowsize=0.7];
+  subgraph cluster_sup { label="Supplier"; style="filled"; fillcolor="#F7FBFF"; color="#BFBFBF"; fontsize=11; labeljust=l;
+    s1 [label="Open ASN Creation\n(Add mode)"];
+    s2 [label="Pick Manifest No /\nOrder Date / PO No,\n[Search]"];
+    s3 [label="Choose part /\nmanifest"];
+    s4 [label="Input qty and\ndelivery date"];
+    s5 [label="[Submit]"];
+  }
+  subgraph cluster_nsp { label="NSP - ASN Creation (ASN03, regular orders only)"; style="filled"; fillcolor="#FFFFFF"; color="#BFBFBF"; fontsize=11; labeljust=l;
+    n2 [label="Get Data Manifest\nsupplier, remaining qty\nEXCLUDE CROSS_DOCK_FLAG X\nand Palletize Code X", fillcolor="#FFF2CC" color="#C55A11" penwidth=2];
+    n3 [label="Show manifest"];
+    n4 [label="Insert to draft\n(TB_T_ASN)"];
+    n5 [label="Submit: insert daily order\nmanifest and part,\nreduce qty of pra part"];
+  }
+  subgraph cluster_xd { label="Other screen: ASN Creation (Crossdock, XD10), crossdock orders"; style="filled"; fillcolor="#F4FAF0"; color="#BFBFBF"; fontsize=11; labeljust=l;
+    x0 [label="Supplier opens\nASN Creation (Crossdock)", fillcolor="#E2EFDA" color="#548235"];
+    x1 [label="ASN per Part +\nCustomer Order Date\n(own flow, XD09 / XD10)", fillcolor="#E2EFDA" color="#548235"];
+  }
+  subgraph cluster_db { label="Database"; style="filled"; fillcolor="#FAFAFA"; color="#BFBFBF"; fontsize=11; labeljust=l;
+    db_pm [shape=cylinder, label="TB_R_PRA_DAILY_ORDER_MANIFEST\n(CROSS_DOCK_FLAG)"];
+    db_pp [shape=cylinder, label="TB_R_PRA_DAILY_ORDER_PART\n(Palletize Code, remaining qty)"];
+    db_asn [shape=cylinder, label="TB_T_ASN\n(draft)"];
+    db_dm [shape=cylinder, label="TB_R_DAILY_ORDER_MANIFEST"];
+    db_dp [shape=cylinder, label="TB_R_DAILY_ORDER_PART"];
+  }
+  s1 -> s2 -> n2 -> n3 -> s3 -> n4 -> s4 -> s5 -> n5;
+  db_pm -> n2 [style=dashed, label="read flag", constraint=false]; db_pp -> n2 [style=dashed, label="read Palletize", constraint=false];
+  n4 -> db_asn [style=dashed, label="insert", constraint=false];
+  n5 -> db_dm [style=dashed, label="insert", constraint=false]; n5 -> db_dp [style=dashed, label="insert", constraint=false];
+  n5 -> db_pp [style=dashed, label="reduce qty", constraint=false];
+  { rank=same; s2; n2; db_pm; } s2 -> n2 [style=invis]; n2 -> db_pm [style=invis];
+  { rank=same; n4; db_asn; } n4 -> db_asn [style=invis];
+  { rank=same; n5; db_dm; db_dp; } n5 -> db_dm [style=invis]; db_dm -> db_dp [style=invis];
+  x0 -> x1;
+}

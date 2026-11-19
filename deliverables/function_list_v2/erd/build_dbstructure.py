@@ -13,8 +13,8 @@ OUT = os.path.join(HERE, 'Crossdock_DB_Structure.xlsx')
 
 # id, physical name, logical name, design kind, description
 TABLES = [
-    ('MST-01', 'TB_M_PART_CANDIDATE', 'Crossdock Part Candidate', 'Master', 'Candidate / Active / Inactive crossdock part (Part List of XD01).'),
-    ('MST-02', 'TB_M_PART_CANDIDATE_DEST', 'Part Mapping per Destination', 'Master', 'Case/Day per part, period and destination (Mapping per Destination of XD01).'),
+    ('MST-01', 'TB_M_PART_CANDIDATE', 'Crossdock Part Candidate', 'Master', 'Candidate / Active / Inactive crossdock part (Kanban Crossdock Master of XD01, per period).'),
+    ('MST-02', 'TB_M_PART_CANDIDATE_DEST', 'Part Mapping per Destination', 'Master', 'Case/Day per part, period and destination (Export Crossdock Master of XD01, per order type).'),
     ('HIS-01', 'TB_H_PART_CANDIDATE', 'Part Candidate History', 'History', 'Every change of a crossdock part (screen, upload, calculation, sync).'),
     ('HIS-02', 'TB_H_CROSSDOCK_ORDER_CHANGE', 'Crossdock Order Change History', 'History', 'Change Order Number (XD11): cancelled qty in an ASN moved to other lines.'),
     ('TR-01', 'TB_R_PART_DAD_RESULT', 'DAD Volume Calculation Result', 'Transaction', 'Result of XD05 process 1 per part and period.'),

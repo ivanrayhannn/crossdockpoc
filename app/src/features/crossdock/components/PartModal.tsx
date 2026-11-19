@@ -59,7 +59,7 @@ export function PartModal({ state }: { state: CrossdockState }) {
   const ongoing = editId ? parts.find((p) => p.p === f.p && p.per === CUR_PER) : undefined;
   const mapped = ongoing ? ongoing.dests.reduce((a, d) => a + num(d.al), 0) : 0;
   const belowMapped = !!editId && !!mc && mc < mapped;
-  const belowMsg = `Max Case/Day can not be less than the mapped total (${fmt(mapped)} case/day) of the ongoing period. Reduce the mapping in Mapping per Destination first.`;
+  const belowMsg = `Max Case/Day can not be less than the mapped total (${fmt(mapped)} case/day) of the ongoing period. Reduce the mapping in Export Crossdock Master first.`;
 
   // Min MAD is mandatory: whole number, 0 or more (reference for the MAD result of the calculation).
   const minMadStr = String(f.minMad == null ? '' : f.minMad).trim();

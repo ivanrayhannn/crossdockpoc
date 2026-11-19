@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { CUR_PER, PAST_ROWS, PERIODS } from '../../../data/seed';
 import { fmt, num, parseDt } from '../../../lib/format';
 import type { Part, PartQuery, PartStatus } from '../../../types';
 import { partAudit, selectParts } from '../partList';
@@ -58,7 +59,8 @@ export function PartListTab({ parts, q, aq, onSearch, setQ, resetQ, ro, onOpenPa
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
 
-  const rowsSrc = useMemo(() => selectParts(parts, aq), [parts, aq]);
+  // Ongoing period = the editable parts; past periods are read only (same rows as Export Crossdock Master).
+  const rowsSrc = useMemo(() => selectParts(parts.concat(PAST_ROWS), aq), [parts, aq]);
 
   useEffect(() => {
     setPage(1);
@@ -99,7 +101,21 @@ export function PartListTab({ parts, q, aq, onSearch, setQ, resetQ, ro, onOpenPa
             <span style={{ fontSize: 10.5, fontWeight: 600, letterSpacing: '.04em', textTransform: 'uppercase' }}>Search criteria</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 13 }}>
-            <div className="field" style={{ width: 260 }}>
+            <div className="field" style={{ width: 200 }}>
+              <label>
+                Calculation period <span style={{ color: 'var(--color-neutral-500)', textTransform: 'none', letterSpacing: 0 }}>({q.per === CUR_PER ? 'ongoing' : q.per === 'all' ? 'all' : 'past'})</span>
+              </label>
+              <select className="input" value={q.per} onChange={(e) => setQ((prev) => ({ ...prev, per: e.target.value }))} style={{ appearance: 'none' }}>
+                <option value="all">All periods</option>
+                {PERIODS.map((per) => (
+                  <option key={per} value={per}>
+                    {per}
+                    {per === CUR_PER ? ' (ongoing)' : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="field" style={{ width: 220 }}>
               <label>Part Number</label>
               <div style={{ position: 'relative' }}>
                 <input
@@ -202,10 +218,11 @@ export function PartListTab({ parts, q, aq, onSearch, setQ, resetQ, ro, onOpenPa
 
           {!empty && !noResult && (
             <div style={{ overflowX: 'auto', overflowY: 'auto', maxHeight: 560 }}>
-            <table style={{ width: '100%', minWidth: 1124, borderCollapse: 'separate', borderSpacing: 0, fontSize: 12.5, tableLayout: 'fixed' }}>
+            <table style={{ width: '100%', minWidth: 1208, borderCollapse: 'separate', borderSpacing: 0, fontSize: 12.5, tableLayout: 'fixed' }}>
               <thead>
                 <tr>
-                  <th style={{ ...th, padding: '0 10px 0 16px', width: 112 }}>Part Number</th>
+                  <th style={{ ...th, padding: '0 10px 0 16px', width: 84 }}>Period</th>
+                  <th style={{ ...th, width: 112 }}>Part Number</th>
                   <th style={{ ...th, width: 130 }}>Part Name</th>
                   <th style={{ ...th, textAlign: 'right', width: 70 }}>Min MAD</th>
                   <th style={{ ...th, textAlign: 'right', width: 66 }}>Pcs/Case</th>
@@ -222,9 +239,14 @@ export function PartListTab({ parts, q, aq, onSearch, setQ, resetQ, ro, onOpenPa
               <tbody>
                 {rows.map((r) => {
                   const p = r.p;
+                  const past = p.per !== CUR_PER;
                   return (
-                    <tr key={p.p} className="row-hover">
-                      <td style={{ ...td, padding: '0 10px 0 16px', overflow: 'hidden' }}>
+                    <tr key={`${p.p}-${p.per}`} className="row-hover">
+                      <td style={{ ...td, padding: '0 10px 0 16px', whiteSpace: 'nowrap', color: past ? 'var(--color-neutral-600)' : undefined }}>{p.per}</td>
+                      <td style={{ ...td, overflow: 'hidden' }}>
+                        {past ? (
+                          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12.5, fontWeight: 600 }}>{p.p}</span>
+                        ) : (
                         <button
                           onClick={() => onOpenPart(p.p)}
                           title={ro ? 'View part data' : 'Edit part data'}
@@ -232,6 +254,7 @@ export function PartListTab({ parts, q, aq, onSearch, setQ, resetQ, ro, onOpenPa
                         >
                           {p.p}
                         </button>
+                        )}
                       </td>
                       <td style={{ ...td, overflow: 'hidden', textOverflow: 'ellipsis' }} title={p.n}>{p.n}</td>
                       <td style={{ ...td, textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: r.minMadFg, fontWeight: r.minMadW }}>{r.minMad}</td>
@@ -257,9 +280,11 @@ export function PartListTab({ parts, q, aq, onSearch, setQ, resetQ, ro, onOpenPa
                       })()}
                       <td style={{ ...td, padding: '0 10px' }}>
                         <span style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
-                          <button className="btn btn-secondary" onClick={() => onOpenPart(p.p)} style={{ fontSize: 12, padding: '4px 12px', whiteSpace: 'nowrap' }}>
-                            {ro ? 'View' : 'Edit'}
-                          </button>
+                          {!past && (
+                            <button className="btn btn-secondary" onClick={() => onOpenPart(p.p)} style={{ fontSize: 12, padding: '4px 12px', whiteSpace: 'nowrap' }}>
+                              {ro ? 'View' : 'Edit'}
+                            </button>
+                          )}
                           <button
                             onClick={() => onOpenHistory(p.p)}
                             title="History"

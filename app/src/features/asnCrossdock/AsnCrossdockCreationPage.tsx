@@ -139,7 +139,7 @@ export function AsnCrossdockCreationPage() {
   const [caseHold, setCaseHold] = useState<Record<string, number>>({});
   /** Lines released from a hold (HOLD_FLAG N): poured at the end of their Customer Order Date (FB-183). */
   const [caseRel, setCaseRel] = useState<Record<string, boolean>>({});
-  /** Hold per case in edit mode: unit key -> draft of its held cases (Edit / Save like Part List and Mapping). */
+  /** Hold per case in edit mode: unit key -> draft of its held cases (Edit / Save like Kanban Crossdock Master and Mapping). */
   /** Draft per unit: `c:<case no>` = tick to hold the case, `h:<line id>` = held line (untick to release). */
   const [caseDraft, setCaseDraft] = useState<Record<string, Record<string, boolean>>>({});
   const startCaseEdit = (u: Unit) => setCaseDraft({ ...caseDraft, [u.key]: Object.fromEntries([

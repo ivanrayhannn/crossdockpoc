@@ -11,7 +11,7 @@ from xml.sax.saxutils import escape
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SHEET_NAME = 'CR Crossdock'
-UPDATED = '14-Nov-2026'
+UPDATED = '19-Nov-2026'
 
 # style keys -> (font, fill, border, alignment)
 FONTS = {'n': '<font><sz val="10"/><name val="Arial"/></font>',
@@ -156,7 +156,7 @@ def header(function_name, doc, title):
     return [
         [('mk', 'Phase'), ('mv', 'DR'), ('mk', 'Project Name'), ('mv', 'G-TOPAS Local System'), ('mk', 'Updated'), ('mv', UPDATED)],
         [('mk', 'Block'), ('mv', 'ASN'), ('mk', 'Function Name'), ('mv', function_name), ('mk', 'By'), ('mv', '[Author]')],
-        [('mk', 'Doc'), ('mv', doc), ('mk', 'Title'), ('mv', title), ('mk', 'Source'), ('mv', 'ASN_Existing.xlsx (14-Nov)')],
+        [('mk', 'Doc'), ('mv', doc), ('mk', 'Title'), ('mv', title), ('mk', 'Source'), ('mv', 'ASN_Existing.xlsx (14-Nov), decisions 19-Nov')],
         [],
     ]
 
@@ -171,114 +171,135 @@ def table(head, body, style='td'):
     return rows + [[]]
 
 
+X = "Palletize Code = 'X' or CROSS_DOCK_FLAG = 'X'"
 BACKGROUND = [
-    [('text', 'Crossdock orders are the PO / manifests with CROSSDOCK_FLAG = \'X\' in TB_R_PRA_DAILY_ORDER_MANIFEST. '
+    [('text', "Crossdock orders are the orders with CROSS_DOCK_FLAG = 'X' in TB_R_PRA_DAILY_ORDER_MANIFEST (column name as in the BCT logic flow) "
+              "and Palletize Code 'X'. A Palletize Code 'X' is always a crossdock order with CROSS_DOCK_FLAG 'X' (decided 19-Nov). "
               'Their ASN is created in the new ASN Creation (Crossdock, XDOCK) screen, per Part Number + Customer Order Date.')],
     [('text', 'The existing ASN Creation (ASN03) and ASN Upload (ASN04) stay for regular (non-crossdock) orders: '
-              'crossdock orders are taken out of them; the rest of the existing flow does not change.')],
+              'crossdock orders are not taken from the pra manifest / pra part; the rest of the existing flow does not change.')],
     [],
 ]
 
+
+def revision(rows):
+    return [[('sec', 'Revision')], *table(['Rev', 'Date', 'Description', 'By', ''], rows)]
+
+
 ASN03 = header('ASN03_Delivery Note / ASN Creation (Screen)', 'UISS-Screen', 'CR Crossdock: crossdock orders out of ASN Creation') + [
     [('title', 'CR Crossdock: crossdock orders are not shown in ASN Creation (regular orders only)')], [],
+    *revision([['0.1', '14-Nov-2026', 'First version from ASN_Existing.xlsx', '[Author]', ''],
+               ['0.2', '19-Nov-2026', "Column CROSS_DOCK_FLAG (BCT logic flow); Palletize Code 'X' also excluded; no message for a typed crossdock "
+                                      'Manifest / PO; draft ASN before go-live: existing behaviour; decisions of the open points', '[Author]', '']]),
     [('sec', '1. Background')], *BACKGROUND,
     [('sec', '2. Change summary')],
     *table(['No', 'Item', 'Current', 'To Be', 'Impacted sheet'], [
         ['1', 'Get Data Manifest (Add mode: Manifest No, Order Date, PO No, [Search] of the grid)',
          'Manifests of the login supplier with remaining qty (company_cd = supplier_cd and remaining_qty >= delivery_qty).',
-         ('tdnew', 'Same, plus: manifests with CROSSDOCK_FLAG = \'X\' are excluded. Crossdock manifests are no longer shown in Get Manifest.'),
+         ('tdnew', "Same, plus: orders with CROSS_DOCK_FLAG = 'X' (pra manifest) or Palletize Code = 'X' (pra part) are excluded. "
+                   'Crossdock orders are no longer shown in Get Manifest.'),
          'Operation Desc 2.a'],
         ['2', 'Upload mode ([Upload] calls ASN04)', 'Every manifest in the file is uploaded.',
-         ('tdnew', 'Rows with Palletize Code \'X\' or a crossdock manifest are rejected by ASN04 (refer DR UISS ASN04, sheet CR Crossdock).'),
-         'Operation Desc 1.a'],
+         ('tdnew', 'Only the regular rows are uploaded; rows with ' + X + ' are skipped by ASN04 (refer CR ASN04).'), 'Operation Desc 1.a'],
         ['3', 'Save / Submit ASN', 'Existing flow.',
-         'No change: TB_T_ASN -> ASN Submit Creation (existing flow) -> update TB_R_PRA_DAILY_ORDER_MANIFEST / TB_R_PRA_DAILY_ORDER_PART.', '-'],
+         'No change: choose part / manifest -> insert to draft (TB_T_ASN) -> input qty and delivery date -> [Submit] -> insert TB_R_DAILY_ORDER_MANIFEST / TB_R_DAILY_ORDER_PART and reduce the qty of TB_R_PRA_DAILY_ORDER_PART.', '-'],
     ]),
     [('sec', '3. Process flow')],
     *table(['Step', 'Input', 'Process', 'Output', ''], [
-        ['1', 'TB_R_PRA_DAILY_ORDER_MANIFEST, TB_R_PRA_DAILY_ORDER_PART', ('tdnew', 'Get Data Manifest, exclude CROSSDOCK_FLAG = \'X\''), 'Manifest list (regular orders only)', ''],
-        ['2', 'Manifest list', 'ASN Creation: crossdock manifests are not shown; the supplier picks regular (non-crossdock) orders and continues the existing flow', 'TB_T_ASN', ''],
-        ['3', 'TB_T_ASN', 'ASN Submit Creation (existing flow)', 'TB_R_PRA_DAILY_ORDER_MANIFEST, TB_R_PRA_DAILY_ORDER_PART', ''],
+        ['1', 'TB_R_PRA_DAILY_ORDER_MANIFEST, TB_R_PRA_DAILY_ORDER_PART', ('tdnew', 'Get Data Manifest, exclude ' + X), 'Manifest list (regular orders only)', ''],
+        ['2', 'Manifest list', 'Show manifest: crossdock orders are not shown; the supplier chooses part / manifest, insert to draft', 'TB_T_ASN (draft)', ''],
+        ['3', 'TB_T_ASN (draft)', 'Supplier inputs qty and delivery date, [Submit] (existing flow)', 'TB_R_DAILY_ORDER_MANIFEST, TB_R_DAILY_ORDER_PART (insert); TB_R_PRA_DAILY_ORDER_PART (qty reduced)', ''],
     ]),
     [('sec', '4. Logic to add in Operation Desc 2.a (Add Mode, Search Mode Condition)')],
     *table(['No', 'Field / action', 'Current condition', 'To Be condition', ''], [
         ['1', 'Manifest No (textbox)', 'if a.company_cd == b.supplier_cd && c.remaining_qty >= c.delivery_qty',
-         ('tdnew', 'if a.company_cd == b.supplier_cd && c.remaining_qty >= c.delivery_qty && ISNULL(b.CROSSDOCK_FLAG, \'\') <> \'X\''), ''],
-        ['2', 'Order Date (combobox)', 'same as above + b.manifest_no', ('tdnew', 'same as above + ISNULL(b.CROSSDOCK_FLAG, \'\') <> \'X\''), ''],
-        ['3', 'PO No (search criteria, rev. 1.3) and [Search] of the grid', 'existing filter', ('tdnew', 'existing filter + ISNULL(b.CROSSDOCK_FLAG, \'\') <> \'X\''), ''],
+         ('tdnew', "if a.company_cd == b.supplier_cd && c.remaining_qty >= c.delivery_qty && ISNULL(b.CROSS_DOCK_FLAG, '') <> 'X' "
+                   "&& UPPER(ISNULL(c.PALLETIZE_CD, '')) <> 'X'"), ''],
+        ['2', 'Order Date (combobox)', 'same as above + b.manifest_no', ('tdnew', 'same as above + both crossdock conditions'), ''],
+        ['3', 'PO No (search criteria, rev. 1.3) and [Search] of the grid', 'existing filter', ('tdnew', 'existing filter + both crossdock conditions'), ''],
     ]),
-    [('note', 'a = sc.tb_m_user, b = nsp.tb_r_pra_daily_order_manifest, c = nsp.tb_r_pra_daily_order_part (aliases of Operation Desc 2.a).')], [],
+    [('note', 'a = sc.tb_m_user, b = nsp.tb_r_pra_daily_order_manifest, c = nsp.tb_r_pra_daily_order_part (aliases of Operation Desc 2.a). '
+              'PALLETIZE_CD: table and column as in the BCT logic flow (shown here on the pra part).')], [],
     [('sec', '5. Test scenarios')],
     *table(['TC', 'Scenario', 'Data', 'Expected result', ''], [
-        ['1', 'Regular manifest', 'CROSSDOCK_FLAG NULL / blank', 'Shown in Manifest No, Order Date and the grid; ASN created as today', ''],
-        ['2', 'Crossdock manifest', 'CROSSDOCK_FLAG = \'X\'', 'Not shown in Manifest No, Order Date, PO No and the grid', ''],
-        ['3', 'Supplier types a crossdock Manifest No / PO No', 'CROSSDOCK_FLAG = \'X\'', 'No data (message: refer open point 2)', ''],
-        ['4', 'Same supplier and date, regular and crossdock manifests', '1 regular + 1 crossdock', 'Only the regular manifest is listed', ''],
-        ['5', 'Upload file with a crossdock row', 'Palletize Code \'X\' or crossdock manifest', 'Upload rejected by ASN04 (ASN04 CR, message 12 / 13)', ''],
-        ['6', 'Submit a regular ASN', 'Regular manifest', 'Existing result: TB_T_ASN submitted, manifest and part tables updated', ''],
+        ['1', 'Regular order', "CROSS_DOCK_FLAG NULL / blank, Palletize Code not 'X'", 'Shown in Manifest No, Order Date and the grid; ASN created as today', ''],
+        ['2', 'Crossdock order', "CROSS_DOCK_FLAG = 'X' and Palletize Code 'X'", 'Not shown in Manifest No, Order Date, PO No and the grid', ''],
+        ['3', 'Supplier types a crossdock Manifest No / PO No', "CROSS_DOCK_FLAG = 'X'", 'No data (no message)', ''],
+        ['4', 'Same supplier and date, regular and crossdock orders', '1 regular + 1 crossdock', 'Only the regular order is listed', ''],
+        ['5', 'Upload file with a crossdock row', X, 'Crossdock row skipped by ASN04, regular rows uploaded (CR ASN04)', ''],
+        ['6', 'Submit a regular ASN', 'Regular order', 'Existing result: TB_R_DAILY_ORDER_MANIFEST / PART inserted, qty of TB_R_PRA_DAILY_ORDER_PART reduced', ''],
+        ['7', 'Draft ASN of a crossdock order made before go-live', 'TB_T_ASN draft', 'Existing behaviour (no change)', ''],
     ]),
-    [('sec', '6. Open points')],
-    *table(['No', 'Question', 'Proposal', 'Status', ''], [
-        ['1', 'Column name in TB_R_PRA_DAILY_ORDER_MANIFEST: CROSSDOCK_FLAG (this CR) or CROSS_DOCK_FLAG (NSP crossdock specs)?', 'Use the real column name of the table', 'To confirm', ''],
-        ['2', 'Supplier types a crossdock Manifest No / PO No: only "no data", or a message?',
-         'Info message: "Manifest {0} is a crossdock order. Please create the ASN in ASN Creation (Crossdock)."', 'To decide', ''],
-        ['3', 'Palletize Code \'X\' is rejected in the upload. Should the screen also exclude it, or is CROSSDOCK_FLAG enough?', 'CROSSDOCK_FLAG only in the screen', 'To confirm', ''],
-        ['4', 'Draft ASNs (TB_T_ASN) of crossdock manifests made before go-live', 'Keep; can still be submitted once', 'To confirm', ''],
+    [('sec', '6. Decisions (19-Nov)')],
+    *table(['FB', 'Question', 'Decision', 'Status', ''], [
+        ['FB-171', 'Column name of the crossdock flag', 'CROSS_DOCK_FLAG, as in the BCT logic flow', 'Done', ''],
+        ['FB-185', 'Message when a crossdock Manifest / PO is typed', 'No message (no data)', 'Done', ''],
+        ['FB-186', "Screen also excludes Palletize Code 'X'?", "Yes: CROSS_DOCK_FLAG 'X' and Palletize Code 'X' are excluded", 'Done', ''],
+        ['FB-187', 'Draft ASN (TB_T_ASN) of crossdock orders before go-live', 'Existing behaviour, no rule', 'Done', ''],
+        ['FB-190', "Is Palletize Code 'X' always crossdock?", "Yes, always crossdock with CROSS_DOCK_FLAG 'X'", 'Done', ''],
     ]),
 ]
 
-ASN04 = header('ASN04_Sub Manifest(ASN) to Upload (Batch)', 'UISS-Batch', 'CR Crossdock: crossdock orders rejected in ASN Upload') + [
-    [('title', 'CR Crossdock: ASN Upload rejects crossdock orders (regular orders only)')], [],
+ASN04 = header('ASN04_Sub Manifest(ASN) to Upload (Batch)', 'UISS-Batch', 'CR Crossdock: validation error for crossdock rows in ASN Upload') + [
+    [('title', 'CR Crossdock: ASN Upload gives a validation error for crossdock rows (regular orders only)')], [],
+    *revision([['0.1', '14-Nov-2026', 'First version from ASN_Existing.xlsx', '[Author]', ''],
+               ['0.2', '19-Nov-2026', 'Column CROSS_DOCK_FLAG (BCT logic flow); messages 8 and 9 deleted (FB-189); Palletize Code X or a crossdock '
+                                      'manifest = validation error (messages 12 / 13), existing error rule: the upload is not saved', '[Author]', '']]),
     [('sec', '1. Background')], *BACKGROUND,
     [('sec', '2. Change summary')],
     *table(['No', 'Item', 'Current', 'To Be', 'Impacted sheet'], [
-        ['1', 'Business validation: Palletize Code', 'Palletize Code \'X\' is uploaded (with the crossdock delivery qty check, message 8).',
-         ('tdnew', 'Row with Palletize Code = \'X\' is rejected (message 12).'), 'Func Flow, Logging Message'],
+        ['1', 'Business validation: Palletize Code', "Palletize Code 'X' is uploaded (with the crossdock delivery qty check, message 8).",
+         ('tdnew', "Row with Palletize Code = 'X' -> validation error (message 12)."), 'Func Flow, Logging Message'],
         ['2', 'Business validation: crossdock manifest', '-',
-         ('tdnew', 'Row whose Manifest No (PO) has CROSSDOCK_FLAG = \'X\' in TB_R_PRA_DAILY_ORDER_MANIFEST is rejected (message 13).'), 'Func Flow, Logging Message'],
-        ['3', 'Result of the upload', 'Existing: any error = finished with error (message 7b).',
-         ('tdnew', 'Same: the upload is not saved to TB_T_ASN; the supplier creates the crossdock ASN in ASN Creation (Crossdock, XDOCK).'), 'Func Flow'],
-        ['4', 'Template Upload', 'Supplier Cd, Supplier Plant, Sub Supp Cd, Sub Supp Plant, Manifest No, Item No, Part No, Qty Delivery, Delivery Date, Palletize Code, Case No, Route, Rit, Supplier Ref No.1, No.2',
+         ('tdnew', "Row whose Manifest No has CROSS_DOCK_FLAG = 'X' in TB_R_PRA_DAILY_ORDER_MANIFEST -> validation error (message 13)."), 'Func Flow, Logging Message'],
+        ['3', 'Result of the upload', 'Existing: any error = finished with error (message 7b), nothing saved.',
+         ('tdnew', 'Same existing rule: with a crossdock row the upload finishes with error and nothing is written to TB_T_ASN. The supplier removes the '
+                   'crossdock rows, uploads again, and creates their ASN on the other screen ASN Creation (Crossdock, XD10).'), 'Func Flow'],
+        ['4', 'Messages 8 (delivery qty for crossdock order) and 9 (case no vs palletize code)', 'Existing crossdock checks',
+         ('tdnew', 'Deleted (FB-189)'), 'Func Flow, Logging Message'],
+        ['5', 'Template Upload', 'Supplier Cd, Supplier Plant, Sub Supp Cd, Sub Supp Plant, Manifest No, Item No, Part No, Qty Delivery, Delivery Date, Palletize Code, Case No, Route, Rit, Supplier Ref No.1, No.2',
          'No change of columns; Palletize Code and Manifest No are used by the new checks.', 'Template Upload'],
     ]),
     [('sec', '3. Process flow')],
     *table(['Step', 'Input', 'Process', 'Output', ''], [
-        ['1', 'Upload file (template)', ('tdnew', 'Upload ASN, exclude: 1) Palletize Code \'X\'; 2) PO / Manifest No with CROSSDOCK_FLAG = \'X\''), 'TB_T_ASN (regular orders only)', ''],
-        ['2', 'TB_T_ASN', 'ASN Submit Creation (existing flow)', 'TB_R_PRA_DAILY_ORDER_MANIFEST, TB_R_PRA_DAILY_ORDER_PART', ''],
+        ['1', 'Upload file (template)', ('tdnew', "Upload ASN: validation error for Palletize Code 'X' (12) and CROSS_DOCK_FLAG 'X' manifest (13)"), 'Log (error) or TB_T_ASN (draft)', ''],
+        ['2', 'TB_T_ASN (draft)', 'Submit (existing flow, as in ASN Creation)', 'TB_R_DAILY_ORDER_MANIFEST, TB_R_DAILY_ORDER_PART (insert); TB_R_PRA_DAILY_ORDER_PART (qty reduced)', ''],
     ]),
     [('sec', '4. Logic (new business validation, after the duplication check (4b) and before insert into temporary (5a / 5b))')],
     *table(['No', 'Step', 'Logic', '', ''], [
         ['1', 'Insert info log', 'Insert info log into [Log Detail]: Executing {0} process, {0} = "Crossdock order checking"', '', ''],
-        ['2', 'Palletize Code check', ('tdnew', 'For each row: if UPPER(TRIM(PALLETIZE_CD)) = \'X\' then insert error log (message 12) and go to the next row'), '', ''],
-        ['3', 'Crossdock manifest check', ('tdnew', 'Get CROSSDOCK_FLAG from TB_R_PRA_DAILY_ORDER_MANIFEST where MANIFEST_NO = [row] Manifest No (and supplier of the row). '
-                                                      'If CROSSDOCK_FLAG = \'X\' then insert error log (message 13)'), '', ''],
+        ['2', 'Palletize Code check', ('tdnew', "For each row: if UPPER(TRIM(PALLETIZE_CD)) = 'X' then insert error log (message 12) and go to the next row"), '', ''],
+        ['3', 'Crossdock manifest check', ('tdnew', 'Get CROSS_DOCK_FLAG from TB_R_PRA_DAILY_ORDER_MANIFEST where MANIFEST_NO = [row] Manifest No (and supplier of the row). '
+                                                    "If CROSS_DOCK_FLAG = 'X' then insert error log (message 13)"), '', ''],
         ['4', 'End', 'If any error exists: finished with error (message 7b), no data is written to TB_T_ASN (existing rule). Else go to the next process.', '', ''],
     ]),
-    [('sec', '5. Logging Message (new)')],
+    [('sec', '5. Logging Message')],
     *table(['No', 'Event / Cause', 'Type', 'Log Message', 'System & User Action'], [
-        ['12', 'Event information / Palletize Code X (crossdock)', 'Error',
+        ['8', 'Delivery qty for crossdock order', '-', ('tdnew', 'Deleted (FB-189)'), '-'],
+        ['9', 'Case No vs Palletize Code', '-', ('tdnew', 'Deleted (FB-189)'), '-'],
+        ['12', 'Validation / Palletize Code X (crossdock)', 'Error',
          ('tdnew', 'Line {0} : Palletize Code X is for crossdock order. Please create the ASN in ASN Creation (Crossdock).\n{0} : Row num'),
          'System: write into table log message. User: remove the row and create the ASN in ASN Creation (Crossdock).'],
-        ['13', 'Event information / Crossdock manifest', 'Error',
+        ['13', 'Validation / crossdock manifest', 'Error',
          ('tdnew', 'Line {0} : Manifest No {1} is a crossdock order. Please create the ASN in ASN Creation (Crossdock).\n{0} : Row num\n{1} : Manifest No'),
          'System: write into table log message. User: remove the row and create the ASN in ASN Creation (Crossdock).'],
     ]),
     [('sec', '6. Test scenarios')],
     *table(['TC', 'Scenario', 'Data', 'Expected result', ''], [
-        ['1', 'Regular rows only', 'Palletize Code not X, CROSSDOCK_FLAG blank', 'Uploaded as today (TB_T_ASN)', ''],
-        ['2', 'Row with Palletize Code X', 'PALLETIZE_CD = X', 'Error message 12 for the line; nothing uploaded', ''],
-        ['3', 'Row with a crossdock manifest', 'CROSSDOCK_FLAG = \'X\'', 'Error message 13 for the line; nothing uploaded', ''],
-        ['4', 'Palletize Code in lower case', 'PALLETIZE_CD = x', 'Same as TC 2 (proposal)', ''],
-        ['5', 'Regular and crossdock rows in one file', '1 regular + 1 crossdock', 'Whole upload fails, the log lists the crossdock lines (refer open point 2)', ''],
-        ['6', 'Both checks on one row', 'Palletize X and CROSSDOCK_FLAG X', 'Message 12 only (first check)', ''],
+        ['1', 'Regular rows only', 'Palletize Code not X, CROSS_DOCK_FLAG blank', 'Uploaded as today (TB_T_ASN draft)', ''],
+        ['2', 'Row with Palletize Code X', 'PALLETIZE_CD = X', 'Error message 12 for the line; finished with error, nothing uploaded', ''],
+        ['3', 'Row with a crossdock manifest', "CROSS_DOCK_FLAG = 'X'", 'Error message 13 for the line; finished with error, nothing uploaded', ''],
+        ['4', 'Palletize Code in lower case', 'PALLETIZE_CD = x', 'Same as TC 2', ''],
+        ['5', 'Regular and crossdock rows in one file', '2 regular + 1 crossdock', 'Whole upload fails (existing rule); the log lists the crossdock line', ''],
+        ['6', 'Both checks on one row', "Palletize X and CROSS_DOCK_FLAG X", 'Message 12 only (first check)', ''],
     ]),
-    [('sec', '7. Open points')],
-    *table(['No', 'Question', 'Proposal', 'Status', ''], [
-        ['1', 'Column name in TB_R_PRA_DAILY_ORDER_MANIFEST: CROSSDOCK_FLAG or CROSS_DOCK_FLAG?', 'Use the real column name of the table', 'To confirm', ''],
-        ['2', 'A file with regular and crossdock rows: reject the whole file (existing rule), or upload the regular rows and skip the crossdock ones?', 'Reject the whole file (existing rule)', 'To decide', ''],
-        ['3', 'Existing crossdock rules of ASN04 (message 8: delivery qty for crossdock order; message 9: case no vs palletize code) are no longer reached for Palletize X: remove them?', 'Mark as not used', 'To decide', ''],
-        ['4', 'Is Palletize Code \'X\' always a crossdock order (also for a manifest without CROSSDOCK_FLAG)?', '-', 'To confirm', ''],
-        ['5', 'ASN_Existing.xlsx marks Supplier Cd, Supplier Plant, Sub Supp Cd, Sub Supp Plant in orange: any change for these columns?', '-', 'To confirm', ''],
+    [('sec', '7. Decisions (19-Nov) and open points')],
+    *table(['FB', 'Question', 'Decision', 'Status', ''], [
+        ['FB-171', 'Column name of the crossdock flag', 'CROSS_DOCK_FLAG, as in the BCT logic flow', 'Done', ''],
+        ['FB-188', 'File with regular and crossdock rows', 'Validation error (12 / 13); existing error rule, nothing uploaded (19-Nov, revised)', 'Done', ''],
+        ['FB-189', 'Existing crossdock messages 8 and 9', 'Deleted', 'Done', ''],
+        ['FB-190', "Is Palletize Code 'X' always crossdock?", "Yes, always crossdock with CROSS_DOCK_FLAG 'X'", 'Done', ''],
+        ['-', 'ASN_Existing.xlsx marks Supplier Cd, Supplier Plant, Sub Supp Cd, Sub Supp Plant in orange: any change for these columns?', '-', 'To confirm', ''],
     ]),
 ]
 
@@ -287,3 +308,18 @@ if __name__ == '__main__':
               os.path.join(HERE, 'DR_UISS_ASN03_Delivery_Note_ASN_Creation_Screen.xlsx'), ASN03)
     add_sheet(os.path.join(HERE, 'source', 'DR_UISS_ASN04_Delivery_Note_ASN_Upload_Batch.xlsx'),
               os.path.join(HERE, 'DR_UISS_ASN04_Delivery_Note_ASN_Upload_Batch.xlsx'), ASN04)
+    from cr_standalone import write
+    img = lambda n: os.path.join(HERE, 'flow_img', n + '.png')
+    write(os.path.join(HERE, 'CR_Crossdock_ASN03_ASN_Creation.xlsx'), ASN03, [
+        ('AS-IS: ASN Creation lists regular and crossdock orders', img('asn03_as_is'), []),
+        ('TO-BE: crossdock orders are not listed; their ASN is made in ASN Creation (Crossdock)', img('asn03_to_be'), [
+            "Get Data Manifest excludes CROSS_DOCK_FLAG = 'X' (TB_R_PRA_DAILY_ORDER_MANIFEST) and Palletize Code = 'X' (TB_R_PRA_DAILY_ORDER_PART).",
+            'A typed crossdock Manifest No / PO No gives no data (no message).',
+            'Crossdock orders: ASN on another screen, ASN Creation (Crossdock, XD10). Regular orders: show manifest, choose part / manifest, insert to draft (TB_T_ASN), input qty and delivery date, [Submit] (insert daily order manifest / part, reduce pra part qty): no change.'])])
+    write(os.path.join(HERE, 'CR_Crossdock_ASN04_ASN_Upload.xlsx'), ASN04, [
+        ('AS-IS: every row is uploaded, crossdock rows included (crossdock checks msg 8 / 9)', img('asn04_as_is'), []),
+        ('TO-BE: a crossdock row gives a validation error', img('asn04_to_be'), [
+            "New checks after the duplication check: Palletize Code 'X' -> validation error 12; Manifest with CROSS_DOCK_FLAG 'X' -> validation error 13.",
+            'Existing error rule: any error -> finished with error (7b), nothing written to TB_T_ASN.',
+            'The supplier removes the crossdock rows, uploads again, and creates their ASN on the other screen ASN Creation (Crossdock, XD10).',
+            'Crossdock checks msg 8 (delivery qty) and msg 9 (case no / palletize) are deleted.'])])

@@ -1,11 +1,11 @@
 import type { TabView } from '../../../types';
 
 const LABEL: Record<TabView, string> = {
-  part: 'Part List',
-  dest: 'Mapping per Destination',
+  part: 'Kanban Crossdock Master',
+  dest: 'Export Crossdock Master',
 };
 
-/** Each account opens exactly one sub-menu (Procurement: Part List, D/S: Mapping per Destination),
+/** Each account opens exactly one sub-menu (Procurement: Kanban Crossdock Master, D/S: Export Crossdock Master),
  * so the tab is a wayfinding label only. */
 export function ViewTabs({ view }: { view: TabView }) {
   const tabs: TabView[] = [view];

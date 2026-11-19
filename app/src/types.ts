@@ -13,8 +13,10 @@ export interface DestAllocation {
    * row where only the destination code (cd) has been typed in. */
   d: string;
   /** Destination code override — used for manually-added rows in the
-   * "Mapping per Destination" inline editor. */
+   * "Export Crossdock Master" inline editor. */
   cd?: string;
+  /** Order Type of the destination row (system master: **, C, 9, V). The same destination may appear twice with different order types. */
+  ot?: string;
   /** Allocation, case/day. String while an input is mid-edit. */
   al: number | string;
   st: PartStatus;
@@ -54,9 +56,9 @@ export interface PartQuery {
   dest: string;
   st: 'all' | 'active' | 'inactive' | 'candidate';
   sync: 'all' | 'notsync' | 'waiting' | 'success' | 'failed';
-  /** Calculation period filter for "Mapping per Destination", e.g. "Sep 2026", or 'all'. */
+  /** Calculation period filter for "Export Crossdock Master", e.g. "Sep 2026", or 'all'. */
   per: string;
-  /** Last Update sort order for Part List. */
+  /** Last Update sort order for Kanban Crossdock Master. */
   sort: 'default' | 'pn_asc' | 'dt_desc' | 'dt_asc';
 }
 

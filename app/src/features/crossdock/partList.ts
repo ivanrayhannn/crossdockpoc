@@ -3,12 +3,12 @@ import { num, parseDt, syncBadge } from '../../lib/format';
 import type { Part, PartQuery } from '../../types';
 import { HIST_BY_PART } from '../../data/seed';
 
-/** Rows of the Part List table for a query: filtered, then sorted. Shared by the table and Export Excel. */
+/** Rows of the Kanban Crossdock Master table for a query: filtered, then sorted. Shared by the table and Export Excel. */
 export function selectParts(parts: Part[], q: PartQuery): Part[] {
   const part = q.part.toLowerCase();
   const name = q.name.toLowerCase();
   const filtered = parts.filter(
-    (p) => (!part || p.p.toLowerCase().includes(part)) && (!name || p.n.toLowerCase().includes(name)) && (q.st === 'all' || p.st.toLowerCase() === q.st),
+    (p) => (!part || p.p.toLowerCase().includes(part)) && (!name || p.n.toLowerCase().includes(name)) && (q.st === 'all' || p.st.toLowerCase() === q.st) && (q.per === 'all' || p.per === q.per),
   );
   if (q.sort === 'default' || q.sort === 'pn_asc') return filtered.sort((a, b) => a.p.localeCompare(b.p));
   if (q.sort === 'dt_desc') return filtered.sort((a, b) => parseDt(b.dt) - parseDt(a.dt));
@@ -35,8 +35,9 @@ export function partAudit(p: Part): { createdDt: string; createdBy: string; upda
   return { createdDt: first ? first.w : p.dt, createdBy: first ? first.by : p.by, updatedDt: p.dt, updatedBy: p.by };
 }
 
-/** Sheet 1: the Part List as shown on the screen, plus Effective Start Date. Information only. */
+/** Sheet 1: the Kanban Crossdock Master as shown on the screen, plus Effective Start Date. Information only. */
 const LIST_COLUMNS: (Column<Part> & { width: number })[] = [
+  { header: { value: 'Period', ...HEADER }, cell: (p) => ({ value: p.per }), width: 12 },
   { header: { value: 'Part Number', ...HEADER }, cell: (p) => ({ value: p.p }), width: 18 },
   { header: { value: 'Part Name', ...HEADER }, cell: (p) => ({ value: p.n }), width: 32 },
   { header: { value: 'Min MAD', ...HEADER, align: 'right' }, cell: (p) => (p.minMad === '' ? null : { value: num(p.minMad), format: NUMBER_FORMAT }), width: 12 },
@@ -66,7 +67,7 @@ const UPLOAD_COLUMNS: (Column<Part> & { width: number })[] = [
 ];
 
 /**
- * Downloads the Part List as .xlsx: sheet 1 holds the rows of the active filter (information only),
+ * Downloads the Kanban Crossdock Master as .xlsx: sheet 1 holds the rows of the active filter (information only),
  * sheet "Upload" holds every registered part in the upload template, ready to edit and upload again.
  */
 export async function exportPartsXlsx(rows: Part[], allParts: Part[]): Promise<void> {
@@ -74,7 +75,7 @@ export async function exportPartsXlsx(rows: Part[], allParts: Part[]): Promise<v
   const stamp = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
   const uploadRows = [...allParts].sort((a, b) => a.p.localeCompare(b.p));
   await writeExcelFile([
-    { sheet: 'Part List', data: getSheetData(rows, LIST_COLUMNS), columns: LIST_COLUMNS.map((c) => ({ width: c.width })) },
+    { sheet: 'Kanban Crossdock Master', data: getSheetData(rows, LIST_COLUMNS), columns: LIST_COLUMNS.map((c) => ({ width: c.width })) },
     { sheet: 'Upload', data: getSheetData(uploadRows, UPLOAD_COLUMNS), columns: UPLOAD_COLUMNS.map((c) => ({ width: c.width })) },
-  ]).toFile(`Crossdock_Part_List_${stamp}.xlsx`);
+  ]).toFile(`Crossdock_Kanban_Master_${stamp}.xlsx`);
 }

@@ -6,27 +6,27 @@
 
 | ID | Event | Cause | Type | Message | Action |
 |---|---|---|---|---|---|
-| **Part List - Search Operation** |  |  |  |  |  |
+| **Kanban Crossdock Master - Search Operation** |  |  |  |  |  |
 | MSG1 | Change search criteria | No part matches the criteria | Info | No matching parts - Loosen the search criteria or reset all filters. | Change the criteria or click [Reset filter] |
-| MSG2 | Open Part List | No part registered yet | Info | No crossdock parts registered yet | Click [Upload Excel] or [Add one part] |
-| **Part List - Add / Edit Operation** |  |  |  |  |  |
+| MSG2 | Open Kanban Crossdock Master | No part registered yet | Info | No crossdock parts registered yet | Click [Upload Excel] or [Add one part] |
+| **Kanban Crossdock Master - Add / Edit Operation** |  |  |  |  |  |
 | MSG3 | Click [Save] button | Part No already registered (concurrent add) | Error | Duplication found for {Part No} | Close the modal and search the part |
 | MSG4 | Click [Save] button | Record changed by another user | Error | Error in Update because of concurrency check. | Close the modal, refresh and edit again |
 | MSG5 | Hover disabled [Save] | Part No not selected | Info | Part No is required | Select a Part No |
 | MSG6 | Hover disabled [Save] | Pcs/Case not filled | Info | Enter Pcs/Case first (step 2) | Fill Pcs/Case |
 | MSG7 | Hover disabled [Save] | Max Case/Day not filled | Info | Enter Max Case/Day (step 2) | Fill Max Case/Day |
 | MSG8 | Type in 'Part No' | No unregistered part matches the text | Info | Part not found | Check the Part No |
-| MSG9 | Click [Save] button | Part saved successfully | Info | Saved successfully - {Part No} · {Part Name} has been added/updated. It is now at the top of the Part List. | Click [OK] |
+| MSG9 | Click [Save] button | Part saved successfully | Info | Saved successfully - {Part No} · {Part Name} has been added/updated. It is now at the top of the Kanban Crossdock Master. | Click [OK] |
 | MSG10 | Hover 'Effective Start Date' | Saved status is Active / Inactive | Info | Can only be changed while the status is still Candidate | - |
-| **Part List - Upload Operation** |  |  |  |  |  |
-| MSG11 | Click [Validate file] button | Upload validated and saved | Info | Saved successfully - Upload completed. The file has been validated and the part settings have been saved to the Part List. | Click [OK] |
-| **Part List - History Operation** |  |  |  |  |  |
+| **Kanban Crossdock Master - Upload Operation** |  |  |  |  |  |
+| MSG11 | Click [Validate file] button | Upload validated and saved | Info | Saved successfully - Upload completed. The file has been validated and the part settings have been saved to the Kanban Crossdock Master. | Click [OK] |
+| **Kanban Crossdock Master - History Operation** |  |  |  |  |  |
 | MSG12 | Click History icon | Part has no history | Info | No change history for this part yet. | Click [Close] |
-| **Part List - Export Operation** |  |  |  |  |  |
+| **Kanban Crossdock Master - Export Operation** |  |  |  |  |  |
 | MSG13 | Click [Export Excel] button | Excel file cannot be created | Error | Export Excel failed. Please try again. | Click [Export Excel] again; contact administrator if it persists |
-| MSG14 | Change 'Max Case/Day' in Edit / click [Save] | Max Case/Day below the total Case/Day mapped in the ongoing period | Error | Max Case/Day can not be less than the mapped total ({n} case/day) of the ongoing period. Reduce the mapping in Mapping per Destination first. | Reduce the mapping in Mapping per Destination first, or enter a higher Max Case/Day |
+| MSG14 | Change 'Max Case/Day' in Edit / click [Save] | Max Case/Day below the total Case/Day mapped in the ongoing period | Error | Max Case/Day can not be less than the mapped total ({n} case/day) of the ongoing period. Reduce the mapping in Export Crossdock Master first. | Reduce the mapping in Export Crossdock Master first, or enter a higher Max Case/Day |
 | MSG15 | Hover disabled [Save] | Min MAD blank or not a whole number | Info | Enter Min MAD (whole number, 0 or more) | Fill Min MAD |
-| **Part List - Calculation Operation** |  |  |  |  |  |
+| **Kanban Crossdock Master - Calculation Operation** |  |  |  |  |  |
 | MSG16 | Click [Run calculation] button | DAD Volume Calculation completed | Info | Calculation completed - DAD volume calculation completed. Part statuses have been updated from the average MAD against Min MAD. | Click [OK] |
 | MSG17 | Hover disabled [Run calculation] | Scheduled run has not failed 3 times | Info | Enabled only when the scheduled run has failed 3 times | - |
 | **Mapping - Search Operation** |  |  |  |  |  |
@@ -38,7 +38,7 @@
 | MSG22 | Open panel of a past period | Period is not ongoing | Info | Past period - read only | - |
 | **Mapping - Upload Operation** |  |  |  |  |  |
 | MSG23 | Hover disabled [Upload Excel] | Past period or All periods selected | Info | Past period - read only. Select the ongoing period to upload. | Select the ongoing period |
-| MSG24 | Click [Validate file] button | Upload validated and saved | Info | Saved successfully - Upload completed. The file has been validated and the destination mapping has been saved to Mapping per Destination. | Click [OK] |
+| MSG24 | Click [Validate file] button | Upload validated and saved | Info | Saved successfully - Upload completed. The file has been validated and the destination mapping has been saved to Export Crossdock Master. | Click [OK] |
 | **Mapping - Save Operation** |  |  |  |  |  |
 | MSG25 | Click [Save] button | Mapping changed by another user | Error | Error in Update because of concurrency check. | Cancel, refresh and edit again |
 | **Mapping - Export Operation** |  |  |  |  |  |
@@ -55,12 +55,12 @@
 | ID | Event | Cause | Type | Message | Action | Exception |
 |---|---|---|---|---|---|---|
 | LOG1 | Click [Save] button | Database error on insert/update of TB_M_PART_CANDIDATE | Error | Failed to save part <PART_NO>: <DB error message>. | Show [Corresponding Screen Message] on screen (TBD) | Y |
-| LOG2 | Click [Export Excel] button | Excel file generation error | Error | Export Excel of Part List failed: <error message>. | Display Message no. 13 | Y |
-| - | Click [Validate file] button | Upload processing | Info | Logging is handled by the Part List Upload batch (refer UISS-Batch "XD02 Cross Dock Part Master Upload Batch"). | - | N |
+| LOG2 | Click [Export Excel] button | Excel file generation error | Error | Export Excel of Kanban Crossdock Master failed: <error message>. | Display Message no. 13 | Y |
+| - | Click [Validate file] button | Upload processing | Info | Logging is handled by the Kanban Crossdock Master Upload batch (refer UISS-Batch "XD02 Cross Dock Part Master Upload Batch"). | - | N |
 | LOG3 | Click [Save] button | Database error on save of TB_M_PART_CANDIDATE_DEST | Error | Failed to save mapping of part <PART_NO>, period <PERIOD>: <DB error message>. | Show [Corresponding Screen Message] on screen (TBD) | Y |
 | LOG4 | XD06 / XD07 | GTOPAS or AP POLE rejects a part | Error | Logging is done by XD06 / XD07 (refer UISS-Batch XD06 / XD07); the chip shows the result. | Status Failed; Display Message no. 28 on the chip | N |
-| LOG5 | Click [Export Excel] button | Excel file generation error | Error | Export Excel of Mapping per Destination failed: <error message>. | Display Message no. 26 | Y |
-| - | Click [Validate file] button | Upload processing | Info | Logging is handled by the Mapping per Destination Upload batch (refer UISS-Batch "XD03 Part and Destination Mapping Upload Batch"). | - | N |
+| LOG5 | Click [Export Excel] button | Excel file generation error | Error | Export Excel of Export Crossdock Master failed: <error message>. | Display Message no. 26 | Y |
+| - | Click [Validate file] button | Upload processing | Info | Logging is handled by the Export Crossdock Master Upload batch (refer UISS-Batch "XD03 Part and Destination Mapping Upload Batch"). | - | N |
 
 ## XD02 – Cross Dock Part Master Upload Batch
 
@@ -118,7 +118,7 @@
 | LOG3 | Process 1: Range of months | Range is not set in the system master | Error | Range of months for the DAD volume calculation is not set. | system: Stop. STATUS = FAILED.; user: User contact PIC |
 | LOG4 | Process 1: Part skipped | Effective Start Date after the run date | Info | Part No <PART_NO> skipped: effective start date <DATE>. | system: Continue.; user: - |
 | LOG5 | Process 1: Save | Insert / update fails | Error | Cannot save the calculation of Part No <PART_NO>: <ERROR_DETAIL>. | system: Roll back. STATUS = FAILED. Retry.; user: User contact PIC |
-| LOG6 | Process 1: Retry exhausted | Scheduled run and 3 retries failed | Warning | DAD volume calculation failed 3 times. Manual run is enabled on Part List. | system: Enable [Run calculation] on Part List.; user: Check the cause, then click [Run calculation]. |
+| LOG6 | Process 1: Retry exhausted | Scheduled run and 3 retries failed | Warning | DAD volume calculation failed 3 times. Manual run is enabled on Kanban Crossdock Master. | system: Enable [Run calculation] on Kanban Crossdock Master.; user: Check the cause, then click [Run calculation]. |
 | LOG7 | Process 1: Unexpected error | Any other system error | Critical | Unexpected error: <ERROR_DETAIL>. | system: Roll back. STATUS = FAILED. Retry.; user: User contact PIC |
 | LOG8 | Process 2: Batch start | Batch is called | Info | Mapping destination calculation started (<RUN_TYPE>, retry <RETRY_NO>). Period <PERIOD>, range <MONTH_FROM> - <MONTH_TO>. | system: Write the log.; user: - |
 | LOG9 | Process 2: Batch end | Batch finishes | Info | Mapping destination calculation ended. Status <STATUS>, parts <COUNT>, mapping changed <CHANGED>. | system: Write the log.; user: - |
@@ -126,7 +126,7 @@
 | LOG11 | Process 2: Destination check | Destination code not in TB_M_H0125_DESTINATION | Error | Destination code <DEST_CODE> of Part No <PART_NO> not found in TB_M_H0125_DESTINATION. | system: Roll back. STATUS = FAILED. Retry.; user: Register the destination in TB_M_H0125_DESTINATION, then run again. |
 | LOG12 | Process 2: Destinations limited | More destinations than Max Case/Day | Info | Part No <PART_NO>: <COUNT> destinations, limited to Max Case/Day <MAX>. | system: Continue.; user: - |
 | LOG13 | Process 2: Save | Insert / update fails | Error | Cannot save the mapping of Part No <PART_NO>, period <PERIOD>: <ERROR_DETAIL>. | system: Roll back. STATUS = FAILED. Retry.; user: User contact PIC |
-| LOG14 | Process 2: Retry exhausted | Scheduled run and 3 retries failed | Warning | Mapping destination calculation failed 3 times. Manual run is enabled on Mapping per Destination. | system: Enable [Run calculation] on Mapping per Destination.; user: Check the cause, then click [Run calculation]. |
+| LOG14 | Process 2: Retry exhausted | Scheduled run and 3 retries failed | Warning | Mapping destination calculation failed 3 times. Manual run is enabled on Export Crossdock Master. | system: Enable [Run calculation] on Export Crossdock Master.; user: Check the cause, then click [Run calculation]. |
 | LOG15 | Process 2: Unexpected error | Any other system error | Critical | Unexpected error: <ERROR_DETAIL>. | system: Roll back. STATUS = FAILED. Retry.; user: User contact PIC |
 
 ## XD06 – IF Cross Dock Master to GTOPAS
@@ -140,6 +140,7 @@
 | LOG3 | Register / delete | Row registered or deleted on the screen | Info | <REGISTER / DELETE> <PART_NO> <DEST_CODE>: <GTOPAS message>. | system: Write the log.; user: - |
 | LOG4 | Error (try-catch) | Login, screen, timeout, GTOPAS error message, NSP download or Excel error | Error | RPA to GTOPAS stopped at <STEP> <PART_NO> <DEST_CODE>: <ERROR_DETAIL>. All Waiting parts Failed. | system: Stop the bot. IF_STATUS = 2 for every Waiting part.; user: Click [Sync] again; contact PIC if it persists. |
 | LOG5 | Unexpected error | Any other system error | Critical | Unexpected error: <ERROR_DETAIL>. | system: Stop. STATUS = ERROR. All Waiting parts Failed.; user: User contact PIC |
+| LOG6 | Notification email | End of the run (SUCCESS / FAILED) | Info | Notification email <SUCCESS / FAILED> of run <RUN_ID> sent to <recipients>. | system: Write the log.; user: Read the email; FAILED: click [Sync] again. |
 
 ## XD07 – IF Cross Dock Master to AP POLE
 
@@ -152,6 +153,7 @@
 | LOG3 | Change done | Part or destination changed on the screen | Info | <ADD / EDIT / DELETE> <PART_NO> <BUYER_PD>: <AP POLE message>. | system: Write the log.; user: - |
 | LOG4 | Error (try-catch) | Login, screen, timeout, AP POLE error message or source file error | Error | RPA to AP POLE stopped at <STEP> <PART_NO> <BUYER_PD>: <ERROR_DETAIL>. All Waiting parts Failed. | system: Stop the bot. IF_STATUS = 2 for every Waiting part.; user: Click [Sync] again; contact PIC if it persists. |
 | LOG5 | Unexpected error | Any other system error | Critical | Unexpected error: <ERROR_DETAIL>. | system: Stop. STATUS = ERROR. All Waiting parts Failed.; user: User contact PIC |
+| LOG6 | Notification email | End of the run (SUCCESS / FAILED) | Info | Notification email <SUCCESS / FAILED> of run <RUN_ID> sent to <recipients>. | system: Write the log.; user: Read the email; FAILED: click [Sync] again. |
 
 ## XD08 – Order Control Information to NSP Batch
 

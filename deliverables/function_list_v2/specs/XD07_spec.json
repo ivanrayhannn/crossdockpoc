@@ -6,7 +6,7 @@
   "function_name": "XD07 RPA Cross Dock Master to AP POLE",
   "created_date": "18-Oct-26",
   "created_by": "FID Rayhan",
-  "updated_date": "18-Nov-26",
+  "updated_date": "19-Nov-26",
   "updated_by": "FID Rayhan"
  },
  "revisions": [
@@ -43,14 +43,28 @@
    "author": "FID Rayhan",
    "date": "18-Nov-26",
    "reviewed_by": "",
-   "description": "Sheet \"Active to Inactive\" removed (18-Nov): Inactive parts with No Sync / Failed are taken by [Sync] by their status. Parts to delete = sheet Part List, Status Inactive, Sync Status Waiting."
+   "description": "Sheet \"Active to Inactive\" removed (18-Nov): Inactive parts with No Sync / Failed are taken by [Sync] by their status. Parts to delete = sheet Kanban Crossdock Master, Status Inactive, Sync Status Waiting."
+  },
+  {
+   "revision": "0.6",
+   "author": "FID Rayhan",
+   "date": "19-Nov-26",
+   "reviewed_by": "",
+   "description": "Notification email of the RPA (Power Automate): cases SUCCESS / FAILED / bot not started, recipients, subject, body, attachment, retry (4.6); LOG6."
+  },
+  {
+   "revision": "0.7",
+   "author": "FID Rayhan",
+   "date": "19-Nov-26",
+   "reviewed_by": "",
+   "description": "Effective Month / Year = period (MM, YYYY); Current then Next; Order Type of the row; order of the screens when Max Case/Day goes down (19-Nov)."
   }
  ],
  "doc_type": "batch",
  "general": {
   "objective": [
    "To make the cross dock master of AP POLE equal to NSP by an RPA process on the AP POLE web screens (decided 17-Nov, replaces the SFTP interface file): part level on WLM9Q890 Cross Dock Kanban Part Master, destination level on WLM9Q860 Export Customer Cross Dock Master.",
-   "Source data: the Export Excel files of XD01, downloaded by the bot itself after [Sync] (decided 17-Nov): Part List (Status, Part Name, Pcs/Case, Max Case/Day), Mapping per Destination of the ongoing period (Destination Code, Dest Case/Day, Last Sync Date); only the parts with Sync Status Waiting.",
+   "Source data: the Export Excel files of XD01, downloaded by the bot itself after [Sync] (decided 17-Nov): Kanban Crossdock Master (Status, Part Name, Pcs/Case, Max Case/Day), Export Crossdock Master of the ongoing period (Destination Code, Dest Case/Day, Last Sync Date); only the parts with Sync Status Waiting.",
    "Part level: a part that became Active is added (or edited when AP POLE still has it), an Active part with a new Pcs/Case or Max Case/Day is edited, a part that went Active -> Inactive is deleted. Destination level: destinations are added, deleted or edited so that AP POLE has the same Buyer-PD and Max Shipping Box Qty as NSP.",
    "Step by step guide with the AP POLE screens: deliverables/user_guide/Crossdock_User_Guide_AP_POLE.xlsx."
   ],
@@ -65,7 +79,7 @@
      },
      {
       "id": "b",
-      "label": "RPA: read source (Part List, Mapping per Destination)",
+      "label": "RPA: read source (Kanban Crossdock Master, Export Crossdock Master)",
       "type": "process"
      },
      {
@@ -126,14 +140,14 @@
   },
   "inputs": [
    {
-    "name": "XD01 Export Excel: Part List",
+    "name": "XD01 Export Excel: Kanban Crossdock Master",
     "type": "File",
-    "description": "Downloaded by the bot after [Sync]. Sheet Part List: Part Number, Part Name, Pcs/Case, Max Case/Day, Status, Sync Status"
+    "description": "Downloaded by the bot after [Sync]. Sheet Kanban Crossdock Master: Part Number, Part Name, Pcs/Case, Max Case/Day, Status, Sync Status"
    },
    {
-    "name": "XD01 Export Excel: Mapping per Destination",
+    "name": "XD01 Export Excel: Export Crossdock Master",
     "type": "File",
-    "description": "Downloaded by the bot after [Sync]. Sheet Mapping per Destination (ongoing period): Part Number, Destination Code, Dest Case/Day, Sync Status"
+    "description": "Downloaded by the bot after [Sync]. Sheet Export Crossdock Master (ongoing period): Part Number, Destination Code, Dest Case/Day, Sync Status"
    },
    {
     "name": "TB_R_CROSSDOCK_IF_RESULT",
@@ -318,7 +332,7 @@
     },
     {
      "id": "src",
-     "label": "XD01 Export Excel (Part List, Mapping per Destination)",
+     "label": "XD01 Export Excel (Kanban Crossdock Master, Export Crossdock Master)",
      "type": "db",
      "lane": "input"
     },
@@ -438,9 +452,9 @@
   "steps": [
    "[Sync] on XD01 sets the parts to Waiting (SYNC_STATUS = '3', IF_STATUS = '3' for 'GTOPAS' and 'APPOLE') and starts the RPA bot. Write LOG1. The whole run is inside one try-catch.",
    {
-    "text": "The bot logs in to NSP and downloads the XD01 Export Excel: Mapping per Destination (ongoing period, Sync Status = Waiting) and Part List; it reads them. It adds the work sheet AP POLE Compare to the file (part / Buyer-PD, NSP value, AP POLE value, Action Add / Edit / Delete / Keep, Result, AP POLE message).",
+    "text": "The bot logs in to NSP and downloads the XD01 Export Excel: Export Crossdock Master (ongoing period, Sync Status = Waiting) and Kanban Crossdock Master; it reads them. It adds the work sheet AP POLE Compare to the file (part / Buyer-PD, NSP value, AP POLE value, Action Add / Edit / Delete / Keep, Result, AP POLE message).",
     "children": [
-     "Parts to process = Sync Status No Sync / Waiting (not synced since the last change). Part level from Part List (Status, Part Name, Pcs/Case, Max Case/Day); destination level from Mapping per Destination (Destination Code, Dest Case/Day); parts to delete = Part List rows with Status Inactive (Waiting)."
+     "Parts to process = Sync Status No Sync / Waiting (not synced since the last change). Part level from Kanban Crossdock Master (Status, Part Name, Pcs/Case, Max Case/Day); destination level from Export Crossdock Master (Destination Code, Dest Case/Day); parts to delete = Kanban Crossdock Master rows with Status Inactive (Waiting)."
     ]
    },
    {
@@ -480,7 +494,7 @@
   "blocks": [
    {
     "source": {
-     "table": "XD01 Export Excel Part List (downloaded by the bot)",
+     "table": "XD01 Export Excel Kanban Crossdock Master (downloaded by the bot)",
      "keys": [
       {
        "field": "Sync Status",
@@ -536,7 +550,7 @@
    },
    {
     "source": {
-     "table": "XD01 Export Excel Mapping per Destination (downloaded by the bot)",
+     "table": "XD01 Export Excel Export Crossdock Master (downloaded by the bot)",
      "keys": [
       {
        "field": "Period",
@@ -599,7 +613,7 @@
     "mappings": [
      {
       "dest_field": "IF_STATUS",
-      "description": "'1' transfer OK / '2' file or transfer error"
+      "description": "'1' run without error / '2' run stopped by an error (try-catch, all parts)"
      },
      {
       "dest_field": "IF_DT",
@@ -836,10 +850,10 @@
    "marker": "-",
    "level": 0,
    "items": [
-    "The Procurement team maintains the Part List and the D/S team the Mapping per Destination on XD01. Every change of a value sent to GTOPAS / AP POLE sets the part to No Sync (Sync Status rule of XD01, 17-Nov).",
+    "The Procurement team maintains the Kanban Crossdock Master and the D/S team the Export Crossdock Master on XD01. Every change of a value sent to GTOPAS / AP POLE sets the part to No Sync (Sync Status rule of XD01, 17-Nov).",
     "The D/S team clicks [Sync] when the changes are complete; that is the only manual step. The RPA bot downloads the Excel, fills the work sheet and makes AP POLE equal to NSP (XD07) and GTOPAS (XD06).",
     "RPA on the AP POLE web screens (decided 17-Nov): the SFTP interface file is no longer used. Part level on WLM9Q890, destination level on WLM9Q860 ([Maintain Cross Dock] of the ticked part).",
-    "Source data: the XD01 Export Excel files (Part List, Mapping per Destination), downloaded by the bot after [Sync]; parts with Sync Status Waiting. Steps with the screens: deliverables/user_guide/Crossdock_User_Guide_AP_POLE.xlsx."
+    "Source data: the XD01 Export Excel files (Kanban Crossdock Master, Export Crossdock Master), downloaded by the bot after [Sync]; parts with Sync Status Waiting. Steps with the screens: deliverables/user_guide/Crossdock_User_Guide_AP_POLE.xlsx."
    ]
   },
   {
@@ -886,7 +900,7 @@
     [
      "3",
      "Active -> Inactive",
-     "Search the part, tick it, [Delete] (source: Part List, Status Inactive, Waiting)"
+     "Search the part, tick it, [Delete] (source: Kanban Crossdock Master, Status Inactive, Waiting)"
     ],
     [
      "4",
@@ -979,7 +993,139 @@
   },
   {
    "type": "heading",
-   "text": "4.6 Open Points"
+   "text": "4.6 Notification Email (Power Automate, 19-Nov)"
+  },
+  {
+   "type": "bullets",
+   "marker": "-",
+   "level": 0,
+   "items": [
+    "The cloud flow of the RPA sends one email per run of XD07 (AP POLE), so the user knows the result without opening NSP.",
+    "One email per target: XD06 (GTOPAS) and XD07 (AP POLE) run as separate bots, so a [Sync] gives two emails.",
+    "One email per run: the retries of the same run do not send an email; only the final result does."
+   ]
+  },
+  {
+   "type": "table",
+   "level": 0,
+   "columns": [
+    {
+     "title": "No",
+     "width": 4
+    },
+    {
+     "title": "Case",
+     "width": 16
+    },
+    {
+     "title": "When the email is sent",
+     "width": 26
+    },
+    {
+     "title": "Subject result",
+     "width": 10
+    }
+   ],
+   "rows": [
+    [
+     "E1",
+     "Run without error",
+     "End of the run, after the last part",
+     "SUCCESS"
+    ],
+    [
+     "E2",
+     "Run stopped by an error (try-catch)",
+     "After the automatic retries of the cloud flow are used up (retry count and interval in the flow settings, proposal 2 times, 10 minutes)",
+     "FAILED"
+    ],
+    [
+     "E3",
+     "Bot could not start (machine offline, login of NSP / AP POLE failed, desktop flow time out)",
+     "Cloud flow branch \"run after = failed / timed out\" of the desktop flow action",
+     "FAILED"
+    ],
+    [
+     "-",
+     "Nothing to process (no part Waiting)",
+     "No email",
+     "-"
+    ]
+   ]
+  },
+  {
+   "type": "table",
+   "level": 0,
+   "columns": [
+    {
+     "title": "Item",
+     "width": 12
+    },
+    {
+     "title": "Content",
+     "width": 44
+    }
+   ],
+   "rows": [
+    [
+     "Sender",
+     "Shared mailbox of the RPA (Office 365 Outlook connector \"Send an email (V2)\"), TBC"
+    ],
+    [
+     "To",
+     "User who clicked [Sync] (e-mail sent by NSP in the request of the flow) + D/S team mailing list"
+    ],
+    [
+     "Cc",
+     "RPA PIC; for FAILED also the NSP PIC"
+    ],
+    [
+     "Subject",
+     "[Crossdock Sync][AP POLE][SUCCESS | FAILED] Run <RUN_ID> - <n> part(s)"
+    ],
+    [
+     "Body 1. Run",
+     "RUN_ID, target AP POLE, started / ended, [Sync] by <user> at <date-time>, period(s) sent"
+    ],
+    [
+     "Body 2. Summary",
+     "Parts processed; part added / edited / deleted, Buyer-PD added / edited / deleted"
+    ],
+    [
+     "Body 3. Error (FAILED)",
+     "Step, part, destination and message of the error (LOG4 / LOG5); parts not processed"
+    ],
+    [
+     "Body 4. Action",
+     "SUCCESS: no action. FAILED: click [Sync] again on Crossdock Master Setting; contact the RPA PIC when it fails again"
+    ],
+    [
+     "Body 5. Links",
+     "Folder of the RPA work file (SharePoint / OneDrive, TBC); link to the run in Power Automate (for the RPA PIC)"
+    ],
+    [
+     "Attachment",
+     "The downloaded Excel with the work sheet AP POLE Compare (action, result and message per row). Above the mail size limit: link only"
+    ],
+    [
+     "Language",
+     "English"
+    ]
+   ]
+  },
+  {
+   "type": "bullets",
+   "marker": "-",
+   "level": 0,
+   "items": [
+    "Example subject: [Crossdock Sync][AP POLE][FAILED] Run 20261127103000 - 12 part(s).",
+    "Recipients (mailing list, RPA PIC, NSP PIC) are set in the flow settings, not in the code of the bot.",
+    "LOG6 is written when the email is sent; when sending fails, the run result stays and the RPA PIC sees it in the Power Automate run history."
+   ]
+  },
+  {
+   "type": "heading",
+   "text": "4.7 Open Points"
   },
   {
    "type": "bullets",
@@ -990,6 +1136,22 @@
     "Screen steps (4.2 / 4.3) or Common File Upload (4.5) - TBC.",
     "Source: the XD01 Export Excel, downloaded by the bot after [Sync] (decided 17-Nov, closed).",
     "Effective Month of a new part: next month (auto by AP POLE); a change for the current month - TBC with the AP POLE team."
+   ]
+  },
+  {
+   "type": "heading",
+   "text": "4.8 Period, Order Type and Order of the Screens (19-Nov)"
+  },
+  {
+   "type": "bullets",
+   "marker": "-",
+   "level": 0,
+   "items": [
+    "Effective Month / Year of WLM9Q890 and WLM9Q860 = the period of the NSP data: MM and YYYY (e.g. 202612 -> 12 / 2026).",
+    "One [Sync] sends the Current period first, then the Next period. The Next period is sent on day D after XD05; on day 1 nothing new is sent.",
+    "Order Type of a Buyer PD row = ORDER_TYPE of the Export Crossdock Master row ('**', 'C', '9', 'V'); key in AP POLE: Buyer PD + Order Type.",
+    "Max Case/Day of the period goes down: 1. WLM9Q860 Delete / Edit the Buyer PD rows (Total Shipping Allocated <= new max), 2. WLM9Q890 Edit Max Shipping Box Qty. Goes up or stays: 1. WLM9Q890 Add / Edit the part, 2. WLM9Q860 Delete, Edit, then Add.",
+    "Simulation: deliverables/function_list_v2/simulation/XD07_Simulation_AP_POLE_Period.xlsx."
    ]
   }
  ],
@@ -1048,6 +1210,17 @@
     "system": "Stop. STATUS = ERROR. All Waiting parts Failed.",
     "user": "User contact PIC"
    }
+  },
+  {
+   "event": "Notification email",
+   "cause": "End of the run (SUCCESS / FAILED)",
+   "type": "Info",
+   "msg_id": "LOG6",
+   "message": "Notification email <SUCCESS / FAILED> of run <RUN_ID> sent to <recipients>.",
+   "action": {
+    "system": "Write the log.",
+    "user": "Read the email; FAILED: click [Sync] again."
+   }
   }
  ],
  "appendix_layout": "full",
@@ -1076,16 +1249,16 @@
     [
      "PERIOD",
      "CHAR(6)",
-     "",
+     "Y",
      "N",
-     "Calculation period of the mapping sent (YYYYMM)"
+     "Calculation period of the data sent (YYYYMM); part of the key: one row per part, target and period (19-Nov)"
     ],
     [
      "IF_STATUS",
      "VARCHAR(1)",
      "",
      "N",
-     "'3' Waiting / '1' Success / '2' Failed"
+     "'0' No Sync / '3' Waiting / '1' Success / '2' Failed (per period, 19-Nov)"
     ],
     [
      "IF_DT",
@@ -1149,7 +1322,7 @@
    "name": "TB_M_PART_CANDIDATE",
    "kind": "transaction",
    "proposed": false,
-   "description": "Candidate part setting, one record per part (Part List data, no calculation period). Target of a successful upload.",
+   "description": "Kanban Crossdock Master: one record per part and calculation period (19-Nov; before: one record per part).",
    "columns": [
     [
      "PART_NO",
@@ -1157,6 +1330,13 @@
      "Y",
      "N",
      "Part number; length follows TB_M_PART_MASTER"
+    ],
+    [
+     "PERIOD",
+     "CHAR(6)",
+     "Y",
+     "N",
+     "Calculation period YYYYMM (19-Nov): one row per part and period. Current: screen / upload; Next: made by XD05 on day D (view only until day 1); Past: view only"
     ],
     [
      "PART_NAME",
@@ -1276,7 +1456,7 @@
    "name": "TB_M_PART_CANDIDATE_DEST",
    "kind": "transaction",
    "proposed": false,
-   "description": "Destination mapping, one record per part, calculation period and destination (Mapping per Destination data). Target of a successful upload.",
+   "description": "Export Crossdock Master: one record per part, calculation period, destination and order type.",
    "columns": [
     [
      "PART_NO",
@@ -1298,6 +1478,13 @@
      "Y",
      "N",
      "Destination code (buyer code + PD code, 7 digits); exists in TB_M_H0125_DESTINATION (Destination Master)"
+    ],
+    [
+     "ORDER_TYPE",
+     "VARCHAR(2)",
+     "Y",
+     "N",
+     "Order Type of the row (system master: '**', 'C', '9', 'V'; default '**'). One row per part, period, destination and order type (19-Nov)"
     ],
     [
      "CASE_DAY",
@@ -1340,7 +1527,7 @@
    "name": "TB_H_PART_CANDIDATE",
    "kind": "history",
    "proposed": true,
-   "description": "History of every change of a crossdock part (Add / Edit by screen or upload, mapping changes, Sync results, status changes and mappings made by the calculation batches). Read by the History setting modal of Part List (index PART_NO, CREATED_DT). No retention limit: the history is kept (no housekeeping job, decided 30-Oct).",
+   "description": "History of every change of a crossdock part (Add / Edit by screen or upload, mapping changes, Sync results, status changes and mappings made by the calculation batches). Read by the History setting modal of Kanban Crossdock Master (index PART_NO, CREATED_DT). No retention limit: the history is kept (no housekeeping job, decided 30-Oct).",
    "columns": [
     [
      "HIST_ID",
@@ -1361,7 +1548,7 @@
      "CHAR(6)",
      "",
      "Y",
-     "Calculation period YYYYMM for MAPPING / SYNC / CALC; NULL for ADD / EDIT (Part List has no period)"
+     "Calculation period YYYYMM for MAPPING / SYNC / CALC; NULL for ADD / EDIT (Kanban Crossdock Master has no period)"
     ],
     [
      "EVENT_TYPE",

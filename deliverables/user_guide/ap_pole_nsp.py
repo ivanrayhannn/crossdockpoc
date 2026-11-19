@@ -8,11 +8,11 @@ SOURCE = {
                'Red box = the item to click. Excel pictures: orange header = column read for AP POLE, yellow rows = examples of sheet "3. Scenario Detail".',
     'meta': [('Function', 'XD01 Crossdock Master Setting ([Sync], Export Excel) as the source of XD07 RPA Cross Dock Master to AP POLE'),
              ('User', 'D/S team: only [Sync]. The RPA bot downloads the two files, fills a work sheet AP POLE Compare and works on AP POLE (17-Nov)'),
-             ('Result', 'Crossdock_Mapping_per_Destination_<Period>_YYYYMMDD.xlsx (sheet Mapping per Destination) and '
-                        'Crossdock_Part_List_YYYYMMDD.xlsx (sheet Part List)')],
+             ('Result', 'Crossdock_Export_Master_<Period>_YYYYMMDD.xlsx (sheet Export Crossdock Master) and '
+                        'Crossdock_Kanban_Master_YYYYMMDD.xlsx (sheet Kanban Crossdock Master)')],
     'blocks': [
-        ('step', 'D/S: open Crossdock Master Setting, tab Mapping per Destination',
-         'In the left menu click Master > Crossdock Master Setting. With the D/S account the screen opens on the tab Mapping per Destination.', 'n1_map_menu.png'),
+        ('step', 'D/S: open Crossdock Master Setting, tab Export Crossdock Master',
+         'In the left menu click Master > Crossdock Master Setting. With the D/S account the screen opens on the tab Export Crossdock Master.', 'n1_map_menu.png'),
         ('step', 'D/S: search the ongoing period and click [Sync]',
          'Calculation period = the ongoing period (e.g. Sep 2026 (ongoing)), Sync Status = All, click [Search]. Click [Sync (n)]: every part with '
          'status Active (ongoing period) or Inactive and Sync Status No Sync or Failed becomes Waiting (Candidate never). n = number of parts that will be sent to GTOPAS and AP POLE. '
@@ -24,17 +24,17 @@ SOURCE = {
         ('step', 'Destinations of a part (for checking only)',
          'Click the arrow > in front of the Part Number. Example PART-009: 3 destinations, Case/Day 7 + 7 + 5 = 19 = Max Case/Day (19 / 19, 100%). '
          'These rows become the Buyer-PD rows of WLM9Q860 in AP POLE.', 'n4_map_dest.png'),
-        ('step', 'Bot: download Mapping per Destination ([Export Excel], Waiting)',
+        ('step', 'Bot: download Export Crossdock Master ([Export Excel], Waiting)',
          'With Sync Status = Waiting and Part Number empty, click [Export Excel]. The browser downloads '
-         'Crossdock_Mapping_per_Destination_Sep_2026_YYYYMMDD.xlsx (period of step 2, download date) and the bot opens it.', 'n5_map_export.png'),
-        ('step', 'Bot: read sheet "Mapping per Destination" (destination level)',
+         'Crossdock_Export_Master_Sep_2026_YYYYMMDD.xlsx (period of step 2, download date) and the bot opens it.', 'n5_map_export.png'),
+        ('step', 'Bot: read sheet "Export Crossdock Master" (destination level)',
          'One row per part and destination of the Waiting parts. Used for AP POLE WLM9Q860: Part Number, Destination Code (-> Buyer-PD), '
          'Dest Case/Day (-> Max Shipping Box Qty), Max Case/Day (quota) (-> Max Shipping Box Qty of the part) and Last Sync Date. '
          'A part without mapping has one row with an empty Destination Code (e.g. PART-B).', 'x_map_waiting.png'),
-        ('step', 'Bot: download the Part List (part level)',
-         'The bot opens the tab Part List, clicks [Search] without a filter, then [Export Excel]. The browser downloads '
-         'Crossdock_Part_List_YYYYMMDD.xlsx.', 'n6_part_export.png'),
-        ('step', 'Bot: read sheet "Part List" (Sync Status = Waiting)',
+        ('step', 'Bot: download the Kanban Crossdock Master (part level)',
+         'The bot opens the tab Kanban Crossdock Master, clicks [Search] without a filter, then [Export Excel]. The browser downloads '
+         'Crossdock_Kanban_Master_YYYYMMDD.xlsx.', 'n6_part_export.png'),
+        ('step', 'Bot: read sheet "Kanban Crossdock Master" (Sync Status = Waiting)',
          'The bot filters column Sync Status = Waiting. Used for AP POLE WLM9Q890: Part Number (-> Part No.), Pcs/Case (-> Shipping Box Qty), '
          'Max Case/Day (-> Max Shipping Box Qty) and Status. Status Inactive (e.g. PART-023) = delete in AP POLE. The same parts are Waiting in both files.', 'x_part_waiting.png'),
     ],
@@ -53,21 +53,21 @@ DETAIL = {
     'caption': 'Examples with the data of the files of sheet "0. Source Data (NSP)" (prototype dummy data). Excel pictures are extracts of the sheet; '
                'orange header = the columns used. "AP POLE now" values are an example of what the screen can show.',
     'meta': [('Function', 'XD07 RPA Cross Dock Master to AP POLE'),
-             ('Input', 'Sheets Part List (Waiting) and Mapping per Destination (Waiting)'),
+             ('Input', 'Sheets Kanban Crossdock Master (Waiting) and Export Crossdock Master (Waiting)'),
              ('Rule', 'Part level first (WLM9Q890), then destination level (WLM9Q860). On WLM9Q860: Delete, then Edit, then Add, so that Total '
                       'Shipping Allocated never goes above Max Shipping Box Qty of the part.')],
     'blocks': [
         ('heading', 'A. How to choose the scenario'),
         ('table', 'Part level (WLM9Q890)', ['No', 'In the NSP file', 'Search on WLM9Q890', 'Scenario and action'], [
-            ['P1', 'Part List: Status Active, Sync Status Waiting. Mapping: Last Sync Date empty (Never)', 'Part not found',
+            ['P1', 'Kanban Crossdock Master: Status Active, Sync Status Waiting. Mapping: Last Sync Date empty (Never)', 'Part not found',
              'Candidate -> Active: [Add] Part No., Shipping Box Qty = Pcs/Case, Max Shipping Box Qty = Max Case/Day'],
-            ['P2', 'Part List: Status Active, Sync Status Waiting. Mapping: Last Sync Date filled', 'Part not found (deleted when it went Inactive)',
+            ['P2', 'Kanban Crossdock Master: Status Active, Sync Status Waiting. Mapping: Last Sync Date filled', 'Part not found (deleted when it went Inactive)',
              'Inactive -> Active: [Add] as P1'],
-            ['P3', 'Part List: Status Inactive, Sync Status Waiting', 'Part found (not found: nothing to delete)', 'Active -> Inactive: tick the part, [Delete]'],
-            ['P4', 'Part List: Status Active, Sync Status Waiting', 'Part found',
+            ['P3', 'Kanban Crossdock Master: Status Inactive, Sync Status Waiting', 'Part found (not found: nothing to delete)', 'Active -> Inactive: tick the part, [Delete]'],
+            ['P4', 'Kanban Crossdock Master: Status Active, Sync Status Waiting', 'Part found',
              'Still Active: compare Shipping Box Qty with Pcs/Case and Max Shipping Box Qty with Max Case/Day; [Edit] when one differs, else no change'],
          ], [6, 52, 30, 52]),
-        ('table', 'Destination level (WLM9Q860, [Maintain Cross Dock] of the part)', ['No', 'Mapping per Destination vs Buyer-PD rows', 'Scenario', 'Action'], [
+        ('table', 'Destination level (WLM9Q860, [Maintain Cross Dock] of the part)', ['No', 'Export Crossdock Master vs Buyer-PD rows', 'Scenario', 'Action'], [
             ['D1', 'Destination Code in the file, no Buyer-PD row', 'Destination added', '[Add] Buyer-PD, Order Type **, Transport Code 2, Max Shipping Box Qty = Dest Case/Day'],
             ['D2', 'As D1, but Total Shipping Allocated = Max Shipping Box Qty (full)', 'Destination added, quota full', 'First D3 / D4 (free the quota), then D1'],
             ['D3', 'Buyer-PD row, Destination Code not in the file (also a part with an empty Destination Code)', 'Destination removed', 'Tick the row, [Delete]'],
@@ -81,8 +81,8 @@ DETAIL = {
         ('heading', 'B. Example 1: PART-009, new part with 3 destinations (P1 + D1)'),
         ('text', 'NSP: Status Active, Sync Status Waiting, Last Sync Date empty (Never). Pcs/Case 5, Max Case/Day 19. Destinations 9722D10 = 7, '
                  '9811110 = 7, 9715310 = 5 (total 19). AP POLE now: WLM9Q890 [Search] Part No. PART-009 shows no data.'),
-        ('image', 'Sheet Part List', 'x_ex1_part.png'),
-        ('image', 'Sheet Mapping per Destination', 'x_ex1_map.png'),
+        ('image', 'Sheet Kanban Crossdock Master', 'x_ex1_part.png'),
+        ('image', 'Sheet Export Crossdock Master', 'x_ex1_map.png'),
         ('table', 'Action in AP POLE', ACT, [
             ['WLM9Q890', '[Add] Part No.', 'PART-009'],
             ['WLM9Q890', 'Shipping Box Qty / Max Shipping Box Qty', '5 / 19 (Max Allowance Qty = 95, by AP POLE), [Save]'],
@@ -96,8 +96,8 @@ DETAIL = {
         ('text', 'NSP: Status Active, Sync Status Waiting, Last Sync Date 28-Aug-2026 10:05. Pcs/Case 40, Max Case/Day 26. Destinations 9715310 = 12, '
                  '9722D10 = 8, 9811110 = 6 (total 26). AP POLE now (example): Shipping Box Qty 40, Max Shipping Box Qty 24; Buyer-PD 97153-10 = 12, '
                  '9722D-10 = 10, 97101-10 = 2 (Total Shipping Allocated 24, full).'),
-        ('image', 'Sheet Part List', 'x_ex2_part.png'),
-        ('image', 'Sheet Mapping per Destination', 'x_ex2_map.png'),
+        ('image', 'Sheet Kanban Crossdock Master', 'x_ex2_part.png'),
+        ('image', 'Sheet Export Crossdock Master', 'x_ex2_map.png'),
         ('table', 'Action in AP POLE (in this order)', ACT, [
             ['WLM9Q890', '[Search] PART-F: found, Max Shipping Box Qty 24 <> 26: tick, [Edit] (P4)', 'Shipping Box Qty 40, Max Shipping Box Qty 26, [Save]'],
             ['WLM9Q890', 'Tick, [Maintain Cross Dock]', ''],
@@ -108,9 +108,9 @@ DETAIL = {
             ['WLM9Q860', 'Check Total Shipping Allocated, [Back]', '26 (= Max Shipping Box Qty 26)']], [20, 60, 60]),
 
         ('heading', 'D. Example 3: PART-023, Inactive part (P3)'),
-        ('text', 'NSP: sheet Part List, Status Inactive, Sync Status Waiting (went Inactive on 01-Oct-2026 after the last sync of 28-Sep-2026). '
+        ('text', 'NSP: sheet Kanban Crossdock Master, Status Inactive, Sync Status Waiting (went Inactive on 01-Oct-2026 after the last sync of 28-Sep-2026). '
                  'AP POLE now: the part with Buyer-PD 97153-10 and 9722D-10.'),
-        ('image', 'Sheet Part List', 'x_ex3_part.png'),
+        ('image', 'Sheet Kanban Crossdock Master', 'x_ex3_part.png'),
         ('table', 'Action in AP POLE', ACT, [
             ['WLM9Q890', '[Search] PART-023: found', ''],
             ['WLM9Q890', 'Tick the part, [Delete]', 'The part is removed. Buyer-PD rows of the part: deleted with the part (TBC); when AP POLE refuses, '
@@ -119,7 +119,7 @@ DETAIL = {
         ('heading', 'E. Example 4: PART-B, part without destination (P1, no D)'),
         ('text', 'NSP: Status Active, Waiting, Never synced, Pcs/Case 12, Max Case/Day 40, Destination Code empty (Total Case/Day 0 / 40). '
                  'AP POLE now: no data.'),
-        ('image', 'Sheet Mapping per Destination', 'x_ex4_map.png'),
+        ('image', 'Sheet Export Crossdock Master', 'x_ex4_map.png'),
         ('table', 'Action in AP POLE', ACT, [
             ['WLM9Q890', '[Add] Part No. / Shipping Box Qty / Max Shipping Box Qty', 'PART-B / 12 / 40, [Save]'],
             ['WLM9Q860', 'No destination in the file', 'Nothing to add. A part that was synced before and lost all destinations: [Delete] its Buyer-PD rows (D3)']], [20, 60, 60]),

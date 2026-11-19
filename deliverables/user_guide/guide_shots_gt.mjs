@@ -10,8 +10,8 @@ const unmark = () => pg.evaluate(() => document.querySelectorAll('[data-guide]')
 const shot = async (name) => { await pg.waitForTimeout(350); await pg.screenshot({ path: `${dir}/${name}.png` }); await unmark(); };
 const btn = (n) => pg.getByRole('button', { name: n, exact: true }).first();
 await pg.goto(url + '#/crossdock'); await pg.waitForTimeout(1000);
-await pg.getByRole('button', { name: /^Mapping per Destination/ }).click(); await pg.waitForTimeout(600);
-await mark(pg.getByText('Crossdock Master Setting', { exact: true }).first()); await mark(btn('Mapping per Destination')); await shot('g1_map_menu');
+await pg.getByRole('button', { name: /^Export Crossdock Master/ }).click(); await pg.waitForTimeout(600);
+await mark(pg.getByText('Crossdock Master Setting', { exact: true }).first()); await mark(btn('Export Crossdock Master')); await shot('g1_map_menu');
 const sel = pg.locator('select');
 const ongoing = await sel.nth(0).locator('option').filter({ hasText: 'ongoing' }).first().getAttribute('value');
 await sel.nth(0).selectOption(ongoing); await sel.nth(1).selectOption('all');

@@ -98,25 +98,26 @@ ul.sents li::marker { color: var(--muted) }
 // ---------- content: summary per function (UISS XD01-XD15, main 4-Nov-26) ----------
 // A point is a string, or an abnormality {k: condition, d: detection, s: system, u: user}.
 const FUNCS = [
-  { id: 'XD01', name: 'Cross Dock Part Master Screen', type: 'Screen', trigger: 'Tab Part List: Procurement · Tab Mapping per Destination: D/S',
+  { id: 'XD01', name: 'Cross Dock Part Master Screen', type: 'Screen', trigger: 'Tab Kanban Crossdock Master: Procurement · Tab Export Crossdock Master: D/S',
     sections: [
-      { key: 'PL', title: 'Proses normal – Tab Part List (Procurement)', points: [
+      { key: 'PL', title: 'Proses normal – Tab Kanban Crossdock Master (Procurement)', points: [
         'Buka menu: hanya akun Procurement. Default filter Part Number / Part Name kosong, Status All, Sort Newer to Older, 25 baris per halaman. Belum ada part sama sekali: msg 2 dengan [Upload Excel] dan [Add one part].',
         'Cari part: Part Number / Part Name (sebagian kata, tidak membedakan huruf besar kecil), Status Candidate / Active / Inactive, digabung AND; diterapkan saat [Search]. Tidak ada hasil: msg 1. Total Pcs/Day = Pcs/Case × Max Case/Day.',
         'Add part baru: status otomatis Candidate (terkunci). Input Part No (dari Part Master, belum terdaftar), Part Name otomatis, Min MAD (≥ 0), Pcs/Case (> 0), Max Case/Day (> 0), Effective Start Date (default besok, minimal hari ini). [Save] aktif kalau isian wajib lengkap (tooltip msg 5 / 15 / 6 / 7). Setelah Save: Sync Status No Sync, history ADD, part paling atas, msg 9.',
         'Edit part (Candidate / Active / Inactive): Min MAD, Pcs/Case, Max Case/Day, Status, dan Effective Start Date (hanya selama Candidate, selain itu tooltip msg 10). Part Active menampilkan "Mapped Case/Day (current period)"; Max Case/Day tidak boleh di bawahnya (msg 14). Setelah Save: No Sync, history per field, msg 9.',
         'History (ikon jam): riwayat perubahan part terbaru di atas (Add / Edit, upload, mapping, hasil Sync, status oleh XD05), disimpan tanpa batas waktu. Tanpa history: msg 12.',
-        'Download (Export Excel): 2 sheet – "Part List" (hasil filter, informasi) dan "Upload" (semua part, Upload (A/E) = E) sebagai file dasar upload.',
+        'Download (Export Excel): 2 sheet – "Kanban Crossdock Master" (hasil filter, informasi) dan "Upload" (semua part, Upload (A/E) = E) sebagai file dasar upload.',
         'Upload part list (XD02): pakai sheet Upload; Upload (A/E) A = part baru, E = edit. Status Candidate tidak bisa diubah lewat upload, Active ↔ Inactive boleh, tidak ada yang bisa jadi Candidate. All-or-nothing; berhasil msg 11.',
         'DAD Calculation (XD05 proses 1): scheduler bulanan, auto retry 3×; [Run calculation] aktif hanya setelah gagal 3× (badge "Scheduled run failed 3x"). Perubahan status ke / dari Active otomatis No Sync.',
+        'Period dan Order Type (19-Nov): Kanban Crossdock Master (dulu Part List) punya period seperti Export Crossdock Master (dulu Mapping per Destination). Past = lihat saja; Current = edit layar / upload; Next = dibuat XD05 di tanggal D, lihat saja sampai tanggal 1. Export Crossdock Master: kolom Order Type per baris destinasi (**, C, 9, V); destinasi yang sama boleh 2 baris kalau order type beda. Max Case/Day turun di bawah total mapping: kurangi destinasi dulu, baru ubah Max Case/Day',
         'Aturan Sync Status (17-Nov): part jadi No Sync hanya kalau nilai yang dikirim ke GTOPAS / AP POLE berubah: status ke / dari Active, Pcs/Case atau Max Case/Day part Active, destinasi atau Case/Day. Min MAD, Effective Start Date, Candidate ↔ Inactive dan Save tanpa perubahan tidak mengubah Sync Status.',
         'Status diubah manual Active → Inactive: part jadi No Sync dan ikut [Sync] berikutnya (dihapus di GTOPAS / AP POLE). Sheet "Active to Inactive" di Export Excel dihapus (18-Nov).' ] },
-      { key: 'MP', title: 'Proses normal – Tab Mapping per Destination (D/S)', points: [
+      { key: 'MP', title: 'Proses normal – Tab Export Crossdock Master (D/S)', points: [
         'Buka menu: hanya akun D/S. Default periode ongoing, Sync Status No Sync. Periode ongoing: semua part Active dengan destinasinya (tanpa destinasi: 0 / quota). Periode baru mulai kosong; periode lalu hanya bisa dilihat.',
-        'Kolom Total Case/Day (used / quota): used = jumlah Case/Day semua destinasi, quota = Max Case/Day dari Part List. Pcs/Day = Pcs/Case × used; Percentage = used / quota (maksimal 100%).',
+        'Kolom Total Case/Day (used / quota): used = jumlah Case/Day semua destinasi, quota = Max Case/Day dari Kanban Crossdock Master. Pcs/Day = Pcs/Case × used; Percentage = used / quota (maksimal 100%).',
         'Detail (panah di baris): tabel destinasi read only dengan catatan "n case/day left / over". Periode lalu: msg 22. Part tanpa destinasi: msg 19.',
         'Edit mapping (periode ongoing): tambah / ubah / hapus destinasi, satu destinasi sekali per part, [Split evenly]. Save diblok kalau total > Max (msg 20), tanpa destinasi, atau baris tanpa destinasi (msg 21). Disimpan per destinasi: update / insert / delete, yang sama tidak disentuh; history per destinasi; part No Sync.',
-        'Download: sheet "Mapping per Destination" (informasi) dan "Upload" (part Active periode ongoing, satu baris per destinasi; baris kosong Upload (A/E) = A untuk part tanpa mapping).',
+        'Download: sheet "Export Crossdock Master" (informasi) dan "Upload" (part Active periode ongoing, satu baris per destinasi; baris kosong Upload (A/E) = A untuk part tanpa mapping).',
         'Upload mapping (XD03): hanya periode ongoing (selain itu msg 23). Disimpan per destinasi; part yang tidak ada di file tidak berubah. All-or-nothing; berhasil msg 24.',
         'Mapping Calculation (XD05 proses 2): scheduler, auto retry 3×; [Run calculation] aktif hanya setelah gagal 3×; selesai msg 29.',
         '[Sync (n)]: semua part berstatus Active (periode ongoing) dan Inactive yang Sync Status-nya No Sync / Failed, tanpa melihat filter (17-Nov). Active ditambah / diubah, Inactive dihapus di GTOPAS / AP POLE. Part jadi Waiting, XD06 dan XD07 dijalankan (msg 27). Part Candidate tidak pernah di-sync.',
@@ -134,7 +135,7 @@ const FUNCS = [
         { k: 'Sync gagal di GTOPAS / AP POLE', d: 'Failed, msg 28 (LOG4)', s: 'Part tetap Failed, ikut n berikutnya', u: 'Perbaiki penyebab, [Sync] lagi' },
         { k: 'Scheduler DAD / Mapping Calculation gagal 3×', d: 'Badge "Scheduled run failed 3x"', s: '[Run calculation] aktif', u: 'Cek penyebab, jalankan manual' } ] } ] },
 
-  { id: 'XD02', name: 'Cross Dock Part Master Upload Batch', type: 'Batch', trigger: '[Validate file] di Upload Excel tab Part List (XD01)',
+  { id: 'XD02', name: 'Cross Dock Part Master Upload Batch', type: 'Batch', trigger: '[Validate file] di Upload Excel tab Kanban Crossdock Master (XD01)',
     sections: [
       { key: 'N', title: 'Proses normal', points: [
         'Cek file: .xlsx, maksimal 5 MB, 1–5.000 baris, sheet "Upload" ada (sheet lain diabaikan), 7 kolom template dengan nama sama seperti sheet export, dibaca berdasarkan nama kolom: Part Number, Min MAD, Pcs/Case, Max Case/Day, Status, Upload (A/E), Effective Start Date.',
@@ -159,7 +160,7 @@ const FUNCS = [
         { k: 'Error sistem lain', d: 'LOG9', s: 'Rollback, REJECTED', u: 'Hubungi PIC' } ] },
       { key: 'C', title: 'Catatan terbuka', points: [ 'FB-119: judul 4.1 / 4.2 di UISS menyebut log no. 5 / 6; yang benar LOG4 (file check) dan LOG5 (row validation).' ] } ] },
 
-  { id: 'XD03', name: 'Part and Destination Mapping Upload Batch', type: 'Batch', trigger: '[Validate file] di Upload Excel tab Mapping per Destination (XD01)',
+  { id: 'XD03', name: 'Part and Destination Mapping Upload Batch', type: 'Batch', trigger: '[Validate file] di Upload Excel tab Export Crossdock Master (XD01)',
     sections: [
       { key: 'N', title: 'Proses normal', points: [
         'Hanya untuk periode ongoing. Cek file: .xlsx, maksimal 5 MB, 1–5.000 baris, sheet "Upload", 6 kolom dengan nama sama seperti sheet export: Part Number, Destination Code, Dest Case/Day, Total Case/Day (used, angka saat export), Max Case/Day (quota), Upload (A/E); used dan quota hanya referensi (tidak dibaca).',
@@ -210,8 +211,9 @@ const FUNCS = [
         'Semua part (Candidate, Active, Inactive); part dengan Effective Start Date setelah tanggal run dilewati (LOG4).',
         'TOTAL_MAD = jumlah MAD semua buyer / PD / order type N + S dalam range; AVG_MAD = TOTAL_MAD / N (bulan tanpa data dihitung 0).',
         'AVG_MAD ≥ Min MAD → Active; AVG_MAD < Min MAD → Inactive.',
-        'Simpan hasil di TB_R_PART_DAD_RESULT; kalau status berubah, update Part List dan history (CALC). Status ke / dari Active membuat part No Sync (Active → Inactive dihapus, ke Active ditambah di GTOPAS / AP POLE).',
-        'Berhasil: commit, lanjut proses 2. Gagal: rollback, proses 2 tidak jalan, auto retry 3×; setelah itu [Run calculation (Part List)] aktif.' ] },
+        'Jadwal baru (19-Nov): jalan di tanggal D (system master) dan membuat period berikutnya (Next) untuk Kanban dan Export Crossdock Master; Current tidak berubah. Proses 3 tanggal 1: Period Rollover (Next jadi Current), part yang kombinasinya berubah jadi No Sync GTOPAS dan XD06 jalan otomatis',
+        'Simpan hasil di TB_R_PART_DAD_RESULT; kalau status berubah, update Kanban Crossdock Master dan history (CALC). Status ke / dari Active membuat part No Sync (Active → Inactive dihapus, ke Active ditambah di GTOPAS / AP POLE).',
+        'Berhasil: commit, lanjut proses 2. Gagal: rollback, proses 2 tidak jalan, auto retry 3×; setelah itu [Run calculation (Kanban Crossdock Master)] aktif.' ] },
       { key: 'P2', title: 'Proses 2 – mapping destinasi', points: [
         'Jalan setelah proses 1 berhasil (atau retry / [Run calculation (Mapping)] untuk proses 2 saja). Periode baru = bulan run.',
         'Part Active saja; actual demand dikelompokkan per kode destinasi (buyer 5 digit + PD 2 digit); grup dengan MAD 0 tidak dipakai; part tanpa MAD tidak mendapat destinasi.',
@@ -229,7 +231,7 @@ const FUNCS = [
   { id: 'XD06', name: 'IF Cross Dock Master to GTOPAS', type: 'Batch (RPA)', trigger: '[Sync] di XD01: bot download Excel, isi sheet kerja, lalu GTOPAS (17-Nov)',
     sections: [
       { key: 'N', title: 'Proses normal', points: [
-        'D/S hanya klik [Sync]. Bot login ke NSP, buka Crossdock Master Setting tab Mapping per Destination (periode berjalan, Sync Status All), [Export Excel], dan membuka file-nya: sheet Mapping per Destination = daftar NSP (part Active + destinasi); part Inactive tidak ada di sheet ini, jadi barisnya di GTOPAS dihapus. Bot tidak membaca DB NSP (17-Nov).',
+        'D/S hanya klik [Sync]. Bot login ke NSP, buka Crossdock Master Setting tab Export Crossdock Master (periode berjalan, Sync Status All), [Export Excel], dan membuka file-nya: sheet Export Crossdock Master = daftar NSP (part Active + destinasi); part Inactive tidak ada di sheet ini, jadi barisnya di GTOPAS dihapus. Bot tidak membaca DB NSP (17-Nov).',
         'Bot membuka GTOPAS menu Supply > Master > Crossdock Master (WVJA5204), isi Depot Code 01, [Search], dan membaca semua halaman ([NextPage]).',
         'Bandingkan per P/No. + Destination Code (GTOPAS menampilkan P/No. dengan "-", contoh 52119-BZV60). Destination Code = buyer code + PD code, harus sama persis di NSP dan GTOPAS, tanpa konversi (11-Nov).',
         'Register dengan nilai tetap: Depot Code 01, Maker Code A, Dom/Os 2, TOPAS Order Type 3, Trans Code 2 (11-Nov).',
@@ -237,6 +239,7 @@ const FUNCS = [
         'Ada di NSP dan ada di GTOPAS → skip. Ada di NSP, belum di GTOPAS → didaftarkan. Ada di GTOPAS, tidak ada di NSP → dihapus (MT = DEL). Pesan sukses GTOPAS: MZD34006FEI Registration completed.',
         'Part yang jadi Inactive atau Active tanpa destinasi tidak ada di daftar NSP, jadi semua row-nya di GTOPAS terhapus.',
         'Pcs/Case, Max Case/Day, Effective Start Date dan Case/Day tidak dikirim.',
+        'Email notifikasi (Power Automate, 19-Nov): 1 email per run ke user yang klik [Sync] + mailing list D/S, Cc PIC RPA. SUCCESS di akhir run; FAILED setelah retry otomatis habis atau bot tidak bisa jalan. Isi: RUN_ID, ringkasan, error, aksi ([Sync] lagi), lampiran Excel GTOPAS Compare.',
         'Selesai tanpa error: semua part Waiting GTOPAS = Success; Sync Status gabungan dengan XD07, history SYNC (source RPA), Log jumlah register / skip / delete.' ] },
       { key: 'AB', title: 'Abnormality', points: [
         { k: 'Error apa pun di bot (login, layar, timeout, pesan error GTOPAS, download NSP / Excel gagal)', d: 'LOG4', s: 'Try-catch: bot berhenti, semua part Waiting Failed (1 gagal, gagal semua); row yang sudah diproses tetap di GTOPAS', u: '[Sync] lagi; run berikutnya membandingkan ulang dan melanjutkan' },
@@ -248,11 +251,13 @@ const FUNCS = [
   { id: 'XD07', name: 'RPA Cross Dock Master to AP POLE', type: 'Batch (RPA)', trigger: '[Sync] di XD01 (RPA di layar AP POLE, 17-Nov)',
     sections: [
       { key: 'N', title: 'Proses normal', points: [
-        'Sumber: file Export Excel XD01 (Part List, Mapping per Destination) yang di-download bot sendiri setelah [Sync] (17-Nov), part Waiting. Bot mengisi sheet kerja AP POLE Compare (aksi dan hasil per part / Buyer-PD). Tidak pakai file SFTP lagi.',
+        'Sumber: file Export Excel XD01 (Kanban Crossdock Master, Export Crossdock Master) yang di-download bot sendiri setelah [Sync] (17-Nov), part Waiting. Bot mengisi sheet kerja AP POLE Compare (aksi dan hasil per part / Buyer-PD). Tidak pakai file SFTP lagi.',
         'Level part, layar WLM9Q890 Cross Dock Kanban Part Master: Effective From awal bulan s/d akhir bulan, isi Part No, [Search]. Part No = PART_NO, Shipping Box Qty = Pcs/Case, Max Shipping Box Qty = Max Case/Day (Max Allowance Qty dihitung AP POLE).',
         'Skenario part: Candidate → Active = Add; Inactive → Active = Add kalau belum ada, Edit kalau sudah ada; Active → Inactive = centang, Delete; tetap Active tapi Pcs/Case / Max Case/Day berubah = Edit.',
         'Level destinasi: centang part, [Maintain Cross Dock] → WLM9Q860 Export Customer Cross Dock Master. Buyer-PD = DEST_CODE (9722D-88), Order Type **, Transport Code 2, Max Shipping Box Qty = Case/Day destinasi.',
         'Skenario destinasi: destinasi bertambah dan Total Shipping Allocated < Max Case/Day = Add; = Max Case/Day = hapus dulu destinasi yang tidak ada di NSP, lalu Add; destinasi berkurang = Delete; Case/Day berubah = Edit.',
+        'Period (19-Nov): Effective Month / Year = period (MM, YYYY); [Sync] kirim Current dulu lalu Next (Next dikirim di tanggal D). Order Type baris Buyer PD = Order Type di Export Crossdock Master. Max Case/Day turun: WLM9Q860 dikurangi dulu, baru WLM9Q890 di-edit',
+        'Email notifikasi (Power Automate, 19-Nov): sama dengan XD06, subject [Crossdock Sync][AP POLE][SUCCESS | FAILED], lampiran Excel AP POLE Compare.',
         'Try-catch: 1 error = semua part Waiting Failed. Success: IF_STATUS 1, LAST_SYNC_DT diisi; Sync Status gabungan dengan XD06; history SYNC.' ] },
       { key: 'AB', title: 'Abnormality', points: [
         { k: 'Login / layar AP POLE gagal, timeout, pesan error AP POLE', d: 'LOG4', s: 'Bot berhenti, semua part Waiting Failed', u: '[Sync] lagi; hubungi PIC' },
@@ -298,7 +303,7 @@ const FUNCS = [
         'Kolom: Case Qty, PO Readiness (case), opsi ASN, status. Per Part Number tanggal tertua dulu ("Wait: tanggal sebelumnya first").',
         'D/S: expand unit → per destinasi (case, qty, Hold Flag) → per customer order line. Hold / Release per destinasi meng-update HOLD_FLAG semua line unit + destinasi; destinasi hold tidak diambil Search.',
         'Hold per Part Number (D/S, 13-Nov): tombol [Hold per Part] membuka sub screen per supplier + plant, satu baris per Part Number dengan status, check box Hold dan [Edit] → centang → [Save] / [Cancel] (TB_R_CROSSDOCK_PART_HOLD). Expand = daftar customer order (tanggal, No, destinasi, qty, case) tanpa info PO. Part yang di-hold tetap tampil On Hold untuk semua tanggal, check box disabled (MSG12).',
-        'Hold per case (D/S, 13-Nov, rev. 14-Nov): check box Hold (D/S) di samping PO Status, diubah lewat [Edit hold] → centang → [Save] / [Cancel] per Part Number + Customer Order Date (seperti Part List dan Mapping). Customer order line di case yang dicentang di-hold: pcs-nya keluar dari unit sebelum PO dituang, jadi tidak dapat PO; PO qty-nya kembali dipakai order berikutnya. Case lain tetap Ready sesuai PO-nya. Disimpan per customer order line + HOLD_QTY di TB_R_CROSSDOCK_CASE_HOLD.',
+        'Hold per case (D/S, 13-Nov, rev. 14-Nov): check box Hold (D/S) di samping PO Status, diubah lewat [Edit hold] → centang → [Save] / [Cancel] per Part Number + Customer Order Date (seperti Kanban Crossdock Master dan Mapping). Customer order line di case yang dicentang di-hold: pcs-nya keluar dari unit sebelum PO dituang, jadi tidak dapat PO; PO qty-nya kembali dipakai order berikutnya. Case lain tetap Ready sesuai PO-nya. Disimpan per customer order line + HOLD_QTY di TB_R_CROSSDOCK_CASE_HOLD.',
         'Contoh 18-Oct, PART-X 17-Oct: hold case 4 (CO-14109 Taiwan 6 pcs) → PO-0003 6 pcs pindah ke CO-14110 Australia, case 1-4 (Korea, Korea, Japan, Australia) semua Ready. Taiwan tampil di bawah case sebagai On Hold (D/S); untick + [Save] = release (FB-183): Taiwan masuk urutan terakhir 17-Oct, Australia tetap pakai PO-nya; Taiwan dapat PO berikutnya dan tetap lebih dulu dari order 18-Oct.',
         'Save hold (case dan Hold per Part): pop up konfirmasi (MSG15) → [Yes, save] → pop up sukses (MSG16) → delivery plan otomatis refresh. Tabel case pakai border; Destination tampil 1x per case, PO yang sama di-merge.',
         'Info PO (14-Nov): baris PO check di atas case dihapus; klik status Partially Ready / Not Ready / Short PO → pop up info PO bahasa Indonesia (MSG17). Tabel unit (Customer Order Date) juga pakai border. Detail destinasi (Destination · pcs, Hold Flag) disembunyikan dulu sampai diminta lagi.',
@@ -370,7 +375,7 @@ const MSGS = {
 "id": "MSG2",
 "kind": "Display",
 "type": "Info",
-"event": "Open Part List",
+"event": "Open Kanban Crossdock Master",
 "cause": "No part registered yet",
 "message": "No crossdock parts registered yet",
 "action": "Click [Upload Excel] or [Add one part]"
@@ -435,7 +440,7 @@ const MSGS = {
 "type": "Info",
 "event": "Click [Save] button",
 "cause": "Part saved successfully",
-"message": "Saved successfully - {Part No} · {Part Name} has been added/updated. It is now at the top of the Part List.",
+"message": "Saved successfully - {Part No} · {Part Name} has been added/updated. It is now at the top of the Kanban Crossdock Master.",
 "action": "Click [OK]"
 },
 {
@@ -453,7 +458,7 @@ const MSGS = {
 "type": "Info",
 "event": "Click [Validate file] button",
 "cause": "Upload validated and saved",
-"message": "Saved successfully - Upload completed. The file has been validated and the part settings have been saved to the Part List.",
+"message": "Saved successfully - Upload completed. The file has been validated and the part settings have been saved to the Kanban Crossdock Master.",
 "action": "Click [OK]"
 },
 {
@@ -480,8 +485,8 @@ const MSGS = {
 "type": "Error",
 "event": "Change 'Max Case/Day' in Edit / click [Save]",
 "cause": "Max Case/Day below the total Case/Day mapped in the ongoing period",
-"message": "Max Case/Day can not be less than the mapped total ({n} case/day) of the ongoing period. Reduce the mapping in Mapping per Destination first.",
-"action": "Reduce the mapping in Mapping per Destination first, or enter a higher Max Case/Day"
+"message": "Max Case/Day can not be less than the mapped total ({n} case/day) of the ongoing period. Reduce the mapping in Export Crossdock Master first.",
+"action": "Reduce the mapping in Export Crossdock Master first, or enter a higher Max Case/Day"
 },
 {
 "id": "MSG15",
@@ -570,7 +575,7 @@ const MSGS = {
 "type": "Info",
 "event": "Click [Validate file] button",
 "cause": "Upload validated and saved",
-"message": "Saved successfully - Upload completed. The file has been validated and the destination mapping has been saved to Mapping per Destination.",
+"message": "Saved successfully - Upload completed. The file has been validated and the destination mapping has been saved to Export Crossdock Master.",
 "action": "Click [OK]"
 },
 {
@@ -642,7 +647,7 @@ const MSGS = {
 "type": "Error",
 "event": "Click [Export Excel] button",
 "cause": "Excel file generation error",
-"message": "Export Excel of Part List failed: <error message>.",
+"message": "Export Excel of Kanban Crossdock Master failed: <error message>.",
 "action": "Display Message no. 13"
 },
 {
@@ -669,7 +674,7 @@ const MSGS = {
 "type": "Error",
 "event": "Click [Export Excel] button",
 "cause": "Excel file generation error",
-"message": "Export Excel of Mapping per Destination failed: <error message>.",
+"message": "Export Excel of Export Crossdock Master failed: <error message>.",
 "action": "Display Message no. 26"
 }
 ],
@@ -947,8 +952,8 @@ const MSGS = {
 "type": "Warning",
 "event": "Process 1: Retry exhausted",
 "cause": "Scheduled run and 3 retries failed",
-"message": "DAD volume calculation failed 3 times. Manual run is enabled on Part List.",
-"action": "system: Enable [Run calculation] on Part List.; user: Check the cause, then click [Run calculation]."
+"message": "DAD volume calculation failed 3 times. Manual run is enabled on Kanban Crossdock Master.",
+"action": "system: Enable [Run calculation] on Kanban Crossdock Master.; user: Check the cause, then click [Run calculation]."
 },
 {
 "id": "LOG7",
@@ -1019,8 +1024,8 @@ const MSGS = {
 "type": "Warning",
 "event": "Process 2: Retry exhausted",
 "cause": "Scheduled run and 3 retries failed",
-"message": "Mapping destination calculation failed 3 times. Manual run is enabled on Mapping per Destination.",
-"action": "system: Enable [Run calculation] on Mapping per Destination.; user: Check the cause, then click [Run calculation]."
+"message": "Mapping destination calculation failed 3 times. Manual run is enabled on Export Crossdock Master.",
+"action": "system: Enable [Run calculation] on Export Crossdock Master.; user: Check the cause, then click [Run calculation]."
 },
 {
 "id": "LOG15",

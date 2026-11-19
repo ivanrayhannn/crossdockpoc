@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from 'react';
-import { CUR_PER, PAST_ROWS, DOTS, MASTER_DESTS, PERIODS } from '../../../data/seed';
+import { CUR_PER, PAST_ROWS, DOTS, MASTER_DESTS, ORDER_TYPES, PERIODS } from '../../../data/seed';
 import { fmt, num, syncBadge } from '../../../lib/format';
 import type { DestAllocation, Part } from '../../../types';
 import { exportMappingXlsx } from '../mappingExport';
@@ -210,7 +210,7 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
                   <th style={{ ...th, width: 150 }}>Part Number</th>
                   <th style={th}>Part Name</th>
                   <th style={{ ...th, textAlign: 'right', width: 86 }}>Pcs/Case</th>
-                  <th style={{ ...th, textAlign: 'right', width: 176 }} title="Case/Day mapped to destinations / Max Case/Day of the part in Part List">Total Case/Day (used / quota)</th>
+                  <th style={{ ...th, textAlign: 'right', width: 176 }} title="Case/Day mapped to destinations / Max Case/Day of the part in Kanban Crossdock Master">Total Case/Day (used / quota)</th>
                   <th style={{ ...th, textAlign: 'right', width: 110 }}>Pcs/Day</th>
                   <th style={{ ...th, textAlign: 'right', width: 110 }}>Percentage</th>
                   <th style={{ ...th, width: 120 }}>Sync Status</th>
@@ -297,7 +297,9 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
   const dUnder = dAlloc < m;
   // Every row needs a destination before the mapping can be saved (OP-04).
   const dMissing = dList.some((d) => !d.d);
-  const saveBlockedTitle = !dList.length ? 'Add at least one destination' : dOver ? 'Allocation exceeds Max Case/Day' : dMissing ? 'Select a destination for every row' : 'Save mapping';
+  // One row per destination + order type (the same destination may be mapped again with another order type).
+  const dDup = dList.some((d, i) => d.d && dList.findIndex((x) => x.d === d.d && (x.ot || '**') === (d.ot || '**')) !== i);
+  const saveBlockedTitle = !dList.length ? 'Add at least one destination' : dOver ? 'Allocation exceeds Max Case/Day' : dMissing ? 'Select a destination for every row' : dDup ? 'Destination and order type used twice' : 'Save mapping';
   const share = m ? `${Math.round((a / m) * 100)}%` : '—';
 
   const editViewDisp = ro || isEditing || !edok ? 'none' : 'inline-flex';
@@ -366,7 +368,7 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
               <button className="btn btn-ghost" onClick={onCancelEdit} style={{ display: editingDisp, fontSize: 12, padding: '4px 12px' }}>
                 Cancel
               </button>
-              <button className="btn btn-primary" onClick={onSave} disabled={dOver || dMissing || !dList.length} title={saveBlockedTitle} style={{ display: editingDisp, fontSize: 12, padding: '4px 16px' }}>
+              <button className="btn btn-primary" onClick={onSave} disabled={dOver || dMissing || dDup || !dList.length} title={saveBlockedTitle} style={{ display: editingDisp, fontSize: 12, padding: '4px 16px' }}>
                 Save
               </button>
             </span>
@@ -379,6 +381,9 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
                   <tr>
                     <th style={{ textAlign: 'left', padding: '7px 16px', fontSize: 9.5, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--color-neutral-700)', background: 'var(--color-surface)', borderBottom: '1px solid var(--color-neutral-400)' }}>
                       Destination (CD)
+                    </th>
+                    <th style={{ textAlign: 'left', padding: '7px 14px', width: 120, fontSize: 9.5, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--color-neutral-700)', background: 'var(--color-surface)', borderBottom: '1px solid var(--color-neutral-400)' }}>
+                      Order Type
                     </th>
                     <th style={{ textAlign: 'right', padding: '7px 14px', width: 160, fontSize: 9.5, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--color-neutral-700)', background: 'var(--color-surface)', borderBottom: '1px solid var(--color-neutral-400)' }}>
                       Case/Day
@@ -415,13 +420,25 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
                               style={{ width: 210, minHeight: 32, padding: '2px 8px', fontSize: 13, fontFamily: 'var(--font-mono)', fontWeight: 600, background: inputBg, appearance: 'none' }}
                             >
                               <option value="">Select destination</option>
-                              {MASTER_DESTS.filter((m) => m.name === d.d || !dList.some((row, ri) => ri !== i && row.d === m.name)).map((m) => (
+                              {MASTER_DESTS.map((m) => (
                                 <option key={m.name} value={m.name}>
                                   {m.code} — {m.name}
                                 </option>
                               ))}
                             </select>
                           </span>
+                        </td>
+                        <td style={{ padding: '0 14px', borderBottom: '1px solid var(--color-divider)' }}>
+                          <select
+                            className="input"
+                            value={d.ot || '**'}
+                            onChange={(e) => onPatchDraft((x) => { x[i].ot = e.target.value; })}
+                            disabled={!isEditing}
+                            title="Order Type (system master)"
+                            style={{ width: 80, minHeight: 32, padding: '2px 8px', fontSize: 13, fontFamily: 'var(--font-mono)', background: inputBg, appearance: 'none' }}
+                          >
+                            {ORDER_TYPES.map((o) => <option key={o} value={o}>{o}</option>)}
+                          </select>
                         </td>
                         <td style={{ padding: '0 14px', borderBottom: '1px solid var(--color-divider)', textAlign: 'right' }}>
                           <input
@@ -467,7 +484,7 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
             {isEditing && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '11px 16px', borderTop: '1px solid var(--color-divider)', background: 'var(--color-surface)' }}>
                 <button
-                  onClick={() => onPatchDraft((x) => { x.push({ d: '', cd: '', al: 0, st: 'Active' }); })}
+                  onClick={() => onPatchDraft((x) => { x.push({ d: '', cd: '', ot: '**', al: 0, st: 'Active' }); })}
                   className="add-dest-row"
                   style={{ cursor: 'pointer', fontFamily: 'var(--font-body)', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 12.5, padding: '6px 13px', borderRadius: 8, border: '1px dashed var(--color-accent)', background: 'var(--color-accent-100)', color: 'var(--color-accent-800)', fontWeight: 600 }}
                 >
@@ -484,6 +501,7 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
 
           {dOver && <MappingAlert>Allocation of {fmt(dAlloc)} case/day exceeds Max Case/Day ({fmt(m)}). Reduce one of the destinations.</MappingAlert>}
           {isEditing && dMissing && <MappingAlert>Select a destination for every row, or remove the empty row, before saving.</MappingAlert>}
+          {isEditing && dDup && <MappingAlert>The same destination is used twice with the same order type. Choose another order type or remove the row.</MappingAlert>}
         </td>
       </tr>
     </>
