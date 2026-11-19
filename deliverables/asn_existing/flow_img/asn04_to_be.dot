@@ -6,7 +6,7 @@ digraph G {
     s1 [label="Fill upload template\n(Manifest No, Part No, Qty,\nPalletize Code, Case No...)"];
     s2 [label="[Upload] on\nASN Creation"];
     s3 [label="Read result / log"];
-    s4 [label="Crossdock rows:\ncreate ASN in ASN\nCreation (Crossdock)", fillcolor="#E2EFDA" color="#548235"];
+    s4 [label="Crossdock rows:\nASN on the other screen\nASN Creation (Crossdock)", fillcolor="#E2EFDA" color="#548235"];
   }
   subgraph cluster_nsp { label="NSP - ASN existing (ASN04 batch)"; style="filled"; fillcolor="#FFFFFF"; color="#BFBFBF"; fontsize=11; labeljust=l;
     b1 [label="Format, mandatory\nand duplication\nchecks (4b)"];
@@ -16,7 +16,7 @@ digraph G {
     b5 [label="Existing business\nchecks (regular rows)"];
     b6 [label="Error?", shape=diamond, width=1.2];
     b7 [label="Finished with error\n(msg 7b), nothing saved"];
-    b8 [label="Insert temporary ->\nTB_T_ASN (regular rows)\n-> ASN Submit Creation"];
+    b8 [label="Insert temporary ->\nTB_T_ASN draft (regular rows);\nSubmit as in ASN Creation"];
     b9 [label="All rows skipped:\nnothing saved,\n\"no data\" result (TBC)", fillcolor="#FFF2CC" color="#C55A11" penwidth=2];
   }
   subgraph cluster_xd { label="NSP - ASN Crossdock (new)"; style="filled"; fillcolor="#F4FAF0"; color="#BFBFBF"; fontsize=11; labeljust=l;
@@ -25,7 +25,9 @@ digraph G {
   subgraph cluster_db { label="Database"; style="filled"; fillcolor="#FAFAFA"; color="#BFBFBF"; fontsize=11; labeljust=l;
     db_pm [shape=cylinder, label="TB_R_PRA_DAILY_ORDER_MANIFEST\n(CROSS_DOCK_FLAG)"];
     db_pp [shape=cylinder, label="TB_R_PRA_DAILY_ORDER_PART\n(Palletize Code, remaining qty)"];
-    db_asn [shape=cylinder, label="TB_T_ASN"];
+    db_asn [shape=cylinder, label="TB_T_ASN\n(draft)"];
+    db_dm [shape=cylinder, label="TB_R_DAILY_ORDER_MANIFEST"];
+    db_dp [shape=cylinder, label="TB_R_DAILY_ORDER_PART"];
   }
   s1 -> s2 -> b1 -> b2;
   b2 -> b3 [label="Yes"]; b2 -> b5 [label="No"]; b3 -> b9 [style=dashed, label="if every row"];

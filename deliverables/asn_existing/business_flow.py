@@ -24,7 +24,9 @@ def lane(name, label, color, body):
 def db_nodes(extra=''):
     return ('    db_pm [shape=cylinder, label="TB_R_PRA_DAILY_ORDER_MANIFEST\\n(CROSS_DOCK_FLAG)"];\n'
             '    db_pp [shape=cylinder, label="TB_R_PRA_DAILY_ORDER_PART\\n(Palletize Code, remaining qty)"];\n'
-            '    db_asn [shape=cylinder, label="TB_T_ASN"];\n' + extra)
+            '    db_asn [shape=cylinder, label="TB_T_ASN\\n(draft)"];\n'
+            '    db_dm [shape=cylinder, label="TB_R_DAILY_ORDER_MANIFEST"];\n'
+            '    db_dp [shape=cylinder, label="TB_R_DAILY_ORDER_PART"];\n' + extra)
 
 
 def asn03(to_be):
@@ -33,23 +35,30 @@ def asn03(to_be):
            '    n2 [label="Get Data Manifest\\nsupplier, remaining qty\\n(regular + crossdock orders)"];\n')
     sup = ('    s1 [label="Open ASN Creation\\n(Add mode)"];\n'
            '    s2 [label="Pick Manifest No /\\nOrder Date / PO No,\\n[Search]"];\n'
-           '    s3 [label="Choose parts,\\ninput delivery qty"];\n'
-           '    s4 [label="Save / Submit ASN"];\n')
-    nsp = (get + '    n3 [label="Show manifest grid"];\n'
-           '    n4 [label="Insert TB_T_ASN"];\n'
-           '    n5 [label="ASN Submit Creation\\n(existing flow)"];\n')
-    g = HEAD % title + lane('sup', 'Supplier', '#F7FBFF', sup + (f'    s5 [label="Crossdock order:\\nopen ASN Creation\\n(Crossdock)", {NEWL}];\n' if to_be else ''))
-    g += lane('nsp', 'NSP - ASN existing (ASN03)', '#FFFFFF', nsp)
+           '    s3 [label="Choose part /\\nmanifest"];\n'
+           '    s4 [label="Input qty and\\ndelivery date"];\n'
+           '    s5 [label="[Submit]"];\n')
+    nsp = (get + '    n3 [label="Show manifest"];\n'
+           '    n4 [label="Insert to draft\\n(TB_T_ASN)"];\n'
+           '    n5 [label="Submit: insert daily order\\nmanifest and part,\\nreduce qty of pra part"];\n')
+    g = HEAD % title + lane('sup', 'Supplier', '#F7FBFF', sup)
+    g += lane('nsp', 'NSP - ASN Creation (ASN03, regular orders' + (' only)' if to_be else ')'), '#FFFFFF', nsp)
     if to_be:
-        g += lane('xd', 'NSP - ASN Crossdock (new)', '#F4FAF0', f'    x1 [label="ASN Creation (Crossdock)\\nper Part + Customer Order Date\\n(XD10)", {NEWL}];\n')
+        g += lane('xd', 'Other screen: ASN Creation (Crossdock, XD10), crossdock orders', '#F4FAF0',
+                  f'    x0 [label="Supplier opens\\nASN Creation (Crossdock)", {NEWL}];\n'
+                  f'    x1 [label="ASN per Part +\\nCustomer Order Date\\n(own flow, XD09 / XD10)", {NEWL}];\n')
     g += lane('db', 'Database', '#FAFAFA', db_nodes())
-    g += ('  s1 -> s2 -> n2 -> n3 -> s3 -> s4 -> n4 -> n5;\n'
-          '  db_pm -> n2 [style=dashed, label="read flag", constraint=false]; db_pp -> n2 [style=dashed, label="read Palletize", constraint=false];\n'
-          '  n4 -> db_asn [style=dashed, constraint=false]; n5 -> db_pp [style=dashed, label="remaining qty", constraint=false];\n'
+    g += ('  s1 -> s2 -> n2 -> n3 -> s3 -> n4 -> s4 -> s5 -> n5;\n'
+          + ('  db_pm -> n2 [style=dashed, label="read flag", constraint=false]; db_pp -> n2 [style=dashed, label="read Palletize", constraint=false];\n' if to_be else
+             '  db_pm -> n2 [style=dashed, label="read", constraint=false]; db_pp -> n2 [style=dashed, label="read", constraint=false];\n') +
+          '  n4 -> db_asn [style=dashed, label="insert", constraint=false];\n'
+          '  n5 -> db_dm [style=dashed, label="insert", constraint=false]; n5 -> db_dp [style=dashed, label="insert", constraint=false];\n'
+          '  n5 -> db_pp [style=dashed, label="reduce qty", constraint=false];\n'
           '  { rank=same; s2; n2; db_pm; } s2 -> n2 [style=invis]; n2 -> db_pm [style=invis];\n'
-          '  { rank=same; n5; db_pp; } n5 -> db_pp [style=invis];\n  { rank=same; n4; db_asn; }\n')
+          '  { rank=same; n4; db_asn; } n4 -> db_asn [style=invis];\n'
+          '  { rank=same; n5; db_dm; db_dp; } n5 -> db_dm [style=invis]; db_dm -> db_dp [style=invis];\n')
     if to_be:
-        g += f'  n2 -> s5 [style=dashed, label="crossdock order\\nnot listed", color="#C55A11", fontcolor="#C55A11"]; s5 -> x1;\n'
+        g += '  x0 -> x1;\n'
     return g + '}\n'
 
 
@@ -66,15 +75,15 @@ def asn04(to_be):
                 '    b5 [label="Existing business\\nchecks (regular rows)"];\n'
                 '    b6 [label="Error?", shape=diamond, width=1.2];\n'
                 '    b7 [label="Finished with error\\n(msg 7b), nothing saved"];\n'
-                '    b8 [label="Insert temporary ->\\nTB_T_ASN (regular rows)\\n-> ASN Submit Creation"];\n'
+                '    b8 [label="Insert temporary ->\\nTB_T_ASN draft (regular rows);\\nSubmit as in ASN Creation"];\n'
                 f'    b9 [label="All rows skipped:\\nnothing saved,\\n\\"no data\\" result (TBC)", {CHG}];\n')
     else:
         nsp += ('    b4 [label="Crossdock checks\\nmsg 8 (delivery qty)\\nmsg 9 (case no / palletize)"];\n'
                 '    b5 [label="Existing business\\nchecks (all rows,\\nincl. Palletize X)"];\n'
                 '    b6 [label="Error?", shape=diamond, width=1.2];\n'
                 '    b7 [label="Finished with error\\n(msg 7b), nothing saved"];\n'
-                '    b8 [label="Insert temporary ->\\nTB_T_ASN (all rows,\\nincl. crossdock)\\n-> ASN Submit Creation"];\n')
-    g = HEAD % title + lane('sup', 'Supplier', '#F7FBFF', sup + (f'    s4 [label="Crossdock rows:\\ncreate ASN in ASN\\nCreation (Crossdock)", {NEWL}];\n' if to_be else ''))
+                '    b8 [label="Insert temporary ->\\nTB_T_ASN draft (all rows,\\nincl. crossdock);\\nSubmit as in ASN Creation"];\n')
+    g = HEAD % title + lane('sup', 'Supplier', '#F7FBFF', sup + (f'    s4 [label="Crossdock rows:\\nASN on the other screen\\nASN Creation (Crossdock)", {NEWL}];\n' if to_be else ''))
     g += lane('nsp', 'NSP - ASN existing (ASN04 batch)', '#FFFFFF', nsp)
     if to_be:
         g += lane('xd', 'NSP - ASN Crossdock (new)', '#F4FAF0', f'    x1 [label="ASN Creation (Crossdock)\\n(XD10)", {NEWL}];\n')

@@ -13,12 +13,14 @@ digraph G {
     b5 [label="Existing business\nchecks (all rows,\nincl. Palletize X)"];
     b6 [label="Error?", shape=diamond, width=1.2];
     b7 [label="Finished with error\n(msg 7b), nothing saved"];
-    b8 [label="Insert temporary ->\nTB_T_ASN (all rows,\nincl. crossdock)\n-> ASN Submit Creation"];
+    b8 [label="Insert temporary ->\nTB_T_ASN draft (all rows,\nincl. crossdock);\nSubmit as in ASN Creation"];
   }
   subgraph cluster_db { label="Database"; style="filled"; fillcolor="#FAFAFA"; color="#BFBFBF"; fontsize=11; labeljust=l;
     db_pm [shape=cylinder, label="TB_R_PRA_DAILY_ORDER_MANIFEST\n(CROSS_DOCK_FLAG)"];
     db_pp [shape=cylinder, label="TB_R_PRA_DAILY_ORDER_PART\n(Palletize Code, remaining qty)"];
-    db_asn [shape=cylinder, label="TB_T_ASN"];
+    db_asn [shape=cylinder, label="TB_T_ASN\n(draft)"];
+    db_dm [shape=cylinder, label="TB_R_DAILY_ORDER_MANIFEST"];
+    db_dp [shape=cylinder, label="TB_R_DAILY_ORDER_PART"];
   }
   s1 -> s2 -> b1 -> b4 -> b5 -> b6; b6 -> b7 [label="Yes"]; b6 -> b8 [label="No"]; b7 -> s3; b8 -> s3;
   db_pm -> b5 [style=dashed, label="read", constraint=false]; b8 -> db_asn [style=dashed, constraint=false];

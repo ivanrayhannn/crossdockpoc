@@ -202,13 +202,13 @@ ASN03 = header('ASN03_Delivery Note / ASN Creation (Screen)', 'UISS-Screen', 'CR
         ['2', 'Upload mode ([Upload] calls ASN04)', 'Every manifest in the file is uploaded.',
          ('tdnew', 'Only the regular rows are uploaded; rows with ' + X + ' are skipped by ASN04 (refer CR ASN04).'), 'Operation Desc 1.a'],
         ['3', 'Save / Submit ASN', 'Existing flow.',
-         'No change: TB_T_ASN -> ASN Submit Creation (existing flow) -> update TB_R_PRA_DAILY_ORDER_MANIFEST / TB_R_PRA_DAILY_ORDER_PART.', '-'],
+         'No change: choose part / manifest -> insert to draft (TB_T_ASN) -> input qty and delivery date -> [Submit] -> insert TB_R_DAILY_ORDER_MANIFEST / TB_R_DAILY_ORDER_PART and reduce the qty of TB_R_PRA_DAILY_ORDER_PART.', '-'],
     ]),
     [('sec', '3. Process flow')],
     *table(['Step', 'Input', 'Process', 'Output', ''], [
         ['1', 'TB_R_PRA_DAILY_ORDER_MANIFEST, TB_R_PRA_DAILY_ORDER_PART', ('tdnew', 'Get Data Manifest, exclude ' + X), 'Manifest list (regular orders only)', ''],
-        ['2', 'Manifest list', 'ASN Creation: crossdock orders are not shown; the supplier picks regular orders and continues the existing flow', 'TB_T_ASN', ''],
-        ['3', 'TB_T_ASN', 'ASN Submit Creation (existing flow)', 'TB_R_PRA_DAILY_ORDER_MANIFEST, TB_R_PRA_DAILY_ORDER_PART', ''],
+        ['2', 'Manifest list', 'Show manifest: crossdock orders are not shown; the supplier chooses part / manifest, insert to draft', 'TB_T_ASN (draft)', ''],
+        ['3', 'TB_T_ASN (draft)', 'Supplier inputs qty and delivery date, [Submit] (existing flow)', 'TB_R_DAILY_ORDER_MANIFEST, TB_R_DAILY_ORDER_PART (insert); TB_R_PRA_DAILY_ORDER_PART (qty reduced)', ''],
     ]),
     [('sec', '4. Logic to add in Operation Desc 2.a (Add Mode, Search Mode Condition)')],
     *table(['No', 'Field / action', 'Current condition', 'To Be condition', ''], [
@@ -227,7 +227,7 @@ ASN03 = header('ASN03_Delivery Note / ASN Creation (Screen)', 'UISS-Screen', 'CR
         ['3', 'Supplier types a crossdock Manifest No / PO No', "CROSS_DOCK_FLAG = 'X'", 'No data (no message)', ''],
         ['4', 'Same supplier and date, regular and crossdock orders', '1 regular + 1 crossdock', 'Only the regular order is listed', ''],
         ['5', 'Upload file with a crossdock row', X, 'Crossdock row skipped by ASN04, regular rows uploaded (CR ASN04)', ''],
-        ['6', 'Submit a regular ASN', 'Regular order', 'Existing result: TB_T_ASN submitted, manifest and part tables updated', ''],
+        ['6', 'Submit a regular ASN', 'Regular order', 'Existing result: TB_R_DAILY_ORDER_MANIFEST / PART inserted, qty of TB_R_PRA_DAILY_ORDER_PART reduced', ''],
         ['7', 'Draft ASN of a crossdock order made before go-live', 'TB_T_ASN draft', 'Existing behaviour (no change)', ''],
     ]),
     [('sec', '6. Decisions (19-Nov)')],
@@ -262,7 +262,7 @@ ASN04 = header('ASN04_Sub Manifest(ASN) to Upload (Batch)', 'UISS-Batch', 'CR Cr
     [('sec', '3. Process flow')],
     *table(['Step', 'Input', 'Process', 'Output', ''], [
         ['1', 'Upload file (template)', ('tdnew', 'Upload ASN, skip the rows with ' + X + ' (warning log)'), 'TB_T_ASN (regular rows only)', ''],
-        ['2', 'TB_T_ASN', 'ASN Submit Creation (existing flow)', 'TB_R_PRA_DAILY_ORDER_MANIFEST, TB_R_PRA_DAILY_ORDER_PART', ''],
+        ['2', 'TB_T_ASN (draft)', 'Submit (existing flow, as in ASN Creation)', 'TB_R_DAILY_ORDER_MANIFEST, TB_R_DAILY_ORDER_PART (insert); TB_R_PRA_DAILY_ORDER_PART (qty reduced)', ''],
     ]),
     [('sec', '4. Logic (new business validation, after the duplication check (4b) and before insert into temporary (5a / 5b))')],
     *table(['No', 'Step', 'Logic', '', ''], [
@@ -315,7 +315,7 @@ if __name__ == '__main__':
         ('TO-BE: crossdock orders are not listed; their ASN is made in ASN Creation (Crossdock)', img('asn03_to_be'), [
             "Get Data Manifest excludes CROSS_DOCK_FLAG = 'X' (TB_R_PRA_DAILY_ORDER_MANIFEST) and Palletize Code = 'X' (TB_R_PRA_DAILY_ORDER_PART).",
             'A typed crossdock Manifest No / PO No gives no data (no message).',
-            'The supplier creates the ASN of a crossdock order in ASN Creation (Crossdock, XD10). Save / Submit of regular orders: no change.'])])
+            'Crossdock orders: ASN on another screen, ASN Creation (Crossdock, XD10). Regular orders: show manifest, choose part / manifest, insert to draft (TB_T_ASN), input qty and delivery date, [Submit] (insert daily order manifest / part, reduce pra part qty): no change.'])])
     write(os.path.join(HERE, 'CR_Crossdock_ASN04_ASN_Upload.xlsx'), ASN04, [
         ('AS-IS: every row is uploaded, crossdock rows included (crossdock checks msg 8 / 9)', img('asn04_as_is'), []),
         ('TO-BE: crossdock rows are skipped, regular rows are uploaded', img('asn04_to_be'), [
