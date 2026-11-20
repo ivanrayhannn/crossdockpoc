@@ -24,7 +24,8 @@ LOG_COLS = ['BATCH_ID', 'RUN_ID', 'SEND_DT', 'SENT_BY', 'PERIOD', 'PARTS', 'STAT
 _k = [c for c in COLS['TB_M_PART_CANDIDATE'] if c not in ('SYNC_STATUS', 'GTOPAS_SYNC_DT', 'APPOLE_SYNC_DT', 'SYNC_RUN_ID')]
 _i = _k.index('PART_STATUS') + 1
 COLS['TB_M_PART_CANDIDATE'] = _k[:_i] + ['GTOPAS_SYNC_STATUS', 'GTOPAS_SYNC_DT', 'APPOLE_SYNC_STATUS', 'APPOLE_SYNC_DT', 'SYNC_RUN_ID'] + _k[_i:]
-ST = {'0': '0 No Sync', '3': '3 Sent', '0>3': '0 No Sync -> 3 Sent', '3>0': '3 Sent -> 0 No Sync'}
+ST = {'0': 0, '1': 1}   # 0 Non Sync, 1 Sync (user, 20-Nov)
+LEGEND = ['Sync Status: 0 = Non Sync, 1 = Sync (sent to the target; no response from the RPA, the result comes by e-mail)']
 CUR, NXT, RUN, ROLL = '202611', '202612', '27-Nov-2026 02:00', '01-Dec-2026 00:10'
 MONTHS = ['202605', '202606', '202607', '202608', '202609', '202610']
 N = len(MONTHS)
@@ -49,7 +50,7 @@ def row(table_name, **v):
 
 
 def kanban(p, per, st, gs, as_, src, by, dt, created=('FID Rayhan', '01-Jun-2026 09:00'), gt='', ap='', run=''):
-    """gs / as_ = GTOPAS / AP POLE Sync Status ('0' No Sync, '3' Sent)."""
+    """gs / as_ = GTOPAS / AP POLE Sync Status ('0' Non Sync, '1' Sync)."""
     d = PARTS[p]
     return row('TB_M_PART_CANDIDATE', PART_NO=p, PERIOD=per, PART_NAME=d['name'], MIN_MAD=d['min'], PCS_CASE=d['pcs'], MAX_CASE_DAY=d['max'],
                TOTAL_PCS_DAY=d['pcs'] * d['max'], EFFECTIVE_START_DATE=d['eff'], PART_STATUS=st, GTOPAS_SYNC_STATUS=ST[gs], GTOPAS_SYNC_DT=gt,
@@ -119,6 +120,24 @@ OLD = ('FID Rayhan', '01-Jun-2026 09:00')
 T27, S27, R1 = '27-Nov-2026 09:00', '27-Nov-2026 10:00', '01-Dec-2026 00:10'
 RUN27, RUN1 = '20261127100000', '20261201001000'
 
+TBH_COLS = ['Kanban row sent', 'APPOLE_SYNC_DT before', 'HIST_ID taken', 'Key (DEST_CODE / ORDER_TYPE / FIELD_NAME)', 'Latest NEW_VALUE',
+            'Needed by AP POLE', 'Source of the value']
+TBH_READ = [
+    ['A 202611', '27-Oct-2026 10:30', 108, '9722D10 / ** / CASE_DAY', 7, 'Eff. 11/2026 Edit 9722D-10 = 7', 'TB_H'],
+    ['A 202611', '27-Oct-2026 10:30', 109, '9715310 / ** / CASE_DAY', 5, 'Eff. 11/2026 Edit 97153-10 = 5', 'TB_H'],
+    ['A 202612', '(never sent: all rows)', 103, '9715310 / ** / CASE_DAY', 4, 'Eff. 12/2026 Add 97153-10 = 4', 'TB_H'],
+    ['A 202612', '(never sent: all rows)', 104, '9811110 / ** / CASE_DAY', 2, 'Eff. 12/2026 Add 98111-10 = 2', 'TB_H'],
+    ['A 202612', '(never sent: all rows)', '-', '9722D10 / ** / CASE_DAY', '-', 'Eff. 12/2026 Add 9722D-10 = 6', 'Not in TB_H (same as Nov): master'],
+    ['A 202612', '(never sent: all rows)', '-', 'PCS_CASE, MAX_CASE_DAY', '-', 'Shipping Box Qty 6, Max 12', 'Not in TB_H (same as Nov): master'],
+    ['B 202612', '(never sent: all rows)', 101, 'PART_STATUS', 'Active', 'Part added for Eff. 12/2026', 'TB_H'],
+    ['B 202612', '(never sent: all rows)', 105, '9618201 / ** / CASE_DAY', 2, 'Eff. 12/2026 Add 96182-01 = 2', 'TB_H'],
+    ['B 202612', '(never sent: all rows)', 106, '9722D10 / ** / CASE_DAY', 4, 'Eff. 12/2026 Add 9722D-10 = 4', 'TB_H'],
+    ['B 202612', '(never sent: all rows)', '-', 'PCS_CASE, MAX_CASE_DAY', '-', 'Shipping Box Qty 10, Max 6', 'Not in TB_H (no change): master'],
+    ['C 202612', '(never sent: all rows)', 102, 'PART_STATUS', 'Inactive', 'No 12/2026 record', 'TB_H'],
+    ['C 202612', '(never sent: all rows)', 107, '9715310 / ** / CASE_DAY', '(empty)', 'No 12/2026 record', 'TB_H'],
+    ['D 202612', '(never sent: all rows)', '-', '9722D10 / ** / CASE_DAY, PCS_CASE, MAX_CASE_DAY', '-', 'Eff. 12/2026 Add 9722D-10 = 8, Box 4, Max 8',
+     'Not in TB_H (no change): master']]
+
 
 def ap_rows(mm, part, dests, action):
     d = PARTS[part]
@@ -138,27 +157,28 @@ def main():
         'Current period 202611 (Nov), day D = 27-Nov-2026 (XD05, system master), Next period 202612, Period Rollover 01-Dec-2026, N = 6 months 202605-202610.',
         'Every table shows all its columns (same source as the ERD / DB Structure). Yellow = inserted / changed in the step, red = deleted, green = kept / done.',
         'PROPOSAL (20-Nov, discussion, not yet in the UISS): one Sync Status per target on TB_M_PART_CANDIDATE: GTOPAS_SYNC_STATUS + GTOPAS_SYNC_DT, '
-        'APPOLE_SYNC_STATUS + APPOLE_SYNC_DT (instead of one SYNC_STATUS). No response from the RPA: 0 No Sync / 3 Sent; the result comes by e-mail.'])
+        'APPOLE_SYNC_STATUS + APPOLE_SYNC_DT (instead of one SYNC_STATUS). Values 0 Non Sync / 1 Sync; no response from the RPA, the result comes by e-mail. '
+        'TB_H_PART_CANDIDATE keeps only value changes (no status / SYNC rows), FK (PART_NO, PERIOD) -> TB_M_PART_CANDIDATE; the send is on the Kanban row + the Log.'])
     r = block(ws, r, 'Rules of the two statuses', ['Change', 'GTOPAS', 'AP POLE'], [
-        ['Status Active <-> Inactive, Candidate -> Active', 'No Sync', 'No Sync'],
-        ['Destination added / removed', 'No Sync', 'No Sync'],
-        ['Case/Day or Order Type of a destination, Pcs/Case, Max Case/Day', 'Not changed (no quantity in GTOPAS)', 'No Sync'],
+        ['Status Active <-> Inactive, Candidate -> Active', '0 Non Sync', '0 Non Sync'],
+        ['Destination added / removed', '0 Non Sync', '0 Non Sync'],
+        ['Case/Day or Order Type of a destination, Pcs/Case, Max Case/Day', 'Not changed (no quantity in GTOPAS)', '0 Non Sync'],
         ['Min MAD, Effective Start Date, Save without change', 'Not changed', 'Not changed'],
-        ['XD05 makes the Next row', 'Copied from Current when the part + destination combination and the status are equal (option b), else No Sync',
-         'No Sync (AP POLE needs the record of the new Effective month)'],
-        ['[Sync]', 'Current: No Sync -> Sent (XD06). Next: waits for the Period Rollover', 'No Sync -> Sent for Current and Next (XD07: Current first)'],
-        ['Period Rollover (day 1)', 'Next rows No Sync -> Sent (XD06 starts)', 'Not touched: stays Sent']])
+        ['XD05 makes the Next row', '0 Non Sync for every Next row (not copied from Current); XD06 compares on day 1 and only acts on differences',
+         '0 Non Sync (AP POLE needs the record of the new Effective month)'],
+        ['[Sync]', 'Current: 0 -> 1 (XD06). Next: waits for the Period Rollover', '0 -> 1 for Current and Next (XD07: Current first)'],
+        ['Period Rollover (day 1)', 'Next rows 0 -> 1 (XD06 starts)', 'Not touched: stays 1 Sync']])
     r = block(ws, r, 'Steps', ['Sheet', 'When', 'Function'], [
         ['1', '-', 'Input: TB_R_ACTUAL_DEMAND_SUMMARY (XD04), destinations'], ['2', '20-Nov', 'Before day D: only 202611'],
         ['3', '27-Nov 02:00', 'XD05 process 1: DAD result, Kanban Crossdock Master 202612'], ['4', '27-Nov 02:00', 'XD05 process 2: Export Crossdock Master 202612'],
         ['5', '27-Nov 09:00', 'D/S adjusts the Current period 202611 on the screen (Case/Day of A)'],
-        ['6', '27-Nov 10:00', '[Sync]: XD07 AP POLE 11/2026 (Current) then 12/2026 (Next); GTOPAS: nothing (no GTOPAS No Sync in Current)'],
-        ['7', '01-Dec 00:10', 'Period Rollover -> XD06 GTOPAS for the Next rows with GTOPAS No Sync'], ['8', '01-Dec', 'End state']])
+        ['6', '27-Nov 10:00', '[Sync]: XD07 AP POLE 11/2026 (Current) then 12/2026 (Next); GTOPAS: nothing (no GTOPAS 0 in Current). How the RPA reads TB_H'],
+        ['7', '01-Dec 00:10', 'Period Rollover -> XD06 GTOPAS for the Next rows with GTOPAS 0 Non Sync (A, B, C, D)'], ['8', '01-Dec', 'End state']])
     block(ws, r, 'Parts of the example', ['Part', 'Nov status', 'Min MAD', 'Pcs/Case', 'Max Case/Day', 'Story'], [
         ['A', 'Active', 300, 6, 12, 'Stays Active; Nov adjusted on 27-Nov (Case/Day); Dec mapping changes (TW added)'],
         ['B', 'Candidate', 200, 10, 6, 'Candidate -> Active for Dec (new in GTOPAS and AP POLE)'],
         ['C', 'Active', 500, 8, 10, 'Active -> Inactive for Dec (deleted in GTOPAS on 1-Dec; no 12/2026 record in AP POLE)'],
-        ['D', 'Active', 100, 4, 8, 'No change at all: GTOPAS status of Dec copied (Sent), AP POLE 12/2026 still sent']])
+        ['D', 'Active', 100, 4, 8, 'No change at all: Dec row GTOPAS 0, sent on 1-Dec (XD06 compare: Keep, no action); AP POLE 12/2026 still sent; no TB_H row']])
 
     # ---------- 1. input ----------
     ws, r = sheet(wb, '1. Input', 'Input: TB_R_ACTUAL_DEMAND_SUMMARY (from XD04) and the destination master', [
@@ -174,11 +194,11 @@ def main():
 
     # ---------- 2. before ----------
     sent_nov = dict(gt='01-Nov-2026 00:10', ap='27-Oct-2026 10:30', run='20261027103000')
-    ws, r = sheet(wb, '2. Before 20-Nov', 'Before day D: only the Current period 202611', [])
-    kan_cur = {'A': kanban('A', CUR, 'Active', '3', '3', 'CALC', DS, '27-Oct-2026 10:30', **sent_nov),
+    ws, r = sheet(wb, '2. Before 20-Nov', 'Before day D: only the Current period 202611', LEGEND)
+    kan_cur = {'A': kanban('A', CUR, 'Active', '1', '1', 'CALC', DS, '27-Oct-2026 10:30', **sent_nov),
                'B': kanban('B', CUR, 'Candidate', '0', '0', 'SCREEN', DS, '10-Nov-2026 09:15', (DS, '10-Nov-2026 09:15')),
-               'C': kanban('C', CUR, 'Active', '3', '3', 'CALC', DS, '27-Oct-2026 10:30', **sent_nov),
-               'D': kanban('D', CUR, 'Active', '3', '3', 'CALC', DS, '27-Oct-2026 10:30', **sent_nov)}
+               'C': kanban('C', CUR, 'Active', '1', '1', 'CALC', DS, '27-Oct-2026 10:30', **sent_nov),
+               'D': kanban('D', CUR, 'Active', '1', '1', 'CALC', DS, '27-Oct-2026 10:30', **sent_nov)}
     r = block(ws, r, 'TB_M_PART_CANDIDATE (Kanban Crossdock Master)', COLS['TB_M_PART_CANDIDATE'], list(kan_cur.values()))
     dcur = [dest(p, CUR, c, o, cd, BATCH, '27-Oct-2026 02:00') for p, c, o, cd in CUR_MAP]
     r = block(ws, r, 'TB_M_PART_CANDIDATE_DEST (Export Crossdock Master)', COLS['TB_M_PART_CANDIDATE_DEST'], dcur)
@@ -202,11 +222,11 @@ def main():
     r = block(ws, r, 'TB_R_PART_DAD_RESULT (inserted)', COLS['TB_R_PART_DAD_RESULT'], dad, fills(len(dad), NEW))
     h_calc = [hist(p, NXT, 'CALC', 'BATCH', 'PART_STATUS', PARTS[p]['st'], newst[p]) for p in PARTS if PARTS[p]['st'] != newst[p]]
     r = block(ws, r, 'TB_H_PART_CANDIDATE (status changes)', COLS['TB_H_PART_CANDIDATE'], h_calc, fills(len(h_calc), NEW))
-    r = note(ws, r, ['The Kanban rows of 202612 are inserted with process 2 (sheet 4), after the mapping is known (needed for the GTOPAS status copy).'])
+    r = note(ws, r, ['Status changes of the Next period are written here once (B Candidate -> Active, C Active -> Inactive); sheet 4 does not repeat them.'])
 
     # ---------- 4. XD05 process 2 ----------
     ws, r = sheet(wb, '4. XD05 P2 27-Nov', 'XD05 process 2 (27-Nov 02:00): Export Crossdock Master 202612 and the Kanban rows 202612', [
-        'Case/Day = share of Max Case/Day, rounded down (min 1), +1 to the largest fraction. Order Type of a new row = **.'])
+        'Case/Day = share of Max Case/Day, rounded down (min 1), +1 to the largest fraction. Order Type of a new row = **.'] + LEGEND)
     alloc_rows, dnxt = [], []
     for p in PARTS:
         if newst[p] != 'Active':
@@ -224,12 +244,11 @@ def main():
     combo_nxt = {p: {x[2] for x in dnxt if x[0] == p} for p in PARTS}
     same = {p: combo_cur[p] == combo_nxt[p] and PARTS[p]['st'] == newst[p] for p in PARTS}
     cmp_rows = [[p, PARTS[p]['st'], newst[p], ', '.join(sorted(DEST[c] for c in combo_cur[p])) or '-', ', '.join(sorted(DEST[c] for c in combo_nxt[p])) or '-',
-                 'Equal: GTOPAS copied (Sent)' if same[p] else 'Different: GTOPAS No Sync', 'No Sync (new Effective month)'] for p in PARTS]
+                 '0 Non Sync (' + ('equal: Keep on 1-Dec' if same[p] else 'different: Add / Delete on 1-Dec') + ')', '0 Non Sync (new Effective month)'] for p in PARTS]
     r = block(ws, r, 'Status of the new rows (compare 202612 with 202611)', ['PART_NO', 'Status 202611', 'Status 202612', 'Destinations 202611',
                                                                              'Destinations 202612', 'GTOPAS_SYNC_STATUS', 'APPOLE_SYNC_STATUS'], cmp_rows,
-              {i: (KEEP if same[x[0]] else NEW) for i, x in enumerate(cmp_rows, 1)})
-    kan_nxt = {p: kanban(p, NXT, newst[p], '3' if same[p] else '0', '0', 'CALC', BATCH, RUN, (BATCH, RUN),
-                         gt=sent_nov['gt'] if same[p] else '', run='') for p in PARTS}
+              fills(len(cmp_rows), NEW))
+    kan_nxt = {p: kanban(p, NXT, newst[p], '0', '0', 'CALC', BATCH, RUN, (BATCH, RUN)) for p in PARTS}
     r = block(ws, r, 'TB_M_PART_CANDIDATE (inserted: Next period 202612)', COLS['TB_M_PART_CANDIDATE'], list(kan_nxt.values()), fills(len(PARTS), NEW))
     prev = {(p, c): cd for p, c, _, cd in CUR_MAP}
     nxt = {(x[0], x[2]): x[4] for x in dnxt}
@@ -239,37 +258,30 @@ def main():
 
     # ---------- 5. adjust Current ----------
     ws, r = sheet(wb, '5. Adjust 27-Nov', 'D/S adjusts the Current period 202611 of part A on the Export Crossdock Master: JPN 6 -> 7, KR 6 -> 5', [
-        'Only the Case/Day changes (same destinations): AP POLE No Sync for 202611; GTOPAS stays Sent (GTOPAS keeps no quantity).'])
+        'Only the Case/Day changes (same destinations): APPOLE_SYNC_STATUS 1 -> 0 for 202611; GTOPAS stays 1 (GTOPAS keeps no quantity).',
+        'TB_H_PART_CANDIDATE: only the value changes (no status row).'] + LEGEND)
     dadj = [dest('A', CUR, '9722D10', '**', 7, DS, T27, (BATCH, '27-Oct-2026 02:00')), dest('A', CUR, '9715310', '**', 5, DS, T27, (BATCH, '27-Oct-2026 02:00'))]
     r = block(ws, r, 'TB_M_PART_CANDIDATE_DEST 202611 of A (updated)', COLS['TB_M_PART_CANDIDATE_DEST'], dadj, fills(2, NEW))
-    r = block(ws, r, 'TB_M_PART_CANDIDATE 202611 of A: APPOLE_SYNC_STATUS 3 Sent -> 0 No Sync (GTOPAS stays 3 Sent)', COLS['TB_M_PART_CANDIDATE'],
-              [kanban('A', CUR, 'Active', '3', '3>0', 'SCREEN', DS, T27, gt=sent_nov['gt'], ap=sent_nov['ap'], run=sent_nov['run'])], {1: NEW})
-    kan_cur['A'] = kanban('A', CUR, 'Active', '3', '0', 'SCREEN', DS, T27, gt=sent_nov['gt'], ap=sent_nov['ap'], run=sent_nov['run'])
-    r = block(ws, r, 'TB_H_PART_CANDIDATE (status)', COLS['TB_H_PART_CANDIDATE'],
-              [hist('A', CUR, 'EDIT', 'SCREEN', 'APPOLE_SYNC_STATUS', 'Sent', 'No Sync', 'Case/Day of a destination changed', by=DS, dt=T27)], {1: NEW})
+    kan_cur['A'] = kanban('A', CUR, 'Active', '1', '0', 'SCREEN', DS, T27, gt=sent_nov['gt'], ap=sent_nov['ap'], run=sent_nov['run'])
+    r = block(ws, r, 'TB_M_PART_CANDIDATE 202611 of A (APPOLE_SYNC_STATUS 1 -> 0)', COLS['TB_M_PART_CANDIDATE'], [kan_cur['A']], {1: NEW})
     block(ws, r, 'TB_H_PART_CANDIDATE', COLS['TB_H_PART_CANDIDATE'],
           [hist('A', CUR, 'MAPPING', 'SCREEN', 'CASE_DAY', 6, 7, code='9722D10', by=DS, dt=T27), hist('A', CUR, 'MAPPING', 'SCREEN', 'CASE_DAY', 6, 5, code='9715310', by=DS, dt=T27)],
           fills(2, NEW))
 
     # ---------- 6. Sync ----------
     ws, r = sheet(wb, '6. Sync 27-Nov', '[Sync] 27-Nov 10:00: rows with a target No Sync (Current and Next; GTOPAS of Next waits for 1-Dec)', [
-        'GTOPAS: no Current row is GTOPAS No Sync -> XD06 does not run. AP POLE: 202611 A, then 202612 A, B, C, D -> XD07 (Current first, then Next).',
-        'NSP writes the send before the bot starts; the bot writes nothing back (result by e-mail).'])
-    shown = [kanban('A', CUR, 'Active', '3', '0>3', 'SCREEN', DS, S27, gt=sent_nov['gt'], ap=S27, run=RUN27)] + [
-        kanban(p, NXT, newst[p], '3' if same[p] else '0', '0>3', 'CALC', DS, S27, (BATCH, RUN), gt=sent_nov['gt'] if same[p] else '', ap=S27, run=RUN27)
-        for p in PARTS]
-    r = block(ws, r, 'TB_M_PART_CANDIDATE: status before -> after [Sync] (202611 A and 202612 all)', COLS['TB_M_PART_CANDIDATE'], shown, fills(5, NEW))
-    kan_cur['A'] = kanban('A', CUR, 'Active', '3', '3', 'SCREEN', DS, S27, gt=sent_nov['gt'], ap=S27, run=RUN27)
+        'GTOPAS: no Current row is GTOPAS 0 -> XD06 does not run. AP POLE: 202611 A, then 202612 A, B, C, D -> XD07 (Current first, then Next).',
+        'NSP writes the send before the bot starts (APPOLE_SYNC_STATUS 0 -> 1, APPOLE_SYNC_DT, SYNC_RUN_ID + Log); the bot writes nothing back (result by e-mail). No TB_H row.'] + LEGEND)
+    kan_cur['A'] = kanban('A', CUR, 'Active', '1', '1', 'SCREEN', DS, S27, gt=sent_nov['gt'], ap=S27, run=RUN27)
     for p in PARTS:
-        kan_nxt[p] = kanban(p, NXT, newst[p], '3' if same[p] else '0', '3', 'CALC', DS, S27, (BATCH, RUN), gt=sent_nov['gt'] if same[p] else '', ap=S27, run=RUN27)
+        kan_nxt[p] = kanban(p, NXT, newst[p], '0', '1', 'CALC', DS, S27, (BATCH, RUN), ap=S27, run=RUN27)
+    r = block(ws, r, 'TB_M_PART_CANDIDATE after [Sync] (202611 A and 202612 all: APPOLE_SYNC_STATUS 0 -> 1)', COLS['TB_M_PART_CANDIDATE'],
+              [kan_cur['A']] + list(kan_nxt.values()), fills(5, NEW))
     sent_dest = dadj + [x for x in dnxt]
     r = block(ws, r, 'TB_M_PART_CANDIDATE_DEST rows sent with these parts (read only; the Sync Status is kept on the part row above)',
               COLS['TB_M_PART_CANDIDATE_DEST'], sent_dest, fills(len(sent_dest), NEW))
     r = note(ws, r, ['The Export Crossdock Master (destinations) has no Sync Status of its own: a change of a destination (here A 202611 JPN 6 -> 7, '
-                     'KR 6 -> 5 on sheet 5) sets the part row to AP POLE No Sync, and the bot sends the part with all its destinations of that period.'])
-    r = block(ws, r, 'TB_H_PART_CANDIDATE (SYNC)', COLS['TB_H_PART_CANDIDATE'],
-              [hist('A', CUR, 'SYNC', 'SCREEN', 'APPOLE_SYNC_STATUS', 'No Sync', 'Sent', 'APPOLE: ' + RUN27, by=DS, dt=S27)] +
-              [hist(p, NXT, 'SYNC', 'SCREEN', 'APPOLE_SYNC_STATUS', 'No Sync', 'Sent', 'APPOLE: ' + RUN27, by=DS, dt=S27) for p in PARTS])
+                     'KR 6 -> 5 on sheet 5) sets APPOLE_SYNC_STATUS of the part row to 0, and the bot sends the part with all its destinations of that period.'])
     r = block(ws, r, 'Log', LOG_COLS, [log('XD07_RPA_APPOLE', RUN27, S27, DS, '202611, 202612', 5)], {1: NEW})
     ap11 = ap_rows('11', 'A', [('9722D10', '**', 7)], 'Edit Max Shipping Box Qty 6 -> 7') + ap_rows('11', 'A', [('9715310', '**', 5)], 'Edit Max Shipping Box Qty 6 -> 5')
     r = block(ws, r, 'AP POLE 1st: Eff. 11/2026 (Current)', AP_COLS, ap11, fills(2, NEW))
@@ -278,28 +290,32 @@ def main():
         if newst[p] == 'Active':
             ap12 += ap_rows('12', p, [(x[2], x[3], x[4]) for x in dnxt if x[0] == p], 'Add')
     r = block(ws, r, 'AP POLE 2nd: Eff. 12/2026 (Next; C Inactive: no record)', AP_COLS, ap12, fills(len(ap12), NEW))
-    note(ws, r, ['Result: e-mail [Crossdock Sync][AP POLE][SUCCESS] Run ' + RUN27 + ' - 5 part(s) with the work file AP POLE Compare.'])
+    r = note(ws, r, ['Result: e-mail [Crossdock Sync][AP POLE][SUCCESS] Run ' + RUN27 + ' - 5 part(s) with the work file AP POLE Compare.'])
+    r = block(ws, r, 'If the RPA reads the changes from TB_H_PART_CANDIDATE (rule: rows of the part + period with CREATED_DT > APPOLE_SYNC_DT before the run, '
+              'all rows when never sent; per key the row with the largest HIST_ID)', TBH_COLS, TBH_READ,
+              {i: (DEL if x[6].startswith('Not in TB_H') else NEW) for i, x in enumerate(TBH_READ, 1)})
+    note(ws, r, ['Red = AP POLE needs the value but TB_H has no row: TB_H keeps only changes, so a value equal to the previous period (A JPN 6, all of D, '
+                 'Pcs/Case and Max Case/Day) is not there. For a new Effective month the RPA must still read the full values from the master (Export Excel), '
+                 'or XD05 must write a history row for every value of the new period.'])
 
     # ---------- 7. Rollover ----------
-    ws, r = sheet(wb, '7. Rollover 1-Dec', 'Period Rollover (01-Dec 00:10): 202612 Current, 202611 Past; XD06 for the 202612 rows with GTOPAS No Sync', [
-        'AP POLE status and date are not touched (stay Sent 27-Nov). D was copied (GTOPAS Sent) on day D, so it is not sent again.'])
-    send = [p for p in PARTS if not same[p]]
-    shown = [kanban(p, NXT, newst[p], '0>3', '3', 'CALC', BATCH, R1, (BATCH, RUN), gt=R1, ap=S27, run=RUN1) if p in send else kan_nxt[p] for p in PARTS]
+    ws, r = sheet(wb, '7. Rollover 1-Dec', 'Period Rollover (01-Dec 00:10): 202612 Current, 202611 Past; XD06 for the 202612 rows with GTOPAS 0', [
+        'GTOPAS_SYNC_STATUS 0 -> 1 for A, B, C, D (GTOPAS_SYNC_DT, SYNC_RUN_ID + Log; no TB_H row). AP POLE status and date are not touched (stay 1, 27-Nov).',
+        'D has the same destination as Nov: in the GTOPAS Compare it is Keep, so the bot does nothing in GTOPAS for D.'] + LEGEND)
+    send = list(PARTS)
     for p in send:
-        kan_nxt[p] = kanban(p, NXT, newst[p], '3', '3', 'CALC', BATCH, R1, (BATCH, RUN), gt=R1, ap=S27, run=RUN1)
-    r = block(ws, r, 'TB_M_PART_CANDIDATE 202612: GTOPAS before -> after (AP POLE unchanged: stays 3 Sent)', COLS['TB_M_PART_CANDIDATE'], shown,
-              {i: (NEW if p in send else KEEP) for i, p in enumerate(PARTS, 1)})
-    r = block(ws, r, 'TB_H_PART_CANDIDATE (SYNC)', COLS['TB_H_PART_CANDIDATE'],
-              [hist(p, NXT, 'SYNC', 'BATCH', 'GTOPAS_SYNC_STATUS', 'No Sync', 'Sent', 'GTOPAS: ' + RUN1, by=BATCH, dt=R1) for p in send])
+        kan_nxt[p] = kanban(p, NXT, newst[p], '1', '1', 'CALC', BATCH, R1, (BATCH, RUN), gt=R1, ap=S27, run=RUN1)
+    r = block(ws, r, 'TB_M_PART_CANDIDATE 202612 (GTOPAS_SYNC_STATUS 0 -> 1; AP POLE unchanged)', COLS['TB_M_PART_CANDIDATE'], list(kan_nxt.values()),
+              fills(len(PARTS), NEW))
     r = block(ws, r, 'Log', LOG_COLS, [log('XD06_RPA_GTOPAS', RUN1, R1, BATCH, NXT, len(send))], {1: NEW})
     cur_c = {(p, c) for p, c, _, _ in CUR_MAP}
     nxt_c = {(x[0], x[2]) for x in dnxt}
     work = [[p, c, 'Y' if (p, c) in nxt_c else 'N', 'Y' if (p, c) in cur_c else 'N',
              'Keep' if (p, c) in cur_c and (p, c) in nxt_c else 'Add' if (p, c) in nxt_c else 'Delete'] for p, c in sorted(cur_c | nxt_c) if p in send]
-    r = block(ws, r, 'Work sheet GTOPAS Compare (parts of the run: A, B, C)', ['P/No.', 'Destination Code', 'In NSP 202612', 'In GTOPAS', 'Action'], work,
+    r = block(ws, r, 'Work sheet GTOPAS Compare (parts of the run: A, B, C, D)', ['P/No.', 'Destination Code', 'In NSP 202612', 'In GTOPAS', 'Action'], work,
               {i: {'Keep': KEEP, 'Add': NEW, 'Delete': DEL}[x[4]] for i, x in enumerate(work, 1)})
     gt_after = sorted(nxt_c)
-    block(ws, r, 'GTOPAS WVJA5204 after XD06 (D not touched)', GT_COLS, [[p, c, 'A', '2', '3', '2'] for p, c in gt_after],
+    block(ws, r, 'GTOPAS WVJA5204 after XD06 (D: Keep, not touched)', GT_COLS, [[p, c, 'A', '2', '3', '2'] for p, c in gt_after],
           {i: (KEEP if k in cur_c else NEW) for i, k in enumerate(gt_after, 1)})
 
     # ---------- 8. end state ----------
