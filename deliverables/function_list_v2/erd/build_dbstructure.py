@@ -18,7 +18,6 @@ TABLES = [
     ('HIS-01', 'TB_H_PART_CANDIDATE', 'Part Candidate History', 'History', 'Every change of a crossdock part (screen, upload, calculation, sync).'),
     ('HIS-02', 'TB_H_CROSSDOCK_ORDER_CHANGE', 'Crossdock Order Change History', 'History', 'Change Order Number (XD11): cancelled qty in an ASN moved to other lines.'),
     ('TR-01', 'TB_R_PART_DAD_RESULT', 'DAD Volume Calculation Result', 'Transaction', 'Result of XD05 process 1 per part and period.'),
-    ('TR-02', 'TB_R_CROSSDOCK_IF_RESULT', 'Crossdock IF Result', 'Transaction', 'Send status of the crossdock master per part and target (dummy table).'),
     ('TR-03', 'TB_R_INSTRUCTION', 'Crossdock Instruction', 'Transaction', 'Real mapping of Create ASN: case x customer order line x PO.'),
     ('TR-05', 'TB_R_CROSSDOCK_CASE_HOLD', 'Crossdock Case Hold', 'Transaction', 'Customer order lines of a supplier case held by the D/S team on XD10 (Hold check box): the held pcs take no PO, the PO qty goes to the next orders (kept until released).'),
     ('TR-06', 'TB_R_CROSSDOCK_PART_HOLD', 'Crossdock Part Hold', 'Transaction', 'Part Number on hold by the D/S team on XD10 (no ASN for the part while HOLD_FLAG Y).'),

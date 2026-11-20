@@ -137,7 +137,7 @@ export function useCrossdockState() {
   const syncParts = useCallback((ids: string[]) => {
     const idSet = new Set(ids);
     const sentAt = nowStamp();
-    setParts((prevParts) => prevParts.map((p) => (idSet.has(p.p) ? { ...p, syncStatus: 3, lastSyncDt: sentAt } : p)));
+    setParts((prevParts) => prevParts.map((p) => (idSet.has(p.p) ? { ...p, syncStatus: 3, lastSyncDt: sentAt, apSyncDt: sentAt } : p)));
     setLastRun(ids);
   }, []);
   const resendLast = useCallback(() => syncParts(lastRun), [lastRun, syncParts]);

@@ -29,13 +29,13 @@ SOURCE = {
          'Crossdock_Export_Master_Sep_2026_YYYYMMDD.xlsx (period of step 2, download date) and the bot opens it.', 'n5_map_export.png'),
         ('step', 'Bot: read sheet "Export Crossdock Master" (destination level)',
          'One row per part and destination of the parts of the run. Used for AP POLE WLM9Q860: Part Number, Destination Code (-> Buyer-PD), '
-         'Dest Case/Day (-> Max Shipping Box Qty), Max Case/Day (quota) (-> Max Shipping Box Qty of the part) and Last Sent Date. '
+         'Dest Case/Day (-> Max Shipping Box Qty), Max Case/Day (quota) (-> Max Shipping Box Qty of the part) and Last Sent AP POLE. '
          'A part without mapping has one row with an empty Destination Code (e.g. PART-B).', 'x_map_waiting.png'),
         ('step', 'Bot: download the Kanban Crossdock Master (part level)',
          'The bot opens the tab Kanban Crossdock Master, clicks [Search] without a filter, then [Export Excel]. The browser downloads '
          'Crossdock_Kanban_Master_YYYYMMDD.xlsx.', 'n6_part_export.png'),
         ('step', 'Bot: read sheet "Kanban Crossdock Master" (parts of the run)',
-         'The bot filters Sync Status = Sent and Last Sent Date = the send time of the run. Used for AP POLE WLM9Q890: Part Number (-> Part No.), Pcs/Case (-> Shipping Box Qty), '
+         'The bot filters Sync Status = Sent and Last Sent AP POLE = the send time of the run. Used for AP POLE WLM9Q890: Part Number (-> Part No.), Pcs/Case (-> Shipping Box Qty), '
          'Max Case/Day (-> Max Shipping Box Qty) and Status. Status Inactive (e.g. PART-023) = delete in AP POLE. The same parts are Sent in both files.', 'x_part_waiting.png'),
     ],
     'notes': ['Change nothing in NSP from [Sync] until the RPA has finished: a part changed in between goes back to No Sync.',

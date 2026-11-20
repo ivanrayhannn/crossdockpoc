@@ -13,7 +13,6 @@ One definition per table (the most complete one among the UISS); "Used by" = fun
 | TB_R_ACTUAL_DEMAND_SUMMARY | transaction | existing | XD04, XD05 |
 | TB_R_CASE_LABEL_LAST_SEQ | transaction | existing | XD10 |
 | TB_R_CROSSDOCK_CASE_HOLD | transaction | proposed | XD09, XD10 |
-| TB_R_CROSSDOCK_IF_RESULT | transaction | proposed | XD01, XD06, XD07 |
 | TB_R_CROSSDOCK_PART_HOLD | transaction | proposed | XD09, XD10 |
 | TB_R_DAILY_ORDER_MANIFEST | transaction | existing | XD10, XD15 |
 | TB_R_DAILY_ORDER_PART | transaction | existing | XD10, XD15 |
@@ -62,15 +61,16 @@ History of every change of a crossdock part (Add / Edit by screen or upload, map
 |---|---|---|---|---|
 | HIST_ID | BIGINT | Y | N | Running number (identity) |
 | PART_NO | VARCHAR(TBD) |  | N | Part number; length follows TB_M_PART_MASTER |
-| PERIOD | CHAR(6) |  | Y | Calculation period YYYYMM for MAPPING / SYNC / CALC; NULL for ADD / EDIT (Kanban Crossdock Master has no period) |
+| PERIOD | CHAR(6) |  | N | Calculation period YYYYMM of the changed row (every event; Kanban and Export Crossdock Master are per period, 20-Nov) |
 | EVENT_TYPE | VARCHAR(10) |  | N | ADD / EDIT / MAPPING / SYNC / CALC |
-| SOURCE | VARCHAR(10) |  | N | SCREEN / UPLOAD / IF / RPA / BATCH |
+| SOURCE | VARCHAR(10) |  | N | SCREEN / UPLOAD / BATCH (SYNC: SCREEN for [Sync] / [Re-send last Sync], BATCH for the Period Rollover) |
 | UPLOAD_ID | VARCHAR(TBD) |  | Y | Upload of the change (Log); NULL when not from an upload |
 | DEST_CODE | CHAR(7) |  | Y | Destination code (7 digits) for MAPPING; NULL for other events |
+| ORDER_TYPE | VARCHAR(2) |  | Y | Order Type of the destination row for MAPPING (with DEST_CODE); NULL for other events (20-Nov) |
 | FIELD_NAME | VARCHAR(30) |  | N | Changed field: PCS_CASE, MAX_CASE_DAY, MIN_MAD, PART_STATUS, EFFECTIVE_START_DATE, CASE_DAY, SYNC_STATUS |
 | OLD_VALUE | VARCHAR(255) |  | Y | Value before the change; NULL for ADD or an added destination |
 | NEW_VALUE | VARCHAR(255) |  | Y | Value after the change; NULL for a removed destination |
-| REMARK | VARCHAR(500) |  | Y | Free text, e.g. SYNC_MESSAGE of a Failed sync |
+| REMARK | VARCHAR(500) |  | Y | Free text; SYNC: target(s) + run ID, e.g. 'GTOPAS, APPOLE: 20261127100000' |
 | CREATED_BY | VARCHAR(20) |  | N | User who made the change (IF batch user ID for SYNC, batch user ID for BATCH) |
 | CREATED_DT | DATETIME |  | N | Date and time of the change |
 
@@ -138,8 +138,9 @@ Kanban Crossdock Master: one record per part and calculation period (19-Nov; bef
 | EFFECTIVE_START_DATE | DATE |  | Y | Effective start date; required while the part is Candidate |
 | PART_STATUS | VARCHAR(TBD) |  | N | Candidate / Active / Inactive |
 | SYNC_STATUS | CHAR(1) |  | N | 0 = No Sync, 3 = Sent (20-Nov: 1 Success / 2 Failed not used, no response from the RPA) |
-| SYNC_DT | DATETIME |  | Y | Date-time of the last send |
-| SYNC_MESSAGE | VARCHAR(TBD) |  | Y | Not used (20-Nov) |
+| GTOPAS_SYNC_DT | DATETIME |  | Y | Date-time of the last send of the part (this period) to GTOPAS: [Sync], [Re-send last Sync] or the Period Rollover (XD05 process 3); shown as Last Sent GTOPAS |
+| APPOLE_SYNC_DT | DATETIME |  | Y | Date-time of the last send of the part (this period) to AP POLE: [Sync] or [Re-send last Sync]; shown as Last Sent AP POLE. XD07 takes the parts whose APPOLE_SYNC_DT = send time of its run |
+| SYNC_RUN_ID | VARCHAR(20) |  | Y | Run ID (YYYYMMDDHHMMSS) of the last send; [Re-send last Sync] sends the rows of the last run ID again |
 | LAST_SOURCE | VARCHAR(TBD) |  | N | CALC / SCREEN / UPLOAD |
 | LAST_UPLOAD_ID | VARCHAR(TBD) |  | Y | Upload that last changed the record |
 | CREATED_BY | VARCHAR(TBD) |  | N | User who created the record |
@@ -242,26 +243,6 @@ New table: customer order lines (pcs) of a supplier case held by the D/S team wi
 | CREATED_BY | VARCHAR(20) |  | N | Login user (D/S team) who created the record |
 | CREATED_DT | DATETIME |  | N | Created date and time |
 | CHANGED_BY | VARCHAR(20) |  | N | Login user (D/S team) who last changed the record |
-| CHANGED_DT | DATETIME |  | N | Last changed date and time |
-
-#### TB_R_CROSSDOCK_IF_RESULT (transaction, proposed)
-Used by: XD01, XD06, XD07
-
-Dummy table (proposed): send status of the cross dock master per part and target system (XD06 GTOPAS, XD07 AP POLE). The real output is the change made by the RPA on the target screens (GTOPAS WVJA5204, AP POLE WLM9Q890 / WLM9Q860). The overall Sync Status of the part stays in TB_M_PART_CANDIDATE.
-
-| Column | Type | PK | Null | Description |
-|---|---|---|---|---|
-| PART_NO | VARCHAR(TBD) | Y | N | Part number (TB_M_PART_CANDIDATE) |
-| TARGET_SYSTEM | VARCHAR(10) | Y | N | 'GTOPAS' (XD06) / 'APPOLE' (XD07) |
-| PERIOD | CHAR(6) | Y | N | Calculation period of the data sent (YYYYMM); part of the key: one row per part, target and period (19-Nov) |
-| IF_STATUS | VARCHAR(1) |  | N | '0' No Sync / '3' Sent (20-Nov: no response from the RPA; the result comes by e-mail) |
-| IF_DT | DATETIME |  | Y | Date-time of the send to the RPA ([Sync] / [Re-send last Sync] / Period Rollover) |
-| LAST_SYNC_DT | DATETIME |  | Y | Date-time of the last send of the part for this target; shown as Last Sent on XD01 (20-Nov) |
-| IF_FILE_NAME | VARCHAR(100) |  | Y | Run ID of the send (YYYYMMDDHHMMSS); [Re-send last Sync] sends the parts of the last run ID again |
-| IF_MESSAGE | VARCHAR(500) |  | Y | Not used (20-Nov: no response from the RPA) |
-| CREATED_BY | VARCHAR(TBD) |  | N | User who created the record |
-| CREATED_DT | DATETIME |  | N | Created date and time |
-| CHANGED_BY | VARCHAR(TBD) |  | N | User who last changed the record |
 | CHANGED_DT | DATETIME |  | N | Last changed date and time |
 
 #### TB_R_CROSSDOCK_PART_HOLD (transaction, proposed)

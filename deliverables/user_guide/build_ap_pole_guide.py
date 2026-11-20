@@ -70,7 +70,7 @@ DEST = {
              ('Screen', 'AP POLE WLM9Q860 Export Customer Cross Dock Master (from WLM9Q890 [Maintain Cross Dock])'),
              ('User', 'RPA bot, started by [Sync] (the same steps can be done by the D/S team by hand as a fallback)'),
              ('Source data', 'NSP Export Excel Export Crossdock Master (ongoing period, sheet Export Crossdock Master: Part Number, Destination Code, '
-                             'Dest Case/Day, Max Case/Day (quota), Sync Status, Last Sent Date). Refer sheet "0. Source Data (NSP)"'),
+                             'Dest Case/Day, Max Case/Day (quota), Sync Status, Last Sent AP POLE). Refer sheet "0. Source Data (NSP)"'),
              ('Condition', 'Only the parts with Sync Status Sent (set by [Sync] in NSP)')],
     'blocks': [
         ('step', COMMON_SEARCH[0], COMMON_SEARCH[1] + ' Refer sheet "1. Kanban Part Master", steps 2 to 4.', None),

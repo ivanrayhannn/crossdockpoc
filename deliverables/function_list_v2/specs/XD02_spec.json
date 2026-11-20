@@ -416,7 +416,7 @@
       "description": "Default : NULL"
      },
      {
-      "dest_field": "SYNC_MESSAGE",
+      "dest_field": "e-mail message",
       "description": "Default : NULL"
      },
      {
@@ -512,7 +512,7 @@
       "description": "Not changed"
      },
      {
-      "dest_field": "SYNC_MESSAGE",
+      "dest_field": "e-mail message",
       "description": "Not changed"
      },
      {
@@ -1545,18 +1545,25 @@
      "0 = No Sync, 3 = Sent (20-Nov: 1 Success / 2 Failed not used, no response from the RPA)"
     ],
     [
-     "SYNC_DT",
+     "GTOPAS_SYNC_DT",
      "DATETIME",
      "",
      "Y",
-     "Date-time of the last send"
+     "Date-time of the last send of the part (this period) to GTOPAS: [Sync], [Re-send last Sync] or the Period Rollover (XD05 process 3); shown as Last Sent GTOPAS"
     ],
     [
-     "SYNC_MESSAGE",
-     "VARCHAR(TBD)",
+     "APPOLE_SYNC_DT",
+     "DATETIME",
      "",
      "Y",
-     "Not used (20-Nov)"
+     "Date-time of the last send of the part (this period) to AP POLE: [Sync] or [Re-send last Sync]; shown as Last Sent AP POLE. XD07 takes the parts whose APPOLE_SYNC_DT = send time of its run"
+    ],
+    [
+     "SYNC_RUN_ID",
+     "VARCHAR(20)",
+     "",
+     "Y",
+     "Run ID (YYYYMMDDHHMMSS) of the last send; [Re-send last Sync] sends the rows of the last run ID again"
     ],
     [
      "LAST_SOURCE",
@@ -1626,8 +1633,8 @@
      "PERIOD",
      "CHAR(6)",
      "",
-     "Y",
-     "Calculation period YYYYMM for MAPPING / SYNC / CALC; NULL for ADD / EDIT (Kanban Crossdock Master has no period)"
+     "N",
+     "Calculation period YYYYMM of the changed row (every event; Kanban and Export Crossdock Master are per period, 20-Nov)"
     ],
     [
      "EVENT_TYPE",
@@ -1641,7 +1648,7 @@
      "VARCHAR(10)",
      "",
      "N",
-     "SCREEN / UPLOAD / IF / RPA / BATCH"
+     "SCREEN / UPLOAD / BATCH (SYNC: SCREEN for [Sync] / [Re-send last Sync], BATCH for the Period Rollover)"
     ],
     [
      "UPLOAD_ID",
@@ -1656,6 +1663,13 @@
      "",
      "Y",
      "Destination code (7 digits) for MAPPING; NULL for other events"
+    ],
+    [
+     "ORDER_TYPE",
+     "VARCHAR(2)",
+     "",
+     "Y",
+     "Order Type of the destination row for MAPPING (with DEST_CODE); NULL for other events (20-Nov)"
     ],
     [
      "FIELD_NAME",
@@ -1683,7 +1697,7 @@
      "VARCHAR(500)",
      "",
      "Y",
-     "Free text, e.g. SYNC_MESSAGE of a Failed sync"
+     "Free text; SYNC: target(s) + run ID, e.g. 'GTOPAS, APPOLE: 20261127100000'"
     ],
     [
      "CREATED_BY",

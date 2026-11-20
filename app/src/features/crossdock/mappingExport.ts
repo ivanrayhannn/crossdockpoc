@@ -54,7 +54,8 @@ const LIST_COLUMNS: (Column<MappingLine> & { width: number })[] = [
   { header: { value: 'Dest Pcs/Day', ...HEADER, align: 'right' }, cell: ({ part, dest }) => cell(dest && num(part.pc) * num(dest.al), NUMBER_FORMAT), width: 14 },
   { header: { value: 'Pcs/Day', ...HEADER, align: 'right' }, cell: ({ part, allocated }) => cell(num(part.pc) * allocated, NUMBER_FORMAT), width: 12 },
   { header: { value: 'Sync Status', ...HEADER }, cell: ({ part }) => cell(syncBadge(part.syncStatus).t), width: 13 },
-  { header: { value: 'Last Sent Date', ...HEADER }, cell: ({ part }) => cell(part.lastSyncDt), width: 18 },
+  { header: { value: 'Last Sent GTOPAS', ...HEADER }, cell: ({ part }) => cell(part.lastSyncDt), width: 18 },
+  { header: { value: 'Last Sent AP POLE', ...HEADER }, cell: ({ part }) => cell(part.apSyncDt), width: 18 },
   // audit log of the mapping row (TB_M_PART_CANDIDATE_DEST CREATED_* / CHANGED_*); blank for a part without destination
   { header: { value: 'CREATED_DT', ...HEADER }, cell: ({ part, dest }) => cell(dest && audit(part).createdDt), width: 18 },
   { header: { value: 'CREATED_BY', ...HEADER }, cell: ({ part, dest }) => cell(dest && audit(part).createdBy), width: 16 },

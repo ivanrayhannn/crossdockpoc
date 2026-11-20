@@ -47,7 +47,7 @@ FLOWS = [
                  read=['TB_M_PART_CANDIDATE'], write=[], ab=[], next=['M11']),
             dict(id='M11', lane='NB', band='B4', slot=2, fn='XD06 · XD07', title='Send crossdock master: GTOPAS by RPA, AP POLE by RPA (Inactive: delete)',
                  read=['TB_M_PART_CANDIDATE', 'TB_M_PART_CANDIDATE_DEST'],
-                 write=['TB_R_CROSSDOCK_IF_RESULT (dummy)', 'TB_M_PART_CANDIDATE (SYNC_STATUS)', 'TB_H_PART_CANDIDATE', 'Log'], ab=['AB06'], next=['M12', 'M13']),
+                 write=['TB_M_PART_CANDIDATE (SYNC_STATUS, GTOPAS_SYNC_DT, APPOLE_SYNC_DT, SYNC_RUN_ID)', 'TB_H_PART_CANDIDATE', 'Log'], ab=['AB06'], next=['M12', 'M13']),
             dict(id='M12', lane='GT', band='B5', slot=0, fn='RPA', title='RPA: register / delete part + destination in Crossdock Master (Supply > Master); Inactive or no destination: delete all rows',
                  read=['RPA input from NSP'], write=['GTOPAS Crossdock Master'], ab=[], next=[]),
             dict(id='M13', lane='AP', band='B5', slot=0, fn='', title='RPA on AP POLE: Cross Dock Kanban Part Master (WLM9Q890) add / edit / delete part; Export Customer Cross Dock Master (WLM9Q860) add / edit / delete destination',

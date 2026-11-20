@@ -1,6 +1,6 @@
 """Simulation (19-Nov): period of the Crossdock Master. XD05 runs on day D (set in the system master, 27-Nov is only an example) and
 creates the Next period (M+1); its status result is applied to the Part List only on day 1 by a new month-change step (Period Rollover).
-Shows TB_M_PART_CANDIDATE, TB_R_PART_DAD_RESULT, TB_M_PART_CANDIDATE_DEST, TB_R_CROSSDOCK_IF_RESULT, GTOPAS WVJA5204 and AP POLE
+Shows TB_M_PART_CANDIDATE, TB_R_PART_DAD_RESULT, TB_M_PART_CANDIDATE_DEST, TB_M_PART_CANDIDATE (sync columns), GTOPAS WVJA5204 and AP POLE
 WLM9Q890 / WLM9Q860 step by step. Decisions of the user: Next only by XD05; GTOPAS = Current, synced automatically on day 1; an edit of
 Pcs/Case / Max Case/Day after day D goes to M and M+1 (4b); Max Case/Day below the Next total is maintained by hand.
 Run: python3 build_sim_period_rollover.py"""
@@ -20,7 +20,7 @@ BP = {'9722D10': '9722D-10', '9811110': '98111-10', '9715310': '97153-10'}
 PART_COLS = ['PART_NO', 'PART_STATUS', 'PCS_CASE', 'MAX_CASE_DAY', 'Next Status (screen, from DAD result)']
 DAD_COLS = ['PERIOD', 'PART_NO', 'AVG_MAD', 'MIN_MAD', 'OLD_STATUS', 'NEW_STATUS', 'APPLIED_DT (new column)']
 DEST_COLS = ['PART_NO', 'PERIOD', 'DEST_CODE', 'CASE_DAY', 'Period type']
-IF_COLS = ['PART_NO', 'TARGET_SYSTEM', 'PERIOD', 'IF_STATUS', 'Note']
+IF_COLS = ['PART_NO', 'Target', 'PERIOD', 'SYNC_STATUS', 'Note (GTOPAS_SYNC_DT / APPOLE_SYNC_DT of TB_M_PART_CANDIDATE)']
 GT_COLS = ['P/No.', 'Destination Code', 'Action of XD06']
 AP_PART_COLS = ['Eff. Month / Year', 'Part No.', 'Shipping Box Qty', 'Max Shipping Box Qty', 'Action of XD07']
 AP_DEST_COLS = ['Eff. Month / Year', 'Part No.', 'Buyer-PD', 'Max Shipping Box Qty', 'Action of XD07']
@@ -105,7 +105,7 @@ def main():
     r = step(ws, r, 'Step 2 - 27-Nov (day D): XD05 creates Dec (Next)')
     r = text(ws, r, ['NSP gets the DAD result 202612 and the Dec mapping (see sheet 2 for the values). Part status is not changed yet.',
                      'GTOPAS: no change. Orders of Nov still use the Nov combinations; nothing is Waiting for GTOPAS.'])
-    r = block(ws, r, 'TB_R_CROSSDOCK_IF_RESULT (GTOPAS)', IF_COLS, [[p, 'GTOPAS', M, '3 Sent', 'No change on day D'] for p in ('P-A', 'P-B', 'P-E')],
+    r = block(ws, r, 'TB_M_PART_CANDIDATE (sync columns) (GTOPAS)', IF_COLS, [[p, 'GTOPAS', M, '3 Sent', 'No change on day D'] for p in ('P-A', 'P-B', 'P-E')],
               {1: KEEP, 2: KEEP, 3: KEEP})
     r = step(ws, r, 'Step 3 - 28-Nov / 29-Nov: Pcs/Case and Max Case/Day edits')
     r = text(ws, r, ['GTOPAS keeps no quantity: the edits of P-A (Pcs/Case) and P-E (Max Case/Day) give no change in GTOPAS (AP POLE only, sheet 2).'])
@@ -134,7 +134,7 @@ def main():
                 ['P-C', '9811110', 'Add'], ['P-E', '9722D10', 'Not sent, not touched'], ['P-E', '9811110', 'Not sent, not touched']]
     r = block(ws, r, '4.6 GTOPAS WVJA5204 after XD06', GT_COLS, gt_after,
               {1: KEEP, 2: DEL, 3: NEW, 4: DEL, 5: NEW, 6: KEEP, 7: KEEP})
-    block(ws, r, '4.6 TB_R_CROSSDOCK_IF_RESULT (GTOPAS, 202612)', IF_COLS, [[p, 'GTOPAS', N, '3 Sent', 'LAST_SYNC_DT 01-Dec'] for p in ('P-A', 'P-B', 'P-C')],
+    block(ws, r, '4.6 TB_M_PART_CANDIDATE (sync columns) (GTOPAS, 202612)', IF_COLS, [[p, 'GTOPAS', N, '3 Sent', 'GTOPAS_SYNC_DT 01-Dec'] for p in ('P-A', 'P-B', 'P-C')],
           {1: KEEP, 2: KEEP, 3: KEEP})
 
     # ================= 2. AP POLE =================
@@ -151,10 +151,10 @@ def main():
     r = block(ws, r, 'AP POLE WLM9Q890 (part), Eff. 12/26', AP_PART_COLS, ap_n, {1: NEW, 2: NEW, 3: NEW, 4: DEL})
     r = block(ws, r, 'AP POLE WLM9Q860 (Buyer-PD), Eff. 12/26', AP_DEST_COLS, [['12/26', p, BP[d], c, 'Add'] for p, _, d, c, _ in dest_n],
               {i: NEW for i in range(1, 6)})
-    r = block(ws, r, 'TB_R_CROSSDOCK_IF_RESULT (APPOLE)', IF_COLS, [[p, 'APPOLE', N, '3 Sent', 'LAST_SYNC_DT 27-Nov'] for p in ('P-A', 'P-B', 'P-C', 'P-E')],
+    r = block(ws, r, 'TB_M_PART_CANDIDATE (sync columns) (APPOLE)', IF_COLS, [[p, 'APPOLE', N, '3 Sent', 'APPOLE_SYNC_DT 27-Nov'] for p in ('P-A', 'P-B', 'P-C', 'P-E')],
               {i: KEEP for i in range(1, 5)})
     r = step(ws, r, 'Step 3 - 28-Nov: Pcs/Case of P-A 10 -> 12 (after day D) -> Eff. 11/26 and 12/26 (4b)')
-    r = block(ws, r, 'TB_R_CROSSDOCK_IF_RESULT after the save', IF_COLS, [['P-A', 'APPOLE', M, '0 No Sync', 'Eff. 11/26'],
+    r = block(ws, r, 'TB_M_PART_CANDIDATE (sync columns) after the save', IF_COLS, [['P-A', 'APPOLE', M, '0 No Sync', 'Eff. 11/26'],
                                                                       ['P-A', 'APPOLE', N, '0 No Sync', 'Eff. 12/26']], {1: NEW, 2: NEW})
     r = block(ws, r, 'AP POLE WLM9Q890 after [Sync] (Current first, then Next)', AP_PART_COLS,
               [['11/26', 'P-A', 12, 20, 'Edit (1st)'], ['12/26', 'P-A', 12, 20, 'Edit (2nd)']], {1: NEW, 2: NEW})

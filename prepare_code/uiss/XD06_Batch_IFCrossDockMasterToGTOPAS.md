@@ -17,7 +17,8 @@
 | 0.5 | FID Rayhan | 18-Nov-26 |  | Sheet "Active to Inactive" removed (18-Nov): Inactive parts with No Sync / Failed are taken by [Sync] by their status. Inactive parts are not in sheet Export Crossdock Master, so their rows are deleted by the compare. |
 | 0.6 | FID Rayhan | 19-Nov-26 |  | Notification email of the RPA (Power Automate): cases SUCCESS / FAILED / bot not started, recipients, subject, body, attachment, retry (4.4); LOG6. |
 | 0.7 | FID Rayhan | 19-Nov-26 |  | GTOPAS = Current period; automatic run after the Period Rollover; several order types of a destination = one GTOPAS row (19-Nov). |
-| 0.8 | FID Rayhan | 20-Nov-26 |  | No response to NSP: the bot does not write TB_R_CROSSDOCK_IF_RESULT / TB_M_PART_CANDIDATE / TB_H_PART_CANDIDATE; the result is the notification e-mail; [Re-send last Sync] (20-Nov). |
+| 0.8 | FID Rayhan | 20-Nov-26 |  | No response to NSP: the bot does not write TB_M_PART_CANDIDATE / TB_M_PART_CANDIDATE / TB_H_PART_CANDIDATE; the result is the notification e-mail; [Re-send last Sync] (20-Nov). |
+| 0.9 | FID Rayhan | 20-Nov-26 |  | TB_R_CROSSDOCK_IF_RESULT removed; the parts of the run come from the send time on TB_M_PART_CANDIDATE (GTOPAS_SYNC_DT / APPOLE_SYNC_DT) and SYNC_RUN_ID (20-Nov). |
 
 ## 1. General
 
@@ -26,7 +27,7 @@
 - To keep the Crossdock Master of GTOPAS equal to NSP by an RPA process (no interface file, decided 11-Nov): [Sync] on XD01 starts the bot; the bot downloads the Export Excel of Export Crossdock Master (ongoing period) from NSP, fills the work sheet "GTOPAS Compare" in the file and maintains GTOPAS screen Crossdock Master (WVJA5204, menu Supply > Master > Crossdock Master) (decided 17-Nov).
 - Per part + destination: in NSP (Active) and not in GTOPAS -> registered; in both -> skipped (no change); in GTOPAS and not in NSP -> deleted. Inactive parts are not in the NSP list, so their rows in GTOPAS are deleted. [Sync] sends every part with status Active (ongoing period) or Inactive whose Sync Status is No Sync or Failed, whatever the filter (Candidate never) (definition of XD01, 17-Nov).
 - Only the part + destination list is maintained; Pcs/Case, Max Case/Day, Effective Start Date and Case/Day are not sent (GTOPAS keeps no Case/Day).
-- The bot runs with try-catch: any error stops the run and the whole run is Failed (one fails, all fail). The result is kept per part in TB_R_CROSSDOCK_IF_RESULT and, together with XD07 (AP POLE), gives the overall Sync Status on XD01.
+- The bot runs with try-catch: any error stops the run and the whole run is Failed (one fails, all fail). The result is kept per part in TB_M_PART_CANDIDATE and, together with XD07 (AP POLE), gives the overall Sync Status on XD01.
 
 ### Operation flow
 
@@ -52,7 +53,6 @@ flowchart TB
 | Name | Type | Description |
 |---|---|---|
 | XD01 Export Excel: Export Crossdock Master | File | Downloaded by the bot after [Sync]: Calculation period = ongoing, Sync Status = All. Sheet Export Crossdock Master (Part Number, Destination Code, Sync Status) = NSP list |
-| TB_R_CROSSDOCK_IF_RESULT | DB | Parts Waiting for 'GTOPAS' (IF_STATUS = '3'), set by [Sync] on XD01: every part with status Active (ongoing period) or Inactive whose Sync Status is No Sync or Failed, whatever the filter (Candidate never) |
 | GTOPAS Crossdock Master (WVJA5204) | System | All rows of Depot Code 01 (one row per part + destination), read by the bot page by page |
 
 ### Output
@@ -61,8 +61,7 @@ flowchart TB
 |---|---|---|
 | GTOPAS Crossdock Master (WVJA5204) | System | Rows registered / deleted by the bot (not in NSP scope) |
 | RPA work file | File | The downloaded Excel with the new sheet GTOPAS Compare filled by the bot (P/No., Destination Code, In NSP (Y/N), In GTOPAS (Y/N), Action (Keep / Add / Delete), Result (OK / Error), GTOPAS message, Done date-time); kept as the evidence of the run |
-| TB_R_CROSSDOCK_IF_RESULT | DB | Result of 'GTOPAS' per Waiting part (1 / 2), run ID, message |
-| TB_M_PART_CANDIDATE | DB | Overall SYNC_STATUS, SYNC_DT, SYNC_MESSAGE of the part |
+| TB_M_PART_CANDIDATE | DB | Overall SYNC_STATUS, SYNC_DT, e-mail message of the part |
 | TB_H_PART_CANDIDATE | DB | History record per part (event SYNC, source RPA) |
 | Log | DB | Start, counts (registered / skipped / deleted), error and end messages |
 
@@ -115,7 +114,7 @@ flowchart TB
   go[("GTOPAS Crossdock Master")]
   d{"6. Any error (try-catch)?"}
   p7["7. Status per part, overall Sync Status, history"]
-  o[("TB_R_CROSSDOCK_IF_RESULT / TB_M_PART_CANDIDATE / TB_H_PART_CANDIDATE")]
+  o[("TB_M_PART_CANDIDATE / TB_M_PART_CANDIDATE / TB_H_PART_CANDIDATE")]
   p8["8. Log end, exit"]
   log[("Log")]
   p1 --> p2
@@ -133,7 +132,7 @@ flowchart TB
   p8 --> log
 ```
 
-1. [Sync] on XD01 sets the parts to Waiting (SYNC_STATUS = '3', IF_STATUS = '3' for 'GTOPAS' and 'APPOLE' in TB_R_CROSSDOCK_IF_RESULT) and starts the RPA bot. Write LOG1. The whole bot run is inside one try-catch (step 6).
+1. [Sync] on XD01 sets the parts to Waiting (SYNC_STATUS = '3', SYNC_STATUS = '3' for 'GTOPAS' and 'APPOLE' in TB_M_PART_CANDIDATE) and starts the RPA bot. Write LOG1. The whole bot run is inside one try-catch (step 6).
   - Waiting parts = every part with status Active (ongoing period) or Inactive whose Sync Status is No Sync or Failed, whatever the filter (Candidate never).
   - Active part: its destinations of the ongoing period are registered / kept in GTOPAS. Inactive part: all its rows are deleted (none to delete when it was never synced; it still gets Success).
 2. The bot logs in to NSP, opens XD01 Crossdock Master Setting, tab Export Crossdock Master, Calculation period = ongoing, Sync Status = All, clicks [Search] and [Export Excel], and opens the downloaded file Crossdock_Export_Master_<Period>_YYYYMMDD.xlsx.
@@ -149,10 +148,10 @@ flowchart TB
   - This covers destinations removed in NSP, parts that became Inactive (all their rows) and Active parts without destination.
 6. Try-catch: any error (login, screen not available, timeout, error message instead of MZD34006FEI, NSP download failed or the Excel cannot be read) stops the bot at once.
   - The whole run is Failed (one fails, all fail): LOG4 with the step and the row of the error. The rows already registered / deleted before the error stay in GTOPAS (no rollback on the screen); the next [Sync] compares again and completes them.
-7. Set the result of every Waiting part for 'GTOPAS' in TB_R_CROSSDOCK_IF_RESULT and the overall Sync Status:
-  - No error: IF_STATUS = '1', IF_MESSAGE = 'registered <n>, deleted <n>' of the part. Error: IF_STATUS = '2' for every Waiting part, IF_MESSAGE = error of LOG4.
+7. Set the result of every Waiting part for 'GTOPAS' in TB_M_PART_CANDIDATE and the overall Sync Status:
+  - No error: SYNC_STATUS = '1', e-mail message = 'registered <n>, deleted <n>' of the part. Error: SYNC_STATUS = '2' for every Waiting part, e-mail message = error of LOG4.
   - TB_M_PART_CANDIDATE: CHANGED_DT changed since step 2 -> '0' (No Sync); else 'GTOPAS' and 'APPOLE' both '1' -> '1' (Success), one '2' -> '2' (Failed), one still '3' -> stays '3'. SYNC_DT = now when 1 or 2.
-  - Insert TB_H_PART_CANDIDATE: event SYNC, source RPA, FIELD_NAME SYNC_STATUS, REMARK = 'GTOPAS: ' + IF_MESSAGE.
+  - Insert TB_H_PART_CANDIDATE: event SYNC, source RPA, FIELD_NAME SYNC_STATUS, REMARK = 'GTOPAS: ' + e-mail message.
 8. Write LOG2 with the counts (NSP rows, GTOPAS rows, registered, skipped, deleted) and the status. Exit.
 
 ## 3. Data edit mapping
@@ -180,33 +179,15 @@ flowchart TB
 |  | MT | 'DEL' |
 |  | Row | Deleted: destination removed in NSP, part Inactive (all its rows), Active part without destination, part not in NSP |
 
-#### 3. Update TB_R_CROSSDOCK_IF_RESULT – Rows of the Waiting parts for 'GTOPAS'
-- Source: Result of the send
-- Destination keys: PART_NO + TARGET_SYSTEM = Waiting part + 'GTOPAS'
-
-| Source field | Destination field | Description |
-|---|---|---|
-|  | IF_STATUS | '1' run without error / '2' run stopped by an error (try-catch, all parts) |
-|  | IF_DT | Date-time of the result |
-|  | IF_FILE_NAME | RPA run ID (YYYYMMDDHHMMSS); file name only for AP POLE |
-|  | IF_MESSAGE | 'registered <n>, deleted <n>' when '1'; error of the run when '2' |
-|  | CHANGED_BY | IF batch user ID |
-|  | CHANGED_DT | Server system date-time |
-|  | PART_NO | Not changed |
-|  | TARGET_SYSTEM | Not changed |
-|  | PERIOD | Not changed |
-|  | CREATED_BY | Not changed |
-|  | CREATED_DT | Not changed |
-
-#### 4. Update TB_M_PART_CANDIDATE – Overall Sync Status of the part
-- Source: TB_R_CROSSDOCK_IF_RESULT (keys: PART_NO = Waiting part (both target rows))
+#### 3. Update TB_M_PART_CANDIDATE – Overall Sync Status of the part
+- Source: TB_M_PART_CANDIDATE (keys: PART_NO = Waiting part (both target rows))
 - Destination keys: PART_NO = Waiting part
 
 | Source field | Destination field | Description |
 |---|---|---|
 |  | SYNC_STATUS | '0' when CHANGED_DT changed; else '3' while a target is Waiting, '1' when both '1', '2' when a target is '2' |
 |  | SYNC_DT | Date-time when SYNC_STATUS becomes 1 or 2; else not changed |
-|  | SYNC_MESSAGE | Target + reason when Failed; blank when Success |
+|  | e-mail message | Target + reason when Failed; blank when Success |
 |  | PART_NO | Not changed |
 |  | PART_NAME | Not changed |
 |  | MIN_MAD | Not changed |
@@ -222,7 +203,7 @@ flowchart TB
 |  | CHANGED_BY | Not changed |
 |  | CHANGED_DT | Not changed |
 
-#### 5. Insert TB_H_PART_CANDIDATE – One record per Waiting part
+#### 4. Insert TB_H_PART_CANDIDATE – One record per Waiting part
 - Source: Result of the part
 
 | Source field | Destination field | Description |
@@ -237,11 +218,11 @@ flowchart TB
 |  | FIELD_NAME | 'SYNC_STATUS' |
 |  | OLD_VALUE | 'Waiting' |
 |  | NEW_VALUE | New overall status (Waiting / Success / Failed / No Sync) |
-|  | REMARK | 'GTOPAS: ' + IF_MESSAGE |
+|  | REMARK | 'GTOPAS: ' + e-mail message |
 |  | CREATED_BY | IF batch user ID |
 |  | CREATED_DT | Server system date-time |
 
-#### 6. Insert Log – Messages of the run
+#### 5. Insert Log – Messages of the run
 - Source: Result of this run
 
 | Source field | Destination field | Description |
@@ -285,11 +266,11 @@ flowchart TB
 ### 4.3 Try-Catch and Status
 
 - The whole bot run is in one try-catch. Any error stops the run: login failed, screen not available, timeout, an error message instead of MZD34006FEI, NSP download failed or the Excel cannot be read.
-- One fails, all fail: every Waiting part gets 'GTOPAS' IF_STATUS = '2' (Failed) with the error, and the overall Sync Status Failed; the D/S team clicks [Sync] again.
+- One fails, all fail: every Waiting part gets 'GTOPAS' SYNC_STATUS = '2' (Failed) with the error, and the overall Sync Status Failed; the D/S team clicks [Sync] again.
 - Rows registered / deleted before the error stay in GTOPAS (the screen has no rollback). The next run compares again, skips them and completes the rest.
 - A part changed on XD01 or by upload while the bot runs gets SYNC_STATUS = No Sync, so the newer data is sent by the next [Sync].
-- TB_R_CROSSDOCK_IF_RESULT keeps the result per part and target (GTOPAS by XD06, AP POLE by XD07); the overall Sync Status needs both.
-- On Success of the run: IF_STATUS 1, IF_DT and LAST_SYNC_DT = date-time of the result for every Waiting part. On Failed: IF_STATUS 2 and IF_DT only; LAST_SYNC_DT is not changed.
+- TB_M_PART_CANDIDATE keeps the result per part and target (GTOPAS by XD06, AP POLE by XD07); the overall Sync Status needs both.
+- On Success of the run: SYNC_STATUS 1, send time and GTOPAS_SYNC_DT / APPOLE_SYNC_DT = date-time of the result for every Waiting part. On Failed: SYNC_STATUS 2 and send time only; GTOPAS_SYNC_DT / APPOLE_SYNC_DT is not changed.
 
 ### 4.4 Notification Email (Power Automate, 19-Nov)
 
@@ -324,13 +305,19 @@ flowchart TB
 
 ### 4.5 Result without response to NSP (20-Nov)
 
-- No response from the RPA (20-Nov): NSP does not receive the result of XD06 / XD07. [Sync] sets the parts to Sent (SYNC_STATUS '3', IF_STATUS '3', IF_DT and LAST_SYNC_DT = send time); Success / Failed are not kept in NSP. The result comes by the notification e-mail of Power Automate (SUCCESS / FAILED with the work file). When the e-mail says FAILED, D/S clicks [Re-send last Sync].
-- The bot writes nothing back to NSP: the steps "set the result in TB_R_CROSSDOCK_IF_RESULT", "overall Sync Status" and "history SYNC" of the function flow and the data edit mapping of these tables are not used. NSP writes them when it sends ([Sync] on XD01 or the Period Rollover of XD05).
+- No response from the RPA (20-Nov): NSP does not receive the result of XD06 / XD07. [Sync] sets the parts to Sent (SYNC_STATUS '3', SYNC_STATUS '3', send time and GTOPAS_SYNC_DT / APPOLE_SYNC_DT = send time); Success / Failed are not kept in NSP. The result comes by the notification e-mail of Power Automate (SUCCESS / FAILED with the work file). When the e-mail says FAILED, D/S clicks [Re-send last Sync].
+- The bot writes nothing back to NSP: the steps "set the result in TB_M_PART_CANDIDATE", "overall Sync Status" and "history SYNC" of the function flow and the data edit mapping of these tables are not used. NSP writes them when it sends ([Sync] on XD01 or the Period Rollover of XD05).
 - Try-catch: an error stops the run and the e-mail is FAILED (E2 / E3). Rows already changed on the target screen stay; [Re-send last Sync] compares again and completes them.
 - Parts of the run: NSP passes the send time (run ID) when it starts the flow; the bot takes the rows with Sync Status Sent and Last Sent Date = that send time from the downloaded Export Excel (parts sent earlier are not processed again).
 - Evidence of a run: the e-mail and the work file (sheet Compare) with action, result and message per row.
 
-### 4.6 Open Points
+### 4.6 Parts of the run (20-Nov)
+
+- TB_R_CROSSDOCK_IF_RESULT is removed. NSP writes the send on TB_M_PART_CANDIDATE before the bot starts: SYNC_STATUS 3 Sent, GTOPAS_SYNC_DT = send time, SYNC_RUN_ID = run ID; the bot gets the run ID and the send time when the flow starts.
+- Parts of the run = rows with SYNC_RUN_ID = run ID (in the Export Excel: Last Sent GTOPAS = send time).
+- The bot writes nothing to NSP; the result is the notification e-mail. Log (existing table, one record per send run, 20-Nov): BATCH_ID XD06_RPA_GTOPAS / XD07_RPA_APPOLE, RUN_ID, send time, sent by (user of [Sync] / [Re-send last Sync] or the Period Rollover), number of parts, period(s). [Re-send last Sync] repeats the targets of the last run.
+
+### 4.7 Open Points
 
 - FB-176: every GTOPAS row (Depot 01) not in NSP is deleted: at go-live all crossdock parts of GTOPAS must exist in NSP, else they are deleted by the first run - TBC.
 - RPA design: login user, time limit and screen handling of the bot - detailed in the RPA design.
@@ -348,29 +335,11 @@ flowchart TB
 | LOG1 | Batch start | [Sync] on XD01 | Info | RPA cross dock master to GTOPAS started. <n> Waiting part(s). | system: Write the log.; user: - |
 | LOG2 | Batch end | Bot finishes | Info | RPA cross dock master to GTOPAS ended. NSP rows <n>, GTOPAS rows <g>, registered <a>, skipped <k>, deleted <d>, status <STATUS>. | system: Write the log.; user: - |
 | LOG3 | Register / delete | Row registered or deleted on the screen | Info | <REGISTER / DELETE> <PART_NO> <DEST_CODE>: <GTOPAS message>. | system: Write the log.; user: - |
-| LOG4 | Error (try-catch) | Login, screen, timeout, GTOPAS error message, NSP download or Excel error | Error | RPA to GTOPAS stopped at <STEP> <PART_NO> <DEST_CODE>: <ERROR_DETAIL>. All Waiting parts Failed. | system: Stop the bot. IF_STATUS = 2 for every Waiting part.; user: Click [Sync] again; contact PIC if it persists. |
+| LOG4 | Error (try-catch) | Login, screen, timeout, GTOPAS error message, NSP download or Excel error | Error | RPA to GTOPAS stopped at <STEP> <PART_NO> <DEST_CODE>: <ERROR_DETAIL>. All Waiting parts Failed. | system: Stop the bot. SYNC_STATUS = 2 for every Waiting part.; user: Click [Sync] again; contact PIC if it persists. |
 | LOG5 | Unexpected error | Any other system error | Critical | Unexpected error: <ERROR_DETAIL>. | system: Stop. STATUS = ERROR. All Waiting parts Failed.; user: User contact PIC |
 | LOG6 | Notification email | End of the run (SUCCESS / FAILED) | Info | Notification email <SUCCESS / FAILED> of run <RUN_ID> sent to <recipients>. | system: Write the log.; user: Read the email; FAILED: click [Sync] again. |
 
 ## 7. Tables
-
-#### TB_R_CROSSDOCK_IF_RESULT (transaction, proposed)
-Dummy table (proposed): send status of the cross dock master per part and target system (XD06 GTOPAS, XD07 AP POLE). The real output is the change made by the RPA on the target screens (GTOPAS WVJA5204, AP POLE WLM9Q890 / WLM9Q860). The overall Sync Status of the part stays in TB_M_PART_CANDIDATE.
-
-| Column | Type | PK | Null | Description |
-|---|---|---|---|---|
-| PART_NO | VARCHAR(TBD) | Y | N | Part number (TB_M_PART_CANDIDATE) |
-| TARGET_SYSTEM | VARCHAR(10) | Y | N | 'GTOPAS' (XD06) / 'APPOLE' (XD07) |
-| PERIOD | CHAR(6) | Y | N | Calculation period of the data sent (YYYYMM); part of the key: one row per part, target and period (19-Nov) |
-| IF_STATUS | VARCHAR(1) |  | N | '0' No Sync / '3' Sent (20-Nov: no response from the RPA; the result comes by e-mail) |
-| IF_DT | DATETIME |  | Y | Date-time of the send to the RPA ([Sync] / [Re-send last Sync] / Period Rollover) |
-| LAST_SYNC_DT | DATETIME |  | Y | Date-time of the last send of the part for this target; shown as Last Sent on XD01 (20-Nov) |
-| IF_FILE_NAME | VARCHAR(100) |  | Y | Run ID of the send (YYYYMMDDHHMMSS); [Re-send last Sync] sends the parts of the last run ID again |
-| IF_MESSAGE | VARCHAR(500) |  | Y | Not used (20-Nov: no response from the RPA) |
-| CREATED_BY | VARCHAR(TBD) |  | N | User who created the record |
-| CREATED_DT | DATETIME |  | N | Created date and time |
-| CHANGED_BY | VARCHAR(TBD) |  | N | User who last changed the record |
-| CHANGED_DT | DATETIME |  | N | Last changed date and time |
 
 #### TB_M_PART_CANDIDATE (transaction, existing)
 Kanban Crossdock Master: one record per part and calculation period (19-Nov; before: one record per part).
@@ -387,8 +356,9 @@ Kanban Crossdock Master: one record per part and calculation period (19-Nov; bef
 | EFFECTIVE_START_DATE | DATE |  | Y | Effective start date; required while the part is Candidate |
 | PART_STATUS | VARCHAR(TBD) |  | N | Candidate / Active / Inactive |
 | SYNC_STATUS | CHAR(1) |  | N | 0 = No Sync, 3 = Sent (20-Nov: 1 Success / 2 Failed not used, no response from the RPA) |
-| SYNC_DT | DATETIME |  | Y | Date-time of the last send |
-| SYNC_MESSAGE | VARCHAR(TBD) |  | Y | Not used (20-Nov) |
+| GTOPAS_SYNC_DT | DATETIME |  | Y | Date-time of the last send of the part (this period) to GTOPAS: [Sync], [Re-send last Sync] or the Period Rollover (XD05 process 3); shown as Last Sent GTOPAS |
+| APPOLE_SYNC_DT | DATETIME |  | Y | Date-time of the last send of the part (this period) to AP POLE: [Sync] or [Re-send last Sync]; shown as Last Sent AP POLE. XD07 takes the parts whose APPOLE_SYNC_DT = send time of its run |
+| SYNC_RUN_ID | VARCHAR(20) |  | Y | Run ID (YYYYMMDDHHMMSS) of the last send; [Re-send last Sync] sends the rows of the last run ID again |
 | LAST_SOURCE | VARCHAR(TBD) |  | N | CALC / SCREEN / UPLOAD |
 | LAST_UPLOAD_ID | VARCHAR(TBD) |  | Y | Upload that last changed the record |
 | CREATED_BY | VARCHAR(TBD) |  | N | User who created the record |
@@ -418,14 +388,15 @@ History of every change of a crossdock part (Add / Edit by screen or upload, map
 |---|---|---|---|---|
 | HIST_ID | BIGINT | Y | N | Running number (identity) |
 | PART_NO | VARCHAR(TBD) |  | N | Part number; length follows TB_M_PART_MASTER |
-| PERIOD | CHAR(6) |  | Y | Calculation period YYYYMM for MAPPING / SYNC / CALC; NULL for ADD / EDIT (Kanban Crossdock Master has no period) |
+| PERIOD | CHAR(6) |  | N | Calculation period YYYYMM of the changed row (every event; Kanban and Export Crossdock Master are per period, 20-Nov) |
 | EVENT_TYPE | VARCHAR(10) |  | N | ADD / EDIT / MAPPING / SYNC / CALC |
-| SOURCE | VARCHAR(10) |  | N | SCREEN / UPLOAD / IF / RPA / BATCH |
+| SOURCE | VARCHAR(10) |  | N | SCREEN / UPLOAD / BATCH (SYNC: SCREEN for [Sync] / [Re-send last Sync], BATCH for the Period Rollover) |
 | UPLOAD_ID | VARCHAR(TBD) |  | Y | Upload of the change (Log); NULL when not from an upload |
 | DEST_CODE | CHAR(7) |  | Y | Destination code (7 digits) for MAPPING; NULL for other events |
+| ORDER_TYPE | VARCHAR(2) |  | Y | Order Type of the destination row for MAPPING (with DEST_CODE); NULL for other events (20-Nov) |
 | FIELD_NAME | VARCHAR(30) |  | N | Changed field: PCS_CASE, MAX_CASE_DAY, MIN_MAD, PART_STATUS, EFFECTIVE_START_DATE, CASE_DAY, SYNC_STATUS |
 | OLD_VALUE | VARCHAR(255) |  | Y | Value before the change; NULL for ADD or an added destination |
 | NEW_VALUE | VARCHAR(255) |  | Y | Value after the change; NULL for a removed destination |
-| REMARK | VARCHAR(500) |  | Y | Free text, e.g. SYNC_MESSAGE of a Failed sync |
+| REMARK | VARCHAR(500) |  | Y | Free text; SYNC: target(s) + run ID, e.g. 'GTOPAS, APPOLE: 20261127100000' |
 | CREATED_BY | VARCHAR(20) |  | N | User who made the change (IF batch user ID for SYNC, batch user ID for BATCH) |
 | CREATED_DT | DATETIME |  | N | Date and time of the change |

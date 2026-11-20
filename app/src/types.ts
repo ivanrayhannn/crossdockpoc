@@ -48,6 +48,8 @@ export interface Part {
   effDate?: string;
   /** Date-time of the last successful sync of the mapping to GTOPAS / AP POLE (XD06 / XD07); null when never synced. */
   lastSyncDt?: string | null;
+  /** Date-time of the last send to AP POLE (XD07); lastSyncDt is the last send to GTOPAS (XD06). Two columns since 20-Nov. */
+  apSyncDt?: string | null;
 }
 
 export interface PartQuery {
