@@ -15,6 +15,7 @@
 | 0.3 | FID Rayhan | 17-Nov-26 |  | [Sync] takes every part with status Active (ongoing period) or Inactive whose Sync Status is No Sync or Failed, whatever the filter shows (Candidate never). |
 | 0.4 | FID Rayhan | 18-Nov-26 |  | Sheet "Active to Inactive" removed (18-Nov): Inactive parts with No Sync / Failed are taken by [Sync] by their status. Export Excel of Export Crossdock Master has 2 sheets again; column Last Sync stays. |
 | 0.5 | FID Rayhan | 19-Nov-26 |  | Names Kanban / Export Crossdock Master; period on the Kanban Crossdock Master; Order Type per destination row; Max Case/Day down: destinations first (19-Nov). |
+| 0.6 | FID Rayhan | 20-Nov-26 |  | Sync without response from the RPA: Sync Status No Sync / Sent, column Last Sent, button [Re-send last Sync] (20-Nov). |
 
 ## 1. General
 
@@ -930,6 +931,15 @@ Sync Status is kept per part in TB_M_PART_CANDIDATE because a part is synced as 
 | Current (M) | Edit / Add Part / upload | Edit / upload |
 | Next (M+1) | View only (made by XD05) | View only (made by XD05) |
 
+### 5.22 Sync without response from the RPA (20-Nov)
+
+- No response from the RPA (20-Nov): NSP does not receive the result of XD06 / XD07. [Sync] sets the parts to Sent (SYNC_STATUS '3', IF_STATUS '3', IF_DT and LAST_SYNC_DT = send time); Success / Failed are not kept in NSP. The result comes by the notification e-mail of Power Automate (SUCCESS / FAILED with the work file). When the e-mail says FAILED, D/S clicks [Re-send last Sync].
+- Sync Status: No Sync (0, grey) / Sent (3). Search criterion Sync Status: All / No Sync / Sent. Column Last Sync is renamed Last Sent (LAST_SYNC_DT = time of the last send); Export Excel column Last Sent Date.
+- [Sync (n)]: n = parts with status Active (ongoing / Next period) or Inactive and Sync Status No Sync. They become Sent; the run ID is kept in IF_FILE_NAME.
+- New button [Re-send last Sync (n)] next to [Sync]: sends the n parts of the last run ID again (same rows, new send time). Disabled when there is no run yet. Used when the e-mail of the RPA says FAILED.
+- Export Excel of the Kanban Crossdock Master: new column Last Sent Date after Sync Status (the bot of XD07 takes the parts of its run with it).
+- A part changed after it was sent goes back to No Sync (Sync Status rule).
+
 ## 7. Display messages
 
 | ID | Event | Cause | Type | Message | Action |
@@ -1019,11 +1029,11 @@ Dummy table (proposed): send status of the cross dock master per part and target
 | PART_NO | VARCHAR(TBD) | Y | N | Part number (TB_M_PART_CANDIDATE) |
 | TARGET_SYSTEM | VARCHAR(10) | Y | N | 'GTOPAS' (XD06) / 'APPOLE' (XD07) |
 | PERIOD | CHAR(6) | Y | N | Calculation period of the data sent (YYYYMM); part of the key: one row per part, target and period (19-Nov) |
-| IF_STATUS | VARCHAR(1) |  | N | '0' No Sync / '3' Waiting / '1' Success / '2' Failed (per period, 19-Nov) |
-| IF_DT | DATETIME |  | Y | Date-time of the result of the target system |
-| LAST_SYNC_DT | DATETIME |  | Y | Date-time of the last Success of the part for this target (kept when a later run is Failed); NULL when never synced. Shown as Last Sync on XD01. |
-| IF_FILE_NAME | VARCHAR(100) |  | Y | RPA run ID (GTOPAS and AP POLE) |
-| IF_MESSAGE | VARCHAR(500) |  | Y | Reason when Failed; blank when Success |
+| IF_STATUS | VARCHAR(1) |  | N | '0' No Sync / '3' Sent (20-Nov: no response from the RPA; the result comes by e-mail) |
+| IF_DT | DATETIME |  | Y | Date-time of the send to the RPA ([Sync] / [Re-send last Sync] / Period Rollover) |
+| LAST_SYNC_DT | DATETIME |  | Y | Date-time of the last send of the part for this target; shown as Last Sent on XD01 (20-Nov) |
+| IF_FILE_NAME | VARCHAR(100) |  | Y | Run ID of the send (YYYYMMDDHHMMSS); [Re-send last Sync] sends the parts of the last run ID again |
+| IF_MESSAGE | VARCHAR(500) |  | Y | Not used (20-Nov: no response from the RPA) |
 | CREATED_BY | VARCHAR(TBD) |  | N | User who created the record |
 | CREATED_DT | DATETIME |  | N | Created date and time |
 | CHANGED_BY | VARCHAR(TBD) |  | N | User who last changed the record |

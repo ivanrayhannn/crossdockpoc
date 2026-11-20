@@ -47,6 +47,8 @@ const LIST_COLUMNS: (Column<Part> & { width: number })[] = [
   { header: { value: 'Status', ...HEADER }, cell: (p) => ({ value: p.st }), width: 12 },
   // RPA source (XD07): the parts not synced yet are No Sync / Waiting / Failed
   { header: { value: 'Sync Status', ...HEADER }, cell: (p) => ({ value: syncBadge(p.syncStatus).t }), width: 13 },
+  // the bot of XD07 takes the parts of its run: Sync Status Sent and Last Sent Date = send time of the run (no response, 20-Nov)
+  { header: { value: 'Last Sent Date', ...HEADER }, cell: (p) => ({ value: p.lastSyncDt || '' }), width: 18 },
   { header: { value: 'Effective Start Date', ...HEADER }, cell: (p) => ({ value: uploadDate(p.effDate) }), width: 20 },
   // audit log of the part (TB_M_PART_CANDIDATE CREATED_* / CHANGED_*); technical names in the file, labels on the screen
   { header: { value: 'CREATED_DT', ...HEADER }, cell: (p) => ({ value: partAudit(p).createdDt }), width: 18 },

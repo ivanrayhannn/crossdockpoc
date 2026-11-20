@@ -289,9 +289,9 @@ Kanban Crossdock Master: one record per part and calculation period (19-Nov; bef
 | TOTAL_PCS_DAY | INT |  | N | PCS_CASE x MAX_CASE_DAY |
 | EFFECTIVE_START_DATE | DATE |  | Y | Effective start date; required while the part is Candidate |
 | PART_STATUS | VARCHAR(TBD) |  | N | Candidate / Active / Inactive |
-| SYNC_STATUS | CHAR(1) |  | N | 0 = No Sync, 3 = Waiting, 1 = Success, 2 = Failed |
-| SYNC_DT | DATETIME |  | Y | Date-time of the last IF function result |
-| SYNC_MESSAGE | VARCHAR(TBD) |  | Y | Reason of the last Failed sync |
+| SYNC_STATUS | CHAR(1) |  | N | 0 = No Sync, 3 = Sent (20-Nov: 1 Success / 2 Failed not used, no response from the RPA) |
+| SYNC_DT | DATETIME |  | Y | Date-time of the last send |
+| SYNC_MESSAGE | VARCHAR(TBD) |  | Y | Not used (20-Nov) |
 | LAST_SOURCE | VARCHAR(TBD) |  | N | CALC / SCREEN / UPLOAD |
 | LAST_UPLOAD_ID | VARCHAR(TBD) |  | Y | Upload that last changed the record |
 | CREATED_BY | VARCHAR(TBD) |  | N | User who created the record |

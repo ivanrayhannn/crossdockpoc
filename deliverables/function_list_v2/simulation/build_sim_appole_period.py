@@ -77,7 +77,7 @@ def main():
     # ---------- 1. NSP tables ----------
     ws, r = sheet(wb, '1. NSP tables', 'NSP: Kanban Crossdock Master (Part List) and Export Crossdock Master (Mapping) per period (end state, 1-Dec)', [
         'New: TB_M_PART_CANDIDATE has PERIOD (key PART_NO + PERIOD), like TB_M_PART_CANDIDATE_DEST.'])
-    pl = [['A', p, 'Active', PCS, PER[p][0], 'Success', 'XD05 on 27-' + {'202610': 'Sep', '202611': 'Oct', '202612': 'Nov'}[p]] for p in PER]
+    pl = [['A', p, 'Active', PCS, PER[p][0], 'Sent', 'XD05 on 27-' + {'202610': 'Sep', '202611': 'Oct', '202612': 'Nov'}[p]] for p in PER]
     r = block(ws, r, 'TB_M_PART_CANDIDATE (per period)', PL, pl)
     mp = [['A', p, bp, ot, c, 'D/S screen 05-Nov' if ot == 'C' else 'XD05'] for p in PER for bp, ot, c in PER[p][1]]
     block(ws, r, 'TB_M_PART_CANDIDATE_DEST (per period; key PART_NO + PERIOD + DEST_CODE + ORDER_TYPE)', MP, mp, {i: NEW for i, x in enumerate(mp, 1) if x[3] == 'C'})
@@ -102,7 +102,7 @@ def main():
 
     r = step(ws, r, 'Step 3 - 05-Nov: D/S adjusts the Current period 202611 on Export Crossdock Master: PH again with Order Type C, Case/Day 2 (total 18)')
     r = block(ws, r, 'NSP TB_M_PART_CANDIDATE_DEST 202611 (added row)', MP, [['A', '202611', 'PH', 'C', 2, 'D/S screen']], {1: NEW})
-    r = block(ws, r, 'NSP TB_M_PART_CANDIDATE 202611', PL, [['A', '202611', 'Active', PCS, 18, 'Success -> No Sync', 'D/S screen']], {1: NEW})
+    r = block(ws, r, 'NSP TB_M_PART_CANDIDATE 202611', PL, [['A', '202611', 'Active', PCS, 18, 'Sent -> No Sync', 'D/S screen']], {1: NEW})
     r = block(ws, r, 'AP POLE WLM9Q890 11/2026: found, values equal -> Keep', KPM, [kpm('202611', 'Keep')], {1: KEEP})
     r = block(ws, r, 'AP POLE WLM9Q860 11/2026: PH + Order Type C not found -> Add (Total Shipping Allocated 16 -> 18)', ECM, ecm('202611', [('PH', 'C', 2)]), {1: NEW})
 

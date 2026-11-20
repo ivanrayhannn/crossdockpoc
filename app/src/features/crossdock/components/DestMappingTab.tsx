@@ -29,7 +29,7 @@ const td: React.CSSProperties = {
 };
 
 export function DestMappingTab({ state }: { state: CrossdockState }) {
-  const { parts, q, aq, setQ, runSearch, resetQ, ro, expand, editDest, draftDests, toggleExpand, startEditDest, cancelEditDest, patchDraft, saveDest, syncParts, openMappingUpload, mapRun, runCalc } = state;
+  const { parts, q, aq, setQ, runSearch, resetQ, ro, expand, editDest, draftDests, toggleExpand, startEditDest, cancelEditDest, patchDraft, saveDest, syncParts, lastRun, resendLast, openMappingUpload, mapRun, runCalc } = state;
   // Only the ongoing period can be changed, so the upload is disabled for past periods and "All periods".
   const uploadLocked = ro || aq.per !== CUR_PER;
 
@@ -43,9 +43,7 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
           (!aq.part || p.p.toLowerCase().includes(aq.part.toLowerCase())) &&
           (aq.sync === 'all' ||
             (aq.sync === 'notsync' && p.syncStatus === 0) ||
-            (aq.sync === 'success' && p.syncStatus === 1) ||
-            (aq.sync === 'failed' && p.syncStatus === 2) ||
-            (aq.sync === 'waiting' && p.syncStatus === 3)),
+            (aq.sync === 'sent' && p.syncStatus !== 0)),
       ),
     [parts, aq],
   );
@@ -57,7 +55,7 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
   // Definition (17-Nov): every part with status Active (ongoing period) or Inactive whose Sync Status is No Sync or Failed.
   // Inactive parts are deleted in GTOPAS / AP POLE; Candidate parts are never synced.
   const syncable = parts.filter(
-    (p) => ((p.st === 'Active' && p.per === CUR_PER) || p.st === 'Inactive') && (p.syncStatus === 0 || p.syncStatus === 2),
+    (p) => ((p.st === 'Active' && p.per === CUR_PER) || p.st === 'Inactive') && p.syncStatus === 0,
   );
   const syncableCount = syncable.length;
 
@@ -142,9 +140,7 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
             <select className="input" value={q.sync} onChange={(e) => setQ((prev) => ({ ...prev, sync: e.target.value as typeof prev.sync }))} style={{ appearance: 'none' }}>
               <option value="all">All</option>
               <option value="notsync">No Sync</option>
-              <option value="waiting">Waiting</option>
-              <option value="success">Success</option>
-              <option value="failed">Failed</option>
+              <option value="sent">Sent</option>
             </select>
           </div>
           <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
@@ -165,7 +161,7 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
       <div style={{ border: '1px solid var(--color-divider)', borderRadius: 8, background: 'var(--color-neutral-100)', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '10px 16px', borderBottom: '1px solid var(--color-divider)' }}>
           <span style={{ fontSize: 12.5, fontWeight: 600 }}>Destination mapping per part</span>
-          <span style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
+          <span className="ax-toolbar" style={{ marginLeft: 'auto', display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 8, alignItems: 'center' }}>
             <CalcRunBar label="mapping calculation" run={mapRun} ro={ro} onRun={() => runCalc('mapping')} />
             <span style={{ width: 1, height: 22, background: 'var(--color-divider)' }} />
             <button
@@ -179,6 +175,15 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
                 <path d="M21 4v5h-5" />
               </svg>
               Sync{syncableCount ? ` (${syncableCount})` : ''}
+            </button>
+            <button
+              className="btn btn-secondary"
+              onClick={resendLast}
+              disabled={!lastRun.length}
+              title={lastRun.length ? `Send the ${lastRun.length} part(s) of the last [Sync] again (when the e-mail of the RPA says FAILED)` : 'No [Sync] yet in this session'}
+              style={{ fontSize: 12, padding: '4px 12px' }}
+            >
+              Re-send last Sync{lastRun.length ? ` (${lastRun.length})` : ''}
             </button>
             <button
               className="btn btn-secondary"
@@ -214,7 +219,7 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
                   <th style={{ ...th, textAlign: 'right', width: 110 }}>Pcs/Day</th>
                   <th style={{ ...th, textAlign: 'right', width: 110 }}>Percentage</th>
                   <th style={{ ...th, width: 120 }}>Sync Status</th>
-                  <th style={{ ...th, width: 150 }} title="Last successful sync of the mapping to GTOPAS / AP POLE (RPA XD06 / XD07)">Last Sync</th>
+                  <th style={{ ...th, width: 150 }} title="Last time the part was sent to the RPA (GTOPAS / AP POLE). The result of the RPA comes by e-mail.">Last Sent</th>
                 </tr>
               </thead>
               <tbody>

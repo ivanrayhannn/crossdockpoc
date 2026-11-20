@@ -4592,6 +4592,23 @@
      "View only (made by XD05)"
     ]
    ]
+  },
+  {
+   "type": "heading",
+   "text": "5.22 Sync without response from the RPA (20-Nov)"
+  },
+  {
+   "type": "bullets",
+   "marker": "-",
+   "level": 0,
+   "items": [
+    "No response from the RPA (20-Nov): NSP does not receive the result of XD06 / XD07. [Sync] sets the parts to Sent (SYNC_STATUS '3', IF_STATUS '3', IF_DT and LAST_SYNC_DT = send time); Success / Failed are not kept in NSP. The result comes by the notification e-mail of Power Automate (SUCCESS / FAILED with the work file). When the e-mail says FAILED, D/S clicks [Re-send last Sync].",
+    "Sync Status: No Sync (0, grey) / Sent (3). Search criterion Sync Status: All / No Sync / Sent. Column Last Sync is renamed Last Sent (LAST_SYNC_DT = time of the last send); Export Excel column Last Sent Date.",
+    "[Sync (n)]: n = parts with status Active (ongoing / Next period) or Inactive and Sync Status No Sync. They become Sent; the run ID is kept in IF_FILE_NAME.",
+    "New button [Re-send last Sync (n)] next to [Sync]: sends the n parts of the last run ID again (same rows, new send time). Disabled when there is no run yet. Used when the e-mail of the RPA says FAILED.",
+    "Export Excel of the Kanban Crossdock Master: new column Last Sent Date after Sync Status (the bot of XD07 takes the parts of its run with it).",
+    "A part changed after it was sent goes back to No Sync (Sync Status rule)."
+   ]
   }
  ],
  "display_messages": [
@@ -5072,35 +5089,35 @@
      "VARCHAR(1)",
      "",
      "N",
-     "'0' No Sync / '3' Waiting / '1' Success / '2' Failed (per period, 19-Nov)"
+     "'0' No Sync / '3' Sent (20-Nov: no response from the RPA; the result comes by e-mail)"
     ],
     [
      "IF_DT",
      "DATETIME",
      "",
      "Y",
-     "Date-time of the result of the target system"
+     "Date-time of the send to the RPA ([Sync] / [Re-send last Sync] / Period Rollover)"
     ],
     [
      "LAST_SYNC_DT",
      "DATETIME",
      "",
      "Y",
-     "Date-time of the last Success of the part for this target (kept when a later run is Failed); NULL when never synced. Shown as Last Sync on XD01."
+     "Date-time of the last send of the part for this target; shown as Last Sent on XD01 (20-Nov)"
     ],
     [
      "IF_FILE_NAME",
      "VARCHAR(100)",
      "",
      "Y",
-     "RPA run ID (GTOPAS and AP POLE)"
+     "Run ID of the send (YYYYMMDDHHMMSS); [Re-send last Sync] sends the parts of the last run ID again"
     ],
     [
      "IF_MESSAGE",
      "VARCHAR(500)",
      "",
      "Y",
-     "Reason when Failed; blank when Success"
+     "Not used (20-Nov: no response from the RPA)"
     ],
     [
      "CREATED_BY",
@@ -5140,7 +5157,7 @@
   "function_name": "XD01 Cross Dock Part Master Screen",
   "created_date": "18-Oct-26",
   "created_by": "FID Rayhan",
-  "updated_date": "19-Nov-26",
+  "updated_date": "20-Nov-26",
   "updated_by": "FID Rayhan"
  },
  "revisions": [
@@ -5178,6 +5195,13 @@
    "date": "19-Nov-26",
    "reviewed_by": "",
    "description": "Names Kanban / Export Crossdock Master; period on the Kanban Crossdock Master; Order Type per destination row; Max Case/Day down: destinations first (19-Nov)."
+  },
+  {
+   "revision": "0.6",
+   "author": "FID Rayhan",
+   "date": "20-Nov-26",
+   "reviewed_by": "",
+   "description": "Sync without response from the RPA: Sync Status No Sync / Sent, column Last Sent, button [Re-send last Sync] (20-Nov)."
   }
  ]
 }

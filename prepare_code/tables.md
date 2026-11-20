@@ -137,9 +137,9 @@ Kanban Crossdock Master: one record per part and calculation period (19-Nov; bef
 | TOTAL_PCS_DAY | INT |  | N | PCS_CASE x MAX_CASE_DAY |
 | EFFECTIVE_START_DATE | DATE |  | Y | Effective start date; required while the part is Candidate |
 | PART_STATUS | VARCHAR(TBD) |  | N | Candidate / Active / Inactive |
-| SYNC_STATUS | CHAR(1) |  | N | 0 = No Sync, 3 = Waiting, 1 = Success, 2 = Failed |
-| SYNC_DT | DATETIME |  | Y | Date-time of the last IF function result |
-| SYNC_MESSAGE | VARCHAR(TBD) |  | Y | Reason of the last Failed sync |
+| SYNC_STATUS | CHAR(1) |  | N | 0 = No Sync, 3 = Sent (20-Nov: 1 Success / 2 Failed not used, no response from the RPA) |
+| SYNC_DT | DATETIME |  | Y | Date-time of the last send |
+| SYNC_MESSAGE | VARCHAR(TBD) |  | Y | Not used (20-Nov) |
 | LAST_SOURCE | VARCHAR(TBD) |  | N | CALC / SCREEN / UPLOAD |
 | LAST_UPLOAD_ID | VARCHAR(TBD) |  | Y | Upload that last changed the record |
 | CREATED_BY | VARCHAR(TBD) |  | N | User who created the record |
@@ -254,11 +254,11 @@ Dummy table (proposed): send status of the cross dock master per part and target
 | PART_NO | VARCHAR(TBD) | Y | N | Part number (TB_M_PART_CANDIDATE) |
 | TARGET_SYSTEM | VARCHAR(10) | Y | N | 'GTOPAS' (XD06) / 'APPOLE' (XD07) |
 | PERIOD | CHAR(6) | Y | N | Calculation period of the data sent (YYYYMM); part of the key: one row per part, target and period (19-Nov) |
-| IF_STATUS | VARCHAR(1) |  | N | '0' No Sync / '3' Waiting / '1' Success / '2' Failed (per period, 19-Nov) |
-| IF_DT | DATETIME |  | Y | Date-time of the result of the target system |
-| LAST_SYNC_DT | DATETIME |  | Y | Date-time of the last Success of the part for this target (kept when a later run is Failed); NULL when never synced. Shown as Last Sync on XD01. |
-| IF_FILE_NAME | VARCHAR(100) |  | Y | RPA run ID (GTOPAS and AP POLE) |
-| IF_MESSAGE | VARCHAR(500) |  | Y | Reason when Failed; blank when Success |
+| IF_STATUS | VARCHAR(1) |  | N | '0' No Sync / '3' Sent (20-Nov: no response from the RPA; the result comes by e-mail) |
+| IF_DT | DATETIME |  | Y | Date-time of the send to the RPA ([Sync] / [Re-send last Sync] / Period Rollover) |
+| LAST_SYNC_DT | DATETIME |  | Y | Date-time of the last send of the part for this target; shown as Last Sent on XD01 (20-Nov) |
+| IF_FILE_NAME | VARCHAR(100) |  | Y | Run ID of the send (YYYYMMDDHHMMSS); [Re-send last Sync] sends the parts of the last run ID again |
+| IF_MESSAGE | VARCHAR(500) |  | Y | Not used (20-Nov: no response from the RPA) |
 | CREATED_BY | VARCHAR(TBD) |  | N | User who created the record |
 | CREATED_DT | DATETIME |  | N | Created date and time |
 | CHANGED_BY | VARCHAR(TBD) |  | N | User who last changed the record |

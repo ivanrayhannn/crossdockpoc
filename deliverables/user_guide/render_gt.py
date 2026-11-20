@@ -45,14 +45,14 @@ def sheet(n):
     return list(rows[0]), [dict(zip(rows[0], r)) for r in rows[1:]]
 mh, mrows = sheet('Export Crossdock Master')
 EX = ('PART-009', 'PART-012', 'PART-F', 'PART-B')
-MC = ['Period', 'Part Number', 'Destination Code', 'Dest Case/Day', 'Sync Status', 'Last Sync Date']
+MC = ['Period', 'Part Number', 'Destination Code', 'Dest Case/Day', 'Sync Status', 'Last Sent Date']
 
 # NSP list (whole sheet, examples in yellow) and the extracts per example
 render('x_gt_nsp_all', MC, [[d[h] for h in MC] for d in mrows], ['Part Number', 'Destination Code'],
-       lambda r: YEL if r[1] in EX else None, {'Last Sync Date': 18, 'Sync Status': 12})
+       lambda r: YEL if r[1] in EX else None, {'Last Sent Date': 18, 'Sync Status': 12})
 for i, p in enumerate(EX, 1):
     render(f'x_gt_ex{i}_nsp', MC, [[d[h] for h in MC] for d in mrows if d['Part Number'] == p], ['Part Number', 'Destination Code'],
-           widths={'Last Sync Date': 18})
+           widths={'Last Sent Date': 18})
 # GTOPAS screen Crossdock Master (WVJA5204): list before the run (example data)
 GH = ['No', 'MT', 'Depot Code', 'Maker Code', 'P/No.', 'Domestic/Overseas', 'Destination Code', 'TOPAS Order Type', 'Order Transportation Code']
 g = lambda p, d: ['', '', '01', 'A', p, '2', d, '3', '2']

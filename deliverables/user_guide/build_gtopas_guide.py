@@ -27,15 +27,15 @@ SOURCE = {
             ['3', 'RPA bot', 'GTOPAS WVJA5204: Search Depot 01, read every page (sheet "1. GTOPAS Crossdock Master")'],
             ['4', 'RPA bot', 'Add the sheet GTOPAS Compare to the file: Keep / Add / Delete per P/No. + Destination Code (sheet "2. Scenario Detail")'],
             ['5', 'RPA bot', 'Add / delete the rows in GTOPAS; write Result and GTOPAS message per row in GTOPAS Compare'],
-            ['6', 'RPA bot', 'Write the result to NSP: Sync Status Success (Last Sync) or Failed; the file stays as evidence of the run']], [6, 34, 100]),
+            ['6', 'RPA bot', 'Send the e-mail SUCCESS / FAILED with the work file (no response to NSP, 20-Nov); FAILED: D/S clicks [Re-send last Sync]']], [6, 34, 100]),
         ('step', 'D/S: open Crossdock Master Setting, tab Export Crossdock Master',
          'In the left menu click Master > Crossdock Master Setting. With the D/S account the screen opens on the tab Export Crossdock Master.', 'g1_map_menu.png'),
         ('step', 'D/S: search the ongoing period and click [Sync]',
          'Calculation period = the ongoing period (e.g. Sep 2026 (ongoing)), Sync Status = All, click [Search]. Click [Sync (n)]: every part with '
-         'status Active (ongoing period) or Inactive and Sync Status No Sync or Failed becomes Waiting (Candidate never) and the RPA bot starts. This is the last manual step.', 'g2_map_sync.png'),
+         'status Active (ongoing period) or Inactive and Sync Status No Sync becomes Sent (Candidate never) and the RPA bot starts. This is the last manual step.', 'g2_map_sync.png'),
         ('step', 'Bot: download the Excel ([Export Excel], Sync Status All)',
          'The bot logs in to NSP, opens the same screen, ongoing period, Sync Status = All (GTOPAS keeps only Part + Destination Code, so the '
-         'whole list is compared, not only the Waiting parts), Part Number empty, clicks [Search] and [Export Excel], and opens '
+         'whole list is compared, not only the Sent parts), Part Number empty, clicks [Search] and [Export Excel], and opens '
          'Crossdock_Export_Master_Sep_2026_YYYYMMDD.xlsx.', 'g3_map_export.png'),
         ('step', 'Bot: read sheet "Export Crossdock Master" = NSP list',
          'One row per Active part and Destination Code of the ongoing period. Only Part Number and Destination Code are used for GTOPAS '
@@ -44,7 +44,7 @@ SOURCE = {
     ],
     'notes': ['Change nothing in NSP from [Sync] until the RPA has finished: a part changed in between goes back to No Sync.',
               'Sheet "Upload" of the file is not used for GTOPAS.',
-              'When the RPA has finished, Sync Status becomes Success (Last Sync = run date-time) when AP POLE (XD07) is also done, or Failed.']}
+              'No response from the RPA (20-Nov): NSP keeps Sent. The result comes by e-mail [Crossdock Sync][...][SUCCESS | FAILED]; when FAILED, click [Re-send last Sync].']}
 
 SCREEN = {
     'sheet': '1. GTOPAS Crossdock Master',
@@ -82,11 +82,11 @@ SCREEN = {
          '(screenshot of step 2: 52119-BZV60 + 9618274 deleted).', None),
         ('step', 'Check the result',
          'After each Add / Delete the bot writes Result (OK) and the GTOPAS message in GTOPAS Compare. At the end the GTOPAS list (Depot 01) has '
-         'exactly the rows of the NSP list, and Sync Status in NSP becomes Success (when AP POLE is also done).', None),
+         'exactly the rows of the NSP list. NSP keeps Sent (no response, 20-Nov); the bot sends the e-mail SUCCESS / FAILED.', None),
         ('image', 'GTOPAS list after the run (example)', 'x_gt_after.png'),
     ],
     'notes': ['Column R of the list shows "O" on the row of the screenshot: meaning TBC (not used by the RPA).',
-              'Any other message than MZD34006FEI (error, time out, screen not available) stops the RPA: the run is Failed for every Waiting part; '
+              'Any other message than MZD34006FEI (error, time out, screen not available) stops the RPA: the e-mail is FAILED; '
               'rows already added or deleted stay, the next [Sync] compares again and completes the rest.',
               'FB-176: every GTOPAS row of Depot 01 that is not in NSP is deleted. At go-live all crossdock parts of GTOPAS must exist in NSP.']}
 
@@ -111,7 +111,7 @@ DETAIL = {
         ('image', 'The same rows in the sheet GTOPAS Compare, filled by the bot after the actions (Result, message, date-time)', 'x_gt_work.png'),
 
         ('heading', 'B. Example 1: PART-009, new part with 3 destinations (S2)'),
-        ('text', 'NSP: 3 rows 9722D10, 9811110, 9715310 (Last Sync Date empty). GTOPAS now: [Search] P/No. PART-009 shows no data.'),
+        ('text', 'NSP: 3 rows 9722D10, 9811110, 9715310 (Last Sent Date empty). GTOPAS now: [Search] P/No. PART-009 shows no data.'),
         ('image', 'Sheet Export Crossdock Master', 'x_gt_ex1_nsp.png'),
         ('table', 'Action in GTOPAS', ACT, [
             ['WVJA5204', 'Add (S2)', 'PART-009 + 9722D10 (Depot 01, Maker A, Dom/Os 2, Order Type 3, Trans 2)'],
@@ -119,13 +119,13 @@ DETAIL = {
             ['WVJA5204', 'Add (S2)', 'PART-009 + 9715310']], [20, 60, 60]),
 
         ('heading', 'C. Example 2: PART-012, no change (S1)'),
-        ('text', 'NSP: 9722D10, Sync Status Success. GTOPAS now: PART-012 + 9722D10.'),
+        ('text', 'NSP: 9722D10, Sync Status Sent (sent before). GTOPAS now: PART-012 + 9722D10.'),
         ('image', 'Sheet Export Crossdock Master', 'x_gt_ex2_nsp.png'),
         ('image', 'GTOPAS now', 'x_gt_ex2_gt.png'),
         ('table', 'Action in GTOPAS', ACT, [['WVJA5204', 'Keep (S1), no action', 'PART-012 + 9722D10']], [20, 60, 60]),
 
         ('heading', 'D. Example 3: PART-F, destinations changed (S1 + S2 + S3)'),
-        ('text', 'NSP: 9715310 (12), 9722D10 (8), 9811110 (6), Last Sync 28-Aug-2026. GTOPAS now (example): 9715310, 9722D10, 9710110. '
+        ('text', 'NSP: 9715310 (12), 9722D10 (8), 9811110 (6), Last Sent 28-Aug-2026. GTOPAS now (example): 9715310, 9722D10, 9710110. '
                  'The Case/Day values do not matter for GTOPAS.'),
         ('image', 'Sheet Export Crossdock Master', 'x_gt_ex3_nsp.png'),
         ('image', 'GTOPAS now', 'x_gt_ex3_gt.png'),

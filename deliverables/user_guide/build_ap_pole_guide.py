@@ -26,11 +26,11 @@ PART = {
              ('User', 'RPA bot, started by [Sync] (the same steps can be done by the D/S team by hand as a fallback)'),
              ('Source data', 'NSP Export Excel Kanban Crossdock Master (sheet Kanban Crossdock Master: Part Number, Part Name, Status, Sync Status, Pcs/Case, Max Case/Day). '
                              'Refer sheet "0. Source Data (NSP)"'),
-             ('Condition', 'Only the parts with Sync Status Waiting (set by [Sync] in NSP): Status Active = add / edit, Status Inactive = delete')],
+             ('Condition', 'Only the parts with Sync Status Sent (set by [Sync] in NSP): Status Active = add / edit, Status Inactive = delete')],
     'blocks': [
         ('step', 'Bot: download the source data from NSP',
          'After [Sync] by the D/S team, the bot downloads the Export Crossdock Master and the Kanban Crossdock Master with [Export Excel] on Crossdock Master Setting: refer sheet '
-         '"0. Source Data (NSP)". Take the parts with Sync Status Waiting. Which scenario applies to which part: refer sheet "3. Scenario Detail".', None),
+         '"0. Source Data (NSP)". Take the parts with Sync Status Sent. Which scenario applies to which part: refer sheet "3. Scenario Detail".', None),
         ('step', 'Open the menu Master Maintenance',
          'Log in to AP POLE (https://ap-pole.toyota-asia.com/lm9/) and open the menu Master Maintenance.', 'a01_menu_master.png'),
         ('step', 'Open Cross Dock Kanban Part Master', 'Scroll down the menu and click Cross Dock Kanban Part Master.', 'a02_menu_crossdock_kanban.png'),
@@ -41,7 +41,7 @@ PART = {
         ('table', 'Scenarios (status of the part in the source file)', ['No', 'Change in NSP', 'Action in AP POLE'], [
             ['1', 'Candidate -> Active', '[Add]: Part No., Shipping Box Qty = Pcs/Case, Max Shipping Box Qty = Max Case/Day, [Save]'],
             ['2', 'Inactive -> Active', 'Search the part. Not in AP POLE: [Add] as scenario 1. In AP POLE: [Edit] Shipping Box Qty and Max Shipping Box Qty'],
-            ['3', 'Active -> Inactive (Kanban Crossdock Master: Status Inactive, Waiting)', 'Search the part, tick it, [Delete]'],
+            ['3', 'Active -> Inactive (Kanban Crossdock Master: Status Inactive, Sent)', 'Search the part, tick it, [Delete]'],
             ['4', 'Still Active, Pcs/Case or Max Case/Day changed', 'Search the part, tick it, [Edit] Shipping Box Qty / Max Shipping Box Qty, [Save]']], [6, 34, 100]),
         ('step', 'Add / Edit: fill the pop up and [Save]',
          'Pop up WLM9Q891: Shipping Box Qty = Pcs/Case, Max Shipping Box Qty = Max Case/Day. Max Allowance Qty is calculated by AP POLE '
@@ -60,7 +60,7 @@ PART = {
          'Effective Year, Operator ID, Part No., Part Name, Shipping Box Qty, Max Shipping Box Qty, Max Allowance Qty, Packing/Pallet Type, ... '
          '(same mapping as above). Screen or upload for the RPA: TBC.', 'a07_upload_lm9q900.png'),
     ],
-    'notes': ['After the run, the part gets Sync Status Success in NSP (Last Sync filled); on any error the whole run is Failed and the D/S team clicks [Sync] again.',
+    'notes': ['NSP keeps Sync Status Sent (no response from the RPA, 20-Nov); the result comes by e-mail. FAILED: [Re-send last Sync] on the Export Crossdock Master.',
               'Destinations of the part are maintained on sheet "2. Export Cust Crossdock Master".']}
 
 DEST = {
@@ -70,8 +70,8 @@ DEST = {
              ('Screen', 'AP POLE WLM9Q860 Export Customer Cross Dock Master (from WLM9Q890 [Maintain Cross Dock])'),
              ('User', 'RPA bot, started by [Sync] (the same steps can be done by the D/S team by hand as a fallback)'),
              ('Source data', 'NSP Export Excel Export Crossdock Master (ongoing period, sheet Export Crossdock Master: Part Number, Destination Code, '
-                             'Dest Case/Day, Max Case/Day (quota), Sync Status, Last Sync Date). Refer sheet "0. Source Data (NSP)"'),
-             ('Condition', 'Only the parts with Sync Status Waiting (set by [Sync] in NSP)')],
+                             'Dest Case/Day, Max Case/Day (quota), Sync Status, Last Sent Date). Refer sheet "0. Source Data (NSP)"'),
+             ('Condition', 'Only the parts with Sync Status Sent (set by [Sync] in NSP)')],
     'blocks': [
         ('step', COMMON_SEARCH[0], COMMON_SEARCH[1] + ' Refer sheet "1. Kanban Part Master", steps 2 to 4.', None),
         ('step', 'Tick the part and click [Maintain Cross Dock]', 'Tick the check box of the part in the list and click [Maintain Cross Dock].', 'b01_maintain_cross_dock.jpg'),

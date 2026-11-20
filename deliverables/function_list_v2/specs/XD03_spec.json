@@ -1545,21 +1545,21 @@
      "CHAR(1)",
      "",
      "N",
-     "0 = No Sync, 3 = Waiting, 1 = Success, 2 = Failed"
+     "0 = No Sync, 3 = Sent (20-Nov: 1 Success / 2 Failed not used, no response from the RPA)"
     ],
     [
      "SYNC_DT",
      "DATETIME",
      "",
      "Y",
-     "Date-time of the last IF function result"
+     "Date-time of the last send"
     ],
     [
      "SYNC_MESSAGE",
      "VARCHAR(TBD)",
      "",
      "Y",
-     "Reason of the last Failed sync"
+     "Not used (20-Nov)"
     ],
     [
      "LAST_SOURCE",

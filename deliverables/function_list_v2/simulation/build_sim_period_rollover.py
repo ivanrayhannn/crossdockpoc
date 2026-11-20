@@ -105,7 +105,7 @@ def main():
     r = step(ws, r, 'Step 2 - 27-Nov (day D): XD05 creates Dec (Next)')
     r = text(ws, r, ['NSP gets the DAD result 202612 and the Dec mapping (see sheet 2 for the values). Part status is not changed yet.',
                      'GTOPAS: no change. Orders of Nov still use the Nov combinations; nothing is Waiting for GTOPAS.'])
-    r = block(ws, r, 'TB_R_CROSSDOCK_IF_RESULT (GTOPAS)', IF_COLS, [[p, 'GTOPAS', M, '1 Success', 'No change on day D'] for p in ('P-A', 'P-B', 'P-E')],
+    r = block(ws, r, 'TB_R_CROSSDOCK_IF_RESULT (GTOPAS)', IF_COLS, [[p, 'GTOPAS', M, '3 Sent', 'No change on day D'] for p in ('P-A', 'P-B', 'P-E')],
               {1: KEEP, 2: KEEP, 3: KEEP})
     r = step(ws, r, 'Step 3 - 28-Nov / 29-Nov: Pcs/Case and Max Case/Day edits')
     r = text(ws, r, ['GTOPAS keeps no quantity: the edits of P-A (Pcs/Case) and P-E (Max Case/Day) give no change in GTOPAS (AP POLE only, sheet 2).'])
@@ -122,19 +122,19 @@ def main():
                  'Same' if (p, d) in inm and (p, d) in inn else 'Added' if (p, d) in inn else 'Removed'] for p, d in keys]
     r = block(ws, r, '4.3 Compare the combinations Nov vs Dec per part', ['PART_NO', 'DEST_CODE', 'In Nov', 'In Dec', 'Result'], cmp_rows,
               mark(cmp_rows, 4, {'Same': KEEP, 'Added': NEW, 'Removed': DEL}))
-    r = block(ws, r, '4.4 Parts with a different combination -> No Sync for GTOPAS (period 202612), then Waiting', IF_COLS, [
-        ['P-A', 'GTOPAS', N, '0 -> 3 Waiting', '9811110 removed, 9715310 added'], ['P-B', 'GTOPAS', N, '0 -> 3 Waiting', 'Inactive: all rows removed'],
-        ['P-C', 'GTOPAS', N, '0 -> 3 Waiting', 'Active: 9811110 added'], ['P-E', 'GTOPAS', N, '1 (no change)', 'Same combinations']], {1: NEW, 2: NEW, 3: NEW, 4: KEEP})
-    r = text(ws, r, ['4.5 XD06 starts automatically: the bot downloads the Export Excel (Dec, all Sync Status) and searches every Waiting P/No. in GTOPAS.'])
+    r = block(ws, r, '4.4 Parts with a different combination -> No Sync for GTOPAS (period 202612), then Sent', IF_COLS, [
+        ['P-A', 'GTOPAS', N, '0 -> 3 Sent', '9811110 removed, 9715310 added'], ['P-B', 'GTOPAS', N, '0 -> 3 Sent', 'Inactive: all rows removed'],
+        ['P-C', 'GTOPAS', N, '0 -> 3 Sent', 'Active: 9811110 added'], ['P-E', 'GTOPAS', N, '3 Sent (no change)', 'Same combinations']], {1: NEW, 2: NEW, 3: NEW, 4: KEEP})
+    r = text(ws, r, ['4.5 XD06 starts automatically: the bot downloads the Export Excel (Dec, all Sync Status) and searches every P/No. sent by the rollover in GTOPAS.'])
     work = [['P-A', '9715310', 'Y', 'N', 'Add'], ['P-A', '9722D10', 'Y', 'Y', 'Keep'], ['P-A', '9811110', 'N', 'Y', 'Delete'],
             ['P-B', '9722D10', 'N (Inactive)', 'Y', 'Delete'], ['P-C', '9811110', 'Y', 'N', 'Add']]
-    r = block(ws, r, '4.5 Sheet GTOPAS Compare (Waiting parts)', ['P/No.', 'Destination Code', 'In NSP (Dec)', 'In GTOPAS', 'Action'], work,
+    r = block(ws, r, '4.5 Sheet GTOPAS Compare (parts sent by the rollover)', ['P/No.', 'Destination Code', 'In NSP (Dec)', 'In GTOPAS', 'Action'], work,
               mark(work, 4, {'Keep': KEEP, 'Add': NEW, 'Delete': DEL}))
     gt_after = [['P-A', '9722D10', 'Keep'], ['P-A', '9811110', 'Delete (MT = DEL)'], ['P-A', '9715310', 'Add'], ['P-B', '9722D10', 'Delete (MT = DEL)'],
-                ['P-C', '9811110', 'Add'], ['P-E', '9722D10', 'Not Waiting, not touched'], ['P-E', '9811110', 'Not Waiting, not touched']]
+                ['P-C', '9811110', 'Add'], ['P-E', '9722D10', 'Not sent, not touched'], ['P-E', '9811110', 'Not sent, not touched']]
     r = block(ws, r, '4.6 GTOPAS WVJA5204 after XD06', GT_COLS, gt_after,
               {1: KEEP, 2: DEL, 3: NEW, 4: DEL, 5: NEW, 6: KEEP, 7: KEEP})
-    block(ws, r, '4.6 TB_R_CROSSDOCK_IF_RESULT (GTOPAS, 202612)', IF_COLS, [[p, 'GTOPAS', N, '1 Success', 'LAST_SYNC_DT 01-Dec'] for p in ('P-A', 'P-B', 'P-C')],
+    block(ws, r, '4.6 TB_R_CROSSDOCK_IF_RESULT (GTOPAS, 202612)', IF_COLS, [[p, 'GTOPAS', N, '3 Sent', 'LAST_SYNC_DT 01-Dec'] for p in ('P-A', 'P-B', 'P-C')],
           {1: KEEP, 2: KEEP, 3: KEEP})
 
     # ================= 2. AP POLE =================
@@ -151,7 +151,7 @@ def main():
     r = block(ws, r, 'AP POLE WLM9Q890 (part), Eff. 12/26', AP_PART_COLS, ap_n, {1: NEW, 2: NEW, 3: NEW, 4: DEL})
     r = block(ws, r, 'AP POLE WLM9Q860 (Buyer-PD), Eff. 12/26', AP_DEST_COLS, [['12/26', p, BP[d], c, 'Add'] for p, _, d, c, _ in dest_n],
               {i: NEW for i in range(1, 6)})
-    r = block(ws, r, 'TB_R_CROSSDOCK_IF_RESULT (APPOLE)', IF_COLS, [[p, 'APPOLE', N, '1 Success', 'LAST_SYNC_DT 27-Nov'] for p in ('P-A', 'P-B', 'P-C', 'P-E')],
+    r = block(ws, r, 'TB_R_CROSSDOCK_IF_RESULT (APPOLE)', IF_COLS, [[p, 'APPOLE', N, '3 Sent', 'LAST_SYNC_DT 27-Nov'] for p in ('P-A', 'P-B', 'P-C', 'P-E')],
               {i: KEEP for i in range(1, 5)})
     r = step(ws, r, 'Step 3 - 28-Nov: Pcs/Case of P-A 10 -> 12 (after day D) -> Eff. 11/26 and 12/26 (4b)')
     r = block(ws, r, 'TB_R_CROSSDOCK_IF_RESULT after the save', IF_COLS, [['P-A', 'APPOLE', M, '0 No Sync', 'Eff. 11/26'],
