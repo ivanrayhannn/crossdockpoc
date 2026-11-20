@@ -257,11 +257,16 @@ def main():
         kan_nxt[p] = kanban(p, NXT, newst[p], '3' if same[p] else '0', '3', 'CALC', DS, S27, (BATCH, RUN), gt=sent_nov['gt'] if same[p] else '', ap=S27, run=RUN27)
     r = block(ws, r, 'TB_M_PART_CANDIDATE after [Sync] (202611 A and 202612 all)', COLS['TB_M_PART_CANDIDATE'], [kan_cur['A']] + list(kan_nxt.values()),
               fills(5, NEW))
+    sent_dest = dadj + [x for x in dnxt]
+    r = block(ws, r, 'TB_M_PART_CANDIDATE_DEST rows sent with these parts (read only; the Sync Status is kept on the part row above)',
+              COLS['TB_M_PART_CANDIDATE_DEST'], sent_dest, fills(len(sent_dest), NEW))
+    r = note(ws, r, ['The Export Crossdock Master (destinations) has no Sync Status of its own: a change of a destination (here A 202611 JPN 6 -> 7, '
+                     'KR 6 -> 5 on sheet 5) sets the part row to AP POLE No Sync, and the bot sends the part with all its destinations of that period.'])
     r = block(ws, r, 'TB_H_PART_CANDIDATE (SYNC)', COLS['TB_H_PART_CANDIDATE'],
               [hist('A', CUR, 'SYNC', 'SCREEN', 'APPOLE_SYNC_STATUS', 'No Sync', 'Sent', 'APPOLE: ' + RUN27, by=DS, dt=S27)] +
               [hist(p, NXT, 'SYNC', 'SCREEN', 'APPOLE_SYNC_STATUS', 'No Sync', 'Sent', 'APPOLE: ' + RUN27, by=DS, dt=S27) for p in PARTS])
     r = block(ws, r, 'Log', LOG_COLS, [log('XD07_RPA_APPOLE', RUN27, S27, DS, '202611, 202612', 5)], {1: NEW})
-    ap11 = ap_rows('11', 'A', [('9722D10', '**', 7), ('9715310', '**', 5)], 'Edit (Max Shipping Box 6 -> 7 / 6 -> 5)')
+    ap11 = ap_rows('11', 'A', [('9722D10', '**', 7)], 'Edit Max Shipping Box Qty 6 -> 7') + ap_rows('11', 'A', [('9715310', '**', 5)], 'Edit Max Shipping Box Qty 6 -> 5')
     r = block(ws, r, 'AP POLE 1st: Eff. 11/2026 (Current)', AP_COLS, ap11, fills(2, NEW))
     ap12 = []
     for p in PARTS:
