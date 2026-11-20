@@ -24,7 +24,7 @@ LOG_COLS = ['BATCH_ID', 'RUN_ID', 'SEND_DT', 'SENT_BY', 'PERIOD', 'PARTS', 'STAT
 _k = [c for c in COLS['TB_M_PART_CANDIDATE'] if c not in ('SYNC_STATUS', 'GTOPAS_SYNC_DT', 'APPOLE_SYNC_DT', 'SYNC_RUN_ID')]
 _i = _k.index('PART_STATUS') + 1
 COLS['TB_M_PART_CANDIDATE'] = _k[:_i] + ['GTOPAS_SYNC_STATUS', 'GTOPAS_SYNC_DT', 'APPOLE_SYNC_STATUS', 'APPOLE_SYNC_DT', 'SYNC_RUN_ID'] + _k[_i:]
-ST = {'0': '0 No Sync', '3': '3 Sent'}
+ST = {'0': '0 No Sync', '3': '3 Sent', '0>3': '0 No Sync -> 3 Sent'}
 CUR, NXT, RUN, ROLL = '202611', '202612', '27-Nov-2026 02:00', '01-Dec-2026 00:10'
 MONTHS = ['202605', '202606', '202607', '202608', '202609', '202610']
 N = len(MONTHS)
@@ -252,11 +252,13 @@ def main():
     ws, r = sheet(wb, '6. Sync 27-Nov', '[Sync] 27-Nov 10:00: rows with a target No Sync (Current and Next; GTOPAS of Next waits for 1-Dec)', [
         'GTOPAS: no Current row is GTOPAS No Sync -> XD06 does not run. AP POLE: 202611 A, then 202612 A, B, C, D -> XD07 (Current first, then Next).',
         'NSP writes the send before the bot starts; the bot writes nothing back (result by e-mail).'])
+    shown = [kanban('A', CUR, 'Active', '3', '0>3', 'SCREEN', DS, S27, gt=sent_nov['gt'], ap=S27, run=RUN27)] + [
+        kanban(p, NXT, newst[p], '3' if same[p] else '0', '0>3', 'CALC', DS, S27, (BATCH, RUN), gt=sent_nov['gt'] if same[p] else '', ap=S27, run=RUN27)
+        for p in PARTS]
+    r = block(ws, r, 'TB_M_PART_CANDIDATE: status before -> after [Sync] (202611 A and 202612 all)', COLS['TB_M_PART_CANDIDATE'], shown, fills(5, NEW))
     kan_cur['A'] = kanban('A', CUR, 'Active', '3', '3', 'SCREEN', DS, S27, gt=sent_nov['gt'], ap=S27, run=RUN27)
     for p in PARTS:
         kan_nxt[p] = kanban(p, NXT, newst[p], '3' if same[p] else '0', '3', 'CALC', DS, S27, (BATCH, RUN), gt=sent_nov['gt'] if same[p] else '', ap=S27, run=RUN27)
-    r = block(ws, r, 'TB_M_PART_CANDIDATE after [Sync] (202611 A and 202612 all)', COLS['TB_M_PART_CANDIDATE'], [kan_cur['A']] + list(kan_nxt.values()),
-              fills(5, NEW))
     sent_dest = dadj + [x for x in dnxt]
     r = block(ws, r, 'TB_M_PART_CANDIDATE_DEST rows sent with these parts (read only; the Sync Status is kept on the part row above)',
               COLS['TB_M_PART_CANDIDATE_DEST'], sent_dest, fills(len(sent_dest), NEW))
@@ -279,9 +281,10 @@ def main():
     ws, r = sheet(wb, '7. Rollover 1-Dec', 'Period Rollover (01-Dec 00:10): 202612 Current, 202611 Past; XD06 for the 202612 rows with GTOPAS No Sync', [
         'AP POLE status and date are not touched (stay Sent 27-Nov). D was copied (GTOPAS Sent) on day D, so it is not sent again.'])
     send = [p for p in PARTS if not same[p]]
+    shown = [kanban(p, NXT, newst[p], '0>3', '3', 'CALC', BATCH, R1, (BATCH, RUN), gt=R1, ap=S27, run=RUN1) if p in send else kan_nxt[p] for p in PARTS]
     for p in send:
         kan_nxt[p] = kanban(p, NXT, newst[p], '3', '3', 'CALC', BATCH, R1, (BATCH, RUN), gt=R1, ap=S27, run=RUN1)
-    r = block(ws, r, 'TB_M_PART_CANDIDATE 202612 (GTOPAS_SYNC_STATUS / _DT filled; AP POLE unchanged)', COLS['TB_M_PART_CANDIDATE'], list(kan_nxt.values()),
+    r = block(ws, r, 'TB_M_PART_CANDIDATE 202612: GTOPAS before -> after (AP POLE unchanged: stays 3 Sent)', COLS['TB_M_PART_CANDIDATE'], shown,
               {i: (NEW if p in send else KEEP) for i, p in enumerate(PARTS, 1)})
     r = block(ws, r, 'TB_H_PART_CANDIDATE (SYNC)', COLS['TB_H_PART_CANDIDATE'],
               [hist(p, NXT, 'SYNC', 'BATCH', 'GTOPAS_SYNC_STATUS', 'No Sync', 'Sent', 'GTOPAS: ' + RUN1, by=BATCH, dt=R1) for p in send])
