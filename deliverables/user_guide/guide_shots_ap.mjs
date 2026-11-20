@@ -28,15 +28,15 @@ await btn('Search').click(); await pg.waitForTimeout(500);
 const syncBtn = pg.getByRole('button', { name: /^Sync/ }).first();
 await mark(sel.nth(0)); await mark(syncBtn); await shot('n2_map_sync');
 await syncBtn.click(); await pg.waitForTimeout(400);
-await sel.nth(1).selectOption('waiting');
+await sel.nth(1).selectOption('sent');
 await btn('Search').click(); await pg.waitForTimeout(500);
-await mark(sel.nth(1)); await mark(pg.locator('th', { hasText: 'Sync Status' }).first()); await mark(pg.locator('th', { hasText: 'Last Sync' }).last()); await shot('n3_map_waiting');
+await mark(sel.nth(1)); await mark(pg.locator('th', { hasText: 'Sync Status' }).first()); await mark(pg.locator('th', { hasText: 'Last Sent' }).last()); await shot('n3_map_waiting');
 // open the destinations of PART-009
 await sel.nth(1).selectOption('all'); await pg.getByPlaceholder(/PART/).first().fill('PART-009');
 await btn('Search').click(); await pg.waitForTimeout(500);
 await pg.locator('tr', { hasText: 'PART-009' }).first().getByTitle('Destination details').click(); await pg.waitForTimeout(500);
 await shot('n4_map_dest');
-await pg.getByPlaceholder(/PART/).first().fill(''); await sel.nth(1).selectOption('waiting');
+await pg.getByPlaceholder(/PART/).first().fill(''); await sel.nth(1).selectOption('sent');
 await btn('Search').click(); await pg.waitForTimeout(500);
 await mark(btn('Export Excel')); await shot('n5_map_export');
 await download();

@@ -55,7 +55,7 @@ export interface PartQuery {
   name: string;
   dest: string;
   st: 'all' | 'active' | 'inactive' | 'candidate';
-  sync: 'all' | 'notsync' | 'waiting' | 'success' | 'failed';
+  sync: 'all' | 'notsync' | 'sent';
   /** Calculation period filter for "Export Crossdock Master", e.g. "Sep 2026", or 'all'. */
   per: string;
   /** Last Update sort order for Kanban Crossdock Master. */

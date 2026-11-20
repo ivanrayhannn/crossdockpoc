@@ -63,14 +63,14 @@ GUIDES = [
          ('Choose the Calculation period and click [Search]',
           'Choose the period, for example Sep 2026 (ongoing). Fill Part Number or Sync Status when needed, then click [Search]. '
           'Choose the ongoing period when the file is used for an upload: for a past period or All periods the sheet "Upload" is empty. '
-          'Column Last Sync shows the last successful sync of the part to GTOPAS / AP POLE (Never = not synced yet).', 'm2_period'),
+          'Column Last Sent shows the last successful sync of the part to GTOPAS / AP POLE (Never = not synced yet).', 'm2_period'),
          ('Click [Export Excel]',
           'Click [Export Excel] above the table. The browser downloads Crossdock_Export_Master_<Period>_YYYYMMDD.xlsx, '
           'for example Crossdock_Export_Master_Sep_2026_20261117.xlsx.', 'm3_export'),
      ] + COMMON_OPEN + [
          ('Read sheet "Export Crossdock Master"',
           'One row per part, destination and Order Type of the chosen period and filter: Destination Code, Order Type (**, C, 9, V), Dest Case/Day, Total Case/Day (used), '
-          'Max Case/Day (quota), Pcs/Day, Sync Status, Last Sync Date and the created / updated information. A part without mapping has one row without destination. '
+          'Max Case/Day (quota), Pcs/Day, Sync Status, Last Sent Date and the created / updated information. A part without mapping has one row without destination. '
           'For information only.', 'x_map_list'),
          ('Use sheet "Upload" for a change (optional)',
           'Every Active part of the ongoing period, one row per destination: Upload (A/E) = E for a current mapping, A for a part without mapping. '

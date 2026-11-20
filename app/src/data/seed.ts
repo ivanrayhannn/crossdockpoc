@@ -237,7 +237,8 @@ function syncDatesOf(p: SeedPart): { lastSyncDt: string | null; inactiveDt: stri
 function syncOf(p: SeedPart): Pick<Part, 'syncStatus' | 'lastSyncDt'> {
   const { lastSyncDt, inactiveDt } = syncDatesOf(p);
   const resent = p.syncStatus === 1 && inactiveDt && lastSyncDt === '28-Sep-2026 10:15';
-  return { lastSyncDt, syncStatus: resent ? 0 : p.syncStatus };
+  // no response from the RPA (20-Nov): a sent part is Sent; a part whose last run failed (old status 2) waits for a new send = No Sync
+  return { lastSyncDt, syncStatus: resent || p.syncStatus === 0 || p.syncStatus === 2 ? 0 : 3 };
 }
 
 /** Builds a plausible change history for one part, newest-first — status

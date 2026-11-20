@@ -120,8 +120,8 @@ const FUNCS = [
         'Download: sheet "Export Crossdock Master" (informasi) dan "Upload" (part Active periode ongoing, satu baris per destinasi; baris kosong Upload (A/E) = A untuk part tanpa mapping).',
         'Upload mapping (XD03): hanya periode ongoing (selain itu msg 23). Disimpan per destinasi; part yang tidak ada di file tidak berubah. All-or-nothing; berhasil msg 24.',
         'Mapping Calculation (XD05 proses 2): scheduler, auto retry 3×; [Run calculation] aktif hanya setelah gagal 3×; selesai msg 29.',
-        '[Sync (n)]: semua part berstatus Active (periode ongoing) dan Inactive yang Sync Status-nya No Sync / Failed, tanpa melihat filter (17-Nov). Active ditambah / diubah, Inactive dihapus di GTOPAS / AP POLE. Part jadi Waiting, XD06 dan XD07 dijalankan (msg 27). Part Candidate tidak pernah di-sync.',
-        'Hasil Sync per part: Success kalau GTOPAS (RPA) dan AP POLE (RPA) berhasil; Failed kalau salah satu gagal (tooltip msg 28, ikut Sync berikutnya); No Sync kalau part diubah saat proses kirim. Setiap hasil masuk history.' ] },
+        '[Sync (n)]: semua part berstatus Active (periode ongoing) dan Inactive yang Sync Status-nya No Sync, tanpa melihat filter (17-Nov). Part jadi Sent; hasil RPA datang lewat email (20-Nov). Active ditambah / diubah, Inactive dihapus di GTOPAS / AP POLE. Part jadi Waiting, XD06 dan XD07 dijalankan (msg 27). Part Candidate tidak pernah di-sync.',
+        'Tanpa response dari RPA (20-Nov): Sync Status hanya No Sync / Sent, kolom Last Sent = waktu kirim terakhir. Hasil GTOPAS / AP POLE (SUCCESS / FAILED) datang lewat email Power Automate; kalau FAILED, D/S klik [Re-send last Sync] (kirim ulang part run terakhir). No Sync kalau part diubah setelah dikirim. Setiap hasil masuk history.' ] },
       { key: 'AB', title: 'Abnormality', points: [
         { k: 'Part sudah didaftarkan user lain saat Add', d: 'msg 3', s: 'Simpan dibatalkan', u: 'Tutup modal, cari part' },
         { k: 'Data part diubah user lain saat Edit', d: 'msg 4', s: 'Simpan dibatalkan', u: 'Refresh, edit ulang' },
@@ -132,7 +132,7 @@ const FUNCS = [
         { k: 'Gagal simpan ke database', d: 'LOG1 (part), LOG3 (mapping)', s: 'Rollback, pesan error', u: 'Hubungi PIC' },
         { k: 'Export Excel gagal', d: 'msg 13 / LOG2, msg 26 / LOG5', s: 'File tidak dibuat', u: 'Coba lagi; hubungi admin' },
         { k: 'Upload ditolak', d: 'Daftar error XD02 / XD03', s: 'Tidak ada yang disimpan', u: 'Perbaiki sheet Re-upload' },
-        { k: 'Sync gagal di GTOPAS / AP POLE', d: 'Failed, msg 28 (LOG4)', s: 'Part tetap Failed, ikut n berikutnya', u: 'Perbaiki penyebab, [Sync] lagi' },
+        { k: 'RPA gagal (email FAILED)', d: 'Email E2 / E3', s: 'Status di NSP tetap Sent (tidak ada response)', u: 'Perbaiki penyebab, [Re-send last Sync]' },
         { k: 'Scheduler DAD / Mapping Calculation gagal 3×', d: 'Badge "Scheduled run failed 3x"', s: '[Run calculation] aktif', u: 'Cek penyebab, jalankan manual' } ] } ] },
 
   { id: 'XD02', name: 'Cross Dock Part Master Upload Batch', type: 'Batch', trigger: '[Validate file] di Upload Excel tab Kanban Crossdock Master (XD01)',
@@ -240,10 +240,10 @@ const FUNCS = [
         'Part yang jadi Inactive atau Active tanpa destinasi tidak ada di daftar NSP, jadi semua row-nya di GTOPAS terhapus.',
         'Pcs/Case, Max Case/Day, Effective Start Date dan Case/Day tidak dikirim.',
         'Email notifikasi (Power Automate, 19-Nov): 1 email per run ke user yang klik [Sync] + mailing list D/S, Cc PIC RPA. SUCCESS di akhir run; FAILED setelah retry otomatis habis atau bot tidak bisa jalan. Isi: RUN_ID, ringkasan, error, aksi ([Sync] lagi), lampiran Excel GTOPAS Compare.',
-        'Selesai tanpa error: semua part Waiting GTOPAS = Success; Sync Status gabungan dengan XD07, history SYNC (source RPA), Log jumlah register / skip / delete.' ] },
+        'Selesai tanpa error: email SUCCESS. Bot tidak menulis balik ke NSP (20-Nov); Log jumlah register / skip / delete.' ] },
       { key: 'AB', title: 'Abnormality', points: [
-        { k: 'Error apa pun di bot (login, layar, timeout, pesan error GTOPAS, download NSP / Excel gagal)', d: 'LOG4', s: 'Try-catch: bot berhenti, semua part Waiting Failed (1 gagal, gagal semua); row yang sudah diproses tetap di GTOPAS', u: '[Sync] lagi; run berikutnya membandingkan ulang dan melanjutkan' },
-        { k: 'Error sistem lain', d: 'LOG5', s: 'Stop, ERROR, semua part Failed', u: 'Hubungi PIC' } ] },
+        { k: 'Error apa pun di bot (login, layar, timeout, pesan error GTOPAS, download NSP / Excel gagal)', d: 'LOG4', s: 'Try-catch: bot berhenti, email FAILED (1 gagal, gagal semua); row yang sudah diproses tetap di GTOPAS', u: '[Sync] lagi; run berikutnya membandingkan ulang dan melanjutkan' },
+        { k: 'Error sistem lain', d: 'LOG5', s: 'Stop, ERROR, email FAILED', u: 'Hubungi PIC' } ] },
       { key: 'C', title: 'Catatan terbuka', points: [
         'FB-173 / 174 / 175 (selesai 11-Nov): kode destinasi sama persis tanpa konversi; nilai register A / 2 / 3 / 2; nama function tetap.',
         'FB-176: semua row GTOPAS (Depot 01) yang tidak ada di NSP dihapus: saat go-live semua part crossdock GTOPAS harus sudah ada di NSP.' ] } ] },
@@ -251,17 +251,17 @@ const FUNCS = [
   { id: 'XD07', name: 'RPA Cross Dock Master to AP POLE', type: 'Batch (RPA)', trigger: '[Sync] di XD01 (RPA di layar AP POLE, 17-Nov)',
     sections: [
       { key: 'N', title: 'Proses normal', points: [
-        'Sumber: file Export Excel XD01 (Kanban Crossdock Master, Export Crossdock Master) yang di-download bot sendiri setelah [Sync] (17-Nov), part Waiting. Bot mengisi sheet kerja AP POLE Compare (aksi dan hasil per part / Buyer-PD). Tidak pakai file SFTP lagi.',
+        'Sumber: file Export Excel XD01 (Kanban Crossdock Master, Export Crossdock Master) yang di-download bot sendiri setelah [Sync] (17-Nov), part Sent. Bot mengisi sheet kerja AP POLE Compare (aksi dan hasil per part / Buyer-PD). Tidak pakai file SFTP lagi.',
         'Level part, layar WLM9Q890 Cross Dock Kanban Part Master: Effective From awal bulan s/d akhir bulan, isi Part No, [Search]. Part No = PART_NO, Shipping Box Qty = Pcs/Case, Max Shipping Box Qty = Max Case/Day (Max Allowance Qty dihitung AP POLE).',
         'Skenario part: Candidate → Active = Add; Inactive → Active = Add kalau belum ada, Edit kalau sudah ada; Active → Inactive = centang, Delete; tetap Active tapi Pcs/Case / Max Case/Day berubah = Edit.',
         'Level destinasi: centang part, [Maintain Cross Dock] → WLM9Q860 Export Customer Cross Dock Master. Buyer-PD = DEST_CODE (9722D-88), Order Type **, Transport Code 2, Max Shipping Box Qty = Case/Day destinasi.',
         'Skenario destinasi: destinasi bertambah dan Total Shipping Allocated < Max Case/Day = Add; = Max Case/Day = hapus dulu destinasi yang tidak ada di NSP, lalu Add; destinasi berkurang = Delete; Case/Day berubah = Edit.',
         'Period (19-Nov): Effective Month / Year = period (MM, YYYY); [Sync] kirim Current dulu lalu Next (Next dikirim di tanggal D). Order Type baris Buyer PD = Order Type di Export Crossdock Master. Max Case/Day turun: WLM9Q860 dikurangi dulu, baru WLM9Q890 di-edit',
         'Email notifikasi (Power Automate, 19-Nov): sama dengan XD06, subject [Crossdock Sync][AP POLE][SUCCESS | FAILED], lampiran Excel AP POLE Compare.',
-        'Try-catch: 1 error = semua part Waiting Failed. Success: IF_STATUS 1, LAST_SYNC_DT diisi; Sync Status gabungan dengan XD06; history SYNC.' ] },
+        'Try-catch: 1 error = run berhenti, email FAILED. Tanpa response ke NSP (20-Nov): status di NSP tetap Sent; kirim ulang dengan [Re-send last Sync].' ] },
       { key: 'AB', title: 'Abnormality', points: [
-        { k: 'Login / layar AP POLE gagal, timeout, pesan error AP POLE', d: 'LOG4', s: 'Bot berhenti, semua part Waiting Failed', u: '[Sync] lagi; hubungi PIC' },
-        { k: 'File sumber tidak terbaca', d: 'LOG4', s: 'Bot berhenti, semua part Waiting Failed', u: 'Download ulang, [Sync] lagi' },
+        { k: 'Login / layar AP POLE gagal, timeout, pesan error AP POLE', d: 'LOG4', s: 'Bot berhenti, email FAILED', u: '[Re-send last Sync]; hubungi PIC' },
+        { k: 'File sumber tidak terbaca', d: 'LOG4', s: 'Bot berhenti, email FAILED', u: '[Re-send last Sync]' },
         { k: 'Error sistem lain', d: 'LOG5', s: 'Stop, ERROR', u: 'Hubungi PIC' } ] },
       { key: 'C', title: 'Catatan terbuka', points: [ 'Operator ID bot di AP POLE (P5 / P6) TBC. Lewat layar atau Common File Upload (LM9Q900 / LM9Q870) TBC. Sumber: Export Excel yang di-download bot setelah [Sync] (17-Nov, selesai). Guide: Crossdock_User_Guide_AP_POLE.xlsx.' ] } ] },
 

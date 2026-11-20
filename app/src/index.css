@@ -7,3 +7,6 @@
 .ax-chipbtn { display: inline-flex; align-items: center; padding: 2px; margin: -2px; border: 1px dashed transparent; border-radius: 999px; background: none; cursor: pointer; font: inherit; }
 .ax-chipbtn:hover { border-color: var(--color-neutral-500); }
 .ax-chipbtn:focus-visible { outline: 2px solid var(--color-accent-600, #1f5fbf); outline-offset: 2px; }
+
+/* Export Crossdock Master toolbar: buttons keep their label on one line, the toolbar wraps instead */
+.ax-toolbar .btn { white-space: nowrap; }

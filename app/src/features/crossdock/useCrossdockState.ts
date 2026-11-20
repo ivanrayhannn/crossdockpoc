@@ -131,11 +131,16 @@ export function useCrossdockState() {
     setDraftDests(null);
   }, [editDest, draftDests]);
 
-  // The RPA writes Success / Failed back later; the prototype stops at Waiting.
+  // [Sync] hands the parts to the RPA: they become Sent with the send time (no response from the RPA, decided 20-Nov).
+  // The parts of the last run are kept for [Re-send last Sync] (used when the e-mail of the RPA says FAILED).
+  const [lastRun, setLastRun] = useState<string[]>([]);
   const syncParts = useCallback((ids: string[]) => {
     const idSet = new Set(ids);
-    setParts((prevParts) => prevParts.map((p) => (idSet.has(p.p) ? { ...p, syncStatus: 3 } : p)));
+    const sentAt = nowStamp();
+    setParts((prevParts) => prevParts.map((p) => (idSet.has(p.p) ? { ...p, syncStatus: 3, lastSyncDt: sentAt } : p)));
+    setLastRun(ids);
   }, []);
+  const resendLast = useCallback(() => syncParts(lastRun), [lastRun, syncParts]);
 
   const closeModal = useCallback(() => {
     setModal(null);
@@ -225,6 +230,8 @@ export function useCrossdockState() {
     patchDraft,
     saveDest,
     syncParts,
+    lastRun,
+    resendLast,
     closeModal,
     commit,
     addPart,

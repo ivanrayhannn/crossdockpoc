@@ -106,7 +106,8 @@ def main():
     # ---------- 0. overview ----------
     ws, r = sheet(wb, '0. Overview', 'Full flow with the ERD tables: Crossdock Master -> DAD calculation -> AP POLE -> Period Rollover -> GTOPAS', [
         'Current period 202611 (Nov), day D = 27-Nov-2026 (XD05, system master), Next period 202612, Period Rollover 01-Dec-2026, N = 6 months 202605-202610.',
-        'Every table shows all its columns (same source as the ERD / DB Structure). Yellow = inserted / changed in the step, red = deleted, green = kept / done.'])
+        'Every table shows all its columns (same source as the ERD / DB Structure). Yellow = inserted / changed in the step, red = deleted, green = kept / done. '
+        'No response from the RPA (20-Nov): Sync Status / IF_STATUS 0 No Sync or 3 Sent; the result comes by e-mail.'])
     r = block(ws, r, 'Steps', ['Sheet', 'When', 'Function', 'Tables written'], [
         ['1', '-', 'Input', 'TB_R_ACTUAL_DEMAND_SUMMARY (XD04), destination master'],
         ['2', '20-Nov', 'Before', 'TB_M_PART_CANDIDATE / _DEST 202611, TB_R_CROSSDOCK_IF_RESULT 202611, GTOPAS, AP POLE 11/2026'],
@@ -134,13 +135,13 @@ def main():
 
     # ---------- 2. before ----------
     ws, r = sheet(wb, '2. Before 20-Nov', 'Before day D: only the Current period 202611', [])
-    kan_cur = [kanban('A', CUR, 'Active', '1', 'CALC', BATCH, '27-Oct-2026 02:00'), kanban('B', CUR, 'Candidate', '0', 'SCREEN', DS, '10-Nov-2026 09:15',
+    kan_cur = [kanban('A', CUR, 'Active', '3', 'CALC', BATCH, '27-Oct-2026 02:00'), kanban('B', CUR, 'Candidate', '0', 'SCREEN', DS, '10-Nov-2026 09:15',
                                                                                            (DS, '10-Nov-2026 09:15')),
-               kanban('C', CUR, 'Active', '1', 'CALC', BATCH, '27-Oct-2026 02:00')]
+               kanban('C', CUR, 'Active', '3', 'CALC', BATCH, '27-Oct-2026 02:00')]
     r = block(ws, r, 'TB_M_PART_CANDIDATE (Kanban Crossdock Master)', COLS['TB_M_PART_CANDIDATE'], kan_cur)
     dcur = [dest(p, CUR, c, o, cd, BATCH, '27-Oct-2026 02:00') for p, c, o, cd in CUR_MAP]
     r = block(ws, r, 'TB_M_PART_CANDIDATE_DEST (Export Crossdock Master)', COLS['TB_M_PART_CANDIDATE_DEST'], dcur)
-    ifcur = [ifr(p, t, CUR, '1', '27-Oct-2026 10:30', '27-Oct-2026 10:30' if t == 'APPOLE' else '01-Nov-2026 00:40', 'RUN' + ('20261027103000' if t == 'APPOLE' else '20261101004000'),
+    ifcur = [ifr(p, t, CUR, '3', '27-Oct-2026 10:30', '27-Oct-2026 10:30' if t == 'APPOLE' else '01-Nov-2026 00:40', 'RUN' + ('20261027103000' if t == 'APPOLE' else '20261101004000'),
                  by=RPA, cdt='27-Oct-2026 10:30') for p in ('A', 'C') for t in ('GTOPAS', 'APPOLE')]
     r = block(ws, r, 'TB_R_CROSSDOCK_IF_RESULT', COLS['TB_R_CROSSDOCK_IF_RESULT'], ifcur)
     r = block(ws, r, 'GTOPAS WVJA5204 (Depot 01)', ['P/No.', 'Destination Code', 'Maker', 'Dom/Os', 'TOPAS Order Type', 'Trans'],
@@ -205,7 +206,7 @@ def main():
     # ---------- 5. Sync -> XD07 ----------
     ws, r = sheet(wb, '5. XD07 27-Nov', '[Sync] 27-Nov 10:00 -> XD07 RPA AP POLE: Next period 202612 = Effective 12/2026', [
         'Current 202611 has nothing to send, so the bot works on 202612 only. C is Inactive for Dec: no 12/2026 record is made.'])
-    r = block(ws, r, 'TB_R_CROSSDOCK_IF_RESULT after [Sync] (Waiting)', COLS['TB_R_CROSSDOCK_IF_RESULT'], [ifr(p, 'APPOLE', NXT, '3', cdt='27-Nov-2026 10:00')
+    r = block(ws, r, 'TB_R_CROSSDOCK_IF_RESULT after [Sync] (Sent; no response from the RPA, 20-Nov)', COLS['TB_R_CROSSDOCK_IF_RESULT'], [ifr(p, 'APPOLE', NXT, '3', '27-Nov-2026 10:00', '27-Nov-2026 10:00', 'RUN20261127100000', cdt='27-Nov-2026 10:00')
                                                                                                          for p in PARTS], {1: NEW, 2: NEW, 3: NEW})
     apc = []
     for p in PARTS:
@@ -220,17 +221,17 @@ def main():
                                                               'Buyer PD', 'Order Type', 'Transport Code', 'Max Shipping Box Qty (Buyer PD)', 'Max Allowance Qty (Buyer PD)'],
               [['12', '2026', x[0], PARTS[x[0]]['pcs'], PARTS[x[0]]['max'], PARTS[x[0]]['pcs'] * PARTS[x[0]]['max'], BP[x[2]], x[3], 2, x[4],
                 PARTS[x[0]]['pcs'] * x[4]] for x in dnxt], {i: NEW for i in range(1, len(dnxt) + 1)})
-    run7 = 'RUN20261127100500'
-    r = block(ws, r, 'TB_R_CROSSDOCK_IF_RESULT after XD07', COLS['TB_R_CROSSDOCK_IF_RESULT'],
-              [ifr(p, 'APPOLE', NXT, '1', '27-Nov-2026 10:20', '27-Nov-2026 10:20', run7, by=RPA, cdt='27-Nov-2026 10:20') for p in PARTS], {1: KEEP, 2: KEEP, 3: KEEP})
-    r = block(ws, r, 'TB_M_PART_CANDIDATE 202612 (SYNC_STATUS; GTOPAS of Dec follows on 1-Dec)', COLS['TB_M_PART_CANDIDATE'],
-              [kanban(p, NXT, newst[p], '1', 'CALC', RPA, '27-Nov-2026 10:20', (BATCH, RUN)) for p in PARTS], {1: KEEP, 2: KEEP, 3: KEEP})
-    block(ws, r, 'TB_H_PART_CANDIDATE (SYNC)', COLS['TB_H_PART_CANDIDATE'],
-          [hist(p, NXT, 'SYNC', 'RPA', 'SYNC_STATUS', 'Waiting', 'Success', 'APPOLE: ' + run7, by=RPA, dt='27-Nov-2026 10:20') for p in PARTS])
+    run7 = 'RUN20261127100000'
+    r = block(ws, r, 'TB_M_PART_CANDIDATE 202612 (SYNC_STATUS 3 Sent at [Sync])', COLS['TB_M_PART_CANDIDATE'],
+              [kanban(p, NXT, newst[p], '3', 'CALC', DS, '27-Nov-2026 10:00', (BATCH, RUN)) for p in PARTS], {1: NEW, 2: NEW, 3: NEW})
+    r = block(ws, r, 'TB_H_PART_CANDIDATE (SYNC, written by NSP at [Sync])', COLS['TB_H_PART_CANDIDATE'],
+              [hist(p, NXT, 'SYNC', 'SCREEN', 'SYNC_STATUS', 'No Sync', 'Sent', 'APPOLE: ' + run7, by=DS, dt='27-Nov-2026 10:00') for p in PARTS])
+    note(ws, r, ['No response from the RPA (20-Nov): the bot writes nothing back to NSP. The result is the e-mail '
+                 '[Crossdock Sync][AP POLE][SUCCESS] Run 20261127100000 - 3 part(s) with the work file. When FAILED: [Re-send last Sync].'])
 
     # ---------- 6. Rollover + XD06 ----------
     ws, r = sheet(wb, '6. Rollover 1-Dec', 'XD05 process 3 Period Rollover (01-Dec 00:10) -> automatic XD06 RPA GTOPAS', [
-        '202612 becomes Current, 202611 Past. Parts whose part + destination combination of 202612 differs from 202611 get GTOPAS No Sync, then Waiting.'])
+        '202612 becomes Current, 202611 Past. Parts whose part + destination combination of 202612 differs from 202611 get GTOPAS No Sync, then Sent (XD06 starts).'])
     cur_c = {(p, c) for p, c, _, _ in CUR_MAP}
     nxt_c = {(x[0], x[2]) for x in dnxt}
     cmp_rows = [[p, c, 'Y' if (p, c) in cur_c else 'N', 'Y' if (p, c) in nxt_c else 'N',
@@ -238,8 +239,8 @@ def main():
     r = block(ws, r, 'Compare 202611 vs 202612 (part + destination)', ['PART_NO', 'DEST_CODE', 'In 202611', 'In 202612', 'Result'], cmp_rows,
               {i: {'Same': KEEP, 'Added': NEW, 'Removed': DEL}[x[4]] for i, x in enumerate(cmp_rows, 1)})
     changed = sorted({x[0] for x in cmp_rows if x[4] != 'Same'})
-    r = block(ws, r, 'TB_R_CROSSDOCK_IF_RESULT (inserted: GTOPAS 202612 -> Waiting)', COLS['TB_R_CROSSDOCK_IF_RESULT'],
-              [ifr(p, 'GTOPAS', NXT, '0 -> 3', by=BATCH, cdt=ROLL) for p in changed], {i: NEW for i in range(1, len(changed) + 1)})
+    r = block(ws, r, 'TB_R_CROSSDOCK_IF_RESULT (inserted: GTOPAS 202612 -> Sent, written by the Period Rollover)', COLS['TB_R_CROSSDOCK_IF_RESULT'],
+              [ifr(p, 'GTOPAS', NXT, '0 -> 3', '01-Dec-2026 00:10', '01-Dec-2026 00:10', 'RUN20261201001000', by=BATCH, cdt=ROLL) for p in changed], {i: NEW for i in range(1, len(changed) + 1)})
     gt_before = sorted(cur_c)
     work = []
     for p, c in sorted(cur_c | nxt_c):
@@ -247,27 +248,25 @@ def main():
             continue
         a = 'Keep' if (p, c) in cur_c and (p, c) in nxt_c else 'Add' if (p, c) in nxt_c else 'Delete'
         work.append([p, c, 'Y' if (p, c) in nxt_c else 'N', 'Y' if (p, c) in cur_c else 'N', a])
-    r = block(ws, r, 'Work sheet GTOPAS Compare (search per P/No. of the Waiting parts)', ['P/No.', 'Destination Code', 'In NSP 202612', 'In GTOPAS', 'Action'], work,
+    r = block(ws, r, 'Work sheet GTOPAS Compare (search per P/No. of the parts sent by the rollover)', ['P/No.', 'Destination Code', 'In NSP 202612', 'In GTOPAS', 'Action'], work,
               {i: {'Keep': KEEP, 'Add': NEW, 'Delete': DEL}[x[4]] for i, x in enumerate(work, 1)})
     gt_after = sorted(nxt_c)
     r = block(ws, r, 'GTOPAS WVJA5204 after XD06', ['P/No.', 'Destination Code', 'Maker', 'Dom/Os', 'TOPAS Order Type', 'Trans'],
               [[p, c, 'A', '2', '3', '2'] for p, c in gt_after], {i: (KEEP if k in cur_c else NEW) for i, k in enumerate(gt_after, 1)})
-    run6 = 'RUN20261201001500'
-    r = block(ws, r, 'TB_R_CROSSDOCK_IF_RESULT after XD06', COLS['TB_R_CROSSDOCK_IF_RESULT'],
-              [ifr(p, 'GTOPAS', NXT, '1', '01-Dec-2026 00:25', '01-Dec-2026 00:25', run6, by=RPA, cdt='01-Dec-2026 00:25') for p in changed],
-              {i: KEEP for i in range(1, len(changed) + 1)})
-    block(ws, r, 'TB_H_PART_CANDIDATE (SYNC)', COLS['TB_H_PART_CANDIDATE'],
-          [hist(p, NXT, 'SYNC', 'RPA', 'SYNC_STATUS', 'Waiting', 'Success', 'GTOPAS: ' + run6, by=RPA, dt='01-Dec-2026 00:25') for p in changed])
+    run6 = 'RUN20261201001000'
+    block(ws, r, 'TB_H_PART_CANDIDATE (SYNC, written by the Period Rollover)', COLS['TB_H_PART_CANDIDATE'],
+          [hist(p, NXT, 'SYNC', 'BATCH', 'SYNC_STATUS', 'No Sync', 'Sent', 'GTOPAS: ' + run6, by=BATCH, dt=ROLL) for p in changed])
+    note(ws, r + len(changed) + 3, ['The result of XD06 is the e-mail [Crossdock Sync][GTOPAS][SUCCESS | FAILED]; NSP keeps Sent.'])
 
     # ---------- 7. end state ----------
     ws, r = sheet(wb, '7. End state 1-Dec', 'End state after 1-Dec (202612 = Current, 202611 = Past)', [])
-    r = block(ws, r, 'TB_M_PART_CANDIDATE', COLS['TB_M_PART_CANDIDATE'], kan_cur + [kanban(p, NXT, newst[p], '1', 'CALC', RPA, '01-Dec-2026 00:25', (BATCH, RUN))
+    r = block(ws, r, 'TB_M_PART_CANDIDATE', COLS['TB_M_PART_CANDIDATE'], kan_cur + [kanban(p, NXT, newst[p], '3', 'CALC', DS, '27-Nov-2026 10:00', (BATCH, RUN))
                                                                                 for p in PARTS])
     r = block(ws, r, 'TB_M_PART_CANDIDATE_DEST', COLS['TB_M_PART_CANDIDATE_DEST'], dcur + dnxt)
     r = block(ws, r, 'TB_R_PART_DAD_RESULT', COLS['TB_R_PART_DAD_RESULT'], dad)
     block(ws, r, 'TB_R_CROSSDOCK_IF_RESULT', COLS['TB_R_CROSSDOCK_IF_RESULT'], ifcur +
-          [ifr(p, 'APPOLE', NXT, '1', '27-Nov-2026 10:20', '27-Nov-2026 10:20', run7, by=RPA, cdt='27-Nov-2026 10:20') for p in PARTS] +
-          [ifr(p, 'GTOPAS', NXT, '1', '01-Dec-2026 00:25', '01-Dec-2026 00:25', run6, by=RPA, cdt='01-Dec-2026 00:25') for p in changed])
+          [ifr(p, 'APPOLE', NXT, '3', '27-Nov-2026 10:00', '27-Nov-2026 10:00', run7, cdt='27-Nov-2026 10:00') for p in PARTS] +
+          [ifr(p, 'GTOPAS', NXT, '3', '01-Dec-2026 00:10', '01-Dec-2026 00:10', run6, by=BATCH, cdt=ROLL) for p in changed])
     wb.save(OUT)
     print('saved', OUT)
 
