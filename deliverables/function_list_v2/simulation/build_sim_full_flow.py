@@ -24,7 +24,7 @@ LOG_COLS = ['BATCH_ID', 'RUN_ID', 'SEND_DT', 'SENT_BY', 'PERIOD', 'PARTS', 'STAT
 _k = [c for c in COLS['TB_M_PART_CANDIDATE'] if c not in ('SYNC_STATUS', 'GTOPAS_SYNC_DT', 'APPOLE_SYNC_DT', 'SYNC_RUN_ID')]
 _i = _k.index('PART_STATUS') + 1
 COLS['TB_M_PART_CANDIDATE'] = _k[:_i] + ['GTOPAS_SYNC_STATUS', 'GTOPAS_SYNC_DT', 'APPOLE_SYNC_STATUS', 'APPOLE_SYNC_DT', 'SYNC_RUN_ID'] + _k[_i:]
-ST = {'0': '0 No Sync', '3': '3 Sent', '0>3': '0 No Sync -> 3 Sent'}
+ST = {'0': '0 No Sync', '3': '3 Sent', '0>3': '0 No Sync -> 3 Sent', '3>0': '3 Sent -> 0 No Sync'}
 CUR, NXT, RUN, ROLL = '202611', '202612', '27-Nov-2026 02:00', '01-Dec-2026 00:10'
 MONTHS = ['202605', '202606', '202607', '202608', '202609', '202610']
 N = len(MONTHS)
@@ -242,8 +242,11 @@ def main():
         'Only the Case/Day changes (same destinations): AP POLE No Sync for 202611; GTOPAS stays Sent (GTOPAS keeps no quantity).'])
     dadj = [dest('A', CUR, '9722D10', '**', 7, DS, T27, (BATCH, '27-Oct-2026 02:00')), dest('A', CUR, '9715310', '**', 5, DS, T27, (BATCH, '27-Oct-2026 02:00'))]
     r = block(ws, r, 'TB_M_PART_CANDIDATE_DEST 202611 of A (updated)', COLS['TB_M_PART_CANDIDATE_DEST'], dadj, fills(2, NEW))
+    r = block(ws, r, 'TB_M_PART_CANDIDATE 202611 of A: APPOLE_SYNC_STATUS 3 Sent -> 0 No Sync (GTOPAS stays 3 Sent)', COLS['TB_M_PART_CANDIDATE'],
+              [kanban('A', CUR, 'Active', '3', '3>0', 'SCREEN', DS, T27, gt=sent_nov['gt'], ap=sent_nov['ap'], run=sent_nov['run'])], {1: NEW})
     kan_cur['A'] = kanban('A', CUR, 'Active', '3', '0', 'SCREEN', DS, T27, gt=sent_nov['gt'], ap=sent_nov['ap'], run=sent_nov['run'])
-    r = block(ws, r, 'TB_M_PART_CANDIDATE 202611 of A (APPOLE_SYNC_STATUS -> No Sync)', COLS['TB_M_PART_CANDIDATE'], [kan_cur['A']], {1: NEW})
+    r = block(ws, r, 'TB_H_PART_CANDIDATE (status)', COLS['TB_H_PART_CANDIDATE'],
+              [hist('A', CUR, 'EDIT', 'SCREEN', 'APPOLE_SYNC_STATUS', 'Sent', 'No Sync', 'Case/Day of a destination changed', by=DS, dt=T27)], {1: NEW})
     block(ws, r, 'TB_H_PART_CANDIDATE', COLS['TB_H_PART_CANDIDATE'],
           [hist('A', CUR, 'MAPPING', 'SCREEN', 'CASE_DAY', 6, 7, code='9722D10', by=DS, dt=T27), hist('A', CUR, 'MAPPING', 'SCREEN', 'CASE_DAY', 6, 5, code='9715310', by=DS, dt=T27)],
           fills(2, NEW))
