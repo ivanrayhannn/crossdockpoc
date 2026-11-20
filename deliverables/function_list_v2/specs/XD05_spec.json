@@ -708,7 +708,7 @@
       "description": "Not changed"
      },
      {
-      "dest_field": "SYNC_MESSAGE",
+      "dest_field": "e-mail message",
       "description": "Not changed"
      },
      {
@@ -1016,7 +1016,7 @@
       "description": "Not changed"
      },
      {
-      "dest_field": "SYNC_MESSAGE",
+      "dest_field": "e-mail message",
       "description": "Not changed"
      },
      {
@@ -1351,6 +1351,20 @@
      "Day 1 (1-Dec)",
      "Process 3: 202612 Current, 202611 Past; XD06 for the changed combinations"
     ]
+   ]
+  },
+  {
+   "type": "heading",
+   "text": "4.10 Period Rollover: send data (20-Nov)"
+  },
+  {
+   "type": "bullets",
+   "marker": "-",
+   "level": 0,
+   "items": [
+    "For each part whose part + destination combination of the new Current period differs from the previous period: TB_M_PART_CANDIDATE (new Current row) SYNC_STATUS = 3 (Sent), GTOPAS_SYNC_DT = rollover time, SYNC_RUN_ID = run ID; TB_H_PART_CANDIDATE SYNC (SOURCE BATCH, REMARK GTOPAS + run ID); then XD06 starts.",
+    "Log (existing table, one record per send run, 20-Nov): BATCH_ID XD06_RPA_GTOPAS / XD07_RPA_APPOLE, RUN_ID, send time, sent by (user of [Sync] / [Re-send last Sync] or the Period Rollover), number of parts, period(s). [Re-send last Sync] repeats the targets of the last run.",
+    "History of process 1 / 2: PERIOD = Next period; MAPPING rows keep ORDER_TYPE."
    ]
   }
  ],
@@ -2064,18 +2078,25 @@
      "0 = No Sync, 3 = Sent (20-Nov: 1 Success / 2 Failed not used, no response from the RPA)"
     ],
     [
-     "SYNC_DT",
+     "GTOPAS_SYNC_DT",
      "DATETIME",
      "",
      "Y",
-     "Date-time of the last send"
+     "Date-time of the last send of the part (this period) to GTOPAS: [Sync], [Re-send last Sync] or the Period Rollover (XD05 process 3); shown as Last Sent GTOPAS"
     ],
     [
-     "SYNC_MESSAGE",
-     "VARCHAR(TBD)",
+     "APPOLE_SYNC_DT",
+     "DATETIME",
      "",
      "Y",
-     "Not used (20-Nov)"
+     "Date-time of the last send of the part (this period) to AP POLE: [Sync] or [Re-send last Sync]; shown as Last Sent AP POLE. XD07 takes the parts whose APPOLE_SYNC_DT = send time of its run"
+    ],
+    [
+     "SYNC_RUN_ID",
+     "VARCHAR(20)",
+     "",
+     "Y",
+     "Run ID (YYYYMMDDHHMMSS) of the last send; [Re-send last Sync] sends the rows of the last run ID again"
     ],
     [
      "LAST_SOURCE",
@@ -2293,8 +2314,8 @@
      "PERIOD",
      "CHAR(6)",
      "",
-     "Y",
-     "Calculation period YYYYMM for MAPPING / SYNC / CALC; NULL for ADD / EDIT (Kanban Crossdock Master has no period)"
+     "N",
+     "Calculation period YYYYMM of the changed row (every event; Kanban and Export Crossdock Master are per period, 20-Nov)"
     ],
     [
      "EVENT_TYPE",
@@ -2308,7 +2329,7 @@
      "VARCHAR(10)",
      "",
      "N",
-     "SCREEN / UPLOAD / IF / RPA / BATCH"
+     "SCREEN / UPLOAD / BATCH (SYNC: SCREEN for [Sync] / [Re-send last Sync], BATCH for the Period Rollover)"
     ],
     [
      "UPLOAD_ID",
@@ -2323,6 +2344,13 @@
      "",
      "Y",
      "Destination code (7 digits) for MAPPING; NULL for other events"
+    ],
+    [
+     "ORDER_TYPE",
+     "VARCHAR(2)",
+     "",
+     "Y",
+     "Order Type of the destination row for MAPPING (with DEST_CODE); NULL for other events (20-Nov)"
     ],
     [
      "FIELD_NAME",
@@ -2350,7 +2378,7 @@
      "VARCHAR(500)",
      "",
      "Y",
-     "Free text, e.g. SYNC_MESSAGE of a Failed sync"
+     "Free text; SYNC: target(s) + run ID, e.g. 'GTOPAS, APPOLE: 20261127100000'"
     ],
     [
      "CREATED_BY",
@@ -2560,7 +2588,7 @@
   "function_name": "XD05 DAD Volume Calculation Batch",
   "created_date": "18-Oct-26",
   "created_by": "FID Rayhan",
-  "updated_date": "19-Nov-26",
+  "updated_date": "20-Nov-26",
   "updated_by": "FID Rayhan"
  },
  "revisions": [
@@ -2591,6 +2619,13 @@
    "date": "19-Nov-26",
    "reviewed_by": "",
    "description": "Runs on day D and makes the Next period (Kanban and Export Crossdock Master); process 3 Period Rollover on day 1 (19-Nov)."
+  },
+  {
+   "revision": "0.5",
+   "author": "FID Rayhan",
+   "date": "20-Nov-26",
+   "reviewed_by": "",
+   "description": "Period Rollover writes GTOPAS_SYNC_DT, SYNC_RUN_ID, history SYNC and the run Log (TB_R_CROSSDOCK_IF_RESULT removed, 20-Nov)."
   }
  ]
 }

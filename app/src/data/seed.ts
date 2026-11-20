@@ -234,11 +234,11 @@ function syncDatesOf(p: SeedPart): { lastSyncDt: string | null; inactiveDt: stri
 }
 
 /** Sync Status rule: a part that went Active -> Inactive (01-Oct run) after its last successful sync is No Sync again. */
-function syncOf(p: SeedPart): Pick<Part, 'syncStatus' | 'lastSyncDt'> {
+function syncOf(p: SeedPart): Pick<Part, 'syncStatus' | 'lastSyncDt' | 'apSyncDt'> {
   const { lastSyncDt, inactiveDt } = syncDatesOf(p);
   const resent = p.syncStatus === 1 && inactiveDt && lastSyncDt === '28-Sep-2026 10:15';
   // no response from the RPA (20-Nov): a sent part is Sent; a part whose last run failed (old status 2) waits for a new send = No Sync
-  return { lastSyncDt, syncStatus: resent || p.syncStatus === 0 || p.syncStatus === 2 ? 0 : 3 };
+  return { lastSyncDt, apSyncDt: lastSyncDt, syncStatus: resent || p.syncStatus === 0 || p.syncStatus === 2 ? 0 : 3 };
 }
 
 /** Builds a plausible change history for one part, newest-first — status
@@ -311,7 +311,7 @@ export function cloneSeedParts(): Part[] {
 }
 
 /** Read-only mapping rows of past periods for parts that are Active now (listed when a past period is selected). */
-export const PAST_ROWS: Part[] = ALL_SEED.filter(activeInPastOnly).map((p) => ({ ...p, lastSyncDt: syncDatesOf(p).lastSyncDt, effDate: effDateOf(p), dests: withCodes(p) }));
+export const PAST_ROWS: Part[] = ALL_SEED.filter(activeInPastOnly).map((p) => ({ ...p, lastSyncDt: syncDatesOf(p).lastSyncDt, apSyncDt: syncDatesOf(p).lastSyncDt, effDate: effDateOf(p), dests: withCodes(p) }));
 
 export function blankPart(): Part {
   const tomorrow = new Date();

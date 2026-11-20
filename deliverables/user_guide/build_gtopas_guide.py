@@ -111,7 +111,7 @@ DETAIL = {
         ('image', 'The same rows in the sheet GTOPAS Compare, filled by the bot after the actions (Result, message, date-time)', 'x_gt_work.png'),
 
         ('heading', 'B. Example 1: PART-009, new part with 3 destinations (S2)'),
-        ('text', 'NSP: 3 rows 9722D10, 9811110, 9715310 (Last Sent Date empty). GTOPAS now: [Search] P/No. PART-009 shows no data.'),
+        ('text', 'NSP: 3 rows 9722D10, 9811110, 9715310 (Last Sent GTOPAS empty). GTOPAS now: [Search] P/No. PART-009 shows no data.'),
         ('image', 'Sheet Export Crossdock Master', 'x_gt_ex1_nsp.png'),
         ('table', 'Action in GTOPAS', ACT, [
             ['WVJA5204', 'Add (S2)', 'PART-009 + 9722D10 (Depot 01, Maker A, Dom/Os 2, Order Type 3, Trans 2)'],

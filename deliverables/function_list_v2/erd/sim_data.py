@@ -20,7 +20,6 @@ COLS = {
     'TB_R_PART_DAD_RESULT': ['PERIOD', 'PART_NO', 'MONTH_FROM', 'MONTH_TO', 'NUM_OF_MONTH', 'TOTAL_MAD', 'AVG_MAD', 'MIN_MAD', 'OLD_STATUS', 'NEW_STATUS'],
     'TB_M_PART_CANDIDATE_DEST': ['PART_NO', 'PERIOD', 'DEST_CODE', 'CASE_DAY'],
     'TB_H_PART_CANDIDATE': ['HIST_ID', 'PART_NO', 'PERIOD', 'EVENT_TYPE', 'SOURCE', 'DEST_CODE', 'FIELD_NAME', 'OLD_VALUE', 'NEW_VALUE', 'CREATED_BY'],
-    'TB_R_CROSSDOCK_IF_RESULT': ['PART_NO', 'TARGET_SYSTEM', 'PERIOD', 'IF_STATUS', 'IF_FILE_NAME', 'IF_MESSAGE'],
     'TB_R_H0253_ORDER_CONTROL_PRE': ['CUSTOMER_CD', 'CUSTOMER_ORDER_NO', 'ORDER_DT', 'DESTINATION_CD', 'DETAILED_ITEM_NO', 'SERIAL_NO', 'SHIPPING_PART_NO', 'ORDER_STATUS_QTY',
                                      'ORDER_STATUS', 'HOLD_FLAG', 'PO_MAPPED_FLAG', 'UPD_STATUS'],
     'TB_R_PRA_DAILY_ORDER_MANIFEST': ['MANIFEST_NO', 'PO_NO', 'SUPPLIER_CD', 'SUPPLIER_PLANT', 'PO_DT', 'CROSS_DOCK_FLAG', 'TOTAL_QTY', 'DELIVERY_DT', 'SUB_ROUTE_CD'],
@@ -126,14 +125,12 @@ SCENARIOS = [
                 ('new', [1002, 'PART-Y', '202610', 'CALC', 'BATCH', None, 'PART_STATUS', 'Candidate', 'Active', 'XD05']),
                 ('new', [1003, 'PART-Z', '202610', 'CALC', 'BATCH', None, 'PART_STATUS', 'Active', 'Inactive', 'XD05']),
                 ('new', [1004, 'PART-X', '202610', 'MAPPING', 'BATCH', VN, 'CASE_DAY', '5', '6', 'XD05'])]),
-            ('6. D/S [Sync] → XD06 (GTOPAS, RPA) / XD07 (AP POLE, SFTP)', 'TB_R_CROSSDOCK_IF_RESULT', [
-                ('new', ['PART-Y', 'GTOPAS', '202610', '1', 'RPA 20261002090000', 'registered 1, deleted 0']),
-                ('new', ['PART-Y', 'APPOLE', '202610', '1', 'XD_CDMASTER_APPOLE_20261002090000.csv', None]),
-                ('new', ['PART-Z', 'GTOPAS', '202610', '1', 'RPA 20261002090000', 'registered 0, deleted 1']),
-                ('new', ['PART-Z', 'APPOLE', '202610', '1', 'XD_CDMASTER_APPOLE_20261002090000.csv', None])]),
+            ('6. D/S [Sync] → XD06 (GTOPAS) / XD07 (AP POLE), RPA without response: NSP writes Sent', 'TB_H_PART_CANDIDATE', [
+                ('new', [1005, 'PART-Y', '202610', 'SYNC', 'SCREEN', None, 'SYNC_STATUS', 'No Sync', 'Sent', 'DS-USER']),
+                ('new', [1006, 'PART-Z', '202610', 'SYNC', 'SCREEN', None, 'SYNC_STATUS', 'No Sync', 'Sent', 'DS-USER'])]),
             ('', 'TB_M_PART_CANDIDATE', [
-                ('upd', ['PART-Y', 'DUMMY PART Y', 100, 6, 2, 12, 'Active', '1', 'CALC'], ['SYNC_STATUS'], 'No Sync → Success (new in GTOPAS and AP POLE)'),
-                ('upd', ['PART-Z', 'DUMMY PART Z', 50, 6, 4, 24, 'Inactive', '1', 'CALC'], ['SYNC_STATUS'], 'No Sync → Success (deleted in GTOPAS / AP POLE)')]),
+                ('upd', ['PART-Y', 'DUMMY PART Y', 100, 6, 2, 12, 'Active', '1', 'CALC'], ['SYNC_STATUS'], 'No Sync → Sent (GTOPAS_SYNC_DT / APPOLE_SYNC_DT = send time; result by e-mail)'),
+                ('upd', ['PART-Z', 'DUMMY PART Z', 50, 6, 4, 24, 'Inactive', '1', 'CALC'], ['SYNC_STATUS'], 'No Sync → Sent (deleted in GTOPAS / AP POLE; result by e-mail)')]),
         ]},
     {
         'id': 'SIM-2', 'title': 'Daily order to ASN (normal)', 'flow': 'BPF F2', 'functions': 'XD08, XD09, XD10 (Create ASN, Submit 5.7)',
@@ -455,13 +452,9 @@ SCENARIOS = [
                 ('new', [1103, 'PART-X', '202610', 'MAPPING', 'SCREEN', D4, 'CASE_DAY', None, '2', 'DS-USER'])]),
             ('', 'TB_M_PART_CANDIDATE', [
                 ('upd', ['PART-X', 'DUMMY PART X', 300, 6, 10, 60, 'Active', '0', 'SCREEN'], ['SYNC_STATUS', 'LAST_SOURCE'], 'Success → No Sync')]),
-            ('3. D/S [Sync] → XD06 (GTOPAS, RPA: differences) / XD07 (AP POLE, SFTP: complete set)', 'TB_R_CROSSDOCK_IF_RESULT', [
-                ('upd', ['PART-X', 'GTOPAS', '202610', '1', 'RPA 20261005100000', 'registered 1, deleted 1'],
-                 ['IF_FILE_NAME', 'IF_MESSAGE'], 'KR / JP ignored'),
-                ('upd', ['PART-X', 'APPOLE', '202610', '1', 'XD_CDMASTER_APPOLE_20261005100000.csv', None], ['IF_FILE_NAME'], 'Existing part: updated')]),
             ('', 'TB_M_PART_CANDIDATE', [
-                ('upd', ['PART-X', 'DUMMY PART X', 300, 6, 10, 60, 'Active', '1', 'SCREEN'], ['SYNC_STATUS'], 'No Sync → Waiting → Success')]),
+                ('upd', ['PART-X', 'DUMMY PART X', 300, 6, 10, 60, 'Active', '1', 'SCREEN'], ['SYNC_STATUS'], '3. D/S [Sync] → XD06 / XD07 (RPA, no response): No Sync → Sent')]),
             ('', 'TB_H_PART_CANDIDATE', [
-                ('new', [1104, 'PART-X', '202610', 'SYNC', 'IF', None, 'SYNC_STATUS', 'Waiting', 'Success', 'IF batch'])]),
+                ('new', [1104, 'PART-X', '202610', 'SYNC', 'SCREEN', None, 'SYNC_STATUS', 'No Sync', 'Sent', 'DS-USER'])]),
         ]},
 ]

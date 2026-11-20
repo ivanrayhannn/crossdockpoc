@@ -262,7 +262,6 @@ export const BPF: BpfData = {
       "TB_M_PART_CANDIDATE_DEST"
      ],
      "write": [
-      "TB_R_CROSSDOCK_IF_RESULT (dummy)",
       "TB_M_PART_CANDIDATE (SYNC_STATUS)",
       "TB_H_PART_CANDIDATE",
       "Log"
