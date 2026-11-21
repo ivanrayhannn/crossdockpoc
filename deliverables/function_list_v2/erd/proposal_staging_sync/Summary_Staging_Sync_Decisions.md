@@ -181,6 +181,7 @@ APPOLE_SYNC_STATUS is always 0 at the insert.
 1. The last sync date of AP POLE is a System Master parameter **LAST_SYNC_DATE_APPOLE**, saved by [Sync] / [Re-send last Sync]. GTOPAS has no last sync date.
 2. GTOPAS takes the rows with **GTOPAS_SYNC_STATUS = 0 and PERIOD** (Current for [Sync], the new Current period for the rollover), with no date condition.
 3. Inactive -> Active: **Procurement** maps the destinations again by hand on the screen (EXPORT ADD rows, CREATED_BY Procurement). The part record stays in the AP POLE Kanban while it is Inactive.
+4. Rows of the Current period still Non Sync at the Period Rollover (changed but no [Sync] before day 1) are **not sent later and keep their status**. They are never taken again because every selection has a PERIOD condition: AP POLE takes Current and Next only, GTOPAS takes Current ([Sync]) or the new Current (rollover). On the screen the Past period can show Non Sync for these parts (view only). GTOPAS is aligned anyway by the rollover with the destinations of the new period.
 
 ## 8. Open point
 1. Total Case/Day > Max Case/Day of the part (same period). The check applies at the screen save (Kanban: new Max; Export: Case/Day or a new destination) and at the upload (Kanban per row, Export per part after the whole file), not for XD05. Choose: error on save (user lowers the destinations first, then Max), or warning on save and [Sync] blocked while a part has total > Max.
