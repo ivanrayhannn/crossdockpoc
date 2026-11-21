@@ -49,7 +49,7 @@ def dest():
     rows = existing('TB_M_PART_CANDIDATE_DEST')
     for r in rows:
         if r[0] == 'CASE_DAY':
-            r[5] += '. Every add / change / removal writes a row to TB_H_PART_CANDIDATE_STG_SYNC (LEVEL_TYPE C) in the same transaction'
+            r[5] += '. Every add / change / removal writes a row to TB_H_PART_CANDIDATE_STG_SYNC (LEVEL_TYPE EXPORT) in the same transaction'
             r[6] = 'Changed'
     return rows
 
@@ -59,10 +59,10 @@ STG = [
     ['PART_NO', 'VARCHAR(TBD)', '', 'N', '', 'Part number (NSP format, with "-"); FK1 (PART_NO, PERIOD) -> TB_M_PART_CANDIDATE', 'New'],
     ['PERIOD', 'CHAR(6)', '', 'N', '', 'Calculation period YYYYMM; FK1. Effective Month / Year of the AP POLE upload', 'New'],
     ['PART_STATUS', 'VARCHAR(10)', '', 'N', '', 'Status of the part in this period when the row is written. Active: ADD / EDIT rows. Inactive: no Kanban row; every Export row of the part is DELETE with NEW_VALUE 0 (XD05 for a new Inactive part, Procurement for Active -> Inactive)', 'New'],
-    ['LEVEL_TYPE', 'CHAR(1)', '', 'N', '', 'P = parent (Kanban Crossdock Master), C = child (Export Crossdock Master destination)', 'New'],
-    ['DEST_CODE', 'CHAR(7)', '', 'Y', '', 'C only: destination code (buyer + PD, 7 digits); Buyer-PD 5-2 in the upload file. No FK: a DELETE row points to a removed destination', 'New'],
-    ['ORDER_TYPE', 'VARCHAR(2)', '', 'Y', '', "C only: '**', 'C', '9', 'V'", 'New'],
-    ['FIELD_NAME', 'VARCHAR(30)', '', 'N', '', 'P: PCS_CASE, MAX_CASE_DAY · C: CASE_DAY', 'New'],
+    ['LEVEL_TYPE', 'VARCHAR(6)', '', 'N', '', 'KANBAN = parent (Kanban Crossdock Master), EXPORT = child (Export Crossdock Master destination)', 'New'],
+    ['DEST_CODE', 'CHAR(7)', '', 'Y', '', 'EXPORT only: destination code (buyer + PD, 7 digits); Buyer-PD 5-2 in the upload file. No FK: a DELETE row points to a removed destination', 'New'],
+    ['ORDER_TYPE', 'VARCHAR(2)', '', 'Y', '', "EXPORT only: '**', 'C', '9', 'V'", 'New'],
+    ['FIELD_NAME', 'VARCHAR(30)', '', 'N', '', 'KANBAN: PCS_CASE, MAX_CASE_DAY · EXPORT: CASE_DAY', 'New'],
     ['ACTION', 'VARCHAR(6)', '', 'N', '', 'ADD / EDIT / DELETE', 'New'],
     ['OLD_VALUE', 'VARCHAR(10)', '', 'Y', '', 'Value before the change; NULL on ADD', 'New'],
     ['NEW_VALUE', 'VARCHAR(10)', '', 'Y', '', 'Value after the change; 0 on DELETE (0 in the upload file)', 'New'],
