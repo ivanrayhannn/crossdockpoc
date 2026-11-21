@@ -74,7 +74,7 @@ STG = [
     ['SEND_SEQ', 'NUMBER(1)', '', 'Y', '', 'Upload file: 1 = Export (LLM9Q880) down / delete, 2 = Kanban (LLM9Q910), 3 = Export up / add. Set by NSP at [Sync] on the last '
      'row of each key; NULL for 2 Superseded and a key that ends on its first value', 'New'],
     ['APPOLE_SYNC_RUN_ID', 'VARCHAR(14)', '', 'Y', '', 'AP POLE run ID YYYYMMDDHHMMSS; [Re-send last Sync] takes the rows of the last run', 'New'],
-    ['GTOPAS_SYNC_STATUS', 'CHAR(1)', '', 'Y', '', 'NULL = not for GTOPAS (Pcs/Case, Max Case/Day, Case/Day EDIT). 0 = Non Sync: a C row ADD or DELETE '
+    ['GTOPAS_SYNC_STATUS', 'CHAR(1)', '', 'Y', '', 'NULL = not for GTOPAS (Pcs/Case, Max Case/Day, Case/Day EDIT). 0 = Non Sync: an EXPORT row ADD or DELETE '
      '(the destination appears / disappears, also from a status change; every row of a new period from XD05). 1 = Sync: [Sync] for the Current period, the Period Rollover for the Next period. '
      'The part + period is GTOPAS Non Sync while it has a row with 0', 'New'],
     ['GTOPAS_SYNC_DT', 'DATETIME', '', 'Y', '', 'Time of the [Sync] / Period Rollover that sent the row to GTOPAS', 'New'],
