@@ -1,0 +1,144 @@
+"""Proposal (21-Nov, discussion, not yet in the UISS / DB Structure): TB_M_PART_CANDIDATE, TB_M_PART_CANDIDATE_DEST and the new
+TB_H_PART_CANDIDATE_STG_SYNC for the AP POLE sync (XD07). Existing columns are read from the specs (erd/build_erd.load_tables).
+Run: python3 build_table_proposal.py"""
+import os
+import sys
+from openpyxl import Workbook
+from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+from openpyxl.utils import get_column_letter
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(HERE, '..'))
+from build_erd import load_tables  # noqa: E402
+
+OUT = os.path.join(HERE, 'Proposal_Tables_AP_POLE_Staging_Sync.xlsx')
+T = load_tables()[0]
+HDR = PatternFill('solid', fgColor='DCEBFA')
+FILL = {'New': PatternFill('solid', fgColor='E2EFDA'), 'Changed': PatternFill('solid', fgColor='FFF2CC'),
+        'Removed': PatternFill('solid', fgColor='FCE4D6'), 'Existing': None}
+thin = Side(style='thin', color='B7C9DB')
+BOX = Border(left=thin, right=thin, top=thin, bottom=thin)
+F, FB = Font(name='Arial', size=9), Font(name='Arial', size=9, bold=True)
+COLS = ['No', 'Column', 'Type', 'PK', 'Null', 'Default', 'Description', 'Status']
+WID = [5, 26, 16, 5, 6, 10, 95, 10]
+
+
+def existing(name):
+    return [[c[0], c[1], 'Y' if c[2] == 'Y' else '', c[3], '', c[4], 'Existing'] for c in T[name][1]]
+
+
+def kanban():
+    rows = []
+    for r in existing('TB_M_PART_CANDIDATE'):
+        n = r[0]
+        if n == 'SYNC_STATUS':
+            rows.append(r[:6] + ['Removed'])
+            rows[-1][5] = 'Removed: one status for both targets. GTOPAS -> GTOPAS_SYNC_STATUS (below); AP POLE -> TB_H_PART_CANDIDATE_STG_SYNC.APPOLE_SYNC_STATUS'
+            rows.append(['GTOPAS_SYNC_STATUS', 'CHAR(1)', '', 'N', "'0'", '0 = Non Sync, 1 = Sync. Set to 0 when the part + destination combination or the status '
+                         'changes (screen, upload, XD05); set to 1 by [Sync] (Current) or the Period Rollover (XD05 process 3)', 'New'])
+        elif n == 'APPOLE_SYNC_DT':
+            rows.append(r[:5] + ['Removed: moved to TB_H_PART_CANDIDATE_STG_SYNC.APPOLE_SYNC_DT. The screen shows Last Sent AP POLE = latest APPOLE_SYNC_DT '
+                                 'of the staging rows of the part + period', 'Removed'])
+        elif n == 'GTOPAS_SYNC_DT':
+            rows.append(r[:5] + ['Date-time of the last send of the part (this period) to GTOPAS: [Sync], [Re-send last Sync] or the Period Rollover; '
+                                 'shown as Last Sent GTOPAS', 'Existing'])
+        elif n == 'SYNC_RUN_ID':
+            rows.append(r[:5] + ['Run ID (YYYYMMDDHHMMSS) of the last GTOPAS send. The AP POLE run ID is on TB_H_PART_CANDIDATE_STG_SYNC.SYNC_RUN_ID', 'Changed'])
+        elif n == 'PART_STATUS':
+            rows.append(r[:5] + ['Candidate / Active / Inactive. Candidate -> Active: XD05 (Next period). Active -> Inactive and Inactive -> Active: '
+                                 'Procurement on the Kanban Crossdock Master (writes PART_STATUS + DELETE / ADD CASE_DAY rows to the staging)', 'Changed'])
+        else:
+            rows.append(r)
+    return rows
+
+
+def dest():
+    rows = existing('TB_M_PART_CANDIDATE_DEST')
+    for r in rows:
+        if r[0] == 'CASE_DAY':
+            r[5] += '. Every add / change / removal writes a row to TB_H_PART_CANDIDATE_STG_SYNC (LEVEL_TYPE C) in the same transaction'
+            r[6] = 'Changed'
+    return rows
+
+
+STG = [
+    ['HIST_ID', 'BIGINT', 'Y', 'N', 'identity', 'Running number: order of the changes', 'New'],
+    ['PART_NO', 'VARCHAR(TBD)', '', 'N', '', 'Part number (NSP format, with "-"); FK1 (PART_NO, PERIOD) -> TB_M_PART_CANDIDATE', 'New'],
+    ['PERIOD', 'CHAR(6)', '', 'N', '', 'Calculation period YYYYMM; FK1. Effective Month / Year of the AP POLE upload', 'New'],
+    ['LEVEL_TYPE', 'CHAR(1)', '', 'N', '', 'P = parent (Kanban Crossdock Master), C = child (Export Crossdock Master destination)', 'New'],
+    ['DEST_CODE', 'CHAR(7)', '', 'Y', '', 'C only: destination code (buyer + PD, 7 digits); Buyer-PD 5-2 in the upload file. No FK: a DELETE row points to a removed destination', 'New'],
+    ['ORDER_TYPE', 'VARCHAR(2)', '', 'Y', '', "C only: '**', 'C', '9', 'V'", 'New'],
+    ['FIELD_NAME', 'VARCHAR(30)', '', 'N', '', 'P: PCS_CASE, MAX_CASE_DAY, PART_STATUS (record only, no upload row) · C: CASE_DAY', 'New'],
+    ['ACTION', 'VARCHAR(6)', '', 'N', '', 'ADD / EDIT / DELETE', 'New'],
+    ['OLD_VALUE', 'VARCHAR(10)', '', 'Y', '', 'Value before the change (number, or the status for PART_STATUS); NULL on ADD', 'New'],
+    ['NEW_VALUE', 'VARCHAR(10)', '', 'Y', '', 'Value after the change; NULL on DELETE (0 in the upload file)', 'New'],
+    ['SOURCE', 'VARCHAR(6)', '', 'N', '', 'BATCH (XD05) / SCREEN / UPLOAD', 'New'],
+    ['UPLOAD_ID', 'VARCHAR(TBD)', '', 'Y', '', 'Upload of the Kanban or Export Excel (Log); NULL when SOURCE is not UPLOAD', 'New'],
+    ['APPOLE_SYNC_STATUS', 'CHAR(1)', '', 'N', "'0'", '0 = Non Sync, 1 = Sync, 2 = Superseded (an earlier row of the same key; not sent). Moved from TB_M_PART_CANDIDATE. '
+     'The part + period is AP POLE Non Sync while it has a row with 0', 'New'],
+    ['APPOLE_SYNC_DT', 'DATETIME', '', 'Y', '', 'Time of the [Sync] that sent the row (status 1 and 2). Moved from TB_M_PART_CANDIDATE', 'New'],
+    ['SEND_SEQ', 'NUMBER(1)', '', 'Y', '', 'Upload file: 1 = Export (LLM9Q880) down / delete, 2 = Kanban (LLM9Q910), 3 = Export up / add. Set by NSP at [Sync] on the last '
+     'row of each key; NULL for 2 Superseded, a key that ends on its first value, and PART_STATUS', 'New'],
+    ['SYNC_RUN_ID', 'VARCHAR(14)', '', 'Y', '', 'Run ID YYYYMMDDHHMMSS; [Re-send last Sync] takes the rows of the last run', 'New'],
+    ['CREATED_BY', 'VARCHAR(20)', '', 'N', '', 'User of the save / upload, or XD05BATCH', 'New'],
+    ['CREATED_DT', 'DATETIME', '', 'N', '', 'Time of the insert (same transaction as the master update)', 'New'],
+    ['CHANGED_BY', 'VARCHAR(20)', '', 'Y', '', 'User of [Sync] / [Re-send last Sync]', 'New'],
+    ['CHANGED_DT', 'DATETIME', '', 'Y', '', 'Time of the update by [Sync] / [Re-send last Sync]', 'New'],
+]
+
+
+def sheet(wb, title, table, desc, rows, notes):
+    ws = wb.create_sheet(title)
+    ws.sheet_view.showGridLines = False
+    ws['A1'] = table
+    ws['A1'].font = Font(name='Arial', size=12, bold=True)
+    ws['A2'] = desc
+    ws['A2'].font = Font(name='Arial', size=9, italic=True)
+    r0 = 4
+    for c, h in enumerate(COLS, 1):
+        x = ws.cell(r0, c, h)
+        x.font, x.fill, x.border = FB, HDR, BOX
+        x.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+    for i, row in enumerate(rows, 1):
+        vals = [i] + row
+        for c, v in enumerate(vals, 1):
+            x = ws.cell(r0 + i, c, v)
+            x.font, x.border = F, BOX
+            x.alignment = Alignment(wrap_text=True, vertical='top')
+            if FILL[row[6]]:
+                x.fill = FILL[row[6]]
+            if row[6] == 'Removed' and c in (2, 3):
+                x.font = Font(name='Arial', size=9, strike=True)
+    for c, w in enumerate(WID, 1):
+        ws.column_dimensions[get_column_letter(c)].width = w
+    r = r0 + len(rows) + 2
+    for n in notes:
+        ws.cell(r, 1, n).font = F
+        r += 1
+    ws.freeze_panes = 'C5'
+
+
+def main():
+    wb = Workbook()
+    wb.remove(wb.active)
+    sheet(wb, '1. TB_M_PART_CANDIDATE', 'TB_M_PART_CANDIDATE (Kanban Crossdock Master)', T['TB_M_PART_CANDIDATE'][0], kanban(), [
+        'PK: PART_NO, PERIOD.',
+        'Green = new, yellow = changed description, red = removed (strike-through).'])
+    sheet(wb, '2. TB_M_PART_CANDIDATE_DEST', 'TB_M_PART_CANDIDATE_DEST (Export Crossdock Master)', T['TB_M_PART_CANDIDATE_DEST'][0], dest(), [
+        'PK: PART_NO, PERIOD, DEST_CODE, ORDER_TYPE. FK: (PART_NO, PERIOD) -> TB_M_PART_CANDIDATE.',
+        'No new column: a removed destination is deleted at once (no DELETE_FLAG); the staging keeps the DELETE row until it is sent.'])
+    sheet(wb, '3. TB_H_PART_CANDIDATE_STG_SYNC', 'TB_H_PART_CANDIDATE_STG_SYNC (new, AP POLE only)',
+          'Staging of every value change for the AP POLE sync (XD07): insert by XD05, the screen and the upload of the Kanban / Export Crossdock Master; '
+          'updated only by [Sync] / [Re-send last Sync]. TB_H_PART_CANDIDATE (existing history, update per part + period) is kept as it is.', STG, [
+              'PK: HIST_ID. FK1: (PART_NO, PERIOD) -> TB_M_PART_CANDIDATE.',
+              'IX1: APPOLE_SYNC_STATUS, PERIOD, PART_NO (rows to send at [Sync]).',
+              'IX2: SYNC_RUN_ID, PERIOD, SEND_SEQ, PART_NO (upload files, [Re-send last Sync]).',
+              'IX3: PART_NO, PERIOD, LEVEL_TYPE, DEST_CODE, ORDER_TYPE, FIELD_NAME, HIST_ID (first OLD / last NEW per key).',
+              'Key of a change = LEVEL_TYPE + DEST_CODE + ORDER_TYPE + FIELD_NAME within PART_NO + PERIOD.',
+              '[Sync] takes the rows with APPOLE_SYNC_STATUS 0 and HIST_ID <= the last HIST_ID at the click; last row per key -> 1 + SEND_SEQ, earlier rows -> 2.'])
+    wb.save(OUT)
+    print('saved', OUT)
+
+
+if __name__ == '__main__':
+    main()
