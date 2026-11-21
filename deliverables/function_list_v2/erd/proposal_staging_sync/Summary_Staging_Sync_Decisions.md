@@ -30,6 +30,7 @@ One row per changed value. Inserted by XD05, the screen save and the upload; upd
 |---|---|---|---|---|
 | 1 | HIST_ID | BIGINT (identity) | N | PK, order of the changes |
 | 2 | PART_NO | VARCHAR(TBD) | N | FK1 (PART_NO, PERIOD) -> TB_M_PART_CANDIDATE; NSP format with "-" |
+| 2a | PART_NAME | VARCHAR(TBD) | N | Copied from TB_M_PART_CANDIDATE at the insert (Part Name of the Kanban upload file) |
 | 3 | PERIOD | CHAR(6) | N | YYYYMM; Effective Month / Year of the AP POLE upload |
 | 4 | PART_STATUS | VARCHAR(10) | N | Status of the part in this period when the row is written (Active / Inactive) |
 | 5 | LEVEL_TYPE | VARCHAR(6) | N | KANBAN = parent (Kanban Crossdock Master), EXPORT = child (Export destination) |
@@ -185,3 +186,9 @@ APPOLE_SYNC_STATUS is always 0 at the insert.
 5. Total Case/Day > Max Case/Day of the part (same period): **error on save**, nothing is saved. Checked at the screen save of the Kanban Crossdock Master (new Max >= total Case/Day of the destinations), the screen save of the Export Crossdock Master (total Case/Day incl. a new destination <= Max), the Kanban upload (per row) and the Export upload (per part after the whole file is read). Not checked for XD05 (the allocation always equals Max). To lower Max the user lowers the destinations first (Export), then Max (Kanban).
 
 No open point left.
+
+## 9. RPA reads the staging only (21-Nov)
+- The bot connects to the NSP database (read-only user) and reads **only TB_H_PART_CANDIDATE_STG_SYNC**, not TB_M_PART_CANDIDATE / _DEST. NSP updates the staging (status, SEND_SEQ, run ID, dates, LAST_SYNC_DATE_APPOLE) at the click of [Sync], before the bot starts.
+- Kanban file: the pair Pcs/Case + Max Case/Day = the latest row with APPOLE_SYNC_STATUS 1 of each field for the part + period (this run or an earlier one), so the row is complete when only one field changed.
+- GTOPAS: per part of the GTOPAS run, every destination whose latest staging value (CREATED_DT <= GTOPAS_SYNC_DT) is >= 1.
+- Queries (SQLite dialect, notes for SQL Server inside): `sql/staging_sync_queries.sql`. SQL sandbox to try them: https://claude.ai/artifact/SUTKyVSyXR7Qer32d2jUr5

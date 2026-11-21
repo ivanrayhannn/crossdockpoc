@@ -57,6 +57,7 @@ def dest():
 STG = [
     ['HIST_ID', 'BIGINT', 'Y', 'N', 'identity', 'Running number: order of the changes', 'New'],
     ['PART_NO', 'VARCHAR(TBD)', '', 'N', '', 'Part number (NSP format, with "-"); FK1 (PART_NO, PERIOD) -> TB_M_PART_CANDIDATE', 'New'],
+    ['PART_NAME', 'VARCHAR(TBD)', '', 'N', '', 'Part Name copied from TB_M_PART_CANDIDATE at the insert, so the bot reads only the staging (Part Name of the Kanban upload file)', 'New'],
     ['PERIOD', 'CHAR(6)', '', 'N', '', 'Calculation period YYYYMM; FK1. Effective Month / Year of the AP POLE upload', 'New'],
     ['PART_STATUS', 'VARCHAR(10)', '', 'N', '', 'Status of the part in this period when the row is written. Active: ADD / EDIT rows. Inactive: the part stays in the AP POLE Kanban (XD05 still writes its Kanban rows for a new period); every Export row of the part is DELETE with NEW_VALUE 0, so the Buyer-PD stays in AP POLE with 0', 'New'],
     ['LEVEL_TYPE', 'VARCHAR(6)', '', 'N', '', 'KANBAN = parent (Kanban Crossdock Master), EXPORT = child (Export Crossdock Master destination)', 'New'],
