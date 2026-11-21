@@ -13,12 +13,14 @@
     "bootstrap": "^4.6.2",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "sql.js": "^1.10.2",
     "write-excel-file": "^4.1.1"
   },
   "devDependencies": {
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
+    "@types/sql.js": "^1.16.0",
     "@vitejs/plugin-react": "^6.1.1",
     "oxlint": "^1.81.0",
     "postcss": "^8.5.28",

@@ -6,7 +6,7 @@ export const NAV_GROUPS: [string, string[]][] = [
   ['ASN', ['Case Label Printing', 'ASN Creation', 'Change Order Number', 'Delivery Note Creation', 'Case Consolidation Simulation', 'ASN Inquiry', 'Cancel Order Simulation', 'ASN Simulation']],
   ['Transfer Posting', ['Stock Inquiry']],
   ['Timeline', ['Timeline']],
-  ['Master', ['Sub Supplier Maintenance', 'Part Master Maintenance', 'Crossdock Master Setting']],
+  ['Master', ['Sub Supplier Maintenance', 'Part Master Maintenance', 'Crossdock Master Setting', 'Staging Sync SQL']],
   ['Forecast', ['Forecast Inquiry']],
   ['Common', ['Log Monitoring', 'System Master Maintenance', 'Batch Process Simulation', 'Candidate Part Batch Flow', 'ASN Backend Process', 'Business Process Flow', 'Confirmation Points', 'Menu Settings']],
   ['Inventory Taking', ['Intak Period Maintenance', 'Yellow Line and CY Stock']],

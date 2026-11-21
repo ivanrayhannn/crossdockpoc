@@ -1,0 +1,466 @@
+<title>Crossdock Staging Sync</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&display=swap">
+<style>
+/* Light mode only (white, light blue, dark blue). Layout: one reading column of sections; scenario workbench = chips on top, four stage panels stacked; tables scroll in their own box. */
+:root {
+  --bg: #ffffff; --surface: #ffffff; --ink: #0f2540; --muted: #4f6580; --line: #c9dcef;
+  --accent: #123a6b; --accent-soft: #e6f0fb; --grid: #d6e4f2; --th: #dcebfa; --th-ink: #123a6b;
+  --pend: #9a6400; --pend-soft: #fff1d6; --ok: #2c7a3f; --ok-soft: #e1f2e5; --ng: #b23b2e; --ng-soft: #fbe3df;
+  --parent: #5a3e8c; --parent-soft: #eee8f7;
+  --f-display: "IBM Plex Sans Condensed", "Arial Narrow", Arial, sans-serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", Arial, sans-serif;
+  --f-mono: "IBM Plex Mono", Consolas, "Courier New", monospace;
+  color-scheme: light;
+}
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--f-body); }
+.wrap { max-width: 1680px; margin: 0 auto; padding-block: 24px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 40px; }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; letter-spacing: .01em; }
+h1 { font-size: 2rem; line-height: 1.15; }
+h2 { font-size: 1.4rem; }
+h3 { font-size: 1.05rem; }
+p { margin: 0; max-width: 72ch; }
+.eyebrow { font: 600 .72rem/1 var(--f-body); text-transform: uppercase; letter-spacing: .09em; color: var(--accent); }
+.sub { color: var(--muted); }
+section { display: grid; gap: 14px; min-width: 0; }
+header { display: grid; gap: 10px; }
+.tag { display: inline-block; font: 500 .72rem/1.6 var(--f-mono); padding: 0 7px; border-radius: 4px; background: var(--pend-soft); color: var(--pend); }
+code, .mono { font-family: var(--f-mono); font-size: .86em; }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px; display: grid; gap: 10px; min-width: 0; align-content: start; }
+.card.new { border-color: var(--accent); }
+.card .head { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; justify-content: space-between; }
+.tbl { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: .82rem; font-variant-numeric: tabular-nums; }
+th, td { padding: 6px 9px; border-bottom: 1px solid var(--grid); border-right: 1px solid var(--grid); text-align: left; white-space: nowrap; vertical-align: top; }
+th:last-child, td:last-child { border-right: 0; }
+th { font: 600 .7rem/1.3 var(--f-body); text-transform: uppercase; letter-spacing: .05em; color: var(--th-ink); background: var(--th); border-bottom: 1px solid var(--line); }
+tbody tr:hover td { box-shadow: inset 0 0 0 999px rgba(18, 58, 107, .05); }
+td { font-family: var(--f-mono); font-size: .8rem; }
+td.wrap-txt { white-space: normal; font-family: var(--f-body); min-width: 220px; }
+tr:last-child td { border-bottom: 0; }
+tr.r-pend td { background: var(--pend-soft); }
+tr.r-ok td { background: var(--ok-soft); }
+tr.r-ng td { background: var(--ng-soft); }
+tr.r-del td { background: var(--ng-soft); }
+tr.r-sup td { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--line); }
+.th-sim { background: #fff1c2 !important; color: #6b4e00 !important; }
+tr.r-par td { background: var(--parent-soft); }
+.pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font: 600 .72rem/1.5 var(--f-body); }
+.p-down { background: var(--ng-soft); color: var(--ng); } .p-up { background: var(--ok-soft); color: var(--ok); }
+.p-add { background: var(--accent-soft); color: var(--accent); } .p-del { background: var(--ng); color: var(--surface); }
+.p-none { background: var(--bg); color: var(--muted); border: 1px solid var(--line); } .p-par { background: var(--parent-soft); color: var(--parent); }
+.p-ok { background: var(--ok-soft); color: var(--ok); } .p-ng { background: var(--ng); color: var(--surface); }
+ol.rules { margin: 0; padding-left: 1.3em; display: grid; gap: 6px; max-width: 80ch; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 500 .82rem/1 var(--f-body); padding: 8px 11px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.chip:hover { border-color: var(--accent); }
+.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+.chip:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.stage { display: grid; grid-template-columns: 34px 1fr; gap: 12px; }
+.stage .no { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font: 700 .9rem/1 var(--f-display); background: var(--accent-soft); color: var(--accent); }
+.stage .body { display: grid; gap: 10px; min-width: 0; }
+.story { background: var(--surface); border-left: 3px solid var(--accent); padding: 10px 14px; border-radius: 0 6px 6px 0; }
+.note { font-size: .86rem; color: var(--muted); max-width: 80ch; }
+.warn { font-size: .86rem; background: var(--ng-soft); color: var(--ink); padding: 8px 12px; border-radius: 6px; max-width: 80ch; }
+.bar { display: flex; height: 10px; border-radius: 3px; overflow: hidden; background: var(--bg); border: 1px solid var(--line); min-width: 120px; }
+.bar i { display: block; background: var(--accent); }
+.bar i.over { background: var(--ng); }
+.pg { display: grid; grid-template-columns: minmax(250px, 320px) 1fr; gap: 16px; align-items: start; }
+@media (max-width: 760px) { .pg { grid-template-columns: 1fr; } }
+.form { display: grid; grid-template-columns: 1fr 80px; gap: 6px 10px; align-items: center; font-size: .86rem; }
+.form label { color: var(--muted); }
+.form input { font: 500 .9rem var(--f-mono); padding: 6px 8px; border: 1px solid var(--line); border-radius: 5px; background: var(--bg); color: var(--ink); width: 100%; box-sizing: border-box; }
+.form .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); margin: 4px 0; }
+.btns { display: flex; flex-wrap: wrap; gap: 8px; }
+button.b { font: 600 .85rem/1 var(--f-body); padding: 9px 14px; border-radius: 6px; border: 1px solid var(--accent); background: var(--accent); color: var(--surface); cursor: pointer; }
+button.b.ghost { background: transparent; color: var(--accent); }
+.msg { font-size: .85rem; min-height: 1.3em; }
+.msg.err { color: var(--ng); } .msg.ok { color: var(--ok); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .8rem; color: var(--muted); }
+.legend span { display: inline-flex; gap: 6px; align-items: center; }
+.sw { width: 12px; height: 12px; border-radius: 3px; display: inline-block; border: 1px solid var(--line); }
+@media (prefers-reduced-motion: no-preference) { .chip, button.b { transition: background .15s, border-color .15s; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Crossdock Master · XD07 AP POLE · option 1 (proposal 21-Nov)</span>
+    <h1>History staging sync for the AP POLE bot</h1>
+    <p class="sub">The current history table <code>TB_H_PART_CANDIDATE</code> stays as it is (one row per part + period, overwritten). A new insert-only table
+      <code>TB_H_PART_CANDIDATE_STG_SYNC</code> keeps every change with its own HIST_ID until it is sent. At [Sync] NSP sets SEND_SEQ = number of the upload file
+      and makes the AP POLE upload files (LLM9Q880 Export, LLM9Q910 Kanban) from the stored templates; the bot uploads them in order.</p>
+    <p class="sub">Example part <b>DUMMY-001</b> (DUMMY PART 001), Pcs/Case 6, Current period 202611 (AP POLE Eff. 11/2026). AP POLE checks every uploaded row one by one: the total Max Shipping Box (RCS) of the Buyer-PD rows must stay ≤ the part's Max Shipping Box Qty.</p>
+  </header>
+
+  <section>
+    <h2>Two history tables</h2>
+    <div class="two">
+      <div class="card">
+        <div class="head"><h3>TB_H_PART_CANDIDATE</h3><span class="pill p-none">existing · kept</span></div>
+        <p class="note">History of the parent (Kanban Crossdock Master). One row per PART_NO + PERIOD: a second change of the same part + period overwrites the row. Used for the screen history only, not by the bot.</p>
+        <div class="tbl"><table><thead><tr><th>Column</th><th>Note</th></tr></thead><tbody>
+          <tr><td>HIST_ID</td><td class="wrap-txt">PK</td></tr>
+          <tr><td>PART_NO, PERIOD</td><td class="wrap-txt">Updated when the same part + period changes again</td></tr>
+          <tr><td>EVENT_TYPE, SOURCE, UPLOAD_ID</td><td class="wrap-txt">As today</td></tr>
+          <tr><td>FIELD_NAME, OLD_VALUE, NEW_VALUE</td><td class="wrap-txt">Last change only: the value before older edits is lost</td></tr>
+          <tr><td>REMARK, CREATED_BY / DT</td><td class="wrap-txt">As today</td></tr>
+        </tbody></table></div>
+      </div>
+      <div class="card new">
+        <div class="head"><h3>TB_H_PART_CANDIDATE_STG_SYNC</h3><span class="pill p-add">new · insert only</span></div>
+        <p class="note">AP POLE and GTOPAS. One row per changed value (parent or child), inserted by XD05 and by the user's save or upload on the Kanban or the Export Crossdock Master. Rows stay Non Sync until [Sync] sends them. FK (PART_NO, PERIOD) → TB_M_PART_CANDIDATE.
+          The Sync Status, Sync date and run ID of both targets move here: <b>SYNC_STATUS, GTOPAS_SYNC_DT, APPOLE_SYNC_DT and SYNC_RUN_ID are removed from TB_M_PART_CANDIDATE</b>. The screen shows a target Non Sync while the part + period has a row with that target's status 0, else Sync with its latest date.</p>
+        <div class="tbl"><table><thead><tr><th>Column</th><th>Type</th><th>Value</th></tr></thead><tbody>
+          <tr><td>HIST_ID</td><td>BIGINT (identity)</td><td class="wrap-txt">PK, order of the changes</td></tr>
+          <tr><td>PART_NO</td><td>VARCHAR(15)</td><td class="wrap-txt">FK to TB_M_PART_CANDIDATE (NSP format, with "-")</td></tr>
+          <tr><td>PERIOD</td><td>VARCHAR(6)</td><td class="wrap-txt">FK to TB_M_PART_CANDIDATE (YYYYMM)</td></tr>
+          <tr><td>PART_STATUS</td><td>VARCHAR(10)</td><td class="wrap-txt">Status of the part in this period when the row is written: Active → ADD / EDIT rows; Inactive → the part stays in the AP POLE Kanban, every Export row of the part is DELETE with NEW 0 (the Buyer-PD stays with 0)</td></tr>
+          <tr><td>LEVEL_TYPE</td><td>VARCHAR(6)</td><td class="wrap-txt">KANBAN = parent (Kanban Crossdock Master), EXPORT = child (Export Crossdock Master destination)</td></tr>
+          <tr><td>DEST_CODE</td><td>VARCHAR(7)</td><td class="wrap-txt">EXPORT only, e.g. JAPAN (dummy; no FK: a DELETE row points to a removed destination)</td></tr>
+          <tr><td>ORDER_TYPE</td><td>VARCHAR(2)</td><td class="wrap-txt">EXPORT only: **, C, 9, V</td></tr>
+          <tr><td>FIELD_NAME</td><td>VARCHAR(30)</td><td class="wrap-txt">KANBAN: PCS_CASE, MAX_CASE_DAY · EXPORT: CASE_DAY</td></tr>
+          <tr><td>ACTION</td><td>VARCHAR(6)</td><td class="wrap-txt">ADD / EDIT / DELETE</td></tr>
+          <tr><td>OLD_VALUE, NEW_VALUE</td><td>VARCHAR(10)</td><td class="wrap-txt">Value before / after the change (number). OLD empty on ADD, NEW = 0 on DELETE (0 in the upload file)</td></tr>
+          <tr><td>SOURCE</td><td>VARCHAR(6)</td><td class="wrap-txt">BATCH (XD05) / SCREEN / UPLOAD</td></tr>
+          <tr><td>UPLOAD_ID</td><td>VARCHAR(20)</td><td class="wrap-txt">Only when SOURCE = UPLOAD</td></tr>
+          <tr><td>APPOLE_SYNC_STATUS</td><td>CHAR(1)</td><td class="wrap-txt">0 = Non Sync (default), 1 = Sync, 2 = Superseded (an earlier row of the same key; not sent). Moved from TB_M_PART_CANDIDATE</td></tr>
+          <tr><td>APPOLE_SYNC_DT</td><td>DATETIME</td><td class="wrap-txt">Time of the [Sync] that sent the row to AP POLE (1 and 2)</td></tr>
+          <tr><td>GTOPAS_SYNC_STATUS</td><td>CHAR(1)</td><td class="wrap-txt">NULL = not for GTOPAS (Pcs/Case, Max, Case/Day EDIT). 0 = Non Sync on a C row ADD / DELETE (the destination appears / disappears). 1 = Sync: [Sync] for Current, the Period Rollover for Next</td></tr>
+          <tr><td>GTOPAS_SYNC_DT</td><td>DATETIME</td><td class="wrap-txt">Time of the [Sync] / Period Rollover that sent the row to GTOPAS</td></tr>
+          <tr><td>SEND_SEQ</td><td>NUMBER(1)</td><td class="wrap-txt">Upload file: 1 = Export of a part whose Max goes down (before its Kanban row), 2 = Kanban, 3 = Export of every other part (Max up, new part, no Kanban row). Set by NSP at [Sync] on the last row of each key; empty for 2 Superseded and a key that ends on its first value</td></tr>
+          <tr><td>APPOLE_SYNC_RUN_ID</td><td>VARCHAR(14)</td><td class="wrap-txt">AP POLE run YYYYMMDDHHMMSS; [Re-send last Sync] takes the rows of the last run</td></tr>
+          <tr><td>GTOPAS_SYNC_RUN_ID</td><td>VARCHAR(14)</td><td class="wrap-txt">GTOPAS run ([Sync], [Re-send last Sync] or the Period Rollover)</td></tr>
+          <tr><td>CREATED_BY, CREATED_DT</td><td>VARCHAR(20), DATETIME</td><td class="wrap-txt">User or XD05BATCH, time of the insert</td></tr>
+          <tr><td>CHANGED_BY, CHANGED_DT</td><td>VARCHAR(20), DATETIME</td><td class="wrap-txt">User of [Sync] / [Re-send last Sync], time of the update</td></tr>
+        </tbody></table></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Who inserts the rows</h2>
+    <p class="note">Every insert happens in the same transaction as the update of TB_M_PART_CANDIDATE / TB_M_PART_CANDIDATE_DEST. A value saved with no change writes no row.</p>
+    <div class="tbl"><table><thead><tr><th>Source</th><th>Menu</th><th>LEVEL_TYPE</th><th>Rows inserted</th><th>SOURCE / UPLOAD_ID</th><th>CREATED_BY</th></tr></thead><tbody>
+      <tr><td>XD05 process 1</td><td>Kanban Crossdock Master (Next period)</td><td>KANBAN</td><td class="wrap-txt">ADD PCS_CASE and ADD MAX_CASE_DAY for every part of the new period (incl. Candidate → Active: a new part for AP POLE, file 2 Add part)</td><td>BATCH / –</td><td>XD05BATCH</td></tr>
+      <tr><td>XD05 process 2</td><td>Export Crossdock Master (Next period)</td><td>EXPORT</td><td class="wrap-txt">ADD CASE_DAY for every destination + order type of the new period</td><td>BATCH / –</td><td>XD05BATCH</td></tr>
+      <tr><td>XD05 re-run (same day D)</td><td>Kanban + Export (Next period)</td><td>KANBAN, EXPORT</td><td class="wrap-txt">EDIT / ADD / DELETE against the Next values it replaces; the bot still reduces to first OLD and last NEW</td><td>BATCH / –</td><td>XD05BATCH</td></tr>
+      <tr><td>Procurement changes the status</td><td>Kanban Crossdock Master</td><td>KANBAN, EXPORT</td><td class="wrap-txt">Active → Inactive: DELETE CASE_DAY (NEW 0) for every destination, PART_STATUS column = Inactive (Buyer-PD 0 in file 1). Inactive → Active: ADD CASE_DAY for every destination mapped again, PART_STATUS = Active (file 3). No row for the status itself</td><td>SCREEN / –</td><td>Procurement user</td></tr>
+      <tr><td>User save on the screen</td><td>Kanban Crossdock Master</td><td>KANBAN</td><td class="wrap-txt">EDIT PCS_CASE / MAX_CASE_DAY per changed field</td><td>SCREEN / –</td><td>user</td></tr>
+      <tr><td>User save on the screen</td><td>Export Crossdock Master</td><td>EXPORT</td><td class="wrap-txt">ADD / EDIT / DELETE CASE_DAY per destination + order type (an Order Type change = DELETE old + ADD new, or EDIT of each row)</td><td>SCREEN / –</td><td>user</td></tr>
+      <tr><td>User upload</td><td>Kanban Crossdock Master</td><td>KANBAN</td><td class="wrap-txt">Same as the screen, one row per changed field of each uploaded row</td><td>UPLOAD / upload ID</td><td>user</td></tr>
+      <tr><td>User upload</td><td>Export Crossdock Master</td><td>EXPORT</td><td class="wrap-txt">Same as the screen, per destination + order type of each uploaded row</td><td>UPLOAD / upload ID</td><td>user</td></tr>
+    </tbody></table></div>
+  </section>
+
+  <section>
+    <h2>[Sync] and the bot</h2>
+    <ol class="rules">
+      <li>[Sync]: NSP takes the rows of each part + period with <b>APPOLE_SYNC_STATUS 0</b> (Non Sync) and HIST_ID ≤ the last HIST_ID at the click (rows inserted while the run is made wait for the next [Sync]). Key = LEVEL_TYPE + DEST_CODE + ORDER_TYPE + FIELD_NAME.</li>
+      <li>Per key: <b>AP POLE value</b> = OLD_VALUE of the first row (smallest HIST_ID); <b>NSP value</b> = NEW_VALUE of the last row (largest HIST_ID). Action: no AP POLE value → <span class="pill p-add">Add</span>, last row DELETE (NEW 0) → <span class="pill p-del">Delete</span>, smaller → <span class="pill p-down">Down</span>, bigger → <span class="pill p-up">Up</span>, equal → <span class="pill p-none">skip</span>.</li>
+      <li>NSP sets <b>SEND_SEQ</b> = upload file on the last row of each key, <b>1</b> Export (LLM9Q880): the destinations of a part <b>whose Max goes down</b> → <b>2</b> Kanban (LLM9Q910): every parent change and new part → <b>3</b> Export: the destinations of every other part (Max up, new part, or no Kanban row: moves between destinations, deletes, Inactive).
+        Only a Max going down needs its destinations lowered before the Kanban row; everything else is safe after it. AP POLE checks row by row, so inside a file the rows of a part going down / deleted (0) come before the rows going up / added.</li>
+      <li>In the same transaction: last row of each key → APPOLE_SYNC_STATUS 1, earlier rows → 2 Superseded, all with APPOLE_SYNC_DT, SYNC_RUN_ID, CHANGED_BY / DT. A key that ends on the AP POLE value gets no SEND_SEQ.</li>
+      <li>NSP makes one file per period + SEND_SEQ from <code>WHERE SYNC_RUN_ID = run AND SEND_SEQ IS NOT NULL ORDER BY PERIOD, SEND_SEQ, PART_NO</code>: the Current files first, then the Next files. File name <code>LLM9Q880_&lt;run&gt;_&lt;period&gt;_1.xls</code>, <code>LLM9Q910_&lt;run&gt;_&lt;period&gt;_2.xls</code>, <code>LLM9Q880_&lt;run&gt;_&lt;period&gt;_3.xls</code>; a file with no rows is not made.</li>
+      <li>The bot uploads the files in the order of their names and stops at the first failed file (e-mail FAILED names the file). The files of the other period wait for [Re-send last Sync].</li>
+      <li><b>GTOPAS</b>: [Sync] (Current) or the Period Rollover (Next) takes every part + period with a row GTOPAS_SYNC_STATUS 0. The bot gets all destinations of the part with CASE_DAY ≥ 1 from TB_M_PART_CANDIDATE_DEST (P/No. + Destination Code, order types together) and compares with GTOPAS WVJA5204: in NSP only → Add, in GTOPAS only → Delete, both → Keep. No SEND_SEQ for GTOPAS.</li>
+      <li>[Re-send last Sync] runs the rows of the last SYNC_RUN_ID again in the same order. Safe to repeat: the bot sets values, it does not add or subtract.</li>
+    </ol>
+  </section>
+
+  <section id="scenarios">
+    <h2>Scenarios</h2>
+    <p class="note">Before every scenario AP POLE holds Max 20 with JAPAN, KOREA, TAIWAN and USA at 5 Case/Day each (Order Type **), unless the scenario says otherwise.</p>
+    <div class="chips" id="chips" role="group" aria-label="Scenario"></div>
+    <div class="legend">
+      <span><i class="sw" style="background:var(--pend-soft)"></i>pending row</span>
+      <span><i class="sw" style="background:var(--ok-soft)"></i>sent / check OK</span>
+      <span><i class="sw" style="background:var(--ng-soft)"></i>delete / check NG</span>
+      <span><i class="sw" style="background:var(--parent-soft)"></i>parent step</span>
+    </div>
+    <div id="scn" style="display:grid;gap:22px"></div>
+  </section>
+
+  <section id="playground">
+    <h2>Try your own change</h2>
+    <p class="note">Change the values, choose screen or upload, and press Save as many times as you like (each save adds staging rows). Sync runs the bot on the pending rows. Empty = no destination. The save checks total Case/Day ≤ Max (assumption, open point).</p>
+    <div class="pg">
+      <div class="card">
+        <div class="form"><label for="f-src">Saved by</label><select id="f-src" style="font:500 .85rem var(--f-body);padding:6px;border:1px solid var(--line);border-radius:5px;background:var(--bg);color:var(--ink)"><option value="">Screen</option><option value="UPL">Upload</option></select></div>
+        <div class="form" id="form"></div>
+        <div class="btns"><button class="b" id="bSave" type="button">Save</button><button class="b" id="bSync" type="button">Sync</button><button class="b ghost" id="bReset" type="button">Reset</button></div>
+        <div class="msg" id="msg" role="status"></div>
+      </div>
+      <div style="display:grid;gap:14px;min-width:0">
+        <div><h3>TB_H_PART_CANDIDATE_STG_SYNC</h3></div><div class="tbl" id="pgStg"></div>
+        <div><h3>Last Sync: bot steps in AP POLE</h3></div><div id="pgSteps"><p class="note">No Sync yet.</p></div>
+        <div><h3>AP POLE now</h3></div><div class="tbl" id="pgAp"></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Option 1 against option 2</h2>
+    <div class="tbl"><table><thead><tr><th>Point</th><th>Option 1 · staging table</th><th>Option 2 · SENT columns</th></tr></thead><tbody>
+      <tr><td class="wrap-txt">New objects</td><td class="wrap-txt">1 table TB_H_PART_CANDIDATE_STG_SYNC</td><td class="wrap-txt">5 columns: APPOLE_FIRST, APPOLE_SENT_PCS_CASE, APPOLE_SENT_MAX_CASE_DAY, APPOLE_SENT_CASE_DAY, DELETE_FLAG</td></tr>
+      <tr><td class="wrap-txt">Removed destination</td><td class="wrap-txt">DELETE row in staging; the master row is deleted at once</td><td class="wrap-txt">Master row kept with DELETE_FLAG Y until sent</td></tr>
+      <tr><td class="wrap-txt">Order of the changes</td><td class="wrap-txt">SEND_SEQ = upload file 1 / 2 / 3 on the staging rows, set by NSP at [Sync]; same order for every part</td><td class="wrap-txt">APPOLE_FIRST on the part + action per child in the Export Excel</td></tr>
+      <tr><td class="wrap-txt">Several saves before Sync</td><td class="wrap-txt">First OLD_VALUE + last NEW_VALUE per key</td><td class="wrap-txt">Compare with the SENT column</td></tr>
+      <tr><td class="wrap-txt">Audit of each change</td><td class="wrap-txt">Yes, every change with HIST_ID, who, when, run ID</td><td class="wrap-txt">No (only the last sent value)</td></tr>
+      <tr><td class="wrap-txt">New period (XD05)</td><td class="wrap-txt">XD05 writes ADD rows for the parent and every child</td><td class="wrap-txt">SENT columns empty</td></tr>
+      <tr><td class="wrap-txt">Effort</td><td class="wrap-txt">Every save / upload / XD05 inserts staging rows</td><td class="wrap-txt">Every save updates FIRST; [Sync] fills SENT, deletes flagged rows</td></tr>
+    </tbody></table></div>
+    <h3>Open points</h3>
+    <ol class="rules">
+      <li>Total Case/Day &gt; Max on save: error (assumed here) or one of options A / B / C.</li>
+    </ol>
+  </section>
+</div>
+
+<script>
+const DORD = ['JAPAN', 'KOREA', 'TAIWAN', 'USA', 'THAILAND'];   /* dummy destinations (country names), in display order */
+const BP = Object.fromEntries(DORD.map(d => [d, [d]]));
+const [D1, D2, D3, D4, D5] = DORD;
+const RUN = '20261127100000';
+const PN = 'DUMMY-001', PN_E = PN.replace(/-/g, ''), PNAME = 'DUMMY PART 001';
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const k = (d, ot) => d + '|' + ot;
+const base = (mx = 20) => ({ pcs: 6, max: mx, ch: { [k(D1, '**')]: 5, [k(D2, '**')]: 5, [k(D3, '**')]: 5, [k(D4, '**')]: 5 } });
+const clone = s => s ? { pcs: s.pcs, max: s.max, st: s.st, ch: { ...s.ch } } : null;
+const sortKeys = keys => keys.sort((a, b) => { const [da, oa] = a.split('|'), [db, ob] = b.split('|'); return DORD.indexOf(da) - DORD.indexOf(db) || (oa !== '**') - (ob !== '**') || oa.localeCompare(ob); });
+
+/* staging rows from the saves; master = NSP state after the saves */
+function stage(start, saves, idFrom = 101) {
+  const m = clone(start) || { pcs: null, max: null, ch: {} };
+  const rows = []; let id = idFrom;
+  for (const sv of saves) {
+    for (const c of sv.changes) {
+      if (c.f === 'PART_STATUS') { m.st = c.v; continue; }   /* status is a column of every row, not a row of its own */
+      if (c.f) {
+        const fk = { PCS_CASE: 'pcs', MAX_CASE_DAY: 'max', PART_STATUS: 'st' }[c.f], old = m[fk] ?? (fk === 'st' ? 'Active' : null);
+        if (old === c.v) continue;
+        rows.push({ id: id++, ps: m.st || 'Active', lvl: 'P', dest: '', ot: '', f: c.f, act: old == null ? 'ADD' : 'EDIT', old, nw: c.v, gst: null, src: sv.src, upl: sv.upl, by: sv.by, dt: sv.dt, st: '0', run: '' });
+        m[fk] = c.v;
+      } else {
+        const key = k(c.d, c.ot), old = m.ch[key] ?? null;
+        if (old === c.v) continue;
+        rows.push({ id: id++, ps: m.st || 'Active', lvl: 'C', dest: c.d, ot: c.ot, f: 'CASE_DAY', act: c.v == null ? 'DELETE' : old == null ? 'ADD' : 'EDIT', old, nw: c.v == null ? 0 : c.v, gst: (c.v == null || old == null) ? '0' : null, src: sv.src, upl: sv.upl, by: sv.by, dt: sv.dt, st: '0', run: '' });
+        if (c.v == null) delete m.ch[key]; else m.ch[key] = c.v;
+      }
+    }
+  }
+  return { rows, master: m };
+}
+
+/* [Sync] in NSP: reduce the pending rows per key, decide parent / child first, set SEND_SEQ on the last row of each key
+   (earlier rows of the key = 2 Superseded); then the bot runs ORDER BY SEND_SEQ in AP POLE */
+function sync(ap0, rows) {
+  const groups = new Map();
+  for (const r of rows) { const key = [r.lvl, r.dest, r.ot, r.f].join('|'); if (!groups.has(key)) groups.set(key, []); groups.get(key).push(r); }
+  const red = [];
+  for (const g of groups.values()) {
+    const a = g[0].old, b = g[g.length - 1].nw;
+    const act = g[0].f === 'PART_STATUS' ? (a === b ? '-' : 'Status') : g[g.length - 1].act === 'DELETE' ? (a == null ? '-' : 'Delete') : a == null ? 'Add' : b < a ? 'Down' : b > a ? 'Up' : '-';
+    red.push({ lvl: g[0].lvl, dest: g[0].dest, ot: g[0].ot, f: g[0].f, ids: g.map(x => x.id), last: g[g.length - 1].id, ap: a, nsp: b, act, seq: null });
+  }
+  const kids = red.filter(x => x.lvl === 'C' && x.act !== '-');
+  const byKey = arr => sortKeys(arr.map(x => k(x.dest, x.ot))).map(kk => arr.find(x => k(x.dest, x.ot) === kk));
+  const down = byKey(kids.filter(x => x.act === 'Down' || x.act === 'Delete'));
+  const up = byKey(kids.filter(x => x.act === 'Up' || x.act === 'Add'));
+  const par = ['MAX_CASE_DAY', 'PCS_CASE'].map(f => red.find(x => x.lvl === 'P' && x.f === f && x.act !== '-')).filter(Boolean);
+  /* EXPORT rows: file 1 (before the Kanban file) only when the Max of the part goes down; else file 3 after the Kanban file */
+  const pMx = red.find(x => x.lvl === 'P' && x.f === 'MAX_CASE_DAY' && x.act !== '-');
+  const maxDown = !!ap0 && !!pMx && pMx.act === 'Down';
+  const groupsOrd = maxDown ? [[1, 'Export: down / delete, then up / add', down.concat(up)], [2, 'Kanban: parent', par]]
+    : [[2, 'Kanban: parent', par], [3, 'Export: down / delete, then up / add', down.concat(up)]];
+  const status = new Map(rows.map(r => [r.id, '2']));
+  red.forEach(x => status.set(x.last, '1'));
+  const seq = new Map();
+  const ap = clone(ap0) || { pcs: null, max: null, ch: {} };
+  const steps = []; let kan = null;
+  for (const [n, grp, list] of groupsOrd) {
+    list.forEach((x, i) => {
+      x.seq = n; seq.set(x.last, n);
+      let bp = '-', ot = '-', act = x.act, from = x.ap ?? '-', to = x.nsp ?? '-';
+      if (x.lvl === 'P') {
+        act = ap0 ? 'Edit' : 'Add part';
+        if (x.f === 'MAX_CASE_DAY') ap.max = x.nsp; else ap.pcs = x.nsp;
+        if (i > 0) act = 'same row';
+        kan = true;
+      } else {
+        bp = BP[x.dest][0]; ot = x.ot;
+        if (x.act === 'Delete') { ap.ch[k(x.dest, x.ot)] = 0; to = '0 (delete)'; }   /* the Buyer-PD stays in AP POLE with 0 */ else ap.ch[k(x.dest, x.ot)] = x.nsp;
+      }
+      const tot = Object.values(ap.ch).reduce((s2, y) => s2 + y, 0);
+      steps.push({ seq: n, hist: x.last, grp, lvl: x.lvl === 'P' ? 'KANBAN' : 'EXPORT', dest: x.dest, ot: x.ot, nsp: x.nsp, bp, otx: ot, f: x.f, act, from, to, max: ap.max, tot, ok: ap.max == null ? tot === 0 : tot <= ap.max });
+    });
+    if (n === 2 && kan) kan = { pcs: ap.pcs, max: ap.max };
+  }
+  return { red, steps, ap, seq, status, kan };
+}
+const applySync = (rows, res, run, per = '202611') => rows.map(r => ({ ...r, st: res.status.get(r.id) ?? r.st, seq: res.seq.get(r.id) ?? null, run,
+  gst: r.gst === '0' && per === '202611' ? '1' : r.gst, grun: r.gst === '0' && per === '202611' ? run : '' }));   /* GTOPAS: Current at [Sync]; Next waits for the Period Rollover */
+
+/* ---------- rendering ---------- */
+const pill = a => { const c = { Down: 'p-down', Up: 'p-up', Add: 'p-add', 'Add part': 'p-add', Delete: 'p-del', Edit: 'p-par', '-': 'p-none', Status: 'p-par', ADD: 'p-add', EDIT: 'p-par', DELETE: 'p-del' }[a] || 'p-none'; return `<span class="pill ${c}">${esc(a === '-' ? 'skip' : a)}</span>`; };
+function table(cols, rows, cls = () => '', sim = []) {
+  return `<div class="tbl"><table><thead><tr>${cols.map((c, j) => `<th${sim.includes(j) ? ' class="th-sim"' : ''}>${esc(c)}</th>`).join('')}</tr></thead><tbody>${rows.length ? rows.map((r, i) => `<tr class="${cls(r, i)}">${r.map(v => `<td>${v}</td>`).join('')}</tr>`).join('') : `<tr><td colspan="${cols.length}">(no rows)</td></tr>`}</tbody></table></div>`;
+}
+const v = x => x == null || x === '' ? '' : esc(x);
+const STL = { '0': '0 Non Sync', '1': '1 Sync', '2': '2 Superseded' };
+const runDt = run => run && run.length >= 12 ? `${run.slice(6, 8)}-Nov-${run.slice(0, 4)} ${run.slice(8, 10)}:${run.slice(10, 12)}` : '';
+const stgTable = (rows, per) => table(['HIST_ID', 'PART_NO', 'PERIOD', 'PART_STATUS', 'LEVEL', 'DEST_CODE', 'OT', 'FIELD_NAME', 'ACTION', 'OLD', 'NEW', 'SOURCE', 'UPLOAD_ID', 'APPOLE_SYNC_STATUS', 'APPOLE_SYNC_DT', 'SEND_SEQ', 'APPOLE_SYNC_RUN_ID', 'GTOPAS_SYNC_STATUS', 'GTOPAS_SYNC_DT', 'GTOPAS_SYNC_RUN_ID', 'CREATED_BY', 'CREATED_DT', 'CHANGED_BY', 'CHANGED_DT'],
+  rows.map(r => [r.id, PN, per, esc(r.ps), r.lvl === 'P' ? 'KANBAN' : 'EXPORT', v(r.dest), v(r.ot), r.f, pill(r.act), v(r.old), v(r.nw), r.src, v(r.upl), STL[r.st], runDt(r.run), r.seq ? `<b>${r.seq}</b>` : '', v(r.run), r.gst == null ? '' : STL[r.gst], runDt(r.grun), v(r.grun), esc(r.by), esc(r.dt), r.run ? 'D.Anggraini' : '', runDt(r.run)]),
+  (r, i) => ({ '0': 'r-pend', '1': 'r-ok', '2': 'r-sup' })[rows[i].st]);
+const apTable = (ap, mm) => !ap || ap.max == null ? '<p class="note">No record in AP POLE.</p>' : table(['Eff.', 'Part No', 'Shipping Box Qty', 'Max Shipping Box Qty', 'Max Allowance Qty', 'Buyer PD', 'Order Type', 'Max Shipping Box Qty (Buyer PD)', 'Max Allowance Qty (Buyer PD)'],
+  sortKeys(Object.keys(ap.ch)).map(kk => { const [d, ot] = kk.split('|'); return [mm + '/2026', PN, ap.pcs, ap.max, ap.pcs * ap.max, BP[d][0], ot, ap.ch[kk], ap.pcs * ap.ch[kk]]; }));
+function stepsHtml(b) {
+  return table(['SEND_SEQ (file)', 'HIST_ID', 'Upload', 'LEVEL_TYPE', 'Buyer PD', 'OT', 'Field', 'Action', 'AP POLE value', 'Set to', 'Max in AP POLE', 'Total children', 'Load', 'Total ≤ Max'],
+    b.steps.map(s => [`<b>${s.seq}</b>`, s.hist, esc(s.grp), s.lvl, esc(s.bp), esc(s.otx), esc(s.f), pill(s.act), esc(s.from), esc(s.to), v(s.max), s.tot,
+      `<span class="bar" aria-hidden="true"><i class="${s.ok ? '' : 'over'}" style="width:${s.max ? Math.min(100, s.tot / s.max * 100) : 0}%"></i></span>`,
+      `<span class="pill ${s.ok ? 'p-ok' : 'p-ng'}">${s.ok ? 'OK' : 'NG'}</span>`]),
+    (r, i) => b.steps[i].lvl === 'KANBAN' ? 'r-par' : (b.steps[i].ok ? '' : 'r-ng'));
+}
+function filesHtml(b, per, run) {
+  const mm = per.slice(4), yy = per.slice(0, 4), out = [];
+  const exp = n => b.steps.filter(x => x.seq === n).map(x => [mm, yy, PN_E, '', '', BP[x.dest][0], esc(x.ot), '2', x.nsp ?? 0, '', '']);
+  const EC = ['Effective Month', 'Effective Year', 'Part No.', 'Shipping Box Qty', 'Max Shipping Box by Part No.', 'Buyer-PD', 'Order Type', 'Transport Code', 'Max Shipping Box (RCS)', 'Max Allowance Qty', 'Packing/Pallet Type'];
+  const f1 = exp(1), f3 = exp(3);
+  if (f1.length) out.push(`<p class="note"><span class="pill p-down">1</span> <code>LLM9Q880_${run}_${per}_1.xls</code> · Export Customer Cross Dock Master</p>` + table(EC, f1));
+  if (b.kan) out.push(`<p class="note"><span class="pill p-par">2</span> <code>LLM9Q910_${run}_${per}_2.xls</code> · Cross Dock Kanban Part Master (Packing/Pallet Type … Outer-Qty: 20 columns left empty)</p>` +
+    table(['Effective Month', 'Effective Year', 'Operator ID', 'Part No.', 'Part Name', 'Shipping Box Qty', 'Max Shipping Box Qty', 'Max Allowance Qty', 'Packing/Pallet Type …'],
+      [[mm, yy, 'P6', PN, PNAME, b.kan.pcs, b.kan.max, b.kan.pcs * b.kan.max, '']], () => 'r-par'));
+  if (f3.length) out.push(`<p class="note"><span class="pill p-up">3</span> <code>LLM9Q880_${run}_${per}_3.xls</code> · Export Customer Cross Dock Master</p>` + table(EC, f3));
+  return out.length ? out.join('') : '<p class="note">No file.</p>';
+}
+function redHtml(b) {
+  return table(['Key', 'HIST_ID of the key', 'AP POLE value (first OLD)', 'NSP value (last NEW)', 'Action', 'Last HIST_ID gets', 'SEND_SEQ (file)'],
+    b.red.map(x => [x.lvl === 'P' ? `KANBAN · ${x.f}` : `EXPORT · ${esc(BP[x.dest][0])} ${esc(x.ot)}`, x.ids.join(', '), v(x.ap) || '–', v(x.nsp) || '–', pill(x.act), x.last, x.seq ? `<b>${x.seq}</b>` : x.f === 'PART_STATUS' ? '– (record only; Buyer-PD 0 in file 1)' : '– (no change)']),
+    (r, i) => b.red[i].lvl === 'P' ? 'r-par' : '', [2, 3, 4]) + '<p class="note">Yellow headers help to read the simulation only (worked out at [Sync], not stored).</p>';
+}
+function masterHtml(m, per) {
+  return table(['Table', 'PART_NO', 'PERIOD', 'PART_STATUS', 'DEST_CODE', 'ORDER_TYPE', 'PCS_CASE', 'MAX_CASE_DAY / CASE_DAY', 'AP POLE on the screen (from the staging)'],
+    [['TB_M_PART_CANDIDATE', PN, per, m.st || 'Active', '', '', m.pcs, m.max, 'Non Sync (rows with APPOLE_SYNC_STATUS 0)'],
+     ...sortKeys(Object.keys(m.ch)).map(kk => { const [d, ot] = kk.split('|'); return ['TB_M_PART_CANDIDATE_DEST', PN, per, '', d, ot, '', m.ch[kk], '']; })],
+    (r, i) => i === 0 ? 'r-par' : '');
+}
+
+/* ---------- scenarios ---------- */
+const S = (by = 'D.Anggraini', dt = '27-Nov-2026 09:00', changes, upl = '') => ({ by, dt, src: by === 'XD05BATCH' ? 'BATCH' : upl ? 'UPLOAD' : 'SCREEN', upl, changes });
+const P = (f, val) => ({ f, v: val }), C = (d, ot, val) => ({ d, ot, v: val });
+const SCN = [
+  { id: 'a14', name: 'Max 20 → 14', story: 'Max 20 with JAPAN 10 and KOREA 10 goes down to Max 14 with JAPAN 7 and KOREA 7. File 1 (Export): JAPAN 7, KOREA 7. File 2 (Kanban): Max 14. No file 3.',
+    base: { pcs: 6, max: 20, ch: { [k(D1, '**')]: 10, [k(D2, '**')]: 10 } }, saves: [S(undefined, undefined, [P('MAX_CASE_DAY', 14), C(D1, '**', 7), C(D2, '**', 7)])] },
+  { id: '3a', name: '3a Child down + up', story: 'Max 20 stays. JAPAN 5 → 4 and KOREA 5 → 6; the total stays 20. JAPAN goes down first, then KOREA goes up.', base: base(), saves: [S(undefined, undefined, [C(D1, '**', 4), C(D2, '**', 6)])] },
+  { id: '3b', name: '3b Max down', story: 'Max 20 → 18 with USA 5 → 3. The child goes down first, then the parent.', base: base(), saves: [S(undefined, undefined, [P('MAX_CASE_DAY', 18), C(D4, '**', 3)])] },
+  { id: '3c', name: '3c Max up', story: 'Max 20 → 22, children unchanged. Only file 2 (Kanban): Max 22.', base: base(), saves: [S(undefined, undefined, [P('MAX_CASE_DAY', 22)])] },
+  { id: 'up3', name: 'Max up + dest up (file 3)', story: 'Max 20 → 24 with JAPAN 5 → 7 and KOREA 5 → 7: the final total 24 is more than the Max now in AP POLE (20), so the destinations must wait for the new Max. File 2 (Kanban): Max 24. File 3 (Export): JAPAN 7, KOREA 7.', base: base(), saves: [S(undefined, undefined, [P('MAX_CASE_DAY', 24), C(D1, '**', 7), C(D2, '**', 7)])] },
+  { id: '3d', name: '3d New dest, full', story: 'Max 20 is fully mapped. New THAILAND = 2: USA 5 → 3 first, then THAILAND is added.', base: base(), saves: [S(undefined, undefined, [C(D4, '**', 3), C(D5, '**', 2)])] },
+  { id: '3e', name: '3e New dest, remaining', story: 'AP POLE has Max 22 with total 20 (2 remaining). New THAILAND = 2 is added directly.', base: base(22), saves: [S(undefined, undefined, [C(D5, '**', 2)])] },
+  { id: '3f', name: '3f Dest removed', story: 'USA is removed on the screen. The master row is deleted at once; the staging keeps a DELETE row, and file 1 (Export) carries Buyer-PD USA with Max Shipping Box (RCS) 0.', base: base(), saves: [S(undefined, undefined, [C(D4, '**', null)])] },
+  { id: '3g', name: '3g Order Type split', story: 'USA ** 5 → ** 3 + C 2. ** goes down first, then the new C row is added.', base: base(), saves: [S(undefined, undefined, [C(D4, '**', 3), C(D4, 'C', 2)])] },
+  { id: 'mix', name: 'Mixed (2 uploads)', story: 'Upload of the Kanban at 09:00: Max 20 → 18. Upload of the Export at 09:05: KOREA ** 5 → 4 + C 1, TAIWAN 5 → 4, USA 5 → 3, new THAILAND = 1 (total 18). Rows of both menus meet in the staging; the bot sends them as one part.', base: base(),
+    saves: [S(undefined, undefined, [P('MAX_CASE_DAY', 18)], 'UPL-K-0412'), S('D.Anggraini', '27-Nov-2026 09:05', [C(D2, '**', 4), C(D2, 'C', 1), C(D3, '**', 4), C(D4, '**', 3), C(D5, '**', 1)], 'UPL-E-0413')] },
+  { id: 'two', name: 'Two saves', story: 'Save 1 at 09:00 (Kanban + Export screen): Max 20 → 18, USA 5 → 3. Save 2 at 09:30: Max 18 → 19, USA 3 → 4. At [Sync] NSP takes the first OLD (20) and the last NEW (19): USA goes down (SEND_SEQ 1, Export) and Max goes down to 19 (SEND_SEQ 2, Kanban). Rows 101 and 102 become 2 Superseded.',
+    base: base(), saves: [S(undefined, undefined, [P('MAX_CASE_DAY', 18), C(D4, '**', 3)]), S('D.Anggraini', '27-Nov-2026 09:30', [P('MAX_CASE_DAY', 19), C(D4, '**', 4)])],
+    extra: 'The existing TB_H_PART_CANDIDATE now holds only MAX_CASE_DAY 18 → 19 for DUMMY-001 202611 (the row was overwritten). Read alone it looks like Max goes up, so the Kanban file could go before the Export file; AP POLE would then get Max 19 while its children still total 20 and reject it. The staging keeps 20 as the first OLD_VALUE.' },
+  { id: 'inact', name: 'Active → Inactive', story: 'Procurement sets the part to Inactive in the Current period 202611 (Kanban Crossdock Master). In the same transaction NSP writes a C DELETE row (NEW 0, PART_STATUS column Inactive) for every destination. File 1 (Export) carries every Buyer-PD with 0; no Kanban file.',
+    base: base(), saves: [S('Procurement', '27-Nov-2026 09:00', [P('PART_STATUS', 'Inactive'), C(D1, '**', null), C(D2, '**', null), C(D3, '**', null), C(D4, '**', null)])] },
+  { id: 'react', name: 'Inactive → Active', story: 'Procurement sets the part back to Active in the Current period 202611 and its destinations are mapped again (5 each). NSP writes a C ADD row per destination with PART_STATUS column Active. The part record is still in AP POLE (Max 20), so there is no Kanban file: file 3 (Export) adds every Buyer-PD.',
+    base: { pcs: 6, max: 20, st: 'Inactive', ch: {} }, saves: [S('Procurement', '27-Nov-2026 09:00', [P('PART_STATUS', 'Active'), C(D1, '**', 5), C(D2, '**', 5), C(D3, '**', 5), C(D4, '**', 5)])] },
+  { id: 'rev', name: 'Change + revert', story: 'Save 1: JAPAN 5 → 4. Save 2: JAPAN 4 → 5. AP POLE value 5 = NSP value 5: no SEND_SEQ, nothing is sent. Row 101 becomes 2 Superseded, row 102 1 Sync without SEND_SEQ.', base: base(), saves: [S(undefined, undefined, [C(D1, '**', 4)]), S('D.Anggraini', '27-Nov-2026 09:30', [C(D1, '**', 5)])] },
+  { id: 'new', name: 'New period (XD05)', per: '202612', mm: '12', story: 'XD05 on day D makes 202612 and writes ADD rows for the parent and every child. File 2 (Kanban) adds the part for Eff. 12/2026 with Pcs/Case and Max in one row, then file 3 (Export) adds every Buyer-PD.',
+    base: null, saves: [S('XD05BATCH', '27-Nov-2026 02:00', [P('PCS_CASE', 6), P('MAX_CASE_DAY', 20), C(D1, '**', 6), C(D2, '**', 6), C(D3, '**', 4), C(D4, '**', 4)])] },
+];
+
+function renderScenario(sc) {
+  const per = sc.per || '202611', mm = sc.mm || '11';
+  const { rows, master } = stage(sc.base, sc.saves);
+  const b = sync(sc.base, rows);
+  const sent = applySync(rows, b, RUN, per);
+  const allOk = b.steps.every(s => s.ok);
+  document.getElementById('scn').innerHTML = `
+    <p class="story">${esc(sc.story)}</p>
+    <div class="stage"><span class="no">1</span><div class="body">
+      <h3>Save → staging rows (pending) and master</h3>
+      ${stgTable(rows, per)}
+      ${masterHtml(master, per)}
+      ${sc.extra ? `<p class="warn">${esc(sc.extra)}</p>` : ''}
+    </div></div>
+    <div class="stage"><span class="no">2</span><div class="body">
+      <h3>[Sync]: NSP reduces the pending rows per key and sets SEND_SEQ</h3>
+      ${redHtml(b)}
+      <p class="note">SEND_SEQ: <span class="pill p-down">1 Export (part whose Max goes down)</span> <span class="pill p-par">2 Kanban</span> <span class="pill p-up">3 Export (every other part)</span> ${!sc.base ? '— new part: no file 1.' : ''}</p>
+    </div></div>
+    <div class="stage"><span class="no">3</span><div class="body">
+      <h3>Staging after [Sync] (run ${RUN}, before the bot starts)</h3>
+      ${stgTable(sent, per)}
+      <p class="note">Last row of each key = 1 Sync with SEND_SEQ; earlier rows of the key = 2 Superseded (same run, no SEND_SEQ).${b.red.some(x => x.act === '-') ? ' A key that ends on the AP POLE value is 1 Sync without SEND_SEQ: nothing is sent for it.' : ''}
+        GTOPAS: rows ADD / DELETE of a destination ${per === '202611' ? 'are sent by the same [Sync] (GTOPAS_SYNC_STATUS 1)' : 'stay GTOPAS 0 until the Period Rollover on 1-Dec'}; the bot compares the part + destinations with CASE_DAY ≥ 1 with GTOPAS.</p>
+    </div></div>
+    <div class="stage"><span class="no">4</span><div class="body">
+      <h3>Upload files made by NSP (stored templates; no download from AP POLE)</h3>
+      ${filesHtml(b, per, RUN)}
+      <h3>Bot uploads one file at a time (file 1 → wait for the result → file 2 → file 3); inside a file AP POLE checks row by row ${b.steps.length ? (allOk ? '<span class="pill p-ok">all OK</span>' : '<span class="pill p-ng">NG</span>') : ''}</h3>
+      ${b.steps.length ? stepsHtml(b) : '<p class="note">No row with SEND_SEQ: no file, nothing to send.</p>'}
+      <h3>AP POLE Eff. ${mm}/2026 after the run</h3>
+      ${apTable(b.ap, mm)}
+    </div></div>`;
+}
+const chips = document.getElementById('chips');
+let cur = 'a14';
+try { const h = location.hash.slice(1); if (SCN.some(s => s.id === h)) cur = h; } catch (e) {}
+function drawChips() {
+  chips.innerHTML = SCN.map(s => `<button type="button" class="chip" data-id="${s.id}" aria-pressed="${s.id === cur}">${esc(s.name)}</button>`).join('');
+}
+chips.addEventListener('click', e => {
+  const b = e.target.closest('.chip'); if (!b) return;
+  cur = b.dataset.id; drawChips(); renderScenario(SCN.find(s => s.id === cur));
+  try { history.replaceState(null, '', '#' + cur); } catch (err) {}
+});
+drawChips(); renderScenario(SCN.find(s => s.id === cur));
+
+/* ---------- playground ---------- */
+const FIELDS = [['max', 'Max Case/Day (parent)'], ['pcs', 'Pcs/Case (parent)'], ['sep'], [k(D1, '**'), 'JAPAN · **'], [k(D2, '**'), 'KOREA · **'], [k(D2, 'C'), 'KOREA · C'],
+  [k(D3, '**'), 'TAIWAN · **'], [k(D4, '**'), 'USA · **'], [k(D4, 'C'), 'USA · C'], [k(D5, '**'), 'THAILAND · **']];
+let pg;
+function pgReset() { pg = { ap: base(), master: base(), rows: [], nextId: 201, saveNo: 0, last: null }; pgDraw(); setForm(pg.master); msg('', ''); }
+function setForm(m) {
+  document.getElementById('form').innerHTML = FIELDS.map(([id, lab]) => id === 'sep' ? '<div class="sep"></div>' :
+    `<label for="f-${id.replace(/[|*]/g, '_')}">${esc(lab)}</label><input id="f-${id.replace(/[|*]/g, '_')}" data-k="${esc(id)}" inputmode="numeric" value="${id === 'max' ? m.max : id === 'pcs' ? m.pcs : (m.ch[id] ?? '')}">`).join('');
+}
+function msg(t, c) { const el = document.getElementById('msg'); el.textContent = t; el.className = 'msg ' + c; }
+function pgDraw() {
+  document.getElementById('pgStg').innerHTML = stgTable(pg.rows, '202611').replace(/^<div class="tbl">|<\/div>$/g, '');
+  document.getElementById('pgAp').innerHTML = apTable(pg.ap, '11').replace(/^<div class="tbl">|<\/div>$/g, '');
+  document.getElementById('pgSteps').innerHTML = pg.last ? (pg.last.steps.length ? redHtml(pg.last) + filesHtml(pg.last, '202611', pg.lastRun) + stepsHtml(pg.last) : '<p class="note">Nothing to send: the pending rows end on the AP POLE values.</p>') : '<p class="note">No Sync yet.</p>';
+}
+document.getElementById('bSave').addEventListener('click', () => {
+  const vals = {}; let bad = '';
+  document.querySelectorAll('#form input').forEach(i => { const t = i.value.trim(); if (t === '') { vals[i.dataset.k] = null; return; } const n = Number(t); if (!Number.isInteger(n) || n < 1) bad = 'Use whole numbers from 1, or leave a destination empty.'; vals[i.dataset.k] = n; });
+  if (bad) return msg(bad, 'err');
+  if (vals.max == null || vals.pcs == null) return msg('Max Case/Day and Pcs/Case are required.', 'err');
+  const tot = Object.entries(vals).filter(([kk]) => kk.includes('|')).reduce((s, [, x]) => s + (x || 0), 0);
+  if (tot > vals.max) return msg(`Total Case/Day ${tot} is more than Max ${vals.max}. Lower a destination or raise Max.`, 'err');
+  pg.saveNo++;
+  const changes = [P('MAX_CASE_DAY', vals.max), P('PCS_CASE', vals.pcs), ...FIELDS.filter(([kk]) => kk.includes('|')).map(([kk]) => { const [d, ot] = kk.split('|'); return C(d, ot, vals[kk]); })];
+  const upl = document.getElementById('f-src').value ? 'UPL-' + String(500 + pg.saveNo) : '';
+  const res = stage(pg.master, [S('D.Anggraini', `27-Nov-2026 ${String(8 + pg.saveNo).padStart(2, '0')}:00`, changes, upl)], pg.nextId);
+  if (!res.rows.length) return msg('No change to save.', '');
+  pg.rows.push(...res.rows); pg.nextId += res.rows.length; pg.master = res.master;
+  pgDraw(); msg(`Saved: ${res.rows.length} staging row(s) added.`, 'ok');
+});
+document.getElementById('bSync').addEventListener('click', () => {
+  const pend = pg.rows.filter(r => r.st === '0');
+  if (!pend.length) return msg('No pending rows to sync.', '');
+  const b = sync(pg.ap, pend), run = '2026112710' + String(pg.nextId).slice(-2) + '00';
+  pend.forEach(r => { r.st = b.status.get(r.id); r.seq = b.seq.get(r.id) ?? null; r.run = run; if (r.gst === '0') { r.gst = '1'; r.grun = run; } });
+  pg.ap = b.ap; pg.last = b; pg.lastRun = run; pgDraw();
+  msg(b.steps.every(s => s.ok) ? `Synced: run ${run}, ${b.steps.length} step(s), all OK.` : `Run ${run}: a step is NG.`, b.steps.every(s => s.ok) ? 'ok' : 'err');
+});
+document.getElementById('bReset').addEventListener('click', pgReset);
+pgReset();
+</script>
