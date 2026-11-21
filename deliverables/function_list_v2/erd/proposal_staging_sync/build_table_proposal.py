@@ -39,7 +39,7 @@ def kanban():
             rows.append(r[:5] + [moved[n], 'Removed'])
         elif n == 'PART_STATUS':
             rows.append(r[:5] + ['Candidate / Active / Inactive. Candidate -> Active: XD05 (Next period). Active -> Inactive and Inactive -> Active: '
-                                 'Procurement on the Kanban Crossdock Master (writes PART_STATUS + DELETE / ADD CASE_DAY rows to the staging)', 'Changed'])
+                                 'Procurement on the Kanban Crossdock Master (writes DELETE / ADD CASE_DAY rows with this status to the staging)', 'Changed'])
         else:
             rows.append(r)
     return rows
@@ -58,12 +58,13 @@ STG = [
     ['HIST_ID', 'BIGINT', 'Y', 'N', 'identity', 'Running number: order of the changes', 'New'],
     ['PART_NO', 'VARCHAR(TBD)', '', 'N', '', 'Part number (NSP format, with "-"); FK1 (PART_NO, PERIOD) -> TB_M_PART_CANDIDATE', 'New'],
     ['PERIOD', 'CHAR(6)', '', 'N', '', 'Calculation period YYYYMM; FK1. Effective Month / Year of the AP POLE upload', 'New'],
+    ['PART_STATUS', 'VARCHAR(10)', '', 'N', '', 'Status of the part in this period when the row is written. Active: ADD / EDIT rows. Inactive: no Kanban row; every Export row of the part is DELETE with NEW_VALUE 0 (XD05 for a new Inactive part, Procurement for Active -> Inactive)', 'New'],
     ['LEVEL_TYPE', 'CHAR(1)', '', 'N', '', 'P = parent (Kanban Crossdock Master), C = child (Export Crossdock Master destination)', 'New'],
     ['DEST_CODE', 'CHAR(7)', '', 'Y', '', 'C only: destination code (buyer + PD, 7 digits); Buyer-PD 5-2 in the upload file. No FK: a DELETE row points to a removed destination', 'New'],
     ['ORDER_TYPE', 'VARCHAR(2)', '', 'Y', '', "C only: '**', 'C', '9', 'V'", 'New'],
-    ['FIELD_NAME', 'VARCHAR(30)', '', 'N', '', 'P: PCS_CASE, MAX_CASE_DAY, PART_STATUS (record only, no upload row) · C: CASE_DAY', 'New'],
+    ['FIELD_NAME', 'VARCHAR(30)', '', 'N', '', 'P: PCS_CASE, MAX_CASE_DAY · C: CASE_DAY', 'New'],
     ['ACTION', 'VARCHAR(6)', '', 'N', '', 'ADD / EDIT / DELETE', 'New'],
-    ['OLD_VALUE', 'VARCHAR(10)', '', 'Y', '', 'Value before the change (number, or the status for PART_STATUS); NULL on ADD', 'New'],
+    ['OLD_VALUE', 'VARCHAR(10)', '', 'Y', '', 'Value before the change; NULL on ADD', 'New'],
     ['NEW_VALUE', 'VARCHAR(10)', '', 'Y', '', 'Value after the change; 0 on DELETE (0 in the upload file)', 'New'],
     ['SOURCE', 'VARCHAR(6)', '', 'N', '', 'BATCH (XD05) / SCREEN / UPLOAD', 'New'],
     ['UPLOAD_ID', 'VARCHAR(TBD)', '', 'Y', '', 'Upload of the Kanban or Export Excel (Log); NULL when SOURCE is not UPLOAD', 'New'],
@@ -71,10 +72,10 @@ STG = [
      'The part + period is AP POLE Non Sync while it has a row with 0', 'New'],
     ['APPOLE_SYNC_DT', 'DATETIME', '', 'Y', '', 'Time of the [Sync] that sent the row to AP POLE (status 1 and 2)', 'New'],
     ['SEND_SEQ', 'NUMBER(1)', '', 'Y', '', 'Upload file: 1 = Export (LLM9Q880) down / delete, 2 = Kanban (LLM9Q910), 3 = Export up / add. Set by NSP at [Sync] on the last '
-     'row of each key; NULL for 2 Superseded, a key that ends on its first value, and PART_STATUS', 'New'],
+     'row of each key; NULL for 2 Superseded and a key that ends on its first value', 'New'],
     ['APPOLE_SYNC_RUN_ID', 'VARCHAR(14)', '', 'Y', '', 'AP POLE run ID YYYYMMDDHHMMSS; [Re-send last Sync] takes the rows of the last run', 'New'],
-    ['GTOPAS_SYNC_STATUS', 'CHAR(1)', '', 'Y', '', 'NULL = not for GTOPAS (Pcs/Case, Max Case/Day, PART_STATUS, Case/Day EDIT). 0 = Non Sync: a C row ADD or DELETE '
-     '(the destination appears / disappears, also from a status change). 1 = Sync: [Sync] for the Current period, the Period Rollover for the Next period. '
+    ['GTOPAS_SYNC_STATUS', 'CHAR(1)', '', 'Y', '', 'NULL = not for GTOPAS (Pcs/Case, Max Case/Day, Case/Day EDIT). 0 = Non Sync: a C row ADD or DELETE '
+     '(the destination appears / disappears, also from a status change; every row of a new period from XD05). 1 = Sync: [Sync] for the Current period, the Period Rollover for the Next period. '
      'The part + period is GTOPAS Non Sync while it has a row with 0', 'New'],
     ['GTOPAS_SYNC_DT', 'DATETIME', '', 'Y', '', 'Time of the [Sync] / Period Rollover that sent the row to GTOPAS', 'New'],
     ['GTOPAS_SYNC_RUN_ID', 'VARCHAR(14)', '', 'Y', '', 'GTOPAS run ID YYYYMMDDHHMMSS ([Sync], [Re-send last Sync] or the Period Rollover)', 'New'],
