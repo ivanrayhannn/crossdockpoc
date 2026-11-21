@@ -64,7 +64,7 @@ STG = [
     ['FIELD_NAME', 'VARCHAR(30)', '', 'N', '', 'P: PCS_CASE, MAX_CASE_DAY, PART_STATUS (record only, no upload row) · C: CASE_DAY', 'New'],
     ['ACTION', 'VARCHAR(6)', '', 'N', '', 'ADD / EDIT / DELETE', 'New'],
     ['OLD_VALUE', 'VARCHAR(10)', '', 'Y', '', 'Value before the change (number, or the status for PART_STATUS); NULL on ADD', 'New'],
-    ['NEW_VALUE', 'VARCHAR(10)', '', 'Y', '', 'Value after the change; NULL on DELETE (0 in the upload file)', 'New'],
+    ['NEW_VALUE', 'VARCHAR(10)', '', 'Y', '', 'Value after the change; 0 on DELETE (0 in the upload file)', 'New'],
     ['SOURCE', 'VARCHAR(6)', '', 'N', '', 'BATCH (XD05) / SCREEN / UPLOAD', 'New'],
     ['UPLOAD_ID', 'VARCHAR(TBD)', '', 'Y', '', 'Upload of the Kanban or Export Excel (Log); NULL when SOURCE is not UPLOAD', 'New'],
     ['APPOLE_SYNC_STATUS', 'CHAR(1)', '', 'N', "'0'", '0 = Non Sync, 1 = Sync, 2 = Superseded (an earlier row of the same key; not sent). '
