@@ -1,0 +1,39 @@
+digraph G {
+  rankdir=LR; newrank=true; nodesep=0.35; ranksep=0.55;
+  graph [fontname="Arial", fontsize=11, bgcolor="white"];
+  node [fontname="Arial", fontsize=10, shape=box, style="rounded,filled", fillcolor="#e6f0fb", color="#123a6b", penwidth=1.1, margin="0.15,0.08"];
+  edge [fontname="Arial", fontsize=9, color="#4f6580", fontcolor="#123a6b"];
+
+  subgraph cluster_user { label="User (D/S, Procurement)"; style="rounded"; color="#c9dcef"; fontcolor="#123a6b";
+    U1 [label="Edit period Current\n(screen / upload)\nsepanjang bulan"];
+    U2 [label="Klik [Sync]\n(kapan saja)"];
+  }
+  subgraph cluster_batch { label="NSP batch XD05"; style="rounded"; color="#c9dcef"; fontcolor="#123a6b";
+    X1 [label="Hari D (tgl 27) 02:00\nhitung DAD,\nbuat period Next"];
+    X2 [label="Tgl 1 00:10\nPeriod Rollover\nNext → Current", fillcolor="#fff1d6"];
+  }
+  subgraph cluster_stg { label="TB_H_PART_CANDIDATE_STG_SYNC"; style="rounded"; color="#c9dcef"; fontcolor="#123a6b";
+    S1 [label="Insert baris\nAPPOLE 0, GTOPAS 0 / NULL"];
+    S2 [label="[Sync]: status 1/2,\nSEND_SEQ, run ID"];
+    S3 [label="Rollover:\nGTOPAS 1 untuk\nperiod baru"];
+  }
+  subgraph cluster_ap { label="RPA AP POLE (XD07)"; style="rounded"; color="#c9dcef"; fontcolor="#123a6b";
+    A1 [label="Upload file 1 → 2 → 3\nCurrent dan Next\n(ada Effective Month)"];
+  }
+  subgraph cluster_gt { label="RPA GTOPAS (XD06)"; style="rounded"; color="#c9dcef"; fontcolor="#123a6b";
+    G1 [label="Compare part Current\nGTOPAS 0 + PERIOD = Current"];
+    G2 [label="Compare part period baru\nGTOPAS 0 + PERIOD = period baru", fillcolor="#fff1d6"];
+  }
+  N [shape=note, style="filled", fillcolor="#fbe3df", color="#b23b2e", label="GTOPAS WVJA5204 tidak punya period:\nisinya selalu kondisi bulan berjalan.\nData Next baru boleh dikirim tgl 1 (Rollover),\nkalau dikirim tgl 27, GTOPAS sudah pakai\ndestinasi bulan depan padahal masih bulan ini."];
+
+  U1 -> S1 [label="PERIOD = Current"];
+  X1 -> S1 [label="PERIOD = Next"];
+  U2 -> S2;
+  S2 -> A1 [label="APPOLE 0\nCurrent + Next"];
+  S2 -> G1 [label="GTOPAS 0\nCurrent saja"];
+  X2 -> S3;
+  S3 -> G2 [label="GTOPAS 0\nperiod baru"];
+  G2 -> N [style=dashed, arrowhead=none, color="#b23b2e"];
+  { rank=same; U1; X1; }
+  { rank=same; U2; X2; }
+}
