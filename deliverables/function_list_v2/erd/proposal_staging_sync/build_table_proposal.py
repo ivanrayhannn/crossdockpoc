@@ -11,7 +11,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..'))
 from build_erd import load_tables  # noqa: E402
 
-OUT = os.path.join(HERE, 'Proposal_Tables_AP_POLE_Staging_Sync.xlsx')
+OUT = os.path.join(HERE, 'Proposal_Tables_Staging_Sync.xlsx')
 T = load_tables()[0]
 HDR = PatternFill('solid', fgColor='DCEBFA')
 FILL = {'New': PatternFill('solid', fgColor='E2EFDA'), 'Changed': PatternFill('solid', fgColor='FFF2CC'),
@@ -28,22 +28,15 @@ def existing(name):
 
 
 def kanban():
+    moved = {'SYNC_STATUS': 'Removed: one status for both targets; replaced by APPOLE_SYNC_STATUS and GTOPAS_SYNC_STATUS on TB_H_PART_CANDIDATE_STG_SYNC',
+             'GTOPAS_SYNC_DT': 'Removed: moved to TB_H_PART_CANDIDATE_STG_SYNC.GTOPAS_SYNC_DT. Last Sent GTOPAS on the screen = latest GTOPAS_SYNC_DT of the staging rows',
+             'APPOLE_SYNC_DT': 'Removed: moved to TB_H_PART_CANDIDATE_STG_SYNC.APPOLE_SYNC_DT. Last Sent AP POLE on the screen = latest APPOLE_SYNC_DT of the staging rows',
+             'SYNC_RUN_ID': 'Removed: moved to TB_H_PART_CANDIDATE_STG_SYNC (APPOLE_SYNC_RUN_ID, GTOPAS_SYNC_RUN_ID)'}
     rows = []
     for r in existing('TB_M_PART_CANDIDATE'):
         n = r[0]
-        if n == 'SYNC_STATUS':
-            rows.append(r[:6] + ['Removed'])
-            rows[-1][5] = 'Removed: one status for both targets. GTOPAS -> GTOPAS_SYNC_STATUS (below); AP POLE -> TB_H_PART_CANDIDATE_STG_SYNC.APPOLE_SYNC_STATUS'
-            rows.append(['GTOPAS_SYNC_STATUS', 'CHAR(1)', '', 'N', "'0'", '0 = Non Sync, 1 = Sync. Set to 0 when the part + destination combination or the status '
-                         'changes (screen, upload, XD05); set to 1 by [Sync] (Current) or the Period Rollover (XD05 process 3)', 'New'])
-        elif n == 'APPOLE_SYNC_DT':
-            rows.append(r[:5] + ['Removed: moved to TB_H_PART_CANDIDATE_STG_SYNC.APPOLE_SYNC_DT. The screen shows Last Sent AP POLE = latest APPOLE_SYNC_DT '
-                                 'of the staging rows of the part + period', 'Removed'])
-        elif n == 'GTOPAS_SYNC_DT':
-            rows.append(r[:5] + ['Date-time of the last send of the part (this period) to GTOPAS: [Sync], [Re-send last Sync] or the Period Rollover; '
-                                 'shown as Last Sent GTOPAS', 'Existing'])
-        elif n == 'SYNC_RUN_ID':
-            rows.append(r[:5] + ['Run ID (YYYYMMDDHHMMSS) of the last GTOPAS send. The AP POLE run ID is on TB_H_PART_CANDIDATE_STG_SYNC.SYNC_RUN_ID', 'Changed'])
+        if n in moved:
+            rows.append(r[:5] + [moved[n], 'Removed'])
         elif n == 'PART_STATUS':
             rows.append(r[:5] + ['Candidate / Active / Inactive. Candidate -> Active: XD05 (Next period). Active -> Inactive and Inactive -> Active: '
                                  'Procurement on the Kanban Crossdock Master (writes PART_STATUS + DELETE / ADD CASE_DAY rows to the staging)', 'Changed'])
@@ -74,12 +67,17 @@ STG = [
     ['NEW_VALUE', 'VARCHAR(10)', '', 'Y', '', 'Value after the change; NULL on DELETE (0 in the upload file)', 'New'],
     ['SOURCE', 'VARCHAR(6)', '', 'N', '', 'BATCH (XD05) / SCREEN / UPLOAD', 'New'],
     ['UPLOAD_ID', 'VARCHAR(TBD)', '', 'Y', '', 'Upload of the Kanban or Export Excel (Log); NULL when SOURCE is not UPLOAD', 'New'],
-    ['APPOLE_SYNC_STATUS', 'CHAR(1)', '', 'N', "'0'", '0 = Non Sync, 1 = Sync, 2 = Superseded (an earlier row of the same key; not sent). Moved from TB_M_PART_CANDIDATE. '
+    ['APPOLE_SYNC_STATUS', 'CHAR(1)', '', 'N', "'0'", '0 = Non Sync, 1 = Sync, 2 = Superseded (an earlier row of the same key; not sent). '
      'The part + period is AP POLE Non Sync while it has a row with 0', 'New'],
-    ['APPOLE_SYNC_DT', 'DATETIME', '', 'Y', '', 'Time of the [Sync] that sent the row (status 1 and 2). Moved from TB_M_PART_CANDIDATE', 'New'],
+    ['APPOLE_SYNC_DT', 'DATETIME', '', 'Y', '', 'Time of the [Sync] that sent the row to AP POLE (status 1 and 2)', 'New'],
     ['SEND_SEQ', 'NUMBER(1)', '', 'Y', '', 'Upload file: 1 = Export (LLM9Q880) down / delete, 2 = Kanban (LLM9Q910), 3 = Export up / add. Set by NSP at [Sync] on the last '
      'row of each key; NULL for 2 Superseded, a key that ends on its first value, and PART_STATUS', 'New'],
-    ['SYNC_RUN_ID', 'VARCHAR(14)', '', 'Y', '', 'Run ID YYYYMMDDHHMMSS; [Re-send last Sync] takes the rows of the last run', 'New'],
+    ['APPOLE_SYNC_RUN_ID', 'VARCHAR(14)', '', 'Y', '', 'AP POLE run ID YYYYMMDDHHMMSS; [Re-send last Sync] takes the rows of the last run', 'New'],
+    ['GTOPAS_SYNC_STATUS', 'CHAR(1)', '', 'Y', '', 'NULL = not for GTOPAS (Pcs/Case, Max Case/Day, PART_STATUS, Case/Day EDIT). 0 = Non Sync: a C row ADD or DELETE '
+     '(the destination appears / disappears, also from a status change). 1 = Sync: [Sync] for the Current period, the Period Rollover for the Next period. '
+     'The part + period is GTOPAS Non Sync while it has a row with 0', 'New'],
+    ['GTOPAS_SYNC_DT', 'DATETIME', '', 'Y', '', 'Time of the [Sync] / Period Rollover that sent the row to GTOPAS', 'New'],
+    ['GTOPAS_SYNC_RUN_ID', 'VARCHAR(14)', '', 'Y', '', 'GTOPAS run ID YYYYMMDDHHMMSS ([Sync], [Re-send last Sync] or the Period Rollover)', 'New'],
     ['CREATED_BY', 'VARCHAR(20)', '', 'N', '', 'User of the save / upload, or XD05BATCH', 'New'],
     ['CREATED_DT', 'DATETIME', '', 'N', '', 'Time of the insert (same transaction as the master update)', 'New'],
     ['CHANGED_BY', 'VARCHAR(20)', '', 'Y', '', 'User of [Sync] / [Re-send last Sync]', 'New'],
@@ -122,20 +120,23 @@ def main():
     wb = Workbook()
     wb.remove(wb.active)
     sheet(wb, '1. TB_M_PART_CANDIDATE', 'TB_M_PART_CANDIDATE (Kanban Crossdock Master)', T['TB_M_PART_CANDIDATE'][0], kanban(), [
-        'PK: PART_NO, PERIOD.',
+        'PK: PART_NO, PERIOD. No sync column left: the Sync Status and date of both targets are on TB_H_PART_CANDIDATE_STG_SYNC.',
         'Green = new, yellow = changed description, red = removed (strike-through).'])
     sheet(wb, '2. TB_M_PART_CANDIDATE_DEST', 'TB_M_PART_CANDIDATE_DEST (Export Crossdock Master)', T['TB_M_PART_CANDIDATE_DEST'][0], dest(), [
         'PK: PART_NO, PERIOD, DEST_CODE, ORDER_TYPE. FK: (PART_NO, PERIOD) -> TB_M_PART_CANDIDATE.',
         'No new column: a removed destination is deleted at once (no DELETE_FLAG); the staging keeps the DELETE row until it is sent.'])
-    sheet(wb, '3. TB_H_PART_CANDIDATE_STG_SYNC', 'TB_H_PART_CANDIDATE_STG_SYNC (new, AP POLE only)',
-          'Staging of every value change for the AP POLE sync (XD07): insert by XD05, the screen and the upload of the Kanban / Export Crossdock Master; '
+    sheet(wb, '3. TB_H_PART_CANDIDATE_STG_SYNC', 'TB_H_PART_CANDIDATE_STG_SYNC (new, AP POLE and GTOPAS)',
+          'Staging of every value change for the sync to AP POLE (XD07) and GTOPAS (XD06): insert by XD05, the screen and the upload of the Kanban / Export Crossdock Master; '
           'updated only by [Sync] / [Re-send last Sync]. TB_H_PART_CANDIDATE (existing history, update per part + period) is kept as it is.', STG, [
               'PK: HIST_ID. FK1: (PART_NO, PERIOD) -> TB_M_PART_CANDIDATE.',
-              'IX1: APPOLE_SYNC_STATUS, PERIOD, PART_NO (rows to send at [Sync]).',
-              'IX2: SYNC_RUN_ID, PERIOD, SEND_SEQ, PART_NO (upload files, [Re-send last Sync]).',
+              'IX1: APPOLE_SYNC_STATUS, PERIOD, PART_NO and IX4: GTOPAS_SYNC_STATUS, PERIOD, PART_NO (rows to send at [Sync] / the Period Rollover).',
+              'IX2: APPOLE_SYNC_RUN_ID, PERIOD, SEND_SEQ, PART_NO (upload files, [Re-send last Sync]).',
               'IX3: PART_NO, PERIOD, LEVEL_TYPE, DEST_CODE, ORDER_TYPE, FIELD_NAME, HIST_ID (first OLD / last NEW per key).',
               'Key of a change = LEVEL_TYPE + DEST_CODE + ORDER_TYPE + FIELD_NAME within PART_NO + PERIOD.',
-              '[Sync] takes the rows with APPOLE_SYNC_STATUS 0 and HIST_ID <= the last HIST_ID at the click; last row per key -> 1 + SEND_SEQ, earlier rows -> 2.'])
+              'AP POLE: [Sync] takes the rows with APPOLE_SYNC_STATUS 0 and HIST_ID <= the last HIST_ID at the click; last row per key -> 1 + SEND_SEQ, earlier rows -> 2.',
+              'GTOPAS: [Sync] (Current) / Period Rollover (Next) takes the part + period with a row GTOPAS_SYNC_STATUS 0; the bot gets every destination of the part '
+              'with CASE_DAY >= 1 in TB_M_PART_CANDIDATE_DEST (P/No. + Destination Code, all order types together) and compares with GTOPAS WVJA5204: '
+              'in NSP only -> Add, in GTOPAS only -> Delete, both -> Keep. Rows -> GTOPAS_SYNC_STATUS 1.'])
     wb.save(OUT)
     print('saved', OUT)
 
