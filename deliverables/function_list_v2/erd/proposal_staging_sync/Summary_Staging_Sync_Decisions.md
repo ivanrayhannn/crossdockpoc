@@ -18,6 +18,7 @@ References:
 
 ### 1.2 TB_M_PART_CANDIDATE_DEST (Export Crossdock Master, PK PART_NO + PERIOD + DEST_CODE + ORDER_TYPE)
 - No new column. A removed destination is deleted from the master at once (no DELETE_FLAG); the staging keeps the DELETE row until it is sent.
+- Exception, Inactive part: its destinations stay in the master with CASE_DAY 0, so the next XD05 can carry them to the following month (AP POLE keeps the Buyer-PD with 0).
 - Every add / change / removal writes a row to the staging in the same transaction.
 
 ### 1.3 TB_H_PART_CANDIDATE (existing history)
@@ -70,11 +71,11 @@ The insert is in the same transaction as the master update. A save without a val
 | Source | Menu | LEVEL_TYPE | Rows inserted |
 |---|---|---|---|
 | XD05 process 1 (day D) | Kanban, Next period | KANBAN | ADD PCS_CASE and ADD MAX_CASE_DAY for **every** part of the new period, Inactive included (the part stays in the AP POLE Kanban) |
-| XD05 process 2 (day D) | Export, Next period | EXPORT | Active part: ADD CASE_DAY per destination + order type. Inactive part: DELETE (OLD = Current value, NEW 0) per destination of the previous period |
+| XD05 process 2 (day D) | Export, Next period | EXPORT | Active part: ADD CASE_DAY per destination + order type. Inactive part: per destination of the previous period, DELETE (OLD = Current value, NEW 0, GTOPAS 0) when it was > 0, or ADD with 0 (GTOPAS NULL) when it was already 0; the Export master row of the new period is kept with CASE_DAY 0 |
 | XD05 re-run (same day D) | Kanban + Export, Next | KANBAN, EXPORT | EDIT / ADD / DELETE against the Next values it replaces |
 | User save / upload | Kanban Crossdock Master | KANBAN | EDIT PCS_CASE / MAX_CASE_DAY per changed field |
 | User save / upload | Export Crossdock Master | EXPORT | ADD / EDIT / DELETE CASE_DAY per destination + order type |
-| Procurement: Active -> Inactive | Kanban Crossdock Master | EXPORT | DELETE (NEW 0) for every destination; PART_STATUS column = Inactive. No row for the status itself |
+| Procurement: Active -> Inactive | Kanban Crossdock Master | EXPORT | DELETE (NEW 0) for every destination, the master row kept with CASE_DAY 0; PART_STATUS column = Inactive. No row for the status itself |
 | Procurement: Inactive -> Active | Kanban Crossdock Master | EXPORT | ADD for every destination mapped again; PART_STATUS column = Active |
 
 PART_STATUS column: Active -> ADD / EDIT rows. Inactive -> the part stays in the AP POLE Kanban; every Export row of the part is DELETE with NEW_VALUE 0, so the Buyer-PD stays in AP POLE with 0.
@@ -87,6 +88,7 @@ PART_STATUS column: Active -> ADD / EDIT rows. Inactive -> the part stays in the
 | EXPORT | ADD | 0 | Destination appears: GTOPAS Add |
 | EXPORT | DELETE | 0 | Destination disappears (0): GTOPAS Delete |
 | EXPORT | EDIT | NULL | Only Case/Day changes; nothing changes in GTOPAS |
+| EXPORT | ADD with 0 (Inactive part carried to a new month) | NULL | The destination is already out of GTOPAS |
 
 APPOLE_SYNC_STATUS is always 0 at the insert.
 
