@@ -96,14 +96,14 @@ APPOLE_SYNC_STATUS is always 0 at the insert.
 
 ### 3.1 Rows taken by NSP
 - `APPOLE_SYNC_STATUS = 0`
-- `CREATED_DT > APPOLE_LAST_SYNC_DT` (saved by the last run) and `CREATED_DT <= time of the click` (HIST_ID <= the last HIST_ID at the click). Rows inserted while the run is made wait for the next [Sync].
+- `CREATED_DT > LAST_SYNC_DATE_APPOLE` (saved by the last run) and `CREATED_DT <= time of the click` (HIST_ID <= the last HIST_ID at the click). Rows inserted while the run is made wait for the next [Sync].
 - PERIOD = Current and Next.
 
 ### 3.2 Reduction per key
 - AP POLE value = OLD_VALUE of the first row (smallest HIST_ID). NSP value = NEW_VALUE of the last row (largest HIST_ID).
 - Direction (worked out at [Sync], not stored): ACTION of the last row DELETE -> Delete; no AP POLE value -> Add; smaller -> Down; bigger -> Up; equal -> nothing to send.
 - Last row of each key -> APPOLE_SYNC_STATUS 1 with SEND_SEQ. Earlier rows of the key -> 2 Superseded. A key that ends on its first value -> 1 without SEND_SEQ.
-- All rows taken get APPOLE_SYNC_DT, APPOLE_SYNC_RUN_ID, CHANGED_BY / CHANGED_DT. Then APPOLE_LAST_SYNC_DT = time of the click.
+- All rows taken get APPOLE_SYNC_DT, APPOLE_SYNC_RUN_ID, CHANGED_BY / CHANGED_DT. Then LAST_SYNC_DATE_APPOLE = time of the click.
 
 ### 3.3 SEND_SEQ (position against the Kanban file)
 
@@ -148,7 +148,8 @@ APPOLE_SYNC_STATUS is always 0 at the insert.
 - Data for the bot: the distinct PART_NO of those rows; for each part every destination of TB_M_PART_CANDIDATE_DEST of that period with **CASE_DAY >= 1** (DEST_CODE distinct, order types together).
 - Fixed values: Depot 01, Maker A, Dom/Os 2, TOPAS Order Type `*`, Trans 2.
 - Compare with GTOPAS WVJA5204 (P/No. without "-" + Destination Code): in NSP only -> Add; in GTOPAS only -> Delete; both -> Keep.
-- Update: rows -> GTOPAS_SYNC_STATUS 1, GTOPAS_SYNC_DT, GTOPAS_SYNC_RUN_ID, CHANGED_BY / CHANGED_DT; GTOPAS_LAST_SYNC_DT is saved.
+- No date condition for GTOPAS (decided 21-Nov): status 0 already means not sent, so the rows written by XD05 on day D are never skipped by a [Sync] of the Current period before the rollover.
+- Update: rows -> GTOPAS_SYNC_STATUS 1, GTOPAS_SYNC_DT, GTOPAS_SYNC_RUN_ID, CHANGED_BY / CHANGED_DT.
 - No SEND_SEQ and no Superseded for GTOPAS: the bot compares the latest state.
 
 ---
@@ -176,9 +177,10 @@ APPOLE_SYNC_STATUS is always 0 at the insert.
 
 ---
 
-## 7. Open points
-1. Where APPOLE_LAST_SYNC_DT / GTOPAS_LAST_SYNC_DT are kept: system master (one value per target) or the Log (send time of the last successful run).
-2. GTOPAS last sync date: kept per period, or the rollover takes every GTOPAS row of the new period whatever its date (so a [Sync] of the Current period on day D does not hide the Next rows written by XD05).
-3. Total Case/Day > Max on save: error (assumed in the simulation) or one of options A / B / C.
-4. Inactive -> Active: who maps the destinations again (Procurement on the same screen, or D/S on the Export Crossdock Master afterwards).
-5. AP POLE keeps the part record while the part is Inactive (assumed: Inactive -> Active needs no Add part).
+## 7. Decided on 21-Nov (after the open points)
+1. The last sync date of AP POLE is a System Master parameter **LAST_SYNC_DATE_APPOLE**, saved by [Sync] / [Re-send last Sync]. GTOPAS has no last sync date.
+2. GTOPAS takes the rows with **GTOPAS_SYNC_STATUS = 0 and PERIOD** (Current for [Sync], the new Current period for the rollover), with no date condition.
+3. Inactive -> Active: **Procurement** maps the destinations again by hand on the screen (EXPORT ADD rows, CREATED_BY Procurement). The part record stays in the AP POLE Kanban while it is Inactive.
+
+## 8. Open point
+1. Total Case/Day > Max Case/Day of the part (same period). The check applies at the screen save (Kanban: new Max; Export: Case/Day or a new destination) and at the upload (Kanban per row, Export per part after the whole file), not for XD05. Choose: error on save (user lowers the destinations first, then Max), or warning on save and [Sync] blocked while a part has total > Max.

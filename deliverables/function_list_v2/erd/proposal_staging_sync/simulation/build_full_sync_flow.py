@@ -342,10 +342,9 @@ KAN_COLS = ['Effective Month', 'Effective Year', 'Operator ID', 'Part No.', 'Par
             'Packing/Pallet Type … Outer-Qty (empty)']
 
 
-def sysm(ap_dt, gt_dt, ap_new=False, gt_new=False):
-    return table(['Key', 'Value', 'Saved by'], [['APPOLE_LAST_SYNC_DT', ap_dt, '[Sync] / [Re-send last Sync] (XD07 run)'],
-                                                ['GTOPAS_LAST_SYNC_DT', gt_dt, '[Sync] for Current / Period Rollover (XD06 run)']],
-                 lambda r, i: 'r-pend' if (i == 0 and ap_new) or (i == 1 and gt_new) else '')
+def sysm(ap_dt, gt_dt=None, ap_new=False, gt_new=False):
+    return table(['System master parameter', 'Value', 'Saved by'], [['LAST_SYNC_DATE_APPOLE', ap_dt, '[Sync] / [Re-send last Sync] (XD07 run)']],
+                 lambda r, i: 'r-pend' if ap_new else '') + note('GTOPAS has no last sync date: XD06 takes the rows with GTOPAS_SYNC_STATUS 0 of the period.')
 
 
 # ---------- HTML ----------
@@ -373,7 +372,7 @@ S.append(step(0, 'before', '20-Nov-2026', 'Before day D: only the Current period
                                             [[a, b, 'A', '2', '*', '2'] for a, b in gt_before]),
     h3('AP POLE before: Eff. 11/2026'), ap_before_table(),
     h3('Screen: Sync status per part (from the staging)'), screen_table([], [CUR], note_old=True),
-    h3('System master: last sync date per target'), sysm('27-Oct-2026 10:30', '01-Nov-2026 00:10')])))
+    h3('System master: last sync date'), sysm('27-Oct-2026 10:30')])))
 
 S.append(step(1, 'xd05-p1', D5T, 'XD05 process 1: DAD calculation and the Kanban rows of the Next period 202612', 'XD05 batch (day D = 27, system master)', ''.join([
     note('Range = the 6 months before the run month (202605 – 202610). AVG_MAD = total / 6; AVG_MAD ≥ MIN_MAD → Active, else Inactive. A Candidate that passes becomes Active.'),
@@ -417,9 +416,9 @@ files_html = ''.join(
     for f in files)
 S.append(step(4, 'sync', SYNC, '[Sync]: NSP reduces the staging, sets SEND_SEQ and makes the upload files', f'{DS} clicks [Sync] · run {RUN_AP}', ''.join([
     h3('Rows taken from the staging'),
-    note('Rule: <b>CREATED_DT &gt; APPOLE_LAST_SYNC_DT</b> (27-Oct-2026 10:30, saved by the last run) <b>and CREATED_DT ≤ the click</b> (27-Nov-2026 10:00). '
-         f'Here: HIST_ID {STG[0]["HIST_ID"]} – {s3[-1]["HIST_ID"]} (XD05 02:00 and the adjustment 09:00). After the files are made, NSP saves 27-Nov-2026 10:00 as the new APPOLE_LAST_SYNC_DT.'),
-    sysm('27-Nov-2026 10:00', '01-Nov-2026 00:10', ap_new=True),
+    note('Rule: <b>CREATED_DT &gt; LAST_SYNC_DATE_APPOLE</b> (27-Oct-2026 10:30, saved by the last run) <b>and CREATED_DT ≤ the click</b> (27-Nov-2026 10:00). '
+         f'Here: HIST_ID {STG[0]["HIST_ID"]} – {s3[-1]["HIST_ID"]} (XD05 02:00 and the adjustment 09:00). After the files are made, NSP saves 27-Nov-2026 10:00 as the new LAST_SYNC_DATE_APPOLE.'),
+    sysm('27-Nov-2026 10:00', ap_new=True),
     note('Per key: AP POLE value = OLD of the first row, NSP value = NEW of the last row. '
          'SEND_SEQ = upload file: 1 Export → 2 Kanban → 3 Export. File 1: the EXPORT rows of a part whose Max goes down (before its Kanban row). '
          'File 3: the EXPORT rows of every other part (Max up, new part, or no Kanban row: moves between destinations, deletes, Inactive). '
@@ -446,11 +445,8 @@ S.append(step(5, 'rpa-ap', SYNC, 'RPA AP POLE (XD07): uploads the files one at a
 S.append(step(6, 'rollover', ROLL, 'Period Rollover (XD05 process 3) → RPA GTOPAS (XD06)', 'XD05 batch, then the bot', ''.join([
     note('202612 becomes Current, 202611 becomes Past. Every 202612 part with a staging row GTOPAS_SYNC_STATUS 0 is sent: '
          f'{", ".join(PN[p] for p in gt_parts)}. The bot takes the destinations with CASE_DAY ≥ 1 of 202612 and compares with GTOPAS (P/No. + Destination Code).'),
-    note('Rows taken: <b>PERIOD = 202612 and CREATED_DT &gt; GTOPAS_LAST_SYNC_DT</b> (01-Nov-2026 00:10) and ≤ the rollover time. Then GTOPAS_LAST_SYNC_DT = 01-Dec-2026 00:10.'),
-    sysm('27-Nov-2026 10:00', '01-Dec-2026 00:10', gt_new=True),
-    '<p class="warn">Watch point: if a [Sync] had sent a Current GTOPAS change on 27-Nov 10:00, GTOPAS_LAST_SYNC_DT would be 27-Nov 10:00 and the 202612 rows of XD05 '
-    '(created 27-Nov 02:00) would be skipped at the rollover. So the last sync date of GTOPAS is kept <b>per period</b> (or the rollover takes every GTOPAS row of the new period, '
-    'whatever its date).</p>',
+    note('Rows taken: <b>GTOPAS_SYNC_STATUS = 0 and PERIOD = 202612</b> (the period that becomes Current). No date condition: status 0 already means not sent yet, '
+         'so rows written by XD05 on day D are never skipped, whatever [Sync] ran in between.'),
     h3('Work sheet GTOPAS Compare'),
     table(['P/No.', 'Destination Code', 'In NSP 202612', 'In GTOPAS', 'Action'], [r[:4] + [pill(r[4], ACT_CLS[r[4]] if r[4] != 'Delete' else 'p-del')] for r in compare],
           lambda r, i: {'Keep': 'r-ok', 'Add': 'r-pend', 'Delete': 'r-ng'}[compare[i][4]], raw={4}),
@@ -667,7 +663,7 @@ S.append(step(8, 'dec-adjust', '10 / 15-Dec-2026', 'Next month: changes on the C
     h3('Screen before [Sync]'), screen2(C2, ST2)])))
 
 S.append(step(9, 'dec-sync', S15, '[Sync] 15-Dec: AP POLE 12/2026 and GTOPAS for the Current period', f'{DS} · run {RUN3}', ''.join([
-    note('Rows taken: APPOLE_SYNC_STATUS 0 with CREATED_DT &gt; APPOLE_LAST_SYNC_DT (27-Nov-2026 10:00) and ≤ 15-Dec-2026 10:00. No part has its Max going down, '
+    note('Rows taken: APPOLE_SYNC_STATUS 0 with CREATED_DT &gt; LAST_SYNC_DATE_APPOLE (27-Nov-2026 10:00) and ≤ 15-Dec-2026 10:00. No part has its Max going down, '
          'so there is no file 1: the Kanban file goes first, then every EXPORT row in file 3 (per part: down first, then up / add).'),
     h3('Reduction per key'), red_table(red9),
     h3(f'Upload files ({len(files9)})'), files_table(files9),
@@ -675,10 +671,10 @@ S.append(step(9, 'dec-sync', S15, '[Sync] 15-Dec: AP POLE 12/2026 and GTOPAS for
     h3('AP POLE after the run: Eff. 12/2026'), ap_table2(apst, C2),
     h3('GTOPAS at the same [Sync] (Current period)'),
     note(f'Rows with GTOPAS_SYNC_STATUS 0 and PERIOD 202612: HIST {", ".join(str(r["HIST_ID"]) for r in gpend9)} (DUMMY-004 KOREA ADD). '
-         'The bot compares the destinations with CASE_DAY ≥ 1 of these parts. Then GTOPAS_LAST_SYNC_DT = 15-Dec-2026 10:00.'),
+         'Condition: GTOPAS_SYNC_STATUS 0 and PERIOD 202612 (no date). The bot compares the destinations with CASE_DAY ≥ 1 of these parts.'),
     '<div class="two"><div>', h3('Work sheet GTOPAS Compare'), cmp_table(cmp9), '</div><div>', h3('GTOPAS WVJA5204 after XD06'), gt_table(gt_after9, gt_before9), '</div></div>',
     h3('TB_H_PART_CANDIDATE_STG_SYNC after [Sync]'), stg_table(after9),
-    sysm('15-Dec-2026 10:00', '15-Dec-2026 10:00', ap_new=True, gt_new=True)])))
+    sysm('15-Dec-2026 10:00', ap_new=True)])))
 
 S.append(step(10, 'dec-xd05', D27, 'XD05 on day D: Next period 202701', 'XD05 batch', ''.join([
     note('Status of 202701 (calculation 202606 – 202611, assumed): DUMMY-001, 002, 004 Active, DUMMY-003 stays Inactive. Pcs/Case and Max Case/Day are taken from the '
@@ -698,9 +694,9 @@ S.append(step(11, 'dec-sync2', S27, '[Sync] 27-Dec: AP POLE 01/2027', f'{DS} · 
 
 S.append(step(12, 'jan-rollover', R1J, 'Period Rollover 01-Jan-2027 → RPA GTOPAS', 'XD05 batch, then the bot', ''.join([
     note(f'202701 becomes Current. Rows with GTOPAS 0 and PERIOD 202701: HIST {gpend12[0]["HIST_ID"]} – {gpend12[-1]["HIST_ID"]} → parts {", ".join(PN[p] for p in gparts12)}. '
-         'DUMMY-003 has no GTOPAS row (Kanban rows only) and is already out of GTOPAS. The 202701 rows were created on 27-Dec 02:00, after GTOPAS_LAST_SYNC_DT (15-Dec 10:00).'),
+         'DUMMY-003 has no GTOPAS row (Kanban rows only) and is already out of GTOPAS. Condition: GTOPAS_SYNC_STATUS 0 and PERIOD 202701, no date.'),
     '<div class="two"><div>', h3('Work sheet GTOPAS Compare'), cmp_table(cmp12), '</div><div>', h3('GTOPAS WVJA5204 after XD06'), gt_table(gt_after12, gt_after9), '</div></div>',
-    sysm('27-Dec-2026 10:00', '01-Jan-2027 00:10', gt_new=True)])))
+    ])))
 
 S.append(step(13, 'jan-end', '01-Jan-2027', 'End state: 202701 is the Current period', 'state', ''.join([
     h3('Screen: Sync status per part'), screen2(N2, st3),
