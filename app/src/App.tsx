@@ -16,6 +16,7 @@ import { ConfirmationPage } from './features/confirmation/ConfirmationPage';
 
 import { LogMonitoringPage } from './features/logMonitoring/LogMonitoringPage';
 import { MenuSettingsPage } from './features/menuSettings/MenuSettingsPage';
+import { StagingSqlPage } from './features/stagingSql/StagingSqlPage';
 import { hashForRoute, routeFromHash } from './routes';
 import type { RouteKey } from './routes';
 
@@ -117,6 +118,14 @@ function App() {
     return (
       <AppShell activeItem="Confirmation Points" onNavigate={navigate} breadcrumb={<Breadcrumb group="Common" label="Confirmation Points" />}>
         <ConfirmationPage />
+      </AppShell>
+    );
+  }
+
+  if (route === 'staging-sql') {
+    return (
+      <AppShell activeItem="Staging Sync SQL" onNavigate={navigate} breadcrumb={<Breadcrumb group="Master" label="Staging Sync SQL" />}>
+        <StagingSqlPage />
       </AppShell>
     );
   }

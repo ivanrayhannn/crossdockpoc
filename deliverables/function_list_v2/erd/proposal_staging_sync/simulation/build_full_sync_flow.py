@@ -751,3 +751,32 @@ page = f'''<title>Crossdock Full Sync Flow</title>
 </div>'''
 open(os.path.join(HERE, 'full_flow.html'), 'w').write(page)
 print('ok', len(page), 'files', [f['name'] for f in files], 'ng', sum('p-ng' in r[10] for r in play))
+
+# ---- data dump for the SQL sandbox ----
+import json  # noqa: E402
+from datetime import datetime  # noqa: E402
+
+
+def iso(d):
+    return datetime.strptime(d, '%d-%b-%Y %H:%M').strftime('%Y-%m-%d %H:%M:%S') if d else None
+
+
+def nv(x):
+    return None if x in ('', None) else str(x)
+
+
+dump = dict(
+    stg=[dict(HIST_ID=r['HIST_ID'], PART_NO=r['PART_NO'], PART_NAME=NAME[r['p']], PERIOD=r['PERIOD'], PART_STATUS=r['PART_STATUS'], LEVEL_TYPE=LV[r['LEVEL_TYPE']],
+              DEST_CODE=nv(r['DEST_CODE']), ORDER_TYPE=nv(r['ORDER_TYPE']), FIELD_NAME=r['FIELD_NAME'], ACTION=r['ACTION'], OLD_VALUE=nv(r['OLD_VALUE']),
+              NEW_VALUE=nv(r['NEW_VALUE']), SOURCE=r['SOURCE'], UPLOAD_ID=nv(r['UPLOAD_ID']), APPOLE_SYNC_STATUS=r['APPOLE_SYNC_STATUS'],
+              APPOLE_SYNC_DT=iso(r['APPOLE_SYNC_DT']), SEND_SEQ=r['SEND_SEQ'] if r['SEND_SEQ'] != '' else None, APPOLE_SYNC_RUN_ID=nv(r['APPOLE_SYNC_RUN_ID']),
+              GTOPAS_SYNC_STATUS=r['GTOPAS_SYNC_STATUS'], GTOPAS_SYNC_DT=iso(r['GTOPAS_SYNC_DT']), GTOPAS_SYNC_RUN_ID=nv(r['GTOPAS_SYNC_RUN_ID']),
+              CREATED_BY=r['CREATED_BY'], CREATED_DT=iso(r['CREATED_DT']), CHANGED_BY=nv(r['CHANGED_BY']), CHANGED_DT=iso(r['CHANGED_DT']))
+         for r in sorted(after12, key=lambda r: r['HIST_ID'])],
+    kan=[dict(PART_NO=PN[p], PERIOD=per, PART_NAME=NAME[p], PCS_CASE=m[p]['pcs'], MAX_CASE_DAY=m[p]['max'], PART_STATUS=stt[p])
+         for per, m, stt in ((C2, mk, ST2), (N2, mk3, st3)) for p in PARTS],
+    dest=[dict(PART_NO=PN[p], PERIOD=per, DEST_CODE=c, ORDER_TYPE=o, CASE_DAY=v) for per, dd in ((C2, md), (N2, d3)) for (p, c, o), v in dd.items()],
+    gtopas=[dict(P_NO=a.replace('-', ''), DEST_CODE=b) for a, b in gt_after9],
+)
+json.dump(dump, open(os.path.join(HERE, 'sandbox_data.json'), 'w'), indent=0)
+print('dump', len(dump['stg']))
