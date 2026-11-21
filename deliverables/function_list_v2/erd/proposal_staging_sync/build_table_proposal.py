@@ -58,7 +58,7 @@ STG = [
     ['HIST_ID', 'BIGINT', 'Y', 'N', 'identity', 'Running number: order of the changes', 'New'],
     ['PART_NO', 'VARCHAR(TBD)', '', 'N', '', 'Part number (NSP format, with "-"); FK1 (PART_NO, PERIOD) -> TB_M_PART_CANDIDATE', 'New'],
     ['PERIOD', 'CHAR(6)', '', 'N', '', 'Calculation period YYYYMM; FK1. Effective Month / Year of the AP POLE upload', 'New'],
-    ['PART_STATUS', 'VARCHAR(10)', '', 'N', '', 'Status of the part in this period when the row is written. Active: ADD / EDIT rows. Inactive: no Kanban row; every Export row of the part is DELETE with NEW_VALUE 0 (XD05 for a new Inactive part, Procurement for Active -> Inactive)', 'New'],
+    ['PART_STATUS', 'VARCHAR(10)', '', 'N', '', 'Status of the part in this period when the row is written. Active: ADD / EDIT rows. Inactive: the part stays in the AP POLE Kanban (XD05 still writes its Kanban rows for a new period); every Export row of the part is DELETE with NEW_VALUE 0, so the Buyer-PD stays in AP POLE with 0', 'New'],
     ['LEVEL_TYPE', 'VARCHAR(6)', '', 'N', '', 'KANBAN = parent (Kanban Crossdock Master), EXPORT = child (Export Crossdock Master destination)', 'New'],
     ['DEST_CODE', 'CHAR(7)', '', 'Y', '', 'EXPORT only: destination code (buyer + PD, 7 digits); Buyer-PD 5-2 in the upload file. No FK: a DELETE row points to a removed destination', 'New'],
     ['ORDER_TYPE', 'VARCHAR(2)', '', 'Y', '', "EXPORT only: '**', 'C', '9', 'V'", 'New'],
