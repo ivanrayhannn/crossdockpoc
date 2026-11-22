@@ -11,7 +11,7 @@
    "Kanban Crossdock Master tab: This sub-menu is opened only for users logged in with a Procurement account; users with a D/S account open the Export Crossdock Master sub-menu instead.",
    "Export Crossdock Master tab: To split the Max Case/Day of each Active part over destinations (Thailand, Philippines, Vietnam) for the ongoing calculation period.",
    "Export Crossdock Master tab: To display the destination mapping per part and calculation period, including past periods (read only).",
-   "Export Crossdock Master tab: to send the changes of the Current and Next period to AP POLE (XD07) and GTOPAS (XD06) with [Sync], and show the Sync Status of each part (worked out from TB_H_PART_CANDIDATE_STG_SYNC).",
+   "Export Crossdock Master tab: To send the changes of the Current and Next period to AP POLE (XD07) and GTOPAS (XD06) with [Sync], and show the Sync Status of each part (worked out from TB_H_PART_CANDIDATE_STG_SYNC).",
    "Export Crossdock Master tab: To export the mapping to Excel and upload the mapping of the ongoing period from Excel.",
    "Export Crossdock Master tab: This sub-menu is opened only for users logged in with a D/S account; users with a Procurement account open the Kanban Crossdock Master sub-menu instead."
   ],
@@ -53,7 +53,7 @@
     ]
    },
    {
-    "section": "Mapping - Result List",
+    "section": "Export Crossdock Master - Result List",
     "fields": [
      {
       "field": "Part Number",
@@ -62,7 +62,7 @@
     ]
    },
    {
-    "section": "Mapping - Destination Mapping panel",
+    "section": "Export Crossdock Master - Destination Mapping panel",
     "fields": [
      {
       "field": "Order in which destinations were added",
@@ -82,7 +82,7 @@
    },
    {
     "name": "Upload Excel (Kanban Crossdock Master)",
-    "function": "Open the \"Upload Excel - part settings\" modal (Upload Mode)."
+    "function": "Open the \"Upload Excel: part settings\" modal (Upload Mode)."
    },
    {
     "name": "Export Excel (Kanban Crossdock Master)",
@@ -142,7 +142,7 @@
    },
    {
     "name": "Upload Excel (Mapping)",
-    "function": "Open the \"Upload Excel - destination mapping\" modal. Enabled only when the ongoing calculation period is selected."
+    "function": "Open the \"Upload Excel: destination mapping\" modal. Enabled only when the ongoing calculation period is selected."
    },
    {
     "name": "Export Excel (Mapping)",
@@ -755,7 +755,7 @@
      },
      {
       "section": "Past period",
-      "description": "Panel read only; badge 'Past period - read only' instead of [Edit mapping]",
+      "description": "Panel read only; badge 'Past period: read only' instead of [Edit mapping]",
       "buttons": {
        "Tab (Kanban Crossdock Master / Export Crossdock Master)": "E",
        "Add Part": "-",
@@ -2198,7 +2198,7 @@
    "required": "Y",
    "format": "ZZ,ZZ9",
    "validation": "Whole number > 0",
-   "description": "Locked until Pcs/Case is filled (tooltip 'Enter Pcs/Case first'). Edit: can not be less than the total Case/Day already mapped in the ongoing period (TB_M_PART_CANDIDATE_DEST); otherwise the field is marked red, message no. 14 is shown and [Save] is disabled."
+   "description": "Locked until Pcs/Case is filled (tooltip 'Enter Pcs/Case first'). Edit: cannot be less than the total Case/Day already mapped in the ongoing period (TB_M_PART_CANDIDATE_DEST); otherwise the field is marked red, message no. 14 is shown and [Save] is disabled."
   },
   {
    "name": "Mapped Case/Day (current period)",
@@ -3062,7 +3062,7 @@
    "required": "",
    "format": "",
    "validation": "",
-   "description": "Shown in edit mode, with the hint 'New row - pick a destination from the destination master in the Destination (CD) column.'"
+   "description": "Shown in edit mode, with the hint 'New row: pick a destination from the destination master in the Destination (CD) column.'"
   },
   {
    "name": "No destination message",
@@ -4029,7 +4029,7 @@
    "level": 3,
    "items": [
     "Open the 'Add Part Candidate Crossdock' modal. 'Status' = Candidate and locked (a new part is always Candidate); 'Effective Start Date' = system date + 1 day, minimum today.",
-    "'Part No' lists parts of TB_M_PART_MASTER that are not yet registered in TB_M_PART_CANDIDATE, so can not register part into Crossdock master",
+    "'Part No' lists only parts of TB_M_PART_MASTER that are not registered in TB_M_PART_CANDIDATE yet, so a part cannot be registered twice.",
     "Selecting a Part No autofills 'Part Name'. 'Max Case/Day' is locked until 'Pcs/Case' is filled.",
     "[Save] is enabled only when Part No, Min MAD (whole number, 0 or more), Pcs/Case > 0 and Max Case/Day > 0 are filled; otherwise its tooltip shows message no. 5, 15, 6 or 7 for the first missing item."
    ]
@@ -4047,7 +4047,7 @@
    "items": [
     "If the Part No was registered by another user in the meantime, display message no. 3. Stop.",
     "Insert the part into TB_M_PART_CANDIDATE with PART_STATUS = Candidate (refer Data Edit Mapping). A Candidate part is not sent (no staging row).",
-    "Insert the change history when any register or update data in Kanban Crossdock Master",
+    "Insert the change history in TB_H_PART_CANDIDATE (refer 5.6).",
     "Close the modal, reset the Part Number / Part Name / Status filters, sort Newer to Older and display message no. 9. The new part is shown at the top."
    ]
   },
@@ -4076,7 +4076,7 @@
     "'Effective Start Date' is editable only while the saved status is Candidate (minimum today); otherwise locked with message no. 10 as tooltip.",
     "'Min MAD' (mandatory, whole number 0 or more), 'Pcs/Case' and 'Max Case/Day' can be changed; 'Total Pcs/Day' is recalculated.",
     "Active part only: below Max Case/Day show 'Mapped Case/Day (current period): n' = total Case/Day of the part in TB_M_PART_CANDIDATE_DEST for the ongoing period (' · no destination yet' when none), so the user sees the lowest allowed Max Case/Day before Save.",
-    "Max Case/Day can not be less than the total Case/Day already mapped to destinations in the ongoing period (TB_M_PART_CANDIDATE_DEST); otherwise the field is marked red, message no. 14 is shown below Pcs/Case & Max Case/Day and [Save] is disabled. The user must first reduce the mapping in Export Crossdock Master (same rule as upload check 9)."
+    "Max Case/Day cannot be less than the total Case/Day already mapped to destinations in the ongoing period (TB_M_PART_CANDIDATE_DEST); otherwise the field is marked red, message no. 14 is shown below Pcs/Case & Max Case/Day and [Save] is disabled. The user must first reduce the mapping in Export Crossdock Master (same rule as upload check 9)."
    ]
   },
   {
@@ -4093,7 +4093,7 @@
     "If the record was changed by another user after it was opened, display message no. 4. Stop.",
     "Check Max Case/Day against the mapped total of the ongoing period again on the server; if it is below, display message no. 14. Stop.",
     "Update TB_M_PART_CANDIDATE, CHANGED_BY and CHANGED_DT. Insert a staging row in TB_H_PART_CANDIDATE_STG_SYNC per changed Pcs/Case or Max Case/Day of an Active part, and for Active <-> Inactive the EXPORT rows of 5.24 (refer Data Edit Mapping).",
-    "Insert the change history when any register or update in Kanban Crossdock Master",
+    "Insert the change history in TB_H_PART_CANDIDATE (refer 5.6).",
     "Close the modal, move the part to the top of the list and display message no. 9."
    ]
   },
@@ -4106,7 +4106,7 @@
    "marker": "a.",
    "level": 2,
    "items": [
-    "History retrieved from inserted data when user add/modify part list data",
+    "The history comes from the records inserted when a user adds or changes a part.",
     "User clicks the clock icon on a row: open 'History setting' with the change timeline of the part, newest first.",
     "Each event shows the title, date-time, field name, old value (struck through) → new value and user.",
     "History is read from TB_H_PART_CANDIDATE, which records every change of the part: Add / Edit by screen, Upload, mapping changes (add, change or remove a destination) and the calculation. The sync is in TB_H_PART_CANDIDATE_STG_SYNC (not shown here). A part without history shows message no. 12."
@@ -4247,7 +4247,7 @@
   {
    "type": "text",
    "level": 2,
-   "text": "Retention: the history of a part is kept; there is no housekeeping job (decided 30-Oct)."
+   "text": "Retention: the history of a part is kept; there is no housekeeping job."
   },
   {
    "type": "heading",
@@ -4355,7 +4355,7 @@
   {
    "type": "text",
    "level": 2,
-   "text": "Sync Status rule (22-Nov): a part becomes Non Sync when a staging row is written, i.e. when a value sent to AP POLE / GTOPAS changes: Pcs/Case or Max Case/Day (AP POLE), destinations or Case/Day (AP POLE; GTOPAS only when a destination appears / disappears), Active <-> Inactive (EXPORT rows). Min MAD, Effective Start Date, Candidate <-> Inactive and a Save without change write no row."
+   "text": "Sync Status rule: a part becomes Non Sync when a staging row is written, i.e. when a value sent to AP POLE / GTOPAS changes: Pcs/Case or Max Case/Day (AP POLE), destinations or Case/Day (AP POLE; GTOPAS only when a destination appears / disappears), Active <-> Inactive (EXPORT rows). Min MAD, Effective Start Date, Candidate <-> Inactive and a Save without change write no row."
   },
   {
    "type": "table",
@@ -4459,7 +4459,7 @@
    "level": 2,
    "items": [
     "Total Case/Day = used / quota (sum of CASE_DAY of the part and period / Max Case/Day); Pcs/Day = Pcs/Case x used.",
-    "Percentage = Total Case/Day / Max Case/Day; it never exceeds 100% because the total can not go above Max Case/Day (Save, upload and the Max Case/Day edit in Kanban Crossdock Master are blocked).",
+    "Percentage = Total Case/Day / Max Case/Day; it never exceeds 100% because the total cannot go above Max Case/Day (Save, upload and the Max Case/Day edit in Kanban Crossdock Master are blocked).",
     "The list is paged: 25 rows per page by default (25 / 50 / 100), with paging information and [Prev] / [Next]. A part with its Destination Mapping panel counts as one row. [Search], Reset and a change of Rows per page return to page 1."
    ]
   },
@@ -4693,11 +4693,11 @@
   {
    "type": "text",
    "level": 2,
-   "text": "The sync status is not kept on TB_M_PART_CANDIDATE: every value change is a row of TB_H_PART_CANDIDATE_STG_SYNC with the Sync Status of AP POLE and GTOPAS (22-Nov). TB_H_PART_CANDIDATE keeps the screen history."
+   "text": "The sync status is not kept on TB_M_PART_CANDIDATE: every value change is a row of TB_H_PART_CANDIDATE_STG_SYNC with the Sync Status of AP POLE and GTOPAS. TB_H_PART_CANDIDATE keeps the screen history."
   },
   {
    "type": "heading",
-   "text": "5.21 Period, Order Type and names (19-Nov)"
+   "text": "5.21 Period, Order Type and names"
   },
   {
    "type": "bullets",
@@ -4705,9 +4705,9 @@
    "level": 0,
    "items": [
     "Names: sub-menu Part List = Kanban Crossdock Master (Procurement), sub-menu Mapping per Destination = Export Crossdock Master (D/S). Page title Crossdock Master. Export Excel: Crossdock_Kanban_Master_YYYYMMDD.xlsx (sheet Kanban Crossdock Master) and Crossdock_Export_Master_<Period>_YYYYMMDD.xlsx (sheet Export Crossdock Master).",
-    "Kanban Crossdock Master (former Part List) has a period like the Export Crossdock Master: TB_M_PART_CANDIDATE is kept per PART_NO + PERIOD (Status, Pcs/Case, Max Case/Day, Pcs/Case, Max Case/Day of that month).",
+    "Kanban Crossdock Master (former Part List) has a period like the Export Crossdock Master: TB_M_PART_CANDIDATE is kept per PART_NO + PERIOD (Status, Pcs/Case and Max Case/Day of that month).",
     "Kanban Crossdock Master screen: new search criterion Calculation period (All periods / periods, default the ongoing period) and new first column Period. Rows of a past period: Part Number and [Edit] not available, [History] available. Add Part: into the ongoing period.",
-    "Periods (19-Nov): Past = view only; Current (M) = changed by screen and upload; Next (M+1) = made by XD05 on day D (system master), view only until day 1. On day 1 the Period Rollover (XD05 process 3) makes Next the Current period.",
+    "Periods: Past = view only; Current (M) = changed by screen and upload; Next (M+1) = made by XD05 on day D (system master), view only until day 1. On day 1 the Period Rollover (XD05 process 3) makes Next the Current period.",
     "Order Type per destination row (system master '**', 'C', '9', 'V'): the same destination may have two rows in a period when the order type differs; key PART_NO + PERIOD + DEST_CODE + ORDER_TYPE. Export Crossdock Master: new column Order Type (combobox of the system master) after Destination (CD); Save is blocked when a destination + order type is used twice (\"The same destination is used twice with the same order type\").",
     "Export Excel / Upload of the Export Crossdock Master: new column Order Type after Destination Code (sheet 1 and sheet Upload).",
     "Max Case/Day of a period may not be below the mapped total of that period (message 14): to lower it, D/S first reduces the destinations on the Export Crossdock Master, then changes Max Case/Day on the Kanban Crossdock Master.",
@@ -4751,7 +4751,7 @@
   },
   {
    "type": "heading",
-   "text": "5.24 Sync with TB_H_PART_CANDIDATE_STG_SYNC (22-Nov)"
+   "text": "5.24 Sync with TB_H_PART_CANDIDATE_STG_SYNC"
   },
   {
    "type": "bullets",
@@ -4785,7 +4785,7 @@
    "cause": "No part matches the criteria",
    "type": "Info",
    "msg_id": "MSG1",
-   "message": "No matching parts - Loosen the search criteria or reset all filters.",
+   "message": "No matching parts. Change the search criteria or reset the filters.",
    "action": "Change the criteria or click [Reset filter]"
   },
   {
@@ -4793,7 +4793,7 @@
    "cause": "No part registered yet",
    "type": "Info",
    "msg_id": "MSG2",
-   "message": "No crossdock parts registered yet",
+   "message": "No crossdock part is registered yet.",
    "action": "Click [Upload Excel] or [Add one part]"
   },
   {
@@ -4804,7 +4804,7 @@
    "cause": "Part No already registered (concurrent add)",
    "type": "Error",
    "msg_id": "MSG3",
-   "message": "Duplication found for {Part No}",
+   "message": "{Part No} is already registered.",
    "action": "Close the modal and search the part"
   },
   {
@@ -4812,7 +4812,7 @@
    "cause": "Record changed by another user",
    "type": "Error",
    "msg_id": "MSG4",
-   "message": "Error in Update because of concurrency check.",
+   "message": "Another user changed this part after you opened it. Refresh and edit again.",
    "action": "Close the modal, refresh and edit again"
   },
   {
@@ -4852,7 +4852,7 @@
    "cause": "Part saved successfully",
    "type": "Info",
    "msg_id": "MSG9",
-   "message": "Saved successfully - {Part No} · {Part Name} has been added/updated. It is now at the top of the Kanban Crossdock Master.",
+   "message": "Saved successfully: {Part No} · {Part Name} is saved and shown at the top of the Kanban Crossdock Master.",
    "action": "Click [OK]"
   },
   {
@@ -4860,7 +4860,7 @@
    "cause": "Saved status is Active / Inactive",
    "type": "Info",
    "msg_id": "MSG10",
-   "message": "Can only be changed while the status is still Candidate",
+   "message": "Can only be changed while the status is Candidate.",
    "action": "-"
   },
   {
@@ -4871,7 +4871,7 @@
    "cause": "Upload validated and saved",
    "type": "Info",
    "msg_id": "MSG11",
-   "message": "Saved successfully - Upload completed. The file has been validated and the part settings have been saved to the Kanban Crossdock Master.",
+   "message": "Saved successfully: the file passed validation and the part settings are saved to the Kanban Crossdock Master.",
    "action": "Click [OK]"
   },
   {
@@ -4901,7 +4901,7 @@
    "cause": "Max Case/Day below the total Case/Day mapped in the ongoing period",
    "type": "Error",
    "msg_id": "MSG14",
-   "message": "Max Case/Day can not be less than the mapped total ({n} case/day) of the ongoing period. Reduce the mapping in Export Crossdock Master first.",
+   "message": "Max Case/Day cannot be less than the mapped total of the ongoing period ({n} case/day). Reduce the mapping in Export Crossdock Master first.",
    "action": "Reduce the mapping in Export Crossdock Master first, or enter a higher Max Case/Day"
   },
   {
@@ -4920,7 +4920,7 @@
    "cause": "DAD Volume Calculation completed",
    "type": "Info",
    "msg_id": "MSG16",
-   "message": "Calculation completed - DAD volume calculation completed. Part statuses have been updated from the average MAD against Min MAD.",
+   "message": "Calculation completed: part statuses are updated from the average MAD against Min MAD.",
    "action": "Click [OK]"
   },
   {
@@ -4939,7 +4939,7 @@
    "cause": "No part matches the criteria",
    "type": "Info",
    "msg_id": "MSG18",
-   "message": "No parts match these filters - Change the period or sync status, or press Reset to show all parts.",
+   "message": "No parts match these filters. Change the period or sync status, or click [Reset] to show all parts.",
    "action": "Change the criteria or click [Reset]"
   },
   {
@@ -4950,7 +4950,7 @@
    "cause": "Part has no destination",
    "type": "Info",
    "msg_id": "MSG19",
-   "message": "No destination yet - Click Edit mapping and add at least one destination so the part is included in the volume calculation.",
+   "message": "No destination yet. Click [Edit mapping] and add at least one destination so the part is included in the volume calculation.",
    "action": "Click [Edit mapping] and add a destination"
   },
   {
@@ -4974,7 +4974,7 @@
    "cause": "Period is not ongoing",
    "type": "Info",
    "msg_id": "MSG22",
-   "message": "Past period - read only",
+   "message": "Past period: read only",
    "action": "-"
   },
   {
@@ -4985,7 +4985,7 @@
    "cause": "Past period or All periods selected",
    "type": "Info",
    "msg_id": "MSG23",
-   "message": "Past period - read only. Select the ongoing period to upload.",
+   "message": "Past period: read only. Select the ongoing period to upload.",
    "action": "Select the ongoing period"
   },
   {
@@ -4993,7 +4993,7 @@
    "cause": "Upload validated and saved",
    "type": "Info",
    "msg_id": "MSG24",
-   "message": "Saved successfully - Upload completed. The file has been validated and the destination mapping has been saved to Export Crossdock Master.",
+   "message": "Saved successfully: the file passed validation and the destination mapping is saved to Export Crossdock Master.",
    "action": "Click [OK]"
   },
   {
@@ -5004,7 +5004,7 @@
    "cause": "Mapping changed by another user",
    "type": "Error",
    "msg_id": "MSG25",
-   "message": "Error in Update because of concurrency check.",
+   "message": "Another user changed this mapping after you started editing. Refresh and edit again.",
    "action": "Cancel, refresh and edit again"
   },
   {
@@ -5026,7 +5026,7 @@
    "cause": "Parts handed to XD06 / XD07",
    "type": "Info",
    "msg_id": "MSG27",
-   "message": "Sync started for {n} part(s): AP POLE and GTOPAS. The result comes by e-mail.",
+   "message": "Sync started for {n} part(s) to AP POLE and GTOPAS. The result comes by e-mail.",
    "action": "-"
   },
   {
@@ -5045,7 +5045,7 @@
    "cause": "Mapping calculation (XD05 process 2) completed",
    "type": "Info",
    "msg_id": "MSG29",
-   "message": "Calculation completed - Mapping destination calculation completed. The destination mapping of the new period has been created.",
+   "message": "Calculation completed: the destination mapping of the new period is created.",
    "action": "Click [OK]"
   },
   {
@@ -5127,7 +5127,7 @@
    "name": "TB_H_PART_CANDIDATE",
    "kind": "history",
    "proposed": true,
-   "description": "History of every change of a crossdock part for the History setting of XD01 (Add / Edit by screen or upload, mapping changes, status changes and mappings made by the calculation batches). The sync to GTOPAS / AP POLE is not recorded here: it is in TB_H_PART_CANDIDATE_STG_SYNC (22-Nov). No retention limit.",
+   "description": "History of every change of a crossdock part for the History setting of XD01 (Add / Edit by screen or upload, mapping changes, status changes and mappings made by the calculation batches). The sync to GTOPAS / AP POLE is not recorded here: it is in TB_H_PART_CANDIDATE_STG_SYNC. No retention limit.",
    "columns": [
     [
      "HIST_ID",
@@ -5148,7 +5148,7 @@
      "CHAR(6)",
      "",
      "N",
-     "Calculation period YYYYMM of the changed row (every event; Kanban and Export Crossdock Master are per period, 20-Nov)"
+     "Calculation period YYYYMM of the changed row (every event; Kanban and Export Crossdock Master are per period)"
     ],
     [
      "EVENT_TYPE",
@@ -5183,7 +5183,7 @@
      "VARCHAR(2)",
      "",
      "Y",
-     "Order Type of the destination row for MAPPING (with DEST_CODE); NULL for other events (20-Nov)"
+     "Order Type of the destination row for MAPPING (with DEST_CODE); NULL for other events"
     ],
     [
      "FIELD_NAME",
@@ -5233,7 +5233,7 @@
    "name": "TB_H_PART_CANDIDATE_STG_SYNC",
    "kind": "history",
    "proposed": true,
-   "description": "Staging of every value change of the Kanban / Export Crossdock Master for the sync to AP POLE (XD07) and GTOPAS (XD06) (22-Nov). Inserted by XD01 (screen), XD02 / XD03 (upload) and XD05 in the same transaction as the master update; updated only by [Sync], [Re-send last Sync] and the Period Rollover. The RPA reads only this table. TB_H_PART_CANDIDATE (screen history) is kept as it is.",
+   "description": "Staging of every value change of the Kanban / Export Crossdock Master for the sync to AP POLE (XD07) and GTOPAS (XD06). Inserted by XD01 (screen), XD02 / XD03 (upload) and XD05 in the same transaction as the master update; updated only by [Sync], [Re-send last Sync] and the Period Rollover. The RPA reads only this table. TB_H_PART_CANDIDATE (screen history) is kept as it is.",
    "columns": [
     [
      "HIST_ID",
@@ -5479,6 +5479,13 @@
    "date": "22-Nov-26",
    "reviewed_by": "",
    "description": "Sync with TB_H_PART_CANDIDATE_STG_SYNC (22-Nov): no sync column on TB_M_PART_CANDIDATE; staging rows per value change (screen); [Sync] sets status / SEND_SEQ / run ID; Sync Status AP POLE / GTOPAS worked out from the staging (5.24)."
+  },
+  {
+   "revision": "0.9",
+   "author": "FID Rayhan",
+   "date": "22-Nov-26",
+   "reviewed_by": "",
+   "description": "Copy review: decision dates removed from the body text (kept here), sentences with broken grammar rewritten, screen messages reworded (no rule changed)."
   }
  ]
 }

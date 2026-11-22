@@ -28,16 +28,16 @@ export function SaveSuccessModal({ notice, onClose }: { notice: SaveNotice; onCl
         <p style={{ fontSize: 13, color: 'var(--color-neutral-700)', margin: '0 0 18px' }}>
           {notice.mode === 'calc' ? (
             notice.target === 'dad'
-              ? 'DAD volume calculation completed. Part statuses have been updated from the average MAD against Min MAD.'
-              : 'Mapping destination calculation completed. The destination mapping of the new period has been created.'
+              ? 'Part statuses are updated from the average MAD against Min MAD.'
+              : 'The destination mapping of the new period is created.'
           ) : notice.mode === 'upload' ? (
             notice.target === 'mapping'
-              ? 'Upload completed. The file has been validated and the destination mapping has been saved to Export Crossdock Master.'
-              : 'Upload completed. The file has been validated and the part settings have been saved to the Kanban Crossdock Master.'
+              ? 'The file passed validation and the destination mapping is saved to Export Crossdock Master.'
+              : 'The file passed validation and the part settings are saved to the Kanban Crossdock Master.'
           ) : (
             <>
               <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{notice.part}</span>
-              {notice.name && ` · ${notice.name}`} has been {notice.mode === 'add' ? 'added' : 'updated'}. It is now at the top of the Kanban Crossdock Master.
+              {notice.name && ` · ${notice.name}`} is saved and shown at the top of the Kanban Crossdock Master.
             </>
           )}
         </p>

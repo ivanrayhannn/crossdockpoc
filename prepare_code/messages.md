@@ -7,47 +7,47 @@
 | ID | Event | Cause | Type | Message | Action |
 |---|---|---|---|---|---|
 | **Kanban Crossdock Master - Search Operation** |  |  |  |  |  |
-| MSG1 | Change search criteria | No part matches the criteria | Info | No matching parts - Loosen the search criteria or reset all filters. | Change the criteria or click [Reset filter] |
-| MSG2 | Open Kanban Crossdock Master | No part registered yet | Info | No crossdock parts registered yet | Click [Upload Excel] or [Add one part] |
+| MSG1 | Change search criteria | No part matches the criteria | Info | No matching parts. Change the search criteria or reset the filters. | Change the criteria or click [Reset filter] |
+| MSG2 | Open Kanban Crossdock Master | No part registered yet | Info | No crossdock part is registered yet. | Click [Upload Excel] or [Add one part] |
 | **Kanban Crossdock Master - Add / Edit Operation** |  |  |  |  |  |
-| MSG3 | Click [Save] button | Part No already registered (concurrent add) | Error | Duplication found for {Part No} | Close the modal and search the part |
-| MSG4 | Click [Save] button | Record changed by another user | Error | Error in Update because of concurrency check. | Close the modal, refresh and edit again |
+| MSG3 | Click [Save] button | Part No already registered (concurrent add) | Error | {Part No} is already registered. | Close the modal and search the part |
+| MSG4 | Click [Save] button | Record changed by another user | Error | Another user changed this part after you opened it. Refresh and edit again. | Close the modal, refresh and edit again |
 | MSG5 | Hover disabled [Save] | Part No not selected | Info | Part No is required | Select a Part No |
 | MSG6 | Hover disabled [Save] | Pcs/Case not filled | Info | Enter Pcs/Case first (step 2) | Fill Pcs/Case |
 | MSG7 | Hover disabled [Save] | Max Case/Day not filled | Info | Enter Max Case/Day (step 2) | Fill Max Case/Day |
 | MSG8 | Type in 'Part No' | No unregistered part matches the text | Info | Part not found | Check the Part No |
-| MSG9 | Click [Save] button | Part saved successfully | Info | Saved successfully - {Part No} · {Part Name} has been added/updated. It is now at the top of the Kanban Crossdock Master. | Click [OK] |
-| MSG10 | Hover 'Effective Start Date' | Saved status is Active / Inactive | Info | Can only be changed while the status is still Candidate | - |
+| MSG9 | Click [Save] button | Part saved successfully | Info | Saved successfully: {Part No} · {Part Name} is saved and shown at the top of the Kanban Crossdock Master. | Click [OK] |
+| MSG10 | Hover 'Effective Start Date' | Saved status is Active / Inactive | Info | Can only be changed while the status is Candidate. | - |
 | **Kanban Crossdock Master - Upload Operation** |  |  |  |  |  |
-| MSG11 | Click [Validate file] button | Upload validated and saved | Info | Saved successfully - Upload completed. The file has been validated and the part settings have been saved to the Kanban Crossdock Master. | Click [OK] |
+| MSG11 | Click [Validate file] button | Upload validated and saved | Info | Saved successfully: the file passed validation and the part settings are saved to the Kanban Crossdock Master. | Click [OK] |
 | **Kanban Crossdock Master - History Operation** |  |  |  |  |  |
 | MSG12 | Click History icon | Part has no history | Info | No change history for this part yet. | Click [Close] |
 | **Kanban Crossdock Master - Export Operation** |  |  |  |  |  |
 | MSG13 | Click [Export Excel] button | Excel file cannot be created | Error | Export Excel failed. Please try again. | Click [Export Excel] again; contact administrator if it persists |
-| MSG14 | Change 'Max Case/Day' in Edit / click [Save] | Max Case/Day below the total Case/Day mapped in the ongoing period | Error | Max Case/Day can not be less than the mapped total ({n} case/day) of the ongoing period. Reduce the mapping in Export Crossdock Master first. | Reduce the mapping in Export Crossdock Master first, or enter a higher Max Case/Day |
+| MSG14 | Change 'Max Case/Day' in Edit / click [Save] | Max Case/Day below the total Case/Day mapped in the ongoing period | Error | Max Case/Day cannot be less than the mapped total of the ongoing period ({n} case/day). Reduce the mapping in Export Crossdock Master first. | Reduce the mapping in Export Crossdock Master first, or enter a higher Max Case/Day |
 | MSG15 | Hover disabled [Save] | Min MAD blank or not a whole number | Info | Enter Min MAD (whole number, 0 or more) | Fill Min MAD |
 | **Kanban Crossdock Master - Calculation Operation** |  |  |  |  |  |
-| MSG16 | Click [Run calculation] button | DAD Volume Calculation completed | Info | Calculation completed - DAD volume calculation completed. Part statuses have been updated from the average MAD against Min MAD. | Click [OK] |
+| MSG16 | Click [Run calculation] button | DAD Volume Calculation completed | Info | Calculation completed: part statuses are updated from the average MAD against Min MAD. | Click [OK] |
 | MSG17 | Hover disabled [Run calculation] | Scheduled run has not failed 3 times | Info | Enabled only when the scheduled run has failed 3 times | - |
 | **Mapping - Search Operation** |  |  |  |  |  |
-| MSG18 | Change search criteria | No part matches the criteria | Info | No parts match these filters - Change the period or sync status, or press Reset to show all parts. | Change the criteria or click [Reset] |
+| MSG18 | Change search criteria | No part matches the criteria | Info | No parts match these filters. Change the period or sync status, or click [Reset] to show all parts. | Change the criteria or click [Reset] |
 | **Mapping - Edit Mapping Operation** |  |  |  |  |  |
-| MSG19 | Open Destination Mapping panel | Part has no destination | Info | No destination yet - Click Edit mapping and add at least one destination so the part is included in the volume calculation. | Click [Edit mapping] and add a destination |
+| MSG19 | Open Destination Mapping panel | Part has no destination | Info | No destination yet. Click [Edit mapping] and add at least one destination so the part is included in the volume calculation. | Click [Edit mapping] and add a destination |
 | MSG20 | Change Case/Day in edit mode | Total Case/Day above Max Case/Day | Error | Allocation of {n} case/day exceeds Max Case/Day ({m}). Reduce one of the destinations. | Reduce Case/Day of a destination |
 | MSG21 | Edit mode | A row has no destination selected | Error | Select a destination for every row, or remove the empty row, before saving. | Select a destination or remove the row |
-| MSG22 | Open panel of a past period | Period is not ongoing | Info | Past period - read only | - |
+| MSG22 | Open panel of a past period | Period is not ongoing | Info | Past period: read only | - |
 | **Mapping - Upload Operation** |  |  |  |  |  |
-| MSG23 | Hover disabled [Upload Excel] | Past period or All periods selected | Info | Past period - read only. Select the ongoing period to upload. | Select the ongoing period |
-| MSG24 | Click [Validate file] button | Upload validated and saved | Info | Saved successfully - Upload completed. The file has been validated and the destination mapping has been saved to Export Crossdock Master. | Click [OK] |
+| MSG23 | Hover disabled [Upload Excel] | Past period or All periods selected | Info | Past period: read only. Select the ongoing period to upload. | Select the ongoing period |
+| MSG24 | Click [Validate file] button | Upload validated and saved | Info | Saved successfully: the file passed validation and the destination mapping is saved to Export Crossdock Master. | Click [OK] |
 | **Mapping - Save Operation** |  |  |  |  |  |
-| MSG25 | Click [Save] button | Mapping changed by another user | Error | Error in Update because of concurrency check. | Cancel, refresh and edit again |
+| MSG25 | Click [Save] button | Mapping changed by another user | Error | Another user changed this mapping after you started editing. Refresh and edit again. | Cancel, refresh and edit again |
 | **Mapping - Export Operation** |  |  |  |  |  |
 | MSG26 | Click [Export Excel] button | Excel file cannot be created | Error | Export Excel failed. Please try again. | Click [Export Excel] again; contact administrator if it persists |
 | **Mapping - Sync Operation** |  |  |  |  |  |
-| MSG27 | Click [Sync] button | Parts handed to XD06 / XD07 | Info | Sync started for {n} part(s): AP POLE and GTOPAS. The result comes by e-mail. | - |
+| MSG27 | Click [Sync] button | Parts handed to XD06 / XD07 | Info | Sync started for {n} part(s) to AP POLE and GTOPAS. The result comes by e-mail. | - |
 | MSG28 | Hover a Sync Status chip | Part already sent | Info | Last sent {date-time} (run {run ID}). | - |
 | **Mapping - Calculation Operation** |  |  |  |  |  |
-| MSG29 | Click [Run calculation] button | Mapping calculation (XD05 process 2) completed | Info | Calculation completed - Mapping destination calculation completed. The destination mapping of the new period has been created. | Click [OK] |
+| MSG29 | Click [Run calculation] button | Mapping calculation (XD05 process 2) completed | Info | Calculation completed: the destination mapping of the new period is created. | Click [OK] |
 | MSG30 | Hover disabled [Run calculation] | Scheduled run has not failed 3 times | Info | Enabled only when the scheduled run has failed 3 times | - |
 
 ### Logging

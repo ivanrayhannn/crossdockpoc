@@ -11,7 +11,7 @@ export function RoleGate({ onSelect }: { onSelect: (role: UserRole) => void }) {
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '72px 24px', gap: 6 }}>
       <h2 style={{ fontSize: 22, margin: '0 0 4px' }}>Choose a sub-menu to preview</h2>
       <p style={{ fontSize: 13, color: 'var(--color-neutral-700)', margin: '0 0 30px', maxWidth: 480, textAlign: 'center' }}>
-        Simulation only — in the real system the sub-menu opens according to the logged-in user account.
+        Simulation only. In the real system the sub-menu opens according to the logged-in user account.
       </p>
       <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', justifyContent: 'center' }}>
         {SUB_MENUS.map((m) => (

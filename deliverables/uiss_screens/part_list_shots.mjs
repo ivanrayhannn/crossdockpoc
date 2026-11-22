@@ -1,15 +1,17 @@
-// Screenshots of XD01 tab Part List (UISS layout pages 1-14) from the prototype; content area only (sidebar clipped).
+// Screenshots of XD01 Kanban Crossdock Master (UISS layout pages 1-14) from the prototype; content area only (sidebar clipped).
 // Usage: node part_list_shots.mjs http://localhost:5179/crossdockpoc/ ./part_list
-import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
+import { createRequire } from 'module';
+const { chromium } = createRequire(import.meta.url)('playwright');
 const [url, dir] = process.argv.slice(2);
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
-const CLIP = { x: 250, y: 52, width: 1190, height: 848 };
+const b = await chromium.launch();
+// same frame as mapping_shots.mjs: wider viewport, resized to 1194 x 852 afterwards
+const CLIP = { x: 250, y: 52, width: 1484, height: 1059 };
 
 async function page() {
-  const ctx = await b.newContext({ viewport: { width: 1440, height: 900 } });
+  const ctx = await b.newContext({ viewport: { width: 1740, height: 1120 } });
   const pg = await ctx.newPage();
   await pg.goto(url + '#/crossdock'); await pg.waitForTimeout(900);
-  await pg.getByRole('button', { name: /^Part List/ }).click(); await pg.waitForTimeout(500);
+  await pg.getByRole('button', { name: /^Kanban Crossdock Master/ }).click(); await pg.waitForTimeout(500);
   return pg;
 }
 const shot = async (pg, name) => { await pg.waitForTimeout(350); await pg.screenshot({ path: `${dir}/${name}.png`, clip: CLIP }); await pg.context().close(); };
@@ -25,7 +27,7 @@ async function openEdit(pg, part) {
 }
 
 let pg = await page(); await shot(pg, 'c_01_initial');
-pg = await page(); await pg.locator('select').first().selectOption('candidate'); await search(pg); await shot(pg, 'c_02_filter_candidate');
+pg = await page(); await pg.locator('select').nth(1).selectOption('candidate'); await search(pg); await shot(pg, 'c_02_filter_candidate');
 pg = await page(); await partNo(pg, 'PART-ZZZ'); await search(pg); await shot(pg, 'c_03_no_result');
 pg = await page(); await openAdd(pg); await shot(pg, 'c_04_add_empty');
 pg = await page(); await openAdd(pg); await pg.getByPlaceholder('Select Part Number').click(); await shot(pg, 'c_05_add_partno_list');

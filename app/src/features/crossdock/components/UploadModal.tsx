@@ -4,8 +4,8 @@ import type { CrossdockState } from '../useCrossdockState';
 const UP_COLS = ['Part Number', 'Min MAD', 'Pcs/Case', 'Max Case/Day', 'Status', 'Upload (A/E)', 'Effective Start Date'];
 
 const UP_RULES: { label: string; cols: string }[] = [
-  { label: 'Add', cols: 'Part Number, Min MAD, Pcs/Case, Max Case/Day, Upload (A/E) = A and Effective Start Date are required. Leave Status blank — a new part is always Candidate.' },
-  { label: 'Edit', cols: 'Upload (A/E) = E. Min MAD (required), Pcs/Case and Max Case/Day can be changed; Effective Start Date only while the part status is still Candidate. Download Export Excel first: its sheet "Upload" is the base file (pre-filled with flag E) to edit and upload again.' },
+  { label: 'Add', cols: 'Part Number, Min MAD, Pcs/Case, Max Case/Day, Upload (A/E) = A and Effective Start Date are required. Leave Status blank: a new part is always Candidate.' },
+  { label: 'Edit', cols: 'Upload (A/E) = E. Min MAD (required), Pcs/Case and Max Case/Day can be changed; Effective Start Date only while the part status is Candidate. Download Export Excel first: its sheet "Upload" is the base file (pre-filled with flag E) to edit and upload again.' },
   { label: 'Status', cols: 'The status of a Candidate part cannot be changed by upload (the row is rejected). An Active part can be changed to Inactive and an Inactive part to Active. No part can be changed to Candidate.' },
 ];
 
@@ -14,7 +14,7 @@ export function UploadModal({ state }: { state: CrossdockState }) {
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(33,33,33,.55)', display: 'grid', placeItems: 'center', padding: 36 }}>
       <div style={{ width: 720, background: 'var(--color-neutral-100)', borderRadius: 10, boxShadow: 'var(--shadow-lg)', padding: '24px 28px 22px' }}>
-        <h3 style={{ fontSize: 22, margin: '0 0 3px' }}>Upload Excel — part settings</h3>
+        <h3 style={{ fontSize: 22, margin: '0 0 3px' }}>Upload Excel: part settings</h3>
         <p style={{ fontSize: 12.5, color: 'var(--color-neutral-700)', margin: '0 0 16px' }}>One row = one part. The upload column marks the row: A = Add (new part) or E = Edit (already registered part).</p>
         <div style={{ padding: '15px 16px', borderRadius: 16, background: 'var(--color-surface)', marginBottom: 13 }}>
           <div style={{ fontSize: 10, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--color-neutral-700)', marginBottom: 9 }}>Template columns</div>
