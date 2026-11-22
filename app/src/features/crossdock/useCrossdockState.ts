@@ -1,9 +1,9 @@
-import { useCallback, useState } from 'react';
-import { blankPart, cloneSeedParts, CUR_PER } from '../../data/seed';
+import { useCallback, useMemo, useState } from 'react';
+import { blankPart, cloneSeedParts, CUR_PER, PAST_ROWS } from '../../data/seed';
 import { nowStamp, num } from '../../lib/format';
 import type { DestAllocation, ModalKind, Part, PartQuery, TabView, UserRole } from '../../types';
 import type { CalcRun } from './components/CalcRunBar';
-import { destsChanged, syncAfterSave } from './syncRule';
+import { addRows, exportRows, kanbanRows, resendRun, runIdOf, runSync, seedStaging, syncOfPart, type StgRow } from './staging';
 
 const DEFAULT_Q: PartQuery = {
   part: '',
@@ -29,8 +29,18 @@ function cloneDests(dests: DestAllocation[]): DestAllocation[] {
   return dests.map((d) => ({ ...d }));
 }
 
+/** Sync Status and Last Sent of a part, from the staging (no sync column on TB_M_PART_CANDIDATE since 22-Nov). */
+function withSync(p: Part, stg: StgRow[]): Part {
+  const s = syncOfPart(stg, p.p, p.per);
+  return { ...p, apSync: s.ap, gtSync: s.gt, syncStatus: s.ap === 0 || s.gt === 0 ? 0 : 3, apSyncDt: s.apDt, lastSyncDt: s.gtDt };
+}
+
 export function useCrossdockState() {
-  const [parts, setParts] = useState<Part[]>(() => cloneSeedParts());
+  const [rawParts, setParts] = useState<Part[]>(() => cloneSeedParts());
+  // TB_H_PART_CANDIDATE_STG_SYNC: one row per value change, written in the same save as the master (XD01 5.24).
+  const [stg, setStg] = useState<StgRow[]>(() => seedStaging([...cloneSeedParts(), ...PAST_ROWS], CUR_PER));
+  const parts = useMemo(() => rawParts.map((p) => withSync(p, stg)), [rawParts, stg]);
+  const pastRows = useMemo(() => PAST_ROWS.map((p) => withSync(p, stg)), [stg]);
   const [modal, setModal] = useState<ModalKind>(null);
   const [form, setForm] = useState<Part | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
@@ -117,30 +127,35 @@ export function useCrossdockState() {
   }, []);
 
   const saveDest = useCallback(() => {
-    setParts((prevParts) => {
-      if (!editDest || !draftDests) return prevParts;
-      return prevParts.map((p) => {
-        if (p.p !== editDest) return p;
-        const dests = draftDests.map((d) => ({ ...d, al: num(d.al) }));
-        // Only a real change of a destination or its Case/Day has to be synced again (FB-205).
-        if (!destsChanged(p.dests, dests)) return p;
-        return { ...p, dests, by: EDITOR, dt: nowStamp(), syncStatus: 0 as const };
-      });
-    });
+    if (!editDest || !draftDests) return;
+    const p = rawParts.find((x) => x.p === editDest);
+    if (p) {
+      const dests = draftDests.map((d) => ({ ...d, al: num(d.al) }));
+      const at = nowStamp();
+      // One EXPORT row per added / changed / removed destination; no row (and no Last Update) when nothing changed.
+      const rows = exportRows(p, p.dests, dests, EDITOR, at);
+      if (rows.length) {
+        setParts((prev) => prev.map((x) => (x.p === p.p ? { ...x, dests, by: EDITOR, dt: at } : x)));
+        setStg((prev) => addRows(prev, rows));
+      }
+    }
     setEditDest(null);
     setDraftDests(null);
-  }, [editDest, draftDests]);
+  }, [editDest, draftDests, rawParts]);
 
-  // [Sync] hands the parts to the RPA: they become Sent with the send time (no response from the RPA, decided 20-Nov).
-  // The parts of the last run are kept for [Re-send last Sync] (used when the e-mail of the RPA says FAILED).
-  const [lastRun, setLastRun] = useState<string[]>([]);
-  const syncParts = useCallback((ids: string[]) => {
-    const idSet = new Set(ids);
-    const sentAt = nowStamp();
-    setParts((prevParts) => prevParts.map((p) => (idSet.has(p.p) ? { ...p, syncStatus: 3, lastSyncDt: sentAt, apSyncDt: sentAt } : p)));
-    setLastRun(ids);
-  }, []);
-  const resendLast = useCallback(() => syncParts(lastRun), [lastRun, syncParts]);
+  // [Sync]: NSP reduces the Non Sync rows of the ongoing period and hands them to the RPA (XD06 GTOPAS, XD07 AP POLE).
+  // The bots write nothing back; the result comes by e-mail. [Re-send last Sync] sends the same run again.
+  const [lastRun, setLastRun] = useState<{ run: string; parts: number } | null>(null);
+  const syncParts = useCallback(() => {
+    const now = new Date();
+    const run = runIdOf(now);
+    const r = runSync(stg, [CUR_PER], CUR_PER, run, nowStamp(now));
+    setStg(r.stg);
+    setLastRun({ run, parts: r.parts });
+  }, [stg]);
+  const resendLast = useCallback(() => {
+    if (lastRun) setStg((prev) => resendRun(prev, lastRun.run, nowStamp()));
+  }, [lastRun]);
 
   const closeModal = useCallback(() => {
     setModal(null);
@@ -151,10 +166,13 @@ export function useCrossdockState() {
   /** Commits the in-progress form to the parts list and closes the modal. */
   const commit = useCallback(() => {
     if (!form) return;
-    const prev = editId ? parts.find((p) => p.p === editId) : undefined;
+    const prev = editId ? rawParts.find((p) => p.p === editId) : undefined;
     const saved: Part = { ...form, pc: num(form.pc), mc: num(form.mc), minMad: num(form.minMad) };
-    // Sync Status follows syncRule: only Status changes to / from Active and Pcs/Case / Max Case/Day of an Active part need a new Sync.
-    const f: Part = { ...saved, by: EDITOR, dt: nowStamp(), syncStatus: syncAfterSave(prev, saved) };
+    const at = nowStamp();
+    const f: Part = { ...saved, by: EDITOR, dt: at };
+    // Staging rows of the save: KANBAN EDIT of Pcs/Case / Max Case/Day (Active part); Active -> Inactive: EXPORT DELETE (0) per destination.
+    const rows = kanbanRows(prev, f, EDITOR, at);
+    if (rows.length) setStg((prevStg) => addRows(prevStg, rows));
     // The saved part goes to the top of the list, whether it was added or edited.
     setParts((prevParts) => [f, ...prevParts.filter((p) => p.p !== f.p)]);
     // Show it right away: drop filters that could hide it and sort newest first.
@@ -165,7 +183,7 @@ export function useCrossdockState() {
     setModal(null);
     setForm(null);
     setEditId(null);
-  }, [form, editId, parts]);
+  }, [form, editId, rawParts]);
 
   const dismissNotice = useCallback(() => setNotice(null), []);
 
@@ -202,6 +220,8 @@ export function useCrossdockState() {
 
   return {
     parts,
+    pastRows,
+    stg,
     modal,
     form,
     editId,

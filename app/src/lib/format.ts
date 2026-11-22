@@ -1,5 +1,3 @@
-import type { SyncStatus } from '../types';
-
 /** Formats a number with thousands separators; non-numeric input renders as "0". */
 export function fmt(v: number | string | undefined | null): string {
   const n = typeof v === 'number' ? v : Number(v);
@@ -40,8 +38,9 @@ export interface SyncBadge {
   fg: string;
 }
 
-export function syncBadge(status: SyncStatus): SyncBadge {
-  // No response from the RPA (decided 20-Nov): NSP only knows that the part was sent; the result comes by e-mail.
-  if (status !== 0) return { t: 'Sent', bg: 'var(--color-accent-2-200)', fg: 'var(--color-accent-2-800)' };
-  return { t: 'No Sync', bg: 'var(--color-neutral-200)', fg: 'var(--color-neutral-700)' };
+/** Sync Status of one target (AP POLE or GTOPAS) from the staging: 0 Non Sync, 1 Sync, null = nothing for that target. */
+export function targetBadge(s: 0 | 1 | null | undefined): SyncBadge {
+  if (s === 0) return { t: 'Non Sync', bg: 'var(--color-neutral-200)', fg: 'var(--color-neutral-700)' };
+  if (s === 1) return { t: 'Sync', bg: 'var(--color-accent-2-200)', fg: 'var(--color-accent-2-800)' };
+  return { t: '—', bg: 'transparent', fg: 'var(--color-neutral-500)' };
 }

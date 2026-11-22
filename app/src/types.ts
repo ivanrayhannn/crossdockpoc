@@ -50,6 +50,9 @@ export interface Part {
   lastSyncDt?: string | null;
   /** Date-time of the last send to AP POLE (XD07); lastSyncDt is the last send to GTOPAS (XD06). Two columns since 20-Nov. */
   apSyncDt?: string | null;
+  /** Sync Status per target, worked out from TB_H_PART_CANDIDATE_STG_SYNC (22-Nov): 0 Non Sync, 1 Sync, null = nothing for that target. */
+  apSync?: 0 | 1 | null;
+  gtSync?: 0 | 1 | null;
 }
 
 export interface PartQuery {
@@ -57,6 +60,7 @@ export interface PartQuery {
   name: string;
   dest: string;
   st: 'all' | 'active' | 'inactive' | 'candidate';
+  /** Non Sync = the part has a staging row with AP POLE or GTOPAS status 0. */
   sync: 'all' | 'notsync' | 'sent';
   /** Calculation period filter for "Export Crossdock Master", e.g. "Sep 2026", or 'all'. */
   per: string;

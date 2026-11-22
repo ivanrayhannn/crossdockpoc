@@ -1,5 +1,5 @@
 import writeExcelFile, { getSheetData, type Column } from 'write-excel-file/browser';
-import { num, parseDt, syncBadge } from '../../lib/format';
+import { num, parseDt, targetBadge } from '../../lib/format';
 import type { Part, PartQuery } from '../../types';
 import { HIST_BY_PART } from '../../data/seed';
 
@@ -46,8 +46,9 @@ const LIST_COLUMNS: (Column<Part> & { width: number })[] = [
   { header: { value: 'Total Pcs/Day', ...HEADER, align: 'right' }, cell: (p) => ({ value: num(p.pc) * num(p.mc), format: NUMBER_FORMAT }), width: 15 },
   { header: { value: 'Status', ...HEADER }, cell: (p) => ({ value: p.st }), width: 12 },
   // RPA source (XD07): the parts not synced yet are No Sync / Waiting / Failed
-  { header: { value: 'Sync Status', ...HEADER }, cell: (p) => ({ value: syncBadge(p.syncStatus).t }), width: 13 },
-  // the bot of XD07 takes the parts of its run: Sync Status Sent and Last Sent Date = send time of the run (no response, 20-Nov)
+  { header: { value: 'Sync Status AP POLE', ...HEADER }, cell: (p) => ({ value: targetBadge(p.apSync).t }), width: 14 },
+  { header: { value: 'Sync Status GTOPAS', ...HEADER }, cell: (p) => ({ value: targetBadge(p.gtSync).t }), width: 14 },
+  // Sync Status and Last Sent are worked out from TB_H_PART_CANDIDATE_STG_SYNC (22-Nov); the bots write nothing back.
   { header: { value: 'Last Sent GTOPAS', ...HEADER }, cell: (p) => ({ value: p.lastSyncDt || '' }), width: 18 },
   { header: { value: 'Last Sent AP POLE', ...HEADER }, cell: (p) => ({ value: p.apSyncDt || '' }), width: 18 },
   { header: { value: 'Effective Start Date', ...HEADER }, cell: (p) => ({ value: uploadDate(p.effDate) }), width: 20 },
