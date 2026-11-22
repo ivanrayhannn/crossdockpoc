@@ -19,6 +19,7 @@
 | 0.7 | FID Rayhan | 20-Nov-26 |  | TB_R_CROSSDOCK_IF_RESULT removed: send time per target on TB_M_PART_CANDIDATE (GTOPAS_SYNC_DT, APPOLE_SYNC_DT, SYNC_RUN_ID); columns Last Sent GTOPAS / AP POLE; Log per run; history SYNC by NSP (20-Nov). |
 | 0.8 | FID Rayhan | 22-Nov-26 |  | Sync with TB_H_PART_CANDIDATE_STG_SYNC (22-Nov): no sync column on TB_M_PART_CANDIDATE; staging rows per value change (screen); [Sync] sets status / SEND_SEQ / run ID; Sync Status AP POLE / GTOPAS worked out from the staging (5.24). |
 | 0.9 | FID Rayhan | 22-Nov-26 |  | Copy review: decision dates removed from the body text (kept here), sentences with broken grammar rewritten, screen messages reworded (no rule changed). |
+| 0.10 | FID Rayhan | 22-Nov-26 |  | New 5.25 Table changes per Save: Add / Edit / Delete per table for every save on the screen. |
 
 ## 1. General
 
@@ -708,7 +709,7 @@ flowchart TB
 
 ## 6. Operation description
 
-5.1 - 5.10: Kanban Crossdock Master tab. 5.11 - 5.20: Export Crossdock Master tab.
+5.1 - 5.10: Kanban Crossdock Master tab. 5.11 - 5.20: Export Crossdock Master tab. 5.25: table changes of every save.
 
 ### 5.1 Initial Display
 
@@ -741,7 +742,7 @@ b. Total Pcs/Day = Pcs/Case x Max Case/Day.
   1. If the Part No was registered by another user in the meantime, display message no. 3. Stop.
   2. Insert the part into TB_M_PART_CANDIDATE with PART_STATUS = Candidate (refer Data Edit Mapping). A Candidate part is not sent (no staging row).
   3. Insert the change history in TB_H_PART_CANDIDATE (refer 5.6).
-  4. Close the modal, reset the Part Number / Part Name / Status filters, sort Newer to Older and display message no. 9. The new part is shown at the top.
+  4. Close the modal, reset the Part Number / Part Name / Status filters, sort Newer to Older and display message no. 9. The new part is shown at the top. Table changes: refer 5.25.
 
 - c. User clicks [Cancel] or the X icon: close the modal without saving.
 
@@ -759,7 +760,7 @@ b. Total Pcs/Day = Pcs/Case x Max Case/Day.
   2. Check Max Case/Day against the mapped total of the ongoing period again on the server; if it is below, display message no. 14. Stop.
   3. Update TB_M_PART_CANDIDATE, CHANGED_BY and CHANGED_DT. Insert a staging row in TB_H_PART_CANDIDATE_STG_SYNC per changed Pcs/Case or Max Case/Day of an Active part, and for Active <-> Inactive the EXPORT rows of 5.24 (refer Data Edit Mapping).
   4. Insert the change history in TB_H_PART_CANDIDATE (refer 5.6).
-  5. Close the modal, move the part to the top of the list and display message no. 9.
+  5. Close the modal, move the part to the top of the list and display message no. 9. Table changes: refer 5.25.
 
 ### 5.6 History Setting
 
@@ -887,7 +888,7 @@ c. A part without destination shows message no. 19.
   2. Save the draft per destination in TB_M_PART_CANDIDATE_DEST: update the Case/Day of a kept one, insert a new one, delete a removed one (refer Data Edit Mapping).
   3. Insert a staging row in TB_H_PART_CANDIDATE_STG_SYNC per added, changed or removed destination (EXPORT ADD / EDIT / DELETE, refer 5.24); a Save without change writes no row. The total Case/Day may not exceed Max Case/Day (message no. 20).
   4. Insert a history record per added, changed or removed destination in TB_H_PART_CANDIDATE (event MAPPING, source SCREEN, DEST_CODE, FIELD_NAME CASE_DAY, old / new Case/Day).
-  5. Leave edit mode and show the saved mapping.
+  5. Leave edit mode and show the saved mapping. Table changes: refer 5.25.
 
 - d. User clicks [Cancel] or closes the panel: discard the draft.
 
@@ -976,6 +977,28 @@ The sync status is not kept on TB_M_PART_CANDIDATE: every value change is a row 
 - Sync Status on the screen is worked out from the staging per part + period: AP POLE Non Sync while the part + period has a row with APPOLE_SYNC_STATUS 0, else Sync (Last Sent AP POLE = latest APPOLE_SYNC_DT); GTOPAS Non Sync while it has a row with GTOPAS_SYNC_STATUS 0, else Sync (Last Sent GTOPAS = latest GTOPAS_SYNC_DT). A past period can show Non Sync for rows not sent before the rollover (view only).
 - Buttons: [Sync (n)] and [Re-send last Sync]. Columns of the Export Crossdock Master and its Export Excel: Sync Status AP POLE, Sync Status GTOPAS, Last Sent AP POLE, Last Sent GTOPAS. The RPA does not download the Export Excel any more.
 - Decisions and simulation: deliverables/function_list_v2/erd/proposal_staging_sync (Summary_Staging_Sync_Decisions.md, simulation/Full_Sync_Flow_Simulation.xlsx).
+
+### 5.25 Table changes per Save
+
+Every save on the screen writes in one transaction. Add = insert a row, Edit = update a row, Delete = delete a row. A save without a changed value adds no history and no staging row. Columns: refer Data Map.
+
+| Save (screen) | Table | Add / Edit / Delete | What is written |
+|---|---|---|---|
+| Add Part [Save] | TB_M_PART_CANDIDATE | Add | 1 row for the new part, PART_STATUS = Candidate, CREATED / CHANGED = login user and server time. |
+|  | TB_H_PART_CANDIDATE | Add | EVENT_TYPE ADD, SOURCE SCREEN, OLD_VALUE NULL (history of the new part). |
+|  | TB_H_PART_CANDIDATE_STG_SYNC | - | No row: a Candidate part is not sent. |
+| Edit part data [Save] | TB_M_PART_CANDIDATE | Edit | The part row: Status, Min MAD, Pcs/Case, Max Case/Day, Total Pcs/Day, Effective Start Date (Candidate only), CHANGED_BY / CHANGED_DT. |
+|  | TB_H_PART_CANDIDATE | Add | 1 row per changed field, EVENT_TYPE EDIT, SOURCE SCREEN, old and new value. |
+|  | TB_H_PART_CANDIDATE_STG_SYNC | Add | Active part: 1 KANBAN EDIT row per changed Pcs/Case or Max Case/Day. Candidate -> Active: KANBAN ADD rows. Active -> Inactive: 1 EXPORT DELETE row (NEW_VALUE 0) per destination. Min MAD, Effective Start Date and Candidate <-> Inactive: no row. |
+| Edit mapping [Save] | TB_M_PART_CANDIDATE_DEST | Add | 1 row per new destination + order type of the part and period. |
+|  | TB_M_PART_CANDIDATE_DEST | Edit | CASE_DAY of a kept destination whose Case/Day changed, CHANGED_BY / CHANGED_DT. |
+|  | TB_M_PART_CANDIDATE_DEST | Delete | The row of a removed destination. |
+|  | TB_H_PART_CANDIDATE | Add | 1 row per added, changed or removed destination, EVENT_TYPE MAPPING, FIELD_NAME CASE_DAY. |
+|  | TB_H_PART_CANDIDATE_STG_SYNC | Add | 1 EXPORT row per added (ADD), changed (EDIT) or removed (DELETE, NEW_VALUE 0) destination. |
+| [Sync] | TB_H_PART_CANDIDATE_STG_SYNC | Edit | The rows taken by the run: sync status, SEND_SEQ, sync date and run ID of AP POLE / GTOPAS (refer 5.24). No row is added. |
+|  | System Master | Edit | LAST_SYNC_DATE_APPOLE = time of the click. |
+| [Re-send last Sync] | TB_H_PART_CANDIDATE_STG_SYNC | - | The rows of the last run ID are sent again (refer 5.16 c). No row is added. |
+| Upload Excel [Validate file] | Same tables as the Save above | Add / Edit | Written by the upload batch, SOURCE UPLOAD: XD02 for Kanban Crossdock Master, XD03 for Export Crossdock Master (refer UISS-Batch). |
 
 ## 7. Display messages
 

@@ -57,6 +57,26 @@ if '<drawing ' not in fx:
     fx = fx[:m.start()] + f'<drawing r:id="{rid}"/>' + fx[m.start():]
 files[flow] = fx.encode()
 
+# Print areas / titles of the replaced text sheets follow the generated workbook (the text gets longer than the hand file's area).
+def names(wbx):
+    return [html.unescape(n) for n in re.findall(r'<sheet [^>]*?name="([^"]+)"', wbx)]
+
+
+gwb, hwb = gfiles['xl/workbook.xml'].decode(), files['xl/workbook.xml'].decode()
+gnames, hnames = names(gwb), names(hwb)
+for m in re.finditer(r'<definedName name="(_xlnm\.Print_(?:Area|Titles))" localSheetId="(\d+)"[^>]*>([^<]*)</definedName>', gwb):
+    kind, sname, val = m.group(1), gnames[int(m.group(2))], m.group(3)
+    if sname == 'Screen Layout' or sname not in hnames:
+        continue
+    hid = hnames.index(sname)
+    pat = re.compile(rf'(<definedName name="{re.escape(kind)}" localSheetId="{hid}"[^>]*>)[^<]*(</definedName>)')
+    if pat.search(hwb):
+        hwb = pat.sub(lambda h: h.group(1) + val + h.group(2), hwb)
+    else:
+        el = f'<definedName name="{kind}" localSheetId="{hid}">{val}</definedName>'
+        hwb = hwb.replace('</definedNames>', el + '</definedNames>') if '</definedNames>' in hwb else hwb.replace('</sheets>', f'</sheets><definedNames>{el}</definedNames>')
+files['xl/workbook.xml'] = hwb.encode()
+
 sheet = sheet_part(files, 'Screen Layout')
 x = files[sheet].decode()
 for k, cap in enumerate(captions):
