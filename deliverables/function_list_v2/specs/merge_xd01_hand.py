@@ -27,10 +27,37 @@ subprocess.run([sys.executable, 'deliverables/uiss_specs/add_sheets_xlsx.py', HA
 z = zipfile.ZipFile(merged)
 files = {i.filename: z.read(i.filename) for i in z.infolist()}
 order = z.infolist()
-wb, rels = files['xl/workbook.xml'].decode(), files['xl/_rels/workbook.xml.rels'].decode()
-rid = re.search(r'<sheet [^>]*name="Screen Layout"[^>]*r:id="([^"]+)"', wb).group(1)
-rel = next(r for r in re.findall(r'<Relationship [^>]*>', rels) if f'Id="{rid}"' in r)
-sheet = 'xl/' + re.search(r'Target="([^"]+)"', rel).group(1).lstrip('/').replace('xl/', '', 1)
+
+
+def sheet_part(zfiles, name):
+    wb, rels = zfiles['xl/workbook.xml'].decode(), zfiles['xl/_rels/workbook.xml.rels'].decode()
+    rid = re.search(rf'<sheet [^>]*name="{name}"[^>]*r:id="([^"]+)"', wb).group(1)
+    rel = next(r for r in re.findall(r'<Relationship [^>]*>', rels) if f'Id="{rid}"' in r)
+    return 'xl/' + re.search(r'Target="([^"]+)"', rel).group(1).lstrip('/').replace('xl/', '', 1)
+
+
+def drawing_of(zfiles, sheet):
+    rp = sheet.replace('worksheets/', 'worksheets/_rels/') + '.rels'
+    rel = next(r for r in re.findall(r'<Relationship [^>]*>', zfiles[rp].decode()) if '/drawing"' in r)
+    return re.search(r'Id="([^"]+)"', rel).group(1), 'xl/drawings/' + re.search(r'Target="[^"]*/([^/"]+)"', rel).group(1)
+
+
+# Screen Flow: the diagram is shapes in a drawing, which the openpyxl copy of the text sheets loses.
+# Put the generated diagram into the hand file's Screen Flow drawing and link it again from the sheet.
+zg = zipfile.ZipFile(GEN)
+gfiles = {n: zg.read(n) for n in zg.namelist()}
+flow = sheet_part(files, 'Screen Flow')
+rid, hand_drawing = drawing_of(files, flow)
+files[hand_drawing] = gfiles[drawing_of(gfiles, sheet_part(gfiles, 'Screen Flow'))[1]]
+fx = files[flow].decode()
+if '<drawing ' not in fx:
+    if 'xmlns:r=' not in fx[:fx.index('>', fx.index('<worksheet'))]:
+        fx = fx.replace('<worksheet ', '<worksheet xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" ', 1)
+    m = re.search(r'<(legacyDrawing|legacyDrawingHF|picture|oleObjects|controls|webPublishItems|tableParts|extLst)\b|</worksheet>', fx)
+    fx = fx[:m.start()] + f'<drawing r:id="{rid}"/>' + fx[m.start():]
+files[flow] = fx.encode()
+
+sheet = sheet_part(files, 'Screen Layout')
 x = files[sheet].decode()
 for k, cap in enumerate(captions):
     ref = f'D{8 + 40 * k}'
