@@ -15,6 +15,7 @@
 | 0.3 | FID Rayhan | 18-Nov-26 |  | Sheet "Active to Inactive" removed (18-Nov): Inactive parts with No Sync / Failed are taken by [Sync] by their status. |
 | 0.4 | FID Rayhan | 19-Nov-26 |  | Runs on day D and makes the Next period (Kanban and Export Crossdock Master); process 3 Period Rollover on day 1 (19-Nov). |
 | 0.5 | FID Rayhan | 20-Nov-26 |  | Period Rollover writes GTOPAS_SYNC_DT, SYNC_RUN_ID, history SYNC and the run Log (TB_R_CROSSDOCK_IF_RESULT removed, 20-Nov). |
+| 0.6 | FID Rayhan | 22-Nov-26 |  | Staging rows in TB_H_PART_CANDIDATE_STG_SYNC for the new period and Period Rollover by GTOPAS_SYNC_STATUS 0 + PERIOD (22-Nov). |
 
 ## 1. General
 
@@ -180,7 +181,7 @@ flowchart TB
   - Round down with a minimum of 1; adjust so the total equals Max Case/Day.
 16. Save the new period in TB_M_PART_CANDIDATE_DEST (see 4.7):
   - Delete the rows of the new period if they exist (manual re-run), then insert the calculated rows.
-  - A part whose mapping differs from the previous period: SYNC_STATUS = 0 (No Sync) and a history record per added / changed / removed destination (event MAPPING, source BATCH).
+  - Every row of the new period is written to TB_H_PART_CANDIDATE_STG_SYNC (EXPORT ADD per destination, GTOPAS 0; Inactive part: DELETE 0 per destination still > 0) and a history record per added / changed / removed destination (event MAPPING, source BATCH).
 17. Check whether any error occurred during steps 11 to 16.
 18. No error: commit, record SUCCESS in the Log (END_DT = last success date). The new period becomes the ongoing period; the previous period becomes past (read only). Exit.
 19. Error: roll back process 2, record FAILED of process 2 in the Log.
@@ -220,9 +221,6 @@ flowchart TB
 |  | TOTAL_PCS_DAY | Not changed |
 |  | EFFECTIVE_START_DATE | Not changed |
 | NEW_STATUS | PART_STATUS | Active / Inactive |
-|  | SYNC_STATUS | '0' (No Sync) when the status changes to or from Active (Candidate -> Active, Inactive -> Active, Active -> Inactive); else not changed (decided 30-Oct / 17-Nov) |
-|  | SYNC_DT | Not changed |
-|  | e-mail message | Not changed |
 |  | LAST_SOURCE | Set 'CALC' |
 |  | LAST_UPLOAD_ID | Not changed |
 |  | CREATED_BY | Not changed |
@@ -306,9 +304,6 @@ flowchart TB
 |  | TOTAL_PCS_DAY | Not changed |
 |  | EFFECTIVE_START_DATE | Not changed |
 |  | PART_STATUS | Not changed |
-|  | SYNC_STATUS | Set '0' (No Sync) |
-|  | SYNC_DT | Not changed |
-|  | e-mail message | Not changed |
 |  | LAST_SOURCE | Set 'CALC' |
 |  | LAST_UPLOAD_ID | Not changed |
 |  | CREATED_BY | Not changed |
@@ -349,6 +344,79 @@ flowchart TB
 |  | START_DT | Start date and time |
 |  | END_DT | End date and time; END_DT of the latest SUCCESS = last success date |
 
+#### 10. Insert TB_H_PART_CANDIDATE_STG_SYNC – Process 1: ADD PCS_CASE and ADD MAX_CASE_DAY for every part of the new period, Inactive included
+- Source: Result of process 1 (new period)
+
+| Source field | Destination field | Description |
+|---|---|---|
+| - | HIST_ID | Identity |
+| PART_NO | PART_NO | Part of the change |
+| PART_NAME | PART_NAME | From TB_M_PART_CANDIDATE |
+| PERIOD | PERIOD | Period of the changed row |
+| PART_STATUS | PART_STATUS | Status of the part in the period |
+| - | LEVEL_TYPE | 'KANBAN' |
+| - | DEST_CODE | NULL |
+| - | ORDER_TYPE | NULL |
+| - | FIELD_NAME | 'PCS_CASE' / 'MAX_CASE_DAY' (one row per changed field) |
+| - | ACTION | 'ADD' (new part / new period) / 'EDIT' |
+| Value before | OLD_VALUE | NULL on ADD |
+| Value after | NEW_VALUE | New value |
+| - | SOURCE | 'BATCH' |
+| - | UPLOAD_ID | Upload ID when SOURCE = UPLOAD, else NULL |
+| - | GTOPAS_SYNC_STATUS | NULL (not for GTOPAS) |
+| - | APPOLE_SYNC_STATUS | '0' (Non Sync) |
+| - | APPOLE_SYNC_DT | NULL |
+| - | SEND_SEQ | NULL |
+| - | APPOLE_SYNC_RUN_ID | NULL |
+| - | GTOPAS_SYNC_DT | NULL |
+| - | GTOPAS_SYNC_RUN_ID | NULL |
+| - | CREATED_BY | Login user (XD05: batch user ID) |
+| - | CREATED_DT | System date-time |
+| - | CHANGED_BY | NULL |
+| - | CHANGED_DT | NULL |
+
+#### 11. Insert TB_H_PART_CANDIDATE_STG_SYNC – Process 2: ADD per destination of an Active part; Inactive part: DELETE (OLD = previous value, NEW 0) per destination still > 0
+- Source: Result of process 2 (new period)
+
+| Source field | Destination field | Description |
+|---|---|---|
+| - | HIST_ID | Identity |
+| PART_NO | PART_NO | Part of the change |
+| PART_NAME | PART_NAME | From TB_M_PART_CANDIDATE |
+| PERIOD | PERIOD | Period of the changed row |
+| PART_STATUS | PART_STATUS | Status of the part in the period |
+| - | LEVEL_TYPE | 'EXPORT' |
+| DEST_CODE | DEST_CODE | Destination of the changed row |
+| ORDER_TYPE | ORDER_TYPE | Order Type of the row |
+| - | FIELD_NAME | 'CASE_DAY' |
+| - | ACTION | 'ADD' (new destination) / 'EDIT' (Case/Day) / 'DELETE' (removed, Inactive) |
+| Case/Day before | OLD_VALUE | NULL on ADD |
+| Case/Day after | NEW_VALUE | 0 on DELETE |
+| - | SOURCE | 'BATCH' |
+| - | UPLOAD_ID | Upload ID when SOURCE = UPLOAD, else NULL |
+| - | GTOPAS_SYNC_STATUS | '0' for ADD / DELETE, NULL for EDIT |
+| - | APPOLE_SYNC_STATUS | '0' (Non Sync) |
+| - | APPOLE_SYNC_DT | NULL |
+| - | SEND_SEQ | NULL |
+| - | APPOLE_SYNC_RUN_ID | NULL |
+| - | GTOPAS_SYNC_DT | NULL |
+| - | GTOPAS_SYNC_RUN_ID | NULL |
+| - | CREATED_BY | Login user (XD05: batch user ID) |
+| - | CREATED_DT | System date-time |
+| - | CHANGED_BY | NULL |
+| - | CHANGED_DT | NULL |
+
+#### 12. Update TB_H_PART_CANDIDATE_STG_SYNC – Process 3 Period Rollover (day 1 00:10), then XD06 starts
+- Source: TB_H_PART_CANDIDATE_STG_SYNC (keys: GTOPAS_SYNC_STATUS = '0', PERIOD = Period that becomes Current)
+
+| Source field | Destination field | Description |
+|---|---|---|
+| - | GTOPAS_SYNC_STATUS | '1' |
+| - | GTOPAS_SYNC_DT | Rollover time / run ID |
+| - | GTOPAS_SYNC_RUN_ID | Rollover time / run ID |
+| - | CHANGED_BY | Batch user ID / system date-time |
+| - | CHANGED_DT | Batch user ID / system date-time |
+
 ## 4. Function description
 
 One batch with two processes run in sequence: process 1 sets the part status from the average MAD (4.1 - 4.4); process 2 creates the destination mapping of the new period for the Active parts (4.5 - 4.8). Range of months and schedule are set in the system master (not explained in this document).
@@ -376,9 +444,9 @@ One batch with two processes run in sequence: process 1 sets the part status fro
 
 - One record per calculated part is inserted into TB_R_PART_DAD_RESULT (also when the status does not change).
 - Only parts whose status changes are updated in TB_M_PART_CANDIDATE (PART_STATUS, LAST_SOURCE = CALC, CHANGED_BY / CHANGED_DT) and get a history record (event CALC, source BATCH).
-- SYNC_STATUS: a part whose status changes to or from Active gets SYNC_STATUS = 0 (No Sync): Active -> Inactive is deleted by the next [Sync] in GTOPAS (XD06, RPA, all rows) and in AP POLE (XD07, RPA, WLM9Q890 [Delete]) (decided 30-Oct); Candidate -> Active and Inactive -> Active are added. Other status changes do not change SYNC_STATUS (17-Nov).
+- Staging (22-Nov): process 1 writes KANBAN ADD rows (PCS_CASE, MAX_CASE_DAY) for every part of the new period, Inactive included, so the part stays in the AP POLE Kanban; the PART_STATUS column of the staging rows is the new status.
 - All-or-nothing: any error rolls back the whole run.
-- Every status change is written to TB_H_PART_CANDIDATE (FIELD_NAME PART_STATUS, OLD_VALUE / NEW_VALUE, CREATED_DT = run date-time). An Inactive part with No Sync is taken by the next [Sync]: XD06 / XD07 delete it in GTOPAS / AP POLE.
+- Every status change is written to TB_H_PART_CANDIDATE (FIELD_NAME PART_STATUS, OLD_VALUE / NEW_VALUE, CREATED_DT = run date-time). An Inactive part gets EXPORT DELETE (0) rows for its destinations still > 0 in the previous period (process 2), so AP POLE gets Buyer-PD 0 and GTOPAS deletes the rows at the Period Rollover.
 
 ### 4.4 Process 1 - Retry and Manual Trigger
 
@@ -407,7 +475,7 @@ One batch with two processes run in sequence: process 1 sets the part status fro
 
 - The new period = run month. On a manual re-run in the same month, the rows of that period are replaced.
 - After a successful run the new period is the ongoing period; the previous period becomes past (read only).
-- Each part is compared with its mapping of the previous period. When destinations or Case/Day differ: SYNC_STATUS = 0 (No Sync), LAST_SOURCE = CALC, and a history record per added / changed / removed destination (event MAPPING, source BATCH). When equal: no update and no history.
+- Each part is compared with its mapping of the previous period for the history (TB_H_PART_CANDIDATE, event MAPPING, source BATCH, LAST_SOURCE = CALC). For the sync every destination of the new period is an EXPORT ADD row of TB_H_PART_CANDIDATE_STG_SYNC (GTOPAS 0).
 - An Active part without result MAD has no row in the new period; the D/S user assigns it on the screen or by upload.
 - All-or-nothing: any error rolls back the whole run; the previous period stays the ongoing period.
 
@@ -422,7 +490,7 @@ One batch with two processes run in sequence: process 1 sets the part status fro
 - Schedule: day D of every month (system master, before the end of the month). The new period = the month after the run month (e.g. run 27-Nov -> period 202612 = Next).
 - Process 1: TB_R_PART_DAD_RESULT for the Next period, and one Kanban Crossdock Master row per part for the Next period: PART_STATUS from the result, Pcs/Case and Max Case/Day copied from the Current period. The Current period is not changed.
 - Process 2: Export Crossdock Master rows of the Next period for the Active parts (Order Type '**'). The Next period is view only on the screen.
-- Process 3 (new, day 1, 00:10): Period Rollover: Next becomes Current, Current becomes Past. Parts whose part + destination combination differs from the previous period get GTOPAS No Sync, then XD06 starts automatically. AP POLE got the Next period already on day D (XD07).
+- Process 3 (new, day 1, 00:10): Period Rollover: Next becomes Current, Current becomes Past. The staging rows of the new Current period with GTOPAS_SYNC_STATUS 0 (no date condition) are sent: GTOPAS_SYNC_STATUS 1, GTOPAS_SYNC_DT, run ID; then XD06 starts automatically. AP POLE got the period earlier by [Sync] (Effective Month).
 - The manual [Run calculation] of the screen re-runs the Next period.
 
 | When | What |
@@ -433,9 +501,19 @@ One batch with two processes run in sequence: process 1 sets the part status fro
 
 ### 4.10 Period Rollover: send data (20-Nov)
 
-- For each part whose part + destination combination of the new Current period differs from the previous period: TB_M_PART_CANDIDATE (new Current row) SYNC_STATUS = 3 (Sent), GTOPAS_SYNC_DT = rollover time, SYNC_RUN_ID = run ID; TB_H_PART_CANDIDATE SYNC (SOURCE BATCH, REMARK GTOPAS + run ID); then XD06 starts.
-- Log (existing table, one record per send run, 20-Nov): BATCH_ID XD06_RPA_GTOPAS / XD07_RPA_APPOLE, RUN_ID, send time, sent by (user of [Sync] / [Re-send last Sync] or the Period Rollover), number of parts, period(s). [Re-send last Sync] repeats the targets of the last run.
-- History of process 1 / 2: PERIOD = Next period; MAPPING rows keep ORDER_TYPE.
+- GTOPAS WVJA5204 has no period: it always shows the Current month, so the Next period reaches GTOPAS only at the Period Rollover.
+- Rows taken: TB_H_PART_CANDIDATE_STG_SYNC with GTOPAS_SYNC_STATUS 0 and PERIOD = the new Current period (no date, so rows written on day D are not skipped by a [Sync] of the old Current period). Update: GTOPAS_SYNC_STATUS 1, GTOPAS_SYNC_DT = rollover time, GTOPAS_SYNC_RUN_ID, CHANGED_BY / CHANGED_DT; Log of the run; start XD06.
+- Rows of the old period still Non Sync are not sent any more (every selection has a PERIOD condition).
+
+### 4.11 Staging rows of XD05 (22-Nov)
+
+- Every value change inserts a row in TB_H_PART_CANDIDATE_STG_SYNC in the same transaction as the master update (a save without a value change writes no row): PART_NO, PART_NAME, PERIOD, PART_STATUS, LEVEL_TYPE, DEST_CODE / ORDER_TYPE (EXPORT), FIELD_NAME, ACTION, OLD_VALUE, NEW_VALUE, SOURCE, UPLOAD_ID, APPOLE_SYNC_STATUS 0, CREATED_BY / CREATED_DT.
+- KANBAN rows (Kanban Crossdock Master): EDIT of PCS_CASE / MAX_CASE_DAY per changed field; GTOPAS_SYNC_STATUS NULL.
+- EXPORT rows (Export Crossdock Master): ADD / EDIT / DELETE of CASE_DAY per destination + order type. ADD and DELETE (destination appears / disappears) get GTOPAS_SYNC_STATUS 0; EDIT gets NULL. DELETE: NEW_VALUE 0.
+- Process 1 / 2 on day D: KANBAN ADD (PCS_CASE, MAX_CASE_DAY) for every part of the new period; EXPORT ADD per destination of an Active part (GTOPAS 0); Inactive part: EXPORT DELETE (NEW 0) per destination still > 0 in the previous period (a destination already 0 gets no row). SOURCE BATCH, CREATED_BY batch user ID.
+- Process 3 Period Rollover: refer 4.10.
+- Key of a change = PART_NO + PERIOD + LEVEL_TYPE + DEST_CODE + ORDER_TYPE + FIELD_NAME.
+- Decisions and simulation: deliverables/function_list_v2/erd/proposal_staging_sync (Summary_Staging_Sync_Decisions.md, simulation/Full_Sync_Flow_Simulation.xlsx).
 
 ## 5. Logging messages
 
@@ -494,11 +572,7 @@ Kanban Crossdock Master: one record per part and calculation period (19-Nov; bef
 | MAX_CASE_DAY | INT |  | N | Total Case/Day of the part (> 0); limit of the mapping |
 | TOTAL_PCS_DAY | INT |  | N | PCS_CASE x MAX_CASE_DAY |
 | EFFECTIVE_START_DATE | DATE |  | Y | Effective start date; a part is calculated only from this date |
-| PART_STATUS | VARCHAR(TBD) |  | N | Candidate / Active / Inactive |
-| SYNC_STATUS | CHAR(1) |  | N | 0 = No Sync, 3 = Sent (20-Nov: 1 Success / 2 Failed not used, no response from the RPA) |
-| GTOPAS_SYNC_DT | DATETIME |  | Y | Date-time of the last send of the part (this period) to GTOPAS: [Sync], [Re-send last Sync] or the Period Rollover (XD05 process 3); shown as Last Sent GTOPAS |
-| APPOLE_SYNC_DT | DATETIME |  | Y | Date-time of the last send of the part (this period) to AP POLE: [Sync] or [Re-send last Sync]; shown as Last Sent AP POLE. XD07 takes the parts whose APPOLE_SYNC_DT = send time of its run |
-| SYNC_RUN_ID | VARCHAR(20) |  | Y | Run ID (YYYYMMDDHHMMSS) of the last send; [Re-send last Sync] sends the rows of the last run ID again |
+| PART_STATUS | VARCHAR(TBD) |  | N | Candidate / Active / Inactive. Candidate -> Active: XD05 (Next period). Active -> Inactive and Inactive -> Active: Procurement on the Kanban Crossdock Master. The sync status of the part is in TB_H_PART_CANDIDATE_STG_SYNC (22-Nov) |
 | LAST_SOURCE | VARCHAR(TBD) |  | N | CALC / SCREEN / UPLOAD |
 | LAST_UPLOAD_ID | VARCHAR(TBD) |  | Y | Upload that last changed the record |
 | CREATED_BY | VARCHAR(TBD) |  | N | User who created the record |
@@ -533,24 +607,55 @@ Actual demand summary replicated from DB Surrounding to NSP (same columns). Key 
 | EM_MS_FLAG | CHAR(1) |  | Y | EM / MS flag (not used by Crossdock) |
 
 #### TB_H_PART_CANDIDATE (history, proposed)
-History of every change of a crossdock part (Add / Edit by screen or upload, mapping changes, Sync results, status changes and mappings made by the calculation batches). Read by the History setting modal of Kanban Crossdock Master (index PART_NO, CREATED_DT). No retention limit: the history is kept (no housekeeping job, decided 30-Oct).
+History of every change of a crossdock part for the History setting of XD01 (Add / Edit by screen or upload, mapping changes, status changes and mappings made by the calculation batches). The sync to GTOPAS / AP POLE is not recorded here: it is in TB_H_PART_CANDIDATE_STG_SYNC (22-Nov). No retention limit.
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
 | HIST_ID | BIGINT | Y | N | Running number (identity) |
 | PART_NO | VARCHAR(TBD) |  | N | Part number; length follows TB_M_PART_MASTER |
 | PERIOD | CHAR(6) |  | N | Calculation period YYYYMM of the changed row (every event; Kanban and Export Crossdock Master are per period, 20-Nov) |
-| EVENT_TYPE | VARCHAR(10) |  | N | ADD / EDIT / MAPPING / SYNC / CALC |
-| SOURCE | VARCHAR(10) |  | N | SCREEN / UPLOAD / BATCH (SYNC: SCREEN for [Sync] / [Re-send last Sync], BATCH for the Period Rollover) |
+| EVENT_TYPE | VARCHAR(10) |  | N | ADD / EDIT / MAPPING / CALC |
+| SOURCE | VARCHAR(10) |  | N | SCREEN / UPLOAD / BATCH |
 | UPLOAD_ID | VARCHAR(TBD) |  | Y | Upload of the change (Log); NULL when not from an upload |
 | DEST_CODE | CHAR(7) |  | Y | Destination code (7 digits) for MAPPING; NULL for other events |
 | ORDER_TYPE | VARCHAR(2) |  | Y | Order Type of the destination row for MAPPING (with DEST_CODE); NULL for other events (20-Nov) |
-| FIELD_NAME | VARCHAR(30) |  | N | Changed field: PCS_CASE, MAX_CASE_DAY, MIN_MAD, PART_STATUS, EFFECTIVE_START_DATE, CASE_DAY, SYNC_STATUS |
+| FIELD_NAME | VARCHAR(30) |  | N | Changed field: PCS_CASE, MAX_CASE_DAY, MIN_MAD, PART_STATUS, EFFECTIVE_START_DATE, CASE_DAY |
 | OLD_VALUE | VARCHAR(255) |  | Y | Value before the change; NULL for ADD or an added destination |
 | NEW_VALUE | VARCHAR(255) |  | Y | Value after the change; NULL for a removed destination |
-| REMARK | VARCHAR(500) |  | Y | Free text; SYNC: target(s) + run ID, e.g. 'GTOPAS, APPOLE: 20261127100000' |
-| CREATED_BY | VARCHAR(20) |  | N | User who made the change (IF batch user ID for SYNC, batch user ID for BATCH) |
+| REMARK | VARCHAR(500) |  | Y | Free text |
+| CREATED_BY | VARCHAR(20) |  | N | User who made the change (batch user ID for BATCH) |
 | CREATED_DT | DATETIME |  | N | Date and time of the change |
+
+#### TB_H_PART_CANDIDATE_STG_SYNC (history, proposed)
+Staging of every value change of the Kanban / Export Crossdock Master for the sync to AP POLE (XD07) and GTOPAS (XD06) (22-Nov). Inserted by XD01 (screen), XD02 / XD03 (upload) and XD05 in the same transaction as the master update; updated only by [Sync], [Re-send last Sync] and the Period Rollover. The RPA reads only this table. TB_H_PART_CANDIDATE (screen history) is kept as it is.
+
+| Column | Type | PK | Null | Description |
+|---|---|---|---|---|
+| HIST_ID | BIGINT | Y | N | Running number (identity): order of the changes |
+| PART_NO | VARCHAR(TBD) |  | N | Part number (NSP format, with "-"); FK1 (PART_NO, PERIOD) -> TB_M_PART_CANDIDATE |
+| PART_NAME | VARCHAR(TBD) |  | N | Part Name copied from TB_M_PART_CANDIDATE at the insert (Part Name of the Kanban upload file) |
+| PERIOD | CHAR(6) |  | N | Calculation period YYYYMM; Effective Month / Year of the AP POLE upload |
+| PART_STATUS | VARCHAR(10) |  | N | Status of the part in this period when the row is written (Active / Inactive). Inactive: the part stays in the AP POLE Kanban, its Export rows are DELETE with NEW_VALUE 0 |
+| LEVEL_TYPE | VARCHAR(6) |  | N | KANBAN = parent (Kanban Crossdock Master), EXPORT = destination (Export Crossdock Master) |
+| DEST_CODE | CHAR(7) |  | Y | EXPORT only: destination code. No FK (a DELETE row points to a removed destination) |
+| ORDER_TYPE | VARCHAR(2) |  | Y | EXPORT only: '**', 'C', '9', 'V' |
+| FIELD_NAME | VARCHAR(30) |  | N | KANBAN: PCS_CASE, MAX_CASE_DAY. EXPORT: CASE_DAY |
+| ACTION | VARCHAR(6) |  | N | ADD / EDIT / DELETE |
+| OLD_VALUE | VARCHAR(10) |  | Y | Value before the change; NULL on ADD |
+| NEW_VALUE | VARCHAR(10) |  | Y | Value after the change; 0 on DELETE |
+| SOURCE | VARCHAR(6) |  | N | BATCH (XD05) / SCREEN / UPLOAD |
+| UPLOAD_ID | VARCHAR(TBD) |  | Y | Upload of the Kanban or Export Excel (Log); NULL when SOURCE is not UPLOAD |
+| APPOLE_SYNC_STATUS | CHAR(1) |  | N | 0 = Non Sync (default), 1 = Sync, 2 = Superseded (an earlier row of the same key, not sent). The part + period is AP POLE Non Sync while it has a row with 0 |
+| APPOLE_SYNC_DT | DATETIME |  | Y | Time of the [Sync] that sent the row to AP POLE (status 1 and 2); Last Sent AP POLE = latest value |
+| SEND_SEQ | NUMBER(1) |  | Y | Upload file: 1 = Export (LLM9Q880) before the Kanban file, only for a part whose Max goes down; 2 = Kanban (LLM9Q910); 3 = Export after the Kanban file (every other part). Set at [Sync] on the last row of each key; NULL for 2 and for a key that ends on its first value |
+| APPOLE_SYNC_RUN_ID | VARCHAR(14) |  | Y | AP POLE run ID YYYYMMDDHHMMSS; [Re-send last Sync] takes the rows of the last run |
+| GTOPAS_SYNC_STATUS | CHAR(1) |  | Y | NULL = not for GTOPAS (KANBAN rows, EXPORT EDIT). 0 = Non Sync: EXPORT ADD / DELETE (destination appears / disappears). 1 = Sync: [Sync] for the Current period, the Period Rollover for the new period |
+| GTOPAS_SYNC_DT | DATETIME |  | Y | Time of the [Sync] / Period Rollover that sent the row to GTOPAS; Last Sent GTOPAS = latest value |
+| GTOPAS_SYNC_RUN_ID | VARCHAR(14) |  | Y | GTOPAS run ID ([Sync], [Re-send last Sync] or the Period Rollover) |
+| CREATED_BY | VARCHAR(20) |  | N | User of the save / upload, or XD05BATCH |
+| CREATED_DT | DATETIME |  | N | Time of the insert (same transaction as the master update) |
+| CHANGED_BY | VARCHAR(20) |  | Y | User of [Sync] / [Re-send last Sync], XD05BATCH for the Period Rollover |
+| CHANGED_DT | DATETIME |  | Y | Time of that update |
 
 #### TB_M_PART_CANDIDATE_DEST (transaction, existing)
 Export Crossdock Master: one record per part, calculation period, destination and order type.
@@ -561,7 +666,7 @@ Export Crossdock Master: one record per part, calculation period, destination an
 | PERIOD | CHAR(6) | Y | N | Calculation period YYYYMM, e.g. 202610; displayed as 'Oct 2026' |
 | DEST_CODE | CHAR(7) | Y | N | Destination code (buyer code + PD code, 7 digits); exists in TB_M_H0125_DESTINATION |
 | ORDER_TYPE | VARCHAR(2) | Y | N | Order Type of the row (system master: '**', 'C', '9', 'V'; default '**'). One row per part, period, destination and order type (19-Nov) |
-| CASE_DAY | INT |  | N | Allocated Case/Day of the destination (> 0) |
+| CASE_DAY | INT |  | N | Allocated Case/Day of the destination (> 0). Every add / change / removal writes a row to TB_H_PART_CANDIDATE_STG_SYNC (LEVEL_TYPE EXPORT) in the same transaction (22-Nov) |
 | CREATED_BY | VARCHAR(TBD) |  | N | User who created the record |
 | CREATED_DT | DATETIME |  | N | Created date and time |
 | CHANGED_BY | VARCHAR(TBD) |  | N | User who last changed the record |
@@ -643,7 +748,7 @@ Destination Master (existing NSP table, read only). Only the listed columns are 
 
 | No | Scenario | Expected result |
 |---|---|---|
-| N1 | Part 52119BZV60 (section A) | Period 202610 created: 9722D10 = 8, 9811110 = 5, 9618201 = 2, 9715310 = 1. Mapping differs from 202609 -> Sync Status No Sync; history MAPPING/BATCH per destination. |
+| N1 | Part 52119BZV60 (section A) | Period 202610 created: 9722D10 = 8, 9811110 = 5, 9618201 = 2, 9715310 = 1. Staging EXPORT ADD per destination (AP POLE / GTOPAS Non Sync); history MAPPING/BATCH per changed destination. |
 | N2 | Active part without demand in the range | No destination row for 202610; the part is listed on Export Crossdock Master with Total Case/Day 0 (to be assigned by D/S). |
 | N3 | Candidate or Inactive part | Not calculated (Active parts only). |
 | N4 | Result equal to the mapping of the previous period | Rows inserted for the new period; Sync Status not changed; no history record. |

@@ -44,8 +44,8 @@
 | **Mapping - Export Operation** |  |  |  |  |  |
 | MSG26 | Click [Export Excel] button | Excel file cannot be created | Error | Export Excel failed. Please try again. | Click [Export Excel] again; contact administrator if it persists |
 | **Mapping - Sync Operation** |  |  |  |  |  |
-| MSG27 | Click [Sync] button | Parts handed to XD06 / XD07 | Info | Sync requested for {n} part(s). They stay Waiting until GTOPAS and AP POLE have received them. | - |
-| MSG28 | Hover a Failed Sync Status chip | GTOPAS or AP POLE could not receive the part | Info | Sync failed: {e-mail message}. The part is sent again with the next Sync. | Correct the cause if needed and click [Sync] |
+| MSG27 | Click [Sync] button | Parts handed to XD06 / XD07 | Info | Sync started for {n} part(s): AP POLE and GTOPAS. The result comes by e-mail. | - |
+| MSG28 | Hover a Sync Status chip | Part already sent | Info | Last sent {date-time} (run {run ID}). | - |
 | **Mapping - Calculation Operation** |  |  |  |  |  |
 | MSG29 | Click [Run calculation] button | Mapping calculation (XD05 process 2) completed | Info | Calculation completed - Mapping destination calculation completed. The destination mapping of the new period has been created. | Click [OK] |
 | MSG30 | Hover disabled [Run calculation] | Scheduled run has not failed 3 times | Info | Enabled only when the scheduled run has failed 3 times | - |
@@ -58,7 +58,7 @@
 | LOG2 | Click [Export Excel] button | Excel file generation error | Error | Export Excel of Kanban Crossdock Master failed: <error message>. | Display Message no. 13 | Y |
 | - | Click [Validate file] button | Upload processing | Info | Logging is handled by the Kanban Crossdock Master Upload batch (refer UISS-Batch "XD02 Cross Dock Part Master Upload Batch"). | - | N |
 | LOG3 | Click [Save] button | Database error on save of TB_M_PART_CANDIDATE_DEST | Error | Failed to save mapping of part <PART_NO>, period <PERIOD>: <DB error message>. | Show [Corresponding Screen Message] on screen (TBD) | Y |
-| LOG4 | XD06 / XD07 | GTOPAS or AP POLE rejects a part | Error | Logging is done by XD06 / XD07 (refer UISS-Batch XD06 / XD07); the chip shows the result. | Status Failed; Display Message no. 28 on the chip | N |
+| LOG4 | [Sync] / [Re-send last Sync] | XD06 / XD07 run | Error | Logging is done by XD06 / XD07 (refer UISS-Batch XD06 / XD07); the result comes by the notification e-mail. | Read the e-mail; FAILED: click [Re-send last Sync] | N |
 | LOG5 | Click [Export Excel] button | Excel file generation error | Error | Export Excel of Export Crossdock Master failed: <error message>. | Display Message no. 26 | Y |
 | - | Click [Validate file] button | Upload processing | Info | Logging is handled by the Export Crossdock Master Upload batch (refer UISS-Batch "XD03 Part and Destination Mapping Upload Batch"). | - | N |
 
@@ -135,12 +135,12 @@
 
 | ID | Event | Cause | Type | Message | Action |
 |---|---|---|---|---|---|
-| LOG1 | Batch start | [Sync] on XD01 | Info | RPA cross dock master to GTOPAS started. <n> Waiting part(s). | system: Write the log.; user: - |
-| LOG2 | Batch end | Bot finishes | Info | RPA cross dock master to GTOPAS ended. NSP rows <n>, GTOPAS rows <g>, registered <a>, skipped <k>, deleted <d>, status <STATUS>. | system: Write the log.; user: - |
-| LOG3 | Register / delete | Row registered or deleted on the screen | Info | <REGISTER / DELETE> <PART_NO> <DEST_CODE>: <GTOPAS message>. | system: Write the log.; user: - |
-| LOG4 | Error (try-catch) | Login, screen, timeout, GTOPAS error message, NSP download or Excel error | Error | RPA to GTOPAS stopped at <STEP> <PART_NO> <DEST_CODE>: <ERROR_DETAIL>. All Waiting parts Failed. | system: Stop the bot. SYNC_STATUS = 2 for every Waiting part.; user: Click [Sync] again; contact PIC if it persists. |
-| LOG5 | Unexpected error | Any other system error | Critical | Unexpected error: <ERROR_DETAIL>. | system: Stop. STATUS = ERROR. All Waiting parts Failed.; user: User contact PIC |
-| LOG6 | Notification email | End of the run (SUCCESS / FAILED) | Info | Notification email <SUCCESS / FAILED> of run <RUN_ID> sent to <recipients>. | system: Write the log.; user: Read the email; FAILED: click [Sync] again. |
+| LOG1 | Batch start | [Sync] / Period Rollover | Info | RPA cross dock master to GTOPAS started. Run <RUN_ID>, <n> part(s). | system: Write the log.; user: - |
+| LOG2 | Batch end | Bot finishes | Info | RPA cross dock master to GTOPAS ended. Run <RUN_ID>, added <a>, deleted <d>, kept <k>, status <STATUS>. | system: Write the log.; user: - |
+| LOG3 | Row changed | Add / Delete on WVJA5204 | Info | <ADD / DELETE> <P_NO> <DEST_CODE>. | system: Write the log.; user: - |
+| LOG4 | Error (try-catch) | Login, screen, timeout or GTOPAS error message | Error | RPA to GTOPAS stopped at <STEP> <P_NO> <DEST_CODE>: <ERROR_DETAIL>. | system: Stop the bot.; user: Click [Re-send last Sync]; contact PIC if it persists. |
+| LOG5 | Unexpected error | Any other system error | Critical | Unexpected error: <ERROR_DETAIL>. | system: Stop. STATUS = ERROR.; user: User contact PIC |
+| LOG6 | Notification email | End of the run (SUCCESS / FAILED) | Info | Notification email <SUCCESS / FAILED> of run <RUN_ID> sent to <recipients>. | system: Write the log.; user: Read the email; FAILED: click [Re-send last Sync]. |
 
 ## XD07 – IF Cross Dock Master to AP POLE
 
@@ -148,12 +148,12 @@
 
 | ID | Event | Cause | Type | Message | Action |
 |---|---|---|---|---|---|
-| LOG1 | Batch start | [Sync] on XD01 | Info | RPA cross dock master to AP POLE started. <n> Waiting part(s). | system: Write the log.; user: - |
-| LOG2 | Batch end | Bot finishes | Info | RPA cross dock master to AP POLE ended. Parts added <a>, edited <e>, deleted <d>; destinations added <da>, deleted <dd>, edited <de>; status <STATUS>. | system: Write the log.; user: - |
-| LOG3 | Change done | Part or destination changed on the screen | Info | <ADD / EDIT / DELETE> <PART_NO> <BUYER_PD>: <AP POLE message>. | system: Write the log.; user: - |
-| LOG4 | Error (try-catch) | Login, screen, timeout, AP POLE error message or source file error | Error | RPA to AP POLE stopped at <STEP> <PART_NO> <BUYER_PD>: <ERROR_DETAIL>. All Waiting parts Failed. | system: Stop the bot. SYNC_STATUS = 2 for every Waiting part.; user: Click [Sync] again; contact PIC if it persists. |
-| LOG5 | Unexpected error | Any other system error | Critical | Unexpected error: <ERROR_DETAIL>. | system: Stop. STATUS = ERROR. All Waiting parts Failed.; user: User contact PIC |
-| LOG6 | Notification email | End of the run (SUCCESS / FAILED) | Info | Notification email <SUCCESS / FAILED> of run <RUN_ID> sent to <recipients>. | system: Write the log.; user: Read the email; FAILED: click [Sync] again. |
+| LOG1 | Batch start | [Sync] / [Re-send last Sync] on XD01 | Info | RPA cross dock master to AP POLE started. Run <RUN_ID>, <n> file(s). | system: Write the log.; user: - |
+| LOG2 | Batch end | Bot finishes | Info | RPA cross dock master to AP POLE ended. Run <RUN_ID>, files uploaded <f>, rows <r>, status <STATUS>. | system: Write the log.; user: - |
+| LOG3 | File uploaded | AP POLE accepted the file | Info | <FILE_NAME> uploaded: <n> row(s). | system: Write the log.; user: - |
+| LOG4 | Error (try-catch) | Login, upload screen, AP POLE error of a row, timeout | Error | RPA to AP POLE stopped at <FILE_NAME> row <n>: <ERROR_DETAIL>. Files not uploaded: <list>. | system: Stop the bot.; user: Click [Re-send last Sync]; contact PIC if it persists. |
+| LOG5 | Unexpected error | Any other system error | Critical | Unexpected error: <ERROR_DETAIL>. | system: Stop. STATUS = ERROR.; user: User contact PIC |
+| LOG6 | Notification email | End of the run (SUCCESS / FAILED) | Info | Notification email <SUCCESS / FAILED> of run <RUN_ID> sent to <recipients>. | system: Write the log.; user: Read the email; FAILED: click [Re-send last Sync]. |
 
 ## XD08 – Order Control Information to NSP Batch
 

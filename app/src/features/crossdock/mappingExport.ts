@@ -1,6 +1,6 @@
 import writeExcelFile, { getSheetData, type Column } from 'write-excel-file/browser';
 import { CUR_PER, DCODE } from '../../data/seed';
-import { num, syncBadge } from '../../lib/format';
+import { num, targetBadge } from '../../lib/format';
 import type { Part } from '../../types';
 
 /** One exported line: a part repeated once per mapped destination (or once, blank, when it has none). */
@@ -53,7 +53,8 @@ const LIST_COLUMNS: (Column<MappingLine> & { width: number })[] = [
   { header: { value: 'Max Case/Day (quota)', ...HEADER, align: 'right' }, cell: ({ part }) => cell(num(part.mc), NUMBER_FORMAT), width: 20 },
   { header: { value: 'Dest Pcs/Day', ...HEADER, align: 'right' }, cell: ({ part, dest }) => cell(dest && num(part.pc) * num(dest.al), NUMBER_FORMAT), width: 14 },
   { header: { value: 'Pcs/Day', ...HEADER, align: 'right' }, cell: ({ part, allocated }) => cell(num(part.pc) * allocated, NUMBER_FORMAT), width: 12 },
-  { header: { value: 'Sync Status', ...HEADER }, cell: ({ part }) => cell(syncBadge(part.syncStatus).t), width: 13 },
+  { header: { value: 'Sync Status AP POLE', ...HEADER }, cell: ({ part }) => cell(targetBadge(part.apSync).t), width: 14 },
+  { header: { value: 'Sync Status GTOPAS', ...HEADER }, cell: ({ part }) => cell(targetBadge(part.gtSync).t), width: 14 },
   { header: { value: 'Last Sent GTOPAS', ...HEADER }, cell: ({ part }) => cell(part.lastSyncDt), width: 18 },
   { header: { value: 'Last Sent AP POLE', ...HEADER }, cell: ({ part }) => cell(part.apSyncDt), width: 18 },
   // audit log of the mapping row (TB_M_PART_CANDIDATE_DEST CREATED_* / CHANGED_*); blank for a part without destination

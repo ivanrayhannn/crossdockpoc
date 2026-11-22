@@ -15,7 +15,9 @@ ASN = 'ASN0101'  # example number (format of the existing numbering not detailed
 COLS = {
     'TB_M_H0125_DESTINATION': ['DESTINATION_CD', 'CUSTOMER_CD', 'DESTINATION_NAME_ENG', 'COUNTRY_NAME_ENG'],
     'TB_M_PART_MASTER': ['PART_NO', 'SUPPLIER_CD', 'SUPPLIER_PLANT_CD', 'DOCK_CD', 'VALID_FROM', 'PART_NAME'],
-    'TB_M_PART_CANDIDATE': ['PART_NO', 'PART_NAME', 'MIN_MAD', 'PCS_CASE', 'MAX_CASE_DAY', 'TOTAL_PCS_DAY', 'PART_STATUS', 'SYNC_STATUS', 'LAST_SOURCE'],
+    'TB_M_PART_CANDIDATE': ['PART_NO', 'PART_NAME', 'MIN_MAD', 'PCS_CASE', 'MAX_CASE_DAY', 'TOTAL_PCS_DAY', 'PART_STATUS', 'LAST_SOURCE'],
+    'TB_H_PART_CANDIDATE_STG_SYNC': ['HIST_ID', 'PART_NO', 'PERIOD', 'LEVEL_TYPE', 'DEST_CODE', 'FIELD_NAME', 'ACTION', 'OLD_VALUE', 'NEW_VALUE',
+                                     'APPOLE_SYNC_STATUS', 'SEND_SEQ', 'GTOPAS_SYNC_STATUS'],
     'TB_R_ACTUAL_DEMAND_SUMMARY': ['GROUPING_BUYER_CD', 'GROUPING_PD_CD', 'ORDER_TYPE_GROUP', 'DEMAND_MONTH_YEAR', 'PART_NO', 'MAD'],
     'TB_R_PART_DAD_RESULT': ['PERIOD', 'PART_NO', 'MONTH_FROM', 'MONTH_TO', 'NUM_OF_MONTH', 'TOTAL_MAD', 'AVG_MAD', 'MIN_MAD', 'OLD_STATUS', 'NEW_STATUS'],
     'TB_M_PART_CANDIDATE_DEST': ['PART_NO', 'PERIOD', 'DEST_CODE', 'CASE_DAY'],
@@ -40,7 +42,8 @@ COLS = {
 VALUE_FILL = {
     ('PART_STATUS', 'Active'): 'C6EFCE', ('PART_STATUS', 'Inactive'): 'D9D9D9', ('PART_STATUS', 'Candidate'): 'DDEBF7',
     ('NEW_STATUS', 'Active'): 'C6EFCE', ('NEW_STATUS', 'Inactive'): 'D9D9D9',
-    ('SYNC_STATUS', '0'): 'FCE4D6', ('SYNC_STATUS', '1'): 'C6EFCE', ('SYNC_STATUS', '2'): 'FF7C80',
+    ('APPOLE_SYNC_STATUS', '0'): 'FCE4D6', ('APPOLE_SYNC_STATUS', '1'): 'C6EFCE', ('APPOLE_SYNC_STATUS', '2'): 'D9D9D9',
+    ('GTOPAS_SYNC_STATUS', '0'): 'FCE4D6', ('GTOPAS_SYNC_STATUS', '1'): 'C6EFCE',
     ('CUT_FLAG', 'Y'): 'BDD7EE', ('CROSSDOCK_STATUS', '6'): 'C6EFCE', ('CROSSDOCK_STATUS', '7'): 'FF7C80',
     ('ORDER_STATUS', '2'): 'FF7C80', ('ORDER_STATUS', '6'): 'DDEBF7', ('HOLD_FLAG', 'Y'): 'FF7C80',
     ('UPD_STATUS', '2'): 'FF7C80', ('UPD_STATUS', '6'): 'C6EFCE',
@@ -91,10 +94,9 @@ SCENARIOS = [
     {
         'id': 'SIM-1', 'title': 'Master setup and monthly calculation', 'flow': 'BPF F1', 'functions': 'XD13, XD01 / XD02, XD04, XD05, XD01 [Sync], XD06 / XD07',
         'story': ['Destination master is synchronised weekly; Procurement registers PART-Y; the monthly run (Oct 2026) uses the actual demand of Jul – Sep.',
-                  'XD05: PART-X stays Active (avg MAD 315 ≥ 300), PART-Y becomes Active (130 ≥ 100), PART-Z becomes Inactive (35 < 50) and is set to No Sync.',
-                  'Mapping: PART-X Max Case/Day 10 split by MAD share KR 60 % / JP 30 % / TW 10 % = 6 / 3 / 1. D/S clicks [Sync]: PART-Y (new Active part) is '
-                  'registered in GTOPAS by RPA (destination TW added) and added in AP POLE (SFTP: part, Pcs/Case, Max Case/Day, destinations); '
-                  'PART-Z (became Inactive) is deleted in GTOPAS (RPA, all rows) and in AP POLE (SFTP, CROSSDOCK_FLAG N, one row).'],
+                  'XD05: PART-X stays Active (avg MAD 315 ≥ 300), PART-Y becomes Active (130 ≥ 100), PART-Z becomes Inactive (35 < 50): its destination gets an EXPORT DELETE (0) staging row.',
+                  'Mapping: PART-X Max Case/Day 10 split by MAD share KR 60 % / JP 30 % / TW 10 % = 6 / 3 / 1. D/S clicks [Sync]: NSP sets the staging rows to Sync '
+                  'with SEND_SEQ; XD07 uploads LLM9Q910 (Add part PART-Y) then LLM9Q880 (PART-Y TW 2, PART-Z VN 0); XD06 adds PART-Y TW and deletes PART-Z in GTOPAS.'],
         'steps': [
             ('1. XD13 weekly destination sync (delete – insert)', 'TB_M_H0125_DESTINATION', [
                 ('new', [VN, '97153', 'DUMMY DESTINATION VIETNAM', 'VIETNAM']), ('new', [TH, '9722D', 'DUMMY DESTINATION THAILAND', 'THAILAND']),
@@ -103,9 +105,9 @@ SCENARIOS = [
                 ('ref', ['PART-X', '5001', '1', 'S1', '2026-01-01', 'DUMMY PART X']), ('ref', ['PART-Y', '5001', '1', 'S1', '2026-01-01', 'DUMMY PART Y']),
                 ('ref', ['PART-Z', '5001', '1', 'S1', '2026-01-01', 'DUMMY PART Z'])]),
             ('', 'TB_M_PART_CANDIDATE', [
-                ('ref', ['PART-X', 'DUMMY PART X', 300, 6, 10, 60, 'Active', '1', 'CALC']),
-                ('new', ['PART-Y', 'DUMMY PART Y', 100, 6, 2, 12, 'Candidate', '0', 'SCREEN']),
-                ('ref', ['PART-Z', 'DUMMY PART Z', 50, 6, 4, 24, 'Active', '1', 'CALC'])]),
+                ('ref', ['PART-X', 'DUMMY PART X', 300, 6, 10, 60, 'Active', 'CALC']),
+                ('new', ['PART-Y', 'DUMMY PART Y', 100, 6, 2, 12, 'Candidate', 'SCREEN']),
+                ('ref', ['PART-Z', 'DUMMY PART Z', 50, 6, 4, 24, 'Active', 'CALC'])]),
             ('3. XD04 monthly actual demand (delta upsert)', 'TB_R_ACTUAL_DEMAND_SUMMARY', [
                 ('new', [b, p, 'N', m, part, q]) for part, b, p, qs in (('PART-X', '97153', '10', (180, 190, 200)), ('PART-X', '9722D', '10', (90, 95, 100)),
                                                                         ('PART-X', '98111', '10', (30, 30, 30)), ('PART-Y', '98111', '10', (120, 130, 140)),
@@ -116,21 +118,25 @@ SCENARIOS = [
                 ('new', ['202610', 'PART-Y', '202607', '202609', 3, 390, 130, 100, 'Candidate', 'Active']),
                 ('new', ['202610', 'PART-Z', '202607', '202609', 3, 105, 35, 50, 'Active', 'Inactive'])]),
             ('', 'TB_M_PART_CANDIDATE', [
-                ('ref', ['PART-X', 'DUMMY PART X', 300, 6, 10, 60, 'Active', '1', 'CALC']),
-                ('upd', ['PART-Y', 'DUMMY PART Y', 100, 6, 2, 12, 'Active', '0', 'CALC'], ['PART_STATUS', 'LAST_SOURCE'], 'Candidate → Active'),
-                ('upd', ['PART-Z', 'DUMMY PART Z', 50, 6, 4, 24, 'Inactive', '0', 'CALC'], ['PART_STATUS', 'SYNC_STATUS'], 'Active → Inactive, set No Sync')]),
+                ('ref', ['PART-X', 'DUMMY PART X', 300, 6, 10, 60, 'Active', 'CALC']),
+                ('upd', ['PART-Y', 'DUMMY PART Y', 100, 6, 2, 12, 'Active', 'CALC'], ['PART_STATUS', 'LAST_SOURCE'], 'Candidate → Active'),
+                ('upd', ['PART-Z', 'DUMMY PART Z', 50, 6, 4, 24, 'Inactive', 'CALC'], ['PART_STATUS'], 'Active → Inactive')]),
             ('5. XD05 process 2: mapping per destination, history', 'TB_M_PART_CANDIDATE_DEST', [
                 ('new', ['PART-X', '202610', VN, 6]), ('new', ['PART-X', '202610', TH, 3]), ('new', ['PART-X', '202610', PH, 1]), ('new', ['PART-Y', '202610', PH, 2])]),
             ('', 'TB_H_PART_CANDIDATE', [
                 ('new', [1002, 'PART-Y', '202610', 'CALC', 'BATCH', None, 'PART_STATUS', 'Candidate', 'Active', 'XD05']),
                 ('new', [1003, 'PART-Z', '202610', 'CALC', 'BATCH', None, 'PART_STATUS', 'Active', 'Inactive', 'XD05']),
                 ('new', [1004, 'PART-X', '202610', 'MAPPING', 'BATCH', VN, 'CASE_DAY', '5', '6', 'XD05'])]),
-            ('6. D/S [Sync] → XD06 (GTOPAS) / XD07 (AP POLE), RPA without response: NSP writes Sent', 'TB_H_PART_CANDIDATE', [
-                ('new', [1005, 'PART-Y', '202610', 'SYNC', 'SCREEN', None, 'SYNC_STATUS', 'No Sync', 'Sent', 'DS-USER']),
-                ('new', [1006, 'PART-Z', '202610', 'SYNC', 'SCREEN', None, 'SYNC_STATUS', 'No Sync', 'Sent', 'DS-USER'])]),
-            ('', 'TB_M_PART_CANDIDATE', [
-                ('upd', ['PART-Y', 'DUMMY PART Y', 100, 6, 2, 12, 'Active', '1', 'CALC'], ['SYNC_STATUS'], 'No Sync → Sent (GTOPAS_SYNC_DT / APPOLE_SYNC_DT = send time; result by e-mail)'),
-                ('upd', ['PART-Z', 'DUMMY PART Z', 50, 6, 4, 24, 'Inactive', '1', 'CALC'], ['SYNC_STATUS'], 'No Sync → Sent (deleted in GTOPAS / AP POLE; result by e-mail)')]),
+            ('', 'TB_H_PART_CANDIDATE_STG_SYNC', [
+                ('new', [2001, 'PART-Y', '202610', 'KANBAN', None, 'PCS_CASE', 'ADD', None, '6', '0', None, None]),
+                ('new', [2002, 'PART-Y', '202610', 'KANBAN', None, 'MAX_CASE_DAY', 'ADD', None, '2', '0', None, None]),
+                ('new', [2003, 'PART-Y', '202610', 'EXPORT', PH, 'CASE_DAY', 'ADD', None, '2', '0', None, '0']),
+                ('new', [2004, 'PART-Z', '202610', 'EXPORT', VN, 'CASE_DAY', 'DELETE', '4', '0', '0', None, '0'])]),
+            ('6. D/S [Sync] → XD07 (AP POLE) / XD06 (GTOPAS): NSP updates the staging, the RPA reads it (no response)', 'TB_H_PART_CANDIDATE_STG_SYNC', [
+                ('upd', [2001, 'PART-Y', '202610', 'KANBAN', None, 'PCS_CASE', 'ADD', None, '6', '1', 2, None], ['APPOLE_SYNC_STATUS', 'SEND_SEQ'], 'Kanban file (Add part)'),
+                ('upd', [2002, 'PART-Y', '202610', 'KANBAN', None, 'MAX_CASE_DAY', 'ADD', None, '2', '1', 2, None], ['APPOLE_SYNC_STATUS', 'SEND_SEQ'], 'Same Kanban row'),
+                ('upd', [2003, 'PART-Y', '202610', 'EXPORT', PH, 'CASE_DAY', 'ADD', None, '2', '1', 3, '1'], ['APPOLE_SYNC_STATUS', 'SEND_SEQ', 'GTOPAS_SYNC_STATUS'], 'Export file after Kanban; GTOPAS Add'),
+                ('upd', [2004, 'PART-Z', '202610', 'EXPORT', VN, 'CASE_DAY', 'DELETE', '4', '0', '1', 3, '1'], ['APPOLE_SYNC_STATUS', 'SEND_SEQ', 'GTOPAS_SYNC_STATUS'], 'Buyer-PD 0 in AP POLE; GTOPAS Delete')]),
         ]},
     {
         'id': 'SIM-2', 'title': 'Daily order to ASN (normal)', 'flow': 'BPF F2', 'functions': 'XD08, XD09, XD10 (Create ASN, Submit 5.7)',
@@ -435,7 +441,7 @@ SCENARIOS = [
         'functions': 'XD01 (Edit mapping, [Sync]), XD06 / XD07',
         'story': ['PART-X (Max Case/Day 10) is mapped KR 6 / JP 3 / TW 1 in Oct 2026. The D/S team changes it to KR 5 / JP 3 / ' + D4 + ' 2 and removes TW.',
                   'Saved per destination (FB-085): KR updated (CREATED_DT kept), JP not touched, TW deleted, ' + D4 + ' inserted; one history record per changed '
-                  'destination; the part becomes No Sync.',
+                  'destination and one staging row per changed destination (Non Sync).',
                   '[Sync]: the RPA bot registers ' + D4 + ' and deletes TW in GTOPAS (KR and JP ignored, no Case/Day in GTOPAS); AP POLE gets the complete '
                   'set (existing part: Pcs/Case, Max Case/Day and destinations updated).'],
         'steps': [
@@ -450,11 +456,13 @@ SCENARIOS = [
                 ('new', [1101, 'PART-X', '202610', 'MAPPING', 'SCREEN', VN, 'CASE_DAY', '6', '5', 'DS-USER']),
                 ('new', [1102, 'PART-X', '202610', 'MAPPING', 'SCREEN', PH, 'CASE_DAY', '1', None, 'DS-USER']),
                 ('new', [1103, 'PART-X', '202610', 'MAPPING', 'SCREEN', D4, 'CASE_DAY', None, '2', 'DS-USER'])]),
-            ('', 'TB_M_PART_CANDIDATE', [
-                ('upd', ['PART-X', 'DUMMY PART X', 300, 6, 10, 60, 'Active', '0', 'SCREEN'], ['SYNC_STATUS', 'LAST_SOURCE'], 'Success → No Sync')]),
-            ('', 'TB_M_PART_CANDIDATE', [
-                ('upd', ['PART-X', 'DUMMY PART X', 300, 6, 10, 60, 'Active', '1', 'SCREEN'], ['SYNC_STATUS'], '3. D/S [Sync] → XD06 / XD07 (RPA, no response): No Sync → Sent')]),
-            ('', 'TB_H_PART_CANDIDATE', [
-                ('new', [1104, 'PART-X', '202610', 'SYNC', 'SCREEN', None, 'SYNC_STATUS', 'No Sync', 'Sent', 'DS-USER'])]),
+            ('', 'TB_H_PART_CANDIDATE_STG_SYNC', [
+                ('new', [2101, 'PART-X', '202610', 'EXPORT', VN, 'CASE_DAY', 'EDIT', '6', '5', '0', None, None]),
+                ('new', [2102, 'PART-X', '202610', 'EXPORT', PH, 'CASE_DAY', 'DELETE', '1', '0', '0', None, '0']),
+                ('new', [2103, 'PART-X', '202610', 'EXPORT', D4, 'CASE_DAY', 'ADD', None, '2', '0', None, '0'])]),
+            ('3. D/S [Sync] (no Max change: every Export row after the Kanban file, SEND_SEQ 3)', 'TB_H_PART_CANDIDATE_STG_SYNC', [
+                ('upd', [2101, 'PART-X', '202610', 'EXPORT', VN, 'CASE_DAY', 'EDIT', '6', '5', '1', 3, None], ['APPOLE_SYNC_STATUS', 'SEND_SEQ'], 'AP POLE 5 (down first)'),
+                ('upd', [2102, 'PART-X', '202610', 'EXPORT', PH, 'CASE_DAY', 'DELETE', '1', '0', '1', 3, '1'], ['APPOLE_SYNC_STATUS', 'SEND_SEQ', 'GTOPAS_SYNC_STATUS'], 'AP POLE 0; GTOPAS Delete'),
+                ('upd', [2103, 'PART-X', '202610', 'EXPORT', D4, 'CASE_DAY', 'ADD', None, '2', '1', 3, '1'], ['APPOLE_SYNC_STATUS', 'SEND_SEQ', 'GTOPAS_SYNC_STATUS'], 'AP POLE Add; GTOPAS Add')]),
         ]},
 ]

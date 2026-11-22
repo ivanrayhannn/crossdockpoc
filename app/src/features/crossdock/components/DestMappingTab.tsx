@@ -1,9 +1,10 @@
 import { useMemo, useState, type ReactNode } from 'react';
-import { CUR_PER, PAST_ROWS, DOTS, MASTER_DESTS, ORDER_TYPES, PERIODS } from '../../../data/seed';
-import { fmt, num, syncBadge } from '../../../lib/format';
+import { CUR_PER, DOTS, MASTER_DESTS, ORDER_TYPES, PERIODS } from '../../../data/seed';
+import { fmt, num, targetBadge } from '../../../lib/format';
 import type { DestAllocation, Part } from '../../../types';
 import { exportMappingXlsx } from '../mappingExport';
 import { CalcRunBar } from './CalcRunBar';
+import { StagingRows } from './StagingRows';
 import type { CrossdockState } from '../useCrossdockState';
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100];
@@ -29,13 +30,13 @@ const td: React.CSSProperties = {
 };
 
 export function DestMappingTab({ state }: { state: CrossdockState }) {
-  const { parts, q, aq, setQ, runSearch, resetQ, ro, expand, editDest, draftDests, toggleExpand, startEditDest, cancelEditDest, patchDraft, saveDest, syncParts, lastRun, resendLast, openMappingUpload, mapRun, runCalc } = state;
+  const { parts, pastRows, stg, q, aq, setQ, runSearch, resetQ, ro, expand, editDest, draftDests, toggleExpand, startEditDest, cancelEditDest, patchDraft, saveDest, syncParts, lastRun, resendLast, openMappingUpload, mapRun, runCalc } = state;
   // Only the ongoing period can be changed, so the upload is disabled for past periods and "All periods".
   const uploadLocked = ro || aq.per !== CUR_PER;
 
   const destRowsSrc = useMemo(
     () =>
-      parts.concat(PAST_ROWS).filter(
+      parts.concat(pastRows).filter(
         (p) =>
           // The ongoing period only works with Active parts; past periods list every part.
           (p.st === 'Active' || p.per !== CUR_PER) &&
@@ -45,18 +46,12 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
             (aq.sync === 'notsync' && p.syncStatus === 0) ||
             (aq.sync === 'sent' && p.syncStatus !== 0)),
       ),
-    [parts, aq],
+    [parts, pastRows, aq],
   );
 
-  // Sync only ever targets rows that aren't already a confirmed success...
-  // ...and only in the ongoing period; past periods are read-only.
-  // [Sync] hands every Active part of the ongoing period that is No Sync (or Failed, to retry) to the RPA,
-  // whatever the filter shows; they wait as "Waiting" until the RPA writes back Success or Failed.
-  // Definition (17-Nov): every part with status Active (ongoing period) or Inactive whose Sync Status is No Sync or Failed.
-  // Inactive parts are deleted in GTOPAS / AP POLE; Candidate parts are never synced.
-  const syncable = parts.filter(
-    (p) => ((p.st === 'Active' && p.per === CUR_PER) || p.st === 'Inactive') && p.syncStatus === 0,
-  );
+  // [Sync] takes every staging row with AP POLE or GTOPAS status 0 of the ongoing period, whatever the filter shows (XD01 5.24).
+  // Past-period rows are never taken. Inactive parts are included (their EXPORT DELETE rows); Candidate parts have no row.
+  const syncable = parts.filter((p) => p.per === CUR_PER && p.syncStatus === 0);
   const syncableCount = syncable.length;
 
   const exportExcel = () => {
@@ -139,8 +134,8 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
             <label>Sync Status</label>
             <select className="input" value={q.sync} onChange={(e) => setQ((prev) => ({ ...prev, sync: e.target.value as typeof prev.sync }))} style={{ appearance: 'none' }}>
               <option value="all">All</option>
-              <option value="notsync">No Sync</option>
-              <option value="sent">Sent</option>
+              <option value="notsync">Non Sync</option>
+              <option value="sent">Sync</option>
             </select>
           </div>
           <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
@@ -166,7 +161,8 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
             <span style={{ width: 1, height: 22, background: 'var(--color-divider)' }} />
             <button
               className="btn btn-secondary"
-              onClick={() => syncParts(syncable.map((p) => p.p))}
+              onClick={syncParts}
+              title="Send the Non Sync staging rows of the ongoing period to AP POLE (XD07) and GTOPAS (XD06)"
               disabled={!syncableCount}
               style={{ fontSize: 12, padding: '4px 12px' }}
             >
@@ -179,11 +175,11 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
             <button
               className="btn btn-secondary"
               onClick={resendLast}
-              disabled={!lastRun.length}
-              title={lastRun.length ? `Send the ${lastRun.length} part(s) of the last [Sync] again (when the e-mail of the RPA says FAILED)` : 'No [Sync] yet in this session'}
+              disabled={!lastRun}
+              title={lastRun ? `Send run ${lastRun.run} (${lastRun.parts} part(s)) again with the same run ID (when the e-mail of the RPA says FAILED)` : 'No [Sync] yet in this session'}
               style={{ fontSize: 12, padding: '4px 12px' }}
             >
-              Re-send last Sync{lastRun.length ? ` (${lastRun.length})` : ''}
+              Re-send last Sync{lastRun ? ` (${lastRun.parts})` : ''}
             </button>
             <button
               className="btn btn-secondary"
@@ -218,7 +214,7 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
                   <th style={{ ...th, textAlign: 'right', width: 176 }} title="Case/Day mapped to destinations / Max Case/Day of the part in Kanban Crossdock Master">Total Case/Day (used / quota)</th>
                   <th style={{ ...th, textAlign: 'right', width: 110 }}>Pcs/Day</th>
                   <th style={{ ...th, textAlign: 'right', width: 110 }}>Percentage</th>
-                  <th style={{ ...th, width: 120 }}>Sync Status</th>
+                  <th style={{ ...th, width: 150 }} title="Per target, from TB_H_PART_CANDIDATE_STG_SYNC: Non Sync = a row of the part still waits for [Sync]">Sync Status</th>
                   <th style={{ ...th, width: 130 }} title="Last send of the part to GTOPAS (XD06): [Sync], [Re-send last Sync] or the Period Rollover. The result comes by e-mail.">Last Sent GTOPAS</th>
                   <th style={{ ...th, width: 130 }} title="Last send of the part to AP POLE (XD07): [Sync] or [Re-send last Sync]. The result comes by e-mail.">Last Sent AP POLE</th>
                 </tr>
@@ -275,6 +271,8 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
           </div>
         )}
       </div>
+
+      <StagingRows stg={stg} per={aq.per} part={aq.part} />
     </div>
   );
 }
@@ -295,7 +293,8 @@ interface DestRowProps {
 function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStartEdit, onCancelEdit, onSave, onPatchDraft }: DestRowProps) {
   const m = num(p.mc);
   const a = p.dests.reduce((x, d) => x + num(d.al), 0);
-  const sb = syncBadge(p.syncStatus);
+  const apB = targetBadge(p.apSync);
+  const gtB = targetBadge(p.gtSync);
   const edok = p.per === CUR_PER && !ro;
   const dList = isEditing && draftDests ? draftDests : p.dests;
   const dAlloc = dList.reduce((x, d) => x + num(d.al), 0);
@@ -350,7 +349,14 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
         <td style={{ ...td, textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--color-neutral-700)' }}>{fmt(num(p.pc) * a)}</td>
         <td style={{ ...td, textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: 600, color: 'var(--color-neutral-800)' }}>{share}</td>
         <td style={td}>
-          <span style={{ display: 'inline-flex', fontSize: 10, fontWeight: 700, padding: '2px 9px', borderRadius: 999, background: sb.bg, color: sb.fg, whiteSpace: 'nowrap' }}>{sb.t}</span>
+          <span style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '4px 0' }}>
+            {([['AP POLE', apB], ['GTOPAS', gtB]] as const).map(([k, b]) => (
+              <span key={k} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 10, whiteSpace: 'nowrap' }}>
+                <span style={{ width: 46, color: 'var(--color-neutral-700)' }}>{k}</span>
+                <span style={{ fontWeight: 700, padding: '1px 8px', borderRadius: 999, background: b.bg, color: b.fg }}>{b.t}</span>
+              </span>
+            ))}
+          </span>
         </td>
         <td style={{ ...td, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums', color: p.lastSyncDt ? undefined : 'var(--color-neutral-600)' }}>{p.lastSyncDt || 'Never'}</td>
         <td style={{ ...td, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums', color: p.apSyncDt ? undefined : 'var(--color-neutral-600)' }}>{p.apSyncDt || 'Never'}</td>
