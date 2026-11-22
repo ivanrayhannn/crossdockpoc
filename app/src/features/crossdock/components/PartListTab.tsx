@@ -85,7 +85,7 @@ export function PartListTab({ parts, q, aq, onSearch, setQ, resetQ, ro, onOpenPa
     const hasMad = p.minMad !== '' && p.minMad != null;
     return {
       p,
-      minMad: hasMad ? fmt(num(p.minMad)) : '—',
+      minMad: hasMad ? fmt(num(p.minMad)) : '-',
       minMadFg: 'var(--color-neutral-800)',
       minMadW: 400,
       stBg: STATUS_STYLE[p.st].bg,
@@ -211,7 +211,7 @@ export function PartListTab({ parts, q, aq, onSearch, setQ, resetQ, ro, onOpenPa
                   <rect x="4" y="10.5" width="16" height="11" rx="3" />
                   <path d="M8 10.5V7a4 4 0 0 1 8 0v3.5" />
                 </svg>
-                Read-only — you do not have permission to edit
+                Read only: you do not have permission to edit
               </span>
             )}
           </div>
@@ -309,7 +309,7 @@ export function PartListTab({ parts, q, aq, onSearch, setQ, resetQ, ro, onOpenPa
           {noResult && (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '48px 24px 52px' }}>
               <h3 style={{ fontSize: 18, margin: '0 0 5px' }}>No matching parts</h3>
-              <p style={{ fontSize: 12.5, maxWidth: 380, color: 'var(--color-neutral-700)', margin: '0 0 13px' }}>Loosen the search criteria or reset all filters.</p>
+              <p style={{ fontSize: 12.5, maxWidth: 380, color: 'var(--color-neutral-700)', margin: '0 0 13px' }}>Change the search criteria or reset the filters.</p>
               <button className="btn btn-secondary" onClick={resetQ} style={{ fontSize: 13 }}>
                 Reset filter
               </button>
@@ -326,7 +326,7 @@ export function PartListTab({ parts, q, aq, onSearch, setQ, resetQ, ro, onOpenPa
                   <polyline points="9 14 12 11 15 14" />
                 </svg>
               </span>
-              <h3 style={{ fontSize: 21, margin: '0 0 6px' }}>No crossdock parts registered yet</h3>
+              <h3 style={{ fontSize: 21, margin: '0 0 6px' }}>No crossdock part is registered yet</h3>
               <p style={{ fontSize: 13, maxWidth: 430, color: 'var(--color-neutral-700)', margin: '0 0 17px' }}>
                 Start from the Excel template, or register a single part and map its Max Case/Day to Japan, Taiwan and Korea.
               </p>

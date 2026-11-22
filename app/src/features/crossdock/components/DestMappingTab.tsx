@@ -185,7 +185,7 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
               className="btn btn-secondary"
               onClick={openMappingUpload}
               disabled={uploadLocked}
-              title={uploadLocked ? 'Past period — read only. Select the ongoing period to upload.' : 'Upload the destination mapping from Excel'}
+              title={uploadLocked ? 'Past period: read only. Select the ongoing period to upload.' : 'Upload the destination mapping from Excel'}
               style={{ fontSize: 12, padding: '4px 12px' }}
             >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
@@ -267,7 +267,7 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
         {destRowsSrc.length === 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '48px 24px 52px' }}>
             <h3 style={{ fontSize: 18, margin: '0 0 5px' }}>No parts match these filters</h3>
-            <p style={{ fontSize: 12.5, maxWidth: 400, color: 'var(--color-neutral-700)', margin: 0 }}>Change the period or sync status, or press Reset to show all parts.</p>
+            <p style={{ fontSize: 12.5, maxWidth: 400, color: 'var(--color-neutral-700)', margin: 0 }}>Change the period or sync status, or click Reset to show all parts.</p>
           </div>
         )}
       </div>
@@ -370,7 +370,7 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
             </span>
             <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 7 }}>
               <span style={{ display: roPerDisp, alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: 'var(--color-neutral-200)', color: 'var(--color-neutral-700)' }}>
-                Past period — read only
+                Past period: read only
               </span>
               <button className="btn btn-ghost" onClick={splitEven} style={{ display: splitDisp, color: 'var(--color-accent-700)', fontSize: 12, padding: '4px 10px' }}>
                 Split evenly
@@ -435,7 +435,7 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
                               <option value="">Select destination</option>
                               {MASTER_DESTS.map((m) => (
                                 <option key={m.name} value={m.name}>
-                                  {m.code} — {m.name}
+                                  {m.code} - {m.name}
                                 </option>
                               ))}
                             </select>
@@ -507,7 +507,7 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
                   </svg>
                   Add destination
                 </button>
-                <span style={{ fontSize: 12, color: 'var(--color-neutral-600)' }}>New row — pick a destination from the destination master in the Destination (CD) column.</span>
+                <span style={{ fontSize: 12, color: 'var(--color-neutral-600)' }}>New row: pick a destination from the destination master in the Destination (CD) column.</span>
               </div>
             )}
           </div>

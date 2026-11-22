@@ -42,5 +42,5 @@ export interface SyncBadge {
 export function targetBadge(s: 0 | 1 | null | undefined): SyncBadge {
   if (s === 0) return { t: 'Non Sync', bg: 'var(--color-neutral-200)', fg: 'var(--color-neutral-700)' };
   if (s === 1) return { t: 'Sync', bg: 'var(--color-accent-2-200)', fg: 'var(--color-accent-2-800)' };
-  return { t: '—', bg: 'transparent', fg: 'var(--color-neutral-500)' };
+  return { t: '-', bg: 'transparent', fg: 'var(--color-neutral-500)' };
 }

@@ -8,7 +8,7 @@ const UP_RULES: { label: string; cols: string }[] = [
   { label: 'Upload', cols: 'Upload (A/E) = A (Add) for a destination that is new for the part, E (Edit) for a destination that is already mapped (Dest Case/Day can be changed). Export Excel pre-fills E for the current destinations and A for the blank row of a part without mapping.' },
   { label: 'Save', cols: 'Per destination: a changed Case/Day is updated, a new destination is added, a destination not in the file is removed, the same Case/Day is not touched. Parts not in the file are not changed.' },
   { label: 'Limits', cols: 'Destination Code from the destination master; Order Type from the system master (**, C, 9, V); one row per destination + order type of a part. Dest Case/Day is a whole number greater than 0. The total Dest Case/Day of a part may not exceed its Max Case/Day (Total Case/Day (used) and Max Case/Day (quota) are shown for reference and are not read).' },
-  { label: 'Base', cols: 'Download Export Excel first with the ongoing period selected: its sheet "Upload" is the base file. A part without mapping has one row with Destination Code and Dest Case/Day blank and Upload (A/E) = A — fill both to map it, or leave both blank to skip it.' },
+  { label: 'Base', cols: 'Download Export Excel first with the ongoing period selected: its sheet "Upload" is the base file. A part without mapping has one row with Destination Code and Dest Case/Day blank and Upload (A/E) = A. Fill both to map it, or leave both blank to skip it.' },
 ];
 
 export function MappingUploadModal({ state }: { state: CrossdockState }) {
@@ -16,7 +16,7 @@ export function MappingUploadModal({ state }: { state: CrossdockState }) {
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(33,33,33,.55)', display: 'grid', placeItems: 'center', padding: 36 }}>
       <div style={{ width: 720, background: 'var(--color-neutral-100)', borderRadius: 10, boxShadow: 'var(--shadow-lg)', padding: '24px 28px 22px' }}>
-        <h3 style={{ fontSize: 22, margin: '0 0 3px' }}>Upload Excel — destination mapping</h3>
+        <h3 style={{ fontSize: 22, margin: '0 0 3px' }}>Upload Excel: destination mapping</h3>
         <p style={{ fontSize: 12.5, color: 'var(--color-neutral-700)', margin: '0 0 16px' }}>Splits the Max Case/Day of each Active part over destinations for the ongoing calculation period.</p>
         <div style={{ padding: '15px 16px', borderRadius: 16, background: 'var(--color-surface)', marginBottom: 13 }}>
           <div style={{ fontSize: 10, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--color-neutral-700)', marginBottom: 9 }}>Template columns</div>
