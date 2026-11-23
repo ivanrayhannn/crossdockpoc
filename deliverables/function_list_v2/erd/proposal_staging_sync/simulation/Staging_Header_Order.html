@@ -1,0 +1,636 @@
+<title>Staging Header Order</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&display=swap">
+<style>
+/* Light mode only (white, light blue, dark blue). Layout: one reading column; the three staging tables side by side in definition, then a step timeline driving the three table states. Yellow header = helper column (not in the upload template / GTOPAS screen). */
+:root {
+  --bg: #ffffff; --surface: #ffffff; --ink: #0f2540; --muted: #4f6580; --line: #c9dcef;
+  --accent: #123a6b; --accent-soft: #e6f0fb; --grid: #d6e4f2; --th: #dcebfa; --th-ink: #123a6b;
+  --help: #fff1c2; --help-ink: #6b4e00;
+  --pend: #9a6400; --pend-soft: #fff1d6; --ok: #2c7a3f; --ok-soft: #e1f2e5; --ng: #b23b2e; --ng-soft: #fbe3df;
+  --f-display: "IBM Plex Sans Condensed", "Arial Narrow", Arial, sans-serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", Arial, sans-serif;
+  --f-mono: "IBM Plex Mono", Consolas, "Courier New", monospace;
+  color-scheme: light;
+}
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--f-body); }
+.wrap { max-width: 1680px; margin: 0 auto; padding-block: 24px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 40px; }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; letter-spacing: .01em; }
+h1 { font-size: 2rem; line-height: 1.15; } h2 { font-size: 1.4rem; } h3 { font-size: 1.05rem; }
+p { margin: 0; max-width: 78ch; }
+.eyebrow { font: 600 .72rem/1 var(--f-body); text-transform: uppercase; letter-spacing: .09em; color: var(--accent); }
+.sub { color: var(--muted); }
+section { display: grid; gap: 14px; min-width: 0; }
+header { display: grid; gap: 10px; }
+code, .mono { font-family: var(--f-mono); font-size: .86em; }
+.three { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 16px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px; display: grid; gap: 10px; min-width: 0; align-content: start; }
+.card .head { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; justify-content: space-between; }
+.tbl { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: .82rem; font-variant-numeric: tabular-nums; }
+th, td { padding: 6px 9px; border-bottom: 1px solid var(--grid); border-right: 1px solid var(--grid); text-align: left; white-space: nowrap; vertical-align: top; }
+th:last-child, td:last-child { border-right: 0; }
+th { font: 600 .7rem/1.3 var(--f-body); text-transform: uppercase; letter-spacing: .05em; color: var(--th-ink); background: var(--th); border-bottom: 1px solid var(--line); }
+th.h { background: var(--help); color: var(--help-ink); }
+td { font-family: var(--f-mono); font-size: .8rem; }
+td.t { white-space: normal; font-family: var(--f-body); min-width: 200px; }
+td.n { text-align: right; }
+tr:last-child td { border-bottom: 0; }
+tr.r-new td { background: var(--pend-soft); }
+tr.r-sent td { background: var(--ok-soft); }
+tr.r-sup td { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--line); }
+tr.r-hide { display: none; }
+.pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font: 600 .72rem/1.5 var(--f-body); }
+.p-add { background: var(--accent-soft); color: var(--accent); } .p-edit { background: var(--pend-soft); color: var(--pend); }
+.p-del { background: var(--ng); color: var(--surface); } .p-ok { background: var(--ok-soft); color: var(--ok); }
+.p-none { background: var(--bg); color: var(--muted); border: 1px solid var(--line); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 500 .82rem/1.25 var(--f-body); padding: 8px 11px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; text-align: left; }
+.chip b { font-family: var(--f-mono); font-weight: 500; font-size: .76rem; color: var(--muted); display: block; }
+.chip:hover { border-color: var(--accent); }
+.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+.chip[aria-pressed="true"] b { color: var(--accent-soft); }
+.chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.story { border-left: 3px solid var(--accent); padding: 10px 14px; border-radius: 0 6px 6px 0; background: var(--accent-soft); display: grid; gap: 6px; }
+.note { font-size: .86rem; color: var(--muted); max-width: 84ch; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .8rem; color: var(--muted); }
+.legend span { display: inline-flex; gap: 6px; align-items: center; }
+.sw { width: 12px; height: 12px; border-radius: 3px; display: inline-block; border: 1px solid var(--line); }
+ol.q { margin: 0; padding-left: 1.3em; display: grid; gap: 8px; max-width: 90ch; }
+.files { display: grid; grid-template-columns: repeat(auto-fit, minmax(460px, 1fr)); gap: 12px; }
+@media (max-width: 520px) { .files { grid-template-columns: 1fr; } }
+.file { border: 1px dashed var(--accent); border-radius: 6px; padding: 10px; display: grid; gap: 6px; min-width: 0; }
+.file h4 { margin: 0; font: 600 .85rem/1.3 var(--f-body); color: var(--accent); }
+.cmp td.t { min-width: 260px; }
+@media (prefers-reduced-motion: no-preference) { .chip { transition: background .15s, border-color .15s; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Crossdock Master · sync to AP POLE (XD07) and GTOPAS (XD06) · proposal 22-Nov · variant: upload order from the header, rules at the save</span>
+    <h1>Staging per target, upload order read from the Kanban header</h1>
+    <p class="sub">Proposal to replace the one staging table <code>TB_H_PART_CANDIDATE_STG_SYNC</code> (one row per changed field, OLD / 4 value) with three tables,
+      one per target file or screen. Every row already has the columns of the AP POLE upload template (LLM9Q910 Kanban, LLM9Q880 Export) or of the GTOPAS screen WVJA5204,
+      so the RPA copies the rows as they are. In this variant every rule runs at the save, in one stored procedure that XD01 (screen), XD02, XD03 and XD05 call: it writes the row, marks the older unsent row of the key Superseded and sets OPERATION_TYPE on the Kanban row. [Sync] calculates nothing: it only sets the rows to Sync. A view gives the RPA the files EXPORT_PRE, KANBAN and EXPORT_POST and the row order. XD05 and every save on the screen or upload insert into these tables in the same transaction as the master update.</p>
+    <p class="sub">Example: dummy parts <b>DUMMY-001</b>, <b>DUMMY-002</b>, <b>DUMMY-003</b>; destinations JAPAN 9722D10, KOREA 9715310, TAIWAN 9811110, USA 9600110 and THAILAND 9655510 (dummy codes).
+      Current period 202611, XD05 day D = 27-Nov-2026 makes period 202612, Period Rollover 01-Dec-2026. Sent in 202611 (still active in AP POLE): DUMMY-001 Max 30, JAPAN 20, KOREA 10; DUMMY-002 Max 28, TAIWAN 28; DUMMY-003 Max 14, USA 8, THAILAND 6.</p>
+    <div class="legend">
+      <span><i class="sw" style="background:var(--th)"></i>column of the upload template / GTOPAS screen</span>
+      <span><i class="sw" style="background:var(--help)"></i>helper column (NSP only, not in the file)</span>
+      <span><i class="sw" style="background:var(--pend-soft)"></i>SYNC_STATUS 0 Non Sync</span>
+      <span><i class="sw" style="background:var(--ok-soft)"></i>1 Sync</span>
+      <span><i class="sw" style="background:var(--bg)"></i><s>2 Superseded</s></span>
+    </div>
+  </header>
+
+  <section>
+    <h2>The three tables</h2>
+    <p class="note">Template columns keep the order of the upload file. Helper columns hold the key back to NSP, the action and the sync status. Names of the tables are a proposal.</p>
+    <div class="three" id="defs"></div>
+  </section>
+
+  <section>
+    <h2>Who inserts what</h2>
+    <div class="tbl"><table>
+      <thead><tr><th>Event</th><th>AP POLE Kanban</th><th>AP POLE Export</th><th>GTOPAS</th></tr></thead>
+      <tbody id="who"></tbody>
+    </table></div>
+    <p class="note">One row in a table = one full row of the file. A change writes a new row with the values after the change; the earlier unsent row of the same key becomes 2 Superseded at that save.
+      Key: Kanban = PERIOD + PART_NO; Export = PERIOD + NSP_PART_NO + DEST_CODE + ORDER_TYPE; GTOPAS = PERIOD + P_NO + DESTINATION_CODE.</p>
+  </section>
+
+  <section>
+    <h2>What each process does</h2>
+    <div class="tbl"><table>
+      <thead><tr><th>Process</th><th>What it does</th><th>Rules</th></tr></thead>
+      <tbody id="proc"></tbody>
+    </table></div>
+    <p class="note">Upload files of a run: <code>&lt;template&gt;_&lt;RUN_ID&gt;_&lt;order&gt;_&lt;name&gt;.xls</code>, e.g. <code>LLM9Q880_20261204100000_1_EXPORT_PRE.xls</code>, <code>LLM9Q910_20261204100000_2_KANBAN.xls</code>, <code>LLM9Q880_20261204100000_3_EXPORT_POST.xls</code>. One file holds the Current and the Next period (Effective Month / Year). An empty file is not made.</p>
+  </section>
+
+  <section>
+    <h2>Stored procedure SP_STG_WRITE</h2>
+    <p class="note">One procedure writes every staging row, so the rules sit in one place. The caller passes one changed value per call, inside its own transaction, after the master table is updated.
+      [Sync] uses a second procedure, <code>SP_STG_SYNC</code>, that only sets 0 → 1. The SQL is a draft in T-SQL style for the review; types and the locking hints follow the database that NSP uses.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Caller</th><th>When</th><th>Calls with</th></tr></thead>
+      <tbody id="callers"></tbody>
+    </table></div>
+    <div class="three">
+      <div class="card"><div class="head"><h3>KANBAN branch</h3><span class="pill p-none">TB_H_STG_APPOLE_KANBAN</span></div>
+        <ol class="q"><li>Find the last sent Kanban row of the part: same period, else the latest earlier period.</li><li>Older unsent row of the part + period → 2 Superseded.</li><li>OPERATION_TYPE: never sent 4, Max lower 1, higher 2, equal 3.</li><li>Insert with the template values (P6, MM/YYYY, Max Allowance = Pcs/Case × Max). Same period and same values as sent → status 2 (nothing to send), else 0.</li></ol></div>
+      <div class="card"><div class="head"><h3>EXPORT branch</h3><span class="pill p-none">TB_H_STG_APPOLE_EXPORT</span></div>
+        <ol class="q"><li>Find the last sent value of the key (part + destination + order type): same period, else the latest earlier period.</li><li>Older unsent row of the key → 2 Superseded.</li><li>Insert with the template values (part number without "-", Buyer-PD 5-2, Transport Code 2). Same period and same value as sent → 2, else 0.</li><li>Then the GTOPAS part (right).</li></ol></div>
+      <div class="card"><div class="head"><h3>GTOPAS part</h3><span class="pill p-none">TB_H_STG_GTOPAS</span></div>
+        <ol class="q"><li>After the master update: does the part still map the destination in the period with any order type (Case/Day &gt; 0)? Yes → GTOPAS needs ADD, no → DELETE.</li><li>Compare with what GTOPAS gets: the unsent row of part + destination, else the last sent row (no row = not in GTOPAS).</li><li>Same → nothing. Different → the unsent row becomes 2 Superseded, and a new row (status 0) is written only when the need differs from the last sent row.</li><li>So adding two order types in one save, or ** → C, writes the right GTOPAS rows whatever the order of the calls.</li></ol></div>
+    </div>
+    <div class="tbl"><pre style="margin:0;padding:12px 14px;font:.78rem/1.5 var(--f-mono);white-space:pre;color:var(--ink)">-- Draft (T-SQL style). Called by XD01 (screen save), XD02 / XD03 (upload) and XD05 (day D) once per changed value,
+-- inside the caller's transaction, after TB_M_PART_CANDIDATE / TB_M_PART_CANDIDATE_DEST are updated.
+CREATE PROCEDURE SP_STG_WRITE
+  @LEVEL        VARCHAR(6),     -- 'KANBAN' or 'EXPORT' (GTOPAS rows are written by the EXPORT branch)
+  @ACTION       VARCHAR(6),     -- ADD / EDIT / DELETE
+  @PERIOD       CHAR(6),        -- YYYYMM
+  @PART_NO      VARCHAR(15),    -- NSP format, with '-'
+  @PART_STATUS  VARCHAR(10),    -- Active / Inactive
+  @PCS_CASE     INT = NULL,     -- KANBAN: Shipping Box Qty
+  @MAX_CASE_DAY INT = NULL,     -- KANBAN: Max Shipping Box Qty
+  @DEST_CODE    CHAR(7) = NULL, -- EXPORT
+  @ORDER_TYPE   VARCHAR(2) = NULL,
+  @CASE_DAY     INT = NULL,     -- EXPORT: Max Shipping Box (RCS); 0 on DELETE
+  @SOURCE       VARCHAR(6),     -- SCREEN / UPLOAD / BATCH
+  @UPLOAD_ID    VARCHAR(20) = NULL,
+  @USER_ID      VARCHAR(20)
+AS
+BEGIN
+  DECLARE @NOW DATETIME = GETDATE(), @EFF CHAR(7) = RIGHT(@PERIOD, 2) + '/' + LEFT(@PERIOD, 4);
+
+  IF @LEVEL = 'KANBAN'
+  BEGIN
+    DECLARE @SENT_MAX INT, @SENT_PCS INT, @SENT_PERIOD CHAR(6);
+    -- 1. last sent Kanban row: same period, else the latest earlier period (still active in AP POLE)
+    SELECT TOP 1 @SENT_MAX = MAX_SHIPPING_BOX_QTY, @SENT_PCS = SHIPPING_BOX_QTY, @SENT_PERIOD = PERIOD
+    FROM   TB_H_STG_APPOLE_KANBAN WITH (UPDLOCK)
+    WHERE  PART_NO = @PART_NO AND PERIOD &lt;= @PERIOD AND SYNC_STATUS = '1'
+    ORDER  BY PERIOD DESC, SYNC_DT DESC, STG_ID DESC;
+
+    -- 2. older unsent row of the part + period -&gt; 2 Superseded
+    UPDATE TB_H_STG_APPOLE_KANBAN
+    SET    SYNC_STATUS = '2', CHANGED_BY = @USER_ID, CHANGED_DT = @NOW
+    WHERE  PART_NO = @PART_NO AND PERIOD = @PERIOD AND SYNC_STATUS = '0';
+
+    -- 3. OPERATION_TYPE: 1 Max down, 2 Max up, 3 Max same, 4 never sent
+    DECLARE @OP TINYINT = CASE WHEN @SENT_MAX IS NULL THEN 4
+                               WHEN @MAX_CASE_DAY &lt; @SENT_MAX THEN 1
+                               WHEN @MAX_CASE_DAY &gt; @SENT_MAX THEN 2 ELSE 3 END;
+
+    -- 4. back to the values sent for this period -&gt; nothing to send (row kept as 2)
+    DECLARE @ST CHAR(1) = CASE WHEN @SENT_PERIOD = @PERIOD AND @MAX_CASE_DAY = @SENT_MAX
+                                    AND @PCS_CASE = @SENT_PCS THEN '2' ELSE '0' END;
+
+    INSERT INTO TB_H_STG_APPOLE_KANBAN
+      (PERIOD, ACTION, PART_STATUS, EFFECTIVE_MONTH_YEAR, OPERATOR_ID, PART_NO, PART_NAME,
+       SHIPPING_BOX_QTY, MAX_SHIPPING_BOX_QTY, MAX_ALLOWANCE_QTY, OPERATION_TYPE,
+       SYNC_STATUS, SOURCE, UPLOAD_ID, CREATED_BY, CREATED_DT)
+    SELECT @PERIOD, @ACTION, @PART_STATUS, @EFF, 'P6', @PART_NO, m.PART_NAME,
+           @PCS_CASE, @MAX_CASE_DAY, @PCS_CASE * @MAX_CASE_DAY, @OP,
+           @ST, @SOURCE, @UPLOAD_ID, @USER_ID, @NOW
+    FROM   TB_M_PART_CANDIDATE m WHERE m.PART_NO = @PART_NO AND m.PERIOD = @PERIOD;
+
+    -- 5. back to the sent values while Export rows wait: header 5 again: a part + period with an unsent Export row keeps one unsent Kanban row
+    EXEC SP_STG_HEADER @PERIOD, @PART_NO, @SOURCE, @UPLOAD_ID, @USER_ID, @NOW;
+  END
+
+  IF @LEVEL = 'EXPORT'
+  BEGIN
+    DECLARE @SENT_RCS INT, @SENT_RCS_PERIOD CHAR(6);
+    -- 1. last sent value of the key (same period, else the latest earlier period)
+    SELECT TOP 1 @SENT_RCS = MAX_SHIPPING_BOX_RCS, @SENT_RCS_PERIOD = PERIOD
+    FROM   TB_H_STG_APPOLE_EXPORT WITH (UPDLOCK)
+    WHERE  NSP_PART_NO = @PART_NO AND DEST_CODE = @DEST_CODE AND ORDER_TYPE = @ORDER_TYPE
+      AND  PERIOD &lt;= @PERIOD AND SYNC_STATUS = '1'
+    ORDER  BY PERIOD DESC, SYNC_DT DESC, STG_ID DESC;
+
+    -- 2. older unsent row of the key -&gt; 2 Superseded
+    UPDATE TB_H_STG_APPOLE_EXPORT
+    SET    SYNC_STATUS = '2', CHANGED_BY = @USER_ID, CHANGED_DT = @NOW
+    WHERE  PERIOD = @PERIOD AND NSP_PART_NO = @PART_NO AND DEST_CODE = @DEST_CODE
+      AND  ORDER_TYPE = @ORDER_TYPE AND SYNC_STATUS = '0';
+
+    -- 3. insert; back to the value sent for this period -&gt; 2
+    INSERT INTO TB_H_STG_APPOLE_EXPORT
+      (PERIOD, NSP_PART_NO, DEST_CODE, ACTION, EFFECTIVE_MONTH_YEAR, PART_NO, BUYER_PD,
+       ORDER_TYPE, TRANSPORT_CODE, MAX_SHIPPING_BOX_RCS, SYNC_STATUS, SOURCE, UPLOAD_ID, CREATED_BY, CREATED_DT)
+    VALUES
+      (@PERIOD, @PART_NO, @DEST_CODE, @ACTION, @EFF, REPLACE(@PART_NO, '-', ''),
+       LEFT(@DEST_CODE, 5) + '-' + RIGHT(@DEST_CODE, 2), @ORDER_TYPE, '2', @CASE_DAY,
+       CASE WHEN @SENT_RCS_PERIOD = @PERIOD AND @CASE_DAY = @SENT_RCS THEN '2' ELSE '0' END,
+       @SOURCE, @UPLOAD_ID, @USER_ID, @NOW);
+
+    -- 4. GTOPAS keeps part + destination (any order type): what the master needs against what GTOPAS gets
+    DECLARE @NEED VARCHAR(6) = CASE WHEN EXISTS (SELECT 1 FROM TB_M_PART_CANDIDATE_DEST
+                                 WHERE PART_NO = @PART_NO AND PERIOD = @PERIOD AND DEST_CODE = @DEST_CODE AND CASE_DAY &gt; 0)
+                               THEN 'ADD' ELSE 'DELETE' END;
+    DECLARE @G_SENT VARCHAR(6) = ISNULL((SELECT TOP 1 ACTION FROM TB_H_STG_GTOPAS WITH (UPDLOCK)
+                                   WHERE P_NO = @PART_NO AND DESTINATION_CODE = @DEST_CODE AND PERIOD &lt;= @PERIOD AND SYNC_STATUS = '1'
+                                   ORDER BY PERIOD DESC, SYNC_DT DESC, STG_ID DESC), 'DELETE');
+    DECLARE @G_PEND VARCHAR(6) = (SELECT ACTION FROM TB_H_STG_GTOPAS
+                                   WHERE P_NO = @PART_NO AND DESTINATION_CODE = @DEST_CODE AND PERIOD = @PERIOD AND SYNC_STATUS = '0');
+    IF @NEED &lt;&gt; ISNULL(@G_PEND, @G_SENT)
+    BEGIN
+      UPDATE TB_H_STG_GTOPAS SET SYNC_STATUS = '2', CHANGED_BY = @USER_ID, CHANGED_DT = @NOW   -- unsent opposite row
+      WHERE  PERIOD = @PERIOD AND P_NO = @PART_NO AND DESTINATION_CODE = @DEST_CODE AND SYNC_STATUS = '0';
+      IF @NEED &lt;&gt; @G_SENT                                                                     -- else GTOPAS already has it
+        INSERT INTO TB_H_STG_GTOPAS
+          (PERIOD, ACTION, DEPOT_CODE, P_NO, DESTINATION_CODE, MAKER_CODE, DOMESTIC_OVERSEAS,
+           TOPAS_ORDER_TYPE, ORDER_TRANSPORTATION_CODE, SYNC_STATUS, SOURCE, UPLOAD_ID, CREATED_BY, CREATED_DT)
+        VALUES
+          (@PERIOD, @NEED, '01', @PART_NO, @DEST_CODE, 'A', '2', '3', '2', '0', @SOURCE, @UPLOAD_ID, @USER_ID, @NOW);
+    END
+
+    -- 5. header rule: a part + period with an unsent Export row keeps one unsent Kanban row
+    EXEC SP_STG_HEADER @PERIOD, @PART_NO, @SOURCE, @UPLOAD_ID, @USER_ID, @NOW;
+  END
+END;
+
+-- Header of the part (called by SP_STG_WRITE): OPERATION_TYPE 5 = Kanban unchanged, only the destinations changed
+CREATE PROCEDURE SP_STG_HEADER
+  @PERIOD CHAR(6), @PART_NO VARCHAR(15), @SOURCE VARCHAR(6), @UPLOAD_ID VARCHAR(20), @USER_ID VARCHAR(20), @NOW DATETIME
+AS
+BEGIN
+  DECLARE @PEND_E INT = (SELECT COUNT(*) FROM TB_H_STG_APPOLE_EXPORT
+                         WHERE NSP_PART_NO = @PART_NO AND PERIOD = @PERIOD AND SYNC_STATUS = '0');
+  DECLARE @PEND_K TINYINT = (SELECT OPERATION_TYPE FROM TB_H_STG_APPOLE_KANBAN
+                             WHERE PART_NO = @PART_NO AND PERIOD = @PERIOD AND SYNC_STATUS = '0');
+  IF @PEND_E &gt; 0 AND @PEND_K IS NULL                       -- Export waits, no header yet: write 5 with the current values
+    INSERT INTO TB_H_STG_APPOLE_KANBAN
+      (PERIOD, ACTION, PART_STATUS, EFFECTIVE_MONTH_YEAR, OPERATOR_ID, PART_NO, PART_NAME,
+       SHIPPING_BOX_QTY, MAX_SHIPPING_BOX_QTY, MAX_ALLOWANCE_QTY, OPERATION_TYPE,
+       SYNC_STATUS, SOURCE, UPLOAD_ID, CREATED_BY, CREATED_DT)
+    SELECT @PERIOD, 'KEEP', m.PART_STATUS, RIGHT(@PERIOD, 2) + '/' + LEFT(@PERIOD, 4), 'P6', @PART_NO, m.PART_NAME,
+           m.PCS_CASE, m.MAX_CASE_DAY, m.PCS_CASE * m.MAX_CASE_DAY, 5,
+           '0', @SOURCE, @UPLOAD_ID, @USER_ID, @NOW
+    FROM   TB_M_PART_CANDIDATE m WHERE m.PART_NO = @PART_NO AND m.PERIOD = @PERIOD;
+  ELSE IF @PEND_E = 0 AND @PEND_K = 5                       -- every Export change went back to the sent value
+    UPDATE TB_H_STG_APPOLE_KANBAN SET SYNC_STATUS = '2', CHANGED_BY = @USER_ID, CHANGED_DT = @NOW
+    WHERE  PART_NO = @PART_NO AND PERIOD = @PERIOD AND SYNC_STATUS = '0';
+END;
+
+-- [Sync] (XD01): no rule, only 0 -&gt; 1. One transaction; a save waits for the lock.
+CREATE PROCEDURE SP_STG_SYNC @RUN_ID VARCHAR(14), @CUR CHAR(6), @NEXT CHAR(6), @USER_ID VARCHAR(20)
+AS
+BEGIN
+  DECLARE @NOW DATETIME = GETDATE();
+  UPDATE TB_H_STG_APPOLE_KANBAN WITH (TABLOCKX)
+     SET SYNC_STATUS = '1', SYNC_DT = @NOW, SYNC_RUN_ID = @RUN_ID, CHANGED_BY = @USER_ID, CHANGED_DT = @NOW
+   WHERE SYNC_STATUS = '0' AND PERIOD IN (@CUR, @NEXT);
+  UPDATE TB_H_STG_APPOLE_EXPORT WITH (TABLOCKX)
+     SET SYNC_STATUS = '1', SYNC_DT = @NOW, SYNC_RUN_ID = @RUN_ID, CHANGED_BY = @USER_ID, CHANGED_DT = @NOW
+   WHERE SYNC_STATUS = '0' AND PERIOD IN (@CUR, @NEXT);
+  UPDATE TB_H_STG_GTOPAS WITH (TABLOCKX)              -- GTOPAS: Current only; Next waits for the Period Rollover
+     SET SYNC_STATUS = '1', SYNC_DT = @NOW, SYNC_RUN_ID = @RUN_ID, CHANGED_BY = @USER_ID, CHANGED_DT = @NOW
+   WHERE SYNC_STATUS = '0' AND PERIOD = @CUR;
+  UPDATE TB_M_SYSTEM_MASTER SET VALUE = CONVERT(VARCHAR(19), @NOW, 120)
+   WHERE PARAM = 'LAST_SYNC_DATE_APPOLE';
+END;
+</pre></div>
+  </section>
+
+  <section>
+    <h2>Business rules</h2>
+    <ol class="q" id="br"></ol>
+  </section>
+
+  <section>
+    <h2>Combination rules</h2>
+    <p class="note">AP POLE checks every uploaded row: total Max Shipping Box (RCS) of the part ≤ its Max Shipping Box Qty. AP POLE is valid before the run and NSP keeps the end state valid (messages 14 and 20), so only the order of the upload matters.
+      Header = the part's Kanban row in the run (Max against the last sent Kanban row), child = its Export rows. Header states 1 / 2 / 3 / 5 with 4 child states give 15 (5 without child does not exist: the header is written by an Export change); 4 (a part never sent) has no child to lower, so 2 more: 17. A Kanban ADD of a new period is compared with the previous period and falls in rows 1 to 12.</p>
+    <div class="three">
+      <div class="card"><div class="head"><h3>Rule 1 · OPERATION_TYPE</h3><span class="pill p-none">Kanban row (header)</span></div>
+        <p class="note">Set at the save. <b>1</b> (Max down): EXPORT_PRE, then KANBAN, so the total comes down before the Max. <b>2</b> (Max up), <b>3</b> (Max same), <b>4</b> (new part): KANBAN, then EXPORT_POST, so the Max goes up before the total. <b>5</b> (Kanban unchanged): EXPORT_POST only, the header is not in the KANBAN file. Every part of a run has its header.</p></div>
+      <div class="card"><div class="head"><h3>Rule 2 · ROW_ORDER (view, not stored)</h3><span class="pill p-none">V_APPOLE_UPLOAD_EXPORT</span></div>
+        <p class="note">The view compares every Export row with the last value sent for the key: <b>1</b> = decrease or DELETE (0), <b>2</b> = increase or ADD. Inside every file 1 comes before 2 per part: the total first goes down, then up to the end value, and never passes the Max.</p></div>
+    </div>
+    <div class="tbl"><table>
+      <thead><tr><th>#</th><th>Header (Kanban)</th><th>Child (Export)</th><th>OPERATION_TYPE (header)</th><th>Upload order</th><th>Example (total against Max)</th></tr></thead>
+      <tbody id="combo"></tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>View for the RPA</h2>
+    <p class="note">The Export table keeps only the template, key, action and sync columns. NSP owns two views; the RPA selects the rows of the run by file and order. The comparison base is the last row with SYNC_STATUS 1 of the same key, so [Re-send last Sync] gets the same files again.</p>
+    <div class="tbl"><pre style="margin:0;padding:12px 14px;font:.8rem/1.5 var(--f-mono);white-space:pre;color:var(--ink)">-- KANBAN (order 2): Kanban rows of a run
+CREATE VIEW V_APPOLE_UPLOAD_KANBAN AS
+SELECT k.SYNC_RUN_ID AS RUN_ID, 2 AS FILE_NO, k.PERIOD, k.OPERATION_TYPE,
+       k.EFFECTIVE_MONTH_YEAR, k.OPERATOR_ID, k.PART_NO, k.PART_NAME,
+       k.SHIPPING_BOX_QTY, k.MAX_SHIPPING_BOX_QTY, k.MAX_ALLOWANCE_QTY
+FROM   TB_H_STG_APPOLE_KANBAN k
+WHERE  k.SYNC_STATUS = '1'
+  AND  k.OPERATION_TYPE &lt;&gt; 5;                              -- 5 = header only, Kanban unchanged
+
+-- EXPORT_PRE (1) and EXPORT_POST (3): Export rows of a run, file from the header, row order from the last sent value
+CREATE VIEW V_APPOLE_UPLOAD_EXPORT AS
+WITH e AS (
+  SELECT x.*,
+         LAG(x.MAX_SHIPPING_BOX_RCS) OVER (
+           PARTITION BY x.NSP_PART_NO, x.DEST_CODE, x.ORDER_TYPE
+           ORDER BY x.PERIOD, x.SYNC_DT, x.STG_ID) AS PREV_RCS
+           -- value sent before this run: same period, or the latest earlier period
+           -- (AP POLE keeps a row active until a newer Effective Month / Year)
+  FROM   TB_H_STG_APPOLE_EXPORT x
+  WHERE  x.SYNC_STATUS = '1'                               -- 2 Superseded rows are never sent
+)
+SELECT e.SYNC_RUN_ID AS RUN_ID,
+       CASE WHEN k.OPERATION_TYPE = 1 THEN 1 ELSE 3 END AS FILE_NO,   -- 2, 3, 4, 5: after the Kanban file
+       CASE WHEN k.OPERATION_TYPE = 1 THEN 'EXPORT_PRE' ELSE 'EXPORT_POST' END AS FILE_NAME,
+       CASE WHEN e.PREV_RCS IS NOT NULL AND e.MAX_SHIPPING_BOX_RCS &lt; e.PREV_RCS THEN 1 ELSE 2 END AS ROW_ORDER,
+       e.PERIOD, e.NSP_PART_NO, e.STG_ID,
+       e.EFFECTIVE_MONTH_YEAR, e.PART_NO, e.BUYER_PD, e.ORDER_TYPE, e.TRANSPORT_CODE, e.MAX_SHIPPING_BOX_RCS
+FROM   e
+JOIN   TB_H_STG_APPOLE_KANBAN k                              -- every part of the run has its header (1 to 5)
+       ON  k.SYNC_RUN_ID = e.SYNC_RUN_ID AND k.PERIOD = e.PERIOD
+       AND k.PART_NO = e.NSP_PART_NO   AND k.SYNC_STATUS = '1';
+
+-- RPA, per run: EXPORT_PRE, KANBAN, EXPORT_POST
+SELECT * FROM V_APPOLE_UPLOAD_EXPORT WHERE RUN_ID = :run AND FILE_NO = 1 ORDER BY PERIOD, NSP_PART_NO, ROW_ORDER, STG_ID;
+SELECT * FROM V_APPOLE_UPLOAD_KANBAN WHERE RUN_ID = :run ORDER BY PERIOD, PART_NO;
+SELECT * FROM V_APPOLE_UPLOAD_EXPORT WHERE RUN_ID = :run AND FILE_NO = 3 ORDER BY PERIOD, NSP_PART_NO, ROW_ORDER, STG_ID;</pre></div>
+    <p class="note">Index for the LAG: (NSP_PART_NO, DEST_CODE, ORDER_TYPE, PERIOD, SYNC_DT). The views are read only at [Sync] and [Re-send last Sync].</p>
+  </section>
+
+  <section>
+    <h2>Points to watch</h2>
+    <ol class="q" id="watch"></ol>
+  </section>
+
+  <section>
+    <h2>Simulation</h2>
+    <p class="note">Pick a step. The three tables show their rows at that moment; the panel under the steps tells what happened and, at a [Sync], what goes into each upload file.</p>
+    <div class="chips" id="steps" role="group" aria-label="Simulation step"></div>
+    <div class="story" id="story"></div>
+    <div id="files"></div>
+    <div class="card"><div class="head"><h3>TB_H_STG_APPOLE_KANBAN</h3><span class="pill p-none">LLM9Q910</span></div><div class="tbl" id="tk"></div></div>
+    <div class="card"><div class="head"><h3>TB_H_STG_APPOLE_EXPORT</h3><span class="pill p-none">LLM9Q880</span></div><div class="tbl" id="te"></div></div>
+    <div class="card"><div class="head"><h3>TB_H_STG_GTOPAS</h3><span class="pill p-none">WVJA5204</span></div><div class="tbl" id="tg"></div></div>
+  </section>
+
+  <section>
+    <h2>Compared with the one staging table</h2>
+    <div class="tbl cmp"><table>
+      <thead><tr><th>Point</th><th>One table (now, 22-Nov)</th><th>Three tables (this proposal)</th></tr></thead>
+      <tbody id="cmp"></tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>To decide</h2>
+    <ol class="q" id="todo"></ol>
+  </section>
+</div>
+
+<script>
+const H = 'h';
+const DEFS = [
+  { name: 'TB_H_STG_APPOLE_KANBAN', file: 'AP POLE Kanban (LLM9Q910)', cols: [
+    ['STG_ID', 'BIGINT', 'Running number (identity), order of the inserts', H],
+    ['PERIOD', 'CHAR(6)', 'YYYYMM; FK (PART_NO, PERIOD) → TB_M_PART_CANDIDATE', H],
+    ['ACTION', 'VARCHAR(6)', 'ADD (new part / new period) / EDIT / KEEP (header written by an Export save, Kanban unchanged, OPERATION_TYPE 5)', H],
+    ['PART_STATUS', 'VARCHAR(10)', 'Active / Inactive (an Inactive part stays in the Kanban)', H],
+    ['EFFECTIVE_MONTH_YEAR', 'CHAR(7)', 'MM/YYYY of PERIOD'],
+    ['OPERATOR_ID', 'CHAR(2)', "'P6'"],
+    ['PART_NO', 'VARCHAR(15)', 'With "-" (NSP format)'],
+    ['PART_NAME', 'VARCHAR(40)', 'From TB_M_PART_CANDIDATE'],
+    ['SHIPPING_BOX_QTY', 'NUMBER', 'Pcs/Case'],
+    ['MAX_SHIPPING_BOX_QTY', 'NUMBER', 'Max Case/Day'],
+    ['MAX_ALLOWANCE_QTY', 'NUMBER', 'Shipping Box Qty x Max Shipping Box Qty'],
+    ['SYNC_STATUS / DT / RUN_ID', '', '0 = to send, 1 = sent ([Sync] sets SYNC_DT and RUN_ID), 2 = Superseded at the save (a newer row of the key, or back to the sent value). Every Kanban row of a run goes to KANBAN', H],
+    ['OPERATION_TYPE', 'NUMBER(1)', '1 = Max down, 2 = Max up, 3 = Max same (only Pcs/Case changed, or a new period with the same Max), 4 = new (the part was never sent), 5 = Kanban unchanged, only the destinations changed (header row, not uploaded). 1 to 4: Max of this row against the last sent Kanban row of the part in the same period, or in the latest earlier period (AP POLE keeps it active until a newer Effective Month / Year). Set at the save by the stored procedure. 1 → the Export rows of the part go to EXPORT_PRE (before KANBAN), the others to EXPORT_POST', H],
+    ['SOURCE, UPLOAD_ID, CREATED / CHANGED', '', 'BATCH / SCREEN / UPLOAD, audit', H] ] },
+  { name: 'TB_H_STG_APPOLE_EXPORT', file: 'AP POLE Export (LLM9Q880)', cols: [
+    ['STG_ID', 'BIGINT', 'Running number (identity)', H],
+    ['PERIOD', 'CHAR(6)', 'YYYYMM', H],
+    ['NSP_PART_NO', 'VARCHAR(15)', 'With "-"; FK (NSP_PART_NO, PERIOD) → TB_M_PART_CANDIDATE', H],
+    ['DEST_CODE', 'CHAR(7)', '7-digit destination code (no FK: a DELETE row points to a removed destination)', H],
+    ['ACTION', 'VARCHAR(6)', 'ADD / EDIT / DELETE', H],
+    ['EFFECTIVE_MONTH_YEAR', 'CHAR(7)', 'MM/YYYY of PERIOD'],
+    ['PART_NO', 'VARCHAR(15)', 'Without "-"'],
+    ['BUYER_PD', 'CHAR(8)', 'DEST_CODE in 5-2 format'],
+    ['ORDER_TYPE', 'VARCHAR(2)', "'**', 'C', '9', 'V'"],
+    ['TRANSPORT_CODE', 'CHAR(1)', "'2'"],
+    ['MAX_SHIPPING_BOX_RCS', 'NUMBER', 'Case/Day of the destination; 0 = delete'],
+    ['SYNC_STATUS / DT / RUN_ID', '', '0 = to send, 1 = sent, 2 = Superseded at the save', H],
+    ['SOURCE, UPLOAD_ID, CREATED / CHANGED', '', 'BATCH / SCREEN / UPLOAD, audit', H] ] },
+  { name: 'TB_H_STG_GTOPAS', file: 'GTOPAS Crossdock Master (WVJA5204)', cols: [
+    ['STG_ID', 'BIGINT', 'Running number (identity)', H],
+    ['PERIOD', 'CHAR(6)', 'YYYYMM (GTOPAS has no period: [Sync] takes the Current period, the Rollover the new one)', H],
+    ['ACTION', 'VARCHAR(6)', 'ADD / DELETE (a destination appears / disappears; no row for a Case/Day change). The RPA adds the row on WVJA5204 for ADD and deletes it (MT = DEL on the screen) for DELETE', H],
+    ['DEPOT_CODE', 'CHAR(2)', "'01'"],
+    ['P_NO', 'VARCHAR(15)', 'With "-"'],
+    ['DESTINATION_CODE', 'CHAR(7)', '7-digit code, same as NSP'],
+    ['MAKER_CODE', 'CHAR(1)', "'A'"],
+    ['DOMESTIC_OVERSEAS', 'CHAR(1)', "'2'"],
+    ['TOPAS_ORDER_TYPE', 'CHAR(1)', "'3'"],
+    ['ORDER_TRANSPORTATION_CODE', 'CHAR(1)', "'2'"],
+    ['SYNC_STATUS / DT / RUN_ID', '', '0 / 1, time and run of [Sync] or the Period Rollover', H],
+    ['SOURCE, UPLOAD_ID, CREATED / CHANGED', '', 'BATCH / SCREEN / UPLOAD, audit', H] ] },
+];
+
+const WHO = [
+  ['XD05 day D: new period, Active part', 'ADD (Pcs/Case, Max); OPERATION_TYPE against the Max of the previous period', 'ADD per destination; DELETE (0) for a destination of the previous period that is not mapped any more', 'ADD per destination'],
+  ['XD05 day D: new period, Inactive part', 'ADD (the part stays in AP POLE)', 'DELETE (0) per destination still > 0 last period', 'DELETE per destination still in GTOPAS'],
+  ['Add Part (screen / XD02 A row)', '-  (Candidate is not sent)', '-', '-'],
+  ['Edit part: Pcs/Case or Max of an Active part', 'EDIT (full row with the new values)', '-', '-'],
+  ['Edit part: Candidate → Active', 'ADD', '- (D/S maps the destinations)', '-'],
+  ['Edit part: Active → Inactive (Procurement)', 'KEEP header (5), not uploaded: no column of the Kanban file changes; the part stays in AP POLE', 'DELETE (0) per destination', 'DELETE per destination'],
+  ['Edit part: Inactive → Active', 'EDIT when Pcs/Case or Max changes, else KEEP header (5) with the new mapping', 'ADD when Procurement maps again', 'ADD when mapped again'],
+  ['Edit mapping / XD03: new destination', 'KEEP header (5) when the part has no unsent Kanban row', 'ADD', 'ADD (first order type of that destination)'],
+  ['Edit mapping / XD03: Case/Day changed', 'KEEP header (5) when the part has no unsent Kanban row', 'EDIT', '-'],
+  ['Edit mapping / XD03: destination removed', 'KEEP header (5) when the part has no unsent Kanban row', 'DELETE (0)', 'DELETE (last order type of that destination)'],
+  ['Min MAD, Effective Start Date, save without change', '-', '-', '-'],
+];
+
+const COMBO = [
+  ['1', 'Max down', 'none', '1', 'KANBAN', 'Max 30 → 24, mapped total 24. Valid: NSP blocks a Max below the mapped total (message 14).'],
+  ['2', 'Max down', 'down only', '1', 'EXPORT_PRE → KANBAN', 'JAPAN 20 → 12 (total 30 → 22), then Max 22. Reversed: Max 22 with total 30 is rejected.'],
+  ['3', 'Max down', 'up only', '1', 'EXPORT_PRE → KANBAN', 'Max 30 → 24 while the total was low: KOREA 4 → 14 (total 10 → 20 ≤ 30), then Max 24 (20 ≤ 24).'],
+  ['4', 'Max down', 'mixed', '1', 'EXPORT_PRE (ROW_ORDER 1 then 2) → KANBAN', 'Max 30 → 24: JAPAN 20 → 10 (total 20), KOREA 10 → 14 (total 24 ≤ 30), then Max 24.'],
+  ['5', 'Max up', 'none', '2', 'KANBAN', 'Max 24 → 30.'],
+  ['6', 'Max up', 'down only', '2', 'KANBAN → EXPORT_POST', 'Max 30, then TAIWAN 24 → 20. Safe in any order.'],
+  ['7', 'Max up', 'up only', '2', 'KANBAN → EXPORT_POST', 'Max 24 → 30, then TAIWAN 24 → 30. Reversed: 30 > 24 is rejected.'],
+  ['8', 'Max up', 'mixed', '2', 'KANBAN → EXPORT_POST (ROW_ORDER 1 then 2)', 'Max 30, TAIWAN 24 → 16, then USA +14 (total 30).'],
+  ['9', 'Max same (only Pcs/Case changed)', 'none', '3', 'KANBAN', 'Shipping Box 10 → 12.'],
+  ['10', 'Max same', 'down only', '3', 'KANBAN → EXPORT_POST', 'Pcs/Case 10 → 12 and JAPAN 20 → 12.'],
+  ['11', 'Max same', 'up only', '3', 'KANBAN → EXPORT_POST', 'Shipping Box changed and TAIWAN 16 → 24 (total ≤ Max).'],
+  ['12', 'Max same', 'mixed', '3', 'KANBAN → EXPORT_POST (ROW_ORDER 1 then 2)', 'As 8 with the same Max.'],
+  ['13', 'Kanban unchanged (header 5)', 'down only', '5', 'EXPORT_POST', 'JAPAN 20 → 12, or Active → Inactive: DELETE (0) for every destination.'],
+  ['14', 'Kanban unchanged (header 5)', 'up only', '5', 'EXPORT_POST', 'KOREA 10 → 18 (the total was below the Max).'],
+  ['15', 'Kanban unchanged (header 5)', 'mixed', '5', 'EXPORT_POST (ROW_ORDER 1 then 2)', 'DUMMY-002: TAIWAN 24 → 16, then USA 8 (total 24 ≤ 24). Reversed: 32 is rejected.'],
+  ['16', 'Kanban ADD, part never sent', 'none', '4', 'KANBAN', 'Candidate → Active, not mapped yet.'],
+  ['17', 'Kanban ADD, part never sent', 'up only (ADD)', '4', 'KANBAN → EXPORT_POST', 'Candidate → Active and D/S maps it before the same [Sync].'],
+];
+const PROC = [
+  ['XD05 day D, XD01 save (Kanban / Export Crossdock Master), XD02 / XD03 upload', 'Call the stored procedure per changed row: insert the row with the values after the change (SYNC_STATUS 0); mark the older unsent row of the same key 2 Superseded; a row equal to the last sent value → 2 as well; Kanban row: set OPERATION_TYPE against the last sent Max; an Export row without unsent Kanban row of the part → header with OPERATION_TYPE 5', 'All rules, in the stored procedure (one copy)'],
+  ['[Sync] (XD01)', 'Lock the staging for a moment (a save at the same time waits); AP POLE rows with SYNC_STATUS 0 of the Current and Next period → 1 with SYNC_DT and RUN_ID; GTOPAS rows of the Current period → 1; start XD07 and XD06', 'None'],
+  ['View V_APPOLE_UPLOAD_KANBAN / _EXPORT', 'File of every row from the header OPERATION_TYPE (1 → EXPORT_PRE, else EXPORT_POST; 5 is not in the KANBAN file); ROW_ORDER of the Export rows against the last sent value of the key', 'Reads the result of the save'],
+  ['RPA XD07', 'Select the rows of the run from the views and upload EXPORT_PRE, KANBAN, EXPORT_POST in that order', 'None'],
+  ['Period Rollover (XD05 process 3)', 'GTOPAS rows of the new Current period with SYNC_STATUS 0 → 1, start XD06', 'None'],
+  ['[Re-send last Sync]', 'Start XD07 / XD06 again with the run ID of the last run: same files, same order', 'None'],
+];
+const BR = [
+  '<b>NSP checks at every save</b> (screen and upload, Kanban and Export): total Case/Day of the destinations ≤ Max Case/Day of the part in the period (XD01 messages 14 and 20, XD02 / XD03 checks). The end state of every run is valid; the rules below only order the upload.',
+  '<b>Max goes down</b> (OPERATION_TYPE 1): the destinations of the part go first (EXPORT_PRE), then the Max (KANBAN).',
+  '<b>Max up, same (only Pcs/Case changed) or new</b> (2 / 3 / 4): the Max first (KANBAN), then the destinations (EXPORT_POST).',
+  '<b>Only destinations changed</b>: the Export save writes the header with OPERATION_TYPE 5 (current Kanban values); EXPORT_POST only, nothing in KANBAN.',
+  '<b>Max goes down without destination change</b>: KANBAN only (NSP keeps the mapped total ≤ the new Max, message 14).',
+  '<b>Inside one file</b>, per part, decrease or DELETE (0) rows come before increase or ADD rows (ROW_ORDER from the view). All changes of a part stay in one file.',
+  '<b>Destination replaced</b> (KOREA removed, USA added): DELETE (0) then ADD in the same file.',
+  '<b>Order Type changed</b> (JAPAN ** → C): DELETE (0) of ** then ADD of C in the same file.',
+  '<b>Active → Inactive</b>: DELETE (0) for every destination in EXPORT_POST; header 5, nothing in KANBAN (no column of the Kanban file changes, the part stays in AP POLE).',
+  '<b>Inactive → Active</b>: Procurement maps the destinations again (ADD in EXPORT_POST); a Kanban row only when Pcs/Case or Max changes.',
+  '<b>Candidate → Active</b>: Kanban ADD (4) in KANBAN; the destinations go in EXPORT_POST when D/S maps them, in the same run or a later one.',
+  '<b>XD05 new period</b>: AP POLE keeps the rows of the previous Effective Month active until a newer one comes, so NSP adds the rows of the new period. Kanban ADD for every part, OPERATION_TYPE against the Max of the previous period (1 → EXPORT_PRE). Active part: ADD per destination, DELETE (0) for a destination of the previous period not mapped any more. Inactive part: DELETE (0) for the destinations still &gt; 0 in the previous period; in the later periods no row (AP POLE keeps the 0).',
+  '<b>Value changed and back to the sent value</b> before [Sync] (Max 30 → 22 → 30): nothing is sent; the rows are Superseded at the save.',
+  '<b>Several edits before [Sync]</b> (JAPAN 20 → 15 → 12): only the last value is sent; up or down is against the last sent value.',
+  '<b>Current and Next period in one run</b>: the same files; Effective Month / Year tells the period; rows by period, part, ROW_ORDER.',
+  '<b>[Re-send last Sync]</b>: the same files and order (same run ID).',
+  '<b>E-mail FAILED</b>: re-send before the next [Sync], so the last sent values are the values in AP POLE.',
+];
+const CALLERS = [
+  ['XD01 Kanban Crossdock Master [Save]', 'Pcs/Case or Max of an Active part changed; Candidate → Active', "@LEVEL 'KANBAN', @ACTION EDIT (ADD for Candidate → Active), new Pcs/Case and Max"],
+  ['XD01 Kanban Crossdock Master [Save]', 'Active → Inactive', "@LEVEL 'EXPORT', @ACTION DELETE, @CASE_DAY 0, once per destination + order type of the part"],
+  ['XD01 Export Crossdock Master [Save]', 'Destination added, Case/Day changed, destination removed', "@LEVEL 'EXPORT', @ACTION ADD / EDIT / DELETE (0), per destination + order type"],
+  ['XD02 upload (Kanban)', 'Same as the Kanban screen, per row of the file', "As XD01, @SOURCE 'UPLOAD', @UPLOAD_ID"],
+  ['XD03 upload (Export)', 'Same as the Export screen, per row of the file', "As XD01, @SOURCE 'UPLOAD', @UPLOAD_ID"],
+  ['XD05 day D (process 1 / 2)', 'New period', "KANBAN ADD per part; EXPORT ADD per destination of an Active part; EXPORT DELETE (0) for a destination of the previous period not mapped any more, or still &gt; 0 for an Inactive part; @SOURCE 'BATCH'"],
+];
+const WATCH = [
+  '<b>The order inside the file is calculated, not stored.</b> It is the same as long as the data does not change (also for a re-send). A manual data fix in the staging changes the result for an old run; there is no frozen record of the order that was sent.',
+  '<b>The rules sit in one stored procedure</b> that XD01 (screen), XD02, XD03 and XD05 call. A writer that inserts without it breaks the Superseded and OPERATION_TYPE rules. Document it in UISS XD01 5.24 and the view in XD07.',
+  '<b>Lock at [Sync].</b> A save that runs while [Sync] sets 0 → 1 would compare with the old sent value; [Sync] locks the staging for a moment and the save waits.',
+  '<b>The save is no longer insert-only</b>: it also updates the older unsent row of the key to 2 Superseded.',
+  '<b>The base is the last value sent, not the value in AP POLE.</b> The bots write nothing back. When a run fails and the user changes data and runs [Sync] again without [Re-send last Sync], the order is computed against values AP POLE never received. Rule: an e-mail FAILED is re-sent before the next [Sync].',
+  '<b>One source for the file.</b> The view reads OPERATION_TYPE from the header and does not compute the Max direction again.',
+  '<b>Join rules:</b> only Kanban rows with SYNC_STATUS 1 of the same run; every part of the run has its header (OPERATION_TYPE 1 to 5), so the view uses a plain JOIN; join per PERIOD, a run carries the Current and the Next period.',
+  '<b>Load:</b> the LAG reads the sent rows of the key; with the index above and reads only at [Sync], the cost is small.',
+];
+const CMP = [
+  ['When the rules run', 'At [Sync]', 'At the save (stored procedure); [Sync] only sets 0 → 1'],
+  ['Row', 'One row per changed field (FIELD_NAME, OLD_VALUE, NEW_VALUE)', 'One full row of the file, values after the change'],
+  ['RPA query', 'Pivot per part: latest Pcs/Case and Max rows, Buyer-PD format, constants', 'SELECT the rows of the run; no transformation'],
+  ['Sync status', 'APPOLE_ and GTOPAS_ columns on the same row', 'SYNC_STATUS in each table; GTOPAS rows only for ADD / DELETE'],
+  ['File order', 'SEND_SEQ on every row (1 / 2 / 3)', 'OPERATION_TYPE once on the Kanban row (1 / 2 / 3 / 4); the order inside the file comes from a view, nothing stored on the Export row'],
+  ['Screen Sync Status', 'One table', 'AP POLE = Kanban or Export row with 0; GTOPAS = GTOPAS row with 0'],
+  ['Field history (old / new)', 'Kept in the staging', 'Only in TB_H_PART_CANDIDATE (screen history), as today'],
+  ['Same value written twice', 'Part number, part name in every row', 'Constants and formats stored in every row (P6, 01, A, 2, 3, 2)'],
+];
+
+const TODO = [
+  'Assumption: AP POLE checks every uploaded Export row against the Max of the part (the reason for EXPORT_PRE). Decided 22-Nov: stored procedure <code>SP_STG_WRITE</code>, views <code>V_APPOLE_UPLOAD_KANBAN</code> / <code>V_APPOLE_UPLOAD_EXPORT</code>; AP POLE keeps the previous Effective Month active until a newer row comes.',
+  'Table names: <code>TB_H_STG_APPOLE_KANBAN</code>, <code>TB_H_STG_APPOLE_EXPORT</code>, <code>TB_H_STG_GTOPAS</code>, or other names?',
+  'Constants (Operator ID P6, Transport Code 2, Depot 01, Maker A, 2 / 3 / 2) stored in every row as in the file, or filled by the RPA? Storing them keeps the rule "the table = the file".',
+  'GTOPAS keys on part + destination, NSP on part + destination + order type. Proposal: GTOPAS ADD only for the first order type of a destination, DELETE only when the last one is removed.',
+  'GTOPAS table as change rows (ADD / DELETE, this page) or as the list of active part + destination per period that XD06 compares with WVJA5204?',
+  'An EDIT row of the Kanban carries all three values (Shipping Box, Max, Allowance) even when only one changed. OK?',
+  'The one staging table <code>TB_H_PART_CANDIDATE_STG_SYNC</code> and its rules in XD01 5.24, XD02, XD03, XD05, XD06, XD07, the ERD, the SQL sandbox and the prototype change after the decision.',
+];
+
+// dummy data
+const D = { JAPAN: '9722D10', KOREA: '9715310', TAIWAN: '9811110', USA: '9600110', THAILAND: '9655510' };
+const bp = (c) => c.slice(0, 5) + '-' + c.slice(5);
+const STEPS = [
+  { t: '27-Nov 02:00', l: 'XD05 day D', run: null,
+    s: '<b>XD05 day D</b> makes period 202612. DUMMY-001 and DUMMY-002 are Active, DUMMY-003 becomes Inactive. Kanban: ADD for the three parts (DUMMY-003 stays in AP POLE). Export: ADD per destination of the Active parts, DELETE (0) for USA and THAILAND of DUMMY-003 (still &gt; 0 in 202611). GTOPAS: ADD / DELETE of the same destinations. The stored procedure compares each Kanban ADD with the Max sent for 202611: DUMMY-001 30 → 30 = 3 (same), DUMMY-002 28 → 24 = 1 (down), DUMMY-003 14 → 14 = 3 (same).' },
+  { t: '27-Nov 10:00', l: '[Sync]', run: '20261127100000',
+    s: '<b>[Sync]</b> by D/S. [Sync] calculates nothing: it locks the staging, sets the AP POLE rows with SYNC_STATUS 0 of the Current and Next period to 1 with the run ID and starts XD07. The view reads DUMMY-002 OPERATION_TYPE 1: its TAIWAN 24 (28 in 202611, ROW_ORDER 1) goes in EXPORT_PRE before KANBAN; the other parts are 3: EXPORT_POST with the DELETE rows of DUMMY-003 (ROW_ORDER 1) before the rows of DUMMY-001. GTOPAS takes only the Current period 202611: the 202612 rows wait for the Period Rollover.',
+    files: [['1 · EXPORT_PRE · LLM9Q880_20261127100000_1_EXPORT_PRE.xls', 'e', 1], ['2 · KANBAN · LLM9Q910_20261127100000_2_KANBAN.xls', 'k', 1], ['3 · EXPORT_POST · LLM9Q880_20261127100000_3_EXPORT_POST.xls', 'e', 3]] },
+  { t: '01-Dec 00:10', l: 'Period Rollover', run: '20261201001000',
+    s: '<b>Period Rollover</b> (XD05 process 3): 202612 becomes Current. The GTOPAS rows of 202612 with SYNC_STATUS 0 go to XD06 and become 1.', files: [['GTOPAS WVJA5204', 'g', 2]] },
+  { t: '03-Dec 09:00', l: 'Edit mapping', run: null, s: 'D/S changes DUMMY-001 JAPAN 20 → 15. Export: EDIT row with 15. The Kanban did not change, so the stored procedure also writes the header K4 with OPERATION_TYPE 5. No GTOPAS row (the destination stays).' },
+  { t: '03-Dec 09:20', l: 'Edit mapping again', run: null, s: 'D/S changes DUMMY-001 JAPAN 15 → 12 before any [Sync]. A second EDIT row. The stored procedure marks the unsent 15 row 2 Superseded at this save.' },
+  { t: '03-Dec 10:00', l: 'Edit part', run: null, s: 'Procurement lowers DUMMY-001 Max Case/Day 30 → 22 (mapped total 12 + 10 = 22). Kanban: EDIT row with Shipping Box 10, Max 22, Allowance 220. The stored procedure compares 22 with the last sent Max 30 and sets OPERATION_TYPE 1 (down) at once; the header K4 (5) becomes Superseded.' },
+  { t: '03-Dec 11:00', l: 'Edit mapping', run: null, s: 'D/S changes DUMMY-002 TAIWAN 24 → 16 and adds USA 8. Export: EDIT TAIWAN 16, ADD USA 8; header K6 with OPERATION_TYPE 5 (Kanban unchanged). GTOPAS: ADD DUMMY-002 USA.' },
+  { t: '04-Dec 10:00', l: '[Sync]', run: '20261204100000',
+    s: '<b>[Sync]</b> by D/S. Only 0 → 1 with the run ID. The view reads OPERATION_TYPE 1 on the DUMMY-001 Kanban row: its Export row goes in EXPORT_PRE before KANBAN. The DUMMY-002 header K6 has OPERATION_TYPE 5: nothing in KANBAN, its Export rows go in EXPORT_POST; the view orders TAIWAN 16 (24 → 16, ROW_ORDER 1) before USA 8 (new, ROW_ORDER 2). The JAPAN 15 row is already Superseded since 09:20 and is not sent. GTOPAS sends the Current period row DUMMY-002 USA.',
+    files: [['1 · EXPORT_PRE · LLM9Q880_20261204100000_1_EXPORT_PRE.xls', 'e', 1], ['2 · KANBAN · LLM9Q910_20261204100000_2_KANBAN.xls', 'k', 2], ['3 · EXPORT_POST · LLM9Q880_20261204100000_3_EXPORT_POST.xls', 'e', 3], ['GTOPAS WVJA5204', 'g', 0]] },
+];
+// row: at = step inserted; st = [[step, status, seq]]
+const K = [
+  { id: 1, at: 0, per: '202612', act: 'ADD', ps: 'Active', p: 'DUMMY-001', n: 'DUMMY PART 001', sb: 10, mx: 30, src: 'BATCH', ot: '3', st: [[1, 1]] },
+  { id: 2, at: 0, per: '202612', act: 'ADD', ps: 'Active', p: 'DUMMY-002', n: 'DUMMY PART 002', sb: 12, mx: 24, src: 'BATCH', ot: '1', st: [[1, 1]] },
+  { id: 3, at: 0, per: '202612', act: 'ADD', ps: 'Inactive', p: 'DUMMY-003', n: 'DUMMY PART 003', sb: 8, mx: 14, src: 'BATCH', ot: '3', st: [[1, 1]] },
+  { id: 4, at: 3, per: '202612', act: 'KEEP', ps: 'Active', p: 'DUMMY-001', n: 'DUMMY PART 001', sb: 10, mx: 30, src: 'SCREEN', ot: '5', st: [[5, 2]] },
+  { id: 5, at: 5, per: '202612', act: 'EDIT', ps: 'Active', p: 'DUMMY-001', n: 'DUMMY PART 001', sb: 10, mx: 22, src: 'SCREEN', ot: '1', st: [[7, 1]] },
+  { id: 6, at: 6, per: '202612', act: 'KEEP', ps: 'Active', p: 'DUMMY-002', n: 'DUMMY PART 002', sb: 12, mx: 24, src: 'SCREEN', ot: '5', st: [[7, 1]] },
+];
+const E = [
+  { id: 1, at: 0, per: '202612', p: 'DUMMY-001', d: 'JAPAN', ot: '**', act: 'ADD', op: 2, v: 20, src: 'BATCH', st: [[1, 1, 3]] },
+  { id: 2, at: 0, per: '202612', p: 'DUMMY-001', d: 'KOREA', ot: '**', act: 'ADD', op: 2, v: 10, src: 'BATCH', st: [[1, 1, 3]] },
+  { id: 3, at: 0, per: '202612', p: 'DUMMY-002', d: 'TAIWAN', ot: '**', act: 'ADD', op: 1, v: 24, src: 'BATCH', st: [[1, 1, 1]] },
+  { id: 4, at: 0, per: '202612', p: 'DUMMY-003', d: 'USA', ot: '**', act: 'DELETE', op: 1, v: 0, src: 'BATCH', st: [[1, 1, 3]] },
+  { id: 5, at: 0, per: '202612', p: 'DUMMY-003', d: 'THAILAND', ot: '**', act: 'DELETE', op: 1, v: 0, src: 'BATCH', st: [[1, 1, 3]] },
+  { id: 6, at: 3, per: '202612', p: 'DUMMY-001', d: 'JAPAN', ot: '**', act: 'EDIT', v: 15, src: 'SCREEN', st: [[4, 2, null]] },
+  { id: 7, at: 4, per: '202612', p: 'DUMMY-001', d: 'JAPAN', ot: '**', act: 'EDIT', op: 1, v: 12, src: 'SCREEN', st: [[7, 1, 1]] },
+  { id: 8, at: 6, per: '202612', p: 'DUMMY-002', d: 'TAIWAN', ot: '**', act: 'EDIT', op: 1, v: 16, src: 'SCREEN', st: [[7, 1, 3]] },
+  { id: 9, at: 6, per: '202612', p: 'DUMMY-002', d: 'USA', ot: '**', act: 'ADD', op: 2, v: 8, src: 'SCREEN', st: [[7, 1, 3]] },
+];
+const G = [
+  { id: 1, at: 0, per: '202612', p: 'DUMMY-001', d: 'JAPAN', act: 'ADD', src: 'BATCH', st: [[2, 1]] },
+  { id: 2, at: 0, per: '202612', p: 'DUMMY-001', d: 'KOREA', act: 'ADD', src: 'BATCH', st: [[2, 1]] },
+  { id: 3, at: 0, per: '202612', p: 'DUMMY-002', d: 'TAIWAN', act: 'ADD', src: 'BATCH', st: [[2, 1]] },
+  { id: 4, at: 0, per: '202612', p: 'DUMMY-003', d: 'USA', act: 'DELETE', src: 'BATCH', st: [[2, 1]] },
+  { id: 5, at: 0, per: '202612', p: 'DUMMY-003', d: 'THAILAND', act: 'DELETE', src: 'BATCH', st: [[2, 1]] },
+  { id: 6, at: 6, per: '202612', p: 'DUMMY-002', d: 'USA', act: 'ADD', src: 'SCREEN', st: [[7, 1]] },
+];
+const my = (per) => per.slice(4) + '/' + per.slice(0, 4);
+const nodash = (p) => p.replace(/-/g, '');
+const pill = (a) => `<span class="pill ${a === 'ADD' ? 'p-add' : a === 'EDIT' ? 'p-edit' : a === 'KEEP' ? 'p-none' : 'p-del'}">${a}</span>`;
+function stateAt(r, k) {
+  let s = { v: 0, seq: null, step: null };
+  for (const [st, v, seq] of r.st) if (st <= k) s = { v, seq: seq ?? null, step: st };
+  return s;
+}
+const stTxt = (s) => s.v === 0 ? '0 Non Sync' : s.v === 1 ? '1 Sync' : '2 Superseded';
+const cls = (s) => s.v === 0 ? 'r-new' : s.v === 1 ? 'r-sent' : 'r-sup';
+const runOf = (s) => s.step == null ? '' : STEPS[s.step].run;
+const dtOf = (s) => s.step == null || !STEPS[s.step].run ? '' : STEPS[s.step].t + '-2026';
+const thRow = (cols) => '<tr>' + cols.map(([c, h]) => `<th${h ? ' class="h"' : ''}>${c}</th>`).join('') + '</tr>';
+
+function tableK(k) {
+  const cols = [['STG_ID', H], ['PERIOD', H], ['ACTION', H], ['PART_STATUS', H], ['EFFECTIVE MONTH / YEAR'], ['OPERATOR ID'], ['PART NO.'], ['PART NAME'], ['SHIPPING BOX QTY'], ['MAX SHIPPING BOX QTY'], ['MAX ALLOWANCE QTY'], ['SOURCE', H], ['SYNC_STATUS', H], ['OPERATION_TYPE', H], ['SYNC_DT', H], ['SYNC_RUN_ID', H], ['CREATED_DT', H]];
+  const rows = K.filter((r) => r.at <= k).map((r) => { const s = stateAt(r, k); return `<tr class="${cls(s)}"><td>${r.id}</td><td>${r.per}</td><td>${pill(r.act)}</td><td>${r.ps}</td><td>${my(r.per)}</td><td>P6</td><td>${r.p}</td><td>${r.n}</td><td class="n">${r.sb}</td><td class="n">${r.mx}</td><td class="n">${r.sb * r.mx}</td><td>${r.src}</td><td>${stTxt(s)}</td><td>${r.ot}</td><td>${dtOf(s)}</td><td>${runOf(s) || ''}</td><td>${STEPS[r.at].t}-2026</td></tr>`; });
+  return `<table><thead>${thRow(cols)}</thead><tbody>${rows.join('')}</tbody></table>`;
+}
+function tableE(k) {
+  const cols = [['STG_ID', H], ['PERIOD', H], ['NSP_PART_NO', H], ['DEST_CODE', H], ['ACTION', H], ['EFFECTIVE MONTH / YEAR'], ['PART NO.'], ['BUYER-PD'], ['ORDER TYPE'], ['TRANSPORT CODE'], ['MAX SHIPPING BOX (RCS)'], ['SOURCE', H], ['SYNC_STATUS', H], ['SYNC_DT', H], ['SYNC_RUN_ID', H], ['CREATED_DT', H]];
+  const rows = E.filter((r) => r.at <= k).map((r) => { const s = stateAt(r, k); const c = D[r.d]; return `<tr class="${cls(s)}"><td>${r.id}</td><td>${r.per}</td><td>${r.p}</td><td>${c} ${r.d}</td><td>${pill(r.act)}</td><td>${my(r.per)}</td><td>${nodash(r.p)}</td><td>${bp(c)}</td><td>${r.ot}</td><td>2</td><td class="n">${r.v}</td><td>${r.src}</td><td>${stTxt(s)}</td><td>${dtOf(s)}</td><td>${runOf(s) || ''}</td><td>${STEPS[r.at].t}-2026</td></tr>`; });
+  return `<table><thead>${thRow(cols)}</thead><tbody>${rows.join('')}</tbody></table>`;
+}
+function tableG(k) {
+  const cols = [['STG_ID', H], ['PERIOD', H], ['ACTION', H], ['DEPOT CODE'], ['P/NO.'], ['DESTINATION CODE'], ['MAKER CODE'], ['DOMESTIC / OVERSEAS'], ['TOPAS ORDER TYPE'], ['ORDER TRANSPORTATION CODE'], ['SOURCE', H], ['SYNC_STATUS', H], ['SYNC_DT', H], ['SYNC_RUN_ID', H], ['CREATED_DT', H]];
+  const rows = G.filter((r) => r.at <= k).map((r) => { const s = stateAt(r, k); return `<tr class="${cls(s)}"><td>${r.id}</td><td>${r.per}</td><td>${pill(r.act)}</td><td>01</td><td>${r.p}</td><td>${D[r.d]} ${r.d}</td><td>A</td><td>2</td><td>3</td><td>2</td><td>${r.src}</td><td>${stTxt(s)}</td><td>${dtOf(s)}</td><td>${runOf(s) || ''}</td><td>${STEPS[r.at].t}-2026</td></tr>`; });
+  return `<table><thead>${thRow(cols)}</thead><tbody>${rows.join('')}</tbody></table>`;
+}
+function fileOf(kind, seq, k) {
+  if (kind === 'k') {
+    const rs = K.filter((r) => String(r.ot) !== '5' && r.st.some(([st, v]) => st === k && v === 1));
+    return '<table><thead><tr><th>Effective Month / Year</th><th>Operator ID</th><th>Part No.</th><th>Part Name</th><th>Shipping Box Qty</th><th>Max Shipping Box Qty</th><th>Max Allowance Qty</th></tr></thead><tbody>' +
+      rs.map((r) => `<tr><td>${my(r.per)}</td><td>P6</td><td>${r.p}</td><td>${r.n}</td><td class="n">${r.sb}</td><td class="n">${r.mx}</td><td class="n">${r.sb * r.mx}</td></tr>`).join('') + '</tbody></table>';
+  }
+  if (kind === 'e') {
+    const rs = E.filter((r) => r.st.some(([st, v, sq]) => st === k && v === 1 && sq === seq)).sort((a, b) => a.op - b.op);
+    return '<table><thead><tr><th>Effective Month / Year</th><th>Part No.</th><th>Buyer-PD</th><th>Order Type</th><th>Transport Code</th><th>Max Shipping Box (RCS)</th><th class="h">ROW_ORDER (view)</th></tr></thead><tbody>' +
+      rs.map((r) => `<tr><td>${my(r.per)}</td><td>${nodash(r.p)}</td><td>${bp(D[r.d])}</td><td>${r.ot}</td><td>2</td><td class="n">${r.v}</td><td>${r.op}</td></tr>`).join('') + '</tbody></table>';
+  }
+  const rs = G.filter((r) => r.st.some(([st, v]) => st === k && v === 1));
+  return '<table><thead><tr><th class="h">Action on WVJA5204</th><th>Depot Code</th><th>P/No.</th><th>Destination Code</th><th>Maker Code</th><th>Domestic/Overseas</th><th>TOPAS Order Type</th><th>Order Transportation Code</th></tr></thead><tbody>' +
+    rs.map((r) => `<tr><td>${r.act === 'DELETE' ? 'Delete (MT = DEL)' : 'Add'}</td><td>01</td><td>${r.p}</td><td>${D[r.d]}</td><td>A</td><td>2</td><td>3</td><td>2</td></tr>`).join('') + '</tbody></table>';
+}
+
+let cur = 0;
+function render() {
+  document.querySelectorAll('#steps .chip').forEach((b, i) => b.setAttribute('aria-pressed', String(i === cur)));
+  const st = STEPS[cur];
+  document.getElementById('story').innerHTML = `<span class="eyebrow">${st.t}-2026 · ${st.l}${st.run ? ' · run ' + st.run : ''}</span><p>${st.s}</p>`;
+  const f = st.files ? '<div class="files">' + st.files.map(([t, kind, seq]) => `<div class="file"><h4>${t}</h4><div class="tbl">${fileOf(kind, seq, cur)}</div></div>`).join('') + '</div>' : '';
+  document.getElementById('files').innerHTML = f;
+  document.getElementById('tk').innerHTML = tableK(cur);
+  document.getElementById('te').innerHTML = tableE(cur);
+  document.getElementById('tg').innerHTML = tableG(cur);
+}
+document.getElementById('steps').innerHTML = STEPS.map((s, i) => `<button class="chip" type="button" id="step-${i}"><b>${s.t}</b>${s.l}</button>`).join('');
+document.querySelectorAll('#steps .chip').forEach((b, i) => b.addEventListener('click', () => { cur = i; render(); }));
+document.getElementById('defs').innerHTML = DEFS.map((d) => `<div class="card"><div class="head"><h3>${d.name}</h3><span class="pill p-none">${d.file}</span></div><div class="tbl"><table><thead><tr><th>Column</th><th>Type</th><th>Value</th></tr></thead><tbody>` +
+  d.cols.map(([c, t, v, h]) => `<tr><td${h ? ' style="background:var(--help)"' : ''}>${c}</td><td>${t}</td><td class="t">${v}</td></tr>`).join('') + '</tbody></table></div></div>').join('');
+document.getElementById('who').innerHTML = WHO.map((r) => `<tr><td class="t">${r[0]}</td>${r.slice(1).map((c) => `<td class="t">${c}</td>`).join('')}</tr>`).join('');
+document.getElementById('combo').innerHTML = COMBO.map((r) => `<tr>${r.map((c, i) => `<td${i >= 1 && i !== 3 ? ' class="t"' : ''}>${c}</td>`).join('')}</tr>`).join('');
+document.getElementById('callers').innerHTML = CALLERS.map((r) => `<tr>${r.map((c) => `<td class="t">${c}</td>`).join('')}</tr>`).join('');
+document.getElementById('proc').innerHTML = PROC.map((r) => `<tr>${r.map((c) => `<td class="t">${c}</td>`).join('')}</tr>`).join('');
+document.getElementById('br').innerHTML = BR.map((t) => `<li>${t}</li>`).join('');
+document.getElementById('watch').innerHTML = WATCH.map((t) => `<li>${t}</li>`).join('');
+document.getElementById('cmp').innerHTML = CMP.map((r) => `<tr><td class="t">${r[0]}</td><td class="t">${r[1]}</td><td class="t">${r[2]}</td></tr>`).join('');
+document.getElementById('todo').innerHTML = TODO.map((t) => `<li>${t}</li>`).join('');
+render();
+</script>
