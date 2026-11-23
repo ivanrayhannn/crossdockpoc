@@ -21,10 +21,10 @@ const NUMBER_FORMAT = '#,##0';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-/** "2026-06-17" → "17-Jun-2026", the date format of the upload template. */
-function uploadDate(iso: string | undefined): string {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
-  return m ? `${m[3]}-${MONTHS[Number(m[2]) - 1]}-${m[1]}` : '';
+/** "Sep 2026" → "202609", the Period of the upload template. */
+function periodCode(per: string): string {
+  const [mon, year] = per.split(' ');
+  return `${year}${String(MONTHS.indexOf(mon) + 1).padStart(2, '0')}`;
 }
 
 /** Audit of a part: created = its registration (oldest history event; the part's own time when added in this session),
@@ -35,7 +35,7 @@ export function partAudit(p: Part): { createdDt: string; createdBy: string; upda
   return { createdDt: first ? first.w : p.dt, createdBy: first ? first.by : p.by, updatedDt: p.dt, updatedBy: p.by };
 }
 
-/** Sheet 1: the Kanban Crossdock Master as shown on the screen, plus Effective Start Date. Information only. */
+/** Sheet 1: the Kanban Crossdock Master as shown on the screen. Information only. */
 const LIST_COLUMNS: (Column<Part> & { width: number })[] = [
   { header: { value: 'Period', ...HEADER }, cell: (p) => ({ value: p.per }), width: 12 },
   { header: { value: 'Part Number', ...HEADER }, cell: (p) => ({ value: p.p }), width: 18 },
@@ -51,7 +51,6 @@ const LIST_COLUMNS: (Column<Part> & { width: number })[] = [
   // Sync Status and Last Sent are worked out from TB_H_PART_CANDIDATE_STG_SYNC (22-Nov); the bots write nothing back.
   { header: { value: 'Last Sent GTOPAS', ...HEADER }, cell: (p) => ({ value: p.lastSyncDt || '' }), width: 18 },
   { header: { value: 'Last Sent AP POLE', ...HEADER }, cell: (p) => ({ value: p.apSyncDt || '' }), width: 18 },
-  { header: { value: 'Effective Start Date', ...HEADER }, cell: (p) => ({ value: uploadDate(p.effDate) }), width: 20 },
   // audit log of the part (TB_M_PART_CANDIDATE CREATED_* / CHANGED_*); technical names in the file, labels on the screen
   { header: { value: 'CREATED_DT', ...HEADER }, cell: (p) => ({ value: partAudit(p).createdDt }), width: 18 },
   { header: { value: 'CREATED_BY', ...HEADER }, cell: (p) => ({ value: partAudit(p).createdBy }), width: 16 },
@@ -67,7 +66,7 @@ const UPLOAD_COLUMNS: (Column<Part> & { width: number })[] = [
   { header: { value: 'Max Case/Day', ...HEADER }, cell: (p) => ({ value: num(p.mc) }), width: 14 },
   { header: { value: 'Status', ...HEADER }, cell: (p) => ({ value: p.st }), width: 12 },
   { header: { value: 'Upload (A/E)', ...HEADER }, cell: () => ({ value: 'E' }), width: 10 },
-  { header: { value: 'Effective Start Date', ...HEADER }, cell: (p) => ({ value: uploadDate(p.effDate) }), width: 20 },
+  { header: { value: 'Period', ...HEADER }, cell: (p) => ({ value: periodCode(p.per) }), width: 10 },
 ];
 
 /**

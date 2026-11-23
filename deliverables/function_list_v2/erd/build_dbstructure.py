@@ -16,7 +16,9 @@ TABLES = [
     ('MST-01', 'TB_M_PART_CANDIDATE', 'Crossdock Part Candidate', 'Master', 'Candidate / Active / Inactive crossdock part (Kanban Crossdock Master of XD01, per period).'),
     ('MST-02', 'TB_M_PART_CANDIDATE_DEST', 'Part Mapping per Destination', 'Master', 'Case/Day per part, period and destination (Export Crossdock Master of XD01, per order type).'),
     ('HIS-01', 'TB_H_PART_CANDIDATE', 'Part Candidate History', 'History', 'Every change of a crossdock part (screen, upload, calculation) for the History setting.'),
-    ('HIS-03', 'TB_H_PART_CANDIDATE_STG_SYNC', 'Part Candidate Staging Sync', 'History', 'Every value change of the Kanban / Export Crossdock Master with the Sync Status of AP POLE and GTOPAS; read by the RPA (XD06 / XD07) (22-Nov).'),
+    ('HIS-03', 'TB_H_STG_APPOLE_KANBAN', 'Staging AP POLE Kanban', 'History', 'Kanban changes in the AP POLE Kanban upload format (LLM9Q910) and the header of the part (OPERATION_TYPE 1 to 5); read by XD07 (proposal 23-Nov).'),
+    ('HIS-04', 'TB_H_STG_APPOLE_EXPORT', 'Staging AP POLE Export', 'History', 'Destination changes in the AP POLE Export upload format (LLM9Q880); read by XD07 (proposal 23-Nov).'),
+    ('HIS-05', 'TB_H_STG_GTOPAS', 'Staging GTOPAS', 'History', 'Part + destination Add / Delete for GTOPAS WVJA5204; read by XD06 (proposal 23-Nov).'),
     ('HIS-02', 'TB_H_CROSSDOCK_ORDER_CHANGE', 'Crossdock Order Change History', 'History', 'Change Order Number (XD11): cancelled qty in an ASN moved to other lines.'),
     ('TR-01', 'TB_R_PART_DAD_RESULT', 'DAD Volume Calculation Result', 'Transaction', 'Result of XD05 process 1 per part and period.'),
     ('TR-03', 'TB_R_INSTRUCTION', 'Crossdock Instruction', 'Transaction', 'Real mapping of Create ASN: case x customer order line x PO.'),
@@ -92,7 +94,7 @@ def header(ws, title, page):
     put(ws, 2, 'AB', 'CJ', 'Crossdock Optimization (NSP)')
     put(ws, 2, 'CK', 'CN', 'Page', True)
     put(ws, 2, 'CO', 'CV', page)
-    for r, lab, val, lab2, d in ((3, 'Block Name', 'Crossdock', 'Created', '20-Oct-26'), (4, 'Document Name', 'DB Structure', 'Updated', '20-Oct-26')):
+    for r, lab, val, lab2, d in ((3, 'Block Name', 'Crossdock', 'Created', '20-Oct-26'), (4, 'Document Name', 'DB Structure', 'Updated', '23-Nov-26')):
         put(ws, r, 'B', 'N', lab, True)
         put(ws, r, 'O', 'AH', val)
         put(ws, r, 'AI', 'AS', 'Function Name' if r == 3 else 'Title', True)
@@ -103,8 +105,42 @@ def header(ws, title, page):
         put(ws, r, 'CO', 'CV', 'FID Rayhan')
 
 
+REVISIONS = [
+    ('0.1', '20-Oct-2026', 'Initial Draft: Crossdock tables (new, replicated, existing reference)'),
+    ('0.2', '22-Nov-2026', 'TB_H_PART_CANDIDATE_STG_SYNC (staging of the sync); sync columns removed from TB_M_PART_CANDIDATE'),
+    ('0.3', '23-Nov-2026', 'Staging per target: TB_H_PART_CANDIDATE_STG_SYNC replaced by TB_H_STG_APPOLE_KANBAN, TB_H_STG_APPOLE_EXPORT and TB_H_STG_GTOPAS; '
+                           'EFFECTIVE_START_DATE removed from TB_M_PART_CANDIDATE (a part takes effect from its first registered period)'),
+]
+
+
+def proposal(tables, used):
+    """Overlay of the 23-Nov proposal (proposal_staging_sync/build_table_proposal_v2.py) on the tables of the UISS specs."""
+    import importlib.util
+    sp = importlib.util.spec_from_file_location('tp2', os.path.join(HERE, 'proposal_staging_sync', 'build_table_proposal_v2.py'))
+    tp = importlib.util.module_from_spec(sp)
+    sp.loader.exec_module(tp)
+    desc, cols = tables['TB_M_PART_CANDIDATE']
+    tables['TB_M_PART_CANDIDATE'] = (desc, [c for c in cols if c[0] != 'EFFECTIVE_START_DATE'])
+    tables.pop('TB_H_PART_CANDIDATE_STG_SYNC', None)
+
+    def conv(rows):
+        out = []
+        for name, typ, pk, null, default, file_col, d, _ in rows:
+            label = file_col or name.replace('_', ' ').title().replace(' Dt', ' Date').replace(' Id', ' ID').replace('Stg ', 'Staging ').replace('Nsp ', 'NSP ')
+            text = f'{label}; ' + d + (f' (default {default})' if default and default != 'identity' else '')
+            out.append((name, typ, pk, null, text))
+        return out
+    for name, rows, d, fids in (
+            ('TB_H_STG_APPOLE_KANBAN', tp.KAN, 'Kanban rows for AP POLE in the LLM9Q910 format', ['XD01', 'XD02', 'XD05', 'XD07']),
+            ('TB_H_STG_APPOLE_EXPORT', tp.EXP, 'Export rows for AP POLE in the LLM9Q880 format', ['XD01', 'XD03', 'XD05', 'XD07']),
+            ('TB_H_STG_GTOPAS', tp.GTO, 'Part + destination rows for GTOPAS WVJA5204', ['XD01', 'XD03', 'XD05', 'XD06'])):
+        tables[name] = (d, conv(rows))
+        used[name] = fids
+
+
 def build():
     tables, used = load_tables()
+    proposal(tables, used)
     wb = Workbook()
     ws = wb.active
     ws.title = 'Revision'
@@ -113,10 +149,11 @@ def build():
     put(ws, 6, 'H', 'S', 'Date', True)
     put(ws, 6, 'T', 'CJ', 'Description', True)
     put(ws, 6, 'CK', 'CV', 'By', True)
-    put(ws, 7, 'B', 'G', '0.1', align='center')
-    put(ws, 7, 'H', 'S', '20-Oct-2026')
-    put(ws, 7, 'T', 'CJ', 'Initial Draft: Crossdock tables (new, replicated, existing reference)')
-    put(ws, 7, 'CK', 'CV', 'FID Rayhan')
+    for i, (rev, d, text) in enumerate(REVISIONS):
+        put(ws, 7 + i, 'B', 'G', rev, align='center')
+        put(ws, 7 + i, 'H', 'S', d)
+        put(ws, 7 + i, 'T', 'CJ', text)
+        put(ws, 7 + i, 'CK', 'CV', 'FID Rayhan')
 
     tl = wb.create_sheet('Table List')
     header(tl, 'Table List', '2')

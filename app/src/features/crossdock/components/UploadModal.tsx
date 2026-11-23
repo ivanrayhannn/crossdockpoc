@@ -1,11 +1,11 @@
 import type { CrossdockState } from '../useCrossdockState';
 
 // Same columns and order as sheet "Upload" of the Kanban Crossdock Master Export Excel.
-const UP_COLS = ['Part Number', 'Min MAD', 'Pcs/Case', 'Max Case/Day', 'Status', 'Upload (A/E)', 'Effective Start Date'];
+const UP_COLS = ['Part Number', 'Min MAD', 'Pcs/Case', 'Max Case/Day', 'Status', 'Upload (A/E)', 'Period'];
 
 const UP_RULES: { label: string; cols: string }[] = [
-  { label: 'Add', cols: 'Part Number, Min MAD, Pcs/Case, Max Case/Day, Upload (A/E) = A and Effective Start Date are required. Leave Status blank: a new part is always Candidate.' },
-  { label: 'Edit', cols: 'Upload (A/E) = E. Min MAD (required), Pcs/Case and Max Case/Day can be changed; Effective Start Date only while the part status is Candidate. Download Export Excel first: its sheet "Upload" is the base file (pre-filled with flag E) to edit and upload again.' },
+  { label: 'Add', cols: 'Part Number, Min MAD, Pcs/Case, Max Case/Day, Upload (A/E) = A and Period are required. Period = YYYYMM of the ongoing period (default) or the next period: the part takes effect from it. Leave Status blank: a new part is always Candidate.' },
+  { label: 'Edit', cols: 'Upload (A/E) = E. Min MAD (required), Pcs/Case and Max Case/Day can be changed; Period = the ongoing period of the export and cannot be changed (a part of the next period can be edited once it becomes the ongoing period). Download Export Excel first: its sheet "Upload" is the base file (pre-filled with flag E) to edit and upload again.' },
   { label: 'Status', cols: 'The status of a Candidate part cannot be changed by upload (the row is rejected). An Active part can be changed to Inactive and an Inactive part to Active. No part can be changed to Candidate.' },
 ];
 

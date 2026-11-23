@@ -22,6 +22,8 @@ export const ORDER_TYPES = ['**', 'C', '9', 'V'];
 export const MASTER_DESTS: { code: string; name: string }[] = DESTS.map((name) => ({ code: DCODE[name], name }));
 
 export const CUR_PER = 'Sep 2026';
+/** Next period (M+1): Add Part can register a part into it (view only until it becomes the ongoing period). */
+export const NEXT_PER = 'Oct 2026';
 
 /** Periods available in the simulated data, oldest first — drives the
  * "Period" filter on the Export Crossdock Master sub-screen. */
@@ -293,7 +295,6 @@ function genHistoryFor(part: SeedPart): HistoryEvent[] {
 
 export const HIST_BY_PART: Record<string, HistoryEvent[]> = Object.fromEntries(ALL_SEED.map((p) => [p.p, genHistoryFor(p)]));
 
-const effDateOf = (p: SeedPart) => `2026-06-${String(1 + (hashStr(p.p) % 27)).padStart(2, '0')}`; // dummy day between 1 and 27 Jun 2026
 const withCodes = (p: SeedPart) => p.dests.map((d) => ({ ...d, cd: DCODE[d.d] || '' }));
 /** An Active part seeded in a past period only: it is also listed in the ongoing period (every Active part is, XD01 5.11 c). */
 const activeInPastOnly = (p: SeedPart) => p.st === 'Active' && p.per !== CUR_PER;
@@ -305,20 +306,17 @@ export function cloneSeedParts(): Part[] {
   return ALL_SEED.map((p) => ({
     ...p,
     ...syncOf(p),
-    effDate: effDateOf(p),
     ...(activeInPastOnly(p) ? { per: CUR_PER, dests: [] } : { dests: withCodes(p) }),
   }));
 }
 
 /** Read-only mapping rows of past periods for parts that are Active now (listed when a past period is selected). */
-export const PAST_ROWS: Part[] = ALL_SEED.filter(activeInPastOnly).map((p) => ({ ...p, lastSyncDt: syncDatesOf(p).lastSyncDt, apSyncDt: syncDatesOf(p).lastSyncDt, effDate: effDateOf(p), dests: withCodes(p) }));
+export const PAST_ROWS: Part[] = ALL_SEED.filter(activeInPastOnly).map((p) => ({ ...p, lastSyncDt: syncDatesOf(p).lastSyncDt, apSyncDt: syncDatesOf(p).lastSyncDt, dests: withCodes(p) }));
 
 export function blankPart(): Part {
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const effDate = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
+  // Period of a new part: the ongoing period by default; Add Part may choose the Next period (23-Nov).
   return {
     p: '', n: '', pc: '', mc: '', st: 'Candidate', cat: 'Crossdock', mad: [], minMad: '',
-    per: CUR_PER, syncStatus: 0, by: 'D. Anggraini', dt: 'now', dests: [], effDate,
+    per: CUR_PER, syncStatus: 0, by: 'D. Anggraini', dt: 'now', dests: [],
   };
 }
