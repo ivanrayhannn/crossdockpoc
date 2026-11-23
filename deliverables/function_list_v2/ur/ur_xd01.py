@@ -30,7 +30,7 @@ PROCESS = [('1', 'Procurement registers candidate parts (screen or Excel).', 'Pr
 # id, requirement, user, priority, business rules, BPF step
 FR = [
     ('FR-01', 'The user can search the registered parts by Part No and status, and sort the list (newest change first by default).', 'Procurement', 'Must', '-', 'M8'),
-    ('FR-02', 'The user can register a new candidate part with Part No, Min MAD, Pcs/Case, Max Case/Day and Effective Start Date. Part Name is shown from the part master.', 'Procurement', 'Must', 'BR-01, BR-03', 'M3'),
+    ('FR-02', 'The user can register a new candidate part with Part No, Period, Min MAD, Pcs/Case and Max Case/Day. Part Name is shown from the part master.', 'Procurement', 'Must', 'BR-01, BR-03', 'M3'),
     ('FR-03', 'The user can change the data and the status of a registered part.', 'Procurement', 'Must', 'BR-02, BR-03, BR-05, BR-08', 'M3'),
     ('FR-04', 'The user can see the change history of a part: who changed what and when (before / after).', 'Procurement, D/S Team', 'Must', 'BR-12', 'M8'),
     ('FR-05', 'The user can add or change many parts at once with an Excel template (column upload: A = add, E = edit).', 'Procurement', 'Must', 'BR-11', 'M3'),
@@ -45,8 +45,8 @@ FR = [
 
 BR = [
     ('BR-01', 'Part status', 'A new part always starts as Candidate. Active / Inactive is decided by the monthly calculation: average MAD of the last months ≥ Min MAD → Active, otherwise Inactive.'),
-    ('BR-02', 'Part status', 'The user may change Active ↔ Inactive, but a part can never go back to Candidate.'),
-    ('BR-03', 'Effective Start Date', 'Default is tomorrow, it cannot be in the past, and it can only be changed while the part is Candidate. A part is calculated only from its Effective Start Date.'),
+    ('BR-02', 'Part status', 'A Candidate part can become Active on the screen; Active ↔ Inactive is allowed; a part can never go back to Candidate.'),
+    ('BR-03', 'Period', 'A new part is registered for the ongoing month (default) or the next month and takes effect from that month. The period cannot be changed later. A part of the next month can only be viewed until that month starts.'),
     ('BR-04', 'Capacity', 'The total case/day of all destinations must not exceed the Max Case/Day of the part. A lower total is allowed and shown as "n case/day left".'),
     ('BR-05', 'Capacity', 'Max Case/Day cannot be reduced below the case/day already mapped; the mapping has to be reduced first.'),
     ('BR-06', 'Destination', 'A destination appears only once per part and must exist in the destination master (GTOPAS).'),
@@ -62,8 +62,8 @@ BR = [
 SCREENS = [
     ('Tab Part List', 'deliverables/uiss_screens/part_list/c_01_initial.png',
      'Search area, list of parts (Part No, Min MAD, Pcs/Case, Max Case/Day, Total Pcs/Day, status, last update), buttons Add, Upload, Export, Run calculation and the date of the last calculation.'),
-    ('Add part', 'deliverables/uiss_screens/part_list/c_07_add_filled.png', 'New part: always Candidate, Effective Start Date tomorrow by default.'),
-    ('Edit an Active part', 'deliverables/uiss_screens/part_list/c_10_edit_active.png', 'Effective Start Date is locked once the part is no longer Candidate.'),
+    ('Add part', 'deliverables/uiss_screens/part_list/c_07_add_filled.png', 'New part: always Candidate, Period is the ongoing month by default.'),
+    ('Edit an Active part', 'deliverables/uiss_screens/part_list/c_10_edit_active.png', 'Part No and Period are locked; the status can be Active or Inactive.'),
     ('History', 'deliverables/uiss_screens/part_list/c_11_history.png', 'Who changed what and when.'),
     ('Tab Mapping per Destination', 'deliverables/uiss_screens/mapping/c_05_details_view.png',
      'Per part: capacity, allocated, %, sending status, and the destinations with their case/day.'),
@@ -74,7 +74,7 @@ SCREENS = [
 MESSAGES = [
     ('Save mapping', 'Total case/day exceeds the Max Case/Day of the part.', 'BR-04'),
     ('Save part', 'Max Case/Day is lower than the mapped total – reduce the mapping first.', 'BR-05'),
-    ('Edit part', 'Effective Start Date can only be changed while the part is Candidate.', 'BR-03'),
+    ('Edit part', 'Part No and Period cannot be changed; a Candidate part can only become Active.', 'BR-02, BR-03'),
     ('Upload', 'File rejected: n rows need correction (see the result report).', 'BR-11'),
     ('Sync', 'Sync requested for n parts; they stay Waiting until GTOPAS and AP POLE have received them.', 'BR-10'),
     ('Search', 'No part matches the criteria.', '-'),
@@ -89,8 +89,8 @@ NFR = [
 
 # id, scenario (given / when / then), FR, BR
 AC = [
-    ('AC-01', 'Given a new part, when Procurement saves it, then its status is Candidate and the Effective Start Date is tomorrow unless changed.', 'FR-02', 'BR-01, BR-03'),
-    ('AC-02', 'Given an Active part, when Procurement opens Edit, then the Effective Start Date is locked and the status can only be Active or Inactive.', 'FR-03', 'BR-02, BR-03'),
+    ('AC-01', 'Given a new part, when Procurement saves it, then its status is Candidate and its period is the ongoing month unless the next month is chosen.', 'FR-02', 'BR-01, BR-03'),
+    ('AC-02', 'Given an Active part, when Procurement opens Edit, then the period is locked and the status can only be Active or Inactive.', 'FR-03', 'BR-02, BR-03'),
     ('AC-03', 'Given Max Case/Day 24 and destinations totalling 24, when D/S adds 1 case/day to a destination, then Save is blocked with the over-capacity message.', 'FR-07', 'BR-04'),
     ('AC-04', 'Given a part with 20 case/day mapped, when Procurement changes Max Case/Day to 18, then Save is blocked until the mapping is reduced.', 'FR-03', 'BR-05'),
     ('AC-05', 'Given 3 changed Active parts and 1 part that became Inactive, when D/S clicks Sync, then 4 parts are sent and the Inactive part is sent as "stop crossdock".', 'FR-10', 'BR-08, BR-09'),

@@ -14,7 +14,7 @@ KIND = {
 LAYOUT = [
     ['TB_M_H0125_DESTINATION', 'TB_R_ACTUAL_DEMAND_SUMMARY'],
     ['TB_M_PART_MASTER', 'TB_M_PART_CANDIDATE_DEST', 'TB_R_PART_DAD_RESULT'],
-    ['TB_M_PART_CANDIDATE', 'TB_H_PART_CANDIDATE', 'TB_H_PART_CANDIDATE_STG_SYNC'],
+    ['TB_M_PART_CANDIDATE', 'TB_H_PART_CANDIDATE', 'TB_H_STG_APPOLE_KANBAN', 'TB_H_STG_APPOLE_EXPORT', 'TB_H_STG_GTOPAS'],
     ['TB_R_H0253_ORDER_CONTROL_PRE', 'TB_H_CROSSDOCK_ORDER_CHANGE'],
     ['TB_R_INSTRUCTION', 'TB_T_INSTRUCTION_H', 'TB_T_INSTRUCTION_D', 'TB_R_CROSSDOCK_CASE_HOLD', 'TB_R_CROSSDOCK_PART_HOLD'],
     ['TB_R_PRA_DAILY_ORDER_MANIFEST', 'TB_R_PRA_DAILY_ORDER_PART'],
@@ -23,7 +23,7 @@ LAYOUT = [
 
 TABLE_KIND = {
     'TB_M_H0125_DESTINATION': 'replica', 'TB_R_ACTUAL_DEMAND_SUMMARY': 'replica', 'TB_R_H0253_ORDER_CONTROL_PRE': 'replica',
-    'TB_M_PART_CANDIDATE': 'new', 'TB_M_PART_CANDIDATE_DEST': 'new', 'TB_H_PART_CANDIDATE': 'new', 'TB_H_PART_CANDIDATE_STG_SYNC': 'new', 'TB_R_PART_DAD_RESULT': 'new',
+    'TB_M_PART_CANDIDATE': 'new', 'TB_M_PART_CANDIDATE_DEST': 'new', 'TB_H_PART_CANDIDATE': 'new', 'TB_H_STG_APPOLE_KANBAN': 'new', 'TB_H_STG_APPOLE_EXPORT': 'new', 'TB_H_STG_GTOPAS': 'new', 'TB_R_PART_DAD_RESULT': 'new',
     'TB_H_CROSSDOCK_ORDER_CHANGE': 'new', 'TB_R_INSTRUCTION': 'new',
     'TB_R_CROSSDOCK_CASE_HOLD': 'new', 'TB_R_CROSSDOCK_PART_HOLD': 'new',
     'TB_T_INSTRUCTION_H': 'new', 'TB_T_INSTRUCTION_D': 'new',
@@ -86,7 +86,10 @@ RELATIONS = [
     ('TB_M_PART_CANDIDATE', 'PART_NO', 'TB_M_PART_CANDIDATE_DEST', 'PART_NO', '1 : N', 'Mapping per period and destination'),
     ('TB_M_PART_CANDIDATE', 'PART_NO', 'TB_R_PART_DAD_RESULT', 'PART_NO', '1 : N', 'Monthly calculation result (XD05 process 1)'),
     ('TB_M_PART_CANDIDATE', 'PART_NO', 'TB_H_PART_CANDIDATE', 'PART_NO', '1 : N', 'History of every change'),
-    ('TB_M_PART_CANDIDATE', 'PART_NO, PERIOD', 'TB_H_PART_CANDIDATE_STG_SYNC', 'PART_NO, PERIOD', '1 : N', 'Staging of every value change for the sync to AP POLE / GTOPAS (FK1, 22-Nov)'),
+    ('TB_M_PART_CANDIDATE', 'PART_NO, PERIOD', 'TB_H_STG_APPOLE_KANBAN', 'PART_NO, PERIOD', '1 : N', 'AP POLE Kanban rows (LLM9Q910) and the upload order of the part (OPERATION_TYPE), written by SP_STG_WRITE (logical)'),
+    ('TB_M_PART_CANDIDATE_DEST', 'PART_NO, PERIOD, DEST_CODE, ORDER_TYPE', 'TB_H_STG_APPOLE_EXPORT', 'NSP_PART_NO, PERIOD, DEST_CODE, ORDER_TYPE', '1 : N', 'AP POLE Export rows (LLM9Q880) per destination change; DELETE rows stay after the mapping is gone (logical)'),
+    ('TB_M_PART_CANDIDATE', 'PART_NO, PERIOD', 'TB_H_STG_GTOPAS', 'P_NO, PERIOD', '1 : N', 'GTOPAS rows: a destination appears or disappears for the part (logical)'),
+    ('TB_H_STG_APPOLE_KANBAN', 'SYNC_RUN_ID, PART_NO, PERIOD', 'TB_H_STG_APPOLE_EXPORT', 'SYNC_RUN_ID, NSP_PART_NO, PERIOD', '1 : N', 'Header of the part in a run: its OPERATION_TYPE sets the file of the Export rows (view V_APPOLE_UPLOAD_EXPORT)'),
     ('TB_M_PART_CANDIDATE', 'PART_NO', 'TB_R_ACTUAL_DEMAND_SUMMARY', 'PART_NO', '1 : N', 'Actual demand of the part (logical, no FK)'),
     ('TB_M_PART_CANDIDATE', 'PART_NO', 'TB_R_H0253_ORDER_CONTROL_PRE', 'SHIPPING_PART_NO', '1 : N', 'Crossdock customer order lines of an Active part (logical)'),
     ('TB_M_H0125_DESTINATION', 'DESTINATION_CD', 'TB_R_H0253_ORDER_CONTROL_PRE', 'DESTINATION_CD', '1 : N', 'Destination of the customer order'),

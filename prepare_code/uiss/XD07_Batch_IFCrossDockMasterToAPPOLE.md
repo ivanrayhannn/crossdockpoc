@@ -20,40 +20,28 @@
 | 0.8 | FID Rayhan | 20-Nov-26 |  | No response to NSP: the bot does not write TB_M_PART_CANDIDATE / TB_M_PART_CANDIDATE / TB_H_PART_CANDIDATE; the result is the notification e-mail; [Re-send last Sync] (20-Nov). |
 | 0.9 | FID Rayhan | 20-Nov-26 |  | TB_R_CROSSDOCK_IF_RESULT removed; the parts of the run come from the send time on TB_M_PART_CANDIDATE (GTOPAS_SYNC_DT / APPOLE_SYNC_DT) and SYNC_RUN_ID (20-Nov). |
 | 1.0 | FID Rayhan | 22-Nov-26 |  | Upload files LLM9Q910 / LLM9Q880 instead of the screen steps; source = TB_H_PART_CANDIDATE_STG_SYNC only; SEND_SEQ order 1 / 2 / 3 (22-Nov). |
+| 1.1 | FID Rayhan | 23-Nov-26 |  | Source: views V_APPOLE_UPLOAD_KANBAN / _EXPORT on TB_H_STG_APPOLE_KANBAN / _EXPORT; files EXPORT_PRE, KANBAN, EXPORT_POST from OPERATION_TYPE; started by the RPA parent flow (scenario 1 after GTOPAS OK, scenario 2 at once) (23-Nov). |
 
 ## 1. General
 
 ### Objective
 
-- To make the cross dock master of AP POLE equal to NSP by an RPA that uploads files (22-Nov): Cross Dock Kanban Part Master (LLM9Q910) and Export Customer Cross Dock Master (LLM9Q880), filled from the stored templates.
-- Source data: only TB_H_PART_CANDIDATE_STG_SYNC (read-only DB user), rows of the run ID passed by [Sync] / [Re-send last Sync]. NSP has reduced the rows and set SEND_SEQ before the bot starts.
-- Order: SEND_SEQ 1 Export (parts whose Max goes down) -> 2 Kanban -> 3 Export (every other part); Current period first, then Next. AP POLE checks every row: total Max Shipping Box (RCS) of the part <= Max Shipping Box Qty.
-- The bot writes nothing back to NSP; the result comes by the notification e-mail.
+- To make the cross dock master of AP POLE follow NSP by an RPA that uploads the files Cross Dock Kanban Part Master (LLM9Q910) and Export Customer Cross Dock Master (LLM9Q880), filled from the stored templates.
+- Source data: the views V_APPOLE_UPLOAD_KANBAN and V_APPOLE_UPLOAD_EXPORT on TB_H_STG_APPOLE_KANBAN / _EXPORT (read-only DB user), rows of the run ID of [Sync] / [Re-send last Sync]. NSP set every rule at the save; the views only read it.
+- Order: EXPORT_PRE (Export rows of the parts whose Max goes down) -> KANBAN -> EXPORT_POST (every other Export row). AP POLE checks every row: total Max Shipping Box (RCS) of the part <= Max Shipping Box Qty.
+- Started by the RPA parent flow: in scenario 1 only after XD06 succeeded; in scenario 2 at once (refer 4.1).
+- The robot writes nothing back to NSP; the result comes by the notification e-mail.
 
 ### Operation flow
 
-```mermaid
-flowchart TB
-  a>"[Sync] / [Re-send last Sync] on XD01 (run ID)"]
-  b["RPA: read the staging rows of the run (SEND_SEQ)"]
-  c["Fill the upload files per period + SEND_SEQ"]
-  d["Upload file by file (1 -> 2 -> 3), Current then Next"]
-  e{"Any error?"}
-  f["E-mail SUCCESS, Log"]
-  h["Stop at the failed file, e-mail FAILED, Log"]
-  a --> b
-  b --> c
-  c --> d
-  d --> e
-  e -->|No| f
-  e -->|Yes| h
-```
+*Operation flow* (no image)
 
 ### Input
 
 | Name | Type | Description |
 |---|---|---|
-| TB_H_PART_CANDIDATE_STG_SYNC | DB | Rows with APPOLE_SYNC_RUN_ID = run ID and SEND_SEQ not NULL; Kanban pair Pcs/Case + Max Case/Day from the latest Sync row of each field (refer 4.3) |
+| V_APPOLE_UPLOAD_EXPORT | DB view | Export rows of the run with FILE_NO (1 EXPORT_PRE / 3 EXPORT_POST) and ROW_ORDER |
+| V_APPOLE_UPLOAD_KANBAN | DB view | Kanban rows of the run with OPERATION_TYPE 1 to 4 (file KANBAN) |
 | Templates LLM9Q910 / LLM9Q880 | File | Stored upload templates (not downloaded from AP POLE) |
 
 ### Output
@@ -69,49 +57,48 @@ flowchart TB
 | Name | Description |
 |---|---|
 | Target system | 'APPOLE' (AP POLE, https://ap-pole.toyota-asia.com/lm9/) |
-| Method | RPA upload of LLM9Q910 / LLM9Q880 (22-Nov; no screen steps, no SFTP file) |
+| Method | RPA desktop flow CDX_XD07_APPOLE started by the Power Automate parent flow CDX_SYNC_PARENT; upload of LLM9Q910 / LLM9Q880 |
 | User | RPA bot user with AP POLE login; read-only DB user on NSP |
 | Operator ID | 'P6' (fixed) in LLM9Q910 |
 | Transport Code | '2' (fixed) in LLM9Q880 |
 
-### LLM9Q910 Cross Dock Kanban Part Master (file 2)
+### LLM9Q910 Cross Dock Kanban Part Master (file KANBAN, order 2)
 
 | Column | NSP source / rule |
 |---|---|
-| Effective Month / Year | PERIOD (MM / YYYY) |
+| Effective Month / Year | EFFECTIVE_MONTH_YEAR (MM/YYYY) |
 | Operator ID | 'P6' |
 | Part No. | PART_NO with "-" |
 | Part Name | PART_NAME |
-| Shipping Box Qty | PCS_CASE (latest Sync row) |
-| Max Shipping Box Qty | MAX_CASE_DAY (latest Sync row) |
-| Max Allowance Qty | Shipping Box Qty x Max Shipping Box Qty |
+| Shipping Box Qty | SHIPPING_BOX_QTY (Pcs/Case) |
+| Max Shipping Box Qty | MAX_SHIPPING_BOX_QTY (Max Case/Day) |
+| Max Allowance Qty | MAX_ALLOWANCE_QTY |
 | Packing/Pallet Type ... Outer-Qty | Empty |
 
-### LLM9Q880 Export Customer Cross Dock Master (files 1 and 3)
+### LLM9Q880 Export Customer Cross Dock Master (files EXPORT_PRE and EXPORT_POST, orders 1 and 3)
 
 | Column | NSP source / rule |
 |---|---|
-| Effective Month / Year | PERIOD (MM / YYYY) |
+| Effective Month / Year | EFFECTIVE_MONTH_YEAR (MM/YYYY) |
 | Part No. | PART_NO without "-" |
-| Buyer-PD | DEST_CODE as 5-2 (e.g. 9722D-10) |
+| Buyer-PD | BUYER_PD (DEST_CODE as 5-2, e.g. 9722D-10) |
 | Order Type | ORDER_TYPE |
-| Transport Code | '2' |
-| Max Shipping Box (RCS) | NEW_VALUE (0 for DELETE) |
+| Transport Code | TRANSPORT_CODE '2' |
+| Max Shipping Box (RCS) | MAX_SHIPPING_BOX_RCS (0 for DELETE) |
 | Shipping Box Qty, Max Shipping Box by Part No., Max Allowance Qty, Packing/Pallet Type | Empty |
 
 ## 2. Function flow
 
 ```mermaid
 flowchart TB
-  p1["1. Start (run ID from [Sync] / [Re-send last Sync])"]
-  src[("TB_H_PART_CANDIDATE_STG_SYNC")]
-  p2["2. Read the rows of the run (SEND_SEQ not NULL)"]
-  p3["3. Fill LLM9Q880 / LLM9Q910 per period + SEND_SEQ"]
-  p4["4. Upload the files in name order, wait for each result"]
-  ap[("AP POLE Kanban / Export Cross Dock Master")]
-  d{"5. Any error (try-catch)?"}
-  p6["6. Notification e-mail, Log end"]
-  log[("Log")]
+  p1["1. Start (run ID from the parent flow)"]
+  src[("V_APPOLE_UPLOAD_EXPORT / _KANBAN")]
+  p2["2. Rows of the run per file"]
+  p3["3. Fill the templates (empty file not made)"]
+  p4["4. Upload in order, wait for each result"]
+  d{"5. File rejected?"}
+  p6["6. Result to the parent flow, e-mail, Log"]
+  ap[("AP POLE")]
   p1 --> p2
   src --> p2
   p2 --> p3
@@ -119,111 +106,115 @@ flowchart TB
   p4 --> ap
   p4 --> d
   d -->|No / Yes| p6
-  p6 --> log
 ```
 
-1. NSP starts the flow with the run ID after [Sync] / [Re-send last Sync] (the staging is already updated). Write LOG1. The whole run is inside one try-catch.
-2. Read TB_H_PART_CANDIDATE_STG_SYNC (read-only DB user): rows with APPOLE_SYNC_RUN_ID = run ID and SEND_SEQ not NULL.
-  - Kanban rows (SEND_SEQ 2): one row per part + period; Pcs/Case and Max Case/Day = NEW_VALUE of the latest row with APPOLE_SYNC_STATUS 1 of each field (this run or an earlier one), so the pair is complete when only one field changed.
-  - Export rows (SEND_SEQ 1 / 3): Max Shipping Box (RCS) = NEW_VALUE (0 for DELETE).
-3. Fill the stored templates: one file per period + SEND_SEQ, name <template>_<run ID>_<period>_<SEND_SEQ>.xls (e.g. LLM9Q880_20261127100000_202611_1.xls). A file without rows is not made.
-  - Inside an Export file: per part the rows going down / deleted first, then up / added (AP POLE checks row by row).
-4. Upload the files one at a time in the order of their names (Current period first, then Next) and wait for each result. Write LOG3 per file.
-  - File 1 (Export, only parts whose Max goes down) -> file 2 (Kanban) -> file 3 (Export, every other part).
-5. Any error (try-catch): stop at the failed file, write LOG4. The files already uploaded stay in AP POLE; the other files wait for [Re-send last Sync].
-6. Send the notification e-mail (SUCCESS / FAILED), write LOG6 and LOG2. The bot writes nothing to NSP.
+1. The parent flow starts XD07 with the run ID (scenario 1 after XD06 succeeded, scenario 2 at once). NSP has already set the rows to SYNC_STATUS 1 with this run ID. Write LOG1.
+2. Read the views (read-only DB user) for the run ID:
+  - V_APPOLE_UPLOAD_EXPORT WHERE FILE_NO = 1 (EXPORT_PRE) and FILE_NO = 3 (EXPORT_POST), ORDER BY PERIOD, NSP_PART_NO, ROW_ORDER, STG_ID.
+  - V_APPOLE_UPLOAD_KANBAN (OPERATION_TYPE 1 to 4), ORDER BY PERIOD, PART_NO.
+3. Fill the stored templates: one file per kind, Current and Next period together (Effective Month / Year per row). Name <template>_<run ID>_<order>_<name>.xls, e.g. LLM9Q880_20261204100000_1_EXPORT_PRE.xls. A file without rows is not made.
+  - Inside an Export file, per part: rows going down or DELETE (ROW_ORDER 1) first, then up or ADD (ROW_ORDER 2).
+4. Upload the files one at a time: 1 EXPORT_PRE -> 2 KANBAN -> 3 EXPORT_POST, and wait for each result. Write LOG3 per file.
+5. A rejected file stops the run (LOG4): the files already uploaded stay in AP POLE; the next files wait for [Re-send last Sync].
+6. Return STATUS to the parent flow; the parent flow sends the notification e-mail (SUCCESS / FAILED). Write LOG6 and LOG2. The robot writes nothing to NSP.
 
 ## 3. Data edit mapping
 
-#### 1. Insert LLM9Q910 Cross Dock Kanban Part Master (upload file) – One row per part + period (file 2)
-- Source: TB_H_PART_CANDIDATE_STG_SYNC (keys: APPOLE_SYNC_RUN_ID = Run ID, SEND_SEQ = 2)
+#### 1. Insert LLM9Q910 Cross Dock Kanban Part Master (upload file) – File KANBAN (order 2): one row per Kanban row of the run with OPERATION_TYPE 1 to 4
+- Source: V_APPOLE_UPLOAD_KANBAN (keys: RUN_ID = Run ID)
 
 | Source field | Destination field | Description |
 |---|---|---|
-| PERIOD | Effective Month / Year | MM / YYYY |
-| - | Operator ID | 'P6' |
+| EFFECTIVE_MONTH_YEAR | Effective Month / Year | MM/YYYY |
+| OPERATOR_ID | Operator ID | 'P6' |
 | PART_NO | Part No. | With "-" |
 | PART_NAME | Part Name |  |
-| NEW_VALUE (PCS_CASE) | Shipping Box Qty | Latest row with APPOLE_SYNC_STATUS 1 of PCS_CASE for the part + period |
-| NEW_VALUE (MAX_CASE_DAY) | Max Shipping Box Qty | Latest row with APPOLE_SYNC_STATUS 1 of MAX_CASE_DAY |
-| - | Max Allowance Qty | Shipping Box Qty x Max Shipping Box Qty |
+| SHIPPING_BOX_QTY | Shipping Box Qty | Pcs/Case |
+| MAX_SHIPPING_BOX_QTY | Max Shipping Box Qty | Max Case/Day |
+| MAX_ALLOWANCE_QTY | Max Allowance Qty | Shipping Box Qty x Max Shipping Box Qty |
 
-#### 2. Insert LLM9Q880 Export Customer Cross Dock Master (upload files) – One row per destination + order type (files 1 and 3)
-- Source: TB_H_PART_CANDIDATE_STG_SYNC (keys: APPOLE_SYNC_RUN_ID = Run ID, LEVEL_TYPE / SEND_SEQ = 'EXPORT' / 1 or 3)
+#### 2. Insert LLM9Q880 Export Customer Cross Dock Master (upload files) – Files EXPORT_PRE and EXPORT_POST: one row per Export row of the run, ordered by ROW_ORDER per part
+- Source: V_APPOLE_UPLOAD_EXPORT (keys: RUN_ID = Run ID, FILE_NO = 1 (EXPORT_PRE) / 3 (EXPORT_POST))
 
 | Source field | Destination field | Description |
 |---|---|---|
-| PERIOD | Effective Month / Year | MM / YYYY |
+| EFFECTIVE_MONTH_YEAR | Effective Month / Year | MM/YYYY |
 | PART_NO | Part No. | Without "-" |
-| DEST_CODE | Buyer-PD | 5-2 format |
+| BUYER_PD | Buyer-PD | 5-2 format |
 | ORDER_TYPE | Order Type |  |
-| - | Transport Code | '2' |
-| NEW_VALUE | Max Shipping Box (RCS) | 0 for DELETE |
+| TRANSPORT_CODE | Transport Code | '2' |
+| MAX_SHIPPING_BOX_RCS | Max Shipping Box (RCS) | 0 for DELETE |
 
 #### 3. Insert Log – Messages of the run
-- Source: Result of this run
+- Source: RPA run
 
 | Source field | Destination field | Description |
 |---|---|---|
-|  | BATCH_ID | 'XD07_RPA_APPOLE' |
-|  | RUN_ID | Run ID |
-|  | STATUS | SUCCESS / ERROR |
-|  | MESSAGE | LOG1 - LOG6 |
-|  | START_DT / END_DT | Start and end date-time |
+| - | BATCH_ID | 'XD07_RPA_APPOLE' |
+| - | RUN_ID | Run ID |
+| - | STATUS | SUCCESS / FAILED |
+| - | MESSAGE | LOG1 - LOG6 |
+| - | START_DT / END_DT | Start and end date-time |
 
 ## 4. Function description
 
-### 4.1 Business Process
+### 4.1 Parent Flow and Scenarios
 
-- Procurement maintains the Kanban Crossdock Master and the D/S team the Export Crossdock Master on XD01; XD05 makes the Next period on day D. Every value change is a row of TB_H_PART_CANDIDATE_STG_SYNC (refer XD01 5.24).
-- The D/S team clicks [Sync]: NSP reduces the Non Sync rows of the Current and Next period (first OLD / last NEW per key), sets SEND_SEQ, the run ID and LAST_SYNC_DATE_APPOLE, then starts this bot.
-- Decisions and simulation: deliverables/function_list_v2/erd/proposal_staging_sync (Summary_Staging_Sync_Decisions.md, simulation/Full_Sync_Flow_Simulation.xlsx).
+- One Power Automate parent flow per run (CDX_SYNC_PARENT), started by NSP with RUN_ID and RUN_TYPE (SYNC, RESEND, ROLLOVER).
+- Scenario 1 (run with GTOPAS rows: a part becomes Active or Inactive, a destination is added or removed): XD06 GTOPAS first; XD07 AP POLE starts only when every GTOPAS row succeeded. When GTOPAS fails, AP POLE stops: XD07 does not start and the e-mail says FAILED.
+- Scenario 2 (run without GTOPAS rows: Max Case/Day, Pcs/Case, Case/Day, order type of a destination that stays): XD07 only.
+- Period Rollover (RUN_TYPE ROLLOVER): XD06 only, for the GTOPAS rows of the new Current period.
+- Choice of the scenario: SELECT COUNT(*) FROM TB_H_STG_GTOPAS WHERE SYNC_RUN_ID = run ID (> 0: scenario 1).
 
-### 4.2 Upload Files and Order
+### 4.2 Files and Order
 
-| SEND_SEQ | File | Rows |
+- Upload files of AP POLE (views): EXPORT_PRE (LLM9Q880, order 1) = Export rows of the parts whose Kanban row of the run has OPERATION_TYPE 1; KANBAN (LLM9Q910, order 2) = Kanban rows of the run with OPERATION_TYPE 1 to 4; EXPORT_POST (LLM9Q880, order 3) = every other Export row of the run. Inside a file, per part, rows going down or DELETE (ROW_ORDER 1) come before rows going up or ADD (ROW_ORDER 2). An empty file is not made. File name <template>_<RUN_ID>_<order>_<name>.xls.
+- View rules: FILE_NO = 1 (EXPORT_PRE) when the Kanban row of the same run, part and period has OPERATION_TYPE 1, else 3 (EXPORT_POST; every part of a run has its Kanban row, OPERATION_TYPE 1 to 5). ROW_ORDER = 1 when MAX_SHIPPING_BOX_RCS is lower than the value sent before for the key (same period, else the latest earlier period), else 2. V_APPOLE_UPLOAD_KANBAN leaves out OPERATION_TYPE 5.
+- Why the order: AP POLE checks every uploaded row (total Max Shipping Box (RCS) of the part <= Max Shipping Box Qty). When Max goes down the destinations come down first (EXPORT_PRE); when Max goes up, stays or is new the Max goes first (KANBAN). Inside a file the total first goes down, then up to the end value, so it never passes the Max.
+- AP POLE keeps the rows of an Effective Month active until a newer month comes; NSP still sends every row of a new period.
+
+| OPERATION_TYPE | Meaning | Upload order of the part |
 |---|---|---|
-| 1 | LLM9Q880 Export, before Kanban | EXPORT rows of a part whose Max Case/Day goes down (destinations lowered first) |
-| 2 | LLM9Q910 Kanban | Every KANBAN change and new part (Pcs/Case and Max in one row) |
-| 3 | LLM9Q880 Export, after Kanban | EXPORT rows of every other part: Max up, new part, no KANBAN row (moves, deletes, Inactive) |
+| 1 | Max down | EXPORT_PRE, then KANBAN |
+| 2 | Max up | KANBAN, then EXPORT_POST |
+| 3 | Max same (only Pcs/Case changed, or a new period with the same Max) | KANBAN, then EXPORT_POST |
+| 4 | Never sent (new part) | KANBAN, then EXPORT_POST |
+| 5 | Kanban unchanged, only the destinations changed (ACTION KEEP) | EXPORT_POST only |
 
-- File name <template>_<run ID>_<period>_<SEND_SEQ>.xls; one file per period + SEND_SEQ; Current first, then Next. A file without rows is not made.
-- AP POLE checks every row: total Max Shipping Box (RCS) of the part <= Max Shipping Box Qty. Inside an Export file the rows of a part going down / deleted come first, then up / added.
-- Delete of a Buyer-PD = Max Shipping Box (RCS) 0 (the row stays in AP POLE with 0). An Inactive part stays in the Kanban with its Buyer-PD 0; in the following months it has no Export row.
+### 4.3 Errors and Re-send
 
-### 4.3 Data from the Staging
+- A rejected file stops the run: the files already uploaded stay in AP POLE, the next files are not uploaded.
+- When the e-mail says FAILED, the D/S team clicks [Re-send last Sync] before the next [Sync]: the same run ID and the same files; AP POLE sets the same values again, so a repeat is safe.
+- Rules and simulation: deliverables/function_list_v2/erd/proposal_staging_sync (Proposal_Tables_Staging_Per_Target.xlsx, simulation/Staging_Header_Order.html, simulation/Staging_Per_Target_Full_Flow_Simulation.xlsx).
 
-- Rows of the run: APPOLE_SYNC_RUN_ID = run ID and SEND_SEQ not NULL (Superseded rows and keys ending on their first value have no SEND_SEQ).
-- Kanban row: Pcs/Case and Max Case/Day = NEW_VALUE of the latest row with APPOLE_SYNC_STATUS 1 of each field for the part + period (this run or an earlier one; XD05 always writes both on day D).
-- Part Name from the staging (PART_NAME column).
-- Queries: deliverables/function_list_v2/erd/proposal_staging_sync/sql/staging_sync_queries.sql (Kanban file, Export files).
+| Case | GTOPAS (XD06) | AP POLE (XD07) | D/S does |
+|---|---|---|---|
+| Scenario 1, GTOPAS fails on a row | Other rows still done; failed rows listed | Not started | [Re-send last Sync]: GTOPAS again, then AP POLE |
+| Scenario 1, GTOPAS OK, AP POLE rejects a row | Done | Stops at that row; next files not sent | [Re-send last Sync] |
+| Scenario 2, AP POLE rejects a row | Skipped | Stops at that row | [Re-send last Sync] |
+| Period Rollover, GTOPAS fails | Failed rows listed | Not part of the rollover | Re-send the rollover run |
+| Robot or PC down before the start | Not started | Not started | [Re-send last Sync] |
 
-### 4.4 Try-Catch and Re-send
+### 4.4 Notification Email (Power Automate)
 
-- The whole run is in one try-catch. Any error (login, upload screen, AP POLE error of a row, timeout) stops the run at that file.
-- Files uploaded before the error stay in AP POLE. The D/S team clicks [Re-send last Sync]: the files of the last run are made and uploaded again in the same order (the values are set, so a repeat is safe).
-- NSP does not receive the result (no response); the staging stays Sync. The e-mail tells SUCCESS / FAILED.
-
-### 4.5 Notification Email (Power Automate, 19-Nov)
-
-- The cloud flow of the RPA sends one email per run of XD07 (AP POLE), so the user knows the result without opening NSP.
-- One email per target: XD06 (GTOPAS) and XD07 (AP POLE) run as separate bots, so a [Sync] gives two emails.
-- One email per run: the retries of the same run do not send an email; only the final result does.
+- The parent flow sends one email per run, so the user knows the result without opening NSP.
+- The email holds the result of every target of the run: GTOPAS and AP POLE in scenario 1 (AP POLE 'not started' when GTOPAS failed), AP POLE only in scenario 2, GTOPAS only for the Period Rollover.
+- One email per run: the retries of the same run send no email; only the final result does.
 
 | No | Case | When the email is sent | Subject result |
 |---|---|---|---|
-| E1 | Run without error | End of the run, after the last part | SUCCESS |
+| E1 | Run without error | End of the run, after the last row / file of every target | SUCCESS |
 | E2 | Run stopped by an error (try-catch) | After the automatic retries of the cloud flow are used up (retry count and interval in the flow settings, proposal 2 times, 10 minutes) | FAILED |
 | E3 | Bot could not start (machine offline, login of NSP / AP POLE failed, desktop flow time out) | Cloud flow branch "run after = failed / timed out" of the desktop flow action | FAILED |
-| - | Nothing to send (no row with SEND_SEQ in the run) | No email | - |
+| - | No AP POLE row in the run (only a Period Rollover) | XD07 is not started; the email shows GTOPAS only | - |
 
 | Item | Content |
 |---|---|
 | Sender | Shared mailbox of the RPA (Office 365 Outlook connector "Send an email (V2)"), TBC |
 | To | User who clicked [Sync] (e-mail sent by NSP in the request of the flow) + D/S team mailing list |
 | Cc | RPA PIC; for FAILED also the NSP PIC |
-| Subject | [Crossdock Sync][AP POLE][SUCCESS \| FAILED] Run <RUN_ID> - <n> part(s) |
-| Body 1. Run | RUN_ID, target AP POLE, started / ended, [Sync] by <user> at <date-time>, period(s) sent |
+| Subject | [Crossdock Sync][SYNC \| RESEND \| ROLLOVER][SUCCESS \| FAILED] Run <RUN_ID> - <n> part(s) |
+| Body 1. Run | RUN_ID, RUN_TYPE, scenario, targets run, started / ended, [Sync] by <user> at <date-time>, period(s) sent |
 | Body 2. Summary | Parts processed; part added / edited / deleted, Buyer-PD added / edited / deleted |
 | Body 3. Error (FAILED) | Step, part, destination and message of the error (LOG4 / LOG5); parts not processed |
 | Body 4. Action | SUCCESS: no action. FAILED: click [Re-send last Sync] on Crossdock Master Setting; contact the RPA PIC when it fails again |
@@ -231,54 +222,72 @@ flowchart TB
 | Attachment | The upload files of the run with the AP POLE result per file. Above the mail size limit: link only |
 | Language | English |
 
-- Example subject: [Crossdock Sync][AP POLE][FAILED] Run 20261127103000 - 12 part(s).
+- Example subject: [Crossdock Sync][SYNC][FAILED] Run 20261127103000 - 12 part(s).
 - Recipients (mailing list, RPA PIC, NSP PIC) are set in the flow settings, not in the code of the bot.
 - LOG6 is written when the email is sent; when sending fails, the run result stays and the RPA PIC sees it in the Power Automate run history.
-
-### 4.6 Open Points
-
-- Upload screen of AP POLE for LLM9Q910 / LLM9Q880 (Common File Upload) - steps of the bot TBC with the AP POLE team.
 
 ## 5. Logging messages
 
 | ID | Event | Cause | Type | Message | Action |
 |---|---|---|---|---|---|
-| LOG1 | Batch start | [Sync] / [Re-send last Sync] on XD01 | Info | RPA cross dock master to AP POLE started. Run <RUN_ID>, <n> file(s). | system: Write the log.; user: - |
+| LOG1 | Batch start | Parent flow: scenario 1 after GTOPAS OK, or scenario 2 | Info | RPA cross dock master to AP POLE started. Run <RUN_ID>, <n> file(s). | system: Write the log.; user: - |
 | LOG2 | Batch end | Bot finishes | Info | RPA cross dock master to AP POLE ended. Run <RUN_ID>, files uploaded <f>, rows <r>, status <STATUS>. | system: Write the log.; user: - |
 | LOG3 | File uploaded | AP POLE accepted the file | Info | <FILE_NAME> uploaded: <n> row(s). | system: Write the log.; user: - |
-| LOG4 | Error (try-catch) | Login, upload screen, AP POLE error of a row, timeout | Error | RPA to AP POLE stopped at <FILE_NAME> row <n>: <ERROR_DETAIL>. Files not uploaded: <list>. | system: Stop the bot.; user: Click [Re-send last Sync]; contact PIC if it persists. |
+| LOG4 | Error (try-catch) | Login, upload screen, AP POLE error of a row, timeout | Error | RPA to AP POLE stopped at <FILE_NAME> row <n>: <ERROR_DETAIL>. Files not uploaded: <list>. | system: Stop the bot. STATUS FAILED; the next files are not uploaded.; user: Click [Re-send last Sync]; contact PIC if it persists. |
 | LOG5 | Unexpected error | Any other system error | Critical | Unexpected error: <ERROR_DETAIL>. | system: Stop. STATUS = ERROR.; user: User contact PIC |
 | LOG6 | Notification email | End of the run (SUCCESS / FAILED) | Info | Notification email <SUCCESS / FAILED> of run <RUN_ID> sent to <recipients>. | system: Write the log.; user: Read the email; FAILED: click [Re-send last Sync]. |
 
 ## 7. Tables
 
-#### TB_H_PART_CANDIDATE_STG_SYNC (history, proposed)
-Staging of every value change of the Kanban / Export Crossdock Master for the sync to AP POLE (XD07) and GTOPAS (XD06) (22-Nov). Inserted by XD01 (screen), XD02 / XD03 (upload) and XD05 in the same transaction as the master update; updated only by [Sync], [Re-send last Sync] and the Period Rollover. The RPA reads only this table. TB_H_PART_CANDIDATE (screen history) is kept as it is.
+#### TB_H_STG_APPOLE_KANBAN (history, proposed)
+AP POLE Kanban rows in the format of the upload file LLM9Q910, one row per Kanban change of a part + period, plus the header row (OPERATION_TYPE 5) when only the destinations changed. Written by SP_STG_WRITE (XD01, XD02, XD05); SYNC_STATUS set by SP_STG_SYNC. Read by XD07 through V_APPOLE_UPLOAD_KANBAN and V_APPOLE_UPLOAD_EXPORT.
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
-| HIST_ID | BIGINT | Y | N | Running number (identity): order of the changes |
-| PART_NO | VARCHAR(TBD) |  | N | Part number (NSP format, with "-"); FK1 (PART_NO, PERIOD) -> TB_M_PART_CANDIDATE |
-| PART_NAME | VARCHAR(TBD) |  | N | Part Name copied from TB_M_PART_CANDIDATE at the insert (Part Name of the Kanban upload file) |
-| PERIOD | CHAR(6) |  | N | Calculation period YYYYMM; Effective Month / Year of the AP POLE upload |
-| PART_STATUS | VARCHAR(10) |  | N | Status of the part in this period when the row is written (Active / Inactive). Inactive: the part stays in the AP POLE Kanban, its Export rows are DELETE with NEW_VALUE 0 |
-| LEVEL_TYPE | VARCHAR(6) |  | N | KANBAN = parent (Kanban Crossdock Master), EXPORT = destination (Export Crossdock Master) |
-| DEST_CODE | CHAR(7) |  | Y | EXPORT only: destination code. No FK (a DELETE row points to a removed destination) |
-| ORDER_TYPE | VARCHAR(2) |  | Y | EXPORT only: '**', 'C', '9', 'V' |
-| FIELD_NAME | VARCHAR(30) |  | N | KANBAN: PCS_CASE, MAX_CASE_DAY. EXPORT: CASE_DAY |
-| ACTION | VARCHAR(6) |  | N | ADD / EDIT / DELETE |
-| OLD_VALUE | VARCHAR(10) |  | Y | Value before the change; NULL on ADD |
-| NEW_VALUE | VARCHAR(10) |  | Y | Value after the change; 0 on DELETE |
-| SOURCE | VARCHAR(6) |  | N | BATCH (XD05) / SCREEN / UPLOAD |
+| STG_ID | BIGINT | Y | N | Running number: order of the inserts |
+| PERIOD | CHAR(6) |  | N | Calculation period YYYYMM. FK1 (PART_NO, PERIOD) -> TB_M_PART_CANDIDATE |
+| ACTION | VARCHAR(6) |  | N | ADD (new part, new period) / EDIT (Pcs/Case or Max changed) / KEEP (header written by an Export save, Kanban unchanged) |
+| PART_STATUS | VARCHAR(10) |  | N | Active / Inactive in the period when the row is written (an Inactive part stays in the AP POLE Kanban) |
+| EFFECTIVE_MONTH_YEAR | CHAR(7) |  | N | MM/YYYY of PERIOD. File / screen column: Effective Month / Year |
+| OPERATOR_ID | CHAR(2) |  | N | Always P6. File / screen column: Operator ID. Default 'P6' |
+| PART_NO | VARCHAR(TBD) |  | N | Part number with "-" (NSP format); FK1. File / screen column: Part No. |
+| PART_NAME | VARCHAR(TBD) |  | N | From TB_M_PART_CANDIDATE at the insert. File / screen column: Part Name |
+| SHIPPING_BOX_QTY | NUMBER(5) |  | N | Pcs/Case. File / screen column: Shipping Box Qty |
+| MAX_SHIPPING_BOX_QTY | NUMBER(5) |  | N | Max Case/Day. File / screen column: Max Shipping Box Qty |
+| MAX_ALLOWANCE_QTY | NUMBER(9) |  | N | Shipping Box Qty x Max Shipping Box Qty. File / screen column: Max Allowance Qty |
+| OPERATION_TYPE | NUMBER(1) |  | N | Header of the part, set by SP_STG_WRITE at the save: 1 = Max down, 2 = Max up, 3 = Max same (only Pcs/Case changed, or a new period with the same Max), 4 = never sent, 5 = Kanban unchanged, only the destinations changed (ACTION KEEP). 1 to 4 against the last Max sent: same period, else the latest earlier period. Upload: 1 -> the Export rows of the part in EXPORT_PRE before KANBAN; 2, 3, 4 -> KANBAN then EXPORT_POST; 5 -> EXPORT_POST only, the row is not in the KANBAN file |
+| SOURCE | VARCHAR(6) |  | N | SCREEN / UPLOAD / BATCH (XD05) |
 | UPLOAD_ID | VARCHAR(TBD) |  | Y | Upload of the Kanban or Export Excel (Log); NULL when SOURCE is not UPLOAD |
-| APPOLE_SYNC_STATUS | CHAR(1) |  | N | 0 = Non Sync (default), 1 = Sync, 2 = Superseded (an earlier row of the same key, not sent). The part + period is AP POLE Non Sync while it has a row with 0 |
-| APPOLE_SYNC_DT | DATETIME |  | Y | Time of the [Sync] that sent the row to AP POLE (status 1 and 2); Last Sent AP POLE = latest value |
-| SEND_SEQ | NUMBER(1) |  | Y | Upload file: 1 = Export (LLM9Q880) before the Kanban file, only for a part whose Max goes down; 2 = Kanban (LLM9Q910); 3 = Export after the Kanban file (every other part). Set at [Sync] on the last row of each key; NULL for 2 and for a key that ends on its first value |
-| APPOLE_SYNC_RUN_ID | VARCHAR(14) |  | Y | AP POLE run ID YYYYMMDDHHMMSS; [Re-send last Sync] takes the rows of the last run |
-| GTOPAS_SYNC_STATUS | CHAR(1) |  | Y | NULL = not for GTOPAS (KANBAN rows, EXPORT EDIT). 0 = Non Sync: EXPORT ADD / DELETE (destination appears / disappears). 1 = Sync: [Sync] for the Current period, the Period Rollover for the new period |
-| GTOPAS_SYNC_DT | DATETIME |  | Y | Time of the [Sync] / Period Rollover that sent the row to GTOPAS; Last Sent GTOPAS = latest value |
-| GTOPAS_SYNC_RUN_ID | VARCHAR(14) |  | Y | GTOPAS run ID ([Sync], [Re-send last Sync] or the Period Rollover) |
+| SYNC_STATUS | CHAR(1) |  | N | 0 = to send, 1 = sent, 2 = Superseded at the save (a newer row of the key, or back to the value already sent). Set by SP_STG_WRITE (0, 2) and SP_STG_SYNC / Period Rollover (1). Default '0' |
+| SYNC_DT | DATETIME |  | Y | Time of the [Sync] / Period Rollover that sent the row; Last Sent on the screen = latest value |
+| SYNC_RUN_ID | VARCHAR(14) |  | Y | Run ID YYYYMMDDHHMMSS; [Re-send last Sync] sends the rows of the last run again |
 | CREATED_BY | VARCHAR(20) |  | N | User of the save / upload, or XD05BATCH |
 | CREATED_DT | DATETIME |  | N | Time of the insert (same transaction as the master update) |
-| CHANGED_BY | VARCHAR(20) |  | Y | User of [Sync] / [Re-send last Sync], XD05BATCH for the Period Rollover |
+| CHANGED_BY | VARCHAR(20) |  | Y | User of the save that made the row Superseded, of [Sync], or XD05BATCH (Period Rollover) |
+| CHANGED_DT | DATETIME |  | Y | Time of that update |
+
+#### TB_H_STG_APPOLE_EXPORT (history, proposed)
+AP POLE Export rows in the format of the upload file LLM9Q880, one row per added, changed or removed destination + order type of a part + period. Written by SP_STG_WRITE (XD01, XD03, XD05); SYNC_STATUS set by SP_STG_SYNC. Read by XD07 through V_APPOLE_UPLOAD_EXPORT.
+
+| Column | Type | PK | Null | Description |
+|---|---|---|---|---|
+| STG_ID | BIGINT | Y | N | Running number: order of the inserts |
+| PERIOD | CHAR(6) |  | N | Calculation period YYYYMM. FK1 (NSP_PART_NO, PERIOD) -> TB_M_PART_CANDIDATE |
+| NSP_PART_NO | VARCHAR(TBD) |  | N | Part number with "-" (key back to NSP); FK1 |
+| DEST_CODE | CHAR(7) |  | N | Destination code, 7 digits. No FK: a DELETE row points to a removed destination |
+| ACTION | VARCHAR(6) |  | N | ADD / EDIT / DELETE (DELETE = Max Shipping Box (RCS) 0) |
+| EFFECTIVE_MONTH_YEAR | CHAR(7) |  | N | MM/YYYY of PERIOD. File / screen column: Effective Month / Year |
+| PART_NO | VARCHAR(TBD) |  | N | Part number without "-". File / screen column: Part No. |
+| BUYER_PD | CHAR(8) |  | N | DEST_CODE in 5-2 format. File / screen column: Buyer-PD |
+| ORDER_TYPE | VARCHAR(2) |  | N | '**', 'C', '9', 'V' (system master). File / screen column: Order Type |
+| TRANSPORT_CODE | CHAR(1) |  | N | Always 2. File / screen column: Transport Code. Default '2' |
+| MAX_SHIPPING_BOX_RCS | NUMBER(5) |  | N | Case/Day of the destination; 0 = delete. File / screen column: Max Shipping Box (RCS) |
+| SOURCE | VARCHAR(6) |  | N | SCREEN / UPLOAD / BATCH (XD05) |
+| UPLOAD_ID | VARCHAR(TBD) |  | Y | Upload of the Kanban or Export Excel (Log); NULL when SOURCE is not UPLOAD |
+| SYNC_STATUS | CHAR(1) |  | N | 0 = to send, 1 = sent, 2 = Superseded at the save (a newer row of the key, or back to the value already sent). Set by SP_STG_WRITE (0, 2) and SP_STG_SYNC / Period Rollover (1). Default '0' |
+| SYNC_DT | DATETIME |  | Y | Time of the [Sync] / Period Rollover that sent the row; Last Sent on the screen = latest value |
+| SYNC_RUN_ID | VARCHAR(14) |  | Y | Run ID YYYYMMDDHHMMSS; [Re-send last Sync] sends the rows of the last run again |
+| CREATED_BY | VARCHAR(20) |  | N | User of the save / upload, or XD05BATCH |
+| CREATED_DT | DATETIME |  | N | Time of the insert (same transaction as the master update) |
+| CHANGED_BY | VARCHAR(20) |  | Y | User of the save that made the row Superseded, of [Sync], or XD05BATCH (Period Rollover) |
 | CHANGED_DT | DATETIME |  | Y | Time of that update |
