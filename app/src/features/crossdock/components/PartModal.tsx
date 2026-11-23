@@ -67,6 +67,7 @@ export function PartModal({ state }: { state: CrossdockState }) {
   // from that period. Edit: locked (part of the key).
   const periodLocked = inputRO || !!editId;
 
+  const savedStatus = editId ? parts.find((p) => p.p === editId)?.st : undefined;
   // A newly added part always starts as Candidate; the status only becomes
   // editable once the part exists.
   const statusLocked = inputRO || !editId;
@@ -111,10 +112,16 @@ export function PartModal({ state }: { state: CrossdockState }) {
                     title={!editId ? 'New parts are automatically Candidate' : undefined}
                     style={{ background: statusLocked ? 'var(--color-neutral-200)' : inputBg, appearance: 'none' }}
                   >
-                    <option value="Candidate">Candidate</option>
+                    {/* No part goes back to Candidate: Candidate is offered only while the saved part is still Candidate. */}
+                    {(!editId || savedStatus === 'Candidate') && <option value="Candidate">Candidate</option>}
                     <option value="Active">Active</option>
                     <option value="Inactive">Inactive</option>
                   </select>
+                  {!!editId && savedStatus === 'Candidate' && f.st === 'Active' && (
+                    <span style={{ fontSize: 11.5, color: 'var(--color-accent-2-800)', marginTop: 4 }}>
+                      Candidate → Active in the ongoing period: the part is sent to AP POLE at the next [Sync] (Kanban ADD); map its destinations in Export Crossdock Master.
+                    </span>
+                  )}
                 </div>
                 <div className="field">
                   <label>
