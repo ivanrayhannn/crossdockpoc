@@ -25,6 +25,13 @@ BOX = Border(left=thin, right=thin, top=thin, bottom=thin)
 my = lambda per: per[4:] + '/' + per[:4]
 name = lambda p: 'DUMMY PART ' + p[-3:]
 bpd = lambda d: DEST[d][:5] + '-' + DEST[d][5:]
+USER = data['user']
+MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+mon = lambda per: MON[int(per[4:]) - 1] + ' ' + per[:4]
+nz = lambda v: 'NULL' if v is None or v == '' else v
+PK = PatternFill('solid', fgColor='123A6B')
+CHG = PatternFill('solid', fgColor='FFF1D6')
+DEL = PatternFill('solid', fgColor='F2F2F2')
 
 
 class Sheet:
@@ -96,7 +103,7 @@ for i, s in enumerate(STEPS):
         made += (', ' if made else '') + 'GTOPAS'
     r = s.get('rpa')
     scn = '-' if not r else ('Rollover' if r['sc'] == 'Rollover' else 'Scenario ' + r['sc']) + f" · GTOPAS {r['g']} · AP POLE {r['ap']}"
-    rows.append([f'S{i:02d}', s['t'], s['actor'], s['label'], scn, made or '-', s['story']])
+    rows.append([f'S{i:02d}', s['t'], USER.get(s['actor'], s['actor']), s['label'], scn, made or '-', s['story']])
 ov.table([('Sheet', 0), ('When', 0), ('Who', 0), ('Step', 0), ('RPA parent flow', 0), ('Files sent', 0), ('What happens', 0)], rows)
 for row in ov.ws.iter_rows(min_row=5, min_col=7, max_col=7):
     for c in row:
@@ -169,10 +176,43 @@ lg.done()
 # ---------- one sheet per step ----------
 for i, s in enumerate(STEPS):
     sh = Sheet(wb.create_sheet(f'S{i:02d} ' + re.sub(r'[\[\]:/\\?*]', '', s['label'])[:26]))
-    sh.title(f'Step {i}. {s["label"]}', f'{s["t"]} · {s["actor"]}')
+    sh.title(f'Step {i}. {s["label"]}', f'{s["t"]} · {USER.get(s["actor"], s["actor"])}')
     sh.note(s['story'], color='0F2540', italic=False)
     sh.r += 1
-    sh.h('What NSP does')
+    inp = s.get('input')
+    who = USER.get(s['actor'], s['actor'])
+    if inp and inp['kind'] in ('add', 'part'):
+        sh.h(f"NSP screen · {inp['title']} · {who}")
+        if inp['kind'] == 'part':
+            sh.table([('Field', 0), ('Before', 0), ('Entered', 0), ('', 0)], [[l, o if o is not None else '', n, fl] for l, o, n, fl in inp['rows']], fills=[CHG if fl == 'changed' else None for *_, fl in inp['rows']])
+        else:
+            sh.table([('Field', 0), ('Entered', 0), ('', 0)], [[l, n, fl] for l, o, n, fl in inp['rows']])
+        sh.note('[Save] → master saved first, then SP_STG_WRITE per changed value (same transaction).')
+    elif inp and inp['kind'] == 'mapping':
+        sh.h(f"NSP screen · Export Crossdock Master · {inp['title']} · {inp['p']} · {mon(inp['per'])} · {who}")
+        sh.table([('Destination', 0), ('Order Type', 0), ('Case/Day before', 0), ('Case/Day entered', 0), ('', 0)], inp['rows'] + [['Total Case/Day (used / quota)', '', '', f"{inp['total']} / {inp['max']}", 'OK' if inp['total'] <= inp['max'] else 'over']],
+                 fills=[CHG if r[4] else None for r in inp['rows']] + [None])
+        sh.note('[Save] → TB_M_PART_CANDIDATE_DEST per destination (insert / update / delete), then SP_STG_WRITE per changed destination.')
+    elif inp and inp['kind'] == 'upload':
+        sh.h(f"NSP screen · {inp['title']} · {who}")
+        sh.note(f"File {inp['file']}, sheet \"Upload\" → [Validate file] · Upload ID {inp['id']}")
+        n = len(inp['cols'])
+        start = sh.r
+        sh.table([(c, 0) for c in inp['cols']], [r[:n] for r in inp['rows']])
+        for k, r in enumerate(inp['rows']):
+            for j in (r[n] if len(r) > n else []):
+                c = sh.ws.cell(start + 1 + k, j + 1); c.fill = CHG; c.font = F(bold=True)
+        sh.note(inp['note'])
+    elif inp and inp['kind'] == 'batch':
+        sh.h(inp['title'])
+        sh.table([(c, 0) for c in inp['cols']], inp['rows'])
+    elif inp and inp['kind'] == 'sync':
+        sh.h(f"NSP screen · Export Crossdock Master · {who}")
+        sh.note(f"[Sync ({inp['n']})]: n = parts + periods with a staging row SYNC_STATUS 0, whatever the filter.")
+    elif inp and inp['kind'] == 'resend':
+        sh.h(f"NSP screen · Export Crossdock Master · {who}")
+        sh.note(f"[Re-send last Sync]: run {inp['run']}, the same rows; nothing changes in the staging.")
+    sh.h('What NSP and the RPA do')
     sh.note('\n'.join(s['calls']), color='0F2540', italic=False)
     for row in sh.ws.iter_rows(min_row=sh.r - len('\n'.join(s['calls']).split('\n')), max_row=sh.r - 1, max_col=1):
         for c in row:
@@ -206,13 +246,29 @@ for i, s in enumerate(STEPS):
                          fills=[OK if x['chk']['ok'] else NG for x in f[key]])
         if key == 'post' and f['kan'] and not f['post']:
             pass
-    # master
-    sh.h('NSP master after the step (TB_M_PART_CANDIDATE + _DEST)')
+    # NSP master tables (full columns)
+    T = lambda tag: '▶' if tag in s['touched'] else ''
+    sh.h('TB_M_PART_CANDIDATE (Kanban Crossdock Master)')
     mrows = []
     for per in sorted(s['M']):
-        for p, m in s['M'][per].items():
-            mrows.append([per, p, m['st'], m['pcs'], m['max'], ', '.join(f"{k.replace('|', ' ')} {v}" for k, v in m['d'].items()) or '-', sum(m['d'].values())])
-    sh.table([('Period', 0), ('Part', 0), ('Status', 0), ('Pcs/Case', 0), ('Max', 0), ('Destinations (Case/Day)', 0), ('Total', 0)], mrows)
+        for p in sorted(s['M'][per]):
+            m, x = s['M'][per][p], s['META'].get(per + '|' + p, {})
+            mrows.append([T('M' + per + '|' + p), p, per, name(p), m['mad'], m['pcs'], m['max'], m['pcs'] * m['max'], m['st'], x.get('src'), nz(x.get('upl')), x.get('cb'), x.get('cdt'), nz(x.get('chb')), nz(x.get('chd'))])
+    sh.table([('Changed', 1), ('PART_NO', 0), ('PERIOD', 0), ('PART_NAME', 0), ('MIN_MAD', 0), ('PCS_CASE', 0), ('MAX_CASE_DAY', 0), ('TOTAL_PCS_DAY', 0), ('PART_STATUS', 0), ('LAST_SOURCE', 0), ('LAST_UPLOAD_ID', 0), ('CREATED_BY', 0), ('CREATED_DT', 0), ('CHANGED_BY', 0), ('CHANGED_DT', 0)], mrows)
+    sh.h('TB_M_PART_CANDIDATE_DEST (Export Crossdock Master)')
+    drows, dfill = [], []
+    for per in sorted(s['M']):
+        for p in sorted(s['M'][per]):
+            for k, v in s['M'][per][p]['d'].items():
+                d, ot = k.split('|'); x = s['DMETA'].get(per + '|' + p + '|' + k, {})
+                drows.append([T('D' + per + '|' + p + '|' + k), p, per, DEST[d] + ' ' + d, ot, v, x.get('cb'), x.get('cdt'), nz(x.get('chb')), nz(x.get('chd'))]); dfill.append(None)
+    for r in s['delD']:
+        d, ot = r['k'].split('|'); x = r.get('meta') or {}
+        drows.append(['▶ deleted', r['p'], r['per'], DEST[d] + ' ' + d, ot, r['v'], x.get('cb'), x.get('cdt'), 'deleted in this step', '']); dfill.append(DEL)
+    sh.table([('Changed', 1), ('PART_NO', 0), ('PERIOD', 0), ('DEST_CODE', 0), ('ORDER_TYPE', 0), ('CASE_DAY', 0), ('CREATED_BY', 0), ('CREATED_DT', 0), ('CHANGED_BY', 0), ('CHANGED_DT', 0)], drows, fills=dfill)
+    sh.h('TB_H_PART_CANDIDATE (history)')
+    sh.table([('Changed', 1), ('HIST_ID', 0), ('PART_NO', 0), ('PERIOD', 0), ('EVENT_TYPE', 0), ('SOURCE', 0), ('UPLOAD_ID', 0), ('DEST_CODE', 0), ('ORDER_TYPE', 0), ('FIELD_NAME', 0), ('OLD_VALUE', 0), ('NEW_VALUE', 0), ('REMARK', 0), ('CREATED_BY', 0), ('CREATED_DT', 0)],
+             [[T('H%d' % h['id']), h['id'], h['p'], h['per'], h['ev'], h['src'], nz(h['upl']), DEST[h['d']] if h['d'] else 'NULL', nz(h['ot']), h['field'], nz(h['ov']), nz(h['nv']), nz(h['remark']), h['by'], h['dt']] for h in s['H']] or [['', 'No row yet']])
     # AP POLE
     sh.h('AP POLE after the step (value active per Effective Month)')
     arows, afill = [], []
@@ -233,16 +289,16 @@ for i, s in enumerate(STEPS):
     # staging
     st_txt = {0: '0', 1: '1', 2: '2'}
     sh.h('TB_H_STG_APPOLE_KANBAN')
-    sh.table([('Changed', 1), ('STG_ID', 1), ('PERIOD', 1), ('ACTION', 1), ('PART_STATUS', 1), ('EFFECTIVE MONTH / YEAR', 0), ('OPERATOR ID', 0), ('PART NO.', 0), ('PART NAME', 0), ('SHIPPING BOX QTY', 0), ('MAX SHIPPING BOX QTY', 0), ('MAX ALLOWANCE QTY', 0), ('OPERATION_TYPE', 1), ('SOURCE', 1), ('SYNC_STATUS', 1), ('SYNC_RUN_ID', 1), ('CREATED_BY', 1), ('CREATED_DT', 1)],
-             [['▶' if 'K%d' % r['id'] in s['touched'] else '', 'K%d' % r['id'], r['per'], r['act'], r['ps'], my(r['per']), 'P6', r['p'], name(r['p']), r['pcs'], r['max'], r['pcs'] * r['max'], r['op'], r['src'], st_txt[r['st']], r['run'] or '', r['by'], r['dt']] for r in s['K']],
+    sh.table([('Changed', 1), ('STG_ID', 1), ('PERIOD', 1), ('ACTION', 1), ('PART_STATUS', 1), ('EFFECTIVE_MONTH_YEAR', 0), ('OPERATOR_ID', 0), ('PART_NO', 0), ('PART_NAME', 0), ('SHIPPING_BOX_QTY', 0), ('MAX_SHIPPING_BOX_QTY', 0), ('MAX_ALLOWANCE_QTY', 0), ('OPERATION_TYPE', 1), ('SOURCE', 1), ('UPLOAD_ID', 1), ('SYNC_STATUS', 1), ('SYNC_DT', 1), ('SYNC_RUN_ID', 1), ('CREATED_BY', 1), ('CREATED_DT', 1), ('CHANGED_BY', 1), ('CHANGED_DT', 1)],
+             [['▶' if 'K%d' % r['id'] in s['touched'] else '', r['id'], r['per'], r['act'], r['ps'], my(r['per']), 'P6', r['p'], name(r['p']), r['pcs'], r['max'], r['pcs'] * r['max'], r['op'], r['src'], nz(r.get('upl')), st_txt[r['st']], nz(r.get('sdt')), nz(r['run']), r['by'], r['dt'], nz(r.get('chb')), nz(r.get('chd'))] for r in s['K']],
              fills=[ST_FILL[r['st']] for r in s['K']])
     sh.h('TB_H_STG_APPOLE_EXPORT')
-    sh.table([('Changed', 1), ('STG_ID', 1), ('PERIOD', 1), ('NSP_PART_NO', 1), ('DEST_CODE', 1), ('ACTION', 1), ('EFFECTIVE MONTH / YEAR', 0), ('PART NO.', 0), ('BUYER-PD', 0), ('ORDER TYPE', 0), ('TRANSPORT CODE', 0), ('MAX SHIPPING BOX (RCS)', 0), ('SOURCE', 1), ('SYNC_STATUS', 1), ('SYNC_RUN_ID', 1), ('CREATED_BY', 1), ('CREATED_DT', 1)],
-             [['▶' if 'E%d' % r['id'] in s['touched'] else '', 'E%d' % r['id'], r['per'], r['p'], DEST[r['d']] + ' ' + r['d'], r['act'], my(r['per']), r['p'].replace('-', ''), bpd(r['d']), r['ot'], 2, r['cd'], r['src'], st_txt[r['st']], r['run'] or '', r['by'], r['dt']] for r in s['E']],
+    sh.table([('Changed', 1), ('STG_ID', 1), ('PERIOD', 1), ('NSP_PART_NO', 1), ('DEST_CODE', 1), ('ACTION', 1), ('EFFECTIVE_MONTH_YEAR', 0), ('PART_NO', 0), ('BUYER_PD', 0), ('ORDER_TYPE', 0), ('TRANSPORT_CODE', 0), ('MAX_SHIPPING_BOX_RCS', 0), ('SOURCE', 1), ('UPLOAD_ID', 1), ('SYNC_STATUS', 1), ('SYNC_DT', 1), ('SYNC_RUN_ID', 1), ('CREATED_BY', 1), ('CREATED_DT', 1), ('CHANGED_BY', 1), ('CHANGED_DT', 1)],
+             [['▶' if 'E%d' % r['id'] in s['touched'] else '', r['id'], r['per'], r['p'], DEST[r['d']], r['act'], my(r['per']), r['p'].replace('-', ''), bpd(r['d']), r['ot'], 2, r['cd'], r['src'], nz(r.get('upl')), st_txt[r['st']], nz(r.get('sdt')), nz(r['run']), r['by'], r['dt'], nz(r.get('chb')), nz(r.get('chd'))] for r in s['E']],
              fills=[ST_FILL[r['st']] for r in s['E']])
     sh.h('TB_H_STG_GTOPAS')
-    sh.table([('Changed', 1), ('STG_ID', 1), ('PERIOD', 1), ('ACTION', 1), ('DEPOT CODE', 0), ('P/NO.', 0), ('DESTINATION CODE', 0), ('MAKER CODE', 0), ('DOMESTIC / OVERSEAS', 0), ('TOPAS ORDER TYPE', 0), ('ORDER TRANSPORTATION CODE', 0), ('SOURCE', 1), ('SYNC_STATUS', 1), ('SYNC_RUN_ID', 1), ('CREATED_DT', 1)],
-             [['▶' if 'G%d' % r['id'] in s['touched'] else '', 'G%d' % r['id'], r['per'], r['act'], '01', r['p'], DEST[r['d']] + ' ' + r['d'], 'A', 2, 3, 2, r['src'], st_txt[r['st']], r['run'] or '', r['dt']] for r in s['G']],
+    sh.table([('Changed', 1), ('STG_ID', 1), ('PERIOD', 1), ('ACTION', 1), ('DEPOT_CODE', 0), ('P_NO', 0), ('DESTINATION_CODE', 0), ('MAKER_CODE', 0), ('DOMESTIC_OVERSEAS', 0), ('TOPAS_ORDER_TYPE', 0), ('ORDER_TRANSPORTATION_CODE', 0), ('SOURCE', 1), ('UPLOAD_ID', 1), ('SYNC_STATUS', 1), ('SYNC_DT', 1), ('SYNC_RUN_ID', 1), ('CREATED_BY', 1), ('CREATED_DT', 1), ('CHANGED_BY', 1), ('CHANGED_DT', 1)],
+             [['▶' if 'G%d' % r['id'] in s['touched'] else '', r['id'], r['per'], r['act'], '01', r['p'], DEST[r['d']], 'A', 2, 3, 2, r['src'], nz(r.get('upl')), st_txt[r['st']], nz(r.get('sdt')), nz(r['run']), r['by'], r['dt'], nz(r.get('chb')), nz(r.get('chd'))] for r in s['G']],
              fills=[ST_FILL[r['st']] for r in s['G']])
     sh.done()
     sh.ws.column_dimensions['A'].width = max(sh.ws.column_dimensions['A'].width or 0, 22)
