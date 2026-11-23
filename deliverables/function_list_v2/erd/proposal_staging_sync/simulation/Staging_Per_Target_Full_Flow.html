@@ -80,16 +80,19 @@ tr.r-touch td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
 .mini:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .files { grid-template-columns: 1fr; }
 .phase { font: 600 .7rem/1 var(--f-body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); width: 100%; margin-top: 6px; }
+#callsBox { display: grid; gap: 12px; }
+.card.rpa { border-left: 4px solid var(--accent); }
 </style>
 
 <div class="wrap">
   <header>
-    <span class="eyebrow">Crossdock Master · staging per target · full flow simulation · 23-Nov</span>
-    <h1>Full flow: from the save to AP POLE and GTOPAS</h1>
+    <span class="eyebrow">Crossdock Master · staging per target · Period · RPA parent flow · full flow simulation · 23-Nov</span>
+    <h1>Full flow: from Add Part to AP POLE and GTOPAS</h1>
     <p class="sub">Every step runs the rules of the proposal <b>Staging Header Order</b>: the save calls <code>SP_STG_WRITE</code> (rows, Superseded, OPERATION_TYPE), [Sync] calls
-      <code>SP_STG_SYNC</code> (0 → 1 only), the views build the files EXPORT_PRE, KANBAN, EXPORT_POST and the RPA uploads them. AP POLE is simulated too: it keeps a row active until a newer
+      <code>SP_STG_SYNC</code> (0 → 1 only) and starts the RPA parent flow: with GTOPAS rows in the run, XD06 goes first and XD07 starts only when GTOPAS succeeded (scenario 1);
+      without them, XD07 at once (scenario 2); the Period Rollover runs XD06 only. XD07 uploads the files EXPORT_PRE, KANBAN, EXPORT_POST built by the views. AP POLE is simulated too: it keeps a row active until a newer
       Effective Month / Year and checks every uploaded row (total Max Shipping Box (RCS) of the part ≤ Max Shipping Box Qty), so each upload shows whether it passes.</p>
-    <p class="sub">Dummy parts DUMMY-001 to DUMMY-005; destinations JAPAN 9722D10, KOREA 9715310, TAIWAN 9811110, USA 9600110, THAILAND 9655510 (dummy codes). Periods 202611 (Current at the start), 202612, 202701.
+    <p class="sub">Dummy parts DUMMY-001 to DUMMY-007 (Add Part with Period Current or Next); destinations JAPAN 9722D10, KOREA 9715310, TAIWAN 9811110, USA 9600110, THAILAND 9655510 (dummy codes). Periods 202611 (Current at the start), 202612, 202701.
       OPERATION_TYPE: 1 Max down, 2 Max up, 3 Max same, 4 never sent, 5 Kanban unchanged (only destinations).</p>
     <div class="legend">
       <span><i class="sw" style="background:var(--pend-soft)"></i>SYNC_STATUS 0 to send</span>
@@ -142,9 +145,9 @@ tr.r-touch td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
       <tbody>
         <tr><td><b>1</b></td><td class="t">Max down</td><td class="t"><b>EXPORT_PRE → KANBAN</b>: the destinations come down before the Max</td><td class="t">10-Nov DUMMY-002 Max 28 → 20; 27-Nov DUMMY-001 Max 30 → 26 (against 202611)</td></tr>
         <tr><td><b>2</b></td><td class="t">Max up</td><td class="t">KANBAN → EXPORT_POST: the Max goes up before the destinations</td><td class="t">27-Nov DUMMY-004 Max 20 → 24; 03-Dec DUMMY-003 Max 14 → 18</td></tr>
-        <tr><td><b>3</b></td><td class="t">Max same: only Pcs/Case changed, or a new period with the same Max</td><td class="t">KANBAN → EXPORT_POST</td><td class="t">27-Nov DUMMY-002 and DUMMY-003 (202612); 10-Dec DUMMY-002 Pcs/Case 12 → 15; 27-Dec every part (202701)</td></tr>
-        <tr><td><b>4</b></td><td class="t">Never sent: no Max of the part in AP POLE yet</td><td class="t">KANBAN → EXPORT_POST</td><td class="t">10-Nov DUMMY-004 Candidate → Active; K1 to K3 at the start (first rows of the simulation)</td></tr>
-        <tr><td><b>5</b></td><td class="t">Kanban unchanged, only the destinations changed. Header row with the current Kanban values, written by the Export save; not uploaded</td><td class="t"><b>EXPORT_POST only</b>, the header is not in the KANBAN file</td><td class="t">05-Nov DUMMY-001; 04-Dec DUMMY-001 and DUMMY-004 (ACTION KEEP)</td></tr>
+        <tr><td><b>3</b></td><td class="t">Max same: only Pcs/Case changed, or a new period with the same Max</td><td class="t">KANBAN → EXPORT_POST</td><td class="t">27-Nov DUMMY-002 and DUMMY-003 (202612); 10-Dec DUMMY-002 Pcs/Case 12 → 15; 27-Dec the parts already sent (202701)</td></tr>
+        <tr><td><b>4</b></td><td class="t">Never sent: no Max of the part in AP POLE yet</td><td class="t">KANBAN → EXPORT_POST</td><td class="t">10-Nov DUMMY-004 Candidate → Active (screen); 27-Dec DUMMY-006 Candidate → Active (XD05); K1 to K3 at the start</td></tr>
+        <tr><td><b>5</b></td><td class="t">Kanban unchanged, only the destinations changed. Header row with the current Kanban values, written by the Export save; not uploaded</td><td class="t"><b>EXPORT_POST only</b>, the header is not in the KANBAN file</td><td class="t">05-Nov DUMMY-001; 10-Nov 09:30 DUMMY-002 (Superseded at 10:00 by code 1); 03-Dec DUMMY-001 and DUMMY-004 (ACTION KEEP)</td></tr>
       </tbody>
     </table></div>
     <p class="note">Code 1 puts the destinations before the Kanban file, code 5 leaves the part out of the Kanban file; 2, 3 and 4 upload the same way and are kept apart for the screen and the audit. Inside every Export file the rows of a part go down or DELETE (ROW_ORDER 1) before up or ADD (2).</p>
@@ -152,13 +155,14 @@ tr.r-touch td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
 </div>
 
 <script>
+
 // ---------- engine: the rules of SP_STG_WRITE, SP_STG_SYNC, the views and AP POLE ----------
 const DEST = { JAPAN: '9722D10', KOREA: '9715310', TAIWAN: '9811110', USA: '9600110', THAILAND: '9655510' };
 const NAME = (p) => 'DUMMY PART ' + p.slice(-3);
 const my = (per) => per.slice(4) + '/' + per.slice(0, 4);
 const clone = (o) => JSON.parse(JSON.stringify(o));
 let M = {}, K = [], E = [], G = [], AP = { kan: {}, exp: {} }, GT = {}, ids = { k: 0, e: 0, g: 0 }, seq = 0;
-let calls = [], touched = [], files = null, gsent = null, now = '';
+let calls = [], touched = [], files = null, gsent = null, now = '', rpa = null;
 
 const byPerSeq = (a, b) => (a.per !== b.per ? (a.per < b.per ? -1 : 1) : (a.seq - b.seq) || (a.id - b.id));
 function lastSent(arr, keyOf, key, per, beforeSeq) {
@@ -299,39 +303,74 @@ function upload(run) {
   files = { run, ...f };
 }
 function gApply(rows) { rows.forEach((r) => { if (r.act === 'ADD') GT[r.p + '|' + r.d] = true; else delete GT[r.p + '|' + r.d]; }); gsent = rows; }
-function spSync(run, cur, next, by) {
+function spSync(run, cur, next, by, opt = {}) {
   seq += 1;
   const take = (arr, tag, pers) => arr.filter((r) => r.st === 0 && pers.includes(r.per)).forEach((r) => { r.st = 1; r.run = run; r.sdt = now; r.seq = seq; touched.push(tag + r.id); });
   take(K, 'K', [cur, next]); take(E, 'E', [cur, next]);
   const g = G.filter((r) => r.st === 0 && r.per === cur);
   take(G, 'G', [cur]);
-  calls.push(`SP_STG_SYNC('${run}', Current ${cur}, Next ${next}, ${by})\n  → AP POLE rows with SYNC_STATUS 0 of ${cur} and ${next} → 1; GTOPAS rows of ${cur} → 1; LAST_SYNC_DATE_APPOLE = ${now}\n  → start XD07 (AP POLE) and XD06 (GTOPAS) with run ${run}`);
-  upload(run); gApply(g);
+  calls.push(`SP_STG_SYNC('${run}', Current ${cur}, Next ${next}, ${by})\n  → AP POLE rows with SYNC_STATUS 0 of ${cur} and ${next} → 1; GTOPAS rows of ${cur} → 1; LAST_SYNC_DATE_APPOLE = ${now}\n  → start the parent flow CDX_SYNC_PARENT (RUN_ID ${run}, RUN_TYPE SYNC)`);
+  return parent(run, 'SYNC', opt);
 }
-function rollover(run, per) {
+function rollover(run, per, opt = {}) {
   seq += 1;
   const g = G.filter((r) => r.st === 0 && r.per === per);
   g.forEach((r) => { r.st = 1; r.run = run; r.sdt = now; r.seq = seq; touched.push('G' + r.id); });
-  calls.push(`Period Rollover (XD05 process 3): ${per} becomes Current\n  → GTOPAS rows of ${per} with SYNC_STATUS 0 → 1 (${g.length} row(s)), run ${run}; start XD06`);
-  gApply(g);
+  calls.push(`Period Rollover (XD05 process 3): ${per} becomes Current\n  → GTOPAS rows of ${per} with SYNC_STATUS 0 → 1 (${g.length} row(s)), run ${run}\n  → start the parent flow CDX_SYNC_PARENT (RUN_TYPE ROLLOVER)`);
+  return parent(run, 'ROLLOVER', opt);
 }
-function resend(run) {
-  calls.push(`[Re-send last Sync]: start XD07 and XD06 again with run ${run}; nothing changes in the staging`);
-  upload(run); gApply(G.filter((r) => r.run === run));
+function resend(run, opt = {}) {
+  calls.push(`[Re-send last Sync]: the parent flow starts again with RUN_ID ${run} (RUN_TYPE RESEND); nothing changes in the staging`);
+  return parent(run, 'RESEND', opt);
+}
+// ---------- RPA parent flow: scenario 1 (GTOPAS rows in the run) or 2 (none); rollover = XD06 only ----------
+function parent(run, type, opt) {
+  const g = G.filter((r) => r.run === run && r.st === 1);
+  const sc = type === 'ROLLOVER' ? 'Rollover' : g.length ? '1' : '2';
+  rpa = { run, type, sc, gRows: g.length, g: 'skipped', gFail: [], ap: 'skipped', apFile: null };
+  calls.push(`Parent flow: SELECT COUNT(*) FROM TB_H_STG_GTOPAS WHERE SYNC_RUN_ID = '${run}' → ${g.length}` +
+    (type === 'ROLLOVER' ? ' → RUN_TYPE ROLLOVER: XD06 only' : g.length ? ' → scenario 1: XD06 first, XD07 only when GTOPAS succeeded' : ' → scenario 2: XD07 at once'));
+  if (sc !== '2') {
+    const fail = g.filter((r) => (opt.failG || []).includes(r.p + '|' + r.d));
+    const done = g.filter((r) => !fail.includes(r));
+    const before = done.filter((r) => (r.act === 'ADD') === !!GT[r.p + '|' + r.d]);
+    gApply(done);
+    gsent = g.map((r) => ({ ...r, res: fail.includes(r) ? 'FAILED' : before.includes(r) ? 'OK (already ' + (r.act === 'ADD' ? 'there' : 'gone') + ')' : 'OK' }));
+    rpa.g = fail.length ? 'FAILED' : 'SUCCESS';
+    rpa.gFail = fail.map((r) => r.p + ' ' + r.d);
+    calls.push(`XD06 GTOPAS: ${g.length} row(s), ${done.length} OK` + (fail.length ? `, FAILED ${rpa.gFail.join(', ')}` : '') + (before.length ? ` (${before.length} already in the wanted state)` : ''));
+    if (fail.length && type !== 'ROLLOVER') { rpa.ap = 'not started'; calls.push('GTOPAS FAILED → AP POLE stops: XD07 is not started. E-mail FAILED → D/S: [Re-send last Sync]'); return; }
+  }
+  if (type === 'ROLLOVER') { calls.push(`E-mail ${rpa.g}: GTOPAS result of the rollover`); return; }
+  calls.push('XD07 AP POLE: read the views for the run');
+  upload(run);
+  const all = [['EXPORT_PRE', files.pre], ['KANBAN', files.kan], ['EXPORT_POST', files.post]];
+  const bad = all.find(([, l]) => l.some((x) => !x.chk.ok));
+  rpa.ap = bad ? 'FAILED' : 'SUCCESS'; rpa.apFile = bad ? bad[0] : null;
+  rpa.files = all.filter(([, l]) => l.length).map(([n, l]) => n + ' (' + l.length + ')');
+  calls.push(`XD07: ${rpa.files.join(' → ') || 'no file'} → ${rpa.ap}. E-mail ${rpa.g === 'FAILED' || rpa.ap === 'FAILED' ? 'FAILED' : 'SUCCESS'} (one per run)`);
+}
+// ---------- Add Part (XD01): Period = Current (default) or Next ----------
+function addPart(per, p, v, by, opt = {}) {
+  M[per] ||= {};
+  M[per][p] = { st: 'Candidate', pcs: v.pcs, max: v.max, d: {} };
+  calls.push(`INSERT TB_M_PART_CANDIDATE ${p} PERIOD ${per}, PART_STATUS Candidate, Pcs ${v.pcs}, Max ${v.max} (${opt.label || 'Add Part'})`);
+  if (opt.next) { M[opt.next][p] = { st: 'Candidate', pcs: v.pcs, max: v.max, d: {} }; calls.push(`XD05 already made ${opt.next} (after day D) → INSERT the same row for ${opt.next}, so the next XD05 run calculates the part`); }
+  calls.push(`${p} is Candidate: no staging row (not sent to AP POLE or GTOPAS)`);
 }
 
-// ---------- scenario ----------
+// ---------- scenario: full flow Nov 2026 – Jan 2027 ----------
 const STEPS = [];
-function step(t, actor, label, story, fn) {
-  calls = []; touched = []; files = null; gsent = null; now = t;
+function step(t, actor, label, kind, story, fn) {
+  calls = []; touched = []; files = null; gsent = null; rpa = null; now = t;
   fn();
-  STEPS.push({ t, actor, label, story, calls: calls.slice(), touched: touched.slice(), files: files && clone(files), gsent: gsent && clone(gsent),
+  STEPS.push({ t, actor, label, kind, story, calls: calls.slice(), touched: touched.slice(), files: files && clone(files), gsent: gsent && clone(gsent), rpa: rpa && clone(rpa),
     M: clone(M), K: clone(K), E: clone(E), G: clone(G), AP: clone(AP), GT: clone(GT) });
 }
 const DS = 'R. Sari (D/S)', PR = 'D. Anggraini (Procurement)';
 
-step('28-Oct-2026 10:00', 'Start', 'Start: 202611 in AP POLE',
-  'Starting point. Period 202611 was made by XD05 on 27-Oct and sent by [Sync] on 28-Oct (run 20261028100000); GTOPAS got it at the Period Rollover of 01-Nov. DUMMY-004 is still Candidate (never sent). From here every step is one action of a user or a batch.',
+step('28-Oct-2026 10:00', 'Start', 'Start: 202611 sent', 'start',
+  'Starting point. XD05 made 202611 on 27-Oct, [Sync] sent it to AP POLE on 28-Oct (run 20261028100000) and the Period Rollover sent it to GTOPAS on 01-Nov. DUMMY-004 is Candidate (never sent). Current = 202611, day D = 27-Nov.',
   () => {
     M['202611'] = {
       'DUMMY-001': { st: 'Active', pcs: 10, max: 30, d: { 'JAPAN|**': 20, 'KOREA|**': 10 } },
@@ -345,98 +384,111 @@ step('28-Oct-2026 10:00', 'Start', 'Start: 202611 in AP POLE',
     [K, E].forEach((arr) => arr.forEach((r) => { r.st = 1; r.run = '20261028100000'; r.sdt = now; r.seq = 1; }));
     G.forEach((r) => { r.st = 1; r.run = '20261101001000'; r.sdt = '01-Nov-2026 00:10'; r.seq = 1; });
     K.forEach((r) => apRow('k', r)); E.forEach((r) => apRow('e', r)); G.forEach((r) => (GT[r.p + '|' + r.d] = true));
-    calls = ['(state before the simulation: rows of 202611 already sent)'];
-    touched = [];
+    calls = ['(state before the simulation: rows of 202611 already sent)']; touched = [];
   });
 
-step('05-Nov-2026 09:00', DS, 'Edit mapping (down + up)',
-  'D/S moves capacity of DUMMY-001 inside the Current period 202611: JAPAN 20 → 14, KOREA 10 → 16. Max stays 30: SP_STG_WRITE adds the header row with OPERATION_TYPE 5 (Kanban unchanged). The destinations stay, so no GTOPAS row.',
+// ----- November: Current 202611 -----
+step('03-Nov-2026 09:00', PR, 'Add Part · Next', 'add',
+  'Procurement adds DUMMY-006 with Period = Dec 2026 (next). The row exists for 202612 only and is view only until 202612 becomes Current. The part is Candidate: no staging row.',
+  () => addPart('202612', 'DUMMY-006', { pcs: 4, max: 10 }, PR, { label: 'Add Part, Period Next' }));
+step('05-Nov-2026 09:00', DS, 'Edit mapping (down + up)',  'edit',
+  'D/S moves capacity of DUMMY-001 inside 202611: JAPAN 20 → 14, KOREA 10 → 16. Max stays 30, so the Kanban does not change: header with OPERATION_TYPE 5. The destinations stay, so no GTOPAS row.',
   () => saveMapping('202611', 'DUMMY-001', { 'JAPAN|**': 14, 'KOREA|**': 16 }, DS));
-step('05-Nov-2026 10:00', DS, '[Sync]',
-  '[Sync] only sets 0 → 1. The DUMMY-001 header has OPERATION_TYPE 5: no KANBAN row, its rows go in EXPORT_POST; the view puts JAPAN 14 (down, ROW_ORDER 1) before KOREA 16 (up, 2). In the other order AP POLE would see 20 + 16 = 36 > 30 and reject KOREA.',
+step('05-Nov-2026 10:00', DS, '[Sync] · scenario 2', 'sync',
+  'No GTOPAS row in the run: scenario 2, XD07 at once. EXPORT_POST only, JAPAN 14 (down, ROW_ORDER 1) before KOREA 16 (up, 2). The other order would give 20 + 16 = 36 > 30 in AP POLE.',
   () => spSync('20261105100000', '202611', '202612', DS));
-step('10-Nov-2026 08:30', PR, 'Candidate → Active',
-  'Procurement sets DUMMY-004 Active in 202611. The part was never sent: Kanban ADD with OPERATION_TYPE 4.',
+step('10-Nov-2026 08:30', PR, 'Edit · Candidate → Active', 'edit',
+  'Procurement opens Edit on DUMMY-004 (Candidate); the status list offers Candidate and Active only. Active: the part was never sent, so the Kanban row is ADD with OPERATION_TYPE 4.',
   () => savePart('202611', 'DUMMY-004', { st: 'Active' }, PR));
-step('10-Nov-2026 09:00', DS, 'Map the new part',
-  'D/S maps DUMMY-004: KOREA 12, USA 8 (total 20 = Max). Two Export ADD rows; both destinations are new for GTOPAS.',
+step('10-Nov-2026 09:00', DS, 'Map the new part', 'edit',
+  'D/S maps DUMMY-004: KOREA 12, USA 8 (total 20 = Max). Two Export ADD rows; both destinations are new for the part, so GTOPAS gets two ADD rows.',
   () => saveMapping('202611', 'DUMMY-004', { 'KOREA|**': 12, 'USA|**': 8 }, DS));
-step('10-Nov-2026 09:30', DS, 'Lower the mapping first',
-  'To lower DUMMY-002 Max from 28 to 20, D/S first lowers the mapping (NSP blocks a Max below the mapped total): TAIWAN 28 → 12 and a new THAILAND 8 (total 20).',
+step('10-Nov-2026 09:30', DS, 'Lower the mapping first', 'edit',
+  'To lower DUMMY-002 Max from 28 to 20, D/S first lowers the mapping (NSP blocks a Max below the mapped total): TAIWAN 28 → 12 and a new THAILAND 8. Header 5; GTOPAS ADD for THAILAND.',
   () => saveMapping('202611', 'DUMMY-002', { 'TAIWAN|**': 12, 'THAILAND|**': 8 }, DS));
-step('10-Nov-2026 10:00', PR, 'Max down',
-  'Procurement lowers DUMMY-002 Max 28 → 20. The stored procedure compares with the last sent Max (28): OPERATION_TYPE 1.',
+step('10-Nov-2026 10:00', PR, 'Max down', 'edit',
+  'Procurement lowers DUMMY-002 Max 28 → 20. The header 5 of 09:30 is Superseded by a Kanban EDIT with OPERATION_TYPE 1 (last sent Max 28).',
   () => savePart('202611', 'DUMMY-002', { max: 20 }, PR));
-step('10-Nov-2026 11:00', DS, '[Sync]',
-  'DUMMY-002 has OPERATION_TYPE 1: its Export rows go in EXPORT_PRE before KANBAN (AP POLE still has Max 28). DUMMY-004 is 4: KANBAN first, then its rows in EXPORT_POST. GTOPAS gets the three new destinations of the Current period.',
+step('10-Nov-2026 11:00', DS, '[Sync] · scenario 1', 'sync',
+  'GTOPAS rows in the run (DUMMY-004 KOREA, USA; DUMMY-002 THAILAND): scenario 1. XD06 adds them, GTOPAS succeeds, then XD07: EXPORT_PRE (DUMMY-002, op 1, before its Max goes down), KANBAN (DUMMY-002, DUMMY-004), EXPORT_POST (DUMMY-004).',
   () => spSync('20261110110000', '202611', '202612', DS));
-step('27-Nov-2026 02:00', 'XD05 batch', 'XD05 day D: 202612',
-  'XD05 makes period 202612. DUMMY-001 Max 30 → 26 (JAPAN 12, KOREA 14). DUMMY-002 Max 20, TAIWAN 20, THAILAND not mapped any more → DELETE (0). DUMMY-003 becomes Inactive → DELETE (0) for USA and THAILAND; the Kanban row stays. DUMMY-004 Max 20 → 24 (KOREA 14, USA 10). OPERATION_TYPE is against the Max sent for 202611, which AP POLE keeps active. GTOPAS: rows only for the destinations that disappear; the others are already in GTOPAS.',
+
+// ----- Day D and December -----
+step('27-Nov-2026 02:00', 'XD05 batch', 'XD05 day D: 202612', 'calc',
+  'XD05 makes 202612 for every part with a row in 202611, plus DUMMY-006 (registered for 202612 on 03-Nov: its row is kept, it stays Candidate). DUMMY-001 Max 30 → 26 (op 1). DUMMY-002 THAILAND not mapped any more → DELETE (0). DUMMY-003 becomes Inactive → DELETE (0) for USA and THAILAND; the Kanban row stays. DUMMY-004 Max 20 → 24 (op 2). GTOPAS rows only for destinations that disappear; they wait for the Period Rollover.',
   () => xd05('202611', '202612', {
     'DUMMY-001': { st: 'Active', pcs: 10, max: 26, d: { 'JAPAN|**': 12, 'KOREA|**': 14 } },
     'DUMMY-002': { st: 'Active', pcs: 12, max: 20, d: { 'TAIWAN|**': 20 } },
     'DUMMY-003': { st: 'Inactive', pcs: 8, max: 14, d: {} },
     'DUMMY-004': { st: 'Active', pcs: 6, max: 24, d: { 'KOREA|**': 14, 'USA|**': 10 } },
+    'DUMMY-006': { st: 'Candidate', pcs: 4, max: 10, d: {} },
   }));
-step('27-Nov-2026 10:00', DS, '[Sync] with the Next period',
-  'The run carries 202612 (Next). DUMMY-001 is 1 → EXPORT_PRE before KANBAN. In EXPORT_POST, DUMMY-002 THAILAND 0 (down) goes before TAIWAN 20 (up): AP POLE still counts THAILAND 8 from 202611 for 202612, so TAIWAN first would give 28 > 20. GTOPAS rows of 202612 wait for the Period Rollover.',
+step('27-Nov-2026 09:00', PR, 'Add Part · Current after day D', 'add',
+  'Procurement adds DUMMY-007 with Period = Nov 2026 (ongoing). XD05 already made 202612, so NSP writes the 202612 row too; without it the part would miss the next calculation. Candidate: no staging row.',
+  () => addPart('202611', 'DUMMY-007', { pcs: 6, max: 12 }, PR, { next: '202612' }));
+step('27-Nov-2026 10:00', DS, '[Sync] · Next period', 'sync',
+  'The run carries 202612 (Next) for AP POLE. The GTOPAS rows of 202612 stay 0, so the run has no GTOPAS row: scenario 2. DUMMY-001 is 1 → EXPORT_PRE before KANBAN. In EXPORT_POST, DUMMY-002 THAILAND 0 (down) goes before TAIWAN 20 (up): AP POLE still counts THAILAND 8 from 202611 for 202612.',
   () => spSync('20261127100000', '202611', '202612', DS));
-step('01-Dec-2026 00:10', 'XD05 batch', 'Period Rollover',
-  '202612 becomes Current. XD06 deletes in GTOPAS the destinations that disappeared (DUMMY-002 THAILAND, DUMMY-003 USA and THAILAND).',
+step('01-Dec-2026 00:10', 'XD05 batch', 'Period Rollover', 'sync',
+  '202612 becomes Current. The parent flow runs XD06 only: it deletes DUMMY-002 THAILAND, DUMMY-003 USA and THAILAND in GTOPAS. DUMMY-006 and DUMMY-007 can now be edited.',
   () => rollover('20261201001000', '202612'));
-step('03-Dec-2026 09:00', DS, 'Edit mapping',
-  'D/S changes DUMMY-001: KOREA 14 → 10, JAPAN 12 → 15 (total 25 ≤ 26).',
+step('03-Dec-2026 09:00', DS, 'Edit mapping', 'edit',
+  'D/S changes DUMMY-001: KOREA 14 → 10, JAPAN 12 → 15 (total 25 ≤ 26). Header 5.',
   () => saveMapping('202612', 'DUMMY-001', { 'JAPAN|**': 15, 'KOREA|**': 10 }, DS));
-step('03-Dec-2026 09:30', DS, 'Back to the sent value',
+step('03-Dec-2026 09:30', DS, 'Back to the sent value', 'edit',
   'D/S puts JAPAN back to 12 and adds USA 4 (total 26). JAPAN 12 is the value already sent: the unsent 15 and the new 12 are both Superseded, nothing goes for JAPAN. USA is new for DUMMY-001 → GTOPAS ADD.',
   () => saveMapping('202612', 'DUMMY-001', { 'JAPAN|**': 12, 'KOREA|**': 10, 'USA|**': 4 }, DS));
-step('03-Dec-2026 10:00', DS, 'Change Order Type',
+step('03-Dec-2026 10:00', DS, 'Change Order Type', 'edit',
   'D/S changes DUMMY-004 KOREA from order type ** to C (14). For AP POLE: DELETE (0) of ** and ADD of C. GTOPAS keys on part + destination: KOREA stays, so no GTOPAS row.',
   () => saveMapping('202612', 'DUMMY-004', { 'KOREA|C': 14, 'USA|**': 10 }, DS));
-step('03-Dec-2026 11:00', PR, 'Inactive → Active, Max up',
+step('03-Dec-2026 11:00', PR, 'Inactive → Active, Max up', 'edit',
   'Procurement sets DUMMY-003 Active again and raises Max 14 → 18. Kanban EDIT, OPERATION_TYPE 2 against the Max sent for 202612 (14).',
   () => savePart('202612', 'DUMMY-003', { st: 'Active', max: 18 }, PR));
-step('03-Dec-2026 11:30', DS, 'Map again',
+step('03-Dec-2026 11:30', DS, 'Map again', 'edit',
   'D/S maps DUMMY-003: THAILAND 10. THAILAND was deleted in GTOPAS on 01-Dec → GTOPAS ADD.',
   () => saveMapping('202612', 'DUMMY-003', { 'THAILAND|**': 10 }, DS));
-step('04-Dec-2026 10:00', DS, '[Sync]',
-  'No header has OPERATION_TYPE 1, so there is no EXPORT_PRE; DUMMY-001 and DUMMY-004 have 5 (only destinations changed). KANBAN: DUMMY-003 Max 18 (2). EXPORT_POST per part, down before up: DUMMY-001 KOREA 10 then USA 4; DUMMY-004 KOREA ** 0 then KOREA C 14. GTOPAS (Current 202612): DUMMY-001 USA, DUMMY-003 THAILAND.',
-  () => spSync('20261204100000', '202612', '202701', DS));
-step('04-Dec-2026 14:00', DS, 'FAILED → Re-send',
-  'The e-mail of the bot says FAILED. D/S clicks [Re-send last Sync]: the same run ID, the same files in the same order. AP POLE sets the same values again, so the checks pass again.',
+step('04-Dec-2026 10:00', DS, '[Sync] · GTOPAS fails', 'fail',
+  'Scenario 1 (GTOPAS ADD DUMMY-001 USA and DUMMY-003 THAILAND). XD06 adds DUMMY-001 USA but fails on DUMMY-003 THAILAND (GTOPAS error message). GTOPAS FAILED, so AP POLE stops: XD07 does not start. The e-mail says FAILED.',
+  () => spSync('20261204100000', '202612', '202701', DS, { failG: ['DUMMY-003|THAILAND'] }));
+step('04-Dec-2026 14:00', DS, 'Re-send last Sync', 'sync',
+  'D/S clicks [Re-send last Sync]: the same run ID. XD06 again: DUMMY-001 USA is already there (OK), DUMMY-003 THAILAND is added now. Then XD07: KANBAN (DUMMY-003 Max 18, op 2), EXPORT_POST per part down before up: DUMMY-001 KOREA 10 then USA 4; DUMMY-003 THAILAND 10; DUMMY-004 KOREA ** 0 then KOREA C 14.',
   () => resend('20261204100000'));
-step('10-Dec-2026 09:00', PR, 'Upload XD02',
-  'Procurement uploads the Kanban file: DUMMY-002 Pcs/Case 12 → 15 (Max 20 unchanged) and a new part DUMMY-005 (Candidate). DUMMY-002: Kanban EDIT with OPERATION_TYPE 3. DUMMY-005: no staging row while Candidate.',
-  () => { M['202612']['DUMMY-005'] = { st: 'Candidate', pcs: 5, max: 15, d: {} }; calls.push('DUMMY-005 added as Candidate (TB_M_PART_CANDIDATE): no staging row'); savePart('202612', 'DUMMY-002', { pcs: 15 }, PR, 'UPLOAD'); });
-step('27-Dec-2026 02:00', 'XD05 batch', 'XD05 day D: 202701',
-  'XD05 makes 202701. DUMMY-004 becomes Inactive → DELETE (0) for KOREA C and USA. The other parts keep their values; NSP still adds their rows for the new Effective Month (OPERATION_TYPE 3). DUMMY-005 stays Candidate. In the months after 202701 DUMMY-004 needs no Export row: AP POLE keeps the 0.',
+step('10-Dec-2026 09:00', PR, 'Upload XD02', 'upload',
+  'Procurement uploads the Kanban file: DUMMY-002 Pcs/Case 12 → 15 (Max 20 unchanged) and a new part DUMMY-005 (flag A, Period 202612). DUMMY-002: Kanban EDIT with OPERATION_TYPE 3. DUMMY-005: Candidate, no staging row.',
+  () => { addPart('202612', 'DUMMY-005', { pcs: 5, max: 15 }, PR, { label: 'Upload XD02, flag A' }); savePart('202612', 'DUMMY-002', { pcs: 15 }, PR, 'UPLOAD'); });
+
+// ----- Day D and January -----
+step('27-Dec-2026 02:00', 'XD05 batch', 'XD05 day D: 202701', 'calc',
+  'XD05 makes 202701. DUMMY-004 becomes Inactive → DELETE (0) for KOREA C and USA. DUMMY-006 becomes Active (first calculation since its period): Kanban ADD op 4, TAIWAN 10, GTOPAS ADD. The other parts keep their values; NSP still adds their rows for the new Effective Month (op 3). DUMMY-005 and DUMMY-007 stay Candidate.',
   () => xd05('202612', '202701', {
     'DUMMY-001': { st: 'Active', pcs: 10, max: 26, d: { 'JAPAN|**': 12, 'KOREA|**': 10, 'USA|**': 4 } },
     'DUMMY-002': { st: 'Active', pcs: 15, max: 20, d: { 'TAIWAN|**': 20 } },
     'DUMMY-003': { st: 'Active', pcs: 8, max: 18, d: { 'THAILAND|**': 10 } },
     'DUMMY-004': { st: 'Inactive', pcs: 6, max: 24, d: {} },
     'DUMMY-005': { st: 'Candidate', pcs: 5, max: 15, d: {} },
+    'DUMMY-006': { st: 'Active', pcs: 4, max: 10, d: { 'TAIWAN|**': 10 } },
+    'DUMMY-007': { st: 'Candidate', pcs: 6, max: 12, d: {} },
   }));
-step('27-Dec-2026 10:00', DS, '[Sync] Current + Next',
-  'One run with both periods: the KANBAN file has the 202612 row of DUMMY-002 (Pcs/Case 15) and the 202701 rows; Effective Month / Year tells them apart. EXPORT_POST holds the 202701 rows, DELETE before ADD per part.',
+step('27-Dec-2026 10:00', DS, '[Sync] · Current + Next', 'sync',
+  'One run with both periods: the KANBAN file has the 202612 row of DUMMY-002 (Pcs/Case 15) and the 202701 rows; Effective Month / Year tells them apart. EXPORT_POST holds the 202701 rows, DELETE before ADD per part. The GTOPAS rows of 202701 wait: scenario 2.',
   () => spSync('20261227100000', '202612', '202701', DS));
-step('01-Jan-2027 00:10', 'XD05 batch', 'Period Rollover',
-  '202701 becomes Current. XD06 deletes DUMMY-004 KOREA and USA in GTOPAS.',
+step('01-Jan-2027 00:10', 'XD05 batch', 'Period Rollover', 'sync',
+  '202701 becomes Current. XD06 only: deletes DUMMY-004 KOREA and USA, adds DUMMY-006 TAIWAN in GTOPAS.',
   () => rollover('20270101001000', '202701'));
 
 const LEARN = [
-  'Every upload passes the AP POLE check in this run: the save keeps the end state valid, EXPORT_PRE handles Max down, and ROW_ORDER (down before up) handles the moves inside a file.',
-  'Two steps show why the order matters: 05-Nov (KOREA before JAPAN would give 36 > 30) and 27-Nov (TAIWAN before THAILAND would give 28 > 20, because AP POLE still counts the 202611 THAILAND for 202612).',
-  'OPERATION_TYPE is set at the save and compared with the last value AP POLE has: the same period, else the previous period (27-Nov and 27-Dec).',
-  'A value set back to the sent value sends nothing (03-Dec 09:30); a change of order type is DELETE + ADD in AP POLE and nothing in GTOPAS (03-Dec 10:00).',
-  'Every part in a run has one header row in the Kanban staging: 1 to 4 when the Kanban changed, 5 (ACTION KEEP) when only the destinations changed (05-Nov, 10-Nov 09:30, 03-Dec). A header 5 is replaced when the Kanban changes later (10-Nov 10:00) and is never in the KANBAN file.',
-  'GTOPAS gets a row only when a destination appears or disappears for the part, whatever the order type; new-period rows that GTOPAS already has write nothing.',
+  'Add Part writes the master only. Period Next (03-Nov) gives a row of the next period only; Current after day D (27-Nov) gives the row of the next period too. A Candidate part has no staging row.',
+  'Candidate → Active, by Procurement (10-Nov) or by XD05 (27-Dec, DUMMY-006), is a Kanban ADD with OPERATION_TYPE 4; its destinations bring GTOPAS ADD rows.',
+  'The parent flow follows the GTOPAS rows of the run: scenario 1 on 10-Nov and 04-Dec (GTOPAS first), scenario 2 on 05-Nov, 27-Nov and 27-Dec (AP POLE only), rollovers XD06 only.',
+  'When GTOPAS fails (04-Dec 10:00), AP POLE gets nothing. The re-send sends the same run; a GTOPAS row done before counts as OK.',
+  'Every upload to AP POLE passes the check: EXPORT_PRE handles a Max going down (10-Nov, 27-Nov), ROW_ORDER handles a move inside a file (05-Nov, 27-Nov: TAIWAN before THAILAND would give 28 > 20).',
+  'OPERATION_TYPE is set at the save against the last value AP POLE has: the same period, else the previous period. Header 5 marks a part whose Kanban did not change and is never uploaded.',
+  'A value set back to the sent value sends nothing (03-Dec 09:30); an order type change is DELETE + ADD in AP POLE and nothing in GTOPAS (03-Dec 10:00).',
   'An Inactive part keeps its Kanban row in AP POLE; its destinations get DELETE (0) once, in the first period it is Inactive.',
 ];
-
 // ---------- view ----------
 const H = 'h';
-let cur = STEPS.length - 1, filt = 'all';
+let cur = 0, filt = 'all';
 const stTxt = (v) => (v === 0 ? '0' : v === 1 ? '1' : '2');
 const cls = (r, s) => (r.st === 0 ? 'r-new' : r.st === 1 ? 'r-sent' : 'r-sup') + (s.touched.includes(r.tag) ? ' r-touch' : '');
 const pill = (a) => `<span class="pill ${a === 'ADD' ? 'p-add' : a === 'EDIT' ? 'p-edit' : a === 'KEEP' ? 'p-none' : 'p-del'}">${a}</span>`;
@@ -494,18 +546,29 @@ function gtopas(s) {
   const ks = Object.keys(s.GT).sort();
   return `<table><thead><tr><th>P/No.</th><th>Destination Code</th></tr></thead><tbody>${ks.map((k) => { const [p, d] = k.split('|'); return `<tr><td>${p}</td><td>${DEST[d]} ${d}</td></tr>`; }).join('')}</tbody></table>`;
 }
+const KIND = { start: 'Start', add: 'Add', edit: 'Edit', upload: 'Upload', calc: 'Calculation', sync: 'Sync / RPA', fail: 'Sync / RPA' };
+function rpaBox(s) {
+  const r = s.rpa; if (!r) return '';
+  const st = (v) => `<td class="${v === 'SUCCESS' ? 'okc' : v === 'FAILED' || v === 'not started' ? 'ngc' : 't'}">${v}</td>`;
+  const mail = r.g === 'FAILED' || r.ap === 'FAILED' ? 'FAILED' : 'SUCCESS';
+  return `<div class="card rpa"><div class="head"><h3>RPA parent flow · run ${r.run}</h3><span class="pill ${r.sc === '1' ? 'p-add' : r.sc === '2' ? 'p-ok' : 'p-none'}">${r.sc === 'Rollover' ? 'Rollover · XD06 only' : 'Scenario ' + r.sc}</span></div>
+    <div class="tbl"><table><thead><tr><th>RUN_TYPE</th><th>GTOPAS rows in the run</th><th>XD06 GTOPAS</th><th>XD07 AP POLE</th><th>E-mail</th></tr></thead>
+    <tbody><tr><td>${r.type}</td><td class="n">${r.gRows}</td>${st(r.g)}${st(r.ap)}<td class="${mail === 'SUCCESS' ? 'okc' : 'ngc'}">${mail}</td></tr></tbody></table></div>
+    ${r.gFail.length ? `<p class="note">GTOPAS failed on ${r.gFail.join(', ')}: XD07 not started, nothing sent to AP POLE.</p>` : ''}</div>`;
+}
 function render() {
   const s = STEPS[cur];
   document.querySelectorAll('#steps .chip').forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.i) === cur)));
   document.getElementById('story').innerHTML = `<span class="eyebrow">Step ${cur} · ${s.t} · ${s.actor} · ${s.label}</span><p>${s.story}</p>`;
-  document.getElementById('callsBox').innerHTML = `<div class="card"><div class="head"><h3>What NSP does</h3><span class="pill p-none">${s.files ? 'SP_STG_SYNC + views' : s.label.includes('Rollover') || s.label.includes('Re-send') ? 'batch' : 'SP_STG_WRITE'}</span></div><pre class="calls">${s.calls.join('\n')}</pre></div>`;
+  document.getElementById('callsBox').innerHTML = `<div class="card"><div class="head"><h3>What NSP and the RPA do</h3><span class="pill p-none">${KIND[s.kind]}</span></div><pre class="calls">${s.calls.join('\n')}</pre></div>` + rpaBox(s);
   let f = '';
+  if (s.gsent && s.gsent.length) f += `<div class="file"><h4>XD06 · GTOPAS WVJA5204</h4><div class="tbl"><table><thead><tr><th class="h">Action</th><th>Depot Code</th><th>P/No.</th><th>Destination Code</th><th>Maker Code</th><th>Domestic/Overseas</th><th>TOPAS Order Type</th><th>Order Transportation Code</th><th class="h">Result</th></tr></thead><tbody>${s.gsent.map((r) => `<tr><td>${r.act === 'DELETE' ? 'Delete (MT = DEL)' : 'Add'}</td><td>01</td><td>${r.p}</td><td>${DEST[r.d]}</td><td>A</td><td>2</td><td>3</td><td>2</td><td class="${r.res === 'FAILED' ? 'ngc' : 'okc'}">${r.res}</td></tr>`).join('')}</tbody></table></div></div>`;
   if (s.files) {
     const n = s.files.run;
-    f += fileTable(`1 · EXPORT_PRE · LLM9Q880_${n}_1_EXPORT_PRE.xls`, s.files.pre, 'e') + fileTable(`2 · KANBAN · LLM9Q910_${n}_2_KANBAN.xls`, s.files.kan, 'k') + fileTable(`3 · EXPORT_POST · LLM9Q880_${n}_3_EXPORT_POST.xls`, s.files.post, 'e');
+    f += fileTable(`XD07 · 1 EXPORT_PRE · LLM9Q880_${n}_1_EXPORT_PRE.xls`, s.files.pre, 'e') + fileTable(`XD07 · 2 KANBAN · LLM9Q910_${n}_2_KANBAN.xls`, s.files.kan, 'k') + fileTable(`XD07 · 3 EXPORT_POST · LLM9Q880_${n}_3_EXPORT_POST.xls`, s.files.post, 'e');
   }
-  if (s.gsent && s.gsent.length) f += `<div class="file"><h4>GTOPAS WVJA5204 (XD06)</h4><div class="tbl"><table><thead><tr><th class="h">Action on WVJA5204</th><th>Depot Code</th><th>P/No.</th><th>Destination Code</th><th>Maker Code</th><th>Domestic/Overseas</th><th>TOPAS Order Type</th><th>Order Transportation Code</th></tr></thead><tbody>${s.gsent.map((r) => `<tr><td>${r.act === 'DELETE' ? 'Delete (MT = DEL)' : 'Add'}</td><td>01</td><td>${r.p}</td><td>${DEST[r.d]}</td><td>A</td><td>2</td><td>3</td><td>2</td></tr>`).join('')}</tbody></table></div></div>`;
-  else if (s.files) f += '<div class="file"><h4>GTOPAS WVJA5204 (XD06)</h4><p class="note">No GTOPAS row of the Current period in this run.</p></div>';
+  if (false) f += `<div class="file"><h4>GTOPAS WVJA5204 (XD06)</h4><div class="tbl"><table><thead><tr><th class="h">Action on WVJA5204</th><th>Depot Code</th><th>P/No.</th><th>Destination Code</th><th>Maker Code</th><th>Domestic/Overseas</th><th>TOPAS Order Type</th><th>Order Transportation Code</th></tr></thead><tbody>${s.gsent.map((r) => `<tr><td>${r.act === 'DELETE' ? 'Delete (MT = DEL)' : 'Add'}</td><td>01</td><td>${r.p}</td><td>${DEST[r.d]}</td><td>A</td><td>2</td><td>3</td><td>2</td></tr>`).join('')}</tbody></table></div></div>`;
+
   document.getElementById('filesBox').innerHTML = f ? `<div class="files">${f}</div>` : '';
   document.getElementById('master').innerHTML = master(s);
   document.getElementById('apole').innerHTML = apole(s);
@@ -514,7 +577,8 @@ function render() {
   document.getElementById('te').innerHTML = tE(s);
   document.getElementById('tg').innerHTML = tG(s);
 }
-const PHASE = { 0: 'November 2026', 7: 'Day D and December 2026', 18: 'Day D and January 2027' };
+
+const PHASE = { 0: 'November 2026 · Current 202611', 9: 'Day D and December 2026', 21: 'Day D and January 2027' };
 document.getElementById('steps').innerHTML = STEPS.map((s, i) => (PHASE[i] ? `<span class="phase">${PHASE[i]}</span>` : '') + `<button class="chip" type="button" id="step-${i}" data-i="${i}"><b>${s.t.slice(0, 6)} ${s.t.slice(12)}</b>${s.label}</button>`).join('');
 document.querySelectorAll('#steps .chip').forEach((b) => b.addEventListener('click', () => { cur = Number(b.dataset.i); render(); }));
 [['f-all', 'all'], ['f-step', 'step'], ['f-open', 'open']].forEach(([id, v]) => document.getElementById(id).addEventListener('click', () => {
