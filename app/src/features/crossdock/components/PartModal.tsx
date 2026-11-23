@@ -4,6 +4,15 @@ import type { PartStatus } from '../../../types';
 import type { CrossdockState } from '../useCrossdockState';
 import { PartNoCombobox } from './PartNoCombobox';
 
+/** Chevron on an editable select (the inputs use appearance: none, so the native arrow is hidden). */
+const CHEVRON: React.CSSProperties = {
+  backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23374151' stroke-width='2.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")",
+  backgroundRepeat: 'no-repeat',
+  backgroundPosition: 'right 12px center',
+  paddingRight: 34,
+  cursor: 'pointer',
+};
+
 type StepStyle = { bg: string; fg: string; bd: string; icon: string };
 
 const DONE: StepStyle = { bg: 'var(--color-accent-2-200)', fg: 'var(--color-accent-2-800)', bd: 'var(--color-accent-2-300)', icon: '✓' };
@@ -109,8 +118,8 @@ export function PartModal({ state }: { state: CrossdockState }) {
                     value={f.st}
                     onChange={(e) => patch((x) => { x.st = e.target.value as PartStatus; })}
                     disabled={statusLocked}
-                    title={!editId ? 'New parts are automatically Candidate' : undefined}
-                    style={{ background: statusLocked ? 'var(--color-neutral-200)' : inputBg, appearance: 'none' }}
+                    title={!editId ? 'New parts are automatically Candidate' : 'Select the status'}
+                    style={statusLocked ? { background: 'var(--color-neutral-200)', appearance: 'none' } : { backgroundColor: inputBg, appearance: 'none', ...CHEVRON }}
                   >
                     {/* No part goes back to Candidate: Candidate is offered only while the saved part is still Candidate. */}
                     {(!editId || savedStatus === 'Candidate') && <option value="Candidate">Candidate</option>}
@@ -159,7 +168,7 @@ export function PartModal({ state }: { state: CrossdockState }) {
                     onChange={(e) => patch((x) => { x.per = e.target.value; })}
                     disabled={periodLocked}
                     title={periodLocked && !inputRO ? 'The period cannot be changed after the part is registered.' : 'The part takes effect from this period'}
-                    style={{ appearance: 'none', background: periodLocked ? 'var(--color-neutral-200)' : inputBg }}
+                    style={periodLocked ? { appearance: 'none', background: 'var(--color-neutral-200)' } : { appearance: 'none', backgroundColor: inputBg, ...CHEVRON }}
                   >
                     {(editId ? [f.per] : [CUR_PER, NEXT_PER]).map((per) => (
                       <option key={per} value={per}>
