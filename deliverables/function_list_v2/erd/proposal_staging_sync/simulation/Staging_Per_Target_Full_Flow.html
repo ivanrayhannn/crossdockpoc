@@ -80,6 +80,19 @@ tr.r-touch td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
 .mini:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .files { grid-template-columns: 1fr; }
 .phase { font: 600 .7rem/1 var(--f-body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); width: 100%; margin-top: 6px; }
+#inputBox:empty { display: none; }
+.file.nsp { border-color: var(--ok); border-style: solid; background: var(--surface); }
+.file.nsp h4 { color: var(--ok); }
+td.lbl { font-family: var(--f-body); font-weight: 600; }
+td.flag { font-family: var(--f-body); color: var(--pend); font-weight: 600; }
+tr.r-chg td { background: var(--pend-soft); }
+td.cell-chg { background: var(--pend-soft); font-weight: 600; box-shadow: inset 0 0 0 1px var(--pend); }
+tr.r-del td { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--ng); }
+th.pk { background: var(--accent); color: var(--surface); }
+.nul { color: var(--muted); font-style: italic; }
+.dn { color: var(--muted); font-size: .72rem; }
+.btnlike { display: inline-block; padding: 4px 12px; border-radius: 6px; background: var(--accent); color: var(--surface); font: 600 .82rem/1.4 var(--f-body); }
+h3.grp { margin-top: 8px; color: var(--accent); }
 #callsBox { display: grid; gap: 12px; }
 .card.rpa { border-left: 4px solid var(--accent); }
 </style>
@@ -92,7 +105,7 @@ tr.r-touch td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
       <code>SP_STG_SYNC</code> (0 → 1 only) and starts the RPA parent flow: with GTOPAS rows in the run, XD06 goes first and XD07 starts only when GTOPAS succeeded (scenario 1);
       without them, XD07 at once (scenario 2); the Period Rollover runs XD06 only. XD07 uploads the files EXPORT_PRE, KANBAN, EXPORT_POST built by the views. AP POLE is simulated too: it keeps a row active until a newer
       Effective Month / Year and checks every uploaded row (total Max Shipping Box (RCS) of the part ≤ Max Shipping Box Qty), so each upload shows whether it passes.</p>
-    <p class="sub">Dummy parts DUMMY-001 to DUMMY-007 (Add Part with Period Current or Next); destinations JAPAN 9722D10, KOREA 9715310, TAIWAN 9811110, USA 9600110, THAILAND 9655510 (dummy codes). Periods 202611 (Current at the start), 202612, 202701.
+    <p class="sub">Dummy parts DUMMY-001 to DUMMY-007 (Add Part with Period Current or Next); users RSARI (D/S), DANGGRAINI (Procurement), XD05BATCH; destinations JAPAN 9722D10, KOREA 9715310, TAIWAN 9811110, USA 9600110, THAILAND 9655510 (dummy codes). Periods 202611 (Current at the start), 202612, 202701.
       OPERATION_TYPE: 1 Max down, 2 Max up, 3 Max same, 4 never sent, 5 Kanban unchanged (only destinations).</p>
     <div class="legend">
       <span><i class="sw" style="background:var(--pend-soft)"></i>SYNC_STATUS 0 to send</span>
@@ -107,25 +120,29 @@ tr.r-touch td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
     <h2>Steps</h2>
     <div class="chips" id="steps" role="group" aria-label="Simulation step"></div>
     <div class="story" id="story"></div>
+    <div id="inputBox"></div>
     <div id="callsBox"></div>
     <div id="filesBox"></div>
-  </section>
-
-  <section>
     <div class="grid2">
-      <div class="card"><div class="head"><h3>NSP master after the step</h3><span class="pill p-none">TB_M_PART_CANDIDATE + _DEST</span></div><div class="tbl" id="master"></div></div>
-      <div class="card"><div class="head"><h3>AP POLE after the step</h3><span class="pill p-none">value active per Effective Month</span></div><div class="tbl" id="apole"></div>
-        <div class="head"><h3>GTOPAS WVJA5204</h3><span class="pill p-none">part + destination, no period</span></div><div class="tbl" id="gtopas"></div></div>
+      <div class="card"><div class="head"><h3>AP POLE after the step</h3><span class="pill p-none">value active per Effective Month</span></div><div class="tbl" id="apole"></div></div>
+      <div class="card"><div class="head"><h3>GTOPAS WVJA5204 after the step</h3><span class="pill p-none">part + destination, no period</span></div><div class="tbl" id="gtopas"></div></div>
     </div>
   </section>
 
   <section>
-    <h2>Staging tables after the step</h2>
+    <h2>Tables after the step</h2>
+    <p class="note">Every column of the table as in the UISS (XD01 – XD07). Blue header: column of the upload file / GTOPAS screen; yellow header: helper column of NSP; dark header: primary key.
+      Light row: SYNC_STATUS 0, green: 1, struck: 2 Superseded or deleted. Left edge: written or changed in this step.</p>
     <div class="tabs" role="group" aria-label="Rows shown">
       <button class="mini" type="button" id="f-all" aria-pressed="true">All rows</button>
       <button class="mini" type="button" id="f-step" aria-pressed="false">Rows of this step</button>
-      <button class="mini" type="button" id="f-open" aria-pressed="false">Status 0 only</button>
+      <button class="mini" type="button" id="f-open" aria-pressed="false">Staging status 0 only</button>
     </div>
+    <h3 class="grp">NSP master (XD01 / XD02 / XD03 / XD05)</h3>
+    <div class="card"><div class="head"><h3>TB_M_PART_CANDIDATE</h3><span class="pill p-none">Kanban Crossdock Master · PK PART_NO + PERIOD</span></div><div class="tbl" id="tm"></div></div>
+    <div class="card"><div class="head"><h3>TB_M_PART_CANDIDATE_DEST</h3><span class="pill p-none">Export Crossdock Master · PK PART_NO + PERIOD + DEST_CODE + ORDER_TYPE</span></div><div class="tbl" id="td"></div></div>
+    <div class="card"><div class="head"><h3>TB_H_PART_CANDIDATE</h3><span class="pill p-none">history of every change</span></div><div class="tbl" id="th2"></div></div>
+    <h3 class="grp">Staging (SP_STG_WRITE / SP_STG_SYNC)</h3>
     <div class="card"><div class="head"><h3>TB_H_STG_APPOLE_KANBAN</h3><span class="pill p-none">LLM9Q910</span></div><div class="tbl" id="tk"></div></div>
     <div class="card"><div class="head"><h3>TB_H_STG_APPOLE_EXPORT</h3><span class="pill p-none">LLM9Q880</span></div><div class="tbl" id="te"></div></div>
     <div class="card"><div class="head"><h3>TB_H_STG_GTOPAS</h3><span class="pill p-none">WVJA5204</span></div><div class="tbl" id="tg"></div></div>
@@ -359,24 +376,89 @@ function addPart(per, p, v, by, opt = {}) {
   calls.push(`${p} is Candidate: no staging row (not sent to AP POLE or GTOPAS)`);
 }
 
-// ---------- scenario: full flow Nov 2026 – Jan 2027 ----------
+// ---------- full tables: audit columns, master meta and history are derived per step ----------
+const USER = { RSARI: 'R. Sari (D/S)', DANGGRAINI: 'D. Anggraini (Procurement)', XD05BATCH: 'XD05 batch' };
+const DS = 'RSARI', PR = 'DANGGRAINI', XB = 'XD05BATCH';
+let META = {}, DMETA = {}, HIST = [], hid = 0, upn = 0;
 const STEPS = [];
-function step(t, actor, label, kind, story, fn) {
-  calls = []; touched = []; files = null; gsent = null; rpa = null; now = t;
-  fn();
-  STEPS.push({ t, actor, label, kind, story, calls: calls.slice(), touched: touched.slice(), files: files && clone(files), gsent: gsent && clone(gsent), rpa: rpa && clone(rpa),
-    M: clone(M), K: clone(K), E: clone(E), G: clone(G), AP: clone(AP), GT: clone(GT) });
+const pk = (per, p) => per + '|' + p;
+function rowsOfM(mm) { const out = []; Object.keys(mm).sort().forEach((per) => Object.keys(mm[per]).sort().forEach((p) => out.push([per, p, mm[per][p]]))); return out; }
+function hist(p, per, ev, src, upl, d, ot, field, ov, nv, by, remark) {
+  HIST.push({ id: ++hid, p, per, ev, src, upl, d: d || null, ot: ot || null, field, ov: ov == null ? null : String(ov), nv: nv == null ? null : String(nv), remark: remark || null, by, dt: now });
+  touched.push('H' + hid);
 }
-const DS = 'R. Sari (D/S)', PR = 'D. Anggraini (Procurement)';
-
-step('28-Oct-2026 10:00', 'Start', 'Start: 202611 sent', 'start',
+function step(t, actor, label, kind, story, fn, opt = {}) {
+  calls = []; touched = []; files = null; gsent = null; rpa = null; now = t;
+  const by = actor, src = opt.src || (kind === 'calc' || actor === XB ? 'BATCH' : 'SCREEN'), upl = opt.upl || null;
+  const beforeM = clone(M), stBefore = {};
+  [['K', K], ['E', E], ['G', G]].forEach(([tag, arr]) => arr.forEach((r) => (stBefore[tag + r.id] = r.st)));
+  const nOpen = new Set([...K, ...E].filter((r) => r.st === 0).map((r) => r.per + '|' + r.p).concat(G.filter((r) => r.st === 0).map((r) => r.per + '|' + r.p))).size;
+  fn();
+  // staging audit columns
+  [['K', K], ['E', E], ['G', G]].forEach(([tag, arr]) => arr.forEach((r) => {
+    const k = tag + r.id;
+    if (!(k in stBefore)) { r.upl = r.src === 'UPLOAD' ? upl : null; r.name = NAME(r.p); r.chb = r.chb || null; r.chd = r.chd || null; r.sdt = r.sdt || null; if (r.st === 1 && !r.sdt) r.sdt = now; }
+    else if (stBefore[k] !== r.st) { r.chb = by; r.chd = now; if (r.st === 1) r.sdt = now; }
+  }));
+  // master: TB_M_PART_CANDIDATE, _DEST, history
+  const delD = [];
+  const lsrc = src === 'BATCH' ? 'CALC' : src;
+  const ev = (f) => (kind === 'calc' ? 'CALC' : 'EDIT');
+  rowsOfM(M).forEach(([per, p, m]) => {
+    const key = pk(per, p), old = (beforeM[per] || {})[p];
+    if (m.mad == null) { const prevPer = Object.keys(M).filter((x) => x < per && M[x][p]).sort().pop(); m.mad = old ? old.mad : prevPer ? M[prevPer][p].mad : 100; }
+    if (!META[key]) {
+      META[key] = { cb: by, cdt: now, chb: null, chd: null, src: lsrc, upl };
+      if (kind === 'calc') {
+        const prevPer = Object.keys(beforeM).filter((x) => x < per && beforeM[x][p]).sort().pop();
+        const pv = prevPer ? beforeM[prevPer][p] : null;
+        if (pv && pv.st !== m.st) hist(p, per, 'CALC', 'BATCH', null, null, null, 'PART_STATUS', pv.st, m.st, by, 'Status of the new period by the average MAD');
+        const pd = pv ? pv.d : {};
+        new Set([...Object.keys(pd), ...Object.keys(m.d)]).forEach((k) => { const [d, ot] = k.split('|'); if (pd[k] !== m.d[k]) hist(p, per, 'MAPPING', 'BATCH', null, d, ot, 'CASE_DAY', pd[k], m.d[k], by, 'Mapping of the new period'); });
+      } else if (kind !== 'start') hist(p, per, 'ADD', src, upl, null, null, 'PART_STATUS', null, m.st, by, `Pcs/Case ${m.pcs}, Max Case/Day ${m.max}, Min MAD ${m.mad}`);
+      touched.push('M' + key);
+    } else if (old) {
+      const ch = [['PCS_CASE', 'pcs'], ['MAX_CASE_DAY', 'max'], ['MIN_MAD', 'mad'], ['PART_STATUS', 'st']].filter(([, f]) => old[f] !== m[f]);
+      ch.forEach(([fname, f]) => hist(p, per, ev(), src, upl, null, null, fname, old[f], m[f], by));
+      if (ch.length) { Object.assign(META[key], { chb: by, chd: now, src: lsrc, upl: src === 'UPLOAD' ? upl : META[key].upl }); touched.push('M' + key); }
+      new Set([...Object.keys(old.d), ...Object.keys(m.d)]).forEach((k) => { const [d, ot] = k.split('|'); if (old.d[k] !== m.d[k]) hist(p, per, 'MAPPING', src, upl, d, ot, 'CASE_DAY', old.d[k], m.d[k], by); });
+    }
+    Object.entries(m.d).forEach(([k, v]) => {
+      const dk = key + '|' + k;
+      if (!DMETA[dk] || (old && !(k in old.d))) { DMETA[dk] = { cb: by, cdt: now, chb: null, chd: null }; touched.push('D' + dk); }
+      else if (old && old.d[k] !== v) { DMETA[dk].chb = by; DMETA[dk].chd = now; touched.push('D' + dk); }
+    });
+    if (old) Object.entries(old.d).filter(([k]) => !(k in m.d)).forEach(([k, v]) => { delD.push({ per, p, k, v, meta: clone(DMETA[key + '|' + k]) }); delete DMETA[key + '|' + k]; });
+  });
+  if (kind === 'start') { HIST = []; hid = 0; touched = []; }
+  let input = opt.input || null;
+  if (input && input.kind === 'mapping') {
+    const o = beforeM[input.per][input.p].d, n = M[input.per][input.p].d;
+    input.rows = [...new Set([...Object.keys(o), ...Object.keys(n)])].map((k) => { const [d, ot] = k.split('|'); return [DEST[d] + ' ' + d, ot, o[k] ?? '-', n[k] ?? 'removed', o[k] === n[k] ? '' : k in o ? (k in n ? 'changed' : 'removed') : 'added']; });
+    input.max = M[input.per][input.p].max; input.total = Object.values(n).reduce((a, b) => a + b, 0);
+  }
+  if (input && (input.kind === 'part' || input.kind === 'add')) {
+    const o = input.kind === 'add' ? null : beforeM[input.per][input.p], n = M[input.per][input.p];
+    const f = (lbl, ov, nv, lock) => [lbl, o ? ov : '', nv, lock ? 'locked' : o && ov !== nv ? 'changed' : ''];
+    input.rows = [f('Status', o && o.st, n.st, input.kind === 'add'), f('Part No', input.p, input.p, true), f('Part Name', NAME(input.p), NAME(input.p), true),
+      f('Period', mon(input.per), mon(input.per) + (input.perNote ? ' (' + input.perNote + ')' : ''), input.kind === 'part'), f('Min MAD', o && o.mad, n.mad), f('Pcs/Case', o && o.pcs, n.pcs), f('Max Case/Day', o && o.max, n.max),
+      f('Total Pcs/Day', o && o.pcs * o.max, n.pcs * n.max, true)];
+  }
+  if (input && input.kind === 'sync') input.n = nOpen;
+  STEPS.push({ t, actor, label, kind, story, input, calls: calls.slice(), touched: touched.slice(), files: files && clone(files), gsent: gsent && clone(gsent), rpa: rpa && clone(rpa),
+    M: clone(M), K: clone(K), E: clone(E), G: clone(G), AP: clone(AP), GT: clone(GT), META: clone(META), DMETA: clone(DMETA), H: clone(HIST), delD });
+}
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const mon = (per) => MON[Number(per.slice(4)) - 1] + ' ' + per.slice(0, 4);
+const UPL = () => 'UPL' + String(++upn).padStart(5, '0');
+step('28-Oct-2026 10:00', XB, 'Start: 202611 sent', 'start',
   'Starting point. XD05 made 202611 on 27-Oct, [Sync] sent it to AP POLE on 28-Oct (run 20261028100000) and the Period Rollover sent it to GTOPAS on 01-Nov. DUMMY-004 is Candidate (never sent). Current = 202611, day D = 27-Nov.',
   () => {
     M['202611'] = {
-      'DUMMY-001': { st: 'Active', pcs: 10, max: 30, d: { 'JAPAN|**': 20, 'KOREA|**': 10 } },
-      'DUMMY-002': { st: 'Active', pcs: 12, max: 28, d: { 'TAIWAN|**': 28 } },
-      'DUMMY-003': { st: 'Active', pcs: 8, max: 14, d: { 'USA|**': 8, 'THAILAND|**': 6 } },
-      'DUMMY-004': { st: 'Candidate', pcs: 6, max: 20, d: {} },
+      'DUMMY-001': { st: 'Active', pcs: 10, max: 30, mad: 300, d: { 'JAPAN|**': 20, 'KOREA|**': 10 } },
+      'DUMMY-002': { st: 'Active', pcs: 12, max: 28, mad: 250, d: { 'TAIWAN|**': 28 } },
+      'DUMMY-003': { st: 'Active', pcs: 8, max: 14, mad: 120, d: { 'USA|**': 8, 'THAILAND|**': 6 } },
+      'DUMMY-004': { st: 'Candidate', pcs: 6, max: 20, mad: 100, d: {} },
     };
     now = '27-Oct-2026 02:00';
     ['DUMMY-001', 'DUMMY-002', 'DUMMY-003'].forEach((p) => { spKanban('ADD', '202611', p, 'XD05BATCH', 'BATCH'); Object.entries(M['202611'][p].d).forEach(([k, v]) => { const [d, ot] = k.split('|'); spExport('ADD', '202611', p, d, ot, v, 'XD05BATCH', 'BATCH'); }); });
@@ -384,37 +466,50 @@ step('28-Oct-2026 10:00', 'Start', 'Start: 202611 sent', 'start',
     [K, E].forEach((arr) => arr.forEach((r) => { r.st = 1; r.run = '20261028100000'; r.sdt = now; r.seq = 1; }));
     G.forEach((r) => { r.st = 1; r.run = '20261101001000'; r.sdt = '01-Nov-2026 00:10'; r.seq = 1; });
     K.forEach((r) => apRow('k', r)); E.forEach((r) => apRow('e', r)); G.forEach((r) => (GT[r.p + '|' + r.d] = true));
-    calls = ['(state before the simulation: rows of 202611 already sent)']; touched = [];
+    [K, E].forEach((arr) => arr.forEach((r) => { r.chb = 'RSARI'; r.chd = '28-Oct-2026 10:00'; r.sdt = '28-Oct-2026 10:00'; r.dt = '27-Oct-2026 02:00'; }));
+    G.forEach((r) => { r.chb = XB; r.chd = '01-Nov-2026 00:10'; r.sdt = '01-Nov-2026 00:10'; r.dt = '27-Oct-2026 02:00'; });
+    now = '27-Oct-2026 02:00';
+    calls = ['(state before the simulation: rows of 202611 made by XD05 on 27-Oct and already sent)']; touched = [];
   });
 
 // ----- November: Current 202611 -----
 step('03-Nov-2026 09:00', PR, 'Add Part · Next', 'add',
   'Procurement adds DUMMY-006 with Period = Dec 2026 (next). The row exists for 202612 only and is view only until 202612 becomes Current. The part is Candidate: no staging row.',
-  () => addPart('202612', 'DUMMY-006', { pcs: 4, max: 10 }, PR, { label: 'Add Part, Period Next' }));
+  () => { addPart('202612', 'DUMMY-006', { pcs: 4, max: 10 }, PR, { label: 'Add Part, Period Next' }); M['202612']['DUMMY-006'].mad = 100; },
+  { input: { kind: 'add', title: 'Add Part Candidate Crossdock', p: 'DUMMY-006', per: '202612', perNote: 'next' } });
 step('05-Nov-2026 09:00', DS, 'Edit mapping (down + up)',  'edit',
   'D/S moves capacity of DUMMY-001 inside 202611: JAPAN 20 → 14, KOREA 10 → 16. Max stays 30, so the Kanban does not change: header with OPERATION_TYPE 5. The destinations stay, so no GTOPAS row.',
-  () => saveMapping('202611', 'DUMMY-001', { 'JAPAN|**': 14, 'KOREA|**': 16 }, DS));
+  () => saveMapping('202611', 'DUMMY-001', { 'JAPAN|**': 14, 'KOREA|**': 16 }, DS),
+  { input: { kind: 'mapping', title: 'Edit mapping', p: 'DUMMY-001', per: '202611' } });
 step('05-Nov-2026 10:00', DS, '[Sync] · scenario 2', 'sync',
   'No GTOPAS row in the run: scenario 2, XD07 at once. EXPORT_POST only, JAPAN 14 (down, ROW_ORDER 1) before KOREA 16 (up, 2). The other order would give 20 + 16 = 36 > 30 in AP POLE.',
-  () => spSync('20261105100000', '202611', '202612', DS));
+  () => spSync('20261105100000', '202611', '202612', DS), { input: { kind: 'sync' } });
 step('10-Nov-2026 08:30', PR, 'Edit · Candidate → Active', 'edit',
   'Procurement opens Edit on DUMMY-004 (Candidate); the status list offers Candidate and Active only. Active: the part was never sent, so the Kanban row is ADD with OPERATION_TYPE 4.',
-  () => savePart('202611', 'DUMMY-004', { st: 'Active' }, PR));
+  () => savePart('202611', 'DUMMY-004', { st: 'Active' }, PR),
+  { input: { kind: 'part', title: 'Edit part data', p: 'DUMMY-004', per: '202611' } });
 step('10-Nov-2026 09:00', DS, 'Map the new part', 'edit',
   'D/S maps DUMMY-004: KOREA 12, USA 8 (total 20 = Max). Two Export ADD rows; both destinations are new for the part, so GTOPAS gets two ADD rows.',
-  () => saveMapping('202611', 'DUMMY-004', { 'KOREA|**': 12, 'USA|**': 8 }, DS));
-step('10-Nov-2026 09:30', DS, 'Lower the mapping first', 'edit',
-  'To lower DUMMY-002 Max from 28 to 20, D/S first lowers the mapping (NSP blocks a Max below the mapped total): TAIWAN 28 → 12 and a new THAILAND 8. Header 5; GTOPAS ADD for THAILAND.',
-  () => saveMapping('202611', 'DUMMY-002', { 'TAIWAN|**': 12, 'THAILAND|**': 8 }, DS));
+  () => saveMapping('202611', 'DUMMY-004', { 'KOREA|**': 12, 'USA|**': 8 }, DS),
+  { input: { kind: 'mapping', title: 'Edit mapping', p: 'DUMMY-004', per: '202611' } });
+step('10-Nov-2026 09:30', DS, 'Upload XD03 · lower the mapping', 'upload',
+  'To lower DUMMY-002 Max from 28 to 20, D/S first lowers the mapping (NSP blocks a Max below the mapped total). D/S exports the Export Crossdock Master, changes TAIWAN 28 → 12, adds a THAILAND row (flag A) with 8 and uploads the sheet Upload. XD03 checks every row, then saves only the part that changed: Export EDIT and ADD, header 5, GTOPAS ADD for THAILAND. The other parts are the same as the mapping and are skipped.',
+  () => { calls.push('XD03 file check: .xlsx, sheet Upload, 6 columns, 8 rows → OK; row check → OK (all-or-nothing)'); calls.push('DUMMY-001, DUMMY-003, DUMMY-004: same as the mapping of 202611 → skipped (LOG6)'); saveMapping('202611', 'DUMMY-002', { 'TAIWAN|**': 12, 'THAILAND|**': 8 }, DS, 'UPLOAD'); calls.push('Upload log COMPLETED, result report made'); },
+  { src: 'UPLOAD', upl: 'UPL00001', input: { kind: 'upload', title: 'Upload Excel · Export Crossdock Master (XD03)', file: 'Export_Crossdock_Master_202611.xlsx', id: 'UPL00001',
+    cols: ['Part Number', 'Destination Code', 'Dest Case/Day', 'Total Case/Day (used)', 'Max Case/Day (quota)', 'Upload (A/E)'],
+    rows: [['DUMMY-001', '9722D10', 14, 30, 30, 'E'], ['DUMMY-001', '9715310', 16, 30, 30, 'E'], ['DUMMY-002', '9811110', 12, 28, 28, 'E', [2]], ['DUMMY-002', '9655510', 8, 28, 28, 'A', [1, 2, 5]],
+           ['DUMMY-003', '9600110', 8, 14, 14, 'E'], ['DUMMY-003', '9655510', 6, 14, 14, 'E'], ['DUMMY-004', '9715310', 12, 20, 20, 'E'], ['DUMMY-004', '9600110', 8, 20, 20, 'E']],
+    note: 'Total Case/Day (used) and Max Case/Day (quota) are the values at the export, for reference only (not read). Highlighted cells: changed by D/S.' } });
 step('10-Nov-2026 10:00', PR, 'Max down', 'edit',
   'Procurement lowers DUMMY-002 Max 28 → 20. The header 5 of 09:30 is Superseded by a Kanban EDIT with OPERATION_TYPE 1 (last sent Max 28).',
-  () => savePart('202611', 'DUMMY-002', { max: 20 }, PR));
+  () => savePart('202611', 'DUMMY-002', { max: 20 }, PR),
+  { input: { kind: 'part', title: 'Edit part data', p: 'DUMMY-002', per: '202611' } });
 step('10-Nov-2026 11:00', DS, '[Sync] · scenario 1', 'sync',
   'GTOPAS rows in the run (DUMMY-004 KOREA, USA; DUMMY-002 THAILAND): scenario 1. XD06 adds them, GTOPAS succeeds, then XD07: EXPORT_PRE (DUMMY-002, op 1, before its Max goes down), KANBAN (DUMMY-002, DUMMY-004), EXPORT_POST (DUMMY-004).',
-  () => spSync('20261110110000', '202611', '202612', DS));
+  () => spSync('20261110110000', '202611', '202612', DS), { input: { kind: 'sync' } });
 
 // ----- Day D and December -----
-step('27-Nov-2026 02:00', 'XD05 batch', 'XD05 day D: 202612', 'calc',
+step('27-Nov-2026 02:00', XB, 'XD05 day D: 202612', 'calc',
   'XD05 makes 202612 for every part with a row in 202611, plus DUMMY-006 (registered for 202612 on 03-Nov: its row is kept, it stays Candidate). DUMMY-001 Max 30 → 26 (op 1). DUMMY-002 THAILAND not mapped any more → DELETE (0). DUMMY-003 becomes Inactive → DELETE (0) for USA and THAILAND; the Kanban row stays. DUMMY-004 Max 20 → 24 (op 2). GTOPAS rows only for destinations that disappear; they wait for the Period Rollover.',
   () => xd05('202611', '202612', {
     'DUMMY-001': { st: 'Active', pcs: 10, max: 26, d: { 'JAPAN|**': 12, 'KOREA|**': 14 } },
@@ -422,43 +517,59 @@ step('27-Nov-2026 02:00', 'XD05 batch', 'XD05 day D: 202612', 'calc',
     'DUMMY-003': { st: 'Inactive', pcs: 8, max: 14, d: {} },
     'DUMMY-004': { st: 'Active', pcs: 6, max: 24, d: { 'KOREA|**': 14, 'USA|**': 10 } },
     'DUMMY-006': { st: 'Candidate', pcs: 4, max: 10, d: {} },
-  }));
+  }), { input: { kind: 'batch', title: 'XD05 DAD Volume Calculation · new period 202612 (MAD 202605 – 202610)',
+    cols: ['Part', 'Avg MAD', 'Min MAD', 'Status 202611', 'Status 202612', 'Max Case/Day', 'Destinations (Case/Day)'],
+    rows: [['DUMMY-001', 412.5, 300, 'Active', 'Active', 26, 'JAPAN 12, KOREA 14'], ['DUMMY-002', 260, 250, 'Active', 'Active', 20, 'TAIWAN 20'], ['DUMMY-003', 95, 120, 'Active', 'Inactive', 14, '-'],
+           ['DUMMY-004', 180, 100, 'Active', 'Active', 24, 'KOREA 14, USA 10'], ['DUMMY-006', 0, 100, '(registered for 202612)', 'Candidate', 10, '-']] } });
 step('27-Nov-2026 09:00', PR, 'Add Part · Current after day D', 'add',
   'Procurement adds DUMMY-007 with Period = Nov 2026 (ongoing). XD05 already made 202612, so NSP writes the 202612 row too; without it the part would miss the next calculation. Candidate: no staging row.',
-  () => addPart('202611', 'DUMMY-007', { pcs: 6, max: 12 }, PR, { next: '202612' }));
+  () => { addPart('202611', 'DUMMY-007', { pcs: 6, max: 12 }, PR, { next: '202612' }); M['202611']['DUMMY-007'].mad = 150; M['202612']['DUMMY-007'].mad = 150; },
+  { input: { kind: 'add', title: 'Add Part Candidate Crossdock', p: 'DUMMY-007', per: '202611', perNote: 'ongoing' } });
 step('27-Nov-2026 10:00', DS, '[Sync] · Next period', 'sync',
   'The run carries 202612 (Next) for AP POLE. The GTOPAS rows of 202612 stay 0, so the run has no GTOPAS row: scenario 2. DUMMY-001 is 1 → EXPORT_PRE before KANBAN. In EXPORT_POST, DUMMY-002 THAILAND 0 (down) goes before TAIWAN 20 (up): AP POLE still counts THAILAND 8 from 202611 for 202612.',
-  () => spSync('20261127100000', '202611', '202612', DS));
-step('01-Dec-2026 00:10', 'XD05 batch', 'Period Rollover', 'sync',
+  () => spSync('20261127100000', '202611', '202612', DS), { input: { kind: 'sync' } });
+step('01-Dec-2026 00:10', XB, 'Period Rollover', 'sync',
   '202612 becomes Current. The parent flow runs XD06 only: it deletes DUMMY-002 THAILAND, DUMMY-003 USA and THAILAND in GTOPAS. DUMMY-006 and DUMMY-007 can now be edited.',
   () => rollover('20261201001000', '202612'));
 step('03-Dec-2026 09:00', DS, 'Edit mapping', 'edit',
   'D/S changes DUMMY-001: KOREA 14 → 10, JAPAN 12 → 15 (total 25 ≤ 26). Header 5.',
-  () => saveMapping('202612', 'DUMMY-001', { 'JAPAN|**': 15, 'KOREA|**': 10 }, DS));
+  () => saveMapping('202612', 'DUMMY-001', { 'JAPAN|**': 15, 'KOREA|**': 10 }, DS),
+  { input: { kind: 'mapping', title: 'Edit mapping', p: 'DUMMY-001', per: '202612' } });
 step('03-Dec-2026 09:30', DS, 'Back to the sent value', 'edit',
   'D/S puts JAPAN back to 12 and adds USA 4 (total 26). JAPAN 12 is the value already sent: the unsent 15 and the new 12 are both Superseded, nothing goes for JAPAN. USA is new for DUMMY-001 → GTOPAS ADD.',
-  () => saveMapping('202612', 'DUMMY-001', { 'JAPAN|**': 12, 'KOREA|**': 10, 'USA|**': 4 }, DS));
+  () => saveMapping('202612', 'DUMMY-001', { 'JAPAN|**': 12, 'KOREA|**': 10, 'USA|**': 4 }, DS),
+  { input: { kind: 'mapping', title: 'Edit mapping', p: 'DUMMY-001', per: '202612' } });
 step('03-Dec-2026 10:00', DS, 'Change Order Type', 'edit',
   'D/S changes DUMMY-004 KOREA from order type ** to C (14). For AP POLE: DELETE (0) of ** and ADD of C. GTOPAS keys on part + destination: KOREA stays, so no GTOPAS row.',
-  () => saveMapping('202612', 'DUMMY-004', { 'KOREA|C': 14, 'USA|**': 10 }, DS));
+  () => saveMapping('202612', 'DUMMY-004', { 'KOREA|C': 14, 'USA|**': 10 }, DS),
+  { input: { kind: 'mapping', title: 'Edit mapping', p: 'DUMMY-004', per: '202612' } });
 step('03-Dec-2026 11:00', PR, 'Inactive → Active, Max up', 'edit',
   'Procurement sets DUMMY-003 Active again and raises Max 14 → 18. Kanban EDIT, OPERATION_TYPE 2 against the Max sent for 202612 (14).',
-  () => savePart('202612', 'DUMMY-003', { st: 'Active', max: 18 }, PR));
+  () => savePart('202612', 'DUMMY-003', { st: 'Active', max: 18 }, PR),
+  { input: { kind: 'part', title: 'Edit part data', p: 'DUMMY-003', per: '202612' } });
 step('03-Dec-2026 11:30', DS, 'Map again', 'edit',
   'D/S maps DUMMY-003: THAILAND 10. THAILAND was deleted in GTOPAS on 01-Dec → GTOPAS ADD.',
-  () => saveMapping('202612', 'DUMMY-003', { 'THAILAND|**': 10 }, DS));
+  () => saveMapping('202612', 'DUMMY-003', { 'THAILAND|**': 10 }, DS),
+  { input: { kind: 'mapping', title: 'Edit mapping', p: 'DUMMY-003', per: '202612' } });
 step('04-Dec-2026 10:00', DS, '[Sync] · GTOPAS fails', 'fail',
   'Scenario 1 (GTOPAS ADD DUMMY-001 USA and DUMMY-003 THAILAND). XD06 adds DUMMY-001 USA but fails on DUMMY-003 THAILAND (GTOPAS error message). GTOPAS FAILED, so AP POLE stops: XD07 does not start. The e-mail says FAILED.',
-  () => spSync('20261204100000', '202612', '202701', DS, { failG: ['DUMMY-003|THAILAND'] }));
+  () => spSync('20261204100000', '202612', '202701', DS, { failG: ['DUMMY-003|THAILAND'] }), { input: { kind: 'sync' } });
 step('04-Dec-2026 14:00', DS, 'Re-send last Sync', 'sync',
   'D/S clicks [Re-send last Sync]: the same run ID. XD06 again: DUMMY-001 USA is already there (OK), DUMMY-003 THAILAND is added now. Then XD07: KANBAN (DUMMY-003 Max 18, op 2), EXPORT_POST per part down before up: DUMMY-001 KOREA 10 then USA 4; DUMMY-003 THAILAND 10; DUMMY-004 KOREA ** 0 then KOREA C 14.',
-  () => resend('20261204100000'));
+  () => resend('20261204100000'), { input: { kind: 'resend', run: '20261204100000' } });
 step('10-Dec-2026 09:00', PR, 'Upload XD02', 'upload',
-  'Procurement uploads the Kanban file: DUMMY-002 Pcs/Case 12 → 15 (Max 20 unchanged) and a new part DUMMY-005 (flag A, Period 202612). DUMMY-002: Kanban EDIT with OPERATION_TYPE 3. DUMMY-005: Candidate, no staging row.',
-  () => { addPart('202612', 'DUMMY-005', { pcs: 5, max: 15 }, PR, { label: 'Upload XD02, flag A' }); savePart('202612', 'DUMMY-002', { pcs: 15 }, PR, 'UPLOAD'); });
+  'Procurement exports the Kanban Crossdock Master, changes DUMMY-002 Pcs/Case 12 → 15 (Max 20 unchanged), adds DUMMY-005 (flag A, Period 202612) and uploads the sheet Upload. XD02 checks every row, then saves: DUMMY-002 Kanban EDIT with OPERATION_TYPE 3; DUMMY-005 inserted as Candidate (no staging row). The other rows are the same as the master and are skipped.',
+  () => { calls.push('XD02 file check: .xlsx, sheet Upload, 7 columns, 7 rows → OK; row check → OK (all-or-nothing)'); calls.push('DUMMY-001, 003, 004, 006, 007: no change → skipped (LOG6)');
+    addPart('202612', 'DUMMY-005', { pcs: 5, max: 15 }, PR, { label: 'Upload XD02, flag A' }); M['202612']['DUMMY-005'].mad = 80; savePart('202612', 'DUMMY-002', { pcs: 15 }, PR, 'UPLOAD'); calls.push('Upload log COMPLETED, result report made'); },
+  { src: 'UPLOAD', upl: 'UPL00002', input: { kind: 'upload', title: 'Upload Excel · Kanban Crossdock Master (XD02)', file: 'Kanban_Crossdock_Master_202612.xlsx', id: 'UPL00002',
+    cols: ['Part Number', 'Min MAD', 'Pcs/Case', 'Max Case/Day', 'Status', 'Upload (A/E)', 'Period'],
+    rows: [['DUMMY-001', 300, 10, 26, 'Active', 'E', '202612'], ['DUMMY-002', 250, 15, 20, 'Active', 'E', '202612', [2]], ['DUMMY-003', 120, 8, 18, 'Active', 'E', '202612'],
+           ['DUMMY-004', 100, 6, 24, 'Active', 'E', '202612'], ['DUMMY-006', 100, 4, 10, 'Candidate', 'E', '202612'], ['DUMMY-007', 150, 6, 12, 'Candidate', 'E', '202612'],
+           ['DUMMY-005', 80, 5, 15, '', 'A', '202612', [0, 1, 2, 3, 5, 6]]],
+    note: 'Flag A: Status blank (always Candidate), Period = ongoing or next. Flag E: Period = ongoing. Highlighted cells: changed by Procurement.' } });
 
 // ----- Day D and January -----
-step('27-Dec-2026 02:00', 'XD05 batch', 'XD05 day D: 202701', 'calc',
+step('27-Dec-2026 02:00', XB, 'XD05 day D: 202701', 'calc',
   'XD05 makes 202701. DUMMY-004 becomes Inactive → DELETE (0) for KOREA C and USA. DUMMY-006 becomes Active (first calculation since its period): Kanban ADD op 4, TAIWAN 10, GTOPAS ADD. The other parts keep their values; NSP still adds their rows for the new Effective Month (op 3). DUMMY-005 and DUMMY-007 stay Candidate.',
   () => xd05('202612', '202701', {
     'DUMMY-001': { st: 'Active', pcs: 10, max: 26, d: { 'JAPAN|**': 12, 'KOREA|**': 10, 'USA|**': 4 } },
@@ -468,11 +579,14 @@ step('27-Dec-2026 02:00', 'XD05 batch', 'XD05 day D: 202701', 'calc',
     'DUMMY-005': { st: 'Candidate', pcs: 5, max: 15, d: {} },
     'DUMMY-006': { st: 'Active', pcs: 4, max: 10, d: { 'TAIWAN|**': 10 } },
     'DUMMY-007': { st: 'Candidate', pcs: 6, max: 12, d: {} },
-  }));
+  }), { input: { kind: 'batch', title: 'XD05 DAD Volume Calculation · new period 202701 (MAD 202606 – 202611)',
+    cols: ['Part', 'Avg MAD', 'Min MAD', 'Status 202612', 'Status 202701', 'Max Case/Day', 'Destinations (Case/Day)'],
+    rows: [['DUMMY-001', 398, 300, 'Active', 'Active', 26, 'JAPAN 12, KOREA 10, USA 4'], ['DUMMY-002', 271, 250, 'Active', 'Active', 20, 'TAIWAN 20'], ['DUMMY-003', 133, 120, 'Active', 'Active', 18, 'THAILAND 10'],
+           ['DUMMY-004', 64, 100, 'Active', 'Inactive', 24, '-'], ['DUMMY-005', 40, 80, 'Candidate', 'Candidate', 15, '-'], ['DUMMY-006', 115, 100, 'Candidate', 'Active', 10, 'TAIWAN 10'], ['DUMMY-007', 90, 150, 'Candidate', 'Candidate', 12, '-']] } });
 step('27-Dec-2026 10:00', DS, '[Sync] · Current + Next', 'sync',
   'One run with both periods: the KANBAN file has the 202612 row of DUMMY-002 (Pcs/Case 15) and the 202701 rows; Effective Month / Year tells them apart. EXPORT_POST holds the 202701 rows, DELETE before ADD per part. The GTOPAS rows of 202701 wait: scenario 2.',
-  () => spSync('20261227100000', '202612', '202701', DS));
-step('01-Jan-2027 00:10', 'XD05 batch', 'Period Rollover', 'sync',
+  () => spSync('20261227100000', '202612', '202701', DS), { input: { kind: 'sync' } });
+step('01-Jan-2027 00:10', XB, 'Period Rollover', 'sync',
   '202701 becomes Current. XD06 only: deletes DUMMY-004 KOREA and USA, adds DUMMY-006 TAIWAN in GTOPAS.',
   () => rollover('20270101001000', '202701'));
 
@@ -488,7 +602,7 @@ const LEARN = [
 ];
 // ---------- view ----------
 const H = 'h';
-let cur = 0, filt = 'all';
+let cur = 1, filt = 'all';
 const stTxt = (v) => (v === 0 ? '0' : v === 1 ? '1' : '2');
 const cls = (r, s) => (r.st === 0 ? 'r-new' : r.st === 1 ? 'r-sent' : 'r-sup') + (s.touched.includes(r.tag) ? ' r-touch' : '');
 const pill = (a) => `<span class="pill ${a === 'ADD' ? 'p-add' : a === 'EDIT' ? 'p-edit' : a === 'KEEP' ? 'p-none' : 'p-del'}">${a}</span>`;
@@ -496,21 +610,6 @@ const th = (cols) => '<tr>' + cols.map(([c, h]) => `<th${h ? ' class="h"' : ''}>
 function shown(rows, tag, s) {
   rows.forEach((r) => (r.tag = tag + r.id));
   return rows.filter((r) => filt === 'all' || (filt === 'step' ? s.touched.includes(r.tag) : r.st === 0));
-}
-function tK(s) {
-  const cols = [['STG_ID', H], ['PERIOD', H], ['ACTION', H], ['PART_STATUS', H], ['EFFECTIVE MONTH / YEAR'], ['OPERATOR ID'], ['PART NO.'], ['PART NAME'], ['SHIPPING BOX QTY'], ['MAX SHIPPING BOX QTY'], ['MAX ALLOWANCE QTY'], ['OPERATION_TYPE', H], ['SOURCE', H], ['SYNC_STATUS', H], ['SYNC_RUN_ID', H], ['CREATED_BY', H], ['CREATED_DT', H]];
-  const rs = shown(clone(s.K), 'K', s);
-  return `<table><thead>${th(cols)}</thead><tbody>${rs.map((r) => `<tr class="${cls(r, s)}"><td>K${r.id}</td><td>${r.per}</td><td>${pill(r.act)}</td><td>${r.ps}</td><td>${my(r.per)}</td><td>P6</td><td>${r.p}</td><td>${NAME(r.p)}</td><td class="n">${r.pcs}</td><td class="n">${r.max}</td><td class="n">${r.pcs * r.max}</td><td>${r.op}</td><td>${r.src}</td><td>${stTxt(r.st)}</td><td>${r.run || ''}</td><td>${r.by}</td><td>${r.dt}</td></tr>`).join('') || '<tr><td colspan="17">No row</td></tr>'}</tbody></table>`;
-}
-function tE(s) {
-  const cols = [['STG_ID', H], ['PERIOD', H], ['NSP_PART_NO', H], ['DEST_CODE', H], ['ACTION', H], ['EFFECTIVE MONTH / YEAR'], ['PART NO.'], ['BUYER-PD'], ['ORDER TYPE'], ['TRANSPORT CODE'], ['MAX SHIPPING BOX (RCS)'], ['SOURCE', H], ['SYNC_STATUS', H], ['SYNC_RUN_ID', H], ['CREATED_BY', H], ['CREATED_DT', H]];
-  const rs = shown(clone(s.E), 'E', s);
-  return `<table><thead>${th(cols)}</thead><tbody>${rs.map((r) => `<tr class="${cls(r, s)}"><td>E${r.id}</td><td>${r.per}</td><td>${r.p}</td><td>${DEST[r.d]} ${r.d}</td><td>${pill(r.act)}</td><td>${my(r.per)}</td><td>${r.p.replace(/-/g, '')}</td><td>${DEST[r.d].slice(0, 5)}-${DEST[r.d].slice(5)}</td><td>${r.ot}</td><td>2</td><td class="n">${r.cd}</td><td>${r.src}</td><td>${stTxt(r.st)}</td><td>${r.run || ''}</td><td>${r.by}</td><td>${r.dt}</td></tr>`).join('') || '<tr><td colspan="16">No row</td></tr>'}</tbody></table>`;
-}
-function tG(s) {
-  const cols = [['STG_ID', H], ['PERIOD', H], ['ACTION', H], ['DEPOT CODE'], ['P/NO.'], ['DESTINATION CODE'], ['MAKER CODE'], ['DOMESTIC / OVERSEAS'], ['TOPAS ORDER TYPE'], ['ORDER TRANSPORTATION CODE'], ['SOURCE', H], ['SYNC_STATUS', H], ['SYNC_RUN_ID', H], ['CREATED_DT', H]];
-  const rs = shown(clone(s.G), 'G', s);
-  return `<table><thead>${th(cols)}</thead><tbody>${rs.map((r) => `<tr class="${cls(r, s)}"><td>G${r.id}</td><td>${r.per}</td><td>${pill(r.act)}</td><td>01</td><td>${r.p}</td><td>${DEST[r.d]} ${r.d}</td><td>A</td><td>2</td><td>3</td><td>2</td><td>${r.src}</td><td>${stTxt(r.st)}</td><td>${r.run || ''}</td><td>${r.dt}</td></tr>`).join('') || '<tr><td colspan="14">No row</td></tr>'}</tbody></table>`;
 }
 const chk = (c) => `<td class="${c.ok ? 'okc' : 'ngc'}">${c.ok ? 'OK' : 'Rejected'}: total ${c.t} ≤ Max ${c.mx}</td>`.replace('≤', c.ok ? '≤' : '&gt;');
 function fileTable(title, list, kind) {
@@ -521,15 +620,6 @@ function fileTable(title, list, kind) {
     : '<table><thead><tr><th>Effective Month / Year</th><th>Part No.</th><th>Buyer-PD</th><th>Order Type</th><th>Transport Code</th><th>Max Shipping Box (RCS)</th><th class="h">ROW_ORDER (view)</th><th class="h">AP POLE check after the row</th></tr></thead><tbody>' +
       list.map((x) => `<tr><td>${my(x.r.per)}</td><td>${x.r.p.replace(/-/g, '')}</td><td>${DEST[x.r.d].slice(0, 5)}-${DEST[x.r.d].slice(5)} ${x.r.d}</td><td>${x.r.ot}</td><td>2</td><td class="n">${x.r.cd}</td><td>${x.ro} ${x.ro === 1 ? 'down' : 'up'}${x.prev != null ? ' (was ' + x.prev + ')' : ' (new)'}</td>${chk(x.chk)}</tr>`).join('') + '</tbody></table>';
   return `<div class="file"><h4>${title}</h4><div class="tbl">${body}</div></div>`;
-}
-function master(s) {
-  const pers = Object.keys(s.M).sort();
-  const rows = [];
-  pers.forEach((per) => Object.entries(s.M[per]).forEach(([p, m]) => {
-    const t = Object.values(m.d).reduce((a, b) => a + b, 0);
-    rows.push(`<tr><td>${per}</td><td>${p}</td><td>${m.st}</td><td class="n">${m.pcs}</td><td class="n">${m.max}</td><td class="t">${Object.entries(m.d).map(([k, v]) => k.replace('|', ' ') + ' ' + v).join(', ') || '-'}</td><td class="n">${t}</td></tr>`);
-  }));
-  return `<table><thead><tr><th>Period</th><th>Part</th><th>Status</th><th>Pcs/Case</th><th>Max</th><th>Destinations (Case/Day)</th><th>Total</th></tr></thead><tbody>${rows.join('')}</tbody></table>`;
 }
 function apole(s) {
   const months = [...new Set(Object.values(s.AP.kan).flatMap((mp) => Object.keys(mp)))].sort();
@@ -556,10 +646,83 @@ function rpaBox(s) {
     <tbody><tr><td>${r.type}</td><td class="n">${r.gRows}</td>${st(r.g)}${st(r.ap)}<td class="${mail === 'SUCCESS' ? 'okc' : 'ngc'}">${mail}</td></tr></tbody></table></div>
     ${r.gFail.length ? `<p class="note">GTOPAS failed on ${r.gFail.join(', ')}: XD07 not started, nothing sent to AP POLE.</p>` : ''}</div>`;
 }
+
+const nz = (x) => (x == null || x === '' ? '<span class="nul">NULL</span>' : x);
+function tK(s) {
+  const cols = [['STG_ID', H], ['PERIOD', H], ['ACTION', H], ['PART_STATUS', H], ['EFFECTIVE_MONTH_YEAR'], ['OPERATOR_ID'], ['PART_NO'], ['PART_NAME'], ['SHIPPING_BOX_QTY'], ['MAX_SHIPPING_BOX_QTY'], ['MAX_ALLOWANCE_QTY'], ['OPERATION_TYPE', H], ['SOURCE', H], ['UPLOAD_ID', H], ['SYNC_STATUS', H], ['SYNC_DT', H], ['SYNC_RUN_ID', H], ['CREATED_BY', H], ['CREATED_DT', H], ['CHANGED_BY', H], ['CHANGED_DT', H]];
+  const rs = shown(clone(s.K), 'K', s);
+  return `<table><thead>${th(cols)}</thead><tbody>${rs.map((r) => `<tr class="${cls(r, s)}"><td>${r.id}</td><td>${r.per}</td><td>${pill(r.act)}</td><td>${r.ps}</td><td>${my(r.per)}</td><td>P6</td><td>${r.p}</td><td>${NAME(r.p)}</td><td class="n">${r.pcs}</td><td class="n">${r.max}</td><td class="n">${r.pcs * r.max}</td><td>${r.op}</td><td>${r.src}</td><td>${nz(r.upl)}</td><td>${stTxt(r.st)}</td><td>${nz(r.sdt)}</td><td>${nz(r.run)}</td><td>${r.by}</td><td>${r.dt}</td><td>${nz(r.chb)}</td><td>${nz(r.chd)}</td></tr>`).join('') || `<tr><td colspan="${cols.length}">No row</td></tr>`}</tbody></table>`;
+}
+function tE(s) {
+  const cols = [['STG_ID', H], ['PERIOD', H], ['NSP_PART_NO', H], ['DEST_CODE', H], ['ACTION', H], ['EFFECTIVE_MONTH_YEAR'], ['PART_NO'], ['BUYER_PD'], ['ORDER_TYPE'], ['TRANSPORT_CODE'], ['MAX_SHIPPING_BOX_RCS'], ['SOURCE', H], ['UPLOAD_ID', H], ['SYNC_STATUS', H], ['SYNC_DT', H], ['SYNC_RUN_ID', H], ['CREATED_BY', H], ['CREATED_DT', H], ['CHANGED_BY', H], ['CHANGED_DT', H]];
+  const rs = shown(clone(s.E), 'E', s);
+  return `<table><thead>${th(cols)}</thead><tbody>${rs.map((r) => `<tr class="${cls(r, s)}"><td>${r.id}</td><td>${r.per}</td><td>${r.p}</td><td>${DEST[r.d]}</td><td>${pill(r.act)}</td><td>${my(r.per)}</td><td>${r.p.replace(/-/g, '')}</td><td>${DEST[r.d].slice(0, 5)}-${DEST[r.d].slice(5)}</td><td>${r.ot}</td><td>2</td><td class="n">${r.cd}</td><td>${r.src}</td><td>${nz(r.upl)}</td><td>${stTxt(r.st)}</td><td>${nz(r.sdt)}</td><td>${nz(r.run)}</td><td>${r.by}</td><td>${r.dt}</td><td>${nz(r.chb)}</td><td>${nz(r.chd)}</td></tr>`).join('') || `<tr><td colspan="${cols.length}">No row</td></tr>`}</tbody></table>`;
+}
+function tG(s) {
+  const cols = [['STG_ID', H], ['PERIOD', H], ['ACTION', H], ['DEPOT_CODE'], ['P_NO'], ['DESTINATION_CODE'], ['MAKER_CODE'], ['DOMESTIC_OVERSEAS'], ['TOPAS_ORDER_TYPE'], ['ORDER_TRANSPORTATION_CODE'], ['SOURCE', H], ['UPLOAD_ID', H], ['SYNC_STATUS', H], ['SYNC_DT', H], ['SYNC_RUN_ID', H], ['CREATED_BY', H], ['CREATED_DT', H], ['CHANGED_BY', H], ['CHANGED_DT', H]];
+  const rs = shown(clone(s.G), 'G', s);
+  return `<table><thead>${th(cols)}</thead><tbody>${rs.map((r) => `<tr class="${cls(r, s)}"><td>${r.id}</td><td>${r.per}</td><td>${pill(r.act)}</td><td>01</td><td>${r.p}</td><td>${DEST[r.d]}</td><td>A</td><td>2</td><td>3</td><td>2</td><td>${r.src}</td><td>${nz(r.upl)}</td><td>${stTxt(r.st)}</td><td>${nz(r.sdt)}</td><td>${nz(r.run)}</td><td>${r.by}</td><td>${r.dt}</td><td>${nz(r.chb)}</td><td>${nz(r.chd)}</td></tr>`).join('') || `<tr><td colspan="${cols.length}">No row</td></tr>`}</tbody></table>`;
+}
+const mt = (s, tag) => (s.touched.includes(tag) ? ' r-touch' : '');
+const keepRow = (s, tag) => filt !== 'step' || s.touched.includes(tag);
+function tM(s) {
+  const cols = ['PART_NO', 'PERIOD', 'PART_NAME', 'MIN_MAD', 'PCS_CASE', 'MAX_CASE_DAY', 'TOTAL_PCS_DAY', 'PART_STATUS', 'LAST_SOURCE', 'LAST_UPLOAD_ID', 'CREATED_BY', 'CREATED_DT', 'CHANGED_BY', 'CHANGED_DT'];
+  const rows = [];
+  Object.keys(s.M).sort().forEach((per) => Object.keys(s.M[per]).sort().forEach((p) => {
+    const m = s.M[per][p], x = s.META[per + '|' + p] || {}, tag = 'M' + per + '|' + p;
+    if (!keepRow(s, tag)) return;
+    rows.push(`<tr class="${mt(s, tag)}"><td>${p}</td><td>${per}</td><td>${NAME(p)}</td><td class="n">${m.mad}</td><td class="n">${m.pcs}</td><td class="n">${m.max}</td><td class="n">${m.pcs * m.max}</td><td>${m.st}</td><td>${x.src}</td><td>${nz(x.upl)}</td><td>${x.cb}</td><td>${x.cdt}</td><td>${nz(x.chb)}</td><td>${nz(x.chd)}</td></tr>`);
+  }));
+  return `<table><thead><tr>${cols.map((c, i) => `<th${i < 2 ? ' class="pk"' : ''}>${c}</th>`).join('')}</tr></thead><tbody>${rows.join('') || `<tr><td colspan="${cols.length}">No row</td></tr>`}</tbody></table>`;
+}
+function tD(s) {
+  const cols = ['PART_NO', 'PERIOD', 'DEST_CODE', 'ORDER_TYPE', 'CASE_DAY', 'CREATED_BY', 'CREATED_DT', 'CHANGED_BY', 'CHANGED_DT'];
+  const rows = [];
+  Object.keys(s.M).sort().forEach((per) => Object.keys(s.M[per]).sort().forEach((p) => Object.entries(s.M[per][p].d).forEach(([k, v]) => {
+    const [d, ot] = k.split('|'), x = s.DMETA[per + '|' + p + '|' + k] || {}, tag = 'D' + per + '|' + p + '|' + k;
+    if (!keepRow(s, tag)) return;
+    rows.push(`<tr class="${mt(s, tag)}"><td>${p}</td><td>${per}</td><td>${DEST[d]} <span class="dn">${d}</span></td><td>${ot}</td><td class="n">${v}</td><td>${x.cb}</td><td>${x.cdt}</td><td>${nz(x.chb)}</td><td>${nz(x.chd)}</td></tr>`);
+  })));
+  s.delD.forEach((r) => { const [d, ot] = r.k.split('|'); rows.push(`<tr class="r-del r-touch"><td>${r.p}</td><td>${r.per}</td><td>${DEST[d]} <span class="dn">${d}</span></td><td>${ot}</td><td class="n">${r.v}</td><td>${r.meta ? r.meta.cb : ''}</td><td>${r.meta ? r.meta.cdt : ''}</td><td colspan="2">deleted in this step</td></tr>`); });
+  return `<table><thead><tr>${cols.map((c, i) => `<th${i < 4 ? ' class="pk"' : ''}>${c}</th>`).join('')}</tr></thead><tbody>${rows.join('') || `<tr><td colspan="${cols.length}">No row</td></tr>`}</tbody></table>`;
+}
+function tH(s) {
+  const cols = ['HIST_ID', 'PART_NO', 'PERIOD', 'EVENT_TYPE', 'SOURCE', 'UPLOAD_ID', 'DEST_CODE', 'ORDER_TYPE', 'FIELD_NAME', 'OLD_VALUE', 'NEW_VALUE', 'REMARK', 'CREATED_BY', 'CREATED_DT'];
+  const rs = s.H.filter((r) => keepRow(s, 'H' + r.id));
+  return `<table><thead><tr>${cols.map((c) => `<th>${c}</th>`).join('')}</tr></thead><tbody>${rs.map((r) => `<tr class="${mt(s, 'H' + r.id)}"><td>${r.id}</td><td>${r.p}</td><td>${r.per}</td><td>${r.ev}</td><td>${r.src}</td><td>${nz(r.upl)}</td><td>${r.d ? DEST[r.d] : nz(null)}</td><td>${nz(r.ot)}</td><td>${r.field}</td><td>${nz(r.ov)}</td><td>${nz(r.nv)}</td><td class="t">${nz(r.remark)}</td><td>${r.by}</td><td>${r.dt}</td></tr>`).join('') || `<tr><td colspan="${cols.length}">No row yet</td></tr>`}</tbody></table>`;
+}
+function inputBox(s) {
+  const i = s.input; if (!i) return '';
+  const who = USER[s.actor] || s.actor;
+  if (i.kind === 'add' || i.kind === 'part') {
+    const body = '<table><thead><tr><th>Field</th>' + (i.kind === 'part' ? '<th>Before</th>' : '') + '<th>Entered</th><th></th></tr></thead><tbody>' +
+      i.rows.map(([l, o, n, f]) => `<tr class="${f === 'changed' ? 'r-chg' : ''}"><td class="lbl">${l}</td>${i.kind === 'part' ? `<td>${o ?? ''}</td>` : ''}<td>${n}</td><td class="flag">${f}</td></tr>`).join('') + '</tbody></table>';
+    return `<div class="file nsp"><h4>NSP screen · ${i.title} · ${who}</h4><div class="tbl">${body}</div><p class="note">[Save] → master saved first, then <code>SP_STG_WRITE</code> per changed value (same transaction).</p></div>`;
+  }
+  if (i.kind === 'mapping') {
+    const body = '<table><thead><tr><th>Destination</th><th>Order Type</th><th>Case/Day before</th><th>Case/Day entered</th><th></th></tr></thead><tbody>' +
+      i.rows.map((r) => `<tr class="${r[4] ? 'r-chg' : ''}"><td>${r[0]}</td><td>${r[1]}</td><td class="n">${r[2]}</td><td class="n">${r[3]}</td><td class="flag">${r[4]}</td></tr>`).join('') +
+      `<tr><td colspan="3" class="lbl">Total Case/Day (used / quota)</td><td class="n">${i.total} / ${i.max}</td><td class="flag">${i.total <= i.max ? 'OK' : 'over'}</td></tr></tbody></table>`;
+    return `<div class="file nsp"><h4>NSP screen · Export Crossdock Master · ${i.title} · ${i.p} · ${mon(i.per)} · ${who}</h4><div class="tbl">${body}</div><p class="note">[Save] → TB_M_PART_CANDIDATE_DEST per destination (insert / update / delete), then <code>SP_STG_WRITE</code> per changed destination.</p></div>`;
+  }
+  if (i.kind === 'upload') {
+    const body = '<table><thead><tr>' + i.cols.map((c) => `<th>${c}</th>`).join('') + '</tr></thead><tbody>' +
+      i.rows.map((r) => { const hl = r[i.cols.length] || []; return '<tr>' + i.cols.map((c, j) => `<td class="${hl.includes(j) ? 'cell-chg' : ''}${typeof r[j] === 'number' ? ' n' : ''}">${r[j] === '' ? '' : r[j]}</td>`).join('') + '</tr>'; }).join('') + '</tbody></table>';
+    return `<div class="file nsp"><h4>NSP screen · ${i.title} · ${who}</h4><p class="note">File <code>${i.file}</code>, sheet "Upload" → [Validate file] · Upload ID ${i.id}</p><div class="tbl">${body}</div><p class="note">${i.note}</p></div>`;
+  }
+  if (i.kind === 'batch') {
+    const body = '<table><thead><tr>' + i.cols.map((c) => `<th>${c}</th>`).join('') + '</tr></thead><tbody>' + i.rows.map((r) => '<tr>' + r.map((x) => `<td${typeof x === 'number' ? ' class="n"' : ''}>${x}</td>`).join('') + '</tr>').join('') + '</tbody></table>';
+    return `<div class="file nsp"><h4>${i.title}</h4><div class="tbl">${body}</div><p class="note">Avg MAD ≥ Min MAD → Active, else Inactive. Candidate parts registered for a later period are not calculated yet.</p></div>`;
+  }
+  if (i.kind === 'sync') return `<div class="file nsp"><h4>NSP screen · Export Crossdock Master · ${who}</h4><p><span class="btnlike">Sync (${i.n})</span> &nbsp; n = parts + periods with a staging row SYNC_STATUS 0, whatever the filter.</p></div>`;
+  if (i.kind === 'resend') return `<div class="file nsp"><h4>NSP screen · Export Crossdock Master · ${who}</h4><p><span class="btnlike">Re-send last Sync</span> &nbsp; run ${i.run}: the same rows, nothing changes in the staging.</p></div>`;
+  return '';
+}
 function render() {
   const s = STEPS[cur];
   document.querySelectorAll('#steps .chip').forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.i) === cur)));
-  document.getElementById('story').innerHTML = `<span class="eyebrow">Step ${cur} · ${s.t} · ${s.actor} · ${s.label}</span><p>${s.story}</p>`;
+  document.getElementById('story').innerHTML = `<span class="eyebrow">Step ${cur} · ${s.t} · ${USER[s.actor] || s.actor} · ${s.label}</span><p>${s.story}</p>`;
+  document.getElementById('inputBox').innerHTML = inputBox(s);
   document.getElementById('callsBox').innerHTML = `<div class="card"><div class="head"><h3>What NSP and the RPA do</h3><span class="pill p-none">${KIND[s.kind]}</span></div><pre class="calls">${s.calls.join('\n')}</pre></div>` + rpaBox(s);
   let f = '';
   if (s.gsent && s.gsent.length) f += `<div class="file"><h4>XD06 · GTOPAS WVJA5204</h4><div class="tbl"><table><thead><tr><th class="h">Action</th><th>Depot Code</th><th>P/No.</th><th>Destination Code</th><th>Maker Code</th><th>Domestic/Overseas</th><th>TOPAS Order Type</th><th>Order Transportation Code</th><th class="h">Result</th></tr></thead><tbody>${s.gsent.map((r) => `<tr><td>${r.act === 'DELETE' ? 'Delete (MT = DEL)' : 'Add'}</td><td>01</td><td>${r.p}</td><td>${DEST[r.d]}</td><td>A</td><td>2</td><td>3</td><td>2</td><td class="${r.res === 'FAILED' ? 'ngc' : 'okc'}">${r.res}</td></tr>`).join('')}</tbody></table></div></div>`;
@@ -567,17 +730,11 @@ function render() {
     const n = s.files.run;
     f += fileTable(`XD07 · 1 EXPORT_PRE · LLM9Q880_${n}_1_EXPORT_PRE.xls`, s.files.pre, 'e') + fileTable(`XD07 · 2 KANBAN · LLM9Q910_${n}_2_KANBAN.xls`, s.files.kan, 'k') + fileTable(`XD07 · 3 EXPORT_POST · LLM9Q880_${n}_3_EXPORT_POST.xls`, s.files.post, 'e');
   }
-  if (false) f += `<div class="file"><h4>GTOPAS WVJA5204 (XD06)</h4><div class="tbl"><table><thead><tr><th class="h">Action on WVJA5204</th><th>Depot Code</th><th>P/No.</th><th>Destination Code</th><th>Maker Code</th><th>Domestic/Overseas</th><th>TOPAS Order Type</th><th>Order Transportation Code</th></tr></thead><tbody>${s.gsent.map((r) => `<tr><td>${r.act === 'DELETE' ? 'Delete (MT = DEL)' : 'Add'}</td><td>01</td><td>${r.p}</td><td>${DEST[r.d]}</td><td>A</td><td>2</td><td>3</td><td>2</td></tr>`).join('')}</tbody></table></div></div>`;
-
   document.getElementById('filesBox').innerHTML = f ? `<div class="files">${f}</div>` : '';
-  document.getElementById('master').innerHTML = master(s);
   document.getElementById('apole').innerHTML = apole(s);
   document.getElementById('gtopas').innerHTML = gtopas(s);
-  document.getElementById('tk').innerHTML = tK(s);
-  document.getElementById('te').innerHTML = tE(s);
-  document.getElementById('tg').innerHTML = tG(s);
+  ['tm', 'td', 'th2', 'tk', 'te', 'tg'].forEach((id, j) => (document.getElementById(id).innerHTML = [tM, tD, tH, tK, tE, tG][j](s)));
 }
-
 const PHASE = { 0: 'November 2026 · Current 202611', 9: 'Day D and December 2026', 21: 'Day D and January 2027' };
 document.getElementById('steps').innerHTML = STEPS.map((s, i) => (PHASE[i] ? `<span class="phase">${PHASE[i]}</span>` : '') + `<button class="chip" type="button" id="step-${i}" data-i="${i}"><b>${s.t.slice(0, 6)} ${s.t.slice(12)}</b>${s.label}</button>`).join('');
 document.querySelectorAll('#steps .chip').forEach((b) => b.addEventListener('click', () => { cur = Number(b.dataset.i); render(); }));
@@ -585,6 +742,5 @@ document.querySelectorAll('#steps .chip').forEach((b) => b.addEventListener('cli
   filt = v; ['f-all', 'f-step', 'f-open'].forEach((x) => document.getElementById(x).setAttribute('aria-pressed', String(x === id))); render();
 }));
 document.getElementById('learn').innerHTML = LEARN.map((t) => `<li>${t}</li>`).join('');
-cur = 1;
 render();
 </script>
