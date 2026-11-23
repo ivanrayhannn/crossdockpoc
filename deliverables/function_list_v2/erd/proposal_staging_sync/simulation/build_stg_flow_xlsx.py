@@ -87,34 +87,39 @@ wb.remove(wb.active)
 # ---------- Steps ----------
 ov = Sheet(wb.create_sheet('Steps'))
 ov.title('Staging per target: full flow simulation (dummy parts)',
-         'TB_H_STG_APPOLE_KANBAN / _EXPORT / TB_H_STG_GTOPAS, SP_STG_WRITE at the save, SP_STG_SYNC at [Sync], views V_APPOLE_UPLOAD_*. Proposal 23-Nov-2026.')
+         'TB_H_STG_APPOLE_KANBAN / _EXPORT / TB_H_STG_GTOPAS, SP_STG_WRITE at the save, SP_STG_SYNC at [Sync], views V_APPOLE_UPLOAD_*. Period Current / Next, RPA parent flow. Proposal 23-Nov-2026.')
 rows = []
 for i, s in enumerate(STEPS):
     f = s['files']
     made = ', '.join(n for n, k in (('EXPORT_PRE', 'pre'), ('KANBAN', 'kan'), ('EXPORT_POST', 'post')) if f and f[k])
     if s['gsent']:
         made += (', ' if made else '') + 'GTOPAS'
-    rows.append([f'S{i:02d}', s['t'], s['actor'], s['label'], made or '-', s['story']])
-ov.table([('Sheet', 0), ('When', 0), ('Who', 0), ('Step', 0), ('Files sent', 0), ('What happens', 0)], rows)
-for row in ov.ws.iter_rows(min_row=5, min_col=6, max_col=6):
+    r = s.get('rpa')
+    scn = '-' if not r else ('Rollover' if r['sc'] == 'Rollover' else 'Scenario ' + r['sc']) + f" · GTOPAS {r['g']} · AP POLE {r['ap']}"
+    rows.append([f'S{i:02d}', s['t'], s['actor'], s['label'], scn, made or '-', s['story']])
+ov.table([('Sheet', 0), ('When', 0), ('Who', 0), ('Step', 0), ('RPA parent flow', 0), ('Files sent', 0), ('What happens', 0)], rows)
+for row in ov.ws.iter_rows(min_row=5, min_col=7, max_col=7):
     for c in row:
         c.alignment = Alignment(wrap_text=True, vertical='top')
 ov.done()
-ov.ws.column_dimensions['F'].width = 110
+ov.ws.column_dimensions['E'].width = 40
+ov.ws.column_dimensions['G'].width = 110
 
 # ---------- Flow Process (Indonesian, casual) ----------
 fp = Sheet(wb.create_sheet('Flow Process'))
 fp.title('Alur proses (dari save sampai AP POLE dan GTOPAS)')
 fp.table([('No', 0), ('Proses', 0), ('Siapa', 0), ('Yang terjadi', 0)], [
+    [0, 'Add Part (XD01 / XD02 flag A)', 'Procurement', 'Part baru selalu Candidate. Period dipilih: bulan berjalan (default) atau Next; part berlaku mulai period itu. Pilih bulan berjalan setelah tanggal D: baris Next ikut dibuat. Candidate belum dikirim, jadi nggak ada baris staging.'],
     [1, 'Save di screen / upload (XD01, XD02, XD03)', 'Procurement, D/S', 'Master di-update dulu, lalu SP_STG_WRITE dipanggil per nilai yang berubah. SP nulis baris ke tabel staging (status 0), nandain baris lama yang belum terkirim jadi 2 (Superseded), dan ngisi OPERATION_TYPE di baris Kanban.'],
     [2, 'XD05 day D (period baru)', 'Batch', 'Bikin period Next. Kanban ADD buat semua part (OPERATION_TYPE dibanding Max period sebelumnya), Export ADD per destinasi, DELETE (0) buat destinasi period lalu yang udah nggak dipakai atau part yang jadi Inactive.'],
     [3, 'Cuma Export yang berubah', 'SP_STG_WRITE', 'Kalau part + period belum punya baris Kanban status 0, SP nulis header ACTION KEEP dengan OPERATION_TYPE 5 (nilai Kanban yang lagi berlaku). Header ini nggak ikut diupload.'],
-    [4, '[Sync]', 'D/S', 'SP_STG_SYNC cuma ngubah status 0 jadi 1 + RUN_ID (AP POLE: period Current dan Next, GTOPAS: Current aja). Nggak ada aturan yang dihitung di sini. Habis itu XD07 dan XD06 jalan.'],
+    [4, '[Sync]', 'D/S', 'SP_STG_SYNC cuma ngubah status 0 jadi 1 + RUN_ID (AP POLE: period Current dan Next, GTOPAS: Current aja). Nggak ada aturan yang dihitung di sini. Habis itu parent flow RPA jalan.'],
+    [4.5, 'Parent flow RPA', 'Power Automate', 'Cek ada baris GTOPAS di run atau nggak. Ada (part jadi Active / Inactive, destinasi ditambah / dihapus): skenario 1, XD06 dulu, XD07 jalan cuma kalau GTOPAS berhasil. Nggak ada: skenario 2, langsung XD07. Period Rollover: XD06 aja.'],
     [5, 'View', 'NSP (database)', 'Nentuin file: header OPERATION_TYPE 1 → Export part itu masuk EXPORT_PRE (sebelum KANBAN), selain itu EXPORT_POST. Header 5 nggak masuk file KANBAN. Di dalam file, baris yang turun / DELETE dulu baru yang naik / ADD (ROW_ORDER).'],
     [6, 'XD07 (RPA AP POLE)', 'Bot', 'Upload per run: EXPORT_PRE → KANBAN → EXPORT_POST. File yang kosong nggak dibikin. Nama file: <template>_<RUN_ID>_<urutan>_<nama>.xls.'],
-    [7, 'XD06 (RPA GTOPAS)', 'Bot', 'Nambah / hapus part + destinasi di WVJA5204 sesuai ACTION. GTOPAS nggak punya period, jadi period Next nunggu Period Rollover.'],
+    [7, 'XD06 (RPA GTOPAS)', 'Bot', 'Nambah / hapus part + destinasi di WVJA5204 sesuai ACTION. Baris yang udah ada / udah hilang dihitung OK. Baris gagal dicatat, baris lain tetap jalan; hasil FAILED bikin XD07 nggak jalan. GTOPAS nggak punya period, jadi period Next nunggu Period Rollover.'],
     [8, 'Period Rollover (tanggal 1)', 'Batch', 'Period Next jadi Current. Baris GTOPAS period itu yang masih status 0 jadi 1 dan dikirim ke XD06.'],
-    [9, 'E-mail FAILED', 'D/S', 'Klik [Re-send last Sync]: run ID sama, file dan urutan sama. Re-send dulu sebelum [Sync] berikutnya.'],
+    [9, 'E-mail FAILED', 'D/S', 'Klik [Re-send last Sync]: run ID sama, GTOPAS dulu (kalau ada), lalu file AP POLE dengan urutan sama. Re-send dulu sebelum [Sync] berikutnya.'],
 ])
 fp.h('Business rules')
 fp.note('\n'.join([
@@ -128,6 +133,8 @@ fp.note('\n'.join([
     '8. Period baru: AP POLE tetap pakai data period lama sampai ada baris baru, jadi NSP selalu nambahin baris period baru.',
     '9. Nilai diubah lalu balik ke nilai yang udah terkirim sebelum [Sync]: nggak ada yang dikirim (Superseded).',
     '10. GTOPAS cuma dapat baris kalau destinasi muncul atau hilang buat part itu (order type apa pun).',
+    '11. GTOPAS gagal di skenario 1: AP POLE nggak dikirim sama sekali sampai Re-send berhasil.',
+    '12. Candidate bisa jadi Active lewat layar (Procurement) atau XD05; nggak ada yang balik ke Candidate.',
 ]), color='0F2540', italic=False)
 fp.done()
 fp.ws.column_dimensions['D'].width = 110
@@ -138,7 +145,7 @@ lg.title('Legend')
 lg.h('Warna')
 lg.table([('Warna', 0), ('Artinya', 0)], [['', 'Header biru: kolom yang ada di file upload / layar GTOPAS'], ['', 'Header kuning: kolom bantu (cuma di NSP, nggak ikut file)'],
                                          ['', 'SYNC_STATUS 0: belum terkirim'], ['', 'SYNC_STATUS 1: udah terkirim'], ['', 'SYNC_STATUS 2: Superseded, nggak dikirim'],
-                                         ['', 'Cek AP POLE OK'], ['', 'Cek AP POLE ditolak (di simulasi ini nggak ada)'], ['▶', 'Baris yang ditulis / diubah di langkah ini (kolom Changed)']],
+                                         ['', 'Cek AP POLE OK'], ['', 'Cek AP POLE ditolak / GTOPAS FAILED / e-mail FAILED'], ['▶', 'Baris yang ditulis / diubah di langkah ini (kolom Changed)']],
          fills=[HDR, HELP, ST_FILL[0], ST_FILL[1], ST_FILL[2], OK, NG, None])
 lg.h('OPERATION_TYPE (header di TB_H_STG_APPOLE_KANBAN)')
 lg.table([('Kode', 0), ('Artinya', 0), ('Urutan upload part itu', 0)], [
@@ -171,13 +178,24 @@ for i, s in enumerate(STEPS):
         for c in row:
             c.font = Font(name='Consolas', size=9)
     sh.r += 1
+    r = s.get('rpa')
+    if r:
+        mail = 'FAILED' if 'FAILED' in (r['g'], r['ap']) else 'SUCCESS'
+        sh.h(f"RPA parent flow · run {r['run']} · " + ('Rollover (XD06 only)' if r['sc'] == 'Rollover' else 'Scenario ' + r['sc']))
+        sh.table([('RUN_TYPE', 0), ('GTOPAS rows in the run', 0), ('XD06 GTOPAS', 0), ('XD07 AP POLE', 0), ('E-mail', 0)], [[r['type'], r['gRows'], r['g'], r['ap'], mail]],
+                 fills=[NG if mail == 'FAILED' else OK])
+    if s['gsent']:
+        sh.h('XD06 · GTOPAS WVJA5204')
+        sh.table([('Action on WVJA5204', 1), ('Depot Code', 0), ('P/No.', 0), ('Destination Code', 0), ('Maker Code', 0), ('Domestic/Overseas', 0), ('TOPAS Order Type', 0), ('Order Transportation Code', 0), ('Result', 1)],
+                 [['Delete (MT = DEL)' if g['act'] == 'DELETE' else 'Add', '01', g['p'], DEST[g['d']] + ' ' + g['d'], 'A', 2, 3, 2, g.get('res', 'OK')] for g in s['gsent']],
+                 fills=[NG if g.get('res') == 'FAILED' else OK for g in s['gsent']])
     f = s['files']
     chk = lambda c: f"{'OK' if c['ok'] else 'Rejected'}: total {c['t']} {'≤' if c['ok'] else '>'} Max {c['mx']}"
     if f:
         run = f['run']
-        for title, key in ((f'1 · EXPORT_PRE · LLM9Q880_{run}_1_EXPORT_PRE.xls', 'pre'), (f'3 · EXPORT_POST · LLM9Q880_{run}_3_EXPORT_POST.xls', 'post')):
+        for title, key in ((f'XD07 · 1 EXPORT_PRE · LLM9Q880_{run}_1_EXPORT_PRE.xls', 'pre'), (f'XD07 · 3 EXPORT_POST · LLM9Q880_{run}_3_EXPORT_POST.xls', 'post')):
             if key == 'post' and f['kan']:
-                sh.h(f'2 · KANBAN · LLM9Q910_{run}_2_KANBAN.xls')
+                sh.h(f'XD07 · 2 KANBAN · LLM9Q910_{run}_2_KANBAN.xls')
                 sh.table([('Effective Month / Year', 0), ('Operator ID', 0), ('Part No.', 0), ('Part Name', 0), ('Shipping Box Qty', 0), ('Max Shipping Box Qty', 0), ('Max Allowance Qty', 0), ('OPERATION_TYPE', 1), ('AP POLE check', 1)],
                          [[my(x['r']['per']), 'P6', x['r']['p'], name(x['r']['p']), x['r']['pcs'], x['r']['max'], x['r']['pcs'] * x['r']['max'], x['r']['op'], chk(x['chk'])] for x in f['kan']],
                          fills=[OK if x['chk']['ok'] else NG for x in f['kan']])
@@ -188,10 +206,6 @@ for i, s in enumerate(STEPS):
                          fills=[OK if x['chk']['ok'] else NG for x in f[key]])
         if key == 'post' and f['kan'] and not f['post']:
             pass
-    if s['gsent']:
-        sh.h('GTOPAS WVJA5204 (XD06)')
-        sh.table([('Action on WVJA5204', 1), ('Depot Code', 0), ('P/No.', 0), ('Destination Code', 0), ('Maker Code', 0), ('Domestic/Overseas', 0), ('TOPAS Order Type', 0), ('Order Transportation Code', 0)],
-                 [['Delete (MT = DEL)' if g['act'] == 'DELETE' else 'Add', '01', g['p'], DEST[g['d']] + ' ' + g['d'], 'A', 2, 3, 2] for g in s['gsent']])
     # master
     sh.h('NSP master after the step (TB_M_PART_CANDIDATE + _DEST)')
     mrows = []
