@@ -44,8 +44,6 @@ export interface Part {
   per: string;
   /** Sync status of this part's destination mapping. */
   syncStatus: SyncStatus;
-  /** Date this part's data takes effect. Set from the add/edit form. */
-  effDate?: string;
   /** Date-time of the last successful sync of the mapping to GTOPAS / AP POLE (XD06 / XD07); null when never synced. */
   lastSyncDt?: string | null;
   /** Date-time of the last send to AP POLE (XD07); lastSyncDt is the last send to GTOPAS (XD06). Two columns since 20-Nov. */

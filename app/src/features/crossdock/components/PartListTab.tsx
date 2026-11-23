@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { CUR_PER, PAST_ROWS, PERIODS } from '../../../data/seed';
+import { CUR_PER, NEXT_PER, PAST_ROWS, PERIODS } from '../../../data/seed';
 import { fmt, num, parseDt } from '../../../lib/format';
 import type { Part, PartQuery, PartStatus } from '../../../types';
 import { partAudit, selectParts } from '../partList';
@@ -103,14 +103,14 @@ export function PartListTab({ parts, q, aq, onSearch, setQ, resetQ, ro, onOpenPa
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 13 }}>
             <div className="field" style={{ width: 200 }}>
               <label>
-                Calculation period <span style={{ color: 'var(--color-neutral-500)', textTransform: 'none', letterSpacing: 0 }}>({q.per === CUR_PER ? 'ongoing' : q.per === 'all' ? 'all' : 'past'})</span>
+                Calculation period <span style={{ color: 'var(--color-neutral-500)', textTransform: 'none', letterSpacing: 0 }}>({q.per === CUR_PER ? 'ongoing' : q.per === NEXT_PER ? 'next' : q.per === 'all' ? 'all' : 'past'})</span>
               </label>
               <select className="input" value={q.per} onChange={(e) => setQ((prev) => ({ ...prev, per: e.target.value }))} style={{ appearance: 'none' }}>
                 <option value="all">All periods</option>
-                {PERIODS.map((per) => (
+                {[...PERIODS, NEXT_PER].map((per) => (
                   <option key={per} value={per}>
                     {per}
-                    {per === CUR_PER ? ' (ongoing)' : ''}
+                    {per === CUR_PER ? ' (ongoing)' : per === NEXT_PER ? ' (next)' : ''}
                   </option>
                 ))}
               </select>

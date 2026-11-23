@@ -176,7 +176,7 @@ export function useCrossdockState() {
     // The saved part goes to the top of the list, whether it was added or edited.
     setParts((prevParts) => [f, ...prevParts.filter((p) => p.p !== f.p)]);
     // Show it right away: drop filters that could hide it and sort newest first.
-    const showSaved = (prev: PartQuery): PartQuery => ({ ...prev, part: '', name: '', st: 'all', sort: 'dt_desc' });
+    const showSaved = (prev: PartQuery): PartQuery => ({ ...prev, part: '', name: '', st: 'all', sort: 'dt_desc', per: f.per });
     setQ(showSaved);
     setAq(showSaved);
     setNotice({ mode: editId ? 'edit' : 'add', part: f.p, name: f.n });

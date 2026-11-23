@@ -1,13 +1,8 @@
-import { CUR_PER, MASTER_PARTS } from '../../../data/seed';
+import { CUR_PER, MASTER_PARTS, NEXT_PER } from '../../../data/seed';
 import { fmt, num } from '../../../lib/format';
 import type { PartStatus } from '../../../types';
 import type { CrossdockState } from '../useCrossdockState';
 import { PartNoCombobox } from './PartNoCombobox';
-
-function todayStr(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
 
 type StepStyle = { bg: string; fg: string; bd: string; icon: string };
 
@@ -68,9 +63,9 @@ export function PartModal({ state }: { state: CrossdockState }) {
   const saveDisabled = !f.p || !minMadOk || !pc || !mc || belowMapped;
   const saveTitle = !f.p ? 'Part No is required' : !minMadOk ? 'Enter Min MAD (whole number, 0 or more)' : !pc ? 'Enter Pcs/Case first (step 2)' : !mc ? 'Enter Max Case/Day (step 2)' : belowMapped ? belowMsg : 'Save part data';
 
-  // Effective Start Date can only change while the saved part is still Candidate (BR-06).
-  const savedStatus = editId ? parts.find((p) => p.p === editId)?.st : undefined;
-  const effDateLocked = inputRO || (!!editId && savedStatus !== 'Candidate');
+  // Period (23-Nov, replaces Effective Start Date): Add Part chooses the ongoing (default) or the Next period; the part takes effect
+  // from that period. Edit: locked (part of the key).
+  const periodLocked = inputRO || !!editId;
 
   // A newly added part always starts as Candidate; the status only becomes
   // editable once the part exists.
@@ -150,17 +145,22 @@ export function PartModal({ state }: { state: CrossdockState }) {
                   <input className="input" value={f.n} disabled placeholder="Select Part No field" style={{ background: inputBg }} />
                 </div>
                 <div className="field">
-                  <label>Effective Start Date</label>
-                  <input
+                  <label>Period</label>
+                  <select
                     className="input"
-                    type="date"
-                    value={f.effDate || ''}
-                    min={todayStr()}
-                    onChange={(e) => patch((x) => { x.effDate = e.target.value; })}
-                    disabled={effDateLocked}
-                    title={effDateLocked && !inputRO ? 'Can only be changed while the status is Candidate.' : undefined}
-                    style={{ background: effDateLocked ? 'var(--color-neutral-200)' : inputBg }}
-                  />
+                    value={f.per}
+                    onChange={(e) => patch((x) => { x.per = e.target.value; })}
+                    disabled={periodLocked}
+                    title={periodLocked && !inputRO ? 'The period cannot be changed after the part is registered.' : 'The part takes effect from this period'}
+                    style={{ appearance: 'none', background: periodLocked ? 'var(--color-neutral-200)' : inputBg }}
+                  >
+                    {(editId ? [f.per] : [CUR_PER, NEXT_PER]).map((per) => (
+                      <option key={per} value={per}>
+                        {per}
+                        {per === CUR_PER ? ' (ongoing)' : per === NEXT_PER ? ' (next)' : ''}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div className="field">
                   <label>Min MAD *</label>

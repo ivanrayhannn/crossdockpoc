@@ -55,7 +55,7 @@ const ITEMS: Item[] = [
   { id: 'C4', group: 'C', fns: ['XD01', 'XD02', 'XD03'], topic: 'Panjang kolom', question: 'Panjang VARCHAR dan nama field Part Name.', proposal: 'Ikuti TB_M_PART_MASTER' },
   { id: 'C5', group: 'C', fns: ['XD02', 'XD03'], topic: 'Template & log upload', question: 'Lokasi template / result report dan retensi log upload.', proposal: 'Shared folder NSP; retensi 12 bulan' },
   { id: 'C6', group: 'C', fns: ['XD01'], topic: 'Akun read only', question: 'Definisi akun read only.', proposal: 'Role Viewer: hanya Search / Export' },
-  { id: 'C7', group: 'C', fns: ['XD01'], topic: 'Effective Start Date', question: 'Aturan Effective Start Date.', proposal: 'Default besok, minimal hari ini, wajib diisi' },
+  { id: 'C7', group: 'C', fns: ['XD01', 'XD02', 'XD05'], topic: 'Period part baru (pengganti Effective Start Date)', question: 'Effective Start Date diganti Period: part berlaku mulai period pertama didaftarkan?', proposal: 'Add Part pilih period berjalan (default) atau next; period next belum bisa diedit sampai jadi period berjalan (23-Nov)' },
   { id: 'C8', group: 'C', fns: [], topic: 'Label prototype', question: 'Label "Supplier System backend" di prototype dibiarkan atau disingkat "SS"?', proposal: 'Dibiarkan' },
 ];
 
