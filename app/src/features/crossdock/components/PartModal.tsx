@@ -121,10 +121,10 @@ export function PartModal({ state }: { state: CrossdockState }) {
                     title={!editId ? 'New parts are automatically Candidate' : 'Select the status'}
                     style={statusLocked ? { background: 'var(--color-neutral-200)', appearance: 'none' } : { backgroundColor: inputBg, appearance: 'none', ...CHEVRON }}
                   >
-                    {/* No part goes back to Candidate: Candidate is offered only while the saved part is still Candidate. */}
+                    {/* Candidate part: Candidate (current) or Active only. Active / Inactive part: Active or Inactive (never back to Candidate). */}
                     {(!editId || savedStatus === 'Candidate') && <option value="Candidate">Candidate</option>}
                     <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
+                    {!!editId && savedStatus !== 'Candidate' && <option value="Inactive">Inactive</option>}
                   </select>
                   {!!editId && savedStatus === 'Candidate' && f.st === 'Active' && (
                     <span style={{ fontSize: 11.5, color: 'var(--color-accent-2-800)', marginTop: 4 }}>
