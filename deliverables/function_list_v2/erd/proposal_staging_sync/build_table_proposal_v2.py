@@ -52,6 +52,12 @@ def kanban():
             rows.append(r[:6] + [moved[n], 'Removed'])
         elif n in ('PCS_CASE', 'MAX_CASE_DAY'):
             rows.append(r[:6] + [r[6] + '. A change of an Active part: SP_STG_WRITE (KANBAN) writes a row to TB_H_STG_APPOLE_KANBAN in the same transaction', 'Changed'])
+        elif n == 'EFFECTIVE_START_DATE':
+            rows.append(r[:6] + ['Removed (decided 23-Nov): a part takes effect from the period it is first registered as Candidate (its first PERIOD row). '
+                                 'XD05 calculates every part that has a row in the period; the AP POLE Effective Month / Year is PERIOD', 'Removed'])
+        elif n == 'PERIOD':
+            rows.append(r[:6] + [r[6] + '. The first PERIOD row of a part = the period it was registered (start of the part). Add Part writes the Current period, '
+                                 'and the Next period too when XD05 has already made it (between day D and the Period Rollover)', 'Changed'])
         elif n == 'PART_STATUS':
             rows.append(r[:6] + ['Candidate / Active / Inactive. Candidate -> Active: Kanban ADD (OPERATION_TYPE 4). Active -> Inactive: Export DELETE (0) for every destination, '
                                  'Kanban header 5 (the part stays in AP POLE). Inactive -> Active: Procurement maps the destinations again', 'Changed'])
@@ -156,7 +162,7 @@ def summary(wb):
     ws['A1'].font = Font(name='Arial', size=12, bold=True)
     rows = [
         ['Object', 'Kind', 'Status', 'Purpose'],
-        ['TB_M_PART_CANDIDATE', 'Table', 'Changed', 'Kanban Crossdock Master per part + period. Sync columns removed'],
+        ['TB_M_PART_CANDIDATE', 'Table', 'Changed', 'Kanban Crossdock Master per part + period. Sync columns and EFFECTIVE_START_DATE removed'],
         ['TB_M_PART_CANDIDATE_DEST', 'Table', 'Changed (description)', 'Export Crossdock Master per part + period + destination + order type'],
         ['TB_H_STG_APPOLE_KANBAN', 'Table', 'New', 'AP POLE Kanban rows in the LLM9Q910 format; header of the part (OPERATION_TYPE 1 to 5)'],
         ['TB_H_STG_APPOLE_EXPORT', 'Table', 'New', 'AP POLE Export rows in the LLM9Q880 format'],
@@ -181,6 +187,7 @@ def summary(wb):
     r = len(rows) + 4
     for n in ['Colours: green = new column, yellow fill on a new table = helper column (not in the upload file / GTOPAS screen), yellow row = changed description, red = removed (strike-through).',
               'Rules and simulation: simulation/Staging_Header_Order.html, simulation/Staging_Per_Target_Full_Flow.html, simulation/Staging_Per_Target_Full_Flow_Simulation.xlsx.',
+              'Decided 23-Nov: EFFECTIVE_START_DATE removed; a part takes effect from the period it is first registered (Candidate). Add Part after day D also writes the Next period.',
               'Open points: table names; constants stored in every row (P6, 2, 01, A, 2 / 3 / 2); Active -> Inactive removes the mapping of the period (TB_M_PART_CANDIDATE_DEST).']:
         ws.cell(r, 1, n).font = F
         r += 1
