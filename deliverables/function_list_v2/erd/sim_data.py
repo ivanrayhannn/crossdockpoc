@@ -11,13 +11,19 @@ CUST = {VN: '9715300', TH: '9722D00', PH: '9811100', D4: '982200'}  # dummy cust
 OD, T = '2026-10-14', '080000'
 ASN = 'ASN0101'  # example number (format of the existing numbering not detailed)
 
+
+def BPD(d):
+    return d[:5] + '-' + d[5:]  # Buyer-PD of AP POLE (5-2)
+
 # columns shown per table in the simulation sheets
 COLS = {
     'TB_M_H0125_DESTINATION': ['DESTINATION_CD', 'CUSTOMER_CD', 'DESTINATION_NAME_ENG', 'COUNTRY_NAME_ENG'],
     'TB_M_PART_MASTER': ['PART_NO', 'SUPPLIER_CD', 'SUPPLIER_PLANT_CD', 'DOCK_CD', 'VALID_FROM', 'PART_NAME'],
     'TB_M_PART_CANDIDATE': ['PART_NO', 'PART_NAME', 'MIN_MAD', 'PCS_CASE', 'MAX_CASE_DAY', 'TOTAL_PCS_DAY', 'PART_STATUS', 'LAST_SOURCE'],
-    'TB_H_PART_CANDIDATE_STG_SYNC': ['HIST_ID', 'PART_NO', 'PERIOD', 'LEVEL_TYPE', 'DEST_CODE', 'FIELD_NAME', 'ACTION', 'OLD_VALUE', 'NEW_VALUE',
-                                     'APPOLE_SYNC_STATUS', 'SEND_SEQ', 'GTOPAS_SYNC_STATUS'],
+    'TB_H_STG_APPOLE_KANBAN': ['STG_ID', 'PERIOD', 'PART_NO', 'ACTION', 'PART_STATUS', 'SHIPPING_BOX_QTY', 'MAX_SHIPPING_BOX_QTY', 'OPERATION_TYPE',
+                               'SYNC_STATUS', 'SYNC_RUN_ID'],
+    'TB_H_STG_APPOLE_EXPORT': ['STG_ID', 'PERIOD', 'NSP_PART_NO', 'DEST_CODE', 'ACTION', 'BUYER_PD', 'MAX_SHIPPING_BOX_RCS', 'SYNC_STATUS', 'SYNC_RUN_ID'],
+    'TB_H_STG_GTOPAS': ['STG_ID', 'PERIOD', 'ACTION', 'P_NO', 'DESTINATION_CODE', 'SYNC_STATUS', 'SYNC_RUN_ID'],
     'TB_R_ACTUAL_DEMAND_SUMMARY': ['GROUPING_BUYER_CD', 'GROUPING_PD_CD', 'ORDER_TYPE_GROUP', 'DEMAND_MONTH_YEAR', 'PART_NO', 'MAD'],
     'TB_R_PART_DAD_RESULT': ['PERIOD', 'PART_NO', 'MONTH_FROM', 'MONTH_TO', 'NUM_OF_MONTH', 'TOTAL_MAD', 'AVG_MAD', 'MIN_MAD', 'OLD_STATUS', 'NEW_STATUS'],
     'TB_M_PART_CANDIDATE_DEST': ['PART_NO', 'PERIOD', 'DEST_CODE', 'CASE_DAY'],
@@ -94,9 +100,11 @@ SCENARIOS = [
     {
         'id': 'SIM-1', 'title': 'Master setup and monthly calculation', 'flow': 'BPF F1', 'functions': 'XD13, XD01 / XD02, XD04, XD05, XD01 [Sync], XD06 / XD07',
         'story': ['Destination master is synchronised weekly; Procurement registers PART-Y; the monthly run (Oct 2026) uses the actual demand of Jul – Sep.',
-                  'XD05: PART-X stays Active (avg MAD 315 ≥ 300), PART-Y becomes Active (130 ≥ 100), PART-Z becomes Inactive (35 < 50): its destination gets an EXPORT DELETE (0) staging row.',
-                  'Mapping: PART-X Max Case/Day 10 split by MAD share KR 60 % / JP 30 % / TW 10 % = 6 / 3 / 1. D/S clicks [Sync]: NSP sets the staging rows to Sync '
-                  'with SEND_SEQ; XD07 uploads LLM9Q910 (Add part PART-Y) then LLM9Q880 (PART-Y TW 2, PART-Z VN 0); XD06 adds PART-Y TW and deletes PART-Z in GTOPAS.'],
+                  'XD05: PART-X stays Active (avg MAD 315 ≥ 300), PART-Y becomes Active (130 ≥ 100), PART-Z becomes Inactive (35 < 50): its destination gets an Export DELETE (0) staging row.',
+                  'Mapping: PART-X Max Case/Day 10 split by MAD share KR 60 % / JP 30 % / TW 10 % = 6 / 3 / 1. XD05 writes a Kanban row per part of Oct 2026 '
+                  '(PART-Y OPERATION_TYPE 4, PART-X and PART-Z 3), an Export row per destination and GTOPAS rows for PART-Y TW (Add) and PART-Z VN (Delete).',
+                  'D/S clicks [Sync] on 25-Sep: XD07 uploads KANBAN (3 parts) then EXPORT_POST (5 rows) with Effective Month 10/2026. GTOPAS has no period: '
+                  'its rows go at the Period Rollover on 1-Oct (XD06 only).'],
         'steps': [
             ('1. XD13 weekly destination sync (delete – insert)', 'TB_M_H0125_DESTINATION', [
                 ('new', [VN, '97153', 'DUMMY DESTINATION VIETNAM', 'VIETNAM']), ('new', [TH, '9722D', 'DUMMY DESTINATION THAILAND', 'THAILAND']),
@@ -127,16 +135,32 @@ SCENARIOS = [
                 ('new', [1002, 'PART-Y', '202610', 'CALC', 'BATCH', None, 'PART_STATUS', 'Candidate', 'Active', 'XD05']),
                 ('new', [1003, 'PART-Z', '202610', 'CALC', 'BATCH', None, 'PART_STATUS', 'Active', 'Inactive', 'XD05']),
                 ('new', [1004, 'PART-X', '202610', 'MAPPING', 'BATCH', VN, 'CASE_DAY', '5', '6', 'XD05'])]),
-            ('', 'TB_H_PART_CANDIDATE_STG_SYNC', [
-                ('new', [2001, 'PART-Y', '202610', 'KANBAN', None, 'PCS_CASE', 'ADD', None, '6', '0', None, None]),
-                ('new', [2002, 'PART-Y', '202610', 'KANBAN', None, 'MAX_CASE_DAY', 'ADD', None, '2', '0', None, None]),
-                ('new', [2003, 'PART-Y', '202610', 'EXPORT', PH, 'CASE_DAY', 'ADD', None, '2', '0', None, '0']),
-                ('new', [2004, 'PART-Z', '202610', 'EXPORT', VN, 'CASE_DAY', 'DELETE', '4', '0', '0', None, '0'])]),
-            ('6. D/S [Sync] → XD07 (AP POLE) / XD06 (GTOPAS): NSP updates the staging, the RPA reads it (no response)', 'TB_H_PART_CANDIDATE_STG_SYNC', [
-                ('upd', [2001, 'PART-Y', '202610', 'KANBAN', None, 'PCS_CASE', 'ADD', None, '6', '1', 2, None], ['APPOLE_SYNC_STATUS', 'SEND_SEQ'], 'Kanban file (Add part)'),
-                ('upd', [2002, 'PART-Y', '202610', 'KANBAN', None, 'MAX_CASE_DAY', 'ADD', None, '2', '1', 2, None], ['APPOLE_SYNC_STATUS', 'SEND_SEQ'], 'Same Kanban row'),
-                ('upd', [2003, 'PART-Y', '202610', 'EXPORT', PH, 'CASE_DAY', 'ADD', None, '2', '1', 3, '1'], ['APPOLE_SYNC_STATUS', 'SEND_SEQ', 'GTOPAS_SYNC_STATUS'], 'Export file after Kanban; GTOPAS Add'),
-                ('upd', [2004, 'PART-Z', '202610', 'EXPORT', VN, 'CASE_DAY', 'DELETE', '4', '0', '1', 3, '1'], ['APPOLE_SYNC_STATUS', 'SEND_SEQ', 'GTOPAS_SYNC_STATUS'], 'Buyer-PD 0 in AP POLE; GTOPAS Delete')]),
+            ('', 'TB_H_STG_APPOLE_KANBAN', [
+                ('new', [2001, '202610', 'PART-X', 'ADD', 'Active', 6, 10, 3, '0', None]),
+                ('new', [2002, '202610', 'PART-Y', 'ADD', 'Active', 6, 2, 4, '0', None]),
+                ('new', [2003, '202610', 'PART-Z', 'ADD', 'Inactive', 6, 4, 3, '0', None])]),
+            ('', 'TB_H_STG_APPOLE_EXPORT', [
+                ('new', [3001, '202610', 'PART-X', VN, 'ADD', BPD(VN), 6, '0', None]),
+                ('new', [3002, '202610', 'PART-X', TH, 'ADD', BPD(TH), 3, '0', None]),
+                ('new', [3003, '202610', 'PART-X', PH, 'ADD', BPD(PH), 1, '0', None]),
+                ('new', [3004, '202610', 'PART-Y', PH, 'ADD', BPD(PH), 2, '0', None]),
+                ('new', [3005, '202610', 'PART-Z', VN, 'DELETE', BPD(VN), 0, '0', None])]),
+            ('', 'TB_H_STG_GTOPAS', [
+                ('new', [4001, '202610', 'ADD', 'PART-Y', PH, '0', None]),
+                ('new', [4002, '202610', 'DELETE', 'PART-Z', VN, '0', None])]),
+            ('6. D/S [Sync] on 25-Sep (SP_STG_SYNC): AP POLE rows of Current + Next get the run ID; GTOPAS rows of 202610 wait for the Period Rollover', 'TB_H_STG_APPOLE_KANBAN', [
+                ('upd', [2001, '202610', 'PART-X', 'ADD', 'Active', 6, 10, 3, '1', '20260925100000'], ['SYNC_STATUS', 'SYNC_RUN_ID'], 'File KANBAN (order 2), then its Export rows in EXPORT_POST'),
+                ('upd', [2002, '202610', 'PART-Y', 'ADD', 'Active', 6, 2, 4, '1', '20260925100000'], ['SYNC_STATUS', 'SYNC_RUN_ID'], 'New part in AP POLE'),
+                ('upd', [2003, '202610', 'PART-Z', 'ADD', 'Inactive', 6, 4, 3, '1', '20260925100000'], ['SYNC_STATUS', 'SYNC_RUN_ID'], 'The part stays in the Kanban')]),
+            ('', 'TB_H_STG_APPOLE_EXPORT', [
+                ('upd', [3001, '202610', 'PART-X', VN, 'ADD', BPD(VN), 6, '1', '20260925100000'], ['SYNC_STATUS', 'SYNC_RUN_ID'], 'EXPORT_POST (order 3)'),
+                ('upd', [3002, '202610', 'PART-X', TH, 'ADD', BPD(TH), 3, '1', '20260925100000'], ['SYNC_STATUS', 'SYNC_RUN_ID'], 'EXPORT_POST'),
+                ('upd', [3003, '202610', 'PART-X', PH, 'ADD', BPD(PH), 1, '1', '20260925100000'], ['SYNC_STATUS', 'SYNC_RUN_ID'], 'EXPORT_POST'),
+                ('upd', [3004, '202610', 'PART-Y', PH, 'ADD', BPD(PH), 2, '1', '20260925100000'], ['SYNC_STATUS', 'SYNC_RUN_ID'], 'EXPORT_POST'),
+                ('upd', [3005, '202610', 'PART-Z', VN, 'DELETE', BPD(VN), 0, '1', '20260925100000'], ['SYNC_STATUS', 'SYNC_RUN_ID'], 'Buyer-PD 0 from Oct 2026')]),
+            ('7. Period Rollover 1-Oct 00:10 (XD05 process 3): GTOPAS rows of the new Current period; the parent flow runs XD06 only', 'TB_H_STG_GTOPAS', [
+                ('upd', [4001, '202610', 'ADD', 'PART-Y', PH, '1', '20261001001000'], ['SYNC_STATUS', 'SYNC_RUN_ID'], 'GTOPAS Add'),
+                ('upd', [4002, '202610', 'DELETE', 'PART-Z', VN, '1', '20261001001000'], ['SYNC_STATUS', 'SYNC_RUN_ID'], 'GTOPAS Delete')]),
         ]},
     {
         'id': 'SIM-2', 'title': 'Daily order to ASN (normal)', 'flow': 'BPF F2', 'functions': 'XD08, XD09, XD10 (Create ASN, Submit 5.7)',
@@ -440,10 +464,10 @@ SCENARIOS = [
         'id': 'SIM-11', 'title': 'Edit mapping per destination (update / insert / delete) and Sync of the differences', 'flow': 'BPF F1',
         'functions': 'XD01 (Edit mapping, [Sync]), XD06 / XD07',
         'story': ['PART-X (Max Case/Day 10) is mapped KR 6 / JP 3 / TW 1 in Oct 2026. The D/S team changes it to KR 5 / JP 3 / ' + D4 + ' 2 and removes TW.',
-                  'Saved per destination (FB-085): KR updated (CREATED_DT kept), JP not touched, TW deleted, ' + D4 + ' inserted; one history record per changed '
-                  'destination and one staging row per changed destination (Non Sync).',
-                  '[Sync]: the RPA bot registers ' + D4 + ' and deletes TW in GTOPAS (KR and JP ignored, no Case/Day in GTOPAS); AP POLE gets the complete '
-                  'set (existing part: Pcs/Case, Max Case/Day and destinations updated).'],
+                  'Saved per destination (FB-085): KR updated (CREATED_DT kept), JP not touched, TW deleted, ' + D4 + ' inserted; one history record and one Export staging '
+                  'row per changed destination, GTOPAS rows for TW (Delete) and ' + D4 + ' (Add), and the Kanban header (OPERATION_TYPE 5): the Kanban did not change.',
+                  '[Sync] runs scenario 1: XD06 deletes TW and adds ' + D4 + ' in GTOPAS (KR and JP: no row, GTOPAS has no Case/Day); after GTOPAS OK, XD07 '
+                  'uploads EXPORT_POST only: KR 5 and TW 0 first, then ' + D4 + ' 2.'],
         'steps': [
             ('1. Mapping before the change (ongoing period)', 'TB_M_PART_CANDIDATE_DEST', [
                 ('ref', ['PART-X', '202610', VN, 6]), ('ref', ['PART-X', '202610', TH, 3]), ('ref', ['PART-X', '202610', PH, 1])]),
@@ -456,13 +480,23 @@ SCENARIOS = [
                 ('new', [1101, 'PART-X', '202610', 'MAPPING', 'SCREEN', VN, 'CASE_DAY', '6', '5', 'DS-USER']),
                 ('new', [1102, 'PART-X', '202610', 'MAPPING', 'SCREEN', PH, 'CASE_DAY', '1', None, 'DS-USER']),
                 ('new', [1103, 'PART-X', '202610', 'MAPPING', 'SCREEN', D4, 'CASE_DAY', None, '2', 'DS-USER'])]),
-            ('', 'TB_H_PART_CANDIDATE_STG_SYNC', [
-                ('new', [2101, 'PART-X', '202610', 'EXPORT', VN, 'CASE_DAY', 'EDIT', '6', '5', '0', None, None]),
-                ('new', [2102, 'PART-X', '202610', 'EXPORT', PH, 'CASE_DAY', 'DELETE', '1', '0', '0', None, '0']),
-                ('new', [2103, 'PART-X', '202610', 'EXPORT', D4, 'CASE_DAY', 'ADD', None, '2', '0', None, '0'])]),
-            ('3. D/S [Sync] (no Max change: every Export row after the Kanban file, SEND_SEQ 3)', 'TB_H_PART_CANDIDATE_STG_SYNC', [
-                ('upd', [2101, 'PART-X', '202610', 'EXPORT', VN, 'CASE_DAY', 'EDIT', '6', '5', '1', 3, None], ['APPOLE_SYNC_STATUS', 'SEND_SEQ'], 'AP POLE 5 (down first)'),
-                ('upd', [2102, 'PART-X', '202610', 'EXPORT', PH, 'CASE_DAY', 'DELETE', '1', '0', '1', 3, '1'], ['APPOLE_SYNC_STATUS', 'SEND_SEQ', 'GTOPAS_SYNC_STATUS'], 'AP POLE 0; GTOPAS Delete'),
-                ('upd', [2103, 'PART-X', '202610', 'EXPORT', D4, 'CASE_DAY', 'ADD', None, '2', '1', 3, '1'], ['APPOLE_SYNC_STATUS', 'SEND_SEQ', 'GTOPAS_SYNC_STATUS'], 'AP POLE Add; GTOPAS Add')]),
+            ('', 'TB_H_STG_APPOLE_EXPORT', [
+                ('new', [3101, '202610', 'PART-X', VN, 'EDIT', BPD(VN), 5, '0', None]),
+                ('new', [3102, '202610', 'PART-X', PH, 'DELETE', BPD(PH), 0, '0', None]),
+                ('new', [3103, '202610', 'PART-X', D4, 'ADD', BPD(D4), 2, '0', None])]),
+            ('', 'TB_H_STG_GTOPAS', [
+                ('new', [4101, '202610', 'DELETE', 'PART-X', PH, '0', None]),
+                ('new', [4102, '202610', 'ADD', 'PART-X', D4, '0', None])]),
+            ('', 'TB_H_STG_APPOLE_KANBAN', [
+                ('new', [2101, '202610', 'PART-X', 'KEEP', 'Active', 6, 10, 5, '0', None])]),
+            ('3. D/S [Sync] (scenario 1: GTOPAS rows in the run, XD06 first; header 5: every Export row in EXPORT_POST, down / delete before add)', 'TB_H_STG_APPOLE_KANBAN', [
+                ('upd', [2101, '202610', 'PART-X', 'KEEP', 'Active', 6, 10, 5, '1', '20261014100000'], ['SYNC_STATUS', 'SYNC_RUN_ID'], 'Header only, not uploaded')]),
+            ('', 'TB_H_STG_GTOPAS', [
+                ('upd', [4101, '202610', 'DELETE', 'PART-X', PH, '1', '20261014100000'], ['SYNC_STATUS', 'SYNC_RUN_ID'], 'XD06 Delete'),
+                ('upd', [4102, '202610', 'ADD', 'PART-X', D4, '1', '20261014100000'], ['SYNC_STATUS', 'SYNC_RUN_ID'], 'XD06 Add; XD07 starts after GTOPAS OK')]),
+            ('', 'TB_H_STG_APPOLE_EXPORT', [
+                ('upd', [3101, '202610', 'PART-X', VN, 'EDIT', BPD(VN), 5, '1', '20261014100000'], ['SYNC_STATUS', 'SYNC_RUN_ID'], 'EXPORT_POST row order 1 (down)'),
+                ('upd', [3102, '202610', 'PART-X', PH, 'DELETE', BPD(PH), 0, '1', '20261014100000'], ['SYNC_STATUS', 'SYNC_RUN_ID'], 'Row order 1 (delete)'),
+                ('upd', [3103, '202610', 'PART-X', D4, 'ADD', BPD(D4), 2, '1', '20261014100000'], ['SYNC_STATUS', 'SYNC_RUN_ID'], 'Row order 2 (add)')]),
         ]},
 ]

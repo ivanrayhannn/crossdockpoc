@@ -17,7 +17,7 @@
 | MSG7 | Hover disabled [Save] | Max Case/Day not filled | Info | Enter Max Case/Day (step 2) | Fill Max Case/Day |
 | MSG8 | Type in 'Part No' | No unregistered part matches the text | Info | Part not found | Check the Part No |
 | MSG9 | Click [Save] button | Part saved successfully | Info | Saved successfully: {Part No} · {Part Name} is saved and shown at the top of the Kanban Crossdock Master. | Click [OK] |
-| MSG10 | Hover 'Effective Start Date' | Saved status is Active / Inactive | Info | Can only be changed while the status is Candidate. | - |
+| MSG10 | Hover 'Period' in Edit | The part is registered | Info | The period cannot be changed after the part is registered. | - |
 | **Kanban Crossdock Master - Upload Operation** |  |  |  |  |  |
 | MSG11 | Click [Validate file] button | Upload validated and saved | Info | Saved successfully: the file passed validation and the part settings are saved to the Kanban Crossdock Master. | Click [OK] |
 | **Kanban Crossdock Master - History Operation** |  |  |  |  |  |
@@ -116,7 +116,7 @@
 | LOG1 | Process 1: Batch start | Batch is called | Info | DAD volume calculation started (<RUN_TYPE>, retry <RETRY_NO>). Range <MONTH_FROM> - <MONTH_TO>. | system: Write the log.; user: - |
 | LOG2 | Process 1: Batch end | Batch finishes | Info | DAD volume calculation ended. Status <STATUS>, calculated <COUNT>, status changed <CHANGED>. | system: Write the log.; user: - |
 | LOG3 | Process 1: Range of months | Range is not set in the system master | Error | Range of months for the DAD volume calculation is not set. | system: Stop. STATUS = FAILED.; user: User contact PIC |
-| LOG4 | Process 1: Part skipped | Effective Start Date after the run date | Info | Part No <PART_NO> skipped: effective start date <DATE>. | system: Continue.; user: - |
+| LOG4 | Process 1: Part skipped | Part registered for a later period | Info | Part No <PART_NO> skipped: registered for period <PERIOD>. | system: Continue.; user: - |
 | LOG5 | Process 1: Save | Insert / update fails | Error | Cannot save the calculation of Part No <PART_NO>: <ERROR_DETAIL>. | system: Roll back. STATUS = FAILED. Retry.; user: User contact PIC |
 | LOG6 | Process 1: Retry exhausted | Scheduled run and 3 retries failed | Warning | DAD volume calculation failed 3 times. Manual run is enabled on Kanban Crossdock Master. | system: Enable [Run calculation] on Kanban Crossdock Master.; user: Check the cause, then click [Run calculation]. |
 | LOG7 | Process 1: Unexpected error | Any other system error | Critical | Unexpected error: <ERROR_DETAIL>. | system: Roll back. STATUS = FAILED. Retry.; user: User contact PIC |
@@ -135,10 +135,10 @@
 
 | ID | Event | Cause | Type | Message | Action |
 |---|---|---|---|---|---|
-| LOG1 | Batch start | [Sync] / Period Rollover | Info | RPA cross dock master to GTOPAS started. Run <RUN_ID>, <n> part(s). | system: Write the log.; user: - |
-| LOG2 | Batch end | Bot finishes | Info | RPA cross dock master to GTOPAS ended. Run <RUN_ID>, added <a>, deleted <d>, kept <k>, status <STATUS>. | system: Write the log.; user: - |
+| LOG1 | Batch start | Parent flow: scenario 1 or Period Rollover | Info | RPA cross dock master to GTOPAS started. Run <RUN_ID>, <n> row(s). | system: Write the log.; user: - |
+| LOG2 | Batch end | Bot finishes | Info | RPA cross dock master to GTOPAS ended. Run <RUN_ID>, added <a>, deleted <d>, already done <k>, failed <f>, status <STATUS>. | system: Write the log.; user: - |
 | LOG3 | Row changed | Add / Delete on WVJA5204 | Info | <ADD / DELETE> <P_NO> <DEST_CODE>. | system: Write the log.; user: - |
-| LOG4 | Error (try-catch) | Login, screen, timeout or GTOPAS error message | Error | RPA to GTOPAS stopped at <STEP> <P_NO> <DEST_CODE>: <ERROR_DETAIL>. | system: Stop the bot.; user: Click [Re-send last Sync]; contact PIC if it persists. |
+| LOG4 | Row failed / error (try-catch) | Login, screen, timeout or GTOPAS error message | Error | RPA to GTOPAS failed at <STEP> <P_NO> <DEST_CODE>: <ERROR_DETAIL>. | system: Row error: list the row and go to the next row. Login or screen error: stop. STATUS FAILED; in scenario 1 the parent flow does not start XD07.; user: Click [Re-send last Sync]; contact PIC if it persists. |
 | LOG5 | Unexpected error | Any other system error | Critical | Unexpected error: <ERROR_DETAIL>. | system: Stop. STATUS = ERROR.; user: User contact PIC |
 | LOG6 | Notification email | End of the run (SUCCESS / FAILED) | Info | Notification email <SUCCESS / FAILED> of run <RUN_ID> sent to <recipients>. | system: Write the log.; user: Read the email; FAILED: click [Re-send last Sync]. |
 
@@ -148,10 +148,10 @@
 
 | ID | Event | Cause | Type | Message | Action |
 |---|---|---|---|---|---|
-| LOG1 | Batch start | [Sync] / [Re-send last Sync] on XD01 | Info | RPA cross dock master to AP POLE started. Run <RUN_ID>, <n> file(s). | system: Write the log.; user: - |
+| LOG1 | Batch start | Parent flow: scenario 1 after GTOPAS OK, or scenario 2 | Info | RPA cross dock master to AP POLE started. Run <RUN_ID>, <n> file(s). | system: Write the log.; user: - |
 | LOG2 | Batch end | Bot finishes | Info | RPA cross dock master to AP POLE ended. Run <RUN_ID>, files uploaded <f>, rows <r>, status <STATUS>. | system: Write the log.; user: - |
 | LOG3 | File uploaded | AP POLE accepted the file | Info | <FILE_NAME> uploaded: <n> row(s). | system: Write the log.; user: - |
-| LOG4 | Error (try-catch) | Login, upload screen, AP POLE error of a row, timeout | Error | RPA to AP POLE stopped at <FILE_NAME> row <n>: <ERROR_DETAIL>. Files not uploaded: <list>. | system: Stop the bot.; user: Click [Re-send last Sync]; contact PIC if it persists. |
+| LOG4 | Error (try-catch) | Login, upload screen, AP POLE error of a row, timeout | Error | RPA to AP POLE stopped at <FILE_NAME> row <n>: <ERROR_DETAIL>. Files not uploaded: <list>. | system: Stop the bot. STATUS FAILED; the next files are not uploaded.; user: Click [Re-send last Sync]; contact PIC if it persists. |
 | LOG5 | Unexpected error | Any other system error | Critical | Unexpected error: <ERROR_DETAIL>. | system: Stop. STATUS = ERROR.; user: User contact PIC |
 | LOG6 | Notification email | End of the run (SUCCESS / FAILED) | Info | Notification email <SUCCESS / FAILED> of run <RUN_ID> sent to <recipients>. | system: Write the log.; user: Read the email; FAILED: click [Re-send last Sync]. |
 

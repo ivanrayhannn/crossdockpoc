@@ -103,15 +103,15 @@ const FUNCS = [
       { key: 'PL', title: 'Proses normal – Tab Kanban Crossdock Master (Procurement)', points: [
         'Buka menu: hanya akun Procurement. Default filter Part Number / Part Name kosong, Status All, Sort Newer to Older, 25 baris per halaman. Belum ada part sama sekali: msg 2 dengan [Upload Excel] dan [Add one part].',
         'Cari part: Part Number / Part Name (sebagian kata, tidak membedakan huruf besar kecil), Status Candidate / Active / Inactive, digabung AND; diterapkan saat [Search]. Tidak ada hasil: msg 1. Total Pcs/Day = Pcs/Case × Max Case/Day.',
-        'Add part baru: status otomatis Candidate (terkunci). Input Part No (dari Part Master, belum terdaftar), Part Name otomatis, Min MAD (≥ 0), Pcs/Case (> 0), Max Case/Day (> 0), Effective Start Date (default besok, minimal hari ini). [Save] aktif kalau isian wajib lengkap (tooltip msg 5 / 15 / 6 / 7). Setelah Save: history ADD, part paling atas, msg 9 (part Candidate belum dikirim, tidak ada baris staging).',
-        'Edit part (Candidate / Active / Inactive): Min MAD, Pcs/Case, Max Case/Day, Status, dan Effective Start Date (hanya selama Candidate, selain itu tooltip msg 10). Part Active menampilkan "Mapped Case/Day (current period)"; Max Case/Day tidak boleh di bawahnya (msg 14). Setelah Save: baris staging per nilai yang berubah (Non Sync), history per field, msg 9.',
+        'Add part baru: status otomatis Candidate (terkunci). Input Part No (dari Part Master, belum terdaftar), Part Name otomatis, Period (default bulan berjalan, atau Next), Min MAD (≥ 0), Pcs/Case (> 0), Max Case/Day (> 0). Part berlaku mulai period itu. Pilih bulan berjalan setelah tanggal D: baris Next juga dibuat, supaya ikut kalkulasi berikutnya. [Save] aktif kalau isian wajib lengkap (tooltip msg 5 / 15 / 6 / 7). Setelah Save: history ADD, part paling atas, msg 9 (part Candidate belum dikirim, tidak ada baris staging).',
+        'Edit part: Part No dan Period terkunci (tooltip msg 10). Status: part Candidate bisa tetap Candidate atau jadi Active; part Active / Inactive bisa Active atau Inactive; tidak ada yang balik ke Candidate. Part Next hanya bisa dilihat sampai period-nya jadi bulan berjalan. Part Active menampilkan "Mapped Case/Day (current period)"; Max Case/Day tidak boleh di bawahnya (msg 14). Setelah Save: baris staging per nilai yang berubah (Non Sync), history per field, msg 9.',
         'History (ikon jam): riwayat perubahan part terbaru di atas (Add / Edit, upload, mapping, hasil Sync, status oleh XD05), disimpan tanpa batas waktu. Tanpa history: msg 12.',
         'Download (Export Excel): 2 sheet – "Kanban Crossdock Master" (hasil filter, informasi) dan "Upload" (semua part, Upload (A/E) = E) sebagai file dasar upload.',
         'Upload part list (XD02): pakai sheet Upload; Upload (A/E) A = part baru, E = edit. Status Candidate tidak bisa diubah lewat upload, Active ↔ Inactive boleh, tidak ada yang bisa jadi Candidate. All-or-nothing; berhasil msg 11.',
         'DAD Calculation (XD05 proses 1): scheduler bulanan, auto retry 3×; [Run calculation] aktif hanya setelah gagal 3× (badge "Scheduled run failed 3x"). XD05 menulis baris staging untuk period baru.',
         'Period dan Order Type (19-Nov): Kanban Crossdock Master (dulu Part List) punya period seperti Export Crossdock Master (dulu Mapping per Destination). Past = lihat saja; Current = edit layar / upload; Next = dibuat XD05 di tanggal D, lihat saja sampai tanggal 1. Export Crossdock Master: kolom Order Type per baris destinasi (**, C, 9, V); destinasi yang sama boleh 2 baris kalau order type beda. Max Case/Day turun di bawah total mapping: kurangi destinasi dulu, baru ubah Max Case/Day',
-        'Sync (22-Nov): setiap perubahan nilai menulis 1 baris di TB_H_PART_CANDIDATE_STG_SYNC (KANBAN: Pcs/Case, Max Case/Day; EXPORT: Case/Day per destinasi ADD / EDIT / DELETE). Min MAD, Effective Start Date, Candidate ↔ Inactive dan Save tanpa perubahan tidak menulis baris. TB_M_PART_CANDIDATE tidak punya kolom sync lagi.',
-        'Procurement ubah Active → Inactive: semua destinasi part ditulis EXPORT DELETE (nilai 0), part tetap ada di Kanban AP POLE. Inactive → Active: Procurement mapping ulang destinasinya di layar (EXPORT ADD).' ] },
+        'Staging per target: TB_H_STG_APPOLE_KANBAN (format LLM9Q910), TB_H_STG_APPOLE_EXPORT (LLM9Q880), TB_H_STG_GTOPAS (WVJA5204). Setiap Save memanggil SP_STG_WRITE: Kanban baris nilai baru + OPERATION_TYPE (1 Max turun, 2 naik, 3 sama, 4 belum pernah dikirim, 5 header kalau hanya destinasi yang berubah); Export ADD / EDIT / DELETE (0); GTOPAS hanya kalau destinasi muncul / hilang. Baris lama yang belum dikirim jadi 2 Superseded. Min MAD, part Candidate dan Save tanpa perubahan tidak menulis baris.',
+        'Procurement ubah Active → Inactive: mapping period dihapus, tiap destinasi ditulis Export DELETE (0) + GTOPAS DELETE, Kanban header 5; part tetap ada di Kanban AP POLE. Inactive → Active: Procurement mapping ulang destinasinya (Export ADD, GTOPAS ADD).' ] },
       { key: 'MP', title: 'Proses normal – Tab Export Crossdock Master (D/S)', points: [
         'Buka menu: hanya akun D/S. Default periode ongoing, Sync Status Non Sync. Periode ongoing: semua part Active dengan destinasinya (tanpa destinasi: 0 / quota). Periode baru mulai kosong; periode lalu hanya bisa dilihat.',
         'Kolom Total Case/Day (used / quota): used = jumlah Case/Day semua destinasi, quota = Max Case/Day dari Kanban Crossdock Master. Pcs/Day = Pcs/Case × used; Percentage = used / quota (maksimal 100%).',
@@ -120,8 +120,8 @@ const FUNCS = [
         'Download: sheet "Export Crossdock Master" (informasi) dan "Upload" (part Active periode ongoing, satu baris per destinasi; baris kosong Upload (A/E) = A untuk part tanpa mapping).',
         'Upload mapping (XD03): hanya periode ongoing (selain itu msg 23). Disimpan per destinasi; part yang tidak ada di file tidak berubah. All-or-nothing; berhasil msg 24.',
         'Mapping Calculation (XD05 proses 2): scheduler, auto retry 3×; [Run calculation] aktif hanya setelah gagal 3×; selesai msg 29.',
-        '[Sync (n)]: part + period yang punya baris staging Non Sync (AP POLE: Current dan Next; GTOPAS: Current), tanpa melihat filter. Satu transaksi: ringkas per kunci (OLD pertama, NEW terakhir), baris terakhir 1 Sync + SEND_SEQ, baris sebelumnya 2 Superseded, run ID, LAST_SYNC_DATE_APPOLE; lalu XD07 dan XD06 jalan (msg 27).',
-        'Sync Status di layar dihitung dari staging per part + period: AP POLE dan GTOPAS Non Sync / Sync, Last Sent AP POLE / GTOPAS = waktu kirim terakhir. Hasil RPA datang lewat email; kalau FAILED klik [Re-send last Sync] (run ID terakhir dikirim ulang).' ] },
+        '[Sync (n)]: part + period yang punya baris SYNC_STATUS 0 (AP POLE: Current dan Next; GTOPAS: Current), tanpa melihat filter. SP_STG_SYNC hanya mengubah 0 → 1 + SYNC_DT + run ID dan LAST_SYNC_DATE_APPOLE (aturan sudah ditulis saat Save), lalu parent flow RPA jalan (msg 27).',
+        'Sync Status di layar per part + period: AP POLE Non Sync kalau staging Kanban / Export masih punya baris 0; GTOPAS Non Sync kalau staging GTOPAS masih punya baris 0. Last Sent = SYNC_DT terakhir. Hasil RPA datang lewat email; kalau FAILED klik [Re-send last Sync] (run ID yang sama dikirim ulang).' ] },
       { key: 'AB', title: 'Abnormality', points: [
         { k: 'Part sudah didaftarkan user lain saat Add', d: 'msg 3', s: 'Simpan dibatalkan', u: 'Tutup modal, cari part' },
         { k: 'Data part diubah user lain saat Edit', d: 'msg 4', s: 'Simpan dibatalkan', u: 'Refresh, edit ulang' },
@@ -138,17 +138,17 @@ const FUNCS = [
   { id: 'XD02', name: 'Cross Dock Part Master Upload Batch', type: 'Batch', trigger: '[Validate file] di Upload Excel tab Kanban Crossdock Master (XD01)',
     sections: [
       { key: 'N', title: 'Proses normal', points: [
-        'Cek file: .xlsx, maksimal 5 MB, 1–5.000 baris, sheet "Upload" ada (sheet lain diabaikan), 7 kolom template dengan nama sama seperti sheet export, dibaca berdasarkan nama kolom: Part Number, Min MAD, Pcs/Case, Max Case/Day, Status, Upload (A/E), Effective Start Date.',
+        'Cek file: .xlsx, maksimal 5 MB, 1–5.000 baris, sheet "Upload" ada (sheet lain diabaikan), 7 kolom template dengan nama sama seperti sheet export, dibaca berdasarkan nama kolom: Part Number, Min MAD, Pcs/Case, Max Case/Day, Status, Upload (A/E), Period.',
         'Semua baris dicek dulu dan semua error dikumpulkan sekaligus, supaya file cukup diperbaiki satu kali.',
         'Simpan hanya kalau semua baris valid (all-or-nothing). A: part baru sebagai Candidate, Part Name dari Part Master, Total Pcs/Day dihitung. E: nilai yang berubah di-update (termasuk Active ↔ Inactive); baris tanpa perubahan dilewati.',
-        'Tiap nilai yang berubah dari part Active menulis baris staging (KANBAN, source UPLOAD, UPLOAD_ID); part baru (Candidate) tidak; Active → Inactive menulis EXPORT DELETE (0) per destinasi; history per field (ADD / EDIT, source UPLOAD); part yang tidak ada di file tidak berubah.',
+        'Tiap nilai yang berubah dari part Active lewat SP_STG_WRITE (source UPLOAD, UPLOAD_ID): Kanban EDIT dengan OPERATION_TYPE; part baru (Candidate) tidak; Active → Inactive: mapping period dihapus, Export DELETE (0) per destinasi, GTOPAS DELETE, Kanban header 5. History per field (ADD / EDIT, source UPLOAD); part yang tidak ada di file tidak berubah.',
         'Result report (.xlsx: Summary, Result, Re-upload, Changes) dibuat untuk berhasil maupun ditolak; upload log COMPLETED / REJECTED.' ] },
       { key: 'R', title: 'Aturan validasi per baris', points: [
         'Kolom Upload (A/E) = A (Add) atau E (Edit).', 'Part No ada di Part Master.', 'A: part belum terdaftar · E: part sudah terdaftar.', 'Part No hanya sekali di file.',
         'Min MAD bilangan bulat ≥ 0; Pcs/Case dan Max Case/Day bilangan bulat > 0; ketiganya wajib.',
         'Status: A harus kosong; E: Candidate tetap Candidate, Active ↔ Inactive boleh, tidak boleh jadi Candidate.',
-        'Effective Start Date wajib untuk part Candidate (selalu untuk A), minimal hari ini kalau baru / berubah.',
-        'E: Effective Start Date hanya boleh berubah selama Candidate.',
+        'A: Period wajib, bulan berjalan atau Next (YYYYMM); part berlaku mulai period itu.',
+        'E: Period = bulan berjalan. Part yang didaftarkan untuk Next belum bisa diubah sampai period-nya jadi bulan berjalan.',
         'E: Max Case/Day tidak boleh di bawah total yang sudah di-mapping di periode ongoing (contoh mapping 100, Max baru 80 → ditolak).' ] },
       { key: 'AB', title: 'Abnormality', points: [
         { k: 'File upload tidak ditemukan', d: 'LOG3', s: 'Batch berhenti', u: 'Upload ulang' },
@@ -167,7 +167,7 @@ const FUNCS = [
         'Satu baris per part × destinasi; semua baris satu part = mapping baru part itu. Semua error dikumpulkan sekaligus.',
         'All-or-nothing. Part tanpa perubahan dilewati. Part yang berubah disimpan per destinasi: Case/Day berubah → update (CREATED tetap), destinasi baru → insert, tidak ada lagi di file → delete, sama → tidak disentuh.',
         'Part yang semua barisnya kosong tidak diubah: mapping tidak bisa dihapus total lewat upload (minimal 1 destinasi).',
-        'Tiap destinasi yang ditambah / diubah / dihapus menulis baris staging (EXPORT ADD / EDIT / DELETE, GTOPAS 0 untuk ADD / DELETE); baris yang sama dengan mapping sekarang tidak menulis apa pun; history per destinasi (MAPPING, source UPLOAD). Result report dan upload log seperti XD02.',
+        'Tiap destinasi yang ditambah / diubah / dihapus lewat SP_STG_WRITE: Export ADD / EDIT / DELETE (0), GTOPAS kalau destinasi muncul / hilang untuk part itu, Kanban header 5 kalau Kanban tidak berubah. Baris yang sama dengan mapping sekarang tidak menulis apa pun; history per destinasi (MAPPING, source UPLOAD). Result report dan upload log seperti XD02.',
         'Contoh: DB D01 = 10, D02 = 5; file D01 = 8, D03 = 7 → D01 update 8, D03 insert, D02 delete, history 3 record.' ] },
       { key: 'R', title: 'Aturan validasi per baris', points: [
         'Part terdaftar dan statusnya Active.', 'Kode destinasi ada di Destination Master.', 'Dest Case/Day bilangan bulat > 0 kalau Destination Code terisi.', 'Satu destinasi hanya sekali per part.',
@@ -208,18 +208,18 @@ const FUNCS = [
     sections: [
       { key: 'P1', title: 'Proses 1 – status part', points: [
         'Range N bulan dari system master: bulan sebelum run mundur N bulan (contoh run Okt 2026, N = 6 → 202604–202609).',
-        'Semua part (Candidate, Active, Inactive); part dengan Effective Start Date setelah tanggal run dilewati (LOG4).',
+        'Semua part yang punya baris di period Current (Candidate, Active, Inactive). Part yang didaftarkan untuk Next sebelum tanggal D sudah punya baris Next: ikut dihitung, tidak dibuat dua kali.',
         'TOTAL_MAD = jumlah MAD semua buyer / PD / order type N + S dalam range; AVG_MAD = TOTAL_MAD / N (bulan tanpa data dihitung 0).',
         'AVG_MAD ≥ Min MAD → Active; AVG_MAD < Min MAD → Inactive.',
-        'Jadwal (19-Nov): jalan di tanggal D (system master) dan membuat period berikutnya (Next) untuk Kanban dan Export Crossdock Master; Current tidak berubah. Proses 3 tanggal 1 jam 00:10: Period Rollover (Next jadi Current), baris staging period baru dengan GTOPAS 0 (tanpa tanggal) dikirim, lalu XD06 jalan otomatis.',
-        'Simpan hasil di TB_R_PART_DAD_RESULT; kalau status berubah, update Kanban Crossdock Master dan history (CALC). Staging: KANBAN ADD Pcs/Case dan Max Case/Day untuk semua part period baru (termasuk Inactive, part tetap di Kanban AP POLE).',
+        'Jadwal: jalan di tanggal D (system master) dan membuat period berikutnya (Next) untuk Kanban dan Export Crossdock Master; Current tidak berubah. Proses 3 tanggal 1 jam 00:10: Period Rollover (Next jadi Current), baris staging GTOPAS period baru 0 → 1 dengan run ID, lalu parent flow RPA jalan dengan XD06 saja.',
+        'Simpan hasil di TB_R_PART_DAD_RESULT; kalau status berubah, update Kanban Crossdock Master dan history (CALC). Staging lewat SP_STG_WRITE: Kanban ADD untuk semua part period baru (termasuk Inactive, part tetap di Kanban AP POLE), OPERATION_TYPE dibanding Max yang dikirim untuk period sebelumnya.',
         'Berhasil: commit, lanjut proses 2. Gagal: rollback, proses 2 tidak jalan, auto retry 3×; setelah itu [Run calculation (Kanban Crossdock Master)] aktif.' ] },
       { key: 'P2', title: 'Proses 2 – mapping destinasi', points: [
         'Jalan setelah proses 1 berhasil (atau retry / [Run calculation (Mapping)] untuk proses 2 saja). Periode baru = bulan run.',
         'Part Active saja; actual demand dikelompokkan per kode destinasi (buyer 5 digit + PD 2 digit); grup dengan MAD 0 tidak dipakai; part tanpa MAD tidak mendapat destinasi.',
         'Kode destinasi harus ada di Destination Master; kalau tidak ada → error, seluruh proses 2 rollback (LOG11).',
         'Alokasi: destinasi diurutkan MAD terbesar, maksimal sejumlah Max Case/Day (LOG12); target = porsi MAD × Max Case/Day, dibulatkan ke bawah minimal 1, disesuaikan supaya total = Max Case/Day.',
-        'Simpan periode baru (re-run menghapus data periode itu dulu). Staging: EXPORT ADD per destinasi part Active (GTOPAS 0); part Inactive: EXPORT DELETE (0) untuk destinasi yang bulan lalu masih > 0. History per destinasi (MAPPING, BATCH).',
+        'Simpan periode baru (re-run menghapus data periode itu dulu). Staging: Export ADD per destinasi part Active; DELETE (0) untuk destinasi period lalu yang tidak di-mapping lagi dan untuk destinasi part Inactive yang masih > 0; GTOPAS hanya untuk destinasi yang muncul / hilang. History per destinasi (MAPPING, BATCH).',
         'Berhasil: periode baru jadi ongoing, periode lama jadi past (read only). Gagal: rollback proses 2 saja, auto retry 3×, lalu [Run calculation (Mapping)] aktif.' ] },
       { key: 'AB', title: 'Abnormality', points: [
         { k: 'Range bulan belum di-set di system master', d: 'LOG3 / LOG10', s: 'Stop, FAILED', u: 'Hubungi PIC' },
@@ -228,32 +228,38 @@ const FUNCS = [
         { k: 'Jadwal dan 3 retry gagal', d: 'LOG6 / LOG14', s: '[Run calculation] aktif di XD01', u: 'Cek penyebab, klik [Run calculation]' },
         { k: 'Error sistem lain', d: 'LOG7 / LOG15', s: 'Rollback, FAILED, retry', u: 'Hubungi PIC' } ] } ] },
 
-  { id: 'XD06', name: 'IF Cross Dock Master to GTOPAS', type: 'Batch (RPA)', trigger: '[Sync] di XD01 (period Current) dan Period Rollover tanggal 1 (period baru); bot baca staging (22-Nov)',
+  { id: 'XD06', name: 'IF Cross Dock Master to GTOPAS', type: 'Batch (RPA)', trigger: 'Parent flow RPA: [Sync] / [Re-send last Sync] skenario 1, atau Period Rollover tanggal 1',
     sections: [
       { key: 'N', title: 'Proses normal', points: [
-        'Sumber: hanya TB_H_PART_CANDIDATE_STG_SYNC (user DB read-only), part dari run ID. Bot tidak download Excel NSP lagi.',
-        'Baris yang diambil: GTOPAS_SYNC_STATUS 0 + PERIOD, tanpa tanggal. [Sync] = period Current; Period Rollover = period yang baru jadi Current. Data Next tidak dikirim di tanggal D karena GTOPAS WVJA5204 tidak punya period (isinya selalu bulan berjalan).',
-        'GTOPAS 0 hanya untuk baris EXPORT ADD / DELETE (destinasi muncul / hilang). Baris KANBAN dan EDIT Case/Day = NULL (GTOPAS tidak simpan quantity).',
-        'Destinasi NSP per part: nilai staging terakhir per destinasi + order type ≥ 1; order type digabung jadi 1 baris GTOPAS.',
-        'Bot buka WVJA5204 (Depot 01), baca baris part tersebut, bandingkan per P/No. (tanpa "-") + Destination Code: hanya di NSP → Add (Maker A, Dom/Os 2, TOPAS Order Type *, Trans 2); hanya di GTOPAS → Delete; ada di keduanya → Keep.',
-        'Email notifikasi (Power Automate): 1 email per run, SUCCESS / FAILED. Bot tidak menulis balik ke NSP.' ] },
+        'Satu parent flow Power Automate per run (CDX_SYNC_PARENT), dijalankan NSP dengan RUN_ID dan RUN_TYPE (SYNC, RESEND, ROLLOVER).',
+        'Skenario 1, run punya baris GTOPAS (part jadi Active / Inactive, destinasi ditambah / dihapus): XD06 GTOPAS dulu; XD07 AP POLE jalan hanya kalau GTOPAS berhasil. GTOPAS gagal → AP POLE tidak jalan.',
+        'Skenario 2, run tanpa baris GTOPAS (Max Case/Day, Pcs/Case, Case/Day, order type destinasi yang tetap): langsung XD07.',
+        'Period Rollover: XD06 saja untuk baris GTOPAS period yang baru jadi Current.',
+        'Sumber: hanya TB_H_STG_GTOPAS (user DB read-only), baris dengan SYNC_RUN_ID = run ID: ACTION ADD / DELETE per part + destinasi. Bot tidak membandingkan lagi; NSP sudah menentukan saat Save.',
+        'GTOPAS tidak punya period (selalu bulan berjalan): [Sync] mengirim period Current, Next dikirim saat Period Rollover.',
+        'Bot buka WVJA5204 (Depot 01): ADD = daftar baris (Maker A, Dom/Os 2, TOPAS Order Type 3, Trans 2); DELETE = MT DEL. Baris yang sudah ada (ADD) atau sudah hilang (DELETE) dihitung OK, jadi kirim ulang aman.',
+        'Email notifikasi dikirim parent flow: 1 email per run berisi hasil GTOPAS dan AP POLE. Bot tidak menulis balik ke NSP.' ] },
       { key: 'AB', title: 'Abnormality', points: [
-        { k: 'Error apa pun di bot (login, layar, timeout, pesan error GTOPAS)', d: 'LOG4', s: 'Try-catch: bot berhenti, email FAILED; baris yang sudah diproses tetap di GTOPAS', u: '[Re-send last Sync]; run berikutnya membandingkan ulang' },
+        { k: 'Satu baris gagal (pesan error GTOPAS)', d: 'LOG4', s: 'Baris dicatat, baris berikutnya tetap diproses; hasil FAILED, XD07 tidak jalan (skenario 1)', u: '[Re-send last Sync]: GTOPAS lagi, lalu AP POLE' },
+        { k: 'Login / layar / timeout', d: 'LOG4', s: 'Bot berhenti, FAILED, XD07 tidak jalan', u: '[Re-send last Sync]' },
         { k: 'Error sistem lain', d: 'LOG5', s: 'Stop, ERROR, email FAILED', u: 'Hubungi PIC' } ] },
       { key: 'C', title: 'Catatan terbuka', points: [
-        'FB-176: hanya part di run yang dibandingkan (21-Nov).' ] } ] },
+        'Cara NSP menjalankan parent flow (HTTP trigger) TBC dengan tim RPA.' ] } ] },
 
-  { id: 'XD07', name: 'RPA Cross Dock Master to AP POLE', type: 'Batch (RPA)', trigger: '[Sync] / [Re-send last Sync] di XD01: bot baca staging dan upload file LLM9Q880 / LLM9Q910 (22-Nov)',
+  { id: 'XD07', name: 'RPA Cross Dock Master to AP POLE', type: 'Batch (RPA)', trigger: 'Parent flow RPA: skenario 1 setelah GTOPAS OK, atau skenario 2 langsung',
     sections: [
       { key: 'N', title: 'Proses normal', points: [
-        'Sumber: hanya TB_H_PART_CANDIDATE_STG_SYNC (user DB read-only), baris dengan APPOLE_SYNC_RUN_ID = run ID dan SEND_SEQ terisi. NSP sudah meringkas baris dan mengisi SEND_SEQ saat [Sync].',
-        'Upload file dari template tersimpan (tidak download dari AP POLE): file 1 = Export (LLM9Q880) hanya untuk part yang Max-nya turun; file 2 = Kanban (LLM9Q910) semua perubahan induk dan part baru (Pcs dan Max 1 baris); file 3 = Export untuk part lainnya.',
-        'Nama file <template>_<run ID>_<period>_<SEND_SEQ>.xls, 1 file per period + SEND_SEQ, Current dulu baru Next. File tanpa baris tidak dibuat. Bot upload satu per satu dan menunggu hasil tiap file.',
-        'AP POLE cek per baris: total Max Shipping Box (RCS) ≤ Max Shipping Box Qty. Di dalam file Export, per part baris yang turun / dihapus dulu, baru yang naik / baru.',
-        'Isi file: Operator ID P6, Transport Code 2, Part No. Kanban pakai "-", Export tanpa "-", Buyer-PD 5-2, hapus = 0 (Buyer-PD tetap ada dengan 0). Pasangan Pcs + Max diambil dari baris Sync terakhir tiap field.',
-        'Email notifikasi (Power Automate): SUCCESS / FAILED per run. Bot tidak menulis balik ke NSP; kalau FAILED, D/S klik [Re-send last Sync].' ] },
+        'Satu parent flow Power Automate per run (CDX_SYNC_PARENT), dijalankan NSP dengan RUN_ID dan RUN_TYPE (SYNC, RESEND, ROLLOVER).',
+        'Skenario 1, run punya baris GTOPAS (part jadi Active / Inactive, destinasi ditambah / dihapus): XD06 GTOPAS dulu; XD07 AP POLE jalan hanya kalau GTOPAS berhasil. GTOPAS gagal → AP POLE tidak jalan.',
+        'Skenario 2, run tanpa baris GTOPAS (Max Case/Day, Pcs/Case, Case/Day, order type destinasi yang tetap): langsung XD07.',
+        'Sumber: view V_APPOLE_UPLOAD_KANBAN dan V_APPOLE_UPLOAD_EXPORT (user DB read-only) untuk run ID. View hanya membaca aturan yang ditulis saat Save.',
+        'Urutan file: EXPORT_PRE (LLM9Q880, Export part yang Kanban-nya OPERATION_TYPE 1) → KANBAN (LLM9Q910, OPERATION_TYPE 1–4) → EXPORT_POST (Export lainnya). Header 5 tidak di-upload. File tanpa baris tidak dibuat.',
+        'Nama file <template>_<run ID>_<urutan>_<nama>.xls, Current dan Next dalam satu file (Effective Month / Year per baris). Bot upload satu per satu dan menunggu hasil tiap file.',
+        'AP POLE cek per baris: total Max Shipping Box (RCS) ≤ Max Shipping Box Qty. Di dalam file Export, per part baris turun / hapus dulu (ROW_ORDER 1), baru naik / baru (ROW_ORDER 2).',
+        'Isi file: Operator ID P6, Transport Code 2, Part No. Kanban pakai "-", Export tanpa "-", Buyer-PD 5-2, hapus = 0.',
+        'Email notifikasi dari parent flow: SUCCESS / FAILED per run. Bot tidak menulis balik ke NSP; kalau FAILED, D/S klik [Re-send last Sync].' ] },
       { key: 'AB', title: 'Abnormality', points: [
-        { k: 'Login / upload AP POLE gagal, timeout, error AP POLE di satu baris', d: 'LOG4', s: 'Bot berhenti di file itu, email FAILED; file sebelumnya tetap di AP POLE', u: '[Re-send last Sync]; hubungi PIC' },
+        { k: 'AP POLE menolak file / login atau upload gagal / timeout', d: 'LOG4', s: 'Bot berhenti di file itu, FAILED; file sebelumnya tetap di AP POLE', u: '[Re-send last Sync]: run ID dan file yang sama' },
         { k: 'Error sistem lain', d: 'LOG5', s: 'Stop, ERROR', u: 'Hubungi PIC' } ] },
       { key: 'C', title: 'Catatan terbuka', points: [ 'Langkah upload di layar AP POLE (Common File Upload) TBC dengan tim AP POLE.' ] } ] },
 
@@ -439,9 +445,9 @@ const MSGS = {
 "id": "MSG10",
 "kind": "Display",
 "type": "Info",
-"event": "Hover 'Effective Start Date'",
-"cause": "Saved status is Active / Inactive",
-"message": "Can only be changed while the status is Candidate.",
+"event": "Hover 'Period' in Edit",
+"cause": "The part is registered",
+"message": "The period cannot be changed after the part is registered.",
 "action": "-"
 },
 {
@@ -925,8 +931,8 @@ const MSGS = {
 "kind": "Log",
 "type": "Info",
 "event": "Process 1: Part skipped",
-"cause": "Effective Start Date after the run date",
-"message": "Part No <PART_NO> skipped: effective start date <DATE>.",
+"cause": "Part registered for a later period",
+"message": "Part No <PART_NO> skipped: registered for period <PERIOD>.",
 "action": "system: Continue."
 },
 {
@@ -1035,8 +1041,8 @@ const MSGS = {
 "kind": "Log",
 "type": "Info",
 "event": "Batch start",
-"cause": "[Sync] / Period Rollover",
-"message": "RPA cross dock master to GTOPAS started. Run <RUN_ID>, <n> part(s).",
+"cause": "Parent flow: scenario 1 or Period Rollover",
+"message": "RPA cross dock master to GTOPAS started. Run <RUN_ID>, <n> row(s).",
 "action": "system: Write the log."
 },
 {
@@ -1045,7 +1051,7 @@ const MSGS = {
 "type": "Info",
 "event": "Batch end",
 "cause": "Bot finishes",
-"message": "RPA cross dock master to GTOPAS ended. Run <RUN_ID>, added <a>, deleted <d>, kept <k>, status <STATUS>.",
+"message": "RPA cross dock master to GTOPAS ended. Run <RUN_ID>, added <a>, deleted <d>, already done <k>, failed <f>, status <STATUS>.",
 "action": "system: Write the log."
 },
 {
@@ -1061,10 +1067,10 @@ const MSGS = {
 "id": "LOG4",
 "kind": "Log",
 "type": "Error",
-"event": "Error (try-catch)",
+"event": "Row failed / error (try-catch)",
 "cause": "Login, screen, timeout or GTOPAS error message",
-"message": "RPA to GTOPAS stopped at <STEP> <P_NO> <DEST_CODE>: <ERROR_DETAIL>.",
-"action": "system: Stop the bot.; user: Click [Re-send last Sync]; contact PIC if it persists."
+"message": "RPA to GTOPAS failed at <STEP> <P_NO> <DEST_CODE>: <ERROR_DETAIL>.",
+"action": "system: Row error: list the row and go to the next row. Login or screen error: stop. STATUS FAILED; in scenario 1 the parent flow does not start XD07.; user: Click [Re-send last Sync]; contact PIC if it persists."
 },
 {
 "id": "LOG5",
@@ -1091,7 +1097,7 @@ const MSGS = {
 "kind": "Log",
 "type": "Info",
 "event": "Batch start",
-"cause": "[Sync] / [Re-send last Sync] on XD01",
+"cause": "Parent flow: scenario 1 after GTOPAS OK, or scenario 2",
 "message": "RPA cross dock master to AP POLE started. Run <RUN_ID>, <n> file(s).",
 "action": "system: Write the log."
 },
@@ -1120,7 +1126,7 @@ const MSGS = {
 "event": "Error (try-catch)",
 "cause": "Login, upload screen, AP POLE error of a row, timeout",
 "message": "RPA to AP POLE stopped at <FILE_NAME> row <n>: <ERROR_DETAIL>. Files not uploaded: <list>.",
-"action": "system: Stop the bot.; user: Click [Re-send last Sync]; contact PIC if it persists."
+"action": "system: Stop the bot. STATUS FAILED; the next files are not uploaded.; user: Click [Re-send last Sync]; contact PIC if it persists."
 },
 {
 "id": "LOG5",

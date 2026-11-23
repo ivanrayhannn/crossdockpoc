@@ -14,6 +14,7 @@
 | 0.2 | FID Rayhan | 17-Nov-26 |  | Sync Status = No Sync only when a value sent to GTOPAS / AP POLE changed (Status to or from Active, Pcs/Case or Max Case/Day of an Active part); else kept (Sync Status rule of XD01, 17-Nov). |
 | 0.3 | FID Rayhan | 18-Nov-26 |  | Sheet "Active to Inactive" removed (18-Nov): Inactive parts with No Sync / Failed are taken by [Sync] by their status. |
 | 0.4 | FID Rayhan | 19-Nov-26 |  | Kanban Crossdock Master per period: the upload changes the ongoing period only (19-Nov). |
+| 0.5 | FID Rayhan | 23-Nov-26 |  | Staging per target through SP_STG_WRITE (4.9). Column Period replaces Effective Start Date: flag A ongoing or next period, flag E ongoing period (checks 7, 8). |
 
 ## 1. General
 
@@ -111,7 +112,7 @@ flowchart TB
 6. If all rows are valid, save to master table TB_M_PART_CANDIDATE (see 4.3).
   - Add: register the new part as Candidate.
   - Edit: update the changed values, including status Active <-> Inactive. A row with no change is skipped.
-  - Insert a staging row in TB_H_PART_CANDIDATE_STG_SYNC per changed Pcs/Case or Max Case/Day of an Active part; Active -> Inactive also writes an EXPORT DELETE (0) per destination (refer XD01 5.24). A row without change writes nothing.
+  - Call SP_STG_WRITE per changed value: Kanban EDIT of an Active part (OPERATION_TYPE 1 / 2 / 3); Active -> Inactive: the mapping of the period is deleted, Export DELETE (0) per destination, GTOPAS DELETE and the Kanban header (refer XD01 5.24). A row without change writes nothing.
 7. Create the result report and record the result (completed or rejected) in the upload log. The Kanban Crossdock Master screen shows the result to the user. Exit.
 
 ## 3. Data edit mapping
@@ -122,12 +123,12 @@ flowchart TB
 | Source field | Destination field | Description |
 |---|---|---|
 | Part Number | PART_NO |  |
+| Period (file) | PERIOD | Selected period: the ongoing period (default) or the next one |
 |  | PART_NAME | TB_M_PART_MASTER.PART_NAME by PART_NO |
 | Min MAD | MIN_MAD | From the file (mandatory) |
 | Pcs/Case | PCS_CASE |  |
 | Max Case/Day | MAX_CASE_DAY |  |
 |  | TOTAL_PCS_DAY | PCS_CASE x MAX_CASE_DAY |
-| Effective Start Date | EFFECTIVE_START_DATE |  |
 |  | PART_STATUS | Default : 'Candidate' (status column must be blank) |
 |  | LAST_SOURCE | Default : 'UPLOAD' |
 |  | LAST_UPLOAD_ID | UPLOAD_ID of this run |
@@ -148,7 +149,6 @@ flowchart TB
 | Pcs/Case | PCS_CASE |  |
 | Max Case/Day | MAX_CASE_DAY |  |
 |  | TOTAL_PCS_DAY | Recalculate : PCS_CASE x MAX_CASE_DAY |
-| Effective Start Date | EFFECTIVE_START_DATE | Only while PART_STATUS = 'Candidate' |
 | Status | PART_STATUS | Active <-> Inactive only; blank = not changed |
 |  | LAST_SOURCE | Set 'UPLOAD' |
 |  | LAST_UPLOAD_ID | UPLOAD_ID of this run |
@@ -190,36 +190,110 @@ flowchart TB
 |  | RESULT_FILE_PATH | Path of the result report .xlsx |
 |  | END_DT | Server system date and time |
 
-#### 5. Insert TB_H_PART_CANDIDATE_STG_SYNC – One row per changed Pcs/Case, Max Case/Day of an Active part; Active <-> Inactive: EXPORT rows of XD01 5.24
-- Source: Upload file (valid rows)
+#### 5. Insert TB_H_STG_APPOLE_KANBAN – SP_STG_WRITE (KANBAN): changed Pcs/Case or Max Case/Day of an Active part, Candidate -> Active, part of a new period; header 5 when only the destinations changed
+- Source: Upload file (SP_STG_WRITE, SOURCE UPLOAD)
 
 | Source field | Destination field | Description |
 |---|---|---|
-| - | HIST_ID | Identity |
-| PART_NO | PART_NO | Part of the change |
-| PART_NAME | PART_NAME | From TB_M_PART_CANDIDATE |
-| PERIOD | PERIOD | Period of the changed row |
+| - | STG_ID | Identity |
+| PERIOD | PERIOD | Period of the part row |
+| - | ACTION | 'ADD' (new part, new period) / 'EDIT' / 'KEEP' (header 5) |
 | PART_STATUS | PART_STATUS | Status of the part in the period |
-| - | LEVEL_TYPE | 'KANBAN' |
-| - | DEST_CODE | NULL |
-| - | ORDER_TYPE | NULL |
-| - | FIELD_NAME | 'PCS_CASE' / 'MAX_CASE_DAY' (one row per changed field) |
-| - | ACTION | 'ADD' (new part / new period) / 'EDIT' |
-| Value before | OLD_VALUE | NULL on ADD |
-| Value after | NEW_VALUE | New value |
-| - | SOURCE | 'UPLOAD' |
+| PERIOD | EFFECTIVE_MONTH_YEAR | MM/YYYY |
+| - | OPERATOR_ID | 'P6' |
+| PART_NO | PART_NO | With "-" |
+| PART_NAME | PART_NAME | From TB_M_PART_CANDIDATE |
+| PCS_CASE | SHIPPING_BOX_QTY | Value after the change |
+| MAX_CASE_DAY | MAX_SHIPPING_BOX_QTY | Value after the change |
+| - | MAX_ALLOWANCE_QTY | PCS_CASE x MAX_CASE_DAY |
+| - | OPERATION_TYPE | 1 Max down / 2 up / 3 same / 4 never sent, against the last Max sent (same period, else the latest earlier period); 5 header |
+| - | SOURCE | 'SCREEN' / 'UPLOAD' / 'BATCH' (caller) |
 | - | UPLOAD_ID | Upload ID when SOURCE = UPLOAD, else NULL |
-| - | GTOPAS_SYNC_STATUS | NULL (not for GTOPAS) |
-| - | APPOLE_SYNC_STATUS | '0' (Non Sync) |
-| - | APPOLE_SYNC_DT | NULL |
-| - | SEND_SEQ | NULL |
-| - | APPOLE_SYNC_RUN_ID | NULL |
-| - | GTOPAS_SYNC_DT | NULL |
-| - | GTOPAS_SYNC_RUN_ID | NULL |
+| - | SYNC_STATUS | '0'; '2' when the value equals the value already sent for the period |
+| - | SYNC_DT | NULL |
+| - | SYNC_RUN_ID | NULL |
 | - | CREATED_BY | Login user (XD05: batch user ID) |
-| - | CREATED_DT | System date-time |
+| - | CREATED_DT | Server date-time |
 | - | CHANGED_BY | NULL |
 | - | CHANGED_DT | NULL |
+
+#### 6. Insert TB_H_STG_APPOLE_EXPORT – SP_STG_WRITE (EXPORT): one row per added, changed or removed destination + order type
+- Source: Upload file (SP_STG_WRITE, SOURCE UPLOAD)
+
+| Source field | Destination field | Description |
+|---|---|---|
+| - | STG_ID | Identity |
+| PERIOD | PERIOD |  |
+| PART_NO | NSP_PART_NO | With "-" |
+| DEST_CODE | DEST_CODE | 7 digits |
+| - | ACTION | 'ADD' / 'EDIT' / 'DELETE' |
+| PERIOD | EFFECTIVE_MONTH_YEAR | MM/YYYY |
+| PART_NO | PART_NO | Without "-" |
+| DEST_CODE | BUYER_PD | 5-2 format |
+| ORDER_TYPE | ORDER_TYPE |  |
+| - | TRANSPORT_CODE | '2' |
+| CASE_DAY | MAX_SHIPPING_BOX_RCS | Value after the change; 0 for DELETE |
+| - | SOURCE | 'SCREEN' / 'UPLOAD' / 'BATCH' (caller) |
+| - | UPLOAD_ID | Upload ID when SOURCE = UPLOAD, else NULL |
+| - | SYNC_STATUS | '0'; '2' when the value equals the value already sent for the period |
+| - | SYNC_DT | NULL |
+| - | SYNC_RUN_ID | NULL |
+| - | CREATED_BY | Login user (XD05: batch user ID) |
+| - | CREATED_DT | Server date-time |
+| - | CHANGED_BY | NULL |
+| - | CHANGED_DT | NULL |
+
+#### 7. Insert TB_H_STG_GTOPAS – SP_STG_WRITE (EXPORT branch): the destination appears or disappears for the part and GTOPAS does not have that state yet
+- Source: Upload file (SP_STG_WRITE, SOURCE UPLOAD)
+
+| Source field | Destination field | Description |
+|---|---|---|
+| - | STG_ID | Identity |
+| PERIOD | PERIOD |  |
+| - | ACTION | 'ADD' / 'DELETE' |
+| - | DEPOT_CODE | '01' |
+| PART_NO | P_NO | With "-" |
+| DEST_CODE | DESTINATION_CODE |  |
+| - | MAKER_CODE | 'A' |
+| - | DOMESTIC_OVERSEAS | '2' |
+| - | TOPAS_ORDER_TYPE | '3' |
+| - | ORDER_TRANSPORTATION_CODE | '2' |
+| - | SOURCE | 'SCREEN' / 'UPLOAD' / 'BATCH' (caller) |
+| - | UPLOAD_ID | Upload ID when SOURCE = UPLOAD, else NULL |
+| - | SYNC_STATUS | '0' |
+| - | SYNC_DT | NULL |
+| - | SYNC_RUN_ID | NULL |
+| - | CREATED_BY | Login user (XD05: batch user ID) |
+| - | CREATED_DT | Server date-time |
+| - | CHANGED_BY | NULL |
+| - | CHANGED_DT | NULL |
+
+#### 8. Update TB_H_STG_APPOLE_KANBAN – SP_STG_WRITE: Older unsent row of the same key -> Superseded
+- Source: Upload file (SP_STG_WRITE, SOURCE UPLOAD)
+
+| Source field | Destination field | Description |
+|---|---|---|
+| - | SYNC_STATUS | '2' |
+| - | CHANGED_BY | Login user (XD05: batch user ID) |
+| - | CHANGED_DT | Server date-time |
+
+#### 9. Update TB_H_STG_APPOLE_EXPORT – SP_STG_WRITE: Older unsent row of the same key -> Superseded
+- Source: Upload file (SP_STG_WRITE, SOURCE UPLOAD)
+
+| Source field | Destination field | Description |
+|---|---|---|
+| - | SYNC_STATUS | '2' |
+| - | CHANGED_BY | Login user (XD05: batch user ID) |
+| - | CHANGED_DT | Server date-time |
+
+#### 10. Update TB_H_STG_GTOPAS – SP_STG_WRITE: Unsent row of the same part + destination -> Superseded
+- Source: Upload file (SP_STG_WRITE, SOURCE UPLOAD)
+
+| Source field | Destination field | Description |
+|---|---|---|
+| - | SYNC_STATUS | '2' |
+| - | CHANGED_BY | Login user (XD05: batch user ID) |
+| - | CHANGED_DT | Server date-time |
 
 ## 4. Function description
 
@@ -247,7 +321,7 @@ Every row is checked and all errors are collected, so the user can correct the f
 - If all rows are valid, the data is saved to TB_M_PART_CANDIDATE: flag A inserts a new part (status Candidate), flag E updates the changed values, including status Active <-> Inactive. Rows with no change are skipped.
 - The status of a Candidate part is changed only in the Edit part data modal on the screen, not by upload.
 - Every inserted or changed part gets a history record per changed field in TB_H_PART_CANDIDATE (event ADD / EDIT, source UPLOAD, UPLOAD_ID of this run; refer Appendix).
-- Every changed value of an Active part gets a staging row (TB_H_PART_CANDIDATE_STG_SYNC, SOURCE UPLOAD, UPLOAD_ID); the part is sent by the next [Sync]. A new (Candidate) part gets no staging row.
+- Every changed value of an Active part goes to the staging tables through SP_STG_WRITE (SOURCE UPLOAD, UPLOAD_ID); the part is sent by the next [Sync]. A new (Candidate) part gets no staging row.
 - A result report (.xlsx) is created for both cases.
 
 | No | Check | Column |
@@ -258,8 +332,8 @@ Every row is checked and all errors are collected, so the user can correct the f
 | 4 | Part No appears only once in the file. | Part Number |
 | 5 | Min MAD is a whole number, 0 or more, and Pcs/Case and Max Case/Day are whole numbers greater than 0; all three are required on every row. | Min MAD, Pcs/Case, Max Case/Day |
 | 6 | Status: flag A must be blank (a new part is always Candidate). Flag E: a Candidate part must stay Candidate (blank or Candidate); an Active part may be changed to Inactive and an Inactive part to Active; no part can be changed to Candidate. | Status |
-| 7 | Effective Start Date is required when the part status is Candidate (always for flag A) and must be today or later when new or changed. | Effective Start Date |
-| 8 | Flag E: Effective Start Date can only change while the part status is Candidate. | Effective Start Date |
+| 7 | Period is required for flag A and must be the ongoing period or the next period (YYYYMM). The part takes effect from it; when the ongoing period is given after day D, the row is also written for the next period. | Period |
+| 8 | Flag E: Period must be the ongoing period (the period of the export). A part registered for the next period cannot be changed until its period becomes the ongoing period. | Period |
 | 9 | Flag E: Max Case/Day is not below the total Case/Day already mapped per destination in the ongoing calculation period of Export Crossdock Master (TB_M_PART_CANDIDATE_DEST) (e.g. mapped 100, new Max Case/Day 80 is rejected). The user must first reduce the mapping in the Export Crossdock Master sub-menu, then lower Max Case/Day in Kanban Crossdock Master. | Max Case/Day |
 
 ### 4.4 Period (19-Nov)
@@ -268,15 +342,16 @@ Every row is checked and all errors are collected, so the user can correct the f
 - The upload changes the rows of the ongoing period only; Next (made by XD05) and past periods are not changed.
 - Max Case/Day of a period may not be below the mapped total of that period (message 14): to lower it, D/S first reduces the destinations on the Export Crossdock Master, then changes Max Case/Day on the Kanban Crossdock Master.
 
-### 4.9 Staging rows for the sync (22-Nov)
+### 4.9 Staging rows for the sync
 
-- Every value change inserts a row in TB_H_PART_CANDIDATE_STG_SYNC in the same transaction as the master update (a save without a value change writes no row): PART_NO, PART_NAME, PERIOD, PART_STATUS, LEVEL_TYPE, DEST_CODE / ORDER_TYPE (EXPORT), FIELD_NAME, ACTION, OLD_VALUE, NEW_VALUE, SOURCE, UPLOAD_ID, APPOLE_SYNC_STATUS 0, CREATED_BY / CREATED_DT.
-- KANBAN rows (Kanban Crossdock Master): EDIT of PCS_CASE / MAX_CASE_DAY per changed field; GTOPAS_SYNC_STATUS NULL.
-- EXPORT rows (Export Crossdock Master): ADD / EDIT / DELETE of CASE_DAY per destination + order type. ADD and DELETE (destination appears / disappears) get GTOPAS_SYNC_STATUS 0; EDIT gets NULL. DELETE: NEW_VALUE 0.
-- Status change by Procurement (Kanban Crossdock Master): Active -> Inactive writes a DELETE (NEW 0) for every destination of the part, PART_STATUS column Inactive (no row for the status itself; the part stays in the AP POLE Kanban). Inactive -> Active: Procurement maps the destinations again on the screen (EXPORT ADD rows, PART_STATUS Active).
-- Total Case/Day of the destinations > Max Case/Day of the part (same period): error on save, nothing is saved (message no. 14 / 20). To lower Max, the user lowers the destinations first (Export), then Max (Kanban).
-- Key of a change = PART_NO + PERIOD + LEVEL_TYPE + DEST_CODE + ORDER_TYPE + FIELD_NAME.
-- Decisions and simulation: deliverables/function_list_v2/erd/proposal_staging_sync (Summary_Staging_Sync_Decisions.md, simulation/Full_Sync_Flow_Simulation.xlsx).
+- Every save calls the stored procedure SP_STG_WRITE once per changed value, in the same transaction and after the master tables are updated. A save without a changed value writes nothing.
+- Kanban (TB_H_STG_APPOLE_KANBAN): a change of Pcs/Case or Max Case/Day of an Active part writes a row with the values after the change (ACTION EDIT); Candidate -> Active and a part of a new period write ACTION ADD. OPERATION_TYPE compares the new Max with the last Max sent to AP POLE (same period, else the latest earlier period): 1 = Max down, 2 = Max up, 3 = Max same, 4 = never sent.
+- Export (TB_H_STG_APPOLE_EXPORT): one row per added (ADD), changed (EDIT) or removed (DELETE, Max Shipping Box (RCS) 0) destination + order type. Active -> Inactive writes DELETE (0) for every destination of the part.
+- GTOPAS (TB_H_STG_GTOPAS): a row only when the destination appears or disappears for the part (any order type) and GTOPAS does not have that state yet. A Case/Day change or an order type change of a destination that stays writes no GTOPAS row.
+- Header: an Export change of a part + period without an unsent Kanban row writes the Kanban header with ACTION KEEP and OPERATION_TYPE 5 (current Kanban values, not uploaded). So every part of a run has one Kanban row that sets its upload order.
+- Superseded: a new row of a key marks the older unsent row of the same key SYNC_STATUS 2. A value set back to the value already sent for the period gets SYNC_STATUS 2 too (nothing to send). Keys: Kanban PERIOD + PART_NO; Export PERIOD + NSP_PART_NO + DEST_CODE + ORDER_TYPE; GTOPAS PERIOD + P_NO + DESTINATION_CODE.
+- SOURCE UPLOAD, UPLOAD_ID of the upload. The part is sent by the next [Sync] (refer XD01 5.24).
+- Rules and simulation: deliverables/function_list_v2/erd/proposal_staging_sync (Proposal_Tables_Staging_Per_Target.xlsx, simulation/Staging_Header_Order.html, simulation/Staging_Per_Target_Full_Flow_Simulation.xlsx).
 
 ## 5. Logging messages
 
@@ -304,7 +379,7 @@ Every row is checked and all errors are collected, so the user can correct the f
 | Max Case/Day | Max Case/Day |
 | Status | Candidate / Active / Inactive. Flag A: blank. Flag E: a Candidate part stays Candidate (blank or Candidate); Active <-> Inactive allowed; never Candidate for an Active or Inactive part. |
 | Upload (A/E) | A = Add, E = Edit |
-| Effective Start Date | DD-Mon-YYYY |
+| Period | YYYYMM: the ongoing period or the next period (flag A); the ongoing period (flag E) |
 
 Sample upload scenarios (master data, accepted files, rejected files): see sheet Sample Input.
 
@@ -316,14 +391,13 @@ Kanban Crossdock Master: one record per part and calculation period (19-Nov; bef
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
 | PART_NO | VARCHAR(TBD) | Y | N | Part number; length follows TB_M_PART_MASTER |
-| PERIOD | CHAR(6) | Y | N | Calculation period YYYYMM (19-Nov): one row per part and period. Current: screen / upload; Next: made by XD05 on day D (view only until day 1); Past: view only |
+| PERIOD | CHAR(6) | Y | N | Calculation period YYYYMM: one row per part and period. The first row of a part is the period it is registered in (Add Part: the ongoing period or the next one); the part takes effect from it. Current: screen and upload; Next: made by XD05 on day D, view only until day 1; Past: view only |
 | PART_NAME | VARCHAR(TBD) |  | N | Retrieved from TB_M_PART_MASTER by PART_NO |
 | MIN_MAD | INT |  | N | Minimum MAD (mandatory); reference compared with the MAD result of the calculation |
 | PCS_CASE | INT |  | N | Pieces per case (> 0) |
 | MAX_CASE_DAY | INT |  | N | Total Case/Day of the part (> 0) |
 | TOTAL_PCS_DAY | INT |  | N | PCS_CASE x MAX_CASE_DAY |
-| EFFECTIVE_START_DATE | DATE |  | Y | Effective start date; required while the part is Candidate |
-| PART_STATUS | VARCHAR(TBD) |  | N | Candidate / Active / Inactive. Candidate -> Active: XD05 (Next period). Active -> Inactive and Inactive -> Active: Procurement on the Kanban Crossdock Master. The sync status of the part is in TB_H_PART_CANDIDATE_STG_SYNC (22-Nov) |
+| PART_STATUS | VARCHAR(TBD) |  | N | Candidate / Active / Inactive. Candidate -> Active: XD05 (new period) or Procurement on the screen (ongoing period). Active <-> Inactive: XD05 or Procurement (screen, upload). No part goes back to Candidate |
 | LAST_SOURCE | VARCHAR(TBD) |  | N | CALC / SCREEN / UPLOAD |
 | LAST_UPLOAD_ID | VARCHAR(TBD) |  | Y | Upload that last changed the record |
 | CREATED_BY | VARCHAR(TBD) |  | N | User who created the record |
@@ -332,7 +406,7 @@ Kanban Crossdock Master: one record per part and calculation period (19-Nov; bef
 | CHANGED_DT | DATETIME |  | N | Last changed date and time |
 
 #### TB_H_PART_CANDIDATE (history, proposed)
-History of every change of a crossdock part for the History setting of XD01 (Add / Edit by screen or upload, mapping changes, status changes and mappings made by the calculation batches). The sync to GTOPAS / AP POLE is not recorded here: it is in TB_H_PART_CANDIDATE_STG_SYNC (22-Nov). No retention limit.
+History of every change of a crossdock part for the History setting of XD01 (Add / Edit by screen or upload, mapping changes, status changes and mappings made by the calculation batches). The sync to GTOPAS / AP POLE is not recorded here: it is in the staging tables (TB_H_STG_APPOLE_KANBAN, TB_H_STG_APPOLE_EXPORT, TB_H_STG_GTOPAS) (22-Nov). No retention limit.
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
@@ -344,97 +418,144 @@ History of every change of a crossdock part for the History setting of XD01 (Add
 | UPLOAD_ID | VARCHAR(TBD) |  | Y | Upload of the change (Log); NULL when not from an upload |
 | DEST_CODE | CHAR(7) |  | Y | Destination code (7 digits) for MAPPING; NULL for other events |
 | ORDER_TYPE | VARCHAR(2) |  | Y | Order Type of the destination row for MAPPING (with DEST_CODE); NULL for other events (20-Nov) |
-| FIELD_NAME | VARCHAR(30) |  | N | Changed field: PCS_CASE, MAX_CASE_DAY, MIN_MAD, PART_STATUS, EFFECTIVE_START_DATE, CASE_DAY |
+| FIELD_NAME | VARCHAR(30) |  | N | Changed field: PCS_CASE, MAX_CASE_DAY, MIN_MAD, PART_STATUS, CASE_DAY |
 | OLD_VALUE | VARCHAR(255) |  | Y | Value before the change; NULL for ADD or an added destination |
 | NEW_VALUE | VARCHAR(255) |  | Y | Value after the change; NULL for a removed destination |
 | REMARK | VARCHAR(500) |  | Y | Free text |
 | CREATED_BY | VARCHAR(20) |  | N | User who made the change (batch user ID for BATCH) |
 | CREATED_DT | DATETIME |  | N | Date and time of the change |
 
-#### TB_H_PART_CANDIDATE_STG_SYNC (history, proposed)
-Staging of every value change of the Kanban / Export Crossdock Master for the sync to AP POLE (XD07) and GTOPAS (XD06) (22-Nov). Inserted by XD01 (screen), XD02 / XD03 (upload) and XD05 in the same transaction as the master update; updated only by [Sync], [Re-send last Sync] and the Period Rollover. The RPA reads only this table. TB_H_PART_CANDIDATE (screen history) is kept as it is.
+#### TB_H_STG_APPOLE_KANBAN (history, proposed)
+AP POLE Kanban rows in the format of the upload file LLM9Q910, one row per Kanban change of a part + period, plus the header row (OPERATION_TYPE 5) when only the destinations changed. Written by SP_STG_WRITE (XD01, XD02, XD05); SYNC_STATUS set by SP_STG_SYNC. Read by XD07 through V_APPOLE_UPLOAD_KANBAN and V_APPOLE_UPLOAD_EXPORT.
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
-| HIST_ID | BIGINT | Y | N | Running number (identity): order of the changes |
-| PART_NO | VARCHAR(TBD) |  | N | Part number (NSP format, with "-"); FK1 (PART_NO, PERIOD) -> TB_M_PART_CANDIDATE |
-| PART_NAME | VARCHAR(TBD) |  | N | Part Name copied from TB_M_PART_CANDIDATE at the insert (Part Name of the Kanban upload file) |
-| PERIOD | CHAR(6) |  | N | Calculation period YYYYMM; Effective Month / Year of the AP POLE upload |
-| PART_STATUS | VARCHAR(10) |  | N | Status of the part in this period when the row is written (Active / Inactive). Inactive: the part stays in the AP POLE Kanban, its Export rows are DELETE with NEW_VALUE 0 |
-| LEVEL_TYPE | VARCHAR(6) |  | N | KANBAN = parent (Kanban Crossdock Master), EXPORT = destination (Export Crossdock Master) |
-| DEST_CODE | CHAR(7) |  | Y | EXPORT only: destination code. No FK (a DELETE row points to a removed destination) |
-| ORDER_TYPE | VARCHAR(2) |  | Y | EXPORT only: '**', 'C', '9', 'V' |
-| FIELD_NAME | VARCHAR(30) |  | N | KANBAN: PCS_CASE, MAX_CASE_DAY. EXPORT: CASE_DAY |
-| ACTION | VARCHAR(6) |  | N | ADD / EDIT / DELETE |
-| OLD_VALUE | VARCHAR(10) |  | Y | Value before the change; NULL on ADD |
-| NEW_VALUE | VARCHAR(10) |  | Y | Value after the change; 0 on DELETE |
-| SOURCE | VARCHAR(6) |  | N | BATCH (XD05) / SCREEN / UPLOAD |
+| STG_ID | BIGINT | Y | N | Running number: order of the inserts |
+| PERIOD | CHAR(6) |  | N | Calculation period YYYYMM. FK1 (PART_NO, PERIOD) -> TB_M_PART_CANDIDATE |
+| ACTION | VARCHAR(6) |  | N | ADD (new part, new period) / EDIT (Pcs/Case or Max changed) / KEEP (header written by an Export save, Kanban unchanged) |
+| PART_STATUS | VARCHAR(10) |  | N | Active / Inactive in the period when the row is written (an Inactive part stays in the AP POLE Kanban) |
+| EFFECTIVE_MONTH_YEAR | CHAR(7) |  | N | MM/YYYY of PERIOD. File / screen column: Effective Month / Year |
+| OPERATOR_ID | CHAR(2) |  | N | Always P6. File / screen column: Operator ID. Default 'P6' |
+| PART_NO | VARCHAR(TBD) |  | N | Part number with "-" (NSP format); FK1. File / screen column: Part No. |
+| PART_NAME | VARCHAR(TBD) |  | N | From TB_M_PART_CANDIDATE at the insert. File / screen column: Part Name |
+| SHIPPING_BOX_QTY | NUMBER(5) |  | N | Pcs/Case. File / screen column: Shipping Box Qty |
+| MAX_SHIPPING_BOX_QTY | NUMBER(5) |  | N | Max Case/Day. File / screen column: Max Shipping Box Qty |
+| MAX_ALLOWANCE_QTY | NUMBER(9) |  | N | Shipping Box Qty x Max Shipping Box Qty. File / screen column: Max Allowance Qty |
+| OPERATION_TYPE | NUMBER(1) |  | N | Header of the part, set by SP_STG_WRITE at the save: 1 = Max down, 2 = Max up, 3 = Max same (only Pcs/Case changed, or a new period with the same Max), 4 = never sent, 5 = Kanban unchanged, only the destinations changed (ACTION KEEP). 1 to 4 against the last Max sent: same period, else the latest earlier period. Upload: 1 -> the Export rows of the part in EXPORT_PRE before KANBAN; 2, 3, 4 -> KANBAN then EXPORT_POST; 5 -> EXPORT_POST only, the row is not in the KANBAN file |
+| SOURCE | VARCHAR(6) |  | N | SCREEN / UPLOAD / BATCH (XD05) |
 | UPLOAD_ID | VARCHAR(TBD) |  | Y | Upload of the Kanban or Export Excel (Log); NULL when SOURCE is not UPLOAD |
-| APPOLE_SYNC_STATUS | CHAR(1) |  | N | 0 = Non Sync (default), 1 = Sync, 2 = Superseded (an earlier row of the same key, not sent). The part + period is AP POLE Non Sync while it has a row with 0 |
-| APPOLE_SYNC_DT | DATETIME |  | Y | Time of the [Sync] that sent the row to AP POLE (status 1 and 2); Last Sent AP POLE = latest value |
-| SEND_SEQ | NUMBER(1) |  | Y | Upload file: 1 = Export (LLM9Q880) before the Kanban file, only for a part whose Max goes down; 2 = Kanban (LLM9Q910); 3 = Export after the Kanban file (every other part). Set at [Sync] on the last row of each key; NULL for 2 and for a key that ends on its first value |
-| APPOLE_SYNC_RUN_ID | VARCHAR(14) |  | Y | AP POLE run ID YYYYMMDDHHMMSS; [Re-send last Sync] takes the rows of the last run |
-| GTOPAS_SYNC_STATUS | CHAR(1) |  | Y | NULL = not for GTOPAS (KANBAN rows, EXPORT EDIT). 0 = Non Sync: EXPORT ADD / DELETE (destination appears / disappears). 1 = Sync: [Sync] for the Current period, the Period Rollover for the new period |
-| GTOPAS_SYNC_DT | DATETIME |  | Y | Time of the [Sync] / Period Rollover that sent the row to GTOPAS; Last Sent GTOPAS = latest value |
-| GTOPAS_SYNC_RUN_ID | VARCHAR(14) |  | Y | GTOPAS run ID ([Sync], [Re-send last Sync] or the Period Rollover) |
+| SYNC_STATUS | CHAR(1) |  | N | 0 = to send, 1 = sent, 2 = Superseded at the save (a newer row of the key, or back to the value already sent). Set by SP_STG_WRITE (0, 2) and SP_STG_SYNC / Period Rollover (1). Default '0' |
+| SYNC_DT | DATETIME |  | Y | Time of the [Sync] / Period Rollover that sent the row; Last Sent on the screen = latest value |
+| SYNC_RUN_ID | VARCHAR(14) |  | Y | Run ID YYYYMMDDHHMMSS; [Re-send last Sync] sends the rows of the last run again |
 | CREATED_BY | VARCHAR(20) |  | N | User of the save / upload, or XD05BATCH |
 | CREATED_DT | DATETIME |  | N | Time of the insert (same transaction as the master update) |
-| CHANGED_BY | VARCHAR(20) |  | Y | User of [Sync] / [Re-send last Sync], XD05BATCH for the Period Rollover |
+| CHANGED_BY | VARCHAR(20) |  | Y | User of the save that made the row Superseded, of [Sync], or XD05BATCH (Period Rollover) |
+| CHANGED_DT | DATETIME |  | Y | Time of that update |
+
+#### TB_H_STG_APPOLE_EXPORT (history, proposed)
+AP POLE Export rows in the format of the upload file LLM9Q880, one row per added, changed or removed destination + order type of a part + period. Written by SP_STG_WRITE (XD01, XD03, XD05); SYNC_STATUS set by SP_STG_SYNC. Read by XD07 through V_APPOLE_UPLOAD_EXPORT.
+
+| Column | Type | PK | Null | Description |
+|---|---|---|---|---|
+| STG_ID | BIGINT | Y | N | Running number: order of the inserts |
+| PERIOD | CHAR(6) |  | N | Calculation period YYYYMM. FK1 (NSP_PART_NO, PERIOD) -> TB_M_PART_CANDIDATE |
+| NSP_PART_NO | VARCHAR(TBD) |  | N | Part number with "-" (key back to NSP); FK1 |
+| DEST_CODE | CHAR(7) |  | N | Destination code, 7 digits. No FK: a DELETE row points to a removed destination |
+| ACTION | VARCHAR(6) |  | N | ADD / EDIT / DELETE (DELETE = Max Shipping Box (RCS) 0) |
+| EFFECTIVE_MONTH_YEAR | CHAR(7) |  | N | MM/YYYY of PERIOD. File / screen column: Effective Month / Year |
+| PART_NO | VARCHAR(TBD) |  | N | Part number without "-". File / screen column: Part No. |
+| BUYER_PD | CHAR(8) |  | N | DEST_CODE in 5-2 format. File / screen column: Buyer-PD |
+| ORDER_TYPE | VARCHAR(2) |  | N | '**', 'C', '9', 'V' (system master). File / screen column: Order Type |
+| TRANSPORT_CODE | CHAR(1) |  | N | Always 2. File / screen column: Transport Code. Default '2' |
+| MAX_SHIPPING_BOX_RCS | NUMBER(5) |  | N | Case/Day of the destination; 0 = delete. File / screen column: Max Shipping Box (RCS) |
+| SOURCE | VARCHAR(6) |  | N | SCREEN / UPLOAD / BATCH (XD05) |
+| UPLOAD_ID | VARCHAR(TBD) |  | Y | Upload of the Kanban or Export Excel (Log); NULL when SOURCE is not UPLOAD |
+| SYNC_STATUS | CHAR(1) |  | N | 0 = to send, 1 = sent, 2 = Superseded at the save (a newer row of the key, or back to the value already sent). Set by SP_STG_WRITE (0, 2) and SP_STG_SYNC / Period Rollover (1). Default '0' |
+| SYNC_DT | DATETIME |  | Y | Time of the [Sync] / Period Rollover that sent the row; Last Sent on the screen = latest value |
+| SYNC_RUN_ID | VARCHAR(14) |  | Y | Run ID YYYYMMDDHHMMSS; [Re-send last Sync] sends the rows of the last run again |
+| CREATED_BY | VARCHAR(20) |  | N | User of the save / upload, or XD05BATCH |
+| CREATED_DT | DATETIME |  | N | Time of the insert (same transaction as the master update) |
+| CHANGED_BY | VARCHAR(20) |  | Y | User of the save that made the row Superseded, of [Sync], or XD05BATCH (Period Rollover) |
+| CHANGED_DT | DATETIME |  | Y | Time of that update |
+
+#### TB_H_STG_GTOPAS (history, proposed)
+GTOPAS WVJA5204 rows: a part + destination to add or delete, written by SP_STG_WRITE only when the destination appears or disappears for the part (any order type) and GTOPAS does not have that state yet. Sent by [Sync] (Current period) or the Period Rollover (new Current period). Read by XD06.
+
+| Column | Type | PK | Null | Description |
+|---|---|---|---|---|
+| STG_ID | BIGINT | Y | N | Running number: order of the inserts |
+| PERIOD | CHAR(6) |  | N | Calculation period YYYYMM (GTOPAS has no period: [Sync] sends the Current period, the Period Rollover the new Current). FK1 (P_NO, PERIOD) -> TB_M_PART_CANDIDATE |
+| ACTION | VARCHAR(6) |  | N | ADD / DELETE: the destination appears or disappears for the part (any order type). No row for a Case/Day change or for a state GTOPAS already has. File / screen column: Add / Delete (MT = DEL) |
+| DEPOT_CODE | CHAR(2) |  | N | Always 01. File / screen column: Depot Code. Default '01' |
+| P_NO | VARCHAR(TBD) |  | N | Part number with "-"; FK1. File / screen column: P/No. |
+| DESTINATION_CODE | CHAR(7) |  | N | 7-digit code, the same in NSP and GTOPAS. File / screen column: Destination Code |
+| MAKER_CODE | CHAR(1) |  | N | Always A. File / screen column: Maker Code. Default 'A' |
+| DOMESTIC_OVERSEAS | CHAR(1) |  | N | Always 2. File / screen column: Domestic/Overseas. Default '2' |
+| TOPAS_ORDER_TYPE | CHAR(1) |  | N | Always 3. File / screen column: TOPAS Order Type. Default '3' |
+| ORDER_TRANSPORTATION_CODE | CHAR(1) |  | N | Always 2. File / screen column: Order Transportation Code. Default '2' |
+| SOURCE | VARCHAR(6) |  | N | SCREEN / UPLOAD / BATCH (XD05) |
+| UPLOAD_ID | VARCHAR(TBD) |  | Y | Upload of the Kanban or Export Excel (Log); NULL when SOURCE is not UPLOAD |
+| SYNC_STATUS | CHAR(1) |  | N | 0 = to send, 1 = sent, 2 = Superseded at the save (a newer row of the key, or back to the value already sent). Set by SP_STG_WRITE (0, 2) and SP_STG_SYNC / Period Rollover (1). Default '0' |
+| SYNC_DT | DATETIME |  | Y | Time of the [Sync] / Period Rollover that sent the row; Last Sent on the screen = latest value |
+| SYNC_RUN_ID | VARCHAR(14) |  | Y | Run ID YYYYMMDDHHMMSS; [Re-send last Sync] sends the rows of the last run again |
+| CREATED_BY | VARCHAR(20) |  | N | User of the save / upload, or XD05BATCH |
+| CREATED_DT | DATETIME |  | N | Time of the insert (same transaction as the master update) |
+| CHANGED_BY | VARCHAR(20) |  | Y | User of the save that made the row Superseded, of [Sync], or XD05BATCH (Period Rollover) |
 | CHANGED_DT | DATETIME |  | Y | Time of that update |
 
 ## Sample Input
 
 **Sample upload scenarios - Kanban Crossdock Master Upload**
 
-- Each scenario is a separate upload file. Today = 13-Sep-2026, mapping of the ongoing calculation period = Sep 2026.
+- Each scenario is a separate upload file. Today = 13-Sep-2026, ongoing period = 202609 (Sep 2026), next period = 202610.
 - Input columns follow sheet Upload of the Export Excel; a blank cell is a blank value in the file.
 
 ### A. Master data before upload
 
-| Part No | Status | Min MAD | Pcs/Case | Max Case/Day | Effective Date | Mapped 9722D10 | Mapped 9811110 | Mapped 9715310 | Mapped total |
+| Part No | Status | Min MAD | Pcs/Case | Max Case/Day | Period | Mapped 9722D10 | Mapped 9811110 | Mapped 9715310 | Mapped total |
 |---|---|---|---|---|---|---|---|---|---|
-| PART-A | Active | 800 | 60 | 24 | 01-Aug-2026 | 12 | 8 | 4 | 24 |
-| PART-C | Active | 200 | 10 | 30 | 01-Aug-2026 |  | 12 | 18 | 30 |
-| PART-G | Active | 150 | 50 | 22 | 01-Aug-2026 |  |  |  | 0 |
-| PART-I | Candidate | 300 | 15 | 20 | 15-Sep-2026 |  |  |  | 0 |
+| PART-A | Active | 800 | 60 | 24 | 202609 | 12 | 8 | 4 | 24 |
+| PART-C | Active | 200 | 10 | 30 | 202609 |  | 12 | 18 | 30 |
+| PART-G | Active | 150 | 50 | 22 | 202609 |  |  |  | 0 |
+| PART-I | Candidate | 300 | 15 | 20 | 202609 |  |  |  | 0 |
 | PART-M01 | (not registered) |  |  |  |  |  |  |  |  |
 | PART-M02 | (not registered) |  |  |  |  |  |  |  |  |
 | PART-M03 | (not registered) |  |  |  |  |  |  |  |  |
 
 ### B. Normal scenarios (file accepted)
 
-| No | Scenario | Part Number | Min MAD | Pcs/Case | Max Case/Day | Status | Upload (A/E) | Effective Start Date | Expected result |
+| No | Scenario | Part Number | Min MAD | Pcs/Case | Max Case/Day | Status | Upload (A/E) | Period | Expected result |
 |---|---|---|---|---|---|---|---|---|---|
-| N1 | Add a new part | PART-M01 | 300 | 20 | 15 |  | A | 14-Sep-2026 | Inserted. Status Candidate, Total Pcs/Day 300, no staging row (Candidate), Part Name from TB_M_PART_MASTER. |
-| N2 | Add another part, later date | PART-M02 | 500 | 12 | 40 |  | A | 16-Sep-2026 | Inserted. Total Pcs/Day 480. Both N1 and N2 can be in one file. |
-| N3 | Edit a Candidate part, change values and effective date | PART-I | 300 | 15 | 18 | Candidate | E | 20-Sep-2026 | Updated. Max Case/Day 20 -> 18, effective date changed, Total Pcs/Day 270, staging rows MAX_CASE_DAY (AP POLE Non Sync). |
-| N4 | Edit an Active part, raise Max Case/Day | PART-A | 800 | 60 | 30 |  | E |  | Updated. Max Case/Day 24 -> 30, Total Pcs/Day 1,800, staging row MAX_CASE_DAY 24 -> 30 (AP POLE Non Sync). Mapping is not changed. |
+| N1 | Add a new part | PART-M01 | 300 | 20 | 15 |  | A | 202609 | Inserted in 202609. Status Candidate, Total Pcs/Day 300, no staging row (Candidate), Part Name from TB_M_PART_MASTER. |
+| N2 | Add another part into the next period | PART-M02 | 500 | 12 | 40 |  | A | 202610 | Inserted in 202610 (next period, view only until 1-Oct). Total Pcs/Day 480. N1 and N2 can be in one file. |
+| N3 | Edit a Candidate part, change values | PART-I | 300 | 15 | 18 | Candidate | E | 202609 | Updated. Max Case/Day 20 -> 18, Total Pcs/Day 270. No staging row (Candidate part). |
+| N4 | Edit an Active part, raise Max Case/Day | PART-A | 800 | 60 | 30 |  | E |  | Updated. Max Case/Day 24 -> 30, Total Pcs/Day 1,800. Kanban staging row EDIT, OPERATION_TYPE 2 (AP POLE Non Sync). Mapping is not changed. |
 | N5 | Edit with the same values as the master | PART-A | 800 | 60 | 24 | Active | E |  | NO CHANGE. Row skipped, no staging row. |
-| N6 | File with only some parts (one row) | PART-I | 300 | 15 | 18 | Candidate | E | 20-Sep-2026 | Only PART-I is processed. PART-A, C, G are not in the sheet and are not changed. |
-| N7 | Lower Max Case/Day after the mapping was reduced to 20 in Export Crossdock Master | PART-A | 800 | 60 | 20 |  | E |  | Updated. Max Case/Day 24 -> 20 (not below mapped 20). |
-| N8 | Change an Active part to Inactive | PART-G | 150 | 50 | 22 | Inactive | E |  | Updated. Status Active -> Inactive, staging rows MAX_CASE_DAY (AP POLE Non Sync). Inactive -> Active works the same way. |
+| N6 | File with only some parts (one row) | PART-I | 300 | 15 | 18 | Candidate | E | 202609 | Only PART-I is processed. PART-A, C, G are not in the sheet and are not changed. |
+| N7 | Lower Max Case/Day after the mapping was reduced to 20 in Export Crossdock Master | PART-A | 800 | 60 | 20 |  | E |  | Updated. Max Case/Day 24 -> 20 (not below mapped 20). Kanban staging row EDIT, OPERATION_TYPE 1: its Export rows go before the Kanban file. |
+| N8 | Change an Active part to Inactive | PART-G | 150 | 50 | 22 | Inactive | E |  | Updated. Status Active -> Inactive, the mapping of the period is deleted: Export DELETE (0) per destination, GTOPAS DELETE, Kanban header 5 (AP POLE and GTOPAS Non Sync). Inactive -> Active: no staging row until the destinations are mapped again. |
 
 ### C. Error scenarios (whole file rejected, nothing saved)
 
-| No | Scenario | Part Number | Min MAD | Pcs/Case | Max Case/Day | Status | Upload (A/E) | Effective Start Date | Error (4.2 check no.) |
+| No | Scenario | Part Number | Min MAD | Pcs/Case | Max Case/Day | Status | Upload (A/E) | Period | Error (4.2 check no.) |
 |---|---|---|---|---|---|---|---|---|---|
-| E1 | Flag is not A or E | PART-I | 300 | 15 | 18 |  | X | 20-Sep-2026 | Check 1: upload must be A or E. |
+| E1 | Flag is not A or E | PART-I | 300 | 15 | 18 |  | X | 202609 | Check 1: upload must be A or E. |
 | E2 | Part not in part master | PART-Z99 | 100 | 10 | 10 |  | E |  | Check 2: Part No not found in TB_M_PART_MASTER. |
-| E3 | Add a part that is already registered | PART-A | 800 | 60 | 24 |  | A | 14-Sep-2026 | Check 3: Part No already registered, use flag E. |
+| E3 | Add a part that is already registered | PART-A | 800 | 60 | 24 |  | A | 202609 | Check 3: Part No already registered, use flag E. |
 | E4 | Edit a part that is not registered | PART-M03 | 300 | 20 | 15 |  | E |  | Check 3: Part No not registered, use flag A. |
-| E5 | Same part twice in the file (row 1) | PART-I | 300 | 15 | 18 | Candidate | E | 20-Sep-2026 | Check 4: Part No appears more than once. |
-| E5 | Same part twice in the file (row 2) | PART-I | 300 | 15 | 19 | Candidate | E | 20-Sep-2026 | Check 4: Part No appears more than once. |
-| E6 | Invalid number | PART-M03 | 300 | 0 | 15 |  | A | 14-Sep-2026 | Check 5: Pcs/Case must be greater than 0. A blank Min MAD, Pcs/Case or Max Case/Day is also an error. |
-| E7 | Change the status of a Candidate part | PART-I | 300 | 15 | 20 | Active | E | 15-Sep-2026 | Check 6: the status of a Candidate part cannot be changed by upload. Change it in the Edit part data modal. |
+| E5 | Same part twice in the file (row 1) | PART-I | 300 | 15 | 18 | Candidate | E | 202609 | Check 4: Part No appears more than once. |
+| E5 | Same part twice in the file (row 2) | PART-I | 300 | 15 | 19 | Candidate | E | 202609 | Check 4: Part No appears more than once. |
+| E6 | Invalid number | PART-M03 | 300 | 0 | 15 |  | A | 202609 | Check 5: Pcs/Case must be greater than 0. A blank Min MAD, Pcs/Case or Max Case/Day is also an error. |
+| E7 | Change the status of a Candidate part | PART-I | 300 | 15 | 20 | Active | E | 202609 | Check 6: the status of a Candidate part cannot be changed by upload. Change it in the Edit part data modal. |
 | E8 | Change an Active part to Candidate | PART-C | 200 | 10 | 30 | Candidate | E |  | Check 6: no part can be changed to Candidate. |
-| E9 | Add with a status | PART-M03 | 300 | 20 | 15 | Active | A | 14-Sep-2026 | Check 6: status of a new part is always Candidate, leave it blank. |
-| E10 | Add without effective date | PART-M02 | 500 | 12 | 40 |  | A |  | Check 7: Effective Start Date is required for Candidate. |
-| E11 | Effective date in the past | PART-M02 | 500 | 12 | 40 |  | A | 12-Sep-2026 | Check 7: Effective Start Date must be today or later. |
-| E12 | Change effective date of an Active part | PART-C | 200 | 10 | 30 |  | E | 20-Sep-2026 | Check 8: effective date can only change while the part is Candidate. |
+| E9 | Add with a status | PART-M03 | 300 | 20 | 15 | Active | A | 202609 | Check 6: status of a new part is always Candidate, leave it blank. |
+| E10 | Add without period | PART-M02 | 500 | 12 | 40 |  | A |  | Check 7: Period is required for flag A. |
+| E11 | Add into a past period | PART-M02 | 500 | 12 | 40 |  | A | 202608 | Check 7: Period must be the ongoing or the next period. |
+| E12 | Edit with the next period | PART-C | 200 | 10 | 30 |  | E | 202610 | Check 8: flag E uses the ongoing period (202609). |
 | E13 | Max Case/Day below existing mapping | PART-A | 800 | 60 | 20 |  | E |  | Check 9: Max Case/Day 20 is below mapped 24. Reduce the mapping first in Export Crossdock Master. |
-| E14 | Valid row (= N1) mixed with an error row (= E2), row 1 | PART-M01 | 300 | 20 | 15 |  | A | 14-Sep-2026 | Whole file rejected. The valid row is NOT saved. |
+| E14 | Valid row (= N1) mixed with an error row (= E2), row 1 | PART-M01 | 300 | 20 | 15 |  | A | 202609 | Whole file rejected. The valid row is NOT saved. |
 | E14 | Valid row mixed with an error row, row 2 | PART-Z99 | 100 | 10 | 10 |  | E |  | Check 2 on this row. Result report sheet Re-upload lists the rows to correct. |
-| E15 | Add a new part without Min MAD | PART-M03 |  | 25 | 10 |  | A | 15-Sep-2026 | Check 5: Min MAD is required (whole number, 0 or more). |
+| E15 | Add a new part without Min MAD | PART-M03 |  | 25 | 10 |  | A | 202609 | Check 5: Min MAD is required (whole number, 0 or more). |
 
 ### D. File-level errors (file check 4.1)
 

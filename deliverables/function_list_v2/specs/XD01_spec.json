@@ -3,7 +3,7 @@
  "general": {
   "objective": [
    "One screen with two tabs: Kanban Crossdock Master (part number level) and Export Crossdock Master (part + calculation period + destination level).",
-   "Kanban Crossdock Master tab: To register crossdock candidate parts (Part No, Min MAD, Pcs/Case, Max Case/Day, Effective Start Date).",
+   "Kanban Crossdock Master tab: To register crossdock candidate parts (Part No, Period, Min MAD, Pcs/Case, Max Case/Day).",
    "Kanban Crossdock Master tab: To search and display registered crossdock parts with their status and capacity.",
    "Kanban Crossdock Master tab: To change part data and part status (Candidate / Active / Inactive) of a registered part.",
    "Kanban Crossdock Master tab: To display the change history of a part.",
@@ -11,7 +11,7 @@
    "Kanban Crossdock Master tab: This sub-menu is opened only for users logged in with a Procurement account; users with a D/S account open the Export Crossdock Master sub-menu instead.",
    "Export Crossdock Master tab: To split the Max Case/Day of each Active part over destinations (Thailand, Philippines, Vietnam) for the ongoing calculation period.",
    "Export Crossdock Master tab: To display the destination mapping per part and calculation period, including past periods (read only).",
-   "Export Crossdock Master tab: To send the changes of the Current and Next period to AP POLE (XD07) and GTOPAS (XD06) with [Sync], and show the Sync Status of each part (worked out from TB_H_PART_CANDIDATE_STG_SYNC).",
+   "Export Crossdock Master tab: To send the changes of the Current and Next period to AP POLE (XD07) and GTOPAS (XD06) with [Sync], and show the Sync Status of each part (worked out from the staging tables).",
    "Export Crossdock Master tab: To export the mapping to Excel and upload the mapping of the ongoing period from Excel.",
    "Export Crossdock Master tab: This sub-menu is opened only for users logged in with a D/S account; users with a Procurement account open the Kanban Crossdock Master sub-menu instead."
   ],
@@ -138,7 +138,7 @@
    },
    {
     "name": "Sync",
-    "function": "Prepare the run in TB_H_PART_CANDIDATE_STG_SYNC (refer 5.24) and start XD07 (AP POLE) and XD06 (GTOPAS) for every part + period with a Non Sync staging row (AP POLE: Current and Next; GTOPAS: Current), whatever the filter shows. The label shows the number of parts, e.g. Sync (21)."
+    "function": "Call SP_STG_SYNC (refer 5.24): the staging rows with SYNC_STATUS 0 (AP POLE: Current and Next period; GTOPAS: Current period) get the run ID, then the RPA parent flow starts. Whatever the filter shows. The label shows the number of parts, e.g. Sync (21)."
    },
    {
     "name": "Upload Excel (Mapping)",
@@ -400,7 +400,7 @@
     "sections": [
      {
       "section": "Saved status Candidate",
-      "description": "Part No locked; Status, Effective Start Date, Min MAD, Pcs/Case, Max Case/Day editable",
+      "description": "Part No and Period locked; Status (Candidate or Active), Min MAD, Pcs/Case, Max Case/Day editable",
       "buttons": {
        "Tab (Kanban Crossdock Master / Export Crossdock Master)": "E",
        "Add Part": "D",
@@ -430,7 +430,7 @@
      },
      {
       "section": "Saved status Active / Inactive",
-      "description": "Same as 4.a but Effective Start Date locked (it can only change while the status is Candidate)",
+      "description": "Same as 4.a, Status Active or Inactive (no part goes back to Candidate)",
       "buttons": {
        "Tab (Kanban Crossdock Master / Export Crossdock Master)": "E",
        "Add Part": "D",
@@ -920,7 +920,7 @@
    "1) Prev is disabled on the first page and Next on the last page.",
    "2) A user logged in with a read-only account sees [View] instead of [Edit] and cannot use Add Part / Upload Excel / Save. TBD: which accounts are read-only is not defined yet.",
    "3) Run calculation is shown as D (disabled) by default; it is enabled only when the scheduled DAD Volume Calculation has failed 3 times (auto retry).",
-   "4) Sync is enabled only when TB_H_PART_CANDIDATE_STG_SYNC has a Non Sync row (AP POLE: Current / Next, GTOPAS: Current), not limited to the listed rows.",
+   "4) Sync is enabled only when a staging table has a row with SYNC_STATUS 0 (AP POLE: Current / Next, GTOPAS: Current), not limited to the listed rows.",
    "5) Split evenly is shown only in edit mode when the part has more than one destination row.",
    "7) Prev is disabled on the first page and Next on the last page.",
    "8) Run calculation is enabled only when the scheduled XD05 DAD Volume Calculation (process 2) has failed 3 times (auto retry); otherwise disabled with message no. 30 as tooltip.",
@@ -1099,7 +1099,7 @@
      },
      {
       "id": "p1",
-      "label": "Insert (Add) / update (Edit) part, insert staging rows (Non Sync)",
+      "label": "Insert (Add) / update (Edit) part, staging rows by SP_STG_WRITE (Non Sync)",
       "type": "process"
      },
      {
@@ -1205,7 +1205,7 @@
     ]
    },
    "notes": [
-    "Part data valid = Add: Part No selected, Min MAD filled (whole number, 0 or more), Pcs/Case > 0 and Max Case/Day > 0 (otherwise the tooltip shows message no. 5, 15, 6 or 7 for the first missing item). Edit: the same items, Effective Start Date not before today while the part is Candidate (message no. 10), and Max Case/Day not below the Case/Day already mapped in the ongoing period (message no. 14).",
+    "Part data valid = Add: Part No selected, Min MAD filled (whole number, 0 or more), Pcs/Case > 0 and Max Case/Day > 0 (otherwise the tooltip shows message no. 5, 15, 6 or 7 for the first missing item). Edit: the same items and Max Case/Day not below the Case/Day already mapped in the ongoing period (message no. 14).",
     "The check runs on every change in the modal, so [Save] is already disabled before it can be clicked (see Operation Description 5.4 and 5.5)."
    ]
   },
@@ -1344,7 +1344,7 @@
      },
      {
       "id": "p2",
-      "label": "Insert staging rows (Non Sync)",
+      "label": "Staging rows by SP_STG_WRITE (Non Sync)",
       "type": "process"
      },
      {
@@ -1460,11 +1460,11 @@
    "image": "deliverables/uiss_screens/part_list/c_08_save_success.png"
   },
   {
-   "caption": "9. Edit Mode - Candidate part (Effective Start Date editable)",
+   "caption": "9. Edit Mode - Candidate part (Status Candidate or Active)",
    "image": "deliverables/uiss_screens/part_list/c_09_edit_candidate.png"
   },
   {
-   "caption": "10. Edit Mode - Active part (Effective Start Date locked)",
+   "caption": "10. Edit Mode - Active part (Status Active or Inactive)",
    "image": "deliverables/uiss_screens/part_list/c_10_edit_active.png"
   },
   {
@@ -2107,8 +2107,8 @@
    "initial": "Candidate",
    "required": "Y",
    "format": "",
-   "validation": "Add: always Candidate. Edit: Candidate / Active / Inactive",
-   "description": "Add: locked to Candidate (tooltip 'New parts are automatically Candidate'). Edit: Candidate / Active / Inactive."
+   "validation": "Add: always Candidate. Edit of a Candidate part: Candidate or Active. Edit of an Active / Inactive part: Active or Inactive",
+   "description": "Add: locked to Candidate (tooltip 'New parts are automatically Candidate'). Edit: a Candidate part can become Active (ongoing period); an Active or Inactive part can be Active or Inactive; no part goes back to Candidate."
   },
   {
    "name": "Part No",
@@ -2141,19 +2141,19 @@
    "description": "Autofilled from the selected Part No."
   },
   {
-   "name": "Effective Start Date",
+   "name": "Period",
    "source": "TB_M_PART_CANDIDATE",
-   "field": "EFFECTIVE_START_DATE",
-   "type": "Date",
-   "len": "",
-   "io": "I",
-   "control": "Date picker",
+   "field": "PERIOD",
+   "type": "Char",
+   "len": "6",
+   "io": "I/O",
+   "control": "Combo Box",
    "justified": "Left",
-   "initial": "Add: System date + 1 day",
-   "required": "N (TBD: mandatory or not)",
-   "format": "DD-Mon-YYYY",
-   "validation": "Today or later; editable only while the saved status is Candidate",
-   "description": "Editable in Add, and in Edit only while the saved status is Candidate; otherwise locked with tooltip 'Can only be changed while the status is still Candidate'."
+   "initial": "Add: the ongoing period",
+   "required": "Y",
+   "format": "Mon YYYY (stored YYYYMM)",
+   "validation": "Add: the ongoing period or the next period. Edit: locked",
+   "description": "Add: the ongoing period (default) or the next period, marked (ongoing) / (next); the part takes effect from it. Edit: locked (part of the key), tooltip message no. 10. A part of the next period is view only until that period becomes the ongoing one."
   },
   {
    "name": "Min MAD",
@@ -2384,7 +2384,7 @@
    "required": "",
    "format": "",
    "validation": "",
-   "description": "Part Number, Min MAD, Pcs/Case, Max Case/Day, Status, Upload (A/E), Effective Start Date (same names and order as sheet 'Upload' of Export Excel)."
+   "description": "Part Number, Min MAD, Pcs/Case, Max Case/Day, Status, Upload (A/E), Period (same names and order as sheet 'Upload' of Export Excel)."
   },
   {
    "name": "Rules per upload value and status",
@@ -2510,7 +2510,7 @@
    "required": "N",
    "format": "Mon YYYY",
    "validation": "",
-   "description": "Options: All periods / every calculation period; the ongoing one is marked '(ongoing)'. The label shows (ongoing) / (past) / (all). Calculation periods are created by the calculation batch; the latest period created is the ongoing period and earlier ones become past. A new period starts empty: the mapping of the previous period is not copied. Every Active part is listed with its Max Case/Day from Kanban Crossdock Master (the quota) but no destination yet (Total Case/Day 0, 0%), until the D/S user assigns it by Edit mapping or Upload Excel."
+   "description": "Options: All periods / every calculation period; the ongoing one is marked '(ongoing)', the next one '(next)'. The label shows (ongoing) / (past) / (all). Calculation periods are created by the calculation batch; the latest period created is the ongoing period and earlier ones become past. A new period starts empty: the mapping of the previous period is not copied. Every Active part is listed with its Max Case/Day from Kanban Crossdock Master (the quota) but no destination yet (Total Case/Day 0, 0%), until the D/S user assigns it by Edit mapping or Upload Excel."
   },
   {
    "name": "Part Number",
@@ -2648,7 +2648,7 @@
    "required": "",
    "format": "",
    "validation": "",
-   "description": "n = parts + periods with a Non Sync row in TB_H_PART_CANDIDATE_STG_SYNC (AP POLE: Current and Next; GTOPAS: Current), whatever the filter. Disabled when n = 0. Refer Operation Description 5.24."
+   "description": "n = parts + periods with a row SYNC_STATUS 0 in the staging tables (AP POLE: Current and Next; GTOPAS: Current), whatever the filter. Disabled when n = 0. Refer Operation Description 5.24."
   },
   {
    "name": "Upload Excel (Mapping)",
@@ -2802,8 +2802,8 @@
   },
   {
    "name": "Sync Status",
-   "source": "TB_H_PART_CANDIDATE_STG_SYNC",
-   "field": "APPOLE_SYNC_STATUS / GTOPAS_SYNC_STATUS (derived)",
+   "source": "TB_H_STG_APPOLE_KANBAN / TB_H_STG_APPOLE_EXPORT, TB_H_STG_GTOPAS",
+   "field": "SYNC_STATUS (derived)",
    "type": "Varchar",
    "len": "",
    "io": "O",
@@ -2813,7 +2813,7 @@
    "required": "",
    "format": "",
    "validation": "",
-   "description": "Two chips per row: AP POLE and GTOPAS, Non Sync (grey) / Sync (green), worked out per part + period from the staging (refer 5.24). Tooltip: Last Sent AP POLE / GTOPAS (latest APPOLE_SYNC_DT / GTOPAS_SYNC_DT)."
+   "description": "Two chips per row: AP POLE (Kanban or Export staging) and GTOPAS (GTOPAS staging), Non Sync (grey) / Sync (green), per part + period (refer 5.24). Tooltip: Last Sent AP POLE / GTOPAS (latest SYNC_DT)."
   },
   {
    "group": "<Mapping - Footer Section>"
@@ -3236,6 +3236,11 @@
       "dest_field": "PART_NO"
      },
      {
+      "source_field": "Period (Add Part)",
+      "dest_field": "PERIOD",
+      "description": "Selected period: the ongoing period (default) or the next one"
+     },
+     {
       "source_field": "Part Name",
       "dest_field": "PART_NAME",
       "description": "From TB_M_PART_MASTER by PART_NO"
@@ -3256,10 +3261,6 @@
      {
       "dest_field": "TOTAL_PCS_DAY",
       "description": "PCS_CASE x MAX_CASE_DAY"
-     },
-     {
-      "source_field": "Effective Start Date",
-      "dest_field": "EFFECTIVE_START_DATE"
      },
      {
       "dest_field": "PART_STATUS",
@@ -3325,11 +3326,6 @@
      {
       "dest_field": "TOTAL_PCS_DAY",
       "description": "PCS_CASE x MAX_CASE_DAY"
-     },
-     {
-      "source_field": "Effective Start Date",
-      "dest_field": "EFFECTIVE_START_DATE",
-      "description": "Only while saved status is Candidate"
      },
      {
       "dest_field": "LAST_SOURCE",
@@ -3621,32 +3617,27 @@
     ]
    },
    {
-    "source": "Key-in from screen",
+    "source": "Key-in from screen (SP_STG_WRITE)",
     "destination": {
-     "table": "TB_H_PART_CANDIDATE_STG_SYNC",
+     "table": "TB_H_STG_APPOLE_KANBAN",
      "operation": "Insert",
-     "description": "Add Part / Edit part data - [Save]: one row per changed Pcs/Case, Max Case/Day"
+     "description": "SP_STG_WRITE (KANBAN): changed Pcs/Case or Max Case/Day of an Active part, Candidate -> Active, part of a new period; header 5 when only the destinations changed"
     },
     "mappings": [
      {
       "source_field": "-",
-      "dest_field": "HIST_ID",
+      "dest_field": "STG_ID",
       "description": "Identity"
-     },
-     {
-      "source_field": "PART_NO",
-      "dest_field": "PART_NO",
-      "description": "Part of the change"
-     },
-     {
-      "source_field": "PART_NAME",
-      "dest_field": "PART_NAME",
-      "description": "From TB_M_PART_CANDIDATE"
      },
      {
       "source_field": "PERIOD",
       "dest_field": "PERIOD",
-      "description": "Period of the changed row"
+      "description": "Period of the part row"
+     },
+     {
+      "source_field": "-",
+      "dest_field": "ACTION",
+      "description": "'ADD' (new part, new period) / 'EDIT' / 'KEEP' (header 5)"
      },
      {
       "source_field": "PART_STATUS",
@@ -3654,44 +3645,49 @@
       "description": "Status of the part in the period"
      },
      {
-      "source_field": "-",
-      "dest_field": "LEVEL_TYPE",
-      "description": "'KANBAN'"
+      "source_field": "PERIOD",
+      "dest_field": "EFFECTIVE_MONTH_YEAR",
+      "description": "MM/YYYY"
      },
      {
       "source_field": "-",
-      "dest_field": "DEST_CODE",
-      "description": "NULL"
+      "dest_field": "OPERATOR_ID",
+      "description": "'P6'"
+     },
+     {
+      "source_field": "PART_NO",
+      "dest_field": "PART_NO",
+      "description": "With \"-\""
+     },
+     {
+      "source_field": "PART_NAME",
+      "dest_field": "PART_NAME",
+      "description": "From TB_M_PART_CANDIDATE"
+     },
+     {
+      "source_field": "PCS_CASE",
+      "dest_field": "SHIPPING_BOX_QTY",
+      "description": "Value after the change"
+     },
+     {
+      "source_field": "MAX_CASE_DAY",
+      "dest_field": "MAX_SHIPPING_BOX_QTY",
+      "description": "Value after the change"
      },
      {
       "source_field": "-",
-      "dest_field": "ORDER_TYPE",
-      "description": "NULL"
+      "dest_field": "MAX_ALLOWANCE_QTY",
+      "description": "PCS_CASE x MAX_CASE_DAY"
      },
      {
       "source_field": "-",
-      "dest_field": "FIELD_NAME",
-      "description": "'PCS_CASE' / 'MAX_CASE_DAY' (one row per changed field)"
-     },
-     {
-      "source_field": "-",
-      "dest_field": "ACTION",
-      "description": "'ADD' (new part / new period) / 'EDIT'"
-     },
-     {
-      "source_field": "Value before",
-      "dest_field": "OLD_VALUE",
-      "description": "NULL on ADD"
-     },
-     {
-      "source_field": "Value after",
-      "dest_field": "NEW_VALUE",
-      "description": "New value"
+      "dest_field": "OPERATION_TYPE",
+      "description": "1 Max down / 2 up / 3 same / 4 never sent, against the last Max sent (same period, else the latest earlier period); 5 header"
      },
      {
       "source_field": "-",
       "dest_field": "SOURCE",
-      "description": "'SCREEN'"
+      "description": "'SCREEN' / 'UPLOAD' / 'BATCH' (caller)"
      },
      {
       "source_field": "-",
@@ -3700,37 +3696,17 @@
      },
      {
       "source_field": "-",
-      "dest_field": "GTOPAS_SYNC_STATUS",
-      "description": "NULL (not for GTOPAS)"
+      "dest_field": "SYNC_STATUS",
+      "description": "'0'; '2' when the value equals the value already sent for the period"
      },
      {
       "source_field": "-",
-      "dest_field": "APPOLE_SYNC_STATUS",
-      "description": "'0' (Non Sync)"
-     },
-     {
-      "source_field": "-",
-      "dest_field": "APPOLE_SYNC_DT",
+      "dest_field": "SYNC_DT",
       "description": "NULL"
      },
      {
       "source_field": "-",
-      "dest_field": "SEND_SEQ",
-      "description": "NULL"
-     },
-     {
-      "source_field": "-",
-      "dest_field": "APPOLE_SYNC_RUN_ID",
-      "description": "NULL"
-     },
-     {
-      "source_field": "-",
-      "dest_field": "GTOPAS_SYNC_DT",
-      "description": "NULL"
-     },
-     {
-      "source_field": "-",
-      "dest_field": "GTOPAS_SYNC_RUN_ID",
+      "dest_field": "SYNC_RUN_ID",
       "description": "NULL"
      },
      {
@@ -3741,7 +3717,7 @@
      {
       "source_field": "-",
       "dest_field": "CREATED_DT",
-      "description": "System date-time"
+      "description": "Server date-time"
      },
      {
       "source_field": "-",
@@ -3756,77 +3732,72 @@
     ]
    },
    {
-    "source": "Key-in from screen",
+    "source": "Key-in from screen (SP_STG_WRITE)",
     "destination": {
-     "table": "TB_H_PART_CANDIDATE_STG_SYNC",
+     "table": "TB_H_STG_APPOLE_EXPORT",
      "operation": "Insert",
-     "description": "Edit mapping - [Save], status change Active <-> Inactive by Procurement"
+     "description": "SP_STG_WRITE (EXPORT): one row per added, changed or removed destination + order type"
     },
     "mappings": [
      {
       "source_field": "-",
-      "dest_field": "HIST_ID",
+      "dest_field": "STG_ID",
       "description": "Identity"
-     },
-     {
-      "source_field": "PART_NO",
-      "dest_field": "PART_NO",
-      "description": "Part of the change"
-     },
-     {
-      "source_field": "PART_NAME",
-      "dest_field": "PART_NAME",
-      "description": "From TB_M_PART_CANDIDATE"
      },
      {
       "source_field": "PERIOD",
       "dest_field": "PERIOD",
-      "description": "Period of the changed row"
+      "description": ""
      },
      {
-      "source_field": "PART_STATUS",
-      "dest_field": "PART_STATUS",
-      "description": "Status of the part in the period"
-     },
-     {
-      "source_field": "-",
-      "dest_field": "LEVEL_TYPE",
-      "description": "'EXPORT'"
+      "source_field": "PART_NO",
+      "dest_field": "NSP_PART_NO",
+      "description": "With \"-\""
      },
      {
       "source_field": "DEST_CODE",
       "dest_field": "DEST_CODE",
-      "description": "Destination of the changed row"
-     },
-     {
-      "source_field": "ORDER_TYPE",
-      "dest_field": "ORDER_TYPE",
-      "description": "Order Type of the row"
-     },
-     {
-      "source_field": "-",
-      "dest_field": "FIELD_NAME",
-      "description": "'CASE_DAY'"
+      "description": "7 digits"
      },
      {
       "source_field": "-",
       "dest_field": "ACTION",
-      "description": "'ADD' (new destination) / 'EDIT' (Case/Day) / 'DELETE' (removed, Inactive)"
+      "description": "'ADD' / 'EDIT' / 'DELETE'"
      },
      {
-      "source_field": "Case/Day before",
-      "dest_field": "OLD_VALUE",
-      "description": "NULL on ADD"
+      "source_field": "PERIOD",
+      "dest_field": "EFFECTIVE_MONTH_YEAR",
+      "description": "MM/YYYY"
      },
      {
-      "source_field": "Case/Day after",
-      "dest_field": "NEW_VALUE",
-      "description": "0 on DELETE"
+      "source_field": "PART_NO",
+      "dest_field": "PART_NO",
+      "description": "Without \"-\""
+     },
+     {
+      "source_field": "DEST_CODE",
+      "dest_field": "BUYER_PD",
+      "description": "5-2 format"
+     },
+     {
+      "source_field": "ORDER_TYPE",
+      "dest_field": "ORDER_TYPE",
+      "description": ""
+     },
+     {
+      "source_field": "-",
+      "dest_field": "TRANSPORT_CODE",
+      "description": "'2'"
+     },
+     {
+      "source_field": "CASE_DAY",
+      "dest_field": "MAX_SHIPPING_BOX_RCS",
+      "description": "Value after the change; 0 for DELETE"
      },
      {
       "source_field": "-",
       "dest_field": "SOURCE",
-      "description": "'SCREEN'"
+      "description": "'SCREEN' / 'UPLOAD' / 'BATCH' (caller)"
      },
      {
       "source_field": "-",
@@ -3835,37 +3806,17 @@
      },
      {
       "source_field": "-",
-      "dest_field": "GTOPAS_SYNC_STATUS",
-      "description": "'0' for ADD / DELETE, NULL for EDIT"
+      "dest_field": "SYNC_STATUS",
+      "description": "'0'; '2' when the value equals the value already sent for the period"
      },
      {
       "source_field": "-",
-      "dest_field": "APPOLE_SYNC_STATUS",
-      "description": "'0' (Non Sync)"
-     },
-     {
-      "source_field": "-",
-      "dest_field": "APPOLE_SYNC_DT",
+      "dest_field": "SYNC_DT",
       "description": "NULL"
      },
      {
       "source_field": "-",
-      "dest_field": "SEND_SEQ",
-      "description": "NULL"
-     },
-     {
-      "source_field": "-",
-      "dest_field": "APPOLE_SYNC_RUN_ID",
-      "description": "NULL"
-     },
-     {
-      "source_field": "-",
-      "dest_field": "GTOPAS_SYNC_DT",
-      "description": "NULL"
-     },
-     {
-      "source_field": "-",
-      "dest_field": "GTOPAS_SYNC_RUN_ID",
+      "dest_field": "SYNC_RUN_ID",
       "description": "NULL"
      },
      {
@@ -3876,7 +3827,7 @@
      {
       "source_field": "-",
       "dest_field": "CREATED_DT",
-      "description": "System date-time"
+      "description": "Server date-time"
      },
      {
       "source_field": "-",
@@ -3891,74 +3842,287 @@
     ]
    },
    {
-    "source": {
-     "table": "TB_H_PART_CANDIDATE_STG_SYNC",
-     "keys": [
-      {
-       "field": "APPOLE_SYNC_STATUS",
-       "value": "'0', PERIOD Current / Next, CREATED_DT > LAST_SYNC_DATE_APPOLE and <= click"
-      },
-      {
-       "field": "GTOPAS_SYNC_STATUS",
-       "value": "'0', PERIOD = Current"
-      }
-     ]
-    },
+    "source": "Key-in from screen (SP_STG_WRITE)",
     "destination": {
-     "table": "TB_H_PART_CANDIDATE_STG_SYNC",
-     "operation": "Update",
-     "description": "[Sync] / [Re-send last Sync] (before XD06 / XD07 start)"
+     "table": "TB_H_STG_GTOPAS",
+     "operation": "Insert",
+     "description": "SP_STG_WRITE (EXPORT branch): the destination appears or disappears for the part and GTOPAS does not have that state yet"
     },
     "mappings": [
      {
       "source_field": "-",
-      "dest_field": "APPOLE_SYNC_STATUS",
-      "description": "'1' last row of each key, '2' earlier rows (Superseded)"
+      "dest_field": "STG_ID",
+      "description": "Identity"
+     },
+     {
+      "source_field": "PERIOD",
+      "dest_field": "PERIOD",
+      "description": ""
      },
      {
       "source_field": "-",
-      "dest_field": "SEND_SEQ",
-      "description": "1 / 2 / 3 on the last row of each key (refer 5.24); NULL when the key ends on its first value"
+      "dest_field": "ACTION",
+      "description": "'ADD' / 'DELETE'"
      },
      {
       "source_field": "-",
-      "dest_field": "APPOLE_SYNC_DT",
-      "description": "Time of the click / run ID YYYYMMDDHHMMSS"
+      "dest_field": "DEPOT_CODE",
+      "description": "'01'"
+     },
+     {
+      "source_field": "PART_NO",
+      "dest_field": "P_NO",
+      "description": "With \"-\""
+     },
+     {
+      "source_field": "DEST_CODE",
+      "dest_field": "DESTINATION_CODE",
+      "description": ""
      },
      {
       "source_field": "-",
-      "dest_field": "APPOLE_SYNC_RUN_ID",
-      "description": "Time of the click / run ID YYYYMMDDHHMMSS"
+      "dest_field": "MAKER_CODE",
+      "description": "'A'"
      },
      {
       "source_field": "-",
-      "dest_field": "GTOPAS_SYNC_STATUS",
-      "description": "'1' for the GTOPAS rows of the Current period"
+      "dest_field": "DOMESTIC_OVERSEAS",
+      "description": "'2'"
      },
      {
       "source_field": "-",
-      "dest_field": "GTOPAS_SYNC_DT",
-      "description": "Time of the click / run ID"
+      "dest_field": "TOPAS_ORDER_TYPE",
+      "description": "'3'"
      },
      {
       "source_field": "-",
-      "dest_field": "GTOPAS_SYNC_RUN_ID",
-      "description": "Time of the click / run ID"
+      "dest_field": "ORDER_TRANSPORTATION_CODE",
+      "description": "'2'"
+     },
+     {
+      "source_field": "-",
+      "dest_field": "SOURCE",
+      "description": "'SCREEN' / 'UPLOAD' / 'BATCH' (caller)"
+     },
+     {
+      "source_field": "-",
+      "dest_field": "UPLOAD_ID",
+      "description": "Upload ID when SOURCE = UPLOAD, else NULL"
+     },
+     {
+      "source_field": "-",
+      "dest_field": "SYNC_STATUS",
+      "description": "'0'"
+     },
+     {
+      "source_field": "-",
+      "dest_field": "SYNC_DT",
+      "description": "NULL"
+     },
+     {
+      "source_field": "-",
+      "dest_field": "SYNC_RUN_ID",
+      "description": "NULL"
+     },
+     {
+      "source_field": "-",
+      "dest_field": "CREATED_BY",
+      "description": "Login user (XD05: batch user ID)"
+     },
+     {
+      "source_field": "-",
+      "dest_field": "CREATED_DT",
+      "description": "Server date-time"
      },
      {
       "source_field": "-",
       "dest_field": "CHANGED_BY",
-      "description": "Login user / system date-time"
+      "description": "NULL"
      },
      {
       "source_field": "-",
       "dest_field": "CHANGED_DT",
-      "description": "Login user / system date-time"
+      "description": "NULL"
+     }
+    ]
+   },
+   {
+    "source": "Key-in from screen (SP_STG_WRITE)",
+    "destination": {
+     "table": "TB_H_STG_APPOLE_KANBAN",
+     "operation": "Update",
+     "description": "SP_STG_WRITE: Older unsent row of the same key -> Superseded"
+    },
+    "mappings": [
+     {
+      "source_field": "-",
+      "dest_field": "SYNC_STATUS",
+      "description": "'2'"
      },
      {
       "source_field": "-",
-      "dest_field": "System Master LAST_SYNC_DATE_APPOLE",
-      "description": "Time of the click"
+      "dest_field": "CHANGED_BY",
+      "description": "Login user (XD05: batch user ID)"
+     },
+     {
+      "source_field": "-",
+      "dest_field": "CHANGED_DT",
+      "description": "Server date-time"
+     }
+    ]
+   },
+   {
+    "source": "Key-in from screen (SP_STG_WRITE)",
+    "destination": {
+     "table": "TB_H_STG_APPOLE_EXPORT",
+     "operation": "Update",
+     "description": "SP_STG_WRITE: Older unsent row of the same key -> Superseded"
+    },
+    "mappings": [
+     {
+      "source_field": "-",
+      "dest_field": "SYNC_STATUS",
+      "description": "'2'"
+     },
+     {
+      "source_field": "-",
+      "dest_field": "CHANGED_BY",
+      "description": "Login user (XD05: batch user ID)"
+     },
+     {
+      "source_field": "-",
+      "dest_field": "CHANGED_DT",
+      "description": "Server date-time"
+     }
+    ]
+   },
+   {
+    "source": "Key-in from screen (SP_STG_WRITE)",
+    "destination": {
+     "table": "TB_H_STG_GTOPAS",
+     "operation": "Update",
+     "description": "SP_STG_WRITE: Unsent row of the same part + destination -> Superseded"
+    },
+    "mappings": [
+     {
+      "source_field": "-",
+      "dest_field": "SYNC_STATUS",
+      "description": "'2'"
+     },
+     {
+      "source_field": "-",
+      "dest_field": "CHANGED_BY",
+      "description": "Login user (XD05: batch user ID)"
+     },
+     {
+      "source_field": "-",
+      "dest_field": "CHANGED_DT",
+      "description": "Server date-time"
+     }
+    ]
+   },
+   {
+    "source": "[Sync] (SP_STG_SYNC)",
+    "destination": {
+     "table": "TB_H_STG_APPOLE_KANBAN",
+     "operation": "Update",
+     "description": "[Sync]: rows with SYNC_STATUS 0 (AP POLE: Current + Next, GTOPAS: Current)"
+    },
+    "mappings": [
+     {
+      "source_field": "-",
+      "dest_field": "SYNC_STATUS",
+      "description": "'1'"
+     },
+     {
+      "source_field": "-",
+      "dest_field": "SYNC_DT",
+      "description": "Time of the click / rollover"
+     },
+     {
+      "source_field": "-",
+      "dest_field": "SYNC_RUN_ID",
+      "description": "Run ID YYYYMMDDHHMMSS"
+     },
+     {
+      "source_field": "-",
+      "dest_field": "CHANGED_BY",
+      "description": "Login user (rollover: batch user ID)"
+     },
+     {
+      "source_field": "-",
+      "dest_field": "CHANGED_DT",
+      "description": "Server date-time"
+     }
+    ]
+   },
+   {
+    "source": "[Sync] (SP_STG_SYNC)",
+    "destination": {
+     "table": "TB_H_STG_APPOLE_EXPORT",
+     "operation": "Update",
+     "description": "[Sync]: rows with SYNC_STATUS 0 (AP POLE: Current + Next, GTOPAS: Current)"
+    },
+    "mappings": [
+     {
+      "source_field": "-",
+      "dest_field": "SYNC_STATUS",
+      "description": "'1'"
+     },
+     {
+      "source_field": "-",
+      "dest_field": "SYNC_DT",
+      "description": "Time of the click / rollover"
+     },
+     {
+      "source_field": "-",
+      "dest_field": "SYNC_RUN_ID",
+      "description": "Run ID YYYYMMDDHHMMSS"
+     },
+     {
+      "source_field": "-",
+      "dest_field": "CHANGED_BY",
+      "description": "Login user (rollover: batch user ID)"
+     },
+     {
+      "source_field": "-",
+      "dest_field": "CHANGED_DT",
+      "description": "Server date-time"
+     }
+    ]
+   },
+   {
+    "source": "[Sync] (SP_STG_SYNC)",
+    "destination": {
+     "table": "TB_H_STG_GTOPAS",
+     "operation": "Update",
+     "description": "[Sync]: rows with SYNC_STATUS 0 (AP POLE: Current + Next, GTOPAS: Current)"
+    },
+    "mappings": [
+     {
+      "source_field": "-",
+      "dest_field": "SYNC_STATUS",
+      "description": "'1'"
+     },
+     {
+      "source_field": "-",
+      "dest_field": "SYNC_DT",
+      "description": "Time of the click / rollover"
+     },
+     {
+      "source_field": "-",
+      "dest_field": "SYNC_RUN_ID",
+      "description": "Run ID YYYYMMDDHHMMSS"
+     },
+     {
+      "source_field": "-",
+      "dest_field": "CHANGED_BY",
+      "description": "Login user (rollover: batch user ID)"
+     },
+     {
+      "source_field": "-",
+      "dest_field": "CHANGED_DT",
+      "description": "Server date-time"
      }
     ]
    }
@@ -4028,7 +4192,7 @@
    "marker": "1.",
    "level": 3,
    "items": [
-    "Open the 'Add Part Candidate Crossdock' modal. 'Status' = Candidate and locked (a new part is always Candidate); 'Effective Start Date' = system date + 1 day, minimum today.",
+    "Open the 'Add Part Candidate Crossdock' modal. 'Status' = Candidate and locked (a new part is always Candidate); 'Period' = the ongoing period (default) or the next period: the part takes effect from it.",
     "'Part No' lists only parts of TB_M_PART_MASTER that are not registered in TB_M_PART_CANDIDATE yet, so a part cannot be registered twice.",
     "Selecting a Part No autofills 'Part Name'. 'Max Case/Day' is locked until 'Pcs/Case' is filled.",
     "[Save] is enabled only when Part No, Min MAD (whole number, 0 or more), Pcs/Case > 0 and Max Case/Day > 0 are filled; otherwise its tooltip shows message no. 5, 15, 6 or 7 for the first missing item."
@@ -4046,7 +4210,7 @@
    "level": 3,
    "items": [
     "If the Part No was registered by another user in the meantime, display message no. 3. Stop.",
-    "Insert the part into TB_M_PART_CANDIDATE with PART_STATUS = Candidate (refer Data Edit Mapping). A Candidate part is not sent (no staging row).",
+    "Insert the part into TB_M_PART_CANDIDATE with PART_STATUS = Candidate and PERIOD = the selected period. When the ongoing period is selected and XD05 has already made the next period (between day D and the Period Rollover), insert the same row for the next period too, so the next XD05 run calculates the part. A Candidate part is not sent (no staging row).",
     "Insert the change history in TB_H_PART_CANDIDATE (refer 5.6).",
     "Close the modal, reset the Part Number / Part Name / Status filters, sort Newer to Older and display message no. 9. The new part is shown at the top. Table changes: refer 5.25."
    ]
@@ -4072,8 +4236,8 @@
    "marker": "1.",
    "level": 3,
    "items": [
-    "Open the 'Edit part data' modal with the saved values. 'Part No' is locked; 'Status' can be Candidate / Active / Inactive.",
-    "'Effective Start Date' is editable only while the saved status is Candidate (minimum today); otherwise locked with message no. 10 as tooltip.",
+    "Open the 'Edit part data' modal with the saved values. 'Part No' and 'Period' are locked. 'Status': a Candidate part can stay Candidate or become Active; an Active or Inactive part can be Active or Inactive; no part goes back to Candidate.",
+    "Only rows of the ongoing period can be edited. A part registered for the next period has no [Edit] until its period becomes the ongoing period.",
     "'Min MAD' (mandatory, whole number 0 or more), 'Pcs/Case' and 'Max Case/Day' can be changed; 'Total Pcs/Day' is recalculated.",
     "Active part only: below Max Case/Day show 'Mapped Case/Day (current period): n' = total Case/Day of the part in TB_M_PART_CANDIDATE_DEST for the ongoing period (' · no destination yet' when none), so the user sees the lowest allowed Max Case/Day before Save.",
     "Max Case/Day cannot be less than the total Case/Day already mapped to destinations in the ongoing period (TB_M_PART_CANDIDATE_DEST); otherwise the field is marked red, message no. 14 is shown below Pcs/Case & Max Case/Day and [Save] is disabled. The user must first reduce the mapping in Export Crossdock Master (same rule as upload check 9)."
@@ -4092,7 +4256,7 @@
    "items": [
     "If the record was changed by another user after it was opened, display message no. 4. Stop.",
     "Check Max Case/Day against the mapped total of the ongoing period again on the server; if it is below, display message no. 14. Stop.",
-    "Update TB_M_PART_CANDIDATE, CHANGED_BY and CHANGED_DT. Insert a staging row in TB_H_PART_CANDIDATE_STG_SYNC per changed Pcs/Case or Max Case/Day of an Active part, and for Active <-> Inactive the EXPORT rows of 5.24 (refer Data Edit Mapping).",
+    "Update TB_M_PART_CANDIDATE, CHANGED_BY and CHANGED_DT. Active -> Inactive also deletes the mapping of the period (TB_M_PART_CANDIDATE_DEST). Call SP_STG_WRITE for the staging rows (refer 5.24 and 5.25).",
     "Insert the change history in TB_H_PART_CANDIDATE (refer 5.6).",
     "Close the modal, move the part to the top of the list and display message no. 9. Table changes: refer 5.25."
    ]
@@ -4109,7 +4273,7 @@
     "The history comes from the records inserted when a user adds or changes a part.",
     "User clicks the clock icon on a row: open 'History setting' with the change timeline of the part, newest first.",
     "Each event shows the title, date-time, field name, old value (struck through) → new value and user.",
-    "History is read from TB_H_PART_CANDIDATE, which records every change of the part: Add / Edit by screen, Upload, mapping changes (add, change or remove a destination) and the calculation. The sync is in TB_H_PART_CANDIDATE_STG_SYNC (not shown here). A part without history shows message no. 12."
+    "History is read from TB_H_PART_CANDIDATE, which records every change of the part: Add / Edit by screen, Upload, mapping changes (add, change or remove a destination) and the calculation. The sync is in the staging tables (not shown here). A part without history shows message no. 12."
    ]
   },
   {
@@ -4200,7 +4364,7 @@
      "VARCHAR(30)",
      "",
      "N",
-     "Changed field: PCS_CASE, MAX_CASE_DAY, MIN_MAD, PART_STATUS, EFFECTIVE_START_DATE, CASE_DAY"
+     "Changed field: PCS_CASE, MAX_CASE_DAY, MIN_MAD, PART_STATUS, CASE_DAY"
     ],
     [
      "OLD_VALUE",
@@ -4276,8 +4440,8 @@
    "level": 2,
    "items": [
     "User clicks [Export Excel]: download Crossdock_Kanban_Master_YYYYMMDD.xlsx.",
-    "Sheet 'Kanban Crossdock Master': rows of the active filter and sort (all pages) with Part Number, Part Name, Min MAD, Pcs/Case, Max Case/Day, Total Pcs/Day, Status, Effective Start Date, CREATED_DT, CREATED_BY, UPDATED_DT, UPDATED_BY. Information only. Sample: 'Export Kanban Crossdock Master'.",
-    "Sheet 'Upload': every registered part, columns as sheet 1 (Part Number, Min MAD, Pcs/Case, Max Case/Day, Status, Upload (A/E) = E, Effective Start Date). Base file for Edit uploads.",
+    "Sheet 'Kanban Crossdock Master': rows of the active filter and sort (all pages) with Part Number, Part Name, Min MAD, Pcs/Case, Max Case/Day, Total Pcs/Day, Status, CREATED_DT, CREATED_BY, UPDATED_DT, UPDATED_BY. Information only. Sample: 'Export Kanban Crossdock Master'.",
+    "Sheet 'Upload': every registered part, columns as sheet 1 (Part Number, Min MAD, Pcs/Case, Max Case/Day, Status, Upload (A/E) = E, Period YYYYMM). Base file for Edit uploads.",
     "If the file cannot be created, display message no. 13."
    ]
   },
@@ -4294,7 +4458,7 @@
     "The result list header shows 'Last DAD calculation' (last successful run) and, when the scheduled run and its 3 retries have failed, the badge 'Scheduled run failed 3x'.",
     "[Run calculation] is enabled only in that failed state; otherwise it is disabled with message no. 17 as tooltip.",
     "User clicks [Run calculation]: start the batch. When it completes, update 'Last DAD calculation', hide the badge, refresh the list and display message no. 16. When it fails, the batch logs the error (all-or-nothing) and the button stays enabled.",
-    "XD05 writes the staging rows of the new period (refer UISS-Batch XD05); a change from Active to Inactive gives EXPORT DELETE rows (0), so the part is sent by the next [Sync]."
+    "XD05 writes the staging rows of the new period through SP_STG_WRITE (refer UISS-Batch XD05 4.11); a change from Active to Inactive gives Export DELETE rows (0), so the part is sent by the next [Sync]."
    ]
   },
   {
@@ -4337,7 +4501,7 @@
     [
      "Sync Status",
      "Non Sync",
-     "The part + period has a staging row with APPOLE_SYNC_STATUS 0 (AP POLE) or GTOPAS_SYNC_STATUS 0 (GTOPAS)."
+     "The part + period has a row with SYNC_STATUS 0 in the AP POLE staging (Kanban, Export) or in the GTOPAS staging."
     ],
     [
      "Sync Status",
@@ -4355,7 +4519,7 @@
   {
    "type": "text",
    "level": 2,
-   "text": "Sync Status rule: a part becomes Non Sync when a staging row is written, i.e. when a value sent to AP POLE / GTOPAS changes: Pcs/Case or Max Case/Day (AP POLE), destinations or Case/Day (AP POLE; GTOPAS only when a destination appears / disappears), Active <-> Inactive (EXPORT rows). Min MAD, Effective Start Date, Candidate <-> Inactive and a Save without change write no row."
+   "text": "Sync Status rule: a part becomes Non Sync when SP_STG_WRITE writes a staging row, that is when a value AP POLE or GTOPAS holds changes: Pcs/Case or Max Case/Day (Kanban), a destination or its Case/Day (Export; GTOPAS only when a destination appears or disappears), Active -> Inactive (Export DELETE 0). Min MAD, a Candidate part and a save without change write no row."
   },
   {
    "type": "table",
@@ -4366,7 +4530,7 @@
      "width": 20
     },
     {
-     "title": "Staging rows (Sync Status)",
+     "title": "Staging rows",
      "width": 16
     },
     {
@@ -4376,37 +4540,37 @@
    ],
    "rows": [
     [
-     "Status Candidate -> Active",
-     "Non Sync",
-     "Add in GTOPAS (when mapped) and AP POLE"
+     "Status Candidate -> Active (screen, ongoing period, or XD05)",
+     "Kanban ADD, OPERATION_TYPE 4 (2 or 3 when the part was sent before)",
+     "Add in AP POLE; GTOPAS when mapped"
     ],
     [
      "Status Active -> Inactive (screen, upload or XD05)",
-     "EXPORT DELETE (0) per destination: AP POLE and GTOPAS Non Sync",
-     "Delete in GTOPAS and AP POLE"
+     "Export DELETE (0) per destination, Kanban header 5, GTOPAS DELETE",
+     "Delete in GTOPAS; AP POLE Buyer-PD 0 (the part stays in the Kanban)"
     ],
     [
      "Status Inactive -> Active",
-     "Non Sync",
+     "Kanban EDIT only when Pcs/Case or Max changes; Export ADD when the destinations are mapped again",
      "Add again"
     ],
     [
      "Pcs/Case or Max Case/Day of an Active part",
-     "Non Sync",
-     "AP POLE Edit; GTOPAS Keep (no quantity)"
+     "Kanban EDIT, OPERATION_TYPE 1 / 2 / 3",
+     "AP POLE Kanban; GTOPAS keeps (no quantity)"
     ],
     [
      "Destination or Case/Day of the mapping",
-     "Non Sync",
-     "GTOPAS Add / Delete; AP POLE Add / Edit / Delete"
+     "Export ADD / EDIT / DELETE; GTOPAS when a destination appears or disappears; Kanban header 5",
+     "AP POLE Export; GTOPAS Add / Delete"
     ],
     [
-     "Min MAD, Effective Start Date",
+     "Min MAD",
      "No row",
      "Not sent to any target"
     ],
     [
-     "Status Candidate <-> Inactive",
+     "Candidate part (Add, Edit)",
      "No row",
      "Never in GTOPAS / AP POLE"
     ],
@@ -4529,7 +4693,7 @@
    "items": [
     "If the mapping was changed by another user after edit mode started, display message no. 25. Stop.",
     "Save the draft per destination in TB_M_PART_CANDIDATE_DEST: update the Case/Day of a kept one, insert a new one, delete a removed one (refer Data Edit Mapping).",
-    "Insert a staging row in TB_H_PART_CANDIDATE_STG_SYNC per added, changed or removed destination (EXPORT ADD / EDIT / DELETE, refer 5.24); a Save without change writes no row. The total Case/Day may not exceed Max Case/Day (message no. 20).",
+    "Call SP_STG_WRITE per added, changed or removed destination: Export ADD / EDIT / DELETE (0), a GTOPAS row when the destination appears or disappears for the part, the Kanban header (OPERATION_TYPE 5) when the Kanban did not change (refer 5.24). A Save without change writes no row. The total Case/Day may not exceed Max Case/Day (message no. 20).",
     "Insert a history record per added, changed or removed destination in TB_H_PART_CANDIDATE (event MAPPING, source SCREEN, DEST_CODE, FIELD_NAME CASE_DAY, old / new Case/Day).",
     "Leave edit mode and show the saved mapping. Table changes: refer 5.25."
    ]
@@ -4555,8 +4719,8 @@
    "marker": "1.",
    "level": 3,
    "items": [
-    "Prepare the run in TB_H_PART_CANDIDATE_STG_SYNC (refer 5.24): AP POLE rows of the Current and Next period, GTOPAS rows of the Current period. Candidate parts are never sent.",
-    "Start XD07 (AP POLE) and XD06 (GTOPAS) with the run ID. Display message no. 27.",
+    "Call SP_STG_SYNC (refer 5.24): the AP POLE rows of the Current and Next period and the GTOPAS rows of the Current period with SYNC_STATUS 0 get SYNC_STATUS 1, SYNC_DT and the run ID. Candidate parts are never sent.",
+    "Start the RPA parent flow with the run ID (refer UISS-Batch XD06 / XD07). Display message no. 27.",
     "With the default filter Non Sync the parts leave the list; select Sync Status = Sync or All to see them."
    ]
   },
@@ -4571,8 +4735,8 @@
    "marker": "1.",
    "level": 3,
    "items": [
-    "XD07 uploads to AP POLE the files LLM9Q880 (Export) and LLM9Q910 (Kanban) built from the staging rows of the run, in the order of SEND_SEQ.",
-    "XD06 compares, per part of the run, every destination with Case/Day >= 1 (latest staging value) with GTOPAS WVJA5204: Add / Delete / Keep.",
+    "The parent flow checks the run: with GTOPAS rows (a part becomes Active or Inactive, a destination is added or removed) XD06 runs first and XD07 starts only when GTOPAS succeeded; without GTOPAS rows XD07 runs at once.",
+    "XD06 adds or deletes the part + destination rows of the run on GTOPAS WVJA5204. XD07 uploads the files of the run from the views V_APPOLE_UPLOAD_EXPORT / _KANBAN in the order EXPORT_PRE, KANBAN, EXPORT_POST.",
     "The bots write nothing back to NSP; the result comes by the notification e-mail (SUCCESS / FAILED)."
    ]
   },
@@ -4586,7 +4750,7 @@
    "type": "item",
    "marker": "d.",
    "level": 2,
-   "text": "Interface method: RPA to AP POLE by upload files LLM9Q880 / LLM9Q910 (XD07), RPA to GTOPAS on WVJA5204 (XD06); the RPA reads only TB_H_PART_CANDIDATE_STG_SYNC (refer UISS-Batch XD06 / XD07)."
+   "text": "Interface method: one Power Automate parent flow per run starts XD06 (RPA on GTOPAS WVJA5204) and XD07 (RPA upload of LLM9Q880 / LLM9Q910 to AP POLE); the RPA reads only the staging tables and the views (refer UISS-Batch XD06 / XD07)."
   },
   {
    "type": "heading",
@@ -4685,15 +4849,25 @@
     ],
     [
      "Table",
-     "TB_H_PART_CANDIDATE_STG_SYNC",
-     "Staging of every value change for the sync (refer 5.24). Sync Status AP POLE / GTOPAS per part + period is worked out from it."
+     "TB_H_STG_APPOLE_KANBAN",
+     "AP POLE Kanban rows (LLM9Q910 format) and the header of the part (OPERATION_TYPE 1 to 5); refer 5.24."
+    ],
+    [
+     "Table",
+     "TB_H_STG_APPOLE_EXPORT",
+     "AP POLE Export rows (LLM9Q880 format); refer 5.24."
+    ],
+    [
+     "Table",
+     "TB_H_STG_GTOPAS",
+     "GTOPAS rows (part + destination Add / Delete); refer 5.24."
     ]
    ]
   },
   {
    "type": "text",
    "level": 2,
-   "text": "The sync status is not kept on TB_M_PART_CANDIDATE: every value change is a row of TB_H_PART_CANDIDATE_STG_SYNC with the Sync Status of AP POLE and GTOPAS. TB_H_PART_CANDIDATE keeps the screen history."
+   "text": "The sync status is not kept on TB_M_PART_CANDIDATE: every value change is a row of TB_H_STG_APPOLE_KANBAN, TB_H_STG_APPOLE_EXPORT or TB_H_STG_GTOPAS with its SYNC_STATUS. TB_H_PART_CANDIDATE keeps the screen history."
   },
   {
    "type": "heading",
@@ -4706,7 +4880,7 @@
    "items": [
     "Names: sub-menu Part List = Kanban Crossdock Master (Procurement), sub-menu Mapping per Destination = Export Crossdock Master (D/S). Page title Crossdock Master. Export Excel: Crossdock_Kanban_Master_YYYYMMDD.xlsx (sheet Kanban Crossdock Master) and Crossdock_Export_Master_<Period>_YYYYMMDD.xlsx (sheet Export Crossdock Master).",
     "Kanban Crossdock Master (former Part List) has a period like the Export Crossdock Master: TB_M_PART_CANDIDATE is kept per PART_NO + PERIOD (Status, Pcs/Case and Max Case/Day of that month).",
-    "Kanban Crossdock Master screen: new search criterion Calculation period (All periods / periods, default the ongoing period) and new first column Period. Rows of a past period: Part Number and [Edit] not available, [History] available. Add Part: into the ongoing period.",
+    "Kanban Crossdock Master screen: new search criterion Calculation period (All periods / periods, default the ongoing period) and new first column Period. Rows of a past period: Part Number and [Edit] not available, [History] available. Add Part: into the ongoing period (default) or the next period.",
     "Periods: Past = view only; Current (M) = changed by screen and upload; Next (M+1) = made by XD05 on day D (system master), view only until day 1. On day 1 the Period Rollover (XD05 process 3) makes Next the Current period.",
     "Order Type per destination row (system master '**', 'C', '9', 'V'): the same destination may have two rows in a period when the order type differs; key PART_NO + PERIOD + DEST_CODE + ORDER_TYPE. Export Crossdock Master: new column Order Type (combobox of the system master) after Destination (CD); Save is blocked when a destination + order type is used twice (\"The same destination is used twice with the same order type\").",
     "Export Excel / Upload of the Export Crossdock Master: new column Order Type after Destination Code (sheet 1 and sheet Upload).",
@@ -4751,28 +4925,74 @@
   },
   {
    "type": "heading",
-   "text": "5.24 Sync with TB_H_PART_CANDIDATE_STG_SYNC"
+   "text": "5.24 Sync with the staging tables"
   },
   {
    "type": "bullets",
    "marker": "-",
    "level": 0,
    "items": [
-    "Every value change inserts a row in TB_H_PART_CANDIDATE_STG_SYNC in the same transaction as the master update (a save without a value change writes no row): PART_NO, PART_NAME, PERIOD, PART_STATUS, LEVEL_TYPE, DEST_CODE / ORDER_TYPE (EXPORT), FIELD_NAME, ACTION, OLD_VALUE, NEW_VALUE, SOURCE, UPLOAD_ID, APPOLE_SYNC_STATUS 0, CREATED_BY / CREATED_DT.",
-    "KANBAN rows (Kanban Crossdock Master): EDIT of PCS_CASE / MAX_CASE_DAY per changed field; GTOPAS_SYNC_STATUS NULL.",
-    "EXPORT rows (Export Crossdock Master): ADD / EDIT / DELETE of CASE_DAY per destination + order type. ADD and DELETE (destination appears / disappears) get GTOPAS_SYNC_STATUS 0; EDIT gets NULL. DELETE: NEW_VALUE 0.",
-    "Status change by Procurement (Kanban Crossdock Master): Active -> Inactive writes a DELETE (NEW 0) for every destination of the part, PART_STATUS column Inactive (no row for the status itself; the part stays in the AP POLE Kanban). Inactive -> Active: Procurement maps the destinations again on the screen (EXPORT ADD rows, PART_STATUS Active).",
-    "Total Case/Day of the destinations > Max Case/Day of the part (same period): error on save, nothing is saved (message no. 14 / 20). To lower Max, the user lowers the destinations first (Export), then Max (Kanban).",
-    "Key of a change = PART_NO + PERIOD + LEVEL_TYPE + DEST_CODE + ORDER_TYPE + FIELD_NAME.",
-    "[Sync] (Export Crossdock Master) runs in one transaction before the bots start:",
-    "AP POLE: take the staging rows with APPOLE_SYNC_STATUS 0, PERIOD = Current or Next, CREATED_DT > System Master parameter LAST_SYNC_DATE_APPOLE and <= the time of the click. Per key: AP POLE value = OLD_VALUE of the first row, NSP value = NEW_VALUE of the last row. Last row of the key -> APPOLE_SYNC_STATUS 1 with SEND_SEQ; earlier rows -> 2 Superseded; a key that ends on its first value -> 1 without SEND_SEQ. All rows taken: APPOLE_SYNC_DT, APPOLE_SYNC_RUN_ID, CHANGED_BY / CHANGED_DT. Then LAST_SYNC_DATE_APPOLE = time of the click.",
-    "SEND_SEQ (position against the Kanban file): 1 = EXPORT rows of a part whose Max goes down (Export before Kanban), 2 = every KANBAN change and new part, 3 = EXPORT rows of every other part (Max up, new part, or no KANBAN row). AP POLE checks every uploaded row (total Max Shipping Box (RCS) of the part <= Max Shipping Box Qty), so inside a file the rows of a part going down / deleted come first, then up / added.",
-    "GTOPAS: take the staging rows with GTOPAS_SYNC_STATUS 0 and PERIOD = Current (no date condition) -> GTOPAS_SYNC_STATUS 1, GTOPAS_SYNC_DT, GTOPAS_SYNC_RUN_ID. The Next period waits for the Period Rollover (GTOPAS has no period).",
-    "Then NSP starts XD07 (AP POLE) and XD06 (GTOPAS) with the run ID. The bots read only TB_H_PART_CANDIDATE_STG_SYNC and write nothing back; the result comes by the notification e-mail. [Re-send last Sync] starts them again with the run ID of the last run.",
-    "Rows of a past period still Non Sync (changed but not sent before the rollover) are never taken again: every selection has a PERIOD condition.",
-    "Sync Status on the screen is worked out from the staging per part + period: AP POLE Non Sync while the part + period has a row with APPOLE_SYNC_STATUS 0, else Sync (Last Sent AP POLE = latest APPOLE_SYNC_DT); GTOPAS Non Sync while it has a row with GTOPAS_SYNC_STATUS 0, else Sync (Last Sent GTOPAS = latest GTOPAS_SYNC_DT). A past period can show Non Sync for rows not sent before the rollover (view only).",
-    "Buttons: [Sync (n)] and [Re-send last Sync]. Columns of the Export Crossdock Master and its Export Excel: Sync Status AP POLE, Sync Status GTOPAS, Last Sent AP POLE, Last Sent GTOPAS. The RPA does not download the Export Excel any more.",
-    "Decisions and simulation: deliverables/function_list_v2/erd/proposal_staging_sync (Summary_Staging_Sync_Decisions.md, simulation/Full_Sync_Flow_Simulation.xlsx)."
+    "Every save calls the stored procedure SP_STG_WRITE once per changed value, in the same transaction and after the master tables are updated. A save without a changed value writes nothing.",
+    "Kanban (TB_H_STG_APPOLE_KANBAN): a change of Pcs/Case or Max Case/Day of an Active part writes a row with the values after the change (ACTION EDIT); Candidate -> Active and a part of a new period write ACTION ADD. OPERATION_TYPE compares the new Max with the last Max sent to AP POLE (same period, else the latest earlier period): 1 = Max down, 2 = Max up, 3 = Max same, 4 = never sent.",
+    "Export (TB_H_STG_APPOLE_EXPORT): one row per added (ADD), changed (EDIT) or removed (DELETE, Max Shipping Box (RCS) 0) destination + order type. Active -> Inactive writes DELETE (0) for every destination of the part.",
+    "GTOPAS (TB_H_STG_GTOPAS): a row only when the destination appears or disappears for the part (any order type) and GTOPAS does not have that state yet. A Case/Day change or an order type change of a destination that stays writes no GTOPAS row.",
+    "Header: an Export change of a part + period without an unsent Kanban row writes the Kanban header with ACTION KEEP and OPERATION_TYPE 5 (current Kanban values, not uploaded). So every part of a run has one Kanban row that sets its upload order.",
+    "Superseded: a new row of a key marks the older unsent row of the same key SYNC_STATUS 2. A value set back to the value already sent for the period gets SYNC_STATUS 2 too (nothing to send). Keys: Kanban PERIOD + PART_NO; Export PERIOD + NSP_PART_NO + DEST_CODE + ORDER_TYPE; GTOPAS PERIOD + P_NO + DESTINATION_CODE.",
+    "NSP keeps the end state valid before the save: total Case/Day of the destinations <= Max Case/Day of the part in the period (XD01 messages 14 and 20, XD02 / XD03 checks).",
+    "[Sync] calls SP_STG_SYNC with a new run ID (YYYYMMDDHHMMSS). It calculates nothing: it locks the staging tables for a moment (a save at the same time waits), sets SYNC_STATUS 0 -> 1 with SYNC_DT and SYNC_RUN_ID on the AP POLE rows of the Current and Next period and on the GTOPAS rows of the Current period, and sets the System Master parameter LAST_SYNC_DATE_APPOLE. Then it starts the RPA parent flow with the run ID.",
+    "Upload files of AP POLE (views): EXPORT_PRE (LLM9Q880, order 1) = Export rows of the parts whose Kanban row of the run has OPERATION_TYPE 1; KANBAN (LLM9Q910, order 2) = Kanban rows of the run with OPERATION_TYPE 1 to 4; EXPORT_POST (LLM9Q880, order 3) = every other Export row of the run. Inside a file, per part, rows going down or DELETE (ROW_ORDER 1) come before rows going up or ADD (ROW_ORDER 2). An empty file is not made. File name <template>_<RUN_ID>_<order>_<name>.xls.",
+    "RPA parent flow: a run with GTOPAS rows (a part becomes Active or Inactive, a destination is added or removed) runs XD06 first and XD07 only when GTOPAS succeeded; a run without GTOPAS rows runs XD07 only. The Period Rollover runs XD06 only.",
+    "The robots write nothing back to NSP; the result comes by the notification e-mail. When it says FAILED, the D/S team clicks [Re-send last Sync] before the next [Sync]: the same run ID, the same rows and order.",
+    "Rows of a past period that were not sent before the Period Rollover are never taken again: every selection has a PERIOD condition.",
+    "Sync Status per part + period: AP POLE Non Sync while TB_H_STG_APPOLE_KANBAN or TB_H_STG_APPOLE_EXPORT has a row with SYNC_STATUS 0, else Sync; GTOPAS Non Sync while TB_H_STG_GTOPAS has a row with SYNC_STATUS 0, else Sync. Last Sent = latest SYNC_DT of the target.",
+    "Rules and simulation: deliverables/function_list_v2/erd/proposal_staging_sync (Proposal_Tables_Staging_Per_Target.xlsx, simulation/Staging_Header_Order.html, simulation/Staging_Per_Target_Full_Flow_Simulation.xlsx)."
+   ]
+  },
+  {
+   "type": "table",
+   "level": 0,
+   "row_lines": "all",
+   "columns": [
+    {
+     "title": "OPERATION_TYPE",
+     "width": 8,
+     "align": "center"
+    },
+    {
+     "title": "Meaning",
+     "width": 26
+    },
+    {
+     "title": "Upload order of the part",
+     "width": 20
+    }
+   ],
+   "rows": [
+    [
+     "1",
+     "Max down",
+     "EXPORT_PRE, then KANBAN"
+    ],
+    [
+     "2",
+     "Max up",
+     "KANBAN, then EXPORT_POST"
+    ],
+    [
+     "3",
+     "Max same (only Pcs/Case changed, or a new period with the same Max)",
+     "KANBAN, then EXPORT_POST"
+    ],
+    [
+     "4",
+     "Never sent (new part)",
+     "KANBAN, then EXPORT_POST"
+    ],
+    [
+     "5",
+     "Kanban unchanged, only the destinations changed (ACTION KEEP)",
+     "EXPORT_POST only"
+    ]
    ]
   },
   {
@@ -4812,7 +5032,7 @@
      "Add Part [Save]",
      "TB_M_PART_CANDIDATE",
      "Add",
-     "1 row for the new part, PART_STATUS = Candidate, CREATED / CHANGED = login user and server time."
+     "1 row for the new part in the selected period (ongoing or next), PART_STATUS Candidate. When the ongoing period is selected after day D, 1 more row for the next period."
     ],
     [
      "",
@@ -4822,7 +5042,7 @@
     ],
     [
      "",
-     "TB_H_PART_CANDIDATE_STG_SYNC",
+     "Staging tables",
      "-",
      "No row: a Candidate part is not sent."
     ],
@@ -4830,7 +5050,13 @@
      "Edit part data [Save]",
      "TB_M_PART_CANDIDATE",
      "Edit",
-     "The part row: Status, Min MAD, Pcs/Case, Max Case/Day, Total Pcs/Day, Effective Start Date (Candidate only), CHANGED_BY / CHANGED_DT."
+     "The part row: Status, Min MAD, Pcs/Case, Max Case/Day, Total Pcs/Day, CHANGED_BY / CHANGED_DT."
+    ],
+    [
+     "",
+     "TB_M_PART_CANDIDATE_DEST",
+     "Delete",
+     "Active -> Inactive: every destination of the part in the period."
     ],
     [
      "",
@@ -4840,9 +5066,21 @@
     ],
     [
      "",
-     "TB_H_PART_CANDIDATE_STG_SYNC",
+     "TB_H_STG_APPOLE_KANBAN",
      "Add",
-     "Active part: 1 KANBAN EDIT row per changed Pcs/Case or Max Case/Day. Candidate -> Active: KANBAN ADD rows. Active -> Inactive: 1 EXPORT DELETE row (NEW_VALUE 0) per destination. Min MAD, Effective Start Date and Candidate <-> Inactive: no row."
+     "Active part: 1 row with the new Pcs/Case and Max (EDIT, OPERATION_TYPE 1 / 2 / 3). Candidate -> Active: ADD (OPERATION_TYPE 4). Active -> Inactive: header (KEEP, 5)."
+    ],
+    [
+     "",
+     "TB_H_STG_APPOLE_EXPORT",
+     "Add",
+     "Active -> Inactive: 1 DELETE row (0) per destination."
+    ],
+    [
+     "",
+     "TB_H_STG_GTOPAS",
+     "Add",
+     "Active -> Inactive: 1 DELETE row per destination GTOPAS has."
     ],
     [
      "Edit mapping [Save]",
@@ -4870,15 +5108,33 @@
     ],
     [
      "",
-     "TB_H_PART_CANDIDATE_STG_SYNC",
+     "TB_H_STG_APPOLE_EXPORT",
      "Add",
-     "1 EXPORT row per added (ADD), changed (EDIT) or removed (DELETE, NEW_VALUE 0) destination."
+     "1 row per added (ADD), changed (EDIT) or removed (DELETE, 0) destination."
+    ],
+    [
+     "",
+     "TB_H_STG_GTOPAS",
+     "Add",
+     "1 row when a destination appears or disappears for the part (any order type)."
+    ],
+    [
+     "",
+     "TB_H_STG_APPOLE_KANBAN",
+     "Add",
+     "Header (KEEP, OPERATION_TYPE 5) when the part + period has no unsent Kanban row."
+    ],
+    [
+     "Every save above",
+     "Staging tables",
+     "Edit",
+     "The older unsent row of the same key: SYNC_STATUS 2 (Superseded)."
     ],
     [
      "[Sync]",
-     "TB_H_PART_CANDIDATE_STG_SYNC",
+     "Staging tables",
      "Edit",
-     "The rows taken by the run: sync status, SEND_SEQ, sync date and run ID of AP POLE / GTOPAS (refer 5.24). No row is added."
+     "SP_STG_SYNC: SYNC_STATUS 0 -> 1, SYNC_DT, SYNC_RUN_ID (AP POLE Current + Next, GTOPAS Current). No row is added."
     ],
     [
      "",
@@ -4888,14 +5144,14 @@
     ],
     [
      "[Re-send last Sync]",
-     "TB_H_PART_CANDIDATE_STG_SYNC",
+     "Staging tables",
      "-",
      "The rows of the last run ID are sent again (refer 5.16 c). No row is added."
     ],
     [
      "Upload Excel [Validate file]",
      "Same tables as the Save above",
-     "Add / Edit",
+     "Add / Edit / Delete",
      "Written by the upload batch, SOURCE UPLOAD: XD02 for Kanban Crossdock Master, XD03 for Export Crossdock Master (refer UISS-Batch)."
     ]
    ]
@@ -4981,11 +5237,11 @@
    "action": "Click [OK]"
   },
   {
-   "event": "Hover 'Effective Start Date'",
-   "cause": "Saved status is Active / Inactive",
+   "event": "Hover 'Period' in Edit",
+   "cause": "The part is registered",
    "type": "Info",
    "msg_id": "MSG10",
-   "message": "Can only be changed while the status is Candidate.",
+   "message": "The period cannot be changed after the part is registered.",
    "action": "-"
   },
   {
@@ -5252,7 +5508,7 @@
    "name": "TB_H_PART_CANDIDATE",
    "kind": "history",
    "proposed": true,
-   "description": "History of every change of a crossdock part for the History setting of XD01 (Add / Edit by screen or upload, mapping changes, status changes and mappings made by the calculation batches). The sync to GTOPAS / AP POLE is not recorded here: it is in TB_H_PART_CANDIDATE_STG_SYNC. No retention limit.",
+   "description": "History of every change of a crossdock part for the History setting of XD01 (Add / Edit by screen or upload, mapping changes, status changes and mappings made by the calculation batches). The sync to GTOPAS / AP POLE is not recorded here: it is in the staging tables (TB_H_STG_APPOLE_KANBAN, TB_H_STG_APPOLE_EXPORT, TB_H_STG_GTOPAS). No retention limit.",
    "columns": [
     [
      "HIST_ID",
@@ -5315,7 +5571,7 @@
      "VARCHAR(30)",
      "",
      "N",
-     "Changed field: PCS_CASE, MAX_CASE_DAY, MIN_MAD, PART_STATUS, EFFECTIVE_START_DATE, CASE_DAY"
+     "Changed field: PCS_CASE, MAX_CASE_DAY, MIN_MAD, PART_STATUS, CASE_DAY"
     ],
     [
      "OLD_VALUE",
@@ -5355,101 +5611,100 @@
    ]
   },
   {
-   "name": "TB_H_PART_CANDIDATE_STG_SYNC",
+   "name": "TB_H_STG_APPOLE_KANBAN",
    "kind": "history",
    "proposed": true,
-   "description": "Staging of every value change of the Kanban / Export Crossdock Master for the sync to AP POLE (XD07) and GTOPAS (XD06). Inserted by XD01 (screen), XD02 / XD03 (upload) and XD05 in the same transaction as the master update; updated only by [Sync], [Re-send last Sync] and the Period Rollover. The RPA reads only this table. TB_H_PART_CANDIDATE (screen history) is kept as it is.",
    "columns": [
     [
-     "HIST_ID",
+     "STG_ID",
      "BIGINT",
      "Y",
      "N",
-     "Running number (identity): order of the changes"
-    ],
-    [
-     "PART_NO",
-     "VARCHAR(TBD)",
-     "",
-     "N",
-     "Part number (NSP format, with \"-\"); FK1 (PART_NO, PERIOD) -> TB_M_PART_CANDIDATE"
-    ],
-    [
-     "PART_NAME",
-     "VARCHAR(TBD)",
-     "",
-     "N",
-     "Part Name copied from TB_M_PART_CANDIDATE at the insert (Part Name of the Kanban upload file)"
+     "Running number: order of the inserts"
     ],
     [
      "PERIOD",
      "CHAR(6)",
      "",
      "N",
-     "Calculation period YYYYMM; Effective Month / Year of the AP POLE upload"
-    ],
-    [
-     "PART_STATUS",
-     "VARCHAR(10)",
-     "",
-     "N",
-     "Status of the part in this period when the row is written (Active / Inactive). Inactive: the part stays in the AP POLE Kanban, its Export rows are DELETE with NEW_VALUE 0"
-    ],
-    [
-     "LEVEL_TYPE",
-     "VARCHAR(6)",
-     "",
-     "N",
-     "KANBAN = parent (Kanban Crossdock Master), EXPORT = destination (Export Crossdock Master)"
-    ],
-    [
-     "DEST_CODE",
-     "CHAR(7)",
-     "",
-     "Y",
-     "EXPORT only: destination code. No FK (a DELETE row points to a removed destination)"
-    ],
-    [
-     "ORDER_TYPE",
-     "VARCHAR(2)",
-     "",
-     "Y",
-     "EXPORT only: '**', 'C', '9', 'V'"
-    ],
-    [
-     "FIELD_NAME",
-     "VARCHAR(30)",
-     "",
-     "N",
-     "KANBAN: PCS_CASE, MAX_CASE_DAY. EXPORT: CASE_DAY"
+     "Calculation period YYYYMM. FK1 (PART_NO, PERIOD) -> TB_M_PART_CANDIDATE"
     ],
     [
      "ACTION",
      "VARCHAR(6)",
      "",
      "N",
-     "ADD / EDIT / DELETE"
+     "ADD (new part, new period) / EDIT (Pcs/Case or Max changed) / KEEP (header written by an Export save, Kanban unchanged)"
     ],
     [
-     "OLD_VALUE",
+     "PART_STATUS",
      "VARCHAR(10)",
      "",
-     "Y",
-     "Value before the change; NULL on ADD"
+     "N",
+     "Active / Inactive in the period when the row is written (an Inactive part stays in the AP POLE Kanban)"
     ],
     [
-     "NEW_VALUE",
-     "VARCHAR(10)",
+     "EFFECTIVE_MONTH_YEAR",
+     "CHAR(7)",
      "",
-     "Y",
-     "Value after the change; 0 on DELETE"
+     "N",
+     "MM/YYYY of PERIOD. File / screen column: Effective Month / Year"
+    ],
+    [
+     "OPERATOR_ID",
+     "CHAR(2)",
+     "",
+     "N",
+     "Always P6. File / screen column: Operator ID. Default 'P6'"
+    ],
+    [
+     "PART_NO",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "Part number with \"-\" (NSP format); FK1. File / screen column: Part No."
+    ],
+    [
+     "PART_NAME",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "From TB_M_PART_CANDIDATE at the insert. File / screen column: Part Name"
+    ],
+    [
+     "SHIPPING_BOX_QTY",
+     "NUMBER(5)",
+     "",
+     "N",
+     "Pcs/Case. File / screen column: Shipping Box Qty"
+    ],
+    [
+     "MAX_SHIPPING_BOX_QTY",
+     "NUMBER(5)",
+     "",
+     "N",
+     "Max Case/Day. File / screen column: Max Shipping Box Qty"
+    ],
+    [
+     "MAX_ALLOWANCE_QTY",
+     "NUMBER(9)",
+     "",
+     "N",
+     "Shipping Box Qty x Max Shipping Box Qty. File / screen column: Max Allowance Qty"
+    ],
+    [
+     "OPERATION_TYPE",
+     "NUMBER(1)",
+     "",
+     "N",
+     "Header of the part, set by SP_STG_WRITE at the save: 1 = Max down, 2 = Max up, 3 = Max same (only Pcs/Case changed, or a new period with the same Max), 4 = never sent, 5 = Kanban unchanged, only the destinations changed (ACTION KEEP). 1 to 4 against the last Max sent: same period, else the latest earlier period. Upload: 1 -> the Export rows of the part in EXPORT_PRE before KANBAN; 2, 3, 4 -> KANBAN then EXPORT_POST; 5 -> EXPORT_POST only, the row is not in the KANBAN file"
     ],
     [
      "SOURCE",
      "VARCHAR(6)",
      "",
      "N",
-     "BATCH (XD05) / SCREEN / UPLOAD"
+     "SCREEN / UPLOAD / BATCH (XD05)"
     ],
     [
      "UPLOAD_ID",
@@ -5459,53 +5714,25 @@
      "Upload of the Kanban or Export Excel (Log); NULL when SOURCE is not UPLOAD"
     ],
     [
-     "APPOLE_SYNC_STATUS",
+     "SYNC_STATUS",
      "CHAR(1)",
      "",
      "N",
-     "0 = Non Sync (default), 1 = Sync, 2 = Superseded (an earlier row of the same key, not sent). The part + period is AP POLE Non Sync while it has a row with 0"
+     "0 = to send, 1 = sent, 2 = Superseded at the save (a newer row of the key, or back to the value already sent). Set by SP_STG_WRITE (0, 2) and SP_STG_SYNC / Period Rollover (1). Default '0'"
     ],
     [
-     "APPOLE_SYNC_DT",
+     "SYNC_DT",
      "DATETIME",
      "",
      "Y",
-     "Time of the [Sync] that sent the row to AP POLE (status 1 and 2); Last Sent AP POLE = latest value"
+     "Time of the [Sync] / Period Rollover that sent the row; Last Sent on the screen = latest value"
     ],
     [
-     "SEND_SEQ",
-     "NUMBER(1)",
-     "",
-     "Y",
-     "Upload file: 1 = Export (LLM9Q880) before the Kanban file, only for a part whose Max goes down; 2 = Kanban (LLM9Q910); 3 = Export after the Kanban file (every other part). Set at [Sync] on the last row of each key; NULL for 2 and for a key that ends on its first value"
-    ],
-    [
-     "APPOLE_SYNC_RUN_ID",
+     "SYNC_RUN_ID",
      "VARCHAR(14)",
      "",
      "Y",
-     "AP POLE run ID YYYYMMDDHHMMSS; [Re-send last Sync] takes the rows of the last run"
-    ],
-    [
-     "GTOPAS_SYNC_STATUS",
-     "CHAR(1)",
-     "",
-     "Y",
-     "NULL = not for GTOPAS (KANBAN rows, EXPORT EDIT). 0 = Non Sync: EXPORT ADD / DELETE (destination appears / disappears). 1 = Sync: [Sync] for the Current period, the Period Rollover for the new period"
-    ],
-    [
-     "GTOPAS_SYNC_DT",
-     "DATETIME",
-     "",
-     "Y",
-     "Time of the [Sync] / Period Rollover that sent the row to GTOPAS; Last Sent GTOPAS = latest value"
-    ],
-    [
-     "GTOPAS_SYNC_RUN_ID",
-     "VARCHAR(14)",
-     "",
-     "Y",
-     "GTOPAS run ID ([Sync], [Re-send last Sync] or the Period Rollover)"
+     "Run ID YYYYMMDDHHMMSS; [Re-send last Sync] sends the rows of the last run again"
     ],
     [
      "CREATED_BY",
@@ -5526,7 +5753,7 @@
      "VARCHAR(20)",
      "",
      "Y",
-     "User of [Sync] / [Re-send last Sync], XD05BATCH for the Period Rollover"
+     "User of the save that made the row Superseded, of [Sync], or XD05BATCH (Period Rollover)"
     ],
     [
      "CHANGED_DT",
@@ -5535,7 +5762,297 @@
      "Y",
      "Time of that update"
     ]
-   ]
+   ],
+   "description": "AP POLE Kanban rows in the format of the upload file LLM9Q910, one row per Kanban change of a part + period, plus the header row (OPERATION_TYPE 5) when only the destinations changed. Written by SP_STG_WRITE (XD01, XD02, XD05); SYNC_STATUS set by SP_STG_SYNC. Read by XD07 through V_APPOLE_UPLOAD_KANBAN and V_APPOLE_UPLOAD_EXPORT."
+  },
+  {
+   "name": "TB_H_STG_APPOLE_EXPORT",
+   "kind": "history",
+   "proposed": true,
+   "columns": [
+    [
+     "STG_ID",
+     "BIGINT",
+     "Y",
+     "N",
+     "Running number: order of the inserts"
+    ],
+    [
+     "PERIOD",
+     "CHAR(6)",
+     "",
+     "N",
+     "Calculation period YYYYMM. FK1 (NSP_PART_NO, PERIOD) -> TB_M_PART_CANDIDATE"
+    ],
+    [
+     "NSP_PART_NO",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "Part number with \"-\" (key back to NSP); FK1"
+    ],
+    [
+     "DEST_CODE",
+     "CHAR(7)",
+     "",
+     "N",
+     "Destination code, 7 digits. No FK: a DELETE row points to a removed destination"
+    ],
+    [
+     "ACTION",
+     "VARCHAR(6)",
+     "",
+     "N",
+     "ADD / EDIT / DELETE (DELETE = Max Shipping Box (RCS) 0)"
+    ],
+    [
+     "EFFECTIVE_MONTH_YEAR",
+     "CHAR(7)",
+     "",
+     "N",
+     "MM/YYYY of PERIOD. File / screen column: Effective Month / Year"
+    ],
+    [
+     "PART_NO",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "Part number without \"-\". File / screen column: Part No."
+    ],
+    [
+     "BUYER_PD",
+     "CHAR(8)",
+     "",
+     "N",
+     "DEST_CODE in 5-2 format. File / screen column: Buyer-PD"
+    ],
+    [
+     "ORDER_TYPE",
+     "VARCHAR(2)",
+     "",
+     "N",
+     "'**', 'C', '9', 'V' (system master). File / screen column: Order Type"
+    ],
+    [
+     "TRANSPORT_CODE",
+     "CHAR(1)",
+     "",
+     "N",
+     "Always 2. File / screen column: Transport Code. Default '2'"
+    ],
+    [
+     "MAX_SHIPPING_BOX_RCS",
+     "NUMBER(5)",
+     "",
+     "N",
+     "Case/Day of the destination; 0 = delete. File / screen column: Max Shipping Box (RCS)"
+    ],
+    [
+     "SOURCE",
+     "VARCHAR(6)",
+     "",
+     "N",
+     "SCREEN / UPLOAD / BATCH (XD05)"
+    ],
+    [
+     "UPLOAD_ID",
+     "VARCHAR(TBD)",
+     "",
+     "Y",
+     "Upload of the Kanban or Export Excel (Log); NULL when SOURCE is not UPLOAD"
+    ],
+    [
+     "SYNC_STATUS",
+     "CHAR(1)",
+     "",
+     "N",
+     "0 = to send, 1 = sent, 2 = Superseded at the save (a newer row of the key, or back to the value already sent). Set by SP_STG_WRITE (0, 2) and SP_STG_SYNC / Period Rollover (1). Default '0'"
+    ],
+    [
+     "SYNC_DT",
+     "DATETIME",
+     "",
+     "Y",
+     "Time of the [Sync] / Period Rollover that sent the row; Last Sent on the screen = latest value"
+    ],
+    [
+     "SYNC_RUN_ID",
+     "VARCHAR(14)",
+     "",
+     "Y",
+     "Run ID YYYYMMDDHHMMSS; [Re-send last Sync] sends the rows of the last run again"
+    ],
+    [
+     "CREATED_BY",
+     "VARCHAR(20)",
+     "",
+     "N",
+     "User of the save / upload, or XD05BATCH"
+    ],
+    [
+     "CREATED_DT",
+     "DATETIME",
+     "",
+     "N",
+     "Time of the insert (same transaction as the master update)"
+    ],
+    [
+     "CHANGED_BY",
+     "VARCHAR(20)",
+     "",
+     "Y",
+     "User of the save that made the row Superseded, of [Sync], or XD05BATCH (Period Rollover)"
+    ],
+    [
+     "CHANGED_DT",
+     "DATETIME",
+     "",
+     "Y",
+     "Time of that update"
+    ]
+   ],
+   "description": "AP POLE Export rows in the format of the upload file LLM9Q880, one row per added, changed or removed destination + order type of a part + period. Written by SP_STG_WRITE (XD01, XD03, XD05); SYNC_STATUS set by SP_STG_SYNC. Read by XD07 through V_APPOLE_UPLOAD_EXPORT."
+  },
+  {
+   "name": "TB_H_STG_GTOPAS",
+   "kind": "history",
+   "proposed": true,
+   "columns": [
+    [
+     "STG_ID",
+     "BIGINT",
+     "Y",
+     "N",
+     "Running number: order of the inserts"
+    ],
+    [
+     "PERIOD",
+     "CHAR(6)",
+     "",
+     "N",
+     "Calculation period YYYYMM (GTOPAS has no period: [Sync] sends the Current period, the Period Rollover the new Current). FK1 (P_NO, PERIOD) -> TB_M_PART_CANDIDATE"
+    ],
+    [
+     "ACTION",
+     "VARCHAR(6)",
+     "",
+     "N",
+     "ADD / DELETE: the destination appears or disappears for the part (any order type). No row for a Case/Day change or for a state GTOPAS already has. File / screen column: Add / Delete (MT = DEL)"
+    ],
+    [
+     "DEPOT_CODE",
+     "CHAR(2)",
+     "",
+     "N",
+     "Always 01. File / screen column: Depot Code. Default '01'"
+    ],
+    [
+     "P_NO",
+     "VARCHAR(TBD)",
+     "",
+     "N",
+     "Part number with \"-\"; FK1. File / screen column: P/No."
+    ],
+    [
+     "DESTINATION_CODE",
+     "CHAR(7)",
+     "",
+     "N",
+     "7-digit code, the same in NSP and GTOPAS. File / screen column: Destination Code"
+    ],
+    [
+     "MAKER_CODE",
+     "CHAR(1)",
+     "",
+     "N",
+     "Always A. File / screen column: Maker Code. Default 'A'"
+    ],
+    [
+     "DOMESTIC_OVERSEAS",
+     "CHAR(1)",
+     "",
+     "N",
+     "Always 2. File / screen column: Domestic/Overseas. Default '2'"
+    ],
+    [
+     "TOPAS_ORDER_TYPE",
+     "CHAR(1)",
+     "",
+     "N",
+     "Always 3. File / screen column: TOPAS Order Type. Default '3'"
+    ],
+    [
+     "ORDER_TRANSPORTATION_CODE",
+     "CHAR(1)",
+     "",
+     "N",
+     "Always 2. File / screen column: Order Transportation Code. Default '2'"
+    ],
+    [
+     "SOURCE",
+     "VARCHAR(6)",
+     "",
+     "N",
+     "SCREEN / UPLOAD / BATCH (XD05)"
+    ],
+    [
+     "UPLOAD_ID",
+     "VARCHAR(TBD)",
+     "",
+     "Y",
+     "Upload of the Kanban or Export Excel (Log); NULL when SOURCE is not UPLOAD"
+    ],
+    [
+     "SYNC_STATUS",
+     "CHAR(1)",
+     "",
+     "N",
+     "0 = to send, 1 = sent, 2 = Superseded at the save (a newer row of the key, or back to the value already sent). Set by SP_STG_WRITE (0, 2) and SP_STG_SYNC / Period Rollover (1). Default '0'"
+    ],
+    [
+     "SYNC_DT",
+     "DATETIME",
+     "",
+     "Y",
+     "Time of the [Sync] / Period Rollover that sent the row; Last Sent on the screen = latest value"
+    ],
+    [
+     "SYNC_RUN_ID",
+     "VARCHAR(14)",
+     "",
+     "Y",
+     "Run ID YYYYMMDDHHMMSS; [Re-send last Sync] sends the rows of the last run again"
+    ],
+    [
+     "CREATED_BY",
+     "VARCHAR(20)",
+     "",
+     "N",
+     "User of the save / upload, or XD05BATCH"
+    ],
+    [
+     "CREATED_DT",
+     "DATETIME",
+     "",
+     "N",
+     "Time of the insert (same transaction as the master update)"
+    ],
+    [
+     "CHANGED_BY",
+     "VARCHAR(20)",
+     "",
+     "Y",
+     "User of the save that made the row Superseded, of [Sync], or XD05BATCH (Period Rollover)"
+    ],
+    [
+     "CHANGED_DT",
+     "DATETIME",
+     "",
+     "Y",
+     "Time of that update"
+    ]
+   ],
+   "description": "GTOPAS WVJA5204 rows: a part + destination to add or delete, written by SP_STG_WRITE only when the destination appears or disappears for the part (any order type) and GTOPAS does not have that state yet. Sent by [Sync] (Current period) or the Period Rollover (new Current period). Read by XD06."
   }
  ],
  "header": {
@@ -5545,7 +6062,7 @@
   "function_name": "XD01 Cross Dock Part Master Screen",
   "created_date": "18-Oct-26",
   "created_by": "FID Rayhan",
-  "updated_date": "22-Nov-26",
+  "updated_date": "23-Nov-26",
   "updated_by": "FID Rayhan"
  },
  "revisions": [
@@ -5618,6 +6135,13 @@
    "date": "22-Nov-26",
    "reviewed_by": "",
    "description": "New 5.25 Table changes per Save: Add / Edit / Delete per table for every save on the screen."
+  },
+  {
+   "revision": "0.11",
+   "author": "FID Rayhan",
+   "date": "23-Nov-26",
+   "reviewed_by": "",
+   "description": "Staging per target: TB_H_STG_APPOLE_KANBAN / _EXPORT / TB_H_STG_GTOPAS replace TB_H_PART_CANDIDATE_STG_SYNC, SP_STG_WRITE at the save (OPERATION_TYPE 1-5, Superseded), SP_STG_SYNC at [Sync], RPA parent flow (5.24, 5.25). Effective Start Date replaced by Period (Add Part: ongoing or next period). Candidate part: Candidate or Active only."
   }
  ]
 }
