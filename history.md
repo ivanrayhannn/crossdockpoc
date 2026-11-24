@@ -125,9 +125,8 @@ Tidak dipakai: X9 H0202 Demand History Sync, X15 Menu Settings, XD12 (digabung k
 - 20-Nov: **tidak ada response dari RPA (option C)**: Sync Status No Sync / Sent, Last Sent per target, **[Re-send last Sync]**; TB_R_CROSSDOCK_IF_RESULT dihapus.
 
 ### Fase 9 · 21–23 Nov · Staging sync
-- 21-Nov: proposal **TB_H_PART_CANDIDATE_STG_SYNC**: semua perubahan nilai jadi baris staging; part Inactive tetap di Kanban AP POLE dengan Buyer-PD 0; parameter LAST_SYNC_DATE_APPOLE; sandbox SQL di prototype.
-- 22-Nov: UISS XD01–XD03, XD05–XD07 memakai STG_SYNC (kolom sync dihapus dari master, file upload dengan SEND_SEQ); XD01 rev 0.8–0.10 (antislop copy, 5.25 tabel per Save).
-- 23-Nov:
+- 21-Nov: keputusan dasar staging: status sync keluar dari master, part Inactive tetap di Kanban AP POLE dengan Buyer-PD 0, parameter LAST_SYNC_DATE_APPOLE, sandbox SQL di prototype. XD01 rev 0.8–0.10 (antislop copy, 5.25 tabel per Save).
+- 23-Nov (desain final):
   - **Staging per target**: TB_H_STG_APPOLE_KANBAN / _EXPORT / TB_H_STG_GTOPAS dengan format file upload; **SP_STG_WRITE** di Save (OPERATION_TYPE 1–5); **SP_STG_SYNC** di [Sync]; view file EXPORT_PRE / KANBAN / EXPORT_POST.
   - **Period menggantikan Effective Start Date** (Add Part: bulan berjalan atau Next).
   - Part Candidate hanya bisa jadi Active.
@@ -143,13 +142,64 @@ Tidak dipakai: X9 H0202 Demand History Sync, X15 Menu Settings, XD12 (digabung k
 | 30-Sep – 12-Oct | Flag / 3 status di prototype | – | – |
 | 13-Oct – 16-Nov | SYNC_STATUS per part di master (No Sync / Waiting / Success / Failed), hasil per target di tabel dummy | RPA (30-Oct), bandingkan penuh (11-Nov) | File SFTP CSV (18-Oct) |
 | 17–20 Nov | Per part di master; sejak 20-Nov **No Sync / Sent** tanpa response | Bot download Excel NSP, bandingkan, Add / Delete | RPA di layar WLM9Q890 / WLM9Q860 |
-| 22-Nov | Satu tabel staging `TB_H_PART_CANDIDATE_STG_SYNC` (baris per field, OLD/NEW, SEND_SEQ dihitung saat Sync) | Bot baca staging | Upload file LLM9Q910 / LLM9Q880 per SEND_SEQ |
 | 23-Nov (sekarang) | 3 tabel staging per target dengan format file; aturan di `SP_STG_WRITE` saat Save | Parent flow: XD06 menjalankan ADD / DELETE dari TB_H_STG_GTOPAS | XD07 upload EXPORT_PRE → KANBAN → EXPORT_POST dari view |
 
 Perubahan penting yang ikut terbawa:
-- **Active → Inactive.** Sampai 20-Nov part dihapus dari Kanban AP POLE. Sejak 21-Nov part tetap ada di Kanban dan destinasinya dikirim 0, karena AP POLE tetap memakai Effective Month lama sampai ada baris baru.
+- **Active → Inactive.** Sampai 20-Nov part dihapus dari Kanban AP POLE. Sekarang part tetap ada di Kanban dan destinasinya dikirim 0, karena AP POLE tetap memakai Effective Month lama sampai ada baris baru.
 - **Effective Start Date** (default besok, minimal hari ini) dipakai sejak 30-Sep, lalu diganti **Period** pada 23-Nov.
 - **Hasil RPA.** Sampai 19-Nov ditulis balik ke NSP. Sejak 20-Nov tidak ada response; hasil hanya lewat email.
+
+### 4.1 Perbandingan desain awal (s/d 20-Nov) dan sekarang (23-Nov)
+
+**Tempat status sync**
+
+| Aspek | Awal | Sekarang |
+|---|---|---|
+| Status sync disimpan di | Kolom di TB_M_PART_CANDIDATE: SYNC_STATUS, GTOPAS_SYNC_DT / APPOLE_SYNC_DT, SYNC_RUN_ID | 3 tabel staging: TB_H_STG_APPOLE_KANBAN, TB_H_STG_APPOLE_EXPORT, TB_H_STG_GTOPAS |
+| Unit sync | Per part (part dikirim utuh) | Per baris format file: Kanban per part + period, Export per destinasi + order type, GTOPAS per part + destinasi |
+| Nilai status | No Sync / Waiting / Success / Failed; sejak 20-Nov No Sync / Sent | Per baris: 0 belum terkirim / 1 terkirim / 2 Superseded |
+| Kapan jadi No Sync | Nilai yang dikirim berubah (status ke/dari Active, Pcs/Case, Max, destinasi, Case/Day) | `SP_STG_WRITE` menulis baris saat Save; kembali ke nilai terkirim → Superseded |
+| Nilai yang dikirim | Tidak tersimpan (hanya status) | Tersimpan persis seperti di file upload |
+| History sync | Event SYNC di TB_H_PART_CANDIDATE (No Sync → Sent) | Dari tabel staging; event SYNC tidak ditulis ke TB_H |
+| Last Sent | GTOPAS_SYNC_DT / APPOLE_SYNC_DT di master | SYNC_DT terakhir per tabel staging |
+
+**[Sync]**
+
+| Aspek | Awal | Sekarang |
+|---|---|---|
+| Yang diambil | Part Active (Current / Next) dan Inactive dengan status No Sync | Baris SYNC_STATUS 0 (AP POLE: Current + Next; GTOPAS: Current) |
+| Proses saat klik | Master jadi Sent + run ID + waktu kirim, history SYNC, jalankan XD06 dan XD07 | `SP_STG_SYNC` 0 → 1 + run ID, jalankan parent flow |
+| Urutan upload AP POLE | Tidak diatur | OPERATION_TYPE (ditulis saat Save) → EXPORT_PRE / KANBAN / EXPORT_POST, ROW_ORDER |
+| Re-send | Part dari run terakhir dikirim lagi | Run ID yang sama lewat parent flow (RESEND) |
+
+**RPA**
+
+| Aspek | Awal | Sekarang |
+|---|---|---|
+| Sumber data bot | Bot login ke NSP dan download Export Excel XD01 | Tabel staging dan view (user DB read-only) |
+| XD06 GTOPAS | Baca semua baris WVJA5204, bandingkan dengan Excel NSP (sheet GTOPAS Compare), Add / Delete / Keep | Jalankan ACTION ADD / DELETE dari TB_H_STG_GTOPAS, tanpa membandingkan |
+| XD07 AP POLE | RPA di layar WLM9Q890 (part) dan WLM9Q860 (destinasi), sheet AP POLE Compare | Upload file LLM9Q910 / LLM9Q880 dari template |
+| Part jadi Inactive | Part dihapus dari Kanban AP POLE dan semua baris GTOPAS | Kanban tetap, Export DELETE (0), GTOPAS DELETE, header 5 |
+| Cara jalan | XD06 dan XD07 jalan sendiri-sendiri | Parent flow: skenario 1 (GTOPAS dulu; kalau gagal, AP POLE berhenti), skenario 2 (AP POLE saja), Rollover (XD06 saja) |
+| Error | Try-catch: satu error, seluruh run gagal | GTOPAS: baris gagal dicatat, baris lain tetap jalan. AP POLE: berhenti di file yang ditolak |
+| Hasil ke NSP | Success / Failed ditulis balik; sejak 20-Nov tidak ada | Tidak ada; email |
+| Email | 1 per target | 1 per run (GTOPAS + AP POLE) |
+
+**Crossdock Master**
+
+| Aspek | Awal | Sekarang |
+|---|---|---|
+| Mulai berlaku | Effective Start Date (default besok, minimal hari ini, bisa diubah selama Candidate) | Period bulan berjalan atau Next; terkunci setelah disimpan |
+| Add Part | Ke period berjalan, SYNC_STATUS 0 | Bulan berjalan / Next; setelah tanggal D baris Next ikut dibuat; Candidate tidak menulis staging |
+| Pilihan status Edit part Candidate | Candidate / Active / Inactive | Candidate / Active |
+| Filter layar | Sync Status default No Sync (part Sent tersembunyi) | Chip AP POLE / GTOPAS dari staging |
+| Export Excel | Kolom Sync Status dan Last Sent, dipakai bot sebagai sumber | Hanya informasi |
+| Upload XD02 | Kolom Effective Start Date | Kolom Period (A: bulan berjalan / Next, E: bulan berjalan) |
+| XD05 | Lewati part dengan Effective Start Date setelah tanggal run; status ke/dari Active atau mapping beda → No Sync | Semua part dengan baris di Current; Kanban ADD dengan OPERATION_TYPE, Export ADD / DELETE, GTOPAS hanya untuk destinasi yang muncul / hilang |
+| Period Rollover | Part yang kombinasi part + destinasinya beda → GTOPAS Sent, XD06 jalan | Baris GTOPAS period baru 0 → 1, parent flow ROLLOVER |
+| Kolom TB_M_PART_CANDIDATE | + EFFECTIVE_START_DATE, SYNC_STATUS, GTOPAS_SYNC_DT, APPOLE_SYNC_DT, SYNC_RUN_ID | Tanpa kolom itu |
+
+**Alasan perubahan.** Status per part di master tidak menyimpan nilai apa yang dikirim. Akibatnya bot harus download Excel dan membandingkan sendiri, urutan upload ke AP POLE tidak bisa diatur, dan perubahan setelah [Sync] bercampur dengan status. Desain sekarang menyimpan baris dalam format file per target, menentukan urutan saat Save, dan menjalankan GTOPAS dulu supaya AP POLE tidak jalan kalau GTOPAS gagal.
 
 ---
 
