@@ -28,3 +28,29 @@ if not any(r['revision'] == '0.13' for r in s['revisions']):
                                           'Sync Status as Non Sync chip / Sync check / Not sent.'})
     json.dump(s, open(p, 'w'), indent=1, ensure_ascii=False)
     print('patched XD01')
+
+# (c) Used/Quota (Case) and one status column per target, narrow number columns. XD01 rev 0.14.
+s = json.load(open(p))
+if not any(r['revision'] == '0.14' for r in s['revisions']):
+    it = s['items']
+    for x in it:
+        if x.get('name') == 'Total Case/Day (used / quota)':
+            x['name'] = 'Used/Quota (Case)'
+    k = next(i for i, x in enumerate(it) if x.get('name') == 'Sync Status' and x.get('field') == 'SYNC_STATUS (derived)')
+    common = ("'Non Sync' = amber chip with a dot (a row waits for [Sync]); 'Sync' = check mark with green text (every row sent); "
+              "'Not sent' = grey text (no staging row for the target yet). Tooltip: the state and the last send time (latest SYNC_DT). Refer 5.24.")
+    ap = dict(it[k], name='AP POLE Status', field='SYNC_STATUS (derived)', source='TB_H_STG_APPOLE_KANBAN / TB_H_STG_APPOLE_EXPORT',
+              description='Status of the part + period for AP POLE (Kanban or Export staging). ' + common)
+    gt = dict(it[k], name='GTOPAS Status', field='SYNC_STATUS (derived)', source='TB_H_STG_GTOPAS',
+              description='Status of the part + period for GTOPAS (GTOPAS staging). ' + common)
+    it[k:k + 1] = [ap, gt]
+    for o in s['operation']:
+        if 'items' in o:
+            o['items'] = [t.replace('Total Case/Day (used / quota)', 'Used/Quota (Case)') for t in o['items']]
+        if 'text' in o:
+            o['text'] = o['text'].replace('Total Case/Day (used / quota)', 'Used/Quota (Case)')
+    s['revisions'].append({'revision': '0.14', 'author': 'FID Rayhan', 'date': '24-Nov-26', 'reviewed_by': '',
+                           'description': "Export Crossdock Master list: column Used/Quota (Case) (was Total Case/Day (used / quota)); AP POLE Status and "
+                                          'GTOPAS Status as two columns; narrower number columns.'})
+    json.dump(s, open(p, 'w'), indent=1, ensure_ascii=False)
+    print('patched XD01 (c)')
