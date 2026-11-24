@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { AppShell } from '../../components/shell/AppShell';
 import type { RouteKey } from '../../routes';
 import { BreadcrumbBar } from '../../components/shell/BreadcrumbBar';
-import { DestMappingTab } from './components/DestMappingTab';
+import { DestMappingTab, selectDestRows } from './components/DestMappingTab';
 import { HistoryModal } from './components/HistoryModal';
 import { PageHeader } from './components/PageHeader';
 import { PartListTab } from './components/PartListTab';
@@ -12,8 +12,9 @@ import { SaveSuccessModal } from './components/SaveSuccessModal';
 import { MappingUploadModal } from './components/MappingUploadModal';
 import { UploadModal } from './components/UploadModal';
 import { ViewTabs } from './components/ViewTabs';
-import { PAST_ROWS } from '../../data/seed';
+import { exportMappingXlsx } from './mappingExport';
 import { exportPartsXlsx, selectParts } from './partList';
+import { CUR_PER, PAST_ROWS } from '../../data/seed';
 import { useCrossdockState } from './useCrossdockState';
 
 const SUB_MENU_LABEL = { procurement: 'Kanban Crossdock Master', ds: 'Export Crossdock Master' } as const;
@@ -21,7 +22,7 @@ const ACTIVE_ITEM = 'Crossdock Master Setting';
 
 export function CrossdockMasterSettingPage({ onNavigate }: { onNavigate: (route: RouteKey) => void }) {
   const state = useCrossdockState();
-  const { parts, q, aq, setQ, runSearch, resetQ, ro, role, setRole, switchRole, view, modal, addPart, openUpload, openFor, notice, dismissNotice, dadRun, runCalc } = state;
+  const { parts, pastRows, q, aq, setQ, runSearch, resetQ, ro, role, setRole, switchRole, view, modal, addPart, openUpload, openMappingUpload, openFor, notice, dismissNotice, dadRun, runCalc } = state;
 
   // Sheet 1 follows the Kanban Crossdock Master table (same filter and sort, all pages); sheet "Upload" holds every part.
   const exportExcel = useCallback(() => {
@@ -30,6 +31,14 @@ export function CrossdockMasterSettingPage({ onNavigate }: { onNavigate: (route:
       window.alert('Export Excel failed. Please try again.');
     });
   }, [parts, aq]);
+
+  // Export Crossdock Master: sheet 1 = rows of the applied criteria (as the table), sheet "Upload" = the ongoing mapping.
+  const exportMapping = useCallback(() => {
+    exportMappingXlsx(selectDestRows(parts.concat(pastRows), aq), aq.per, parts).catch((err) => {
+      console.error('Export Excel failed', err);
+      window.alert('Export Excel failed. Please try again.');
+    });
+  }, [parts, pastRows, aq]);
 
   if (!role) {
     return (
@@ -43,7 +52,14 @@ export function CrossdockMasterSettingPage({ onNavigate }: { onNavigate: (route:
 
   return (
     <AppShell activeItem={ACTIVE_ITEM} onNavigate={onNavigate} breadcrumb={<BreadcrumbBar simLabel={simLabel} onSwitch={switchRole} />}>
-      <PageHeader ro={ro} view={view} onAddPart={addPart} onOpenUpload={openUpload} onExport={exportExcel} />
+      <PageHeader
+        ro={ro}
+        view={view}
+        onAddPart={addPart}
+        onOpenUpload={view === 'dest' ? openMappingUpload : openUpload}
+        onExport={view === 'dest' ? exportMapping : exportExcel}
+        uploadLocked={view === 'dest' && aq.per !== CUR_PER}
+      />
       <ViewTabs view={view} />
 
       {view === 'part' && (

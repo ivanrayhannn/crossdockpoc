@@ -2495,6 +2495,39 @@
    "description": "Closes the popup."
   },
   {
+   "group": "<Mapping - Header Section>"
+  },
+  {
+   "name": "Upload Excel (Mapping)",
+   "source": "",
+   "field": "",
+   "type": "",
+   "len": "",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "",
+   "validation": "",
+   "description": "Page header, right (same place as on Kanban Crossdock Master). Disabled for a past period or All periods (tooltip message no. 23). Refer Operation Description 5.17."
+  },
+  {
+   "name": "Export Excel (Mapping)",
+   "source": "",
+   "field": "",
+   "type": "",
+   "len": "",
+   "io": "I",
+   "control": "Button",
+   "justified": "Center",
+   "initial": "",
+   "required": "",
+   "format": "",
+   "validation": "",
+   "description": "Page header, right (same place as on Kanban Crossdock Master). Refer Operation Description 5.18."
+  },
+  {
    "group": "<Mapping - Search Criteria Section>"
   },
   {
@@ -2649,36 +2682,6 @@
    "format": "",
    "validation": "",
    "description": "n = parts + periods with a row SYNC_STATUS 0 in the staging tables (AP POLE: Current and Next; GTOPAS: Current), whatever the filter. Disabled when n = 0. Refer Operation Description 5.24."
-  },
-  {
-   "name": "Upload Excel (Mapping)",
-   "source": "",
-   "field": "",
-   "type": "",
-   "len": "",
-   "io": "I",
-   "control": "Button",
-   "justified": "Center",
-   "initial": "",
-   "required": "",
-   "format": "",
-   "validation": "",
-   "description": "Disabled for a past period or All periods (tooltip message no. 23). Refer Operation Description 5.17."
-  },
-  {
-   "name": "Export Excel (Mapping)",
-   "source": "",
-   "field": "",
-   "type": "",
-   "len": "",
-   "io": "I",
-   "control": "Button",
-   "justified": "Center",
-   "initial": "",
-   "required": "",
-   "format": "",
-   "validation": "",
-   "description": "Refer Operation Description 5.18."
   },
   {
    "name": "Period",
@@ -6212,6 +6215,13 @@
    "date": "24-Nov-26",
    "reviewed_by": "",
    "description": "Export Crossdock Master list: column Used/Quota (Case) (was Total Case/Day (used / quota)); AP POLE Status and GTOPAS Status as two columns; narrower number columns."
+  },
+  {
+   "revision": "0.15",
+   "author": "FID Rayhan",
+   "date": "24-Nov-26",
+   "reviewed_by": "",
+   "description": "Export Crossdock Master: Upload Excel and Export Excel moved to the page header, as on Kanban Crossdock Master."
   }
  ]
 }

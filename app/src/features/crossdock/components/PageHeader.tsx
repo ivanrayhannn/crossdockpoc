@@ -6,9 +6,11 @@ interface PageHeaderProps {
   onAddPart: () => void;
   onOpenUpload: () => void;
   onExport: () => void;
+  /** Export Crossdock Master: the upload works for the ongoing period only. */
+  uploadLocked?: boolean;
 }
 
-export function PageHeader({ ro, view, onAddPart, onOpenUpload, onExport }: PageHeaderProps) {
+export function PageHeader({ ro, view, onAddPart, onOpenUpload, onExport, uploadLocked }: PageHeaderProps) {
   return (
     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 24, padding: '20px 28px 0' }}>
       <div>
@@ -35,6 +37,24 @@ export function PageHeader({ ro, view, onAddPart, onOpenUpload, onExport }: Page
             )}
             {!ro && (
               <button className="btn btn-secondary" onClick={onOpenUpload} style={{ fontSize: 13 }}>
+                Upload Excel
+              </button>
+            )}
+            <button className="btn btn-secondary" onClick={onExport} style={{ fontSize: 13 }}>
+              Export Excel
+            </button>
+          </div>
+        )}
+        {view === 'dest' && (
+          <div style={{ display: 'flex', gap: 8 }}>
+            {!ro && (
+              <button
+                className="btn btn-secondary"
+                onClick={onOpenUpload}
+                disabled={uploadLocked}
+                title={uploadLocked ? 'Past period: read only. Select the ongoing period to upload.' : 'Upload the destination mapping from Excel'}
+                style={{ fontSize: 13 }}
+              >
                 Upload Excel
               </button>
             )}

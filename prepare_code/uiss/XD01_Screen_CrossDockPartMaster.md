@@ -24,6 +24,7 @@
 | 0.12 | FID Rayhan | 24-Nov-26 |  | Order Type per destination row on the Export Crossdock Master screen (item Order Type, message no. 31, Data Map ORDER_TYPE). |
 | 0.13 | FID Rayhan | 24-Nov-26 |  | Export Crossdock Master list: Part Name and Last Sent GTOPAS / AP POLE columns removed (tooltips); column rules; Sync Status as Non Sync chip / Sync check / Not sent. |
 | 0.14 | FID Rayhan | 24-Nov-26 |  | Export Crossdock Master list: column Used/Quota (Case) (was Total Case/Day (used / quota)); AP POLE Status and GTOPAS Status as two columns; narrower number columns. |
+| 0.15 | FID Rayhan | 24-Nov-26 |  | Export Crossdock Master: Upload Excel and Export Excel moved to the page header, as on Kanban Crossdock Master. |
 
 ## 1. General
 
@@ -465,20 +466,21 @@ flowchart TB
 | **<Kanban Crossdock Master - Saved Successfully Popup>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | 60 | Success message |  |  | Varchar |  | O | Label | Center |  |  |  |  | Display message no. 9 (Add / Edit) or no. 11 (upload). |
 | 61 | OK |  |  |  |  | I | Button | Center |  |  |  |  | Closes the popup. |
+| **<Mapping - Header Section>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| 62 | Upload Excel (Mapping) |  |  |  |  | I | Button | Center |  |  |  |  | Page header, right (same place as on Kanban Crossdock Master). Disabled for a past period or All periods (tooltip message no. 23). Refer Operation Description 5.17. |
+| 63 | Export Excel (Mapping) |  |  |  |  | I | Button | Center |  |  |  |  | Page header, right (same place as on Kanban Crossdock Master). Refer Operation Description 5.18. |
 | **<Mapping - Search Criteria Section>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| 62 | Calculation period | Key-in |  | Varchar |  | I | Combo Box | Left | Ongoing period, e.g. 'Sep 2026 (ongoing)' | N | Mon YYYY |  | Options: All periods / every calculation period; the ongoing one is marked '(ongoing)', the next one '(next)'. The label shows (ongoing) / (past) / (all). Calculation periods are created by the calculation batch; the latest period created is the ongoing period and earlier ones become past. A new period starts empty: the mapping of the previous period is not copied. Every Active part is listed with its Max Case/Day from Kanban Crossdock Master (the quota) but no destination yet (Total Case/Day 0, 0%), until the D/S user assigns it by Edit mapping or Upload Excel. |
-| 63 | Part Number | Key-in |  | Varchar | TBD | I | Text box with suggestion list | Left | Blank | N | X..TBD..X | Contains, case-insensitive | Suggestions = registered Part Numbers. Placeholder 'e.g. PART-B'. Combined with the other criteria by AND. |
-| 64 | Sync Status | Key-in |  | Varchar |  | I | Combo Box | Left | Non Sync | N |  |  | Options: All / Non Sync / Sync. Non Sync = the part + period has a staging row with AP POLE or GTOPAS Non Sync. |
-| 65 | Reset |  |  |  |  | I | Button | Center |  |  |  |  | Returns every criterion to its initial value (Calculation period = ongoing, Sync Status = Non Sync). |
-| 66 | Search |  |  |  |  | I | Button | Center |  |  |  |  | Applies the criteria to the result list. Typing or selecting a criterion alone does not change the list; Enter in a text box = [Search]. |
+| 64 | Calculation period | Key-in |  | Varchar |  | I | Combo Box | Left | Ongoing period, e.g. 'Sep 2026 (ongoing)' | N | Mon YYYY |  | Options: All periods / every calculation period; the ongoing one is marked '(ongoing)', the next one '(next)'. The label shows (ongoing) / (past) / (all). Calculation periods are created by the calculation batch; the latest period created is the ongoing period and earlier ones become past. A new period starts empty: the mapping of the previous period is not copied. Every Active part is listed with its Max Case/Day from Kanban Crossdock Master (the quota) but no destination yet (Total Case/Day 0, 0%), until the D/S user assigns it by Edit mapping or Upload Excel. |
+| 65 | Part Number | Key-in |  | Varchar | TBD | I | Text box with suggestion list | Left | Blank | N | X..TBD..X | Contains, case-insensitive | Suggestions = registered Part Numbers. Placeholder 'e.g. PART-B'. Combined with the other criteria by AND. |
+| 66 | Sync Status | Key-in |  | Varchar |  | I | Combo Box | Left | Non Sync | N |  |  | Options: All / Non Sync / Sync. Non Sync = the part + period has a staging row with AP POLE or GTOPAS Non Sync. |
+| 67 | Reset |  |  |  |  | I | Button | Center |  |  |  |  | Returns every criterion to its initial value (Calculation period = ongoing, Sync Status = Non Sync). |
+| 68 | Search |  |  |  |  | I | Button | Center |  |  |  |  | Applies the criteria to the result list. Typing or selecting a criterion alone does not change the list; Enter in a text box = [Search]. |
 | **<Mapping - Result List Section>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| 67 | Section title |  |  | Varchar |  | O | Label | Left | 'Destination mapping per part' |  |  |  |  |
-| 68 | Last mapping calculation |  |  | Datetime |  | O | Label | Left |  |  | DD-Mon-YYYY HH:MM |  | Date-time of the last successful run of process 2 (mapping destination) of the XD05 DAD Volume Calculation batch (one date per batch run). |
-| 69 | Failed badge |  |  | Varchar |  | O | Label | Left |  |  |  |  | 'Scheduled run failed 3x'; shown when the scheduled run and its 3 auto retries have failed. |
-| 70 | Run calculation (Mapping) |  |  |  |  | I | Button | Center |  |  |  |  | Manual trigger of process 2 (mapping destination) of the XD05 DAD Volume Calculation batch. Refer Operation Description 5.19 and Screen Mode remark 8). |
-| 71 | Sync (n) |  |  |  |  | I | Button | Center |  |  |  |  | n = parts + periods with a row SYNC_STATUS 0 in the staging tables (AP POLE: Current and Next; GTOPAS: Current), whatever the filter. Disabled when n = 0. Refer Operation Description 5.24. |
-| 72 | Upload Excel (Mapping) |  |  |  |  | I | Button | Center |  |  |  |  | Disabled for a past period or All periods (tooltip message no. 23). Refer Operation Description 5.17. |
-| 73 | Export Excel (Mapping) |  |  |  |  | I | Button | Center |  |  |  |  | Refer Operation Description 5.18. |
+| 69 | Section title |  |  | Varchar |  | O | Label | Left | 'Destination mapping per part' |  |  |  |  |
+| 70 | Last mapping calculation |  |  | Datetime |  | O | Label | Left |  |  | DD-Mon-YYYY HH:MM |  | Date-time of the last successful run of process 2 (mapping destination) of the XD05 DAD Volume Calculation batch (one date per batch run). |
+| 71 | Failed badge |  |  | Varchar |  | O | Label | Left |  |  |  |  | 'Scheduled run failed 3x'; shown when the scheduled run and its 3 auto retries have failed. |
+| 72 | Run calculation (Mapping) |  |  |  |  | I | Button | Center |  |  |  |  | Manual trigger of process 2 (mapping destination) of the XD05 DAD Volume Calculation batch. Refer Operation Description 5.19 and Screen Mode remark 8). |
+| 73 | Sync (n) |  |  |  |  | I | Button | Center |  |  |  |  | n = parts + periods with a row SYNC_STATUS 0 in the staging tables (AP POLE: Current and Next; GTOPAS: Current), whatever the filter. Disabled when n = 0. Refer Operation Description 5.24. |
 | 74 | Period | TB_M_PART_CANDIDATE_DEST | PERIOD | Char | 6 | O | Label | Left |  |  | Mon YYYY |  | Calculation period of the row. Stored as YYYYMM (e.g. 202609), displayed as Mon YYYY. |
 | 75 | Expand (arrow) |  |  |  |  | I | Button | Center |  |  |  |  | Opens / closes the Destination Mapping panel of the row. |
 | 76 | Part Number | TB_M_PART_CANDIDATE | PART_NO | Varchar | TBD | O | Label | Left |  |  | X..TBD..X |  | Tooltip: Part Name (PART_NAME of TB_M_PART_CANDIDATE). |

@@ -2,9 +2,7 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { CUR_PER, DOTS, MASTER_DESTS, ORDER_TYPES, PERIODS } from '../../../data/seed';
 import { fmt, num } from '../../../lib/format';
 import type { DestAllocation, Part } from '../../../types';
-import { exportMappingXlsx } from '../mappingExport';
 import { CalcRunBar } from './CalcRunBar';
-import { StagingRows } from './StagingRows';
 import type { CrossdockState } from '../useCrossdockState';
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100];
@@ -61,37 +59,28 @@ function SyncChip({ target, s, last }: { target: string; s: SyncState; last?: st
   );
 }
 
-export function DestMappingTab({ state }: { state: CrossdockState }) {
-  const { parts, pastRows, stg, q, aq, setQ, runSearch, resetQ, ro, expand, editDest, draftDests, toggleExpand, startEditDest, cancelEditDest, patchDraft, saveDest, syncParts, lastRun, resendLast, openMappingUpload, mapRun, runCalc } = state;
-  // Only the ongoing period can be changed, so the upload is disabled for past periods and "All periods".
-  const uploadLocked = ro || aq.per !== CUR_PER;
-
-  const destRowsSrc = useMemo(
-    () =>
-      parts.concat(pastRows).filter(
-        (p) =>
-          // The ongoing period only works with Active parts; past periods list every part.
-          (p.st === 'Active' || p.per !== CUR_PER) &&
-          (aq.per === 'all' || p.per === aq.per) &&
-          (!aq.part || p.p.toLowerCase().includes(aq.part.toLowerCase())) &&
-          (aq.sync === 'all' ||
-            (aq.sync === 'notsync' && p.syncStatus === 0) ||
-            (aq.sync === 'sent' && p.syncStatus !== 0)),
-      ),
-    [parts, pastRows, aq],
+/** Rows of the Export Crossdock Master list for the applied criteria (the table and its Export Excel use the same rows). */
+export function selectDestRows(rows: Part[], aq: CrossdockState['aq']): Part[] {
+  return rows.filter(
+    (p) =>
+      // The ongoing period only works with Active parts; past periods list every part.
+      (p.st === 'Active' || p.per !== CUR_PER) &&
+      (aq.per === 'all' || p.per === aq.per) &&
+      (!aq.part || p.p.toLowerCase().includes(aq.part.toLowerCase())) &&
+      (aq.sync === 'all' || (aq.sync === 'notsync' && p.syncStatus === 0) || (aq.sync === 'sent' && p.syncStatus !== 0)),
   );
+}
+
+export function DestMappingTab({ state }: { state: CrossdockState }) {
+  const { parts, pastRows, q, aq, setQ, runSearch, resetQ, ro, expand, editDest, draftDests, toggleExpand, startEditDest, cancelEditDest, patchDraft, saveDest, syncParts, lastRun, resendLast, mapRun, runCalc } = state;
+
+  const destRowsSrc = useMemo(() => selectDestRows(parts.concat(pastRows), aq), [parts, pastRows, aq]);
 
   // [Sync] takes every staging row with AP POLE or GTOPAS status 0 of the ongoing period, whatever the filter shows (XD01 5.24).
   // Past-period rows are never taken. Inactive parts are included (their EXPORT DELETE rows); Candidate parts have no row.
   const syncable = parts.filter((p) => p.per === CUR_PER && p.syncStatus === 0);
   const syncableCount = syncable.length;
 
-  const exportExcel = () => {
-    exportMappingXlsx(destRowsSrc, aq.per, parts).catch((err) => {
-      console.error('Export Excel failed', err);
-      window.alert('Export Excel failed. Please try again.');
-    });
-  };
 
   // Paging: back to page 1 whenever the applied criteria or the page size change.
   const [pageSize, setPageSize] = useState(25);
@@ -213,24 +202,6 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
             >
               Re-send last Sync{lastRun ? ` (${lastRun.parts})` : ''}
             </button>
-            <button
-              className="btn btn-secondary"
-              onClick={openMappingUpload}
-              disabled={uploadLocked}
-              title={uploadLocked ? 'Past period: read only. Select the ongoing period to upload.' : 'Upload the destination mapping from Excel'}
-              style={{ fontSize: 12, padding: '4px 12px' }}
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                <path d="M12 21V9M7 14l5-5 5 5M5 3h14" />
-              </svg>
-              Upload Excel
-            </button>
-            <button className="btn btn-primary" onClick={exportExcel} style={{ fontSize: 12, padding: '4px 12px' }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                <path d="M12 3v12M7 10l5 5 5-5M5 21h14" />
-              </svg>
-              Export Excel
-            </button>
           </span>
         </div>
 
@@ -302,7 +273,6 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
         )}
       </div>
 
-      <StagingRows stg={stg} per={aq.per} part={aq.part} />
     </div>
   );
 }
