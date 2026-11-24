@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import type { CrossdockState } from '../useCrossdockState';
 
 // Same columns and order as sheet "Upload" of the Kanban Crossdock Master Export Excel.
@@ -11,10 +12,16 @@ const UP_RULES: { label: string; cols: string }[] = [
 
 export function UploadModal({ state }: { state: CrossdockState }) {
   const { closeModal, submitUpload } = state;
+  // Escape closes the dialog wherever the focus is (R-32).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && closeModal();
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [closeModal]);
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(33,33,33,.55)', display: 'grid', placeItems: 'center', padding: 36 }}>
+    <div role="dialog" aria-modal="true" aria-labelledby="upload-title" style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(33,33,33,.55)', display: 'grid', placeItems: 'center', padding: 36 }}>
       <div style={{ width: 720, background: 'var(--color-neutral-100)', borderRadius: 10, boxShadow: 'var(--shadow-lg)', padding: '24px 28px 22px' }}>
-        <h3 style={{ fontSize: 22, margin: '0 0 3px' }}>Upload Excel: part settings</h3>
+        <h3 id="upload-title" style={{ fontSize: 22, margin: '0 0 3px' }}>Upload Excel: part settings</h3>
         <p style={{ fontSize: 12.5, color: 'var(--color-neutral-700)', margin: '0 0 16px' }}>One row = one part. The upload column marks the row: A = Add (new part) or E = Edit (already registered part).</p>
         <div style={{ padding: '15px 16px', borderRadius: 16, background: 'var(--color-surface)', marginBottom: 13 }}>
           <div style={{ fontSize: 10, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--color-neutral-700)', marginBottom: 9 }}>Template columns</div>

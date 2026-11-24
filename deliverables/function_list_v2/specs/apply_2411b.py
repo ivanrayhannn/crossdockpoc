@@ -54,3 +54,20 @@ if not any(r['revision'] == '0.14' for r in s['revisions']):
                                           'GTOPAS Status as two columns; narrower number columns.'})
     json.dump(s, open(p, 'w'), indent=1, ensure_ascii=False)
     print('patched XD01 (c)')
+
+# (d) Export Crossdock Master: Upload / Export Excel in the page header (as Kanban Crossdock Master). XD01 rev 0.15.
+s = json.load(open(p))
+if not any(r['revision'] == '0.15' for r in s['revisions']):
+    it = s['items']
+    up = next(x for x in it if x.get('name') == 'Upload Excel (Mapping)')
+    ex = next(x for x in it if x.get('name') == 'Export Excel (Mapping)')
+    it.remove(up)
+    it.remove(ex)
+    up['description'] = 'Page header, right (same place as on Kanban Crossdock Master). ' + up['description']
+    ex['description'] = 'Page header, right (same place as on Kanban Crossdock Master). ' + ex['description']
+    k = next(i for i, x in enumerate(it) if x.get('group') == '<Mapping - Search Criteria Section>')
+    it[k:k] = [{'group': '<Mapping - Header Section>'}, up, ex]
+    s['revisions'].append({'revision': '0.15', 'author': 'FID Rayhan', 'date': '24-Nov-26', 'reviewed_by': '',
+                           'description': 'Export Crossdock Master: Upload Excel and Export Excel moved to the page header, as on Kanban Crossdock Master.'})
+    json.dump(s, open(p, 'w'), indent=1, ensure_ascii=False)
+    print('patched XD01 (d)')
