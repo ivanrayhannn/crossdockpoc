@@ -7,7 +7,7 @@
   "function_name": "XD03 Part and Destination Mapping Upload Batch",
   "created_date": "18-Oct-26",
   "created_by": "FID Rayhan",
-  "updated_date": "23-Nov-26",
+  "updated_date": "24-Nov-26",
   "updated_by": "FID Rayhan"
  },
  "revisions": [
@@ -45,6 +45,13 @@
    "date": "23-Nov-26",
    "reviewed_by": "",
    "description": "Staging per target through SP_STG_WRITE: Export rows, GTOPAS rows, Kanban header 5 (4.9)."
+  },
+  {
+   "revision": "0.6",
+   "author": "FID Rayhan",
+   "date": "24-Nov-26",
+   "reviewed_by": "",
+   "description": "Order Type column in the upload template (after Destination Code); check 4 = destination + order type once per part; Sample Input with Order Type."
   }
  ],
  "general": {
@@ -417,6 +424,11 @@
     },
     "mappings": [
      {
+      "source_field": "ORDER_TYPE",
+      "dest_field": "ORDER_TYPE",
+      "description": "Key of the row (not changed)"
+     },
+     {
       "source_field": "Dest Case/Day",
       "dest_field": "CASE_DAY"
      },
@@ -470,6 +482,11 @@
       "source_field": "Destination Code",
       "dest_field": "DEST_CODE",
       "description": "Destination not yet in the table for the part and period"
+     },
+     {
+      "source_field": "Order Type",
+      "dest_field": "ORDER_TYPE",
+      "description": "Order Type of the row ('**', 'C', '9', 'V'; default '**')"
      },
      {
       "source_field": "Dest Case/Day",
@@ -542,6 +559,11 @@
      {
       "dest_field": "DEST_CODE",
       "description": "Row is deleted"
+     },
+     {
+      "source_field": "ORDER_TYPE",
+      "dest_field": "ORDER_TYPE",
+      "description": "Key of the row to delete"
      },
      {
       "dest_field": "CASE_DAY",
@@ -652,6 +674,11 @@
      {
       "dest_field": "DEST_CODE",
       "description": "Destination added, changed or removed"
+     },
+     {
+      "source_field": "ORDER_TYPE",
+      "dest_field": "ORDER_TYPE",
+      "description": "Order Type of the destination row for MAPPING; NULL for other events"
      },
      {
       "dest_field": "FIELD_NAME",
@@ -1231,8 +1258,8 @@
     ],
     [
      "4",
-     "A destination code appears only once per part in the file.",
-     "Destination Code"
+     "A destination code + order type appears only once per part in the file (the same destination with another order type is allowed).",
+     "Destination Code, Order Type"
     ],
     [
      "5",
@@ -1418,7 +1445,11 @@
     ],
     [
      "Destination Code",
-     "Destination code (9722D10 / 9811110 / 9715310). Once per part. Blank together with Dest Case/Day = placeholder row."
+     "Destination code (9722D10 / 9811110 / 9715310). Destination + Order Type once per part. Blank together with Dest Case/Day = placeholder row."
+    ],
+    [
+     "Order Type",
+     "'**', 'C', '9' or 'V' (system master), mandatory when Destination Code is filled. The same destination may have two rows when the order type differs."
     ],
     [
      "Dest Case/Day",
@@ -1524,6 +1555,7 @@
      "Scenario",
      "Part Number",
      "Destination Code",
+     "Order Type",
      "Dest Case/Day",
      "Total Case/Day (used)",
      "Max Case/Day (quota)",
@@ -1546,6 +1578,7 @@
       "Change Case/Day",
       "PART-A",
       "9722D10",
+      "**",
       10,
       24,
       24,
@@ -1557,6 +1590,7 @@
       "Change Case/Day",
       "PART-A",
       "9811110",
+      "**",
       8,
       24,
       24,
@@ -1568,6 +1602,7 @@
       "Change Case/Day",
       "PART-A",
       "9715310",
+      "**",
       6,
       24,
       24,
@@ -1579,6 +1614,7 @@
       "Remove a destination",
       "PART-A",
       "9722D10",
+      "**",
       12,
       20,
       24,
@@ -1590,6 +1626,7 @@
       "Remove a destination",
       "PART-A",
       "9811110",
+      "**",
       8,
       20,
       24,
@@ -1601,6 +1638,7 @@
       "Add a destination",
       "PART-C",
       "9715310",
+      "**",
       18,
       30,
       30,
@@ -1612,6 +1650,7 @@
       "Add a destination",
       "PART-C",
       "9811110",
+      "**",
       12,
       30,
       30,
@@ -1623,6 +1662,7 @@
       "First mapping from the placeholder row",
       "PART-G",
       "9722D10",
+      "**",
       22,
       22,
       22,
@@ -1636,6 +1676,7 @@
       "",
       "",
       "",
+      "",
       22,
       "A",
       "NO CHANGE. PART-G stays without mapping."
@@ -1645,6 +1686,7 @@
       "Same values as the master",
       "PART-A",
       "9722D10",
+      "**",
       12,
       24,
       24,
@@ -1656,6 +1698,7 @@
       "Same values as the master",
       "PART-A",
       "9811110",
+      "**",
       8,
       24,
       24,
@@ -1667,6 +1710,7 @@
       "Same values as the master",
       "PART-A",
       "9715310",
+      "**",
       4,
       24,
       24,
@@ -1678,11 +1722,24 @@
       "File with only some parts (PART-C only)",
       "PART-C",
       "9715310",
+      "**",
       18,
       18,
       30,
       "E",
       "Only PART-C is processed (here NO CHANGE). PART-A and PART-G are not changed."
+     ],
+     [
+      "N9",
+      "Same destination, another order type",
+      "PART-C",
+      "9715310",
+      "C",
+      6,
+      24,
+      30,
+      "A",
+      "Accepted: 9715310 ** 18 stays, a second row 9715310 C 6 is added (total 24 ≤ 30). Export staging ADD for 9715310 C; no GTOPAS row (the destination is already there)."
      ]
     ]
    },
@@ -1693,6 +1750,7 @@
      "Scenario",
      "Part Number",
      "Destination Code",
+     "Order Type",
      "Dest Case/Day",
      "Total Case/Day (used)",
      "Max Case/Day (quota)",
@@ -1715,6 +1773,7 @@
       "Part not registered",
       "PART-Z99",
       "9722D10",
+      "**",
       10,
       10,
       "",
@@ -1726,6 +1785,7 @@
       "Part is not Active",
       "PART-I",
       "9722D10",
+      "**",
       10,
       10,
       20,
@@ -1737,6 +1797,7 @@
       "Unknown destination",
       "PART-A",
       "ZZZZZ99",
+      "**",
       10,
       10,
       24,
@@ -1748,6 +1809,7 @@
       "Invalid Case/Day",
       "PART-A",
       "9722D10",
+      "**",
       0,
       0,
       24,
@@ -1756,20 +1818,22 @@
      ],
      [
       "E5",
-      "Same destination twice",
+      "Same destination + order type twice",
       "PART-A",
       "9722D10",
+      "**",
       10,
       14,
       24,
       "E",
-      "Check 4: Destination 9722D10 appears more than once for this part."
+      "Check 4: Destination 9722D10 with order type ** appears more than once for this part."
      ],
      [
       "E5",
-      "Same destination twice",
+      "Same destination + order type twice",
       "PART-A",
       "9722D10",
+      "**",
       4,
       14,
       24,
@@ -1781,6 +1845,7 @@
       "Only one of Destination Code / Dest Case/Day",
       "PART-G",
       "9722D10",
+      "**",
       "",
       "",
       22,
@@ -1792,6 +1857,7 @@
       "Total above Max Case/Day",
       "PART-A",
       "9722D10",
+      "**",
       12,
       30,
       24,
@@ -1803,6 +1869,7 @@
       "Total above Max Case/Day",
       "PART-A",
       "9811110",
+      "**",
       8,
       30,
       24,
@@ -1814,6 +1881,7 @@
       "Total above Max Case/Day",
       "PART-A",
       "9715310",
+      "**",
       10,
       30,
       24,
@@ -1825,6 +1893,7 @@
       "Valid row (= N4) mixed with an error row (= E3)",
       "PART-G",
       "9722D10",
+      "**",
       22,
       22,
       22,
@@ -1836,6 +1905,7 @@
       "Valid row mixed with an error row",
       "PART-A",
       "ZZZZZ99",
+      "**",
       10,
       10,
       24,
@@ -1847,6 +1917,7 @@
       "Upload (A/E) E for a destination that is not mapped yet",
       "PART-C",
       "9811110",
+      "**",
       12,
       12,
       30,

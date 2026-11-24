@@ -17,6 +17,7 @@
 | 0.5 | FID Rayhan | 20-Nov-26 |  | Period Rollover writes GTOPAS_SYNC_DT, SYNC_RUN_ID, history SYNC and the run Log (TB_R_CROSSDOCK_IF_RESULT removed, 20-Nov). |
 | 0.6 | FID Rayhan | 22-Nov-26 |  | Staging rows in TB_H_PART_CANDIDATE_STG_SYNC for the new period and Period Rollover by GTOPAS_SYNC_STATUS 0 + PERIOD (22-Nov). |
 | 0.7 | FID Rayhan | 23-Nov-26 |  | Staging per target through SP_STG_WRITE (4.11); Period Rollover updates TB_H_STG_GTOPAS and starts the RPA parent flow (XD06 only). Effective Start Date removed: every part with a row in the period is calculated. |
+| 0.8 | FID Rayhan | 24-Nov-26 |  | Data Map: ORDER_TYPE on TB_H_PART_CANDIDATE / TB_M_PART_CANDIDATE_DEST (Order Type per destination row). |
 
 ## 1. General
 
@@ -240,6 +241,7 @@ flowchart TB
 |  | SOURCE | 'BATCH' |
 |  | UPLOAD_ID | NULL |
 |  | DEST_CODE | NULL |
+| ORDER_TYPE | ORDER_TYPE | Order Type of the destination row for MAPPING; NULL for other events |
 |  | FIELD_NAME | 'PART_STATUS' |
 |  | OLD_VALUE | OLD_STATUS |
 |  | NEW_VALUE | NEW_STATUS |
@@ -270,6 +272,7 @@ flowchart TB
 |  | PART_NO | Row is deleted |
 |  | PERIOD | Row is deleted |
 |  | DEST_CODE | Row is deleted |
+| ORDER_TYPE | ORDER_TYPE | Key of the row to delete |
 |  | CASE_DAY | Row is deleted |
 |  | CREATED_BY | Row is deleted |
 |  | CREATED_DT | Row is deleted |
@@ -284,6 +287,7 @@ flowchart TB
 | PART_NO | PART_NO |  |
 |  | PERIOD | New period (run month YYYYMM) |
 | GROUPING_BUYER_CD + GROUPING_PD_CD | DEST_CODE | 7-digit destination code; must exist in TB_M_H0125_DESTINATION |
+| Order Type | ORDER_TYPE | Order Type of the row ('**', 'C', '9', 'V'; default '**') |
 | MAD | CASE_DAY | Allocated Case/Day from SUM(MAD) of the destination (see 4.6) |
 |  | CREATED_BY | Batch user ID (login user when manual) |
 |  | CREATED_DT | Server system date and time |
@@ -322,6 +326,7 @@ flowchart TB
 |  | SOURCE | 'BATCH' |
 |  | UPLOAD_ID | NULL |
 |  | DEST_CODE | Destination added, changed or removed |
+| ORDER_TYPE | ORDER_TYPE | Order Type of the destination row for MAPPING; NULL for other events |
 |  | FIELD_NAME | 'CASE_DAY' |
 |  | OLD_VALUE | Case/Day of the previous period (NULL when added) |
 |  | NEW_VALUE | Calculated Case/Day (NULL when removed) |

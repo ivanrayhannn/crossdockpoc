@@ -21,6 +21,7 @@
 | 0.9 | FID Rayhan | 22-Nov-26 |  | Copy review: decision dates removed from the body text (kept here), sentences with broken grammar rewritten, screen messages reworded (no rule changed). |
 | 0.10 | FID Rayhan | 22-Nov-26 |  | New 5.25 Table changes per Save: Add / Edit / Delete per table for every save on the screen. |
 | 0.11 | FID Rayhan | 23-Nov-26 |  | Staging per target: TB_H_STG_APPOLE_KANBAN / _EXPORT / TB_H_STG_GTOPAS replace TB_H_PART_CANDIDATE_STG_SYNC, SP_STG_WRITE at the save (OPERATION_TYPE 1-5, Superseded), SP_STG_SYNC at [Sync], RPA parent flow (5.24, 5.25). Effective Start Date replaced by Period (Add Part: ongoing or next period). Candidate part: Candidate or Active only. |
+| 0.12 | FID Rayhan | 24-Nov-26 |  | Order Type per destination row on the Export Crossdock Master screen (item Order Type, message no. 31, Data Map ORDER_TYPE). |
 
 ## 1. General
 
@@ -498,24 +499,25 @@ flowchart TB
 | 90 | Edit mapping |  |  |  |  | I | Button | Center |  |  |  |  | Shown only for the ongoing period. |
 | 91 | Cancel |  |  |  |  | I | Button | Center |  |  |  |  | Shown in edit mode; discards the changes. |
 | 92 | Save |  |  |  |  | I | Button | Center |  |  |  |  | Shown in edit mode. Disabled while the mapping cannot be saved (Operation Description 5.15). |
-| 93 | Destination (CD) | TB_M_PART_CANDIDATE_DEST | DEST_CODE | Varchar | TBD | I/O | Combo Box | Left | New row: 'Select destination' | Y | XXXXXXX - X..X | Once per part | List = DESTINATION_CD - DESTINATION_NAME of TB_M_H0125_DESTINATION (Destination Master) (e.g. 9722D10 - Thailand, 9811110 - Philippines, 9715310 - Vietnam). Destinations already used by another row of the same part are hidden. |
-| 94 | Case/Day | TB_M_PART_CANDIDATE_DEST | CASE_DAY | Number | TBD | I/O | Text box | Right | New row: 0 | Y | ZZ,ZZ9 | Whole number (TBD: upper limit) | Editable in edit mode only. |
-| 95 | Pcs/Day |  |  | Number |  | O | Label | Right |  |  | ZZ,ZZ9 |  | Calculated: Pcs/Case x Case/Day of the destination. |
-| 96 | Percentage |  |  | Number |  | O | Label | Right |  |  | ZZ9% |  | Calculated: Case/Day of the destination / total Case/Day of the part. |
-| 97 | Remove destination (trash icon) |  |  |  |  | I | Button | Center |  |  |  |  | Shown in edit mode on every row. |
-| 98 | Add destination |  |  |  |  | I | Button | Center |  |  |  |  | Shown in edit mode, with the hint 'New row: pick a destination from the destination master in the Destination (CD) column.' |
-| 99 | No destination message |  |  | Varchar |  | O | Label | Center |  |  |  |  | Display message no. 19; shown when the part has no destination. |
-| 100 | Validation banner |  |  | Varchar |  | O | Banner | Left |  |  |  |  | Display message no. 20 (over allocation) or no. 4 (row without destination). |
+| 93 | Destination (CD) | TB_M_PART_CANDIDATE_DEST | DEST_CODE | Varchar | TBD | I/O | Combo Box | Left | New row: 'Select destination' | Y | XXXXXXX - X..X | Destination + Order Type once per part | List = DESTINATION_CD - DESTINATION_NAME of TB_M_H0125_DESTINATION (Destination Master) (e.g. 9722D10 - Thailand, 9811110 - Philippines, 9715310 - Vietnam). The same destination may be chosen again with another Order Type. |
+| 94 | Order Type | TB_M_PART_CANDIDATE_DEST | ORDER_TYPE | Varchar | 2 | I/O | Combo Box | Left | New row: '**' | Y | XX | '**', 'C', '9', 'V' (system master). Destination + Order Type once per part (message no. 31) | Order Type of the destination row, shown in view and edit mode; editable in edit mode only. The same destination may have two rows when the order type differs. |
+| 95 | Case/Day | TB_M_PART_CANDIDATE_DEST | CASE_DAY | Number | TBD | I/O | Text box | Right | New row: 0 | Y | ZZ,ZZ9 | Whole number (TBD: upper limit) | Editable in edit mode only. |
+| 96 | Pcs/Day |  |  | Number |  | O | Label | Right |  |  | ZZ,ZZ9 |  | Calculated: Pcs/Case x Case/Day of the destination. |
+| 97 | Percentage |  |  | Number |  | O | Label | Right |  |  | ZZ9% |  | Calculated: Case/Day of the destination / total Case/Day of the part. |
+| 98 | Remove destination (trash icon) |  |  |  |  | I | Button | Center |  |  |  |  | Shown in edit mode on every row. |
+| 99 | Add destination |  |  |  |  | I | Button | Center |  |  |  |  | Shown in edit mode, with the hint 'New row: pick a destination from the destination master in the Destination (CD) column.' |
+| 100 | No destination message |  |  | Varchar |  | O | Label | Center |  |  |  |  | Display message no. 19; shown when the part has no destination. |
+| 101 | Validation banner |  |  | Varchar |  | O | Banner | Left |  |  |  |  | Display message no. 20 (over allocation) or no. 4 (row without destination). |
 | **<Mapping - Upload Excel Modal>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| 101 | Template columns |  |  | Varchar |  | O | Label (chips) | Left |  |  |  |  | Part Number, Destination Code, Dest Case/Day, Total Case/Day (used), Max Case/Day (quota), Upload (A/E) (same names and order as sheet 'Upload' of Export Excel). |
-| 102 | Upload rules |  |  | Varchar |  | O | Label | Left |  |  |  |  | Rows / Replace / Limits / Base rules. Refer Operation Description 5.17. |
-| 103 | Upload file | Key-in |  | File |  | I | Drag-and-drop area + [Choose file] | Center | Blank | Y | .xlsx | Max 5 MB, max 5,000 rows | File checks and row validation are done by the batch (UISS-Batch XD03 Part and Destination Mapping Upload). |
-| 104 | Download template .xlsx |  |  |  |  | I | Button | Center |  |  |  |  | Downloads the empty upload template. TBD: template file location. |
-| 105 | Close |  |  |  |  | I | Button | Center |  |  |  |  | Closes the modal without uploading. |
-| 106 | Validate file |  |  |  |  | I | Button | Center |  |  |  |  | Save button of the upload. Refer Operation Description 5.17. |
+| 102 | Template columns |  |  | Varchar |  | O | Label (chips) | Left |  |  |  |  | Part Number, Destination Code, Dest Case/Day, Total Case/Day (used), Max Case/Day (quota), Upload (A/E) (same names and order as sheet 'Upload' of Export Excel). |
+| 103 | Upload rules |  |  | Varchar |  | O | Label | Left |  |  |  |  | Rows / Replace / Limits / Base rules. Refer Operation Description 5.17. |
+| 104 | Upload file | Key-in |  | File |  | I | Drag-and-drop area + [Choose file] | Center | Blank | Y | .xlsx | Max 5 MB, max 5,000 rows | File checks and row validation are done by the batch (UISS-Batch XD03 Part and Destination Mapping Upload). |
+| 105 | Download template .xlsx |  |  |  |  | I | Button | Center |  |  |  |  | Downloads the empty upload template. TBD: template file location. |
+| 106 | Close |  |  |  |  | I | Button | Center |  |  |  |  | Closes the modal without uploading. |
+| 107 | Validate file |  |  |  |  | I | Button | Center |  |  |  |  | Save button of the upload. Refer Operation Description 5.17. |
 | **<Mapping - Saved Successfully Popup>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| 107 | Success message |  |  | Varchar |  | O | Label | Center |  |  |  |  | Display message no. 24. |
-| 108 | OK |  |  |  |  | I | Button | Center |  |  |  |  | Closes the popup. |
+| 108 | Success message |  |  | Varchar |  | O | Label | Center |  |  |  |  | Display message no. 24. |
+| 109 | OK |  |  |  |  | I | Button | Center |  |  |  |  | Closes the popup. |
 
 ## 5. Data edit mapping
 
@@ -566,6 +568,7 @@ flowchart TB
 |  | SOURCE | 'SCREEN' |
 |  | UPLOAD_ID | NULL |
 |  | DEST_CODE | NULL |
+| ORDER_TYPE | ORDER_TYPE | Order Type of the destination row for MAPPING; NULL for other events |
 |  | FIELD_NAME | Changed field, e.g. PCS_CASE, MAX_CASE_DAY, PART_STATUS |
 |  | OLD_VALUE | Value before Save (NULL for ADD) |
 |  | NEW_VALUE | Value after Save |
@@ -579,6 +582,7 @@ flowchart TB
 
 | Source field | Destination field | Description |
 |---|---|---|
+| ORDER_TYPE | ORDER_TYPE | Key of the row (not changed) |
 | Case/Day | CASE_DAY |  |
 |  | CHANGED_BY | Login user ID |
 |  | CHANGED_DT | Server system date and time |
@@ -593,6 +597,7 @@ flowchart TB
 | Part Number | PART_NO |  |
 |  | PERIOD | Ongoing calculation period |
 | Destination (CD) | DEST_CODE | Destination not yet in the table for the part and period |
+| Order Type | ORDER_TYPE | Order Type of the row ('**', 'C', '9', 'V'; default '**') |
 | Case/Day | CASE_DAY |  |
 |  | CREATED_BY | Login user ID |
 |  | CREATED_DT | Server system date and time |
@@ -608,6 +613,7 @@ flowchart TB
 |  | PART_NO | Row is deleted |
 |  | PERIOD | Row is deleted |
 |  | DEST_CODE | Row is deleted |
+| ORDER_TYPE | ORDER_TYPE | Key of the row to delete |
 |  | CASE_DAY | Row is deleted |
 
 #### 7. Insert TB_H_PART_CANDIDATE – Edit mapping - [Save]
@@ -622,6 +628,7 @@ flowchart TB
 |  | SOURCE | 'SCREEN' |
 |  | UPLOAD_ID | NULL |
 |  | DEST_CODE | Destination added, changed or removed |
+| ORDER_TYPE | ORDER_TYPE | Order Type of the destination row for MAPPING; NULL for other events |
 |  | FIELD_NAME | 'CASE_DAY' |
 |  | OLD_VALUE | Case/Day before (NULL when added) |
 |  | NEW_VALUE | Case/Day after (NULL when removed) |
@@ -940,7 +947,8 @@ c. A part without destination shows message no. 19.
 - b. Save rules - [Save] is disabled while:
   - the total Case/Day is above Max Case/Day (show message no. 20);
   - the part has no destination row; or
-  - a row has no destination selected (show message no. 21).
+  - a row has no destination selected (show message no. 21);
+  - the same destination + order type is used twice (show message no. 31).
   - A total below or equal to Max Case/Day is allowed; below is shown as '{n} case/day left'.
 
 - c. User clicks [Save].
@@ -1122,6 +1130,7 @@ Every save on the screen writes in one transaction. Add = insert a row, Edit = u
 | **Mapping - Calculation Operation** |  |  |  |  |  |
 | MSG29 | Click [Run calculation] button | Mapping calculation (XD05 process 2) completed | Info | Calculation completed: the destination mapping of the new period is created. | Click [OK] |
 | MSG30 | Hover disabled [Run calculation] | Scheduled run has not failed 3 times | Info | Enabled only when the scheduled run has failed 3 times | - |
+| MSG31 | Click [Save] in Edit mapping | Destination + Order Type used twice for the part | Error | The same destination is used twice with the same order type. Choose another order type or remove the row. | Choose another order type or remove the row |
 
 ## 8. Logging messages
 
