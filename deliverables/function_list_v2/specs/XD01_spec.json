@@ -1532,7 +1532,7 @@
    "image": "deliverables/uiss_screens/mapping/c_12_before_sync.png"
   },
   {
-   "caption": "27. After Sync - the parts are Sync (Last Sent AP POLE / GTOPAS = time of the click)",
+   "caption": "27. After Sync - the parts are Sync (tooltip Last Sent AP POLE / GTOPAS = time of the click)",
    "image": "deliverables/uiss_screens/mapping/c_13_after_sync.png"
   },
   {
@@ -2723,22 +2723,7 @@
    "required": "",
    "format": "X..TBD..X",
    "validation": "",
-   "description": ""
-  },
-  {
-   "name": "Part Name",
-   "source": "TB_M_PART_CANDIDATE",
-   "field": "PART_NAME",
-   "type": "Varchar",
-   "len": "TBD",
-   "io": "O",
-   "control": "Label",
-   "justified": "Left",
-   "initial": "",
-   "required": "",
-   "format": "X..TBD..X",
-   "validation": "",
-   "description": ""
+   "description": "Tooltip: Part Name (PART_NAME of TB_M_PART_CANDIDATE)."
   },
   {
    "name": "Pcs/Case",
@@ -2813,7 +2798,7 @@
    "required": "",
    "format": "",
    "validation": "",
-   "description": "Two chips per row: AP POLE (Kanban or Export staging) and GTOPAS (GTOPAS staging), Non Sync (grey) / Sync (green), per part + period (refer 5.24). Tooltip: Last Sent AP POLE / GTOPAS (latest SYNC_DT)."
+   "description": "One line per target, AP POLE (Kanban or Export staging) and GTOPAS (GTOPAS staging), per part + period (refer 5.24): 'Non Sync' = amber chip with a dot (a row waits for [Sync]); 'Sync' = check mark with green text (every row sent); 'Not sent' = grey text (no staging row for the target yet). Tooltip: the state and the last send time (latest SYNC_DT). Part Name and Last Sent are not columns of the list."
   },
   {
    "group": "<Mapping - Footer Section>"
@@ -4820,7 +4805,7 @@
    "level": 2,
    "items": [
     "User clicks [Export Excel]: download Crossdock_Export_Master_<period>_YYYYMMDD.xlsx (<period> e.g. Sep_2026 or All_periods).",
-    "Sheet 'Export Crossdock Master': rows of the active filter, one row per destination (a part without destination gives one row with blank destination columns). Columns: Period, Part Number, Part Name, Destination Code, Pcs/Case, Dest Case/Day, Total Case/Day (used), Max Case/Day (quota), Dest Pcs/Day, Pcs/Day, Sync Status AP POLE, Sync Status GTOPAS, Last Sent AP POLE, Last Sent GTOPAS, CREATED_DT, CREATED_BY, UPDATED_DT, UPDATED_BY (audit of the mapping row). Information only. Sample: sheet 'Export Mapping'.",
+    "Sheet 'Export Crossdock Master': rows of the active filter, one row per destination (a part without destination gives one row with blank destination columns). Columns: Period, Part Number, Part Name, Destination Code, Order Type, Pcs/Case, Dest Case/Day, Total Case/Day (used), Max Case/Day (quota), Dest Pcs/Day, Pcs/Day, Sync Status AP POLE, Sync Status GTOPAS, Last Sent AP POLE, Last Sent GTOPAS, CREATED_DT, CREATED_BY, UPDATED_DT, UPDATED_BY (audit of the mapping row). Information only. Sample: sheet 'Export Mapping'.",
     "Sheet 'Upload': every Active part of the ongoing period, columns Part Number, Destination Code, Dest Case/Day, Total Case/Day (used), Max Case/Day (quota), Upload (A/E); one row per destination, and one blank row (Upload (A/E) = A) for a part without mapping. Empty for a past period or All periods. Upload (A/E) = E for a mapped destination.",
     "If the file cannot be created, display message no. 26."
    ]
@@ -6198,6 +6183,13 @@
    "date": "24-Nov-26",
    "reviewed_by": "",
    "description": "Order Type per destination row on the Export Crossdock Master screen (item Order Type, message no. 31, Data Map ORDER_TYPE)."
+  },
+  {
+   "revision": "0.13",
+   "author": "FID Rayhan",
+   "date": "24-Nov-26",
+   "reviewed_by": "",
+   "description": "Export Crossdock Master list: Part Name and Last Sent GTOPAS / AP POLE columns removed (tooltips); column rules; Sync Status as Non Sync chip / Sync check / Not sent."
   }
  ]
 }
