@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { CUR_PER, DOTS, MASTER_DESTS, ORDER_TYPES, PERIODS } from '../../../data/seed';
-import { fmt, num, targetBadge } from '../../../lib/format';
+import { fmt, num } from '../../../lib/format';
 import type { DestAllocation, Part } from '../../../types';
 import { exportMappingXlsx } from '../mappingExport';
 import { CalcRunBar } from './CalcRunBar';
@@ -18,6 +18,7 @@ const th: React.CSSProperties = {
   color: 'var(--color-neutral-700)',
   background: 'var(--color-surface)',
   borderBottom: '1px solid var(--color-neutral-400)',
+  borderRight: '1px solid var(--color-divider)',
   position: 'sticky',
   top: 0,
   zIndex: 1,
@@ -26,8 +27,39 @@ const th: React.CSSProperties = {
 const td: React.CSSProperties = {
   padding: '0 12px',
   borderBottom: '1px solid var(--color-divider)',
+  borderRight: '1px solid var(--color-divider)',
   height: 40,
 };
+
+type SyncState = 0 | 1 | null | undefined;
+
+/** Sync Status per target. Non Sync is the state that asks for [Sync], so it is the only filled chip; Sync is a check with text;
+ *  a target that never had a staging row reads "Not sent". Shape and text carry the state, not only the colour. */
+function SyncChip({ target, s, last }: { target: string; s: SyncState; last?: string | null }) {
+  const tip = `${target}: ${s === 0 ? 'a row waits for [Sync]' : s === 1 ? 'every row sent' : 'no row yet'}${last ? ` · last sent ${last}` : ''}`;
+  const base: React.CSSProperties = { display: 'inline-flex', justifySelf: 'start', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 600, lineHeight: '18px', whiteSpace: 'nowrap' };
+  if (s === 0)
+    return (
+      <span title={tip} style={{ ...base, padding: '0 8px', borderRadius: 4, background: 'var(--color-warn-bg)', color: 'var(--color-warn-fg)', border: '1px solid var(--color-warn-fg)' }}>
+        <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: 999, background: 'currentColor' }} />
+        Non Sync
+      </span>
+    );
+  if (s === 1)
+    return (
+      <span title={tip} style={{ ...base, color: 'var(--color-accent-2-800)' }}>
+        <svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="5 12 10 17 19 7" />
+        </svg>
+        Sync
+      </span>
+    );
+  return (
+    <span title={tip} style={{ ...base, fontWeight: 500, color: 'var(--color-neutral-700)' }}>
+      Not sent
+    </span>
+  );
+}
 
 export function DestMappingTab({ state }: { state: CrossdockState }) {
   const { parts, pastRows, stg, q, aq, setQ, runSearch, resetQ, ro, expand, editDest, draftDests, toggleExpand, startEditDest, cancelEditDest, patchDraft, saveDest, syncParts, lastRun, resendLast, openMappingUpload, mapRun, runCalc } = state;
@@ -203,20 +235,17 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
         </div>
 
         {destRowsSrc.length > 0 && (
-          <div style={{ maxHeight: 560, overflowY: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: 12 }}>
+          <div style={{ maxHeight: 560, overflow: 'auto' }}>
+            <table style={{ width: '100%', minWidth: 860, borderCollapse: 'separate', borderSpacing: 0, fontSize: 12 }}>
               <thead>
                 <tr>
                   <th style={{ ...th, padding: '0 16px', width: 110, height: 32 }}>Period</th>
                   <th style={{ ...th, width: 150 }}>Part Number</th>
-                  <th style={th}>Part Name</th>
                   <th style={{ ...th, textAlign: 'right', width: 86 }}>Pcs/Case</th>
                   <th style={{ ...th, textAlign: 'right', width: 176 }} title="Case/Day mapped to destinations / Max Case/Day of the part in Kanban Crossdock Master">Total Case/Day (used / quota)</th>
                   <th style={{ ...th, textAlign: 'right', width: 110 }}>Pcs/Day</th>
                   <th style={{ ...th, textAlign: 'right', width: 110 }}>Percentage</th>
-                  <th style={{ ...th, width: 150 }} title="Per target, from TB_H_PART_CANDIDATE_STG_SYNC: Non Sync = a row of the part still waits for [Sync]">Sync Status</th>
-                  <th style={{ ...th, width: 130 }} title="Last send of the part to GTOPAS (XD06): [Sync], [Re-send last Sync] or the Period Rollover. The result comes by e-mail.">Last Sent GTOPAS</th>
-                  <th style={{ ...th, width: 130 }} title="Last send of the part to AP POLE (XD07): [Sync] or [Re-send last Sync]. The result comes by e-mail.">Last Sent AP POLE</th>
+                  <th style={{ ...th, width: 190, borderRight: 0 }} title="Per target, from the staging tables: Non Sync = a row of the part still waits for [Sync]. Hover a status for the last send time.">Sync Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -293,8 +322,6 @@ interface DestRowProps {
 function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStartEdit, onCancelEdit, onSave, onPatchDraft }: DestRowProps) {
   const m = num(p.mc);
   const a = p.dests.reduce((x, d) => x + num(d.al), 0);
-  const apB = targetBadge(p.apSync);
-  const gtB = targetBadge(p.gtSync);
   const edok = p.per === CUR_PER && !ro;
   const dList = isEditing && draftDests ? draftDests : p.dests;
   const dAlloc = dList.reduce((x, d) => x + num(d.al), 0);
@@ -337,10 +364,9 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
                 <polyline points="9 6 15 12 9 18" />
               </svg>
             </button>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 600 }}>{p.p}</span>
+            <span title={p.n} style={{ fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 600 }}>{p.p}</span>
           </span>
         </td>
-        <td style={td}>{p.n}</td>
         <td style={{ ...td, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmt(p.pc)}</td>
         <td style={{ ...td, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
           <b>{fmt(a)}</b>
@@ -348,21 +374,17 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
         </td>
         <td style={{ ...td, textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--color-neutral-700)' }}>{fmt(num(p.pc) * a)}</td>
         <td style={{ ...td, textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: 600, color: 'var(--color-neutral-800)' }}>{share}</td>
-        <td style={td}>
-          <span style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '4px 0' }}>
-            {([['AP POLE', apB], ['GTOPAS', gtB]] as const).map(([k, b]) => (
-              <span key={k} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 10, whiteSpace: 'nowrap' }}>
-                <span style={{ width: 46, color: 'var(--color-neutral-700)' }}>{k}</span>
-                <span style={{ fontWeight: 700, padding: '1px 8px', borderRadius: 999, background: b.bg, color: b.fg }}>{b.t}</span>
-              </span>
-            ))}
+        <td style={{ ...td, borderRight: 0 }}>
+          <span style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', alignItems: 'center', columnGap: 8, rowGap: 3, padding: '5px 0' }}>
+            <span style={{ fontSize: 10, color: 'var(--color-neutral-700)' }}>AP POLE</span>
+            <SyncChip target="AP POLE" s={p.apSync} last={p.apSyncDt} />
+            <span style={{ fontSize: 10, color: 'var(--color-neutral-700)' }}>GTOPAS</span>
+            <SyncChip target="GTOPAS" s={p.gtSync} last={p.lastSyncDt} />
           </span>
         </td>
-        <td style={{ ...td, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums', color: p.lastSyncDt ? undefined : 'var(--color-neutral-600)' }}>{p.lastSyncDt || 'Never'}</td>
-        <td style={{ ...td, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums', color: p.apSyncDt ? undefined : 'var(--color-neutral-600)' }}>{p.apSyncDt || 'Never'}</td>
       </tr>
       <tr style={{ display: isOpen ? 'table-row' : 'none' }}>
-        <td colSpan={10} style={{ padding: '0 16px 16px 46px', borderBottom: '1px solid var(--color-divider)', background: 'var(--color-surface)', position: 'relative' }}>
+        <td colSpan={7} style={{ padding: '0 16px 16px 46px', borderBottom: '1px solid var(--color-divider)', background: 'var(--color-surface)', position: 'relative' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '11px 0 10px' }}>
             <span style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--color-accent-2-800)' }}>Destination mapping</span>
             <span style={{ fontSize: 11.5, color: dOver ? 'var(--color-danger)' : 'var(--color-neutral-700)', fontVariantNumeric: 'tabular-nums' }}>
@@ -389,7 +411,7 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
 
           <div style={{ border: '1px solid var(--color-divider)', borderRadius: 14, overflow: 'hidden', background: 'var(--color-neutral-100)' }}>
             {dList.length > 0 && (
-              <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: 12.5 }}>
+              <table className="dest-grid" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: 12.5 }}>
                 <thead>
                   <tr>
                     <th style={{ textAlign: 'left', padding: '7px 16px', fontSize: 9.5, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--color-neutral-700)', background: 'var(--color-surface)', borderBottom: '1px solid var(--color-neutral-400)' }}>

@@ -10,3 +10,7 @@
 
 /* Export Crossdock Master toolbar: buttons keep their label on one line, the toolbar wraps instead */
 .ax-toolbar .btn { white-space: nowrap; }
+
+/* Destination table of Export Crossdock Master: a rule between columns so each value reads in its column (same grid as the part list) */
+.dest-grid th:not(:nth-last-child(-n + 2)),
+.dest-grid td:not(:nth-last-child(-n + 2)) { border-right: 1px solid var(--color-divider); }
