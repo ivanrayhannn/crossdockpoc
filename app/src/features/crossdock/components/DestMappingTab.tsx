@@ -236,16 +236,17 @@ export function DestMappingTab({ state }: { state: CrossdockState }) {
 
         {destRowsSrc.length > 0 && (
           <div style={{ maxHeight: 560, overflow: 'auto' }}>
-            <table style={{ width: '100%', minWidth: 860, borderCollapse: 'separate', borderSpacing: 0, fontSize: 12 }}>
+            <table style={{ width: '100%', minWidth: 820, tableLayout: 'fixed', borderCollapse: 'separate', borderSpacing: 0, fontSize: 12 }}>
               <thead>
                 <tr>
-                  <th style={{ ...th, padding: '0 16px', width: 110, height: 32 }}>Period</th>
-                  <th style={{ ...th, width: 150 }}>Part Number</th>
-                  <th style={{ ...th, textAlign: 'right', width: 86 }}>Pcs/Case</th>
-                  <th style={{ ...th, textAlign: 'right', width: 176 }} title="Case/Day mapped to destinations / Max Case/Day of the part in Kanban Crossdock Master">Total Case/Day (used / quota)</th>
-                  <th style={{ ...th, textAlign: 'right', width: 110 }}>Pcs/Day</th>
-                  <th style={{ ...th, textAlign: 'right', width: 110 }}>Percentage</th>
-                  <th style={{ ...th, width: 190, borderRight: 0 }} title="Per target, from the staging tables: Non Sync = a row of the part still waits for [Sync]. Hover a status for the last send time.">Sync Status</th>
+                  <th style={{ ...th, padding: '0 16px', width: 100, height: 32 }}>Period</th>
+                  <th style={th}>Part Number</th>
+                  <th style={{ ...th, textAlign: 'right', width: 76 }}>Pcs/Case</th>
+                  <th style={{ ...th, textAlign: 'right', width: 108 }} title="Case/Day mapped to destinations / Max Case/Day of the part in Kanban Crossdock Master">Used/Quota (Case)</th>
+                  <th style={{ ...th, textAlign: 'right', width: 80 }}>Pcs/Day</th>
+                  <th style={{ ...th, textAlign: 'right', width: 88 }}>Percentage</th>
+                  <th style={{ ...th, width: 118 }} title="AP POLE staging (Kanban, Export): Non Sync = a row of the part still waits for [Sync]. Hover the status for the last send time.">AP POLE Status</th>
+                  <th style={{ ...th, width: 118, borderRight: 0 }} title="GTOPAS staging: Non Sync = a row of the part still waits for [Sync]. Hover the status for the last send time.">GTOPAS Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -374,17 +375,15 @@ function DestRow({ p, ro, isOpen, isEditing, draftDests, onToggleExpand, onStart
         </td>
         <td style={{ ...td, textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--color-neutral-700)' }}>{fmt(num(p.pc) * a)}</td>
         <td style={{ ...td, textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: 600, color: 'var(--color-neutral-800)' }}>{share}</td>
+        <td style={td}>
+          <SyncChip target="AP POLE" s={p.apSync} last={p.apSyncDt} />
+        </td>
         <td style={{ ...td, borderRight: 0 }}>
-          <span style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', alignItems: 'center', columnGap: 8, rowGap: 3, padding: '5px 0' }}>
-            <span style={{ fontSize: 10, color: 'var(--color-neutral-700)' }}>AP POLE</span>
-            <SyncChip target="AP POLE" s={p.apSync} last={p.apSyncDt} />
-            <span style={{ fontSize: 10, color: 'var(--color-neutral-700)' }}>GTOPAS</span>
-            <SyncChip target="GTOPAS" s={p.gtSync} last={p.lastSyncDt} />
-          </span>
+          <SyncChip target="GTOPAS" s={p.gtSync} last={p.lastSyncDt} />
         </td>
       </tr>
       <tr style={{ display: isOpen ? 'table-row' : 'none' }}>
-        <td colSpan={7} style={{ padding: '0 16px 16px 46px', borderBottom: '1px solid var(--color-divider)', background: 'var(--color-surface)', position: 'relative' }}>
+        <td colSpan={8} style={{ padding: '0 16px 16px 46px', borderBottom: '1px solid var(--color-divider)', background: 'var(--color-surface)', position: 'relative' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '11px 0 10px' }}>
             <span style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--color-accent-2-800)' }}>Destination mapping</span>
             <span style={{ fontSize: 11.5, color: dOver ? 'var(--color-danger)' : 'var(--color-neutral-700)', fontVariantNumeric: 'tabular-nums' }}>

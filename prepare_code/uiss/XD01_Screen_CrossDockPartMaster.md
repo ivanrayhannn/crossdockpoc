@@ -23,6 +23,7 @@
 | 0.11 | FID Rayhan | 23-Nov-26 |  | Staging per target: TB_H_STG_APPOLE_KANBAN / _EXPORT / TB_H_STG_GTOPAS replace TB_H_PART_CANDIDATE_STG_SYNC, SP_STG_WRITE at the save (OPERATION_TYPE 1-5, Superseded), SP_STG_SYNC at [Sync], RPA parent flow (5.24, 5.25). Effective Start Date replaced by Period (Add Part: ongoing or next period). Candidate part: Candidate or Active only. |
 | 0.12 | FID Rayhan | 24-Nov-26 |  | Order Type per destination row on the Export Crossdock Master screen (item Order Type, message no. 31, Data Map ORDER_TYPE). |
 | 0.13 | FID Rayhan | 24-Nov-26 |  | Export Crossdock Master list: Part Name and Last Sent GTOPAS / AP POLE columns removed (tooltips); column rules; Sync Status as Non Sync chip / Sync check / Not sent. |
+| 0.14 | FID Rayhan | 24-Nov-26 |  | Export Crossdock Master list: column Used/Quota (Case) (was Total Case/Day (used / quota)); AP POLE Status and GTOPAS Status as two columns; narrower number columns. |
 
 ## 1. General
 
@@ -482,42 +483,43 @@ flowchart TB
 | 75 | Expand (arrow) |  |  |  |  | I | Button | Center |  |  |  |  | Opens / closes the Destination Mapping panel of the row. |
 | 76 | Part Number | TB_M_PART_CANDIDATE | PART_NO | Varchar | TBD | O | Label | Left |  |  | X..TBD..X |  | Tooltip: Part Name (PART_NAME of TB_M_PART_CANDIDATE). |
 | 77 | Pcs/Case | TB_M_PART_CANDIDATE | PCS_CASE | Number | TBD | O | Label | Right |  |  | ZZ,ZZ9 |  |  |
-| 78 | Total Case/Day (used / quota) | TB_M_PART_CANDIDATE_DEST / TB_M_PART_CANDIDATE | SUM(CASE_DAY) / MAX_CASE_DAY | Number |  | O | Label | Right |  |  | ZZ,ZZ9 / ZZ,ZZ9 |  | Used (bold) = sum of Case/Day of all destinations of the part and period; quota = Max Case/Day of the part in Kanban Crossdock Master. |
+| 78 | Used/Quota (Case) | TB_M_PART_CANDIDATE_DEST / TB_M_PART_CANDIDATE | SUM(CASE_DAY) / MAX_CASE_DAY | Number |  | O | Label | Right |  |  | ZZ,ZZ9 / ZZ,ZZ9 |  | Used (bold) = sum of Case/Day of all destinations of the part and period; quota = Max Case/Day of the part in Kanban Crossdock Master. |
 | 79 | Pcs/Day |  |  | Number |  | O | Label | Right |  |  | ZZ,ZZ9 |  | Calculated: Pcs/Case x Total Case/Day. |
 | 80 | Percentage |  |  | Number |  | O | Label | Right |  |  | ZZ9% |  | Calculated: Total Case/Day / Max Case/Day (MAX_CASE_DAY). Never above 100%: Save, upload and the Max Case/Day edit in Kanban Crossdock Master are blocked above the limit. |
-| 81 | Sync Status | TB_H_STG_APPOLE_KANBAN / TB_H_STG_APPOLE_EXPORT, TB_H_STG_GTOPAS | SYNC_STATUS (derived) | Varchar |  | O | Chip | Left |  |  |  |  | One line per target, AP POLE (Kanban or Export staging) and GTOPAS (GTOPAS staging), per part + period (refer 5.24): 'Non Sync' = amber chip with a dot (a row waits for [Sync]); 'Sync' = check mark with green text (every row sent); 'Not sent' = grey text (no staging row for the target yet). Tooltip: the state and the last send time (latest SYNC_DT). Part Name and Last Sent are not columns of the list. |
+| 81 | AP POLE Status | TB_H_STG_APPOLE_KANBAN / TB_H_STG_APPOLE_EXPORT | SYNC_STATUS (derived) | Varchar |  | O | Chip | Left |  |  |  |  | Status of the part + period for AP POLE (Kanban or Export staging). 'Non Sync' = amber chip with a dot (a row waits for [Sync]); 'Sync' = check mark with green text (every row sent); 'Not sent' = grey text (no staging row for the target yet). Tooltip: the state and the last send time (latest SYNC_DT). Refer 5.24. |
+| 82 | GTOPAS Status | TB_H_STG_GTOPAS | SYNC_STATUS (derived) | Varchar |  | O | Chip | Left |  |  |  |  | Status of the part + period for GTOPAS (GTOPAS staging). 'Non Sync' = amber chip with a dot (a row waits for [Sync]); 'Sync' = check mark with green text (every row sent); 'Not sent' = grey text (no staging row for the target yet). Tooltip: the state and the last send time (latest SYNC_DT). Refer 5.24. |
 | **<Mapping - Footer Section>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| 82 | Rows per page | Key-in |  | Number |  | I | Combo Box | Left | 25 | N |  |  | Options 25 / 50 / 100. Change returns to page 1. |
-| 83 | Paging information |  |  | Varchar |  | O | Label | Right |  |  |  |  | '{from}-{to} of {n} parts · page {p}/{total}'. |
-| 84 | Prev / Next |  |  |  |  | I | Button | Center |  |  |  |  | Previous / next page. Refer Screen Mode remark 7). |
+| 83 | Rows per page | Key-in |  | Number |  | I | Combo Box | Left | 25 | N |  |  | Options 25 / 50 / 100. Change returns to page 1. |
+| 84 | Paging information |  |  | Varchar |  | O | Label | Right |  |  |  |  | '{from}-{to} of {n} parts · page {p}/{total}'. |
+| 85 | Prev / Next |  |  |  |  | I | Button | Center |  |  |  |  | Previous / next page. Refer Screen Mode remark 7). |
 | **<Mapping - Empty State Section>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| 85 | Empty state message |  |  | Varchar |  | O | Label | Center |  |  |  |  | Display message no. 18. |
+| 86 | Empty state message |  |  | Varchar |  | O | Label | Center |  |  |  |  | Display message no. 18. |
 | **<Mapping - Destination Mapping Panel>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| 86 | Allocation note |  |  | Varchar |  | O | Label | Left |  |  |  |  | 'no destination yet' / '{n} case/day over' / '{n} case/day left' / 'capacity fully allocated'. |
-| 87 | Past period badge |  |  | Varchar |  | O | Badge | Left |  |  |  |  | Display message no. 22; shown instead of [Edit mapping] for a period that is not ongoing. |
-| 88 | Split evenly |  |  |  |  | I | Button | Center |  |  |  |  | Refer Operation Description 5.15. |
-| 89 | Edit mapping |  |  |  |  | I | Button | Center |  |  |  |  | Shown only for the ongoing period. |
-| 90 | Cancel |  |  |  |  | I | Button | Center |  |  |  |  | Shown in edit mode; discards the changes. |
-| 91 | Save |  |  |  |  | I | Button | Center |  |  |  |  | Shown in edit mode. Disabled while the mapping cannot be saved (Operation Description 5.15). |
-| 92 | Destination (CD) | TB_M_PART_CANDIDATE_DEST | DEST_CODE | Varchar | TBD | I/O | Combo Box | Left | New row: 'Select destination' | Y | XXXXXXX - X..X | Destination + Order Type once per part | List = DESTINATION_CD - DESTINATION_NAME of TB_M_H0125_DESTINATION (Destination Master) (e.g. 9722D10 - Thailand, 9811110 - Philippines, 9715310 - Vietnam). The same destination may be chosen again with another Order Type. |
-| 93 | Order Type | TB_M_PART_CANDIDATE_DEST | ORDER_TYPE | Varchar | 2 | I/O | Combo Box | Left | New row: '**' | Y | XX | '**', 'C', '9', 'V' (system master). Destination + Order Type once per part (message no. 31) | Order Type of the destination row, shown in view and edit mode; editable in edit mode only. The same destination may have two rows when the order type differs. |
-| 94 | Case/Day | TB_M_PART_CANDIDATE_DEST | CASE_DAY | Number | TBD | I/O | Text box | Right | New row: 0 | Y | ZZ,ZZ9 | Whole number (TBD: upper limit) | Editable in edit mode only. |
-| 95 | Pcs/Day |  |  | Number |  | O | Label | Right |  |  | ZZ,ZZ9 |  | Calculated: Pcs/Case x Case/Day of the destination. |
-| 96 | Percentage |  |  | Number |  | O | Label | Right |  |  | ZZ9% |  | Calculated: Case/Day of the destination / total Case/Day of the part. |
-| 97 | Remove destination (trash icon) |  |  |  |  | I | Button | Center |  |  |  |  | Shown in edit mode on every row. |
-| 98 | Add destination |  |  |  |  | I | Button | Center |  |  |  |  | Shown in edit mode, with the hint 'New row: pick a destination from the destination master in the Destination (CD) column.' |
-| 99 | No destination message |  |  | Varchar |  | O | Label | Center |  |  |  |  | Display message no. 19; shown when the part has no destination. |
-| 100 | Validation banner |  |  | Varchar |  | O | Banner | Left |  |  |  |  | Display message no. 20 (over allocation) or no. 4 (row without destination). |
+| 87 | Allocation note |  |  | Varchar |  | O | Label | Left |  |  |  |  | 'no destination yet' / '{n} case/day over' / '{n} case/day left' / 'capacity fully allocated'. |
+| 88 | Past period badge |  |  | Varchar |  | O | Badge | Left |  |  |  |  | Display message no. 22; shown instead of [Edit mapping] for a period that is not ongoing. |
+| 89 | Split evenly |  |  |  |  | I | Button | Center |  |  |  |  | Refer Operation Description 5.15. |
+| 90 | Edit mapping |  |  |  |  | I | Button | Center |  |  |  |  | Shown only for the ongoing period. |
+| 91 | Cancel |  |  |  |  | I | Button | Center |  |  |  |  | Shown in edit mode; discards the changes. |
+| 92 | Save |  |  |  |  | I | Button | Center |  |  |  |  | Shown in edit mode. Disabled while the mapping cannot be saved (Operation Description 5.15). |
+| 93 | Destination (CD) | TB_M_PART_CANDIDATE_DEST | DEST_CODE | Varchar | TBD | I/O | Combo Box | Left | New row: 'Select destination' | Y | XXXXXXX - X..X | Destination + Order Type once per part | List = DESTINATION_CD - DESTINATION_NAME of TB_M_H0125_DESTINATION (Destination Master) (e.g. 9722D10 - Thailand, 9811110 - Philippines, 9715310 - Vietnam). The same destination may be chosen again with another Order Type. |
+| 94 | Order Type | TB_M_PART_CANDIDATE_DEST | ORDER_TYPE | Varchar | 2 | I/O | Combo Box | Left | New row: '**' | Y | XX | '**', 'C', '9', 'V' (system master). Destination + Order Type once per part (message no. 31) | Order Type of the destination row, shown in view and edit mode; editable in edit mode only. The same destination may have two rows when the order type differs. |
+| 95 | Case/Day | TB_M_PART_CANDIDATE_DEST | CASE_DAY | Number | TBD | I/O | Text box | Right | New row: 0 | Y | ZZ,ZZ9 | Whole number (TBD: upper limit) | Editable in edit mode only. |
+| 96 | Pcs/Day |  |  | Number |  | O | Label | Right |  |  | ZZ,ZZ9 |  | Calculated: Pcs/Case x Case/Day of the destination. |
+| 97 | Percentage |  |  | Number |  | O | Label | Right |  |  | ZZ9% |  | Calculated: Case/Day of the destination / total Case/Day of the part. |
+| 98 | Remove destination (trash icon) |  |  |  |  | I | Button | Center |  |  |  |  | Shown in edit mode on every row. |
+| 99 | Add destination |  |  |  |  | I | Button | Center |  |  |  |  | Shown in edit mode, with the hint 'New row: pick a destination from the destination master in the Destination (CD) column.' |
+| 100 | No destination message |  |  | Varchar |  | O | Label | Center |  |  |  |  | Display message no. 19; shown when the part has no destination. |
+| 101 | Validation banner |  |  | Varchar |  | O | Banner | Left |  |  |  |  | Display message no. 20 (over allocation) or no. 4 (row without destination). |
 | **<Mapping - Upload Excel Modal>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| 101 | Template columns |  |  | Varchar |  | O | Label (chips) | Left |  |  |  |  | Part Number, Destination Code, Dest Case/Day, Total Case/Day (used), Max Case/Day (quota), Upload (A/E) (same names and order as sheet 'Upload' of Export Excel). |
-| 102 | Upload rules |  |  | Varchar |  | O | Label | Left |  |  |  |  | Rows / Replace / Limits / Base rules. Refer Operation Description 5.17. |
-| 103 | Upload file | Key-in |  | File |  | I | Drag-and-drop area + [Choose file] | Center | Blank | Y | .xlsx | Max 5 MB, max 5,000 rows | File checks and row validation are done by the batch (UISS-Batch XD03 Part and Destination Mapping Upload). |
-| 104 | Download template .xlsx |  |  |  |  | I | Button | Center |  |  |  |  | Downloads the empty upload template. TBD: template file location. |
-| 105 | Close |  |  |  |  | I | Button | Center |  |  |  |  | Closes the modal without uploading. |
-| 106 | Validate file |  |  |  |  | I | Button | Center |  |  |  |  | Save button of the upload. Refer Operation Description 5.17. |
+| 102 | Template columns |  |  | Varchar |  | O | Label (chips) | Left |  |  |  |  | Part Number, Destination Code, Dest Case/Day, Total Case/Day (used), Max Case/Day (quota), Upload (A/E) (same names and order as sheet 'Upload' of Export Excel). |
+| 103 | Upload rules |  |  | Varchar |  | O | Label | Left |  |  |  |  | Rows / Replace / Limits / Base rules. Refer Operation Description 5.17. |
+| 104 | Upload file | Key-in |  | File |  | I | Drag-and-drop area + [Choose file] | Center | Blank | Y | .xlsx | Max 5 MB, max 5,000 rows | File checks and row validation are done by the batch (UISS-Batch XD03 Part and Destination Mapping Upload). |
+| 105 | Download template .xlsx |  |  |  |  | I | Button | Center |  |  |  |  | Downloads the empty upload template. TBD: template file location. |
+| 106 | Close |  |  |  |  | I | Button | Center |  |  |  |  | Closes the modal without uploading. |
+| 107 | Validate file |  |  |  |  | I | Button | Center |  |  |  |  | Save button of the upload. Refer Operation Description 5.17. |
 | **<Mapping - Saved Successfully Popup>** |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| 107 | Success message |  |  | Varchar |  | O | Label | Center |  |  |  |  | Display message no. 24. |
-| 108 | OK |  |  |  |  | I | Button | Center |  |  |  |  | Closes the popup. |
+| 108 | Success message |  |  | Varchar |  | O | Label | Center |  |  |  |  | Display message no. 24. |
+| 109 | OK |  |  |  |  | I | Button | Center |  |  |  |  | Closes the popup. |
 
 ## 5. Data edit mapping
 

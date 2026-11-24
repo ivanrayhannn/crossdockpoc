@@ -2741,7 +2741,7 @@
    "description": ""
   },
   {
-   "name": "Total Case/Day (used / quota)",
+   "name": "Used/Quota (Case)",
    "source": "TB_M_PART_CANDIDATE_DEST / TB_M_PART_CANDIDATE",
    "field": "SUM(CASE_DAY) / MAX_CASE_DAY",
    "type": "Number",
@@ -2786,8 +2786,8 @@
    "description": "Calculated: Total Case/Day / Max Case/Day (MAX_CASE_DAY). Never above 100%: Save, upload and the Max Case/Day edit in Kanban Crossdock Master are blocked above the limit."
   },
   {
-   "name": "Sync Status",
-   "source": "TB_H_STG_APPOLE_KANBAN / TB_H_STG_APPOLE_EXPORT, TB_H_STG_GTOPAS",
+   "name": "AP POLE Status",
+   "source": "TB_H_STG_APPOLE_KANBAN / TB_H_STG_APPOLE_EXPORT",
    "field": "SYNC_STATUS (derived)",
    "type": "Varchar",
    "len": "",
@@ -2798,7 +2798,22 @@
    "required": "",
    "format": "",
    "validation": "",
-   "description": "One line per target, AP POLE (Kanban or Export staging) and GTOPAS (GTOPAS staging), per part + period (refer 5.24): 'Non Sync' = amber chip with a dot (a row waits for [Sync]); 'Sync' = check mark with green text (every row sent); 'Not sent' = grey text (no staging row for the target yet). Tooltip: the state and the last send time (latest SYNC_DT). Part Name and Last Sent are not columns of the list."
+   "description": "Status of the part + period for AP POLE (Kanban or Export staging). 'Non Sync' = amber chip with a dot (a row waits for [Sync]); 'Sync' = check mark with green text (every row sent); 'Not sent' = grey text (no staging row for the target yet). Tooltip: the state and the last send time (latest SYNC_DT). Refer 5.24."
+  },
+  {
+   "name": "GTOPAS Status",
+   "source": "TB_H_STG_GTOPAS",
+   "field": "SYNC_STATUS (derived)",
+   "type": "Varchar",
+   "len": "",
+   "io": "O",
+   "control": "Chip",
+   "justified": "Left",
+   "initial": "",
+   "required": "",
+   "format": "",
+   "validation": "",
+   "description": "Status of the part + period for GTOPAS (GTOPAS staging). 'Non Sync' = amber chip with a dot (a row waits for [Sync]); 'Sync' = check mark with green text (every row sent); 'Not sent' = grey text (no staging row for the target yet). Tooltip: the state and the last send time (latest SYNC_DT). Refer 5.24."
   },
   {
    "group": "<Mapping - Footer Section>"
@@ -6190,6 +6205,13 @@
    "date": "24-Nov-26",
    "reviewed_by": "",
    "description": "Export Crossdock Master list: Part Name and Last Sent GTOPAS / AP POLE columns removed (tooltips); column rules; Sync Status as Non Sync chip / Sync check / Not sent."
+  },
+  {
+   "revision": "0.14",
+   "author": "FID Rayhan",
+   "date": "24-Nov-26",
+   "reviewed_by": "",
+   "description": "Export Crossdock Master list: column Used/Quota (Case) (was Total Case/Day (used / quota)); AP POLE Status and GTOPAS Status as two columns; narrower number columns."
   }
  ]
 }
