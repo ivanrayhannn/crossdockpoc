@@ -106,7 +106,7 @@ DEST = {
 
 def put_image(ws, r, name):
     path = next((d for d in (os.path.join(IMG, name), os.path.join(HERE, 'shots_ap', name), os.path.join(HERE, 'shots_gt', name),
-                                     os.path.join(HERE, 'gtopas_img', name))
+                                     os.path.join(HERE, 'gtopas_img', name), os.path.join(HERE, 'shots_rpa', name))
                  if os.path.exists(d)))
     w, h = Image.open(path).size
     # Excel extracts (rendered at 110 dpi) all at the same zoom; screens fit the column width
