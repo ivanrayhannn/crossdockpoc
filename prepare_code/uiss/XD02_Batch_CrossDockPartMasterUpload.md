@@ -15,6 +15,7 @@
 | 0.3 | FID Rayhan | 18-Nov-26 |  | Sheet "Active to Inactive" removed (18-Nov): Inactive parts with No Sync / Failed are taken by [Sync] by their status. |
 | 0.4 | FID Rayhan | 19-Nov-26 |  | Kanban Crossdock Master per period: the upload changes the ongoing period only (19-Nov). |
 | 0.5 | FID Rayhan | 23-Nov-26 |  | Staging per target through SP_STG_WRITE (4.9). Column Period replaces Effective Start Date: flag A ongoing or next period, flag E ongoing period (checks 7, 8). |
+| 0.6 | FID Rayhan | 24-Nov-26 |  | Data Map: ORDER_TYPE on TB_H_PART_CANDIDATE / TB_M_PART_CANDIDATE_DEST (Order Type per destination row). |
 
 ## 1. General
 
@@ -169,6 +170,7 @@ flowchart TB
 |  | SOURCE | 'UPLOAD' |
 |  | UPLOAD_ID | UPLOAD_ID of this run |
 |  | DEST_CODE | NULL |
+| ORDER_TYPE | ORDER_TYPE | Order Type of the destination row for MAPPING; NULL for other events |
 |  | FIELD_NAME | Changed field, e.g. PCS_CASE, MAX_CASE_DAY, PART_STATUS |
 |  | OLD_VALUE | Value before upload (NULL for ADD) |
 |  | NEW_VALUE | Value from the file |

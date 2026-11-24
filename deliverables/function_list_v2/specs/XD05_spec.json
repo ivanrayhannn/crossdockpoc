@@ -766,6 +766,11 @@
       "description": "NULL"
      },
      {
+      "source_field": "ORDER_TYPE",
+      "dest_field": "ORDER_TYPE",
+      "description": "Order Type of the destination row for MAPPING; NULL for other events"
+     },
+     {
       "dest_field": "FIELD_NAME",
       "description": "'PART_STATUS'"
      },
@@ -868,6 +873,11 @@
       "description": "Row is deleted"
      },
      {
+      "source_field": "ORDER_TYPE",
+      "dest_field": "ORDER_TYPE",
+      "description": "Key of the row to delete"
+     },
+     {
       "dest_field": "CASE_DAY",
       "description": "Row is deleted"
      },
@@ -921,6 +931,11 @@
       "source_field": "GROUPING_BUYER_CD + GROUPING_PD_CD",
       "dest_field": "DEST_CODE",
       "description": "7-digit destination code; must exist in TB_M_H0125_DESTINATION"
+     },
+     {
+      "source_field": "Order Type",
+      "dest_field": "ORDER_TYPE",
+      "description": "Order Type of the row ('**', 'C', '9', 'V'; default '**')"
      },
      {
       "source_field": "MAD",
@@ -1048,6 +1063,11 @@
      {
       "dest_field": "DEST_CODE",
       "description": "Destination added, changed or removed"
+     },
+     {
+      "source_field": "ORDER_TYPE",
+      "dest_field": "ORDER_TYPE",
+      "description": "Order Type of the destination row for MAPPING; NULL for other events"
      },
      {
       "dest_field": "FIELD_NAME",
@@ -3422,7 +3442,7 @@
   "function_name": "XD05 DAD Volume Calculation Batch",
   "created_date": "18-Oct-26",
   "created_by": "FID Rayhan",
-  "updated_date": "23-Nov-26",
+  "updated_date": "24-Nov-26",
   "updated_by": "FID Rayhan"
  },
  "revisions": [
@@ -3474,6 +3494,13 @@
    "date": "23-Nov-26",
    "reviewed_by": "",
    "description": "Staging per target through SP_STG_WRITE (4.11); Period Rollover updates TB_H_STG_GTOPAS and starts the RPA parent flow (XD06 only). Effective Start Date removed: every part with a row in the period is calculated."
+  },
+  {
+   "revision": "0.8",
+   "author": "FID Rayhan",
+   "date": "24-Nov-26",
+   "reviewed_by": "",
+   "description": "Data Map: ORDER_TYPE on TB_H_PART_CANDIDATE / TB_M_PART_CANDIDATE_DEST (Order Type per destination row)."
   }
  ]
 }

@@ -7,7 +7,7 @@
   "function_name": "XD02 Cross Dock Part Master Upload Batch",
   "created_date": "18-Oct-26",
   "created_by": "FID Rayhan",
-  "updated_date": "23-Nov-26",
+  "updated_date": "24-Nov-26",
   "updated_by": "FID Rayhan"
  },
  "revisions": [
@@ -45,6 +45,13 @@
    "date": "23-Nov-26",
    "reviewed_by": "",
    "description": "Staging per target through SP_STG_WRITE (4.9). Column Period replaces Effective Start Date: flag A ongoing or next period, flag E ongoing period (checks 7, 8)."
+  },
+  {
+   "revision": "0.6",
+   "author": "FID Rayhan",
+   "date": "24-Nov-26",
+   "reviewed_by": "",
+   "description": "Data Map: ORDER_TYPE on TB_H_PART_CANDIDATE / TB_M_PART_CANDIDATE_DEST (Order Type per destination row)."
   }
  ],
  "general": {
@@ -555,6 +562,11 @@
      {
       "dest_field": "DEST_CODE",
       "description": "NULL"
+     },
+     {
+      "source_field": "ORDER_TYPE",
+      "dest_field": "ORDER_TYPE",
+      "description": "Order Type of the destination row for MAPPING; NULL for other events"
      },
      {
       "dest_field": "FIELD_NAME",

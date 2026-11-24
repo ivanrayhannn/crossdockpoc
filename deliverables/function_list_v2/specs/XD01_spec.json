@@ -2986,8 +2986,23 @@
    "initial": "New row: 'Select destination'",
    "required": "Y",
    "format": "XXXXXXX - X..X",
-   "validation": "Once per part",
-   "description": "List = DESTINATION_CD - DESTINATION_NAME of TB_M_H0125_DESTINATION (Destination Master) (e.g. 9722D10 - Thailand, 9811110 - Philippines, 9715310 - Vietnam). Destinations already used by another row of the same part are hidden."
+   "validation": "Destination + Order Type once per part",
+   "description": "List = DESTINATION_CD - DESTINATION_NAME of TB_M_H0125_DESTINATION (Destination Master) (e.g. 9722D10 - Thailand, 9811110 - Philippines, 9715310 - Vietnam). The same destination may be chosen again with another Order Type."
+  },
+  {
+   "name": "Order Type",
+   "source": "TB_M_PART_CANDIDATE_DEST",
+   "field": "ORDER_TYPE",
+   "type": "Varchar",
+   "len": "2",
+   "io": "I/O",
+   "control": "Combo Box",
+   "justified": "Left",
+   "initial": "New row: '**'",
+   "required": "Y",
+   "format": "XX",
+   "validation": "'**', 'C', '9', 'V' (system master). Destination + Order Type once per part (message no. 31)",
+   "description": "Order Type of the destination row, shown in view and edit mode; editable in edit mode only. The same destination may have two rows when the order type differs."
   },
   {
    "name": "Case/Day",
@@ -3386,6 +3401,11 @@
       "description": "NULL"
      },
      {
+      "source_field": "ORDER_TYPE",
+      "dest_field": "ORDER_TYPE",
+      "description": "Order Type of the destination row for MAPPING; NULL for other events"
+     },
+     {
       "dest_field": "FIELD_NAME",
       "description": "Changed field, e.g. PCS_CASE, MAX_CASE_DAY, PART_STATUS"
      },
@@ -3434,6 +3454,11 @@
     },
     "mappings": [
      {
+      "source_field": "ORDER_TYPE",
+      "dest_field": "ORDER_TYPE",
+      "description": "Key of the row (not changed)"
+     },
+     {
       "source_field": "Case/Day",
       "dest_field": "CASE_DAY"
      },
@@ -3475,6 +3500,11 @@
       "source_field": "Destination (CD)",
       "dest_field": "DEST_CODE",
       "description": "Destination not yet in the table for the part and period"
+     },
+     {
+      "source_field": "Order Type",
+      "dest_field": "ORDER_TYPE",
+      "description": "Order Type of the row ('**', 'C', '9', 'V'; default '**')"
      },
      {
       "source_field": "Case/Day",
@@ -3549,6 +3579,11 @@
       "description": "Row is deleted"
      },
      {
+      "source_field": "ORDER_TYPE",
+      "dest_field": "ORDER_TYPE",
+      "description": "Key of the row to delete"
+     },
+     {
       "dest_field": "CASE_DAY",
       "description": "Row is deleted"
      }
@@ -3589,6 +3624,11 @@
      {
       "dest_field": "DEST_CODE",
       "description": "Destination added, changed or removed"
+     },
+     {
+      "source_field": "ORDER_TYPE",
+      "dest_field": "ORDER_TYPE",
+      "description": "Order Type of the destination row for MAPPING; NULL for other events"
      },
      {
       "dest_field": "FIELD_NAME",
@@ -4676,7 +4716,8 @@
    "items": [
     "the total Case/Day is above Max Case/Day (show message no. 20);",
     "the part has no destination row; or",
-    "a row has no destination selected (show message no. 21).",
+    "a row has no destination selected (show message no. 21);",
+    "the same destination + order type is used twice (show message no. 31).",
     "A total below or equal to Max Case/Day is allowed; below is shown as '{n} case/day left'."
    ]
   },
@@ -5436,6 +5477,14 @@
    "msg_id": "MSG30",
    "message": "Enabled only when the scheduled run has failed 3 times",
    "action": "-"
+  },
+  {
+   "event": "Click [Save] in Edit mapping",
+   "cause": "Destination + Order Type used twice for the part",
+   "type": "Error",
+   "msg_id": "MSG31",
+   "message": "The same destination is used twice with the same order type. Choose another order type or remove the row.",
+   "action": "Choose another order type or remove the row"
   }
  ],
  "logging_messages": [
@@ -6062,7 +6111,7 @@
   "function_name": "XD01 Cross Dock Part Master Screen",
   "created_date": "18-Oct-26",
   "created_by": "FID Rayhan",
-  "updated_date": "23-Nov-26",
+  "updated_date": "24-Nov-26",
   "updated_by": "FID Rayhan"
  },
  "revisions": [
@@ -6142,6 +6191,13 @@
    "date": "23-Nov-26",
    "reviewed_by": "",
    "description": "Staging per target: TB_H_STG_APPOLE_KANBAN / _EXPORT / TB_H_STG_GTOPAS replace TB_H_PART_CANDIDATE_STG_SYNC, SP_STG_WRITE at the save (OPERATION_TYPE 1-5, Superseded), SP_STG_SYNC at [Sync], RPA parent flow (5.24, 5.25). Effective Start Date replaced by Period (Add Part: ongoing or next period). Candidate part: Candidate or Active only."
+  },
+  {
+   "revision": "0.12",
+   "author": "FID Rayhan",
+   "date": "24-Nov-26",
+   "reviewed_by": "",
+   "description": "Order Type per destination row on the Export Crossdock Master screen (item Order Type, message no. 31, Data Map ORDER_TYPE)."
   }
  ]
 }

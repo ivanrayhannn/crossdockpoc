@@ -49,6 +49,7 @@
 | **Mapping - Calculation Operation** |  |  |  |  |  |
 | MSG29 | Click [Run calculation] button | Mapping calculation (XD05 process 2) completed | Info | Calculation completed: the destination mapping of the new period is created. | Click [OK] |
 | MSG30 | Hover disabled [Run calculation] | Scheduled run has not failed 3 times | Info | Enabled only when the scheduled run has failed 3 times | - |
+| MSG31 | Click [Save] in Edit mapping | Destination + Order Type used twice for the part | Error | The same destination is used twice with the same order type. Choose another order type or remove the row. | Choose another order type or remove the row |
 
 ### Logging
 
