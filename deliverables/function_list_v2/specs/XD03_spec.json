@@ -59,6 +59,13 @@
    "date": "26-Nov-26",
    "reviewed_by": "",
    "description": "Staging: no SYNC_RUN_ID, the run is SYNC_DT (one value per [Sync] click / rollover); one unsent row per key (a new change updates it, back to the sent value deletes it); SYNC_STATUS 0 / 1. SQL: prepare_code/sql/crossdock_staging_sync.sql."
+  },
+  {
+   "revision": "0.8",
+   "author": "FID Rayhan",
+   "date": "26-Nov-26",
+   "reviewed_by": "",
+   "description": "TB_H_STG_APPOLE_KANBAN / _EXPORT: EFFECTIVE_MONTH_YEAR removed (same value as PERIOD); the views make Effective Month / Year (MM/YYYY of PERIOD) for the upload file."
   }
  ],
  "general": {
@@ -786,11 +793,6 @@
       "description": "Status of the part in the period"
      },
      {
-      "source_field": "PERIOD",
-      "dest_field": "EFFECTIVE_MONTH_YEAR",
-      "description": "MM/YYYY"
-     },
-     {
       "source_field": "-",
       "dest_field": "OPERATOR_ID",
       "description": "'P6'"
@@ -899,11 +901,6 @@
       "source_field": "-",
       "dest_field": "ACTION",
       "description": "'ADD' / 'EDIT' / 'DELETE'"
-     },
-     {
-      "source_field": "PERIOD",
-      "dest_field": "EFFECTIVE_MONTH_YEAR",
-      "description": "MM/YYYY"
      },
      {
       "source_field": "PART_NO",
@@ -2361,7 +2358,7 @@
      "CHAR(6)",
      "",
      "N",
-     "Calculation period YYYYMM. FK1 (PART_NO, PERIOD) -> TB_M_PART_CANDIDATE"
+     "Calculation period YYYYMM. FK1 (PART_NO, PERIOD) -> TB_M_PART_CANDIDATE. File column Effective Month / Year = MM/YYYY of PERIOD, made by the view (not stored)"
     ],
     [
      "ACTION",
@@ -2376,13 +2373,6 @@
      "",
      "N",
      "Active / Inactive in the period when the row is written (an Inactive part stays in the AP POLE Kanban)"
-    ],
-    [
-     "EFFECTIVE_MONTH_YEAR",
-     "CHAR(7)",
-     "",
-     "N",
-     "MM/YYYY of PERIOD. File / screen column: Effective Month / Year"
     ],
     [
      "OPERATOR_ID",
@@ -2509,7 +2499,7 @@
      "CHAR(6)",
      "",
      "N",
-     "Calculation period YYYYMM. FK1 (NSP_PART_NO, PERIOD) -> TB_M_PART_CANDIDATE"
+     "Calculation period YYYYMM. FK1 (NSP_PART_NO, PERIOD) -> TB_M_PART_CANDIDATE. File column Effective Month / Year = MM/YYYY of PERIOD, made by the view (not stored)"
     ],
     [
      "NSP_PART_NO",
@@ -2531,13 +2521,6 @@
      "",
      "N",
      "ADD / EDIT / DELETE (DELETE = Max Shipping Box (RCS) 0)"
-    ],
-    [
-     "EFFECTIVE_MONTH_YEAR",
-     "CHAR(7)",
-     "",
-     "N",
-     "MM/YYYY of PERIOD. File / screen column: Effective Month / Year"
     ],
     [
      "PART_NO",

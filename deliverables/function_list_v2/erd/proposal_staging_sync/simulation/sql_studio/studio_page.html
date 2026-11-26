@@ -105,7 +105,7 @@ details.ddl pre { margin: 8px 0 0; padding: 12px; background: var(--accent-soft)
       <p class="status" id="status" role="status"></p>
       <div id="out" class="work"><div class="loading">Loading SQLite…</div></div>
       <details class="ddl"><summary>Tables and views as loaded here (SQLite)</summary>
-        <p class="hint" style="margin-top:6px">Same columns and view SQL as the T-SQL file. Changes for SQLite: STG_ID is INTEGER PRIMARY KEY instead of BIGINT IDENTITY, DATETIME2(0) is DATETIME, no GO. The stored procedures are not here: SQLite has none; "Try a change" shows their UPDATE.</p>
+        <p class="hint" style="margin-top:6px">Same columns and view SQL as the T-SQL file. Changes for SQLite: STG_ID is INTEGER PRIMARY KEY instead of BIGINT IDENTITY, DATETIME2(0) is DATETIME, SUBSTRING / LEFT / + are substr / ||, no GO. The stored procedures are not here: SQLite has none; "Try a change" shows their UPDATE.</p>
         <pre id="ddl"></pre></details>
     </div>
   </div>
