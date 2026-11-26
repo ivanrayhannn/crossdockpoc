@@ -43,7 +43,8 @@ parts = [
     '4. RPA steps XD07 (AP POLE)',
     '5. UISS XD06 IF Cross Dock Master to GTOPAS',
     '6. UISS XD07 IF Cross Dock Master to AP POLE',
-    '7. SQL: tables, stored procedures, views, queries', '',
+    '7. SQL: tables, stored procedures, views, queries',
+    '8. Column mapping: staging tables to the AP POLE files and the GTOPAS screen', '',
     '## 1. Summary of the rules', '',
     '- NSP screens and uploads (XD01 Kanban / Export Crossdock Master, XD02, XD03) and the batch XD05 update the master, then call '
     '**SP_STG_WRITE**, which writes the change to a staging table in the format of the target: TB_H_STG_APPOLE_KANBAN (AP POLE file '
@@ -74,6 +75,8 @@ parts = [
     '## 7. SQL: tables, stored procedures, views, queries', '',
     'File prepare_code/sql/crossdock_staging_sync.sql (SQL Server). Checked with a parser only, not yet run on a database.', '',
     '```sql', read('sql/crossdock_staging_sync.sql').rstrip(), '```', '',
+    '## 8. Column mapping: staging tables to the AP POLE files and the GTOPAS screen', '',
+    demote(read('rpa/Column_Mapping_Staging_To_Upload.md').split('\n', 1)[1], 1),
 ]
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
 text = '\n'.join(parts)
