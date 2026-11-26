@@ -25,6 +25,7 @@
 | 0.13 | FID Rayhan | 24-Nov-26 |  | Export Crossdock Master list: Part Name and Last Sent GTOPAS / AP POLE columns removed (tooltips); column rules; Sync Status as Non Sync chip / Sync check / Not sent. |
 | 0.14 | FID Rayhan | 24-Nov-26 |  | Export Crossdock Master list: column Used/Quota (Case) (was Total Case/Day (used / quota)); AP POLE Status and GTOPAS Status as two columns; narrower number columns. |
 | 0.15 | FID Rayhan | 24-Nov-26 |  | Export Crossdock Master: Upload Excel and Export Excel moved to the page header, as on Kanban Crossdock Master. |
+| 0.16 | FID Rayhan | 26-Nov-26 |  | Staging: no SYNC_RUN_ID, the run is SYNC_DT (one value per [Sync] click / rollover); one unsent row per key (a new change updates it, back to the sent value deletes it); SYNC_STATUS 0 / 1. SQL: prepare_code/sql/crossdock_staging_sync.sql. |
 
 ## 1. General
 
@@ -99,7 +100,7 @@
 | Validate file | Save button of the upload: validate the uploaded file and save it (all-or-nothing), then show the success popup. |
 | OK | Close the success popup. |
 | Run calculation (Mapping) | Start process 2 (mapping destination) of the XD05 DAD Volume Calculation batch manually. Enabled only when the scheduled run and its 3 auto retries have failed. |
-| Sync | Call SP_STG_SYNC (refer 5.24): the staging rows with SYNC_STATUS 0 (AP POLE: Current and Next period; GTOPAS: Current period) get the run ID, then the RPA parent flow starts. Whatever the filter shows. The label shows the number of parts, e.g. Sync (21). |
+| Sync | Call SP_STG_SYNC (refer 5.24): the staging rows with SYNC_STATUS 0 (AP POLE: Current and Next period; GTOPAS: Current period) get SYNC_DT = time of the click, then the RPA parent flow starts with it. Whatever the filter shows. The label shows the number of parts, e.g. Sync (21). |
 | Upload Excel (Mapping) | Open the "Upload Excel: destination mapping" modal. Enabled only when the ongoing calculation period is selected. |
 | Export Excel (Mapping) | Download the mapping as .xlsx: sheet "Export Crossdock Master" (active filter) and sheet "Upload" (base file for the upload). |
 | Expand (arrow) | Open / close the Destination Mapping panel of the part row. |
@@ -640,7 +641,7 @@ flowchart TB
 |  | CREATED_BY | Login user ID |
 |  | CREATED_DT | Server system date and time |
 
-#### 8. Insert TB_H_STG_APPOLE_KANBAN – SP_STG_WRITE (KANBAN): changed Pcs/Case or Max Case/Day of an Active part, Candidate -> Active, part of a new period; header 5 when only the destinations changed
+#### 8. Insert TB_H_STG_APPOLE_KANBAN – SP_STG_WRITE (KANBAN): changed Pcs/Case or Max Case/Day of an Active part, Candidate -> Active, part of a new period; header 5 when only the destinations changed (when the key has no unsent row yet)
 - Source: Key-in from screen (SP_STG_WRITE)
 
 | Source field | Destination field | Description |
@@ -659,15 +660,14 @@ flowchart TB
 | - | OPERATION_TYPE | 1 Max down / 2 up / 3 same / 4 never sent, against the last Max sent (same period, else the latest earlier period); 5 header |
 | - | SOURCE | 'SCREEN' / 'UPLOAD' / 'BATCH' (caller) |
 | - | UPLOAD_ID | Upload ID when SOURCE = UPLOAD, else NULL |
-| - | SYNC_STATUS | '0'; '2' when the value equals the value already sent for the period |
+| - | SYNC_STATUS | '0' |
 | - | SYNC_DT | NULL |
-| - | SYNC_RUN_ID | NULL |
 | - | CREATED_BY | Login user (XD05: batch user ID) |
 | - | CREATED_DT | Server date-time |
 | - | CHANGED_BY | NULL |
 | - | CHANGED_DT | NULL |
 
-#### 9. Insert TB_H_STG_APPOLE_EXPORT – SP_STG_WRITE (EXPORT): one row per added, changed or removed destination + order type
+#### 9. Insert TB_H_STG_APPOLE_EXPORT – SP_STG_WRITE (EXPORT): one row per added, changed or removed destination + order type (when the key has no unsent row yet)
 - Source: Key-in from screen (SP_STG_WRITE)
 
 | Source field | Destination field | Description |
@@ -685,15 +685,14 @@ flowchart TB
 | CASE_DAY | MAX_SHIPPING_BOX_RCS | Value after the change; 0 for DELETE |
 | - | SOURCE | 'SCREEN' / 'UPLOAD' / 'BATCH' (caller) |
 | - | UPLOAD_ID | Upload ID when SOURCE = UPLOAD, else NULL |
-| - | SYNC_STATUS | '0'; '2' when the value equals the value already sent for the period |
+| - | SYNC_STATUS | '0' |
 | - | SYNC_DT | NULL |
-| - | SYNC_RUN_ID | NULL |
 | - | CREATED_BY | Login user (XD05: batch user ID) |
 | - | CREATED_DT | Server date-time |
 | - | CHANGED_BY | NULL |
 | - | CHANGED_DT | NULL |
 
-#### 10. Insert TB_H_STG_GTOPAS – SP_STG_WRITE (EXPORT branch): the destination appears or disappears for the part and GTOPAS does not have that state yet
+#### 10. Insert TB_H_STG_GTOPAS – SP_STG_WRITE (EXPORT branch): the destination appears or disappears for the part and GTOPAS does not have that state yet (when the key has no unsent row yet)
 - Source: Key-in from screen (SP_STG_WRITE)
 
 | Source field | Destination field | Description |
@@ -712,69 +711,98 @@ flowchart TB
 | - | UPLOAD_ID | Upload ID when SOURCE = UPLOAD, else NULL |
 | - | SYNC_STATUS | '0' |
 | - | SYNC_DT | NULL |
-| - | SYNC_RUN_ID | NULL |
 | - | CREATED_BY | Login user (XD05: batch user ID) |
 | - | CREATED_DT | Server date-time |
 | - | CHANGED_BY | NULL |
 | - | CHANGED_DT | NULL |
 
-#### 11. Update TB_H_STG_APPOLE_KANBAN – SP_STG_WRITE: Older unsent row of the same key -> Superseded
+#### 11. Update TB_H_STG_APPOLE_KANBAN – SP_STG_WRITE: a new change of a key that already has an unsent row (SYNC_STATUS 0) updates that row
 - Source: Key-in from screen (SP_STG_WRITE)
 
 | Source field | Destination field | Description |
 |---|---|---|
-| - | SYNC_STATUS | '2' |
+| - | ACTION | 'EDIT' (ADD when the key was not sent in the period) |
+| - | PART_STATUS | Status of the part |
+| - | SHIPPING_BOX_QTY | New Pcs/Case |
+| - | MAX_SHIPPING_BOX_QTY | New Max Case/Day |
+| - | MAX_ALLOWANCE_QTY | Pcs/Case x Max Case/Day |
+| - | OPERATION_TYPE | Again against the last Max sent (a header 5 becomes 1 to 4) |
+| - | SOURCE | Caller of the last change |
+| - | UPLOAD_ID | Upload ID when SOURCE = UPLOAD |
 | - | CHANGED_BY | Login user (XD05: batch user ID) |
 | - | CHANGED_DT | Server date-time |
 
-#### 12. Update TB_H_STG_APPOLE_EXPORT – SP_STG_WRITE: Older unsent row of the same key -> Superseded
+#### 12. Delete TB_H_STG_APPOLE_KANBAN – SP_STG_WRITE: the unsent row of the key when the value is back to the value already sent for the period (Kanban: also the header 5 when no Export row of the part + period waits)
 - Source: Key-in from screen (SP_STG_WRITE)
 
 | Source field | Destination field | Description |
 |---|---|---|
-| - | SYNC_STATUS | '2' |
-| - | CHANGED_BY | Login user (XD05: batch user ID) |
-| - | CHANGED_DT | Server date-time |
+| - | STG_ID | Unsent row (SYNC_STATUS 0) of the key |
 
-#### 13. Update TB_H_STG_GTOPAS – SP_STG_WRITE: Unsent row of the same part + destination -> Superseded
+#### 13. Update TB_H_STG_APPOLE_EXPORT – SP_STG_WRITE: a new change of a key that already has an unsent row (SYNC_STATUS 0) updates that row
 - Source: Key-in from screen (SP_STG_WRITE)
 
 | Source field | Destination field | Description |
 |---|---|---|
-| - | SYNC_STATUS | '2' |
+| - | ACTION | 'ADD' / 'EDIT' / 'DELETE' against the last value sent |
+| - | MAX_SHIPPING_BOX_RCS | New Case/Day; 0 for DELETE |
+| - | SOURCE | Caller of the last change |
+| - | UPLOAD_ID | Upload ID when SOURCE = UPLOAD |
 | - | CHANGED_BY | Login user (XD05: batch user ID) |
 | - | CHANGED_DT | Server date-time |
 
-#### 14. Update TB_H_STG_APPOLE_KANBAN – [Sync]: rows with SYNC_STATUS 0 (AP POLE: Current + Next, GTOPAS: Current)
+#### 14. Delete TB_H_STG_APPOLE_EXPORT – SP_STG_WRITE: the unsent row of the key when the value is back to the value already sent for the period
+- Source: Key-in from screen (SP_STG_WRITE)
+
+| Source field | Destination field | Description |
+|---|---|---|
+| - | STG_ID | Unsent row (SYNC_STATUS 0) of the key |
+
+#### 15. Update TB_H_STG_GTOPAS – SP_STG_WRITE: a new change of a key that already has an unsent row (SYNC_STATUS 0) updates that row
+- Source: Key-in from screen (SP_STG_WRITE)
+
+| Source field | Destination field | Description |
+|---|---|---|
+| - | ACTION | 'ADD' / 'DELETE' (what the master needs) |
+| - | SOURCE | Caller of the last change |
+| - | UPLOAD_ID | Upload ID when SOURCE = UPLOAD |
+| - | CHANGED_BY | Login user (XD05: batch user ID) |
+| - | CHANGED_DT | Server date-time |
+
+#### 16. Delete TB_H_STG_GTOPAS – SP_STG_WRITE: the unsent row of the key when the value is back to the value already sent for the period
+- Source: Key-in from screen (SP_STG_WRITE)
+
+| Source field | Destination field | Description |
+|---|---|---|
+| - | STG_ID | Unsent row (SYNC_STATUS 0) of the key |
+
+#### 17. Update TB_H_STG_APPOLE_KANBAN – [Sync]: rows with SYNC_STATUS 0 (AP POLE: Current + Next, GTOPAS: Current)
 - Source: [Sync] (SP_STG_SYNC)
 
 | Source field | Destination field | Description |
 |---|---|---|
 | - | SYNC_STATUS | '1' |
-| - | SYNC_DT | Time of the click / rollover |
-| - | SYNC_RUN_ID | Run ID YYYYMMDDHHMMSS |
+| - | SYNC_DT | Time of the [Sync] click / of the rollover: one value for every row of the run |
 | - | CHANGED_BY | Login user (rollover: batch user ID) |
 | - | CHANGED_DT | Server date-time |
 
-#### 15. Update TB_H_STG_APPOLE_EXPORT – [Sync]: rows with SYNC_STATUS 0 (AP POLE: Current + Next, GTOPAS: Current)
+#### 18. Update TB_H_STG_APPOLE_EXPORT – [Sync]: rows with SYNC_STATUS 0 (AP POLE: Current + Next, GTOPAS: Current)
 - Source: [Sync] (SP_STG_SYNC)
 
 | Source field | Destination field | Description |
 |---|---|---|
 | - | SYNC_STATUS | '1' |
-| - | SYNC_DT | Time of the click / rollover |
-| - | SYNC_RUN_ID | Run ID YYYYMMDDHHMMSS |
+| - | SYNC_DT | Time of the [Sync] click / of the rollover: one value for every row of the run |
 | - | CHANGED_BY | Login user (rollover: batch user ID) |
 | - | CHANGED_DT | Server date-time |
 
-#### 16. Update TB_H_STG_GTOPAS – [Sync]: rows with SYNC_STATUS 0 (AP POLE: Current + Next, GTOPAS: Current)
+#### 19. Update TB_H_STG_GTOPAS – [Sync]: rows with SYNC_STATUS 0 (AP POLE: Current + Next, GTOPAS: Current)
 - Source: [Sync] (SP_STG_SYNC)
 
 | Source field | Destination field | Description |
 |---|---|---|
 | - | SYNC_STATUS | '1' |
-| - | SYNC_DT | Time of the click / rollover |
-| - | SYNC_RUN_ID | Run ID YYYYMMDDHHMMSS |
+| - | SYNC_DT | Time of the [Sync] click / of the rollover: one value for every row of the run |
 | - | CHANGED_BY | Login user (rollover: batch user ID) |
 | - | CHANGED_DT | Server date-time |
 
@@ -967,8 +995,8 @@ c. A part without destination shows message no. 19.
 ### 5.16 Sync
 
 - a. User clicks [Sync (n)] (on demand).
-  1. Call SP_STG_SYNC (refer 5.24): the AP POLE rows of the Current and Next period and the GTOPAS rows of the Current period with SYNC_STATUS 0 get SYNC_STATUS 1, SYNC_DT and the run ID. Candidate parts are never sent.
-  2. Start the RPA parent flow with the run ID (refer UISS-Batch XD06 / XD07). Display message no. 27.
+  1. Call SP_STG_SYNC (refer 5.24): the AP POLE rows of the Current and Next period and the GTOPAS rows of the Current period with SYNC_STATUS 0 get SYNC_STATUS 1 and SYNC_DT = time of the click (one value for the click). Candidate parts are never sent.
+  2. Start the RPA parent flow with SYNC_DT (refer UISS-Batch XD06 / XD07). Display message no. 27.
   3. With the default filter Non Sync the parts leave the list; select Sync Status = Sync or All to see them.
 
 - b. Interface functions (one per target system; refer UISS-Batch XD06 and XD07).
@@ -976,7 +1004,7 @@ c. A part without destination shows message no. 19.
   2. XD06 adds or deletes the part + destination rows of the run on GTOPAS WVJA5204. XD07 uploads the files of the run from the views V_APPOLE_UPLOAD_EXPORT / _KANBAN in the order EXPORT_PRE, KANBAN, EXPORT_POST.
   3. The bots write nothing back to NSP; the result comes by the notification e-mail (SUCCESS / FAILED).
 
-- c. When the e-mail says FAILED, the D/S team clicks [Re-send last Sync]: the rows of the last run ID are sent again in the same order (the bot sets values, so a repeat is safe).
+- c. When the e-mail says FAILED, the D/S team clicks [Re-send last Sync]: the rows of the last run (latest SYNC_DT) are sent again in the same order (the bot sets values, so a repeat is safe).
 - d. Interface method: one Power Automate parent flow per run starts XD06 (RPA on GTOPAS WVJA5204) and XD07 (RPA upload of LLM9Q880 / LLM9Q910 to AP POLE); the RPA reads only the staging tables and the views (refer UISS-Batch XD06 / XD07).
 
 ### 5.17 Upload Excel
@@ -1040,13 +1068,13 @@ The sync status is not kept on TB_M_PART_CANDIDATE: every value change is a row 
 - Kanban (TB_H_STG_APPOLE_KANBAN): a change of Pcs/Case or Max Case/Day of an Active part writes a row with the values after the change (ACTION EDIT); Candidate -> Active and a part of a new period write ACTION ADD. OPERATION_TYPE compares the new Max with the last Max sent to AP POLE (same period, else the latest earlier period): 1 = Max down, 2 = Max up, 3 = Max same, 4 = never sent.
 - Export (TB_H_STG_APPOLE_EXPORT): one row per added (ADD), changed (EDIT) or removed (DELETE, Max Shipping Box (RCS) 0) destination + order type. Active -> Inactive writes DELETE (0) for every destination of the part.
 - GTOPAS (TB_H_STG_GTOPAS): a row only when the destination appears or disappears for the part (any order type) and GTOPAS does not have that state yet. A Case/Day change or an order type change of a destination that stays writes no GTOPAS row.
-- Header: an Export change of a part + period without an unsent Kanban row writes the Kanban header with ACTION KEEP and OPERATION_TYPE 5 (current Kanban values, not uploaded). So every part of a run has one Kanban row that sets its upload order.
-- Superseded: a new row of a key marks the older unsent row of the same key SYNC_STATUS 2. A value set back to the value already sent for the period gets SYNC_STATUS 2 too (nothing to send). Keys: Kanban PERIOD + PART_NO; Export PERIOD + NSP_PART_NO + DEST_CODE + ORDER_TYPE; GTOPAS PERIOD + P_NO + DESTINATION_CODE.
+- Header: an Export change of a part + period without an unsent Kanban row writes the Kanban header with ACTION KEEP and OPERATION_TYPE 5 (current Kanban values, not uploaded). So every part of a run has one Kanban row that sets its upload order. The header is deleted when no Export row of the part + period waits any more.
+- One unsent row per key: a key has at most one row with SYNC_STATUS 0. A new change of the key updates that row (value, ACTION, OPERATION_TYPE, CHANGED_BY / CHANGED_DT); a change back to the value already sent for the period deletes it (nothing to send); a sent row (SYNC_STATUS 1) is never changed, the next change inserts a new row. Keys: Kanban PERIOD + PART_NO; Export PERIOD + NSP_PART_NO + DEST_CODE + ORDER_TYPE; GTOPAS PERIOD + P_NO + DESTINATION_CODE. TB_H_PART_CANDIDATE keeps every change.
 - NSP keeps the end state valid before the save: total Case/Day of the destinations <= Max Case/Day of the part in the period (XD01 messages 14 and 20, XD02 / XD03 checks).
-- [Sync] calls SP_STG_SYNC with a new run ID (YYYYMMDDHHMMSS). It calculates nothing: it locks the staging tables for a moment (a save at the same time waits), sets SYNC_STATUS 0 -> 1 with SYNC_DT and SYNC_RUN_ID on the AP POLE rows of the Current and Next period and on the GTOPAS rows of the Current period, and sets the System Master parameter LAST_SYNC_DATE_APPOLE. Then it starts the RPA parent flow with the run ID.
-- Upload files of AP POLE (views): EXPORT_PRE (LLM9Q880, order 1) = Export rows of the parts whose Kanban row of the run has OPERATION_TYPE 1; KANBAN (LLM9Q910, order 2) = Kanban rows of the run with OPERATION_TYPE 1 to 4; EXPORT_POST (LLM9Q880, order 3) = every other Export row of the run. Inside a file, per part, rows going down or DELETE (ROW_ORDER 1) come before rows going up or ADD (ROW_ORDER 2). An empty file is not made. File name <template>_<RUN_ID>_<order>_<name>.xls.
+- [Sync] takes the time of the click once (SYNC_DT, to the second) and calls SP_STG_SYNC with it. It calculates nothing: it locks the staging tables for a moment (a save at the same time waits), sets SYNC_STATUS 0 -> 1 and SYNC_DT on the AP POLE rows of the Current and Next period and on the GTOPAS rows of the Current period, and sets the System Master parameter LAST_SYNC_DATE_APPOLE. Then it starts the RPA parent flow with the same SYNC_DT: the robots read the rows of that click.
+- Upload files of AP POLE (views): EXPORT_PRE (LLM9Q880, order 1) = Export rows of the parts whose Kanban row of the run has OPERATION_TYPE 1; KANBAN (LLM9Q910, order 2) = Kanban rows of the run with OPERATION_TYPE 1 to 4; EXPORT_POST (LLM9Q880, order 3) = every other Export row of the run. Inside a file, per part, rows going down or DELETE (ROW_ORDER 1) come before rows going up or ADD (ROW_ORDER 2). An empty file is not made. File name <template>_<SYNC_DT YYYYMMDDHHMMSS>_<order>_<name>.xls.
 - RPA parent flow: a run with GTOPAS rows (a part becomes Active or Inactive, a destination is added or removed) runs XD06 first and XD07 only when GTOPAS succeeded; a run without GTOPAS rows runs XD07 only. The Period Rollover runs XD06 only.
-- The robots write nothing back to NSP; the result comes by the notification e-mail. When it says FAILED, the D/S team clicks [Re-send last Sync] before the next [Sync]: the same run ID, the same rows and order.
+- The robots write nothing back to NSP; the result comes by the notification e-mail. When it says FAILED, the D/S team clicks [Re-send last Sync] before the next [Sync]: the same SYNC_DT, the same rows and order.
 - Rows of a past period that were not sent before the Period Rollover are never taken again: every selection has a PERIOD condition.
 - Sync Status per part + period: AP POLE Non Sync while TB_H_STG_APPOLE_KANBAN or TB_H_STG_APPOLE_EXPORT has a row with SYNC_STATUS 0, else Sync; GTOPAS Non Sync while TB_H_STG_GTOPAS has a row with SYNC_STATUS 0, else Sync. Last Sent = latest SYNC_DT of the target.
 - Rules and simulation: deliverables/function_list_v2/erd/proposal_staging_sync (Proposal_Tables_Staging_Per_Target.xlsx, simulation/Staging_Header_Order.html, simulation/Staging_Per_Target_Full_Flow_Simulation.xlsx).
@@ -1081,10 +1109,10 @@ Every save on the screen writes in one transaction. Add = insert a row, Edit = u
 |  | TB_H_STG_APPOLE_EXPORT | Add | 1 row per added (ADD), changed (EDIT) or removed (DELETE, 0) destination. |
 |  | TB_H_STG_GTOPAS | Add | 1 row when a destination appears or disappears for the part (any order type). |
 |  | TB_H_STG_APPOLE_KANBAN | Add | Header (KEEP, OPERATION_TYPE 5) when the part + period has no unsent Kanban row. |
-| Every save above | Staging tables | Edit | The older unsent row of the same key: SYNC_STATUS 2 (Superseded). |
-| [Sync] | Staging tables | Edit | SP_STG_SYNC: SYNC_STATUS 0 -> 1, SYNC_DT, SYNC_RUN_ID (AP POLE Current + Next, GTOPAS Current). No row is added. |
+| Every save above | Staging tables | Edit | The unsent row of the same key (SYNC_STATUS 0) takes the new value; it is deleted when the value is back to the value already sent. |
+| [Sync] | Staging tables | Edit | SP_STG_SYNC: SYNC_STATUS 0 -> 1, SYNC_DT = time of the click (AP POLE Current + Next, GTOPAS Current). No row is added. |
 |  | System Master | Edit | LAST_SYNC_DATE_APPOLE = time of the click. |
-| [Re-send last Sync] | Staging tables | - | The rows of the last run ID are sent again (refer 5.16 c). No row is added. |
+| [Re-send last Sync] | Staging tables | - | The rows of the last run (latest SYNC_DT) are sent again (refer 5.16 c). No row is added. |
 | Upload Excel [Validate file] | Same tables as the Save above | Add / Edit / Delete | Written by the upload batch, SOURCE UPLOAD: XD02 for Kanban Crossdock Master, XD03 for Export Crossdock Master (refer UISS-Batch). |
 
 ## 7. Display messages
@@ -1130,7 +1158,7 @@ Every save on the screen writes in one transaction. Add = insert a row, Edit = u
 | MSG26 | Click [Export Excel] button | Excel file cannot be created | Error | Export Excel failed. Please try again. | Click [Export Excel] again; contact administrator if it persists |
 | **Mapping - Sync Operation** |  |  |  |  |  |
 | MSG27 | Click [Sync] button | Parts handed to XD06 / XD07 | Info | Sync started for {n} part(s) to AP POLE and GTOPAS. The result comes by e-mail. | - |
-| MSG28 | Hover a Sync Status chip | Part already sent | Info | Last sent {date-time} (run {run ID}). | - |
+| MSG28 | Hover a Sync Status chip | Part already sent | Info | Last sent {date-time}. | - |
 | **Mapping - Calculation Operation** |  |  |  |  |  |
 | MSG29 | Click [Run calculation] button | Mapping calculation (XD05 process 2) completed | Info | Calculation completed: the destination mapping of the new period is created. | Click [OK] |
 | MSG30 | Hover disabled [Run calculation] | Scheduled run has not failed 3 times | Info | Enabled only when the scheduled run has failed 3 times | - |
@@ -1171,7 +1199,7 @@ History of every change of a crossdock part for the History setting of XD01 (Add
 | CREATED_DT | DATETIME |  | N | Date and time of the change |
 
 #### TB_H_STG_APPOLE_KANBAN (history, proposed)
-AP POLE Kanban rows in the format of the upload file LLM9Q910, one row per Kanban change of a part + period, plus the header row (OPERATION_TYPE 5) when only the destinations changed. Written by SP_STG_WRITE (XD01, XD02, XD05); SYNC_STATUS set by SP_STG_SYNC. Read by XD07 through V_APPOLE_UPLOAD_KANBAN and V_APPOLE_UPLOAD_EXPORT.
+AP POLE Kanban rows in the format of the upload file LLM9Q910, one row per Kanban change of a part + period (one unsent row at a time: a new change updates it), plus the header row (OPERATION_TYPE 5) when only the destinations changed. Written by SP_STG_WRITE (XD01, XD02, XD05); SYNC_STATUS and SYNC_DT set by SP_STG_SYNC. Read by XD07 through V_APPOLE_UPLOAD_KANBAN and V_APPOLE_UPLOAD_EXPORT.
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
@@ -1189,16 +1217,15 @@ AP POLE Kanban rows in the format of the upload file LLM9Q910, one row per Kanba
 | OPERATION_TYPE | NUMBER(1) |  | N | Header of the part, set by SP_STG_WRITE at the save: 1 = Max down, 2 = Max up, 3 = Max same (only Pcs/Case changed, or a new period with the same Max), 4 = never sent, 5 = Kanban unchanged, only the destinations changed (ACTION KEEP). 1 to 4 against the last Max sent: same period, else the latest earlier period. Upload: 1 -> the Export rows of the part in EXPORT_PRE before KANBAN; 2, 3, 4 -> KANBAN then EXPORT_POST; 5 -> EXPORT_POST only, the row is not in the KANBAN file |
 | SOURCE | VARCHAR(6) |  | N | SCREEN / UPLOAD / BATCH (XD05) |
 | UPLOAD_ID | VARCHAR(TBD) |  | Y | Upload of the Kanban or Export Excel (Log); NULL when SOURCE is not UPLOAD |
-| SYNC_STATUS | CHAR(1) |  | N | 0 = to send, 1 = sent, 2 = Superseded at the save (a newer row of the key, or back to the value already sent). Set by SP_STG_WRITE (0, 2) and SP_STG_SYNC / Period Rollover (1). Default '0' |
-| SYNC_DT | DATETIME |  | Y | Time of the [Sync] / Period Rollover that sent the row; Last Sent on the screen = latest value |
-| SYNC_RUN_ID | VARCHAR(14) |  | Y | Run ID YYYYMMDDHHMMSS; [Re-send last Sync] sends the rows of the last run again |
+| SYNC_STATUS | CHAR(1) |  | N | 0 = to send (written or updated by SP_STG_WRITE), 1 = sent (SP_STG_SYNC at [Sync], SP_STG_ROLLOVER for GTOPAS). One row with 0 per key at a time: a new change of the key updates it. Default '0' |
+| SYNC_DT | DATETIME2(0) |  | Y | Time of the [Sync] click (or of the Period Rollover), the same value for every row of that click: the RPA reads the rows of a run by SYNC_DT; [Re-send last Sync] = MAX(SYNC_DT); Last Sent on the screen = latest value |
 | CREATED_BY | VARCHAR(20) |  | N | User of the save / upload, or XD05BATCH |
 | CREATED_DT | DATETIME |  | N | Time of the insert (same transaction as the master update) |
-| CHANGED_BY | VARCHAR(20) |  | Y | User of the save that made the row Superseded, of [Sync], or XD05BATCH (Period Rollover) |
+| CHANGED_BY | VARCHAR(20) |  | Y | User of the save that updated the unsent row, of [Sync], or XD05BATCH (Period Rollover) |
 | CHANGED_DT | DATETIME |  | Y | Time of that update |
 
 #### TB_H_STG_APPOLE_EXPORT (history, proposed)
-AP POLE Export rows in the format of the upload file LLM9Q880, one row per added, changed or removed destination + order type of a part + period. Written by SP_STG_WRITE (XD01, XD03, XD05); SYNC_STATUS set by SP_STG_SYNC. Read by XD07 through V_APPOLE_UPLOAD_EXPORT.
+AP POLE Export rows in the format of the upload file LLM9Q880, one row per added, changed or removed destination + order type of a part + period (one unsent row per key: a new change updates it). Written by SP_STG_WRITE (XD01, XD03, XD05); SYNC_STATUS and SYNC_DT set by SP_STG_SYNC. Read by XD07 through V_APPOLE_UPLOAD_EXPORT.
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
@@ -1215,16 +1242,15 @@ AP POLE Export rows in the format of the upload file LLM9Q880, one row per added
 | MAX_SHIPPING_BOX_RCS | NUMBER(5) |  | N | Case/Day of the destination; 0 = delete. File / screen column: Max Shipping Box (RCS) |
 | SOURCE | VARCHAR(6) |  | N | SCREEN / UPLOAD / BATCH (XD05) |
 | UPLOAD_ID | VARCHAR(TBD) |  | Y | Upload of the Kanban or Export Excel (Log); NULL when SOURCE is not UPLOAD |
-| SYNC_STATUS | CHAR(1) |  | N | 0 = to send, 1 = sent, 2 = Superseded at the save (a newer row of the key, or back to the value already sent). Set by SP_STG_WRITE (0, 2) and SP_STG_SYNC / Period Rollover (1). Default '0' |
-| SYNC_DT | DATETIME |  | Y | Time of the [Sync] / Period Rollover that sent the row; Last Sent on the screen = latest value |
-| SYNC_RUN_ID | VARCHAR(14) |  | Y | Run ID YYYYMMDDHHMMSS; [Re-send last Sync] sends the rows of the last run again |
+| SYNC_STATUS | CHAR(1) |  | N | 0 = to send (written or updated by SP_STG_WRITE), 1 = sent (SP_STG_SYNC at [Sync], SP_STG_ROLLOVER for GTOPAS). One row with 0 per key at a time: a new change of the key updates it. Default '0' |
+| SYNC_DT | DATETIME2(0) |  | Y | Time of the [Sync] click (or of the Period Rollover), the same value for every row of that click: the RPA reads the rows of a run by SYNC_DT; [Re-send last Sync] = MAX(SYNC_DT); Last Sent on the screen = latest value |
 | CREATED_BY | VARCHAR(20) |  | N | User of the save / upload, or XD05BATCH |
 | CREATED_DT | DATETIME |  | N | Time of the insert (same transaction as the master update) |
-| CHANGED_BY | VARCHAR(20) |  | Y | User of the save that made the row Superseded, of [Sync], or XD05BATCH (Period Rollover) |
+| CHANGED_BY | VARCHAR(20) |  | Y | User of the save that updated the unsent row, of [Sync], or XD05BATCH (Period Rollover) |
 | CHANGED_DT | DATETIME |  | Y | Time of that update |
 
 #### TB_H_STG_GTOPAS (history, proposed)
-GTOPAS WVJA5204 rows: a part + destination to add or delete, written by SP_STG_WRITE only when the destination appears or disappears for the part (any order type) and GTOPAS does not have that state yet. Sent by [Sync] (Current period) or the Period Rollover (new Current period). Read by XD06.
+GTOPAS WVJA5204 rows: a part + destination to add or delete, written by SP_STG_WRITE only when the destination appears or disappears for the part (any order type) and GTOPAS does not have that state yet (one unsent row per key). Sent by [Sync] (Current period) or the Period Rollover (new Current period). Read by XD06.
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
@@ -1240,10 +1266,9 @@ GTOPAS WVJA5204 rows: a part + destination to add or delete, written by SP_STG_W
 | ORDER_TRANSPORTATION_CODE | CHAR(1) |  | N | Always 2. File / screen column: Order Transportation Code. Default '2' |
 | SOURCE | VARCHAR(6) |  | N | SCREEN / UPLOAD / BATCH (XD05) |
 | UPLOAD_ID | VARCHAR(TBD) |  | Y | Upload of the Kanban or Export Excel (Log); NULL when SOURCE is not UPLOAD |
-| SYNC_STATUS | CHAR(1) |  | N | 0 = to send, 1 = sent, 2 = Superseded at the save (a newer row of the key, or back to the value already sent). Set by SP_STG_WRITE (0, 2) and SP_STG_SYNC / Period Rollover (1). Default '0' |
-| SYNC_DT | DATETIME |  | Y | Time of the [Sync] / Period Rollover that sent the row; Last Sent on the screen = latest value |
-| SYNC_RUN_ID | VARCHAR(14) |  | Y | Run ID YYYYMMDDHHMMSS; [Re-send last Sync] sends the rows of the last run again |
+| SYNC_STATUS | CHAR(1) |  | N | 0 = to send (written or updated by SP_STG_WRITE), 1 = sent (SP_STG_SYNC at [Sync], SP_STG_ROLLOVER for GTOPAS). One row with 0 per key at a time: a new change of the key updates it. Default '0' |
+| SYNC_DT | DATETIME2(0) |  | Y | Time of the [Sync] click (or of the Period Rollover), the same value for every row of that click: the RPA reads the rows of a run by SYNC_DT; [Re-send last Sync] = MAX(SYNC_DT); Last Sent on the screen = latest value |
 | CREATED_BY | VARCHAR(20) |  | N | User of the save / upload, or XD05BATCH |
 | CREATED_DT | DATETIME |  | N | Time of the insert (same transaction as the master update) |
-| CHANGED_BY | VARCHAR(20) |  | Y | User of the save that made the row Superseded, of [Sync], or XD05BATCH (Period Rollover) |
+| CHANGED_BY | VARCHAR(20) |  | Y | User of the save that updated the unsent row, of [Sync], or XD05BATCH (Period Rollover) |
 | CHANGED_DT | DATETIME |  | Y | Time of that update |

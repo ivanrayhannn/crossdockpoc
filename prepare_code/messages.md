@@ -45,7 +45,7 @@
 | MSG26 | Click [Export Excel] button | Excel file cannot be created | Error | Export Excel failed. Please try again. | Click [Export Excel] again; contact administrator if it persists |
 | **Mapping - Sync Operation** |  |  |  |  |  |
 | MSG27 | Click [Sync] button | Parts handed to XD06 / XD07 | Info | Sync started for {n} part(s) to AP POLE and GTOPAS. The result comes by e-mail. | - |
-| MSG28 | Hover a Sync Status chip | Part already sent | Info | Last sent {date-time} (run {run ID}). | - |
+| MSG28 | Hover a Sync Status chip | Part already sent | Info | Last sent {date-time}. | - |
 | **Mapping - Calculation Operation** |  |  |  |  |  |
 | MSG29 | Click [Run calculation] button | Mapping calculation (XD05 process 2) completed | Info | Calculation completed: the destination mapping of the new period is created. | Click [OK] |
 | MSG30 | Hover disabled [Run calculation] | Scheduled run has not failed 3 times | Info | Enabled only when the scheduled run has failed 3 times | - |
@@ -136,12 +136,12 @@
 
 | ID | Event | Cause | Type | Message | Action |
 |---|---|---|---|---|---|
-| LOG1 | Batch start | Parent flow: scenario 1 or Period Rollover | Info | RPA cross dock master to GTOPAS started. Run <RUN_ID>, <n> row(s). | system: Write the log.; user: - |
-| LOG2 | Batch end | Bot finishes | Info | RPA cross dock master to GTOPAS ended. Run <RUN_ID>, added <a>, deleted <d>, already done <k>, failed <f>, status <STATUS>. | system: Write the log.; user: - |
+| LOG1 | Batch start | Parent flow: scenario 1 or Period Rollover | Info | RPA cross dock master to GTOPAS started. Run <SYNC_DT>, <n> row(s). | system: Write the log.; user: - |
+| LOG2 | Batch end | Bot finishes | Info | RPA cross dock master to GTOPAS ended. Run <SYNC_DT>, added <a>, deleted <d>, already done <k>, failed <f>, status <STATUS>. | system: Write the log.; user: - |
 | LOG3 | Row changed | Add / Delete on WVJA5204 | Info | <ADD / DELETE> <P_NO> <DEST_CODE>. | system: Write the log.; user: - |
 | LOG4 | Row failed / error (try-catch) | Login, screen, timeout or GTOPAS error message | Error | RPA to GTOPAS failed at <STEP> <P_NO> <DEST_CODE>: <ERROR_DETAIL>. | system: Row error: list the row and go to the next row. Login or screen error: stop. STATUS FAILED; in scenario 1 the parent flow does not start XD07.; user: Click [Re-send last Sync]; contact PIC if it persists. |
 | LOG5 | Unexpected error | Any other system error | Critical | Unexpected error: <ERROR_DETAIL>. | system: Stop. STATUS = ERROR.; user: User contact PIC |
-| LOG6 | Notification email | End of the run (SUCCESS / FAILED) | Info | Notification email <SUCCESS / FAILED> of run <RUN_ID> sent to <recipients>. | system: Write the log.; user: Read the email; FAILED: click [Re-send last Sync]. |
+| LOG6 | Notification email | End of the run (SUCCESS / FAILED) | Info | Notification email <SUCCESS / FAILED> of run <SYNC_DT> sent to <recipients>. | system: Write the log.; user: Read the email; FAILED: click [Re-send last Sync]. |
 
 ## XD07 – IF Cross Dock Master to AP POLE
 
@@ -149,12 +149,12 @@
 
 | ID | Event | Cause | Type | Message | Action |
 |---|---|---|---|---|---|
-| LOG1 | Batch start | Parent flow: scenario 1 after GTOPAS OK, or scenario 2 | Info | RPA cross dock master to AP POLE started. Run <RUN_ID>, <n> file(s). | system: Write the log.; user: - |
-| LOG2 | Batch end | Bot finishes | Info | RPA cross dock master to AP POLE ended. Run <RUN_ID>, files uploaded <f>, rows <r>, status <STATUS>. | system: Write the log.; user: - |
+| LOG1 | Batch start | Parent flow: scenario 1 after GTOPAS OK, or scenario 2 | Info | RPA cross dock master to AP POLE started. Run <SYNC_DT>, <n> file(s). | system: Write the log.; user: - |
+| LOG2 | Batch end | Bot finishes | Info | RPA cross dock master to AP POLE ended. Run <SYNC_DT>, files uploaded <f>, rows <r>, status <STATUS>. | system: Write the log.; user: - |
 | LOG3 | File uploaded | AP POLE accepted the file | Info | <FILE_NAME> uploaded: <n> row(s). | system: Write the log.; user: - |
 | LOG4 | Error (try-catch) | Login, upload screen, AP POLE error of a row, timeout | Error | RPA to AP POLE stopped at <FILE_NAME> row <n>: <ERROR_DETAIL>. Files not uploaded: <list>. | system: Stop the bot. STATUS FAILED; the next files are not uploaded.; user: Click [Re-send last Sync]; contact PIC if it persists. |
 | LOG5 | Unexpected error | Any other system error | Critical | Unexpected error: <ERROR_DETAIL>. | system: Stop. STATUS = ERROR.; user: User contact PIC |
-| LOG6 | Notification email | End of the run (SUCCESS / FAILED) | Info | Notification email <SUCCESS / FAILED> of run <RUN_ID> sent to <recipients>. | system: Write the log.; user: Read the email; FAILED: click [Re-send last Sync]. |
+| LOG6 | Notification email | End of the run (SUCCESS / FAILED) | Info | Notification email <SUCCESS / FAILED> of run <SYNC_DT> sent to <recipients>. | system: Write the log.; user: Read the email; FAILED: click [Re-send last Sync]. |
 
 ## XD08 – Order Control Information to NSP Batch
 

@@ -26,12 +26,11 @@ WID = [5, 26, 14, 5, 6, 10, 22, 90, 10]
 AUDIT = [
     ['SOURCE', 'VARCHAR(6)', '', 'N', '', '', 'SCREEN / UPLOAD / BATCH (XD05)', 'New'],
     ['UPLOAD_ID', 'VARCHAR(TBD)', '', 'Y', '', '', 'Upload of the Kanban or Export Excel (Log); NULL when SOURCE is not UPLOAD', 'New'],
-    ['SYNC_STATUS', 'CHAR(1)', '', 'N', "'0'", '', '0 = to send, 1 = sent, 2 = Superseded at the save (a newer row of the key, or back to the value already sent). Set by SP_STG_WRITE (0, 2) and SP_STG_SYNC / Period Rollover (1)', 'New'],
-    ['SYNC_DT', 'DATETIME', '', 'Y', '', '', 'Time of the [Sync] / Period Rollover that sent the row; Last Sent on the screen = latest value', 'New'],
-    ['SYNC_RUN_ID', 'VARCHAR(14)', '', 'Y', '', '', 'Run ID YYYYMMDDHHMMSS; [Re-send last Sync] sends the rows of the last run again', 'New'],
+    ['SYNC_STATUS', 'CHAR(1)', '', 'N', "'0'", '', '0 = to send (written or updated by SP_STG_WRITE), 1 = sent (SP_STG_SYNC at [Sync], SP_STG_ROLLOVER for GTOPAS). One row with 0 per key at a time: a new change of the key updates it', 'New'],
+    ['SYNC_DT', 'DATETIME2(0)', '', 'Y', '', '', 'Time of the [Sync] click (or of the Period Rollover), the same value for every row of that click: the RPA reads the rows of a run by SYNC_DT; [Re-send last Sync] = MAX(SYNC_DT); Last Sent on the screen = latest value', 'New'],
     ['CREATED_BY', 'VARCHAR(20)', '', 'N', '', '', 'User of the save / upload, or XD05BATCH', 'New'],
     ['CREATED_DT', 'DATETIME', '', 'N', '', '', 'Time of the insert (same transaction as the master update)', 'New'],
-    ['CHANGED_BY', 'VARCHAR(20)', '', 'Y', '', '', 'User of the save that made the row Superseded, of [Sync], or XD05BATCH (Period Rollover)', 'New'],
+    ['CHANGED_BY', 'VARCHAR(20)', '', 'Y', '', '', 'User of the save that updated the unsent row, of [Sync], or XD05BATCH (Period Rollover)', 'New'],
     ['CHANGED_DT', 'DATETIME', '', 'Y', '', '', 'Time of that update', 'New'],
 ]
 
@@ -44,7 +43,7 @@ def kanban():
     moved = {'SYNC_STATUS': 'Removed: the Sync Status is SYNC_STATUS of the staging tables (AP POLE: Kanban and Export staging, GTOPAS: GTOPAS staging)',
              'GTOPAS_SYNC_DT': 'Removed: Last Sent GTOPAS = latest SYNC_DT of TB_H_STG_GTOPAS for the part',
              'APPOLE_SYNC_DT': 'Removed: Last Sent AP POLE = latest SYNC_DT of TB_H_STG_APPOLE_KANBAN / _EXPORT for the part',
-             'SYNC_RUN_ID': 'Removed: SYNC_RUN_ID of the staging tables'}
+             'SYNC_RUN_ID': 'Removed: the run is SYNC_DT of the staging tables (one value per [Sync] click)'}
     rows = []
     for r in existing('TB_M_PART_CANDIDATE'):
         n = r[0]
@@ -158,7 +157,7 @@ def sheet(wb, title, table, desc, rows, notes):
 def summary(wb):
     ws = wb.create_sheet('0. Summary', 0)
     ws.sheet_view.showGridLines = False
-    ws['A1'] = 'Staging per target: tables, procedures and views (proposal 23-Nov-2026)'
+    ws['A1'] = 'Staging per target: tables, procedures and views (proposal 23-Nov-2026, rev. 26-Nov-2026)'
     ws['A1'].font = Font(name='Arial', size=12, bold=True)
     rows = [
         ['Object', 'Kind', 'Status', 'Purpose'],
@@ -169,10 +168,11 @@ def summary(wb):
         ['TB_H_STG_GTOPAS', 'Table', 'New', 'GTOPAS WVJA5204 rows (part + destination ADD / DELETE)'],
         ['TB_H_PART_CANDIDATE_STG_SYNC', 'Table', 'Removed (22-Nov proposal)', 'Replaced by the three tables above'],
         ['TB_H_PART_CANDIDATE', 'Table', 'Existing', 'Screen history, kept as it is'],
-        ['SP_STG_WRITE', 'Stored procedure', 'New', 'Called by XD01 (screen), XD02 / XD03 (upload) and XD05 per changed value: insert, Superseded, OPERATION_TYPE, GTOPAS row'],
+        ['SP_STG_WRITE', 'Stored procedure', 'New', 'Called by XD01 (screen), XD02 / XD03 (upload) and XD05 per changed value: insert, or update of the unsent row of the key, or delete when back to the sent value; OPERATION_TYPE; GTOPAS row'],
         ['SP_STG_HEADER', 'Stored procedure', 'New', 'Called by SP_STG_WRITE: Kanban header with OPERATION_TYPE 5 when only the destinations changed'],
-        ['SP_STG_SYNC', 'Stored procedure', 'New', '[Sync]: 0 -> 1 with RUN_ID (AP POLE Current + Next, GTOPAS Current); LAST_SYNC_DATE_APPOLE'],
-        ['V_APPOLE_UPLOAD_KANBAN', 'View', 'New', 'File KANBAN (order 2): Kanban rows of a run with OPERATION_TYPE 1 to 4'],
+        ['SP_STG_SYNC', 'Stored procedure', 'New', '[Sync]: 0 -> 1 with SYNC_DT = time of the click (AP POLE Current + Next, GTOPAS Current); LAST_SYNC_DATE_APPOLE'],
+        ['SP_STG_ROLLOVER', 'Stored procedure', 'New', 'Period Rollover (XD05 process 3): GTOPAS rows of the new Current period 0 -> 1 with SYNC_DT'],
+        ['V_APPOLE_UPLOAD_KANBAN', 'View', 'New', 'File KANBAN (order 2): Kanban rows of a run (SYNC_DT) with OPERATION_TYPE 1 to 4'],
         ['V_APPOLE_UPLOAD_EXPORT', 'View', 'New', 'Files EXPORT_PRE (1) and EXPORT_POST (3) from the header OPERATION_TYPE; ROW_ORDER 1 down / 2 up'],
     ]
     for i, row in enumerate(rows, 3):
@@ -188,6 +188,7 @@ def summary(wb):
     for n in ['Colours: green = new column, yellow fill on a new table = helper column (not in the upload file / GTOPAS screen), yellow row = changed description, red = removed (strike-through).',
               'Rules and simulation: simulation/Staging_Header_Order.html, simulation/Staging_Per_Target_Full_Flow.html, simulation/Staging_Per_Target_Full_Flow_Simulation.xlsx.',
               'Decided 23-Nov: EFFECTIVE_START_DATE removed; a part takes effect from the period it is first registered (Candidate). Add Part after day D also writes the Next period.',
+              'Decided 26-Nov: no run ID column; the run is SYNC_DT (one value per [Sync] click). A key has one unsent row: a new change updates it, a change back to the sent value deletes it; SYNC_STATUS is 0 / 1 only.',
               'Open points: table names; constants stored in every row (P6, 2, 01, A, 2 / 3 / 2); Active -> Inactive removes the mapping of the period (TB_M_PART_CANDIDATE_DEST).']:
         ws.cell(r, 1, n).font = F
         r += 1
@@ -204,23 +205,23 @@ def main():
         'No new column: a removed destination is deleted at once; the staging keeps the DELETE row until it is sent.'])
     sheet(wb, '3. TB_H_STG_APPOLE_KANBAN', 'TB_H_STG_APPOLE_KANBAN (new, AP POLE Kanban LLM9Q910)',
           'One row per Kanban change of a part + period in the format of the upload template, plus the header row (OPERATION_TYPE 5) when only the destinations changed. '
-          'Insert by SP_STG_WRITE (XD01, XD02, XD05); SYNC_STATUS set by SP_STG_SYNC.', KAN, [
+          'Insert / update / delete by SP_STG_WRITE (XD01, XD02, XD05); SYNC_STATUS and SYNC_DT set by SP_STG_SYNC.', KAN, [
               'PK: STG_ID. FK1: (PART_NO, PERIOD) -> TB_M_PART_CANDIDATE. Key of a change: PERIOD + PART_NO (one unsent row at a time).',
-              'IX1: SYNC_STATUS, PERIOD, PART_NO (rows to send, header lookup at the save). IX2: SYNC_RUN_ID, PERIOD, PART_NO (files of a run, re-send).',
+              'IX1: SYNC_STATUS, PERIOD, PART_NO (rows to send, header lookup at the save). IX2: SYNC_DT, PERIOD, PART_NO (files of a run, re-send).',
               'IX3: PART_NO, PERIOD, SYNC_STATUS, SYNC_DT (last sent Max for OPERATION_TYPE).',
               'Read by V_APPOLE_UPLOAD_KANBAN (OPERATION_TYPE 1 to 4) and by V_APPOLE_UPLOAD_EXPORT (file of the Export rows).'])
     sheet(wb, '4. TB_H_STG_APPOLE_EXPORT', 'TB_H_STG_APPOLE_EXPORT (new, AP POLE Export LLM9Q880)',
           'One row per added / changed / removed destination + order type of a part + period in the format of the upload template. '
-          'Insert by SP_STG_WRITE (XD01, XD03, XD05); SYNC_STATUS set by SP_STG_SYNC.', EXP, [
+          'Insert / update / delete by SP_STG_WRITE (XD01, XD03, XD05); SYNC_STATUS and SYNC_DT set by SP_STG_SYNC.', EXP, [
               'PK: STG_ID. FK1: (NSP_PART_NO, PERIOD) -> TB_M_PART_CANDIDATE. Key of a change: PERIOD + NSP_PART_NO + DEST_CODE + ORDER_TYPE.',
-              'IX1: SYNC_STATUS, PERIOD, NSP_PART_NO. IX2: SYNC_RUN_ID, PERIOD, NSP_PART_NO.',
+              'IX1: SYNC_STATUS, PERIOD, NSP_PART_NO. IX2: SYNC_DT, PERIOD, NSP_PART_NO.',
               'IX3: NSP_PART_NO, DEST_CODE, ORDER_TYPE, PERIOD, SYNC_DT (last sent value: back-to-sent check at the save, ROW_ORDER in the view).',
               'No order column: the file comes from the Kanban header (OPERATION_TYPE), the order inside the file from the view (ROW_ORDER: down / DELETE before up / ADD).'])
     sheet(wb, '5. TB_H_STG_GTOPAS', 'TB_H_STG_GTOPAS (new, GTOPAS WVJA5204)',
           'One row when a destination appears (ADD) or disappears (DELETE) for a part, whatever the order type, and GTOPAS does not have that state yet. '
-          'Insert by SP_STG_WRITE (EXPORT); sent by [Sync] (Current period) or the Period Rollover (new Current period).', GTO, [
+          'Insert / update / delete by SP_STG_WRITE (EXPORT); sent by [Sync] (Current period) or the Period Rollover (new Current period).', GTO, [
               'PK: STG_ID. FK1: (P_NO, PERIOD) -> TB_M_PART_CANDIDATE. Key: PERIOD + P_NO + DESTINATION_CODE.',
-              'IX1: SYNC_STATUS, PERIOD. IX2: P_NO, DESTINATION_CODE, PERIOD, SYNC_DT (last sent action).',
+              'IX1: SYNC_STATUS, PERIOD. IX2: SYNC_DT (rows of a run). IX3: P_NO, DESTINATION_CODE, PERIOD, SYNC_DT (last sent action).',
               'No MT column: the RPA deletes the row on WVJA5204 (MT = DEL) when ACTION = DELETE.'])
     summary(wb)
     wb.save(OUT)

@@ -124,7 +124,7 @@ Tidak dipakai: X9 H0202 Demand History Sync, X15 Menu Settings, XD12 (digabung k
 - 19-Nov: nama **Kanban Crossdock Master / Export Crossdock Master**; **period di Kanban Crossdock Master** (Past / Current / Next, Period Rollover tanggal 1); **Order Type** per baris destinasi; email notifikasi RPA; CR ASN03 / ASN04 rev 0.2.
 - 20-Nov: **tidak ada response dari RPA (option C)**: Sync Status No Sync / Sent, Last Sent per target, **[Re-send last Sync]**; TB_R_CROSSDOCK_IF_RESULT dihapus.
 
-### Fase 9 · 21–23 Nov · Staging sync
+### Fase 9 · 21–26 Nov · Staging sync
 - 21-Nov: keputusan dasar staging: status sync keluar dari master, part Inactive tetap di Kanban AP POLE dengan Buyer-PD 0, parameter LAST_SYNC_DATE_APPOLE, sandbox SQL di prototype. XD01 rev 0.8–0.10 (antislop copy, 5.25 tabel per Save).
 - 23-Nov (desain final):
   - **Staging per target**: TB_H_STG_APPOLE_KANBAN / _EXPORT / TB_H_STG_GTOPAS dengan format file upload; **SP_STG_WRITE** di Save (OPERATION_TYPE 1–5); **SP_STG_SYNC** di [Sync]; view file EXPORT_PRE / KANBAN / EXPORT_POST.
@@ -132,6 +132,8 @@ Tidak dipakai: X9 H0202 Demand History Sync, X15 Menu Settings, XD12 (digabung k
   - Part Candidate hanya bisa jadi Active.
   - **RPA parent flow**: GTOPAS dulu; kalau GTOPAS gagal, AP POLE berhenti.
   - Simulasi full flow 24 langkah dengan semua kolom tabel.
+- 24-Nov: Export Crossdock Master tanpa panel staging, Upload / Export di header; highlight perubahan UISS (`uiss/changes`); dokumen langkah RPA XD06 / XD07; file SP terpisah (`prepare_code/sql/crossdock_staging_sync.sql`).
+- 26-Nov: **tanpa run ID** di staging: run = **SYNC_DT** (waktu klik [Sync] / rollover, diisi NSP, dikirim ke parent flow); bot baca `SYNC_STATUS = '1' AND SYNC_DT = :sync_dt`; Re-send = MAX(SYNC_DT). **SYNC_STATUS 0 / 1** saja: satu baris 0 per key, perubahan berikutnya meng-update baris itu, balik ke nilai terkirim = baris dihapus. XD01 0.16, XD02 0.7, XD03 0.7, XD05 0.9, XD06 / XD07 1.2.
 
 ---
 
@@ -142,7 +144,7 @@ Tidak dipakai: X9 H0202 Demand History Sync, X15 Menu Settings, XD12 (digabung k
 | 30-Sep – 12-Oct | Flag / 3 status di prototype | – | – |
 | 13-Oct – 16-Nov | SYNC_STATUS per part di master (No Sync / Waiting / Success / Failed), hasil per target di tabel dummy | RPA (30-Oct), bandingkan penuh (11-Nov) | File SFTP CSV (18-Oct) |
 | 17–20 Nov | Per part di master; sejak 20-Nov **No Sync / Sent** tanpa response | Bot download Excel NSP, bandingkan, Add / Delete | RPA di layar WLM9Q890 / WLM9Q860 |
-| 23-Nov (sekarang) | 3 tabel staging per target dengan format file; aturan di `SP_STG_WRITE` saat Save | Parent flow: XD06 menjalankan ADD / DELETE dari TB_H_STG_GTOPAS | XD07 upload EXPORT_PRE → KANBAN → EXPORT_POST dari view |
+| 23-Nov (sekarang, 26-Nov: run = SYNC_DT, satu baris belum terkirim per key) | 3 tabel staging per target dengan format file; aturan di `SP_STG_WRITE` saat Save | Parent flow: XD06 menjalankan ADD / DELETE dari TB_H_STG_GTOPAS | XD07 upload EXPORT_PRE → KANBAN → EXPORT_POST dari view |
 
 Perubahan penting yang ikut terbawa:
 - **Active → Inactive.** Sampai 20-Nov part dihapus dari Kanban AP POLE. Sekarang part tetap ada di Kanban dan destinasinya dikirim 0, karena AP POLE tetap memakai Effective Month lama sampai ada baris baru.
@@ -302,4 +304,8 @@ python3 deliverables/function_list_v2/summary/build_ur_summary.py
 cd deliverables/function_list_v2/erd/proposal_staging_sync/simulation && node dump_stg_flow.cjs && python3 build_stg_flow_xlsx.py
 ```
 
-Perubahan spec ditulis sebagai script `specs/apply_DDMM*.py` yang dijalankan berurutan di `build_all_v2.sh`; yang terbaru `apply_2311.py` (staging per target, Period, parent flow).
+Perubahan spec ditulis sebagai script `specs/apply_DDMM*.py` yang dijalankan berurutan di `build_all_v2.sh`; yang terbaru `apply_2611.py` (staging tanpa run ID: run = SYNC_DT, SYNC_STATUS 0/1, satu baris belum terkirim per key).
+
+SQL staging (DDL, SP, view, query) di-generate: `python3 deliverables/function_list_v2/erd/proposal_staging_sync/build_staging_sql.py` → `prepare_code/sql/crossdock_staging_sync.sql`.
+
+Dokumen langkah RPA: `cd deliverables/user_guide && python3 render_rpa.py && python3 build_rpa_steps.py`.

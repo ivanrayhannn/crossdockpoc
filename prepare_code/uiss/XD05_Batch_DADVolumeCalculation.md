@@ -18,6 +18,7 @@
 | 0.6 | FID Rayhan | 22-Nov-26 |  | Staging rows in TB_H_PART_CANDIDATE_STG_SYNC for the new period and Period Rollover by GTOPAS_SYNC_STATUS 0 + PERIOD (22-Nov). |
 | 0.7 | FID Rayhan | 23-Nov-26 |  | Staging per target through SP_STG_WRITE (4.11); Period Rollover updates TB_H_STG_GTOPAS and starts the RPA parent flow (XD06 only). Effective Start Date removed: every part with a row in the period is calculated. |
 | 0.8 | FID Rayhan | 24-Nov-26 |  | Data Map: ORDER_TYPE on TB_H_PART_CANDIDATE / TB_M_PART_CANDIDATE_DEST (Order Type per destination row). |
+| 0.9 | FID Rayhan | 26-Nov-26 |  | Staging: no SYNC_RUN_ID, the run is SYNC_DT (one value per [Sync] click / rollover); one unsent row per key (a new change updates it, back to the sent value deletes it); SYNC_STATUS 0 / 1. SQL: prepare_code/sql/crossdock_staging_sync.sql. |
 
 ## 1. General
 
@@ -348,7 +349,7 @@ flowchart TB
 |  | START_DT | Start date and time |
 |  | END_DT | End date and time; END_DT of the latest SUCCESS = last success date |
 
-#### 10. Insert TB_H_STG_APPOLE_KANBAN – SP_STG_WRITE (KANBAN): changed Pcs/Case or Max Case/Day of an Active part, Candidate -> Active, part of a new period; header 5 when only the destinations changed
+#### 10. Insert TB_H_STG_APPOLE_KANBAN – SP_STG_WRITE (KANBAN): changed Pcs/Case or Max Case/Day of an Active part, Candidate -> Active, part of a new period; header 5 when only the destinations changed (when the key has no unsent row yet)
 - Source: XD05 process 1 / 2 (SP_STG_WRITE, SOURCE BATCH)
 
 | Source field | Destination field | Description |
@@ -367,15 +368,14 @@ flowchart TB
 | - | OPERATION_TYPE | 1 Max down / 2 up / 3 same / 4 never sent, against the last Max sent (same period, else the latest earlier period); 5 header |
 | - | SOURCE | 'SCREEN' / 'UPLOAD' / 'BATCH' (caller) |
 | - | UPLOAD_ID | Upload ID when SOURCE = UPLOAD, else NULL |
-| - | SYNC_STATUS | '0'; '2' when the value equals the value already sent for the period |
+| - | SYNC_STATUS | '0' |
 | - | SYNC_DT | NULL |
-| - | SYNC_RUN_ID | NULL |
 | - | CREATED_BY | Login user (XD05: batch user ID) |
 | - | CREATED_DT | Server date-time |
 | - | CHANGED_BY | NULL |
 | - | CHANGED_DT | NULL |
 
-#### 11. Insert TB_H_STG_APPOLE_EXPORT – SP_STG_WRITE (EXPORT): one row per added, changed or removed destination + order type
+#### 11. Insert TB_H_STG_APPOLE_EXPORT – SP_STG_WRITE (EXPORT): one row per added, changed or removed destination + order type (when the key has no unsent row yet)
 - Source: XD05 process 1 / 2 (SP_STG_WRITE, SOURCE BATCH)
 
 | Source field | Destination field | Description |
@@ -393,15 +393,14 @@ flowchart TB
 | CASE_DAY | MAX_SHIPPING_BOX_RCS | Value after the change; 0 for DELETE |
 | - | SOURCE | 'SCREEN' / 'UPLOAD' / 'BATCH' (caller) |
 | - | UPLOAD_ID | Upload ID when SOURCE = UPLOAD, else NULL |
-| - | SYNC_STATUS | '0'; '2' when the value equals the value already sent for the period |
+| - | SYNC_STATUS | '0' |
 | - | SYNC_DT | NULL |
-| - | SYNC_RUN_ID | NULL |
 | - | CREATED_BY | Login user (XD05: batch user ID) |
 | - | CREATED_DT | Server date-time |
 | - | CHANGED_BY | NULL |
 | - | CHANGED_DT | NULL |
 
-#### 12. Insert TB_H_STG_GTOPAS – SP_STG_WRITE (EXPORT branch): the destination appears or disappears for the part and GTOPAS does not have that state yet
+#### 12. Insert TB_H_STG_GTOPAS – SP_STG_WRITE (EXPORT branch): the destination appears or disappears for the part and GTOPAS does not have that state yet (when the key has no unsent row yet)
 - Source: XD05 process 1 / 2 (SP_STG_WRITE, SOURCE BATCH)
 
 | Source field | Destination field | Description |
@@ -420,47 +419,78 @@ flowchart TB
 | - | UPLOAD_ID | Upload ID when SOURCE = UPLOAD, else NULL |
 | - | SYNC_STATUS | '0' |
 | - | SYNC_DT | NULL |
-| - | SYNC_RUN_ID | NULL |
 | - | CREATED_BY | Login user (XD05: batch user ID) |
 | - | CREATED_DT | Server date-time |
 | - | CHANGED_BY | NULL |
 | - | CHANGED_DT | NULL |
 
-#### 13. Update TB_H_STG_APPOLE_KANBAN – SP_STG_WRITE: Older unsent row of the same key -> Superseded
+#### 13. Update TB_H_STG_APPOLE_KANBAN – SP_STG_WRITE: a new change of a key that already has an unsent row (SYNC_STATUS 0) updates that row
 - Source: XD05 process 1 / 2 (SP_STG_WRITE, SOURCE BATCH)
 
 | Source field | Destination field | Description |
 |---|---|---|
-| - | SYNC_STATUS | '2' |
+| - | ACTION | 'EDIT' (ADD when the key was not sent in the period) |
+| - | PART_STATUS | Status of the part |
+| - | SHIPPING_BOX_QTY | New Pcs/Case |
+| - | MAX_SHIPPING_BOX_QTY | New Max Case/Day |
+| - | MAX_ALLOWANCE_QTY | Pcs/Case x Max Case/Day |
+| - | OPERATION_TYPE | Again against the last Max sent (a header 5 becomes 1 to 4) |
+| - | SOURCE | Caller of the last change |
+| - | UPLOAD_ID | Upload ID when SOURCE = UPLOAD |
 | - | CHANGED_BY | Login user (XD05: batch user ID) |
 | - | CHANGED_DT | Server date-time |
 
-#### 14. Update TB_H_STG_APPOLE_EXPORT – SP_STG_WRITE: Older unsent row of the same key -> Superseded
+#### 14. Delete TB_H_STG_APPOLE_KANBAN – SP_STG_WRITE: the unsent row of the key when the value is back to the value already sent for the period (Kanban: also the header 5 when no Export row of the part + period waits)
 - Source: XD05 process 1 / 2 (SP_STG_WRITE, SOURCE BATCH)
 
 | Source field | Destination field | Description |
 |---|---|---|
-| - | SYNC_STATUS | '2' |
-| - | CHANGED_BY | Login user (XD05: batch user ID) |
-| - | CHANGED_DT | Server date-time |
+| - | STG_ID | Unsent row (SYNC_STATUS 0) of the key |
 
-#### 15. Update TB_H_STG_GTOPAS – SP_STG_WRITE: Unsent row of the same part + destination -> Superseded
+#### 15. Update TB_H_STG_APPOLE_EXPORT – SP_STG_WRITE: a new change of a key that already has an unsent row (SYNC_STATUS 0) updates that row
 - Source: XD05 process 1 / 2 (SP_STG_WRITE, SOURCE BATCH)
 
 | Source field | Destination field | Description |
 |---|---|---|
-| - | SYNC_STATUS | '2' |
+| - | ACTION | 'ADD' / 'EDIT' / 'DELETE' against the last value sent |
+| - | MAX_SHIPPING_BOX_RCS | New Case/Day; 0 for DELETE |
+| - | SOURCE | Caller of the last change |
+| - | UPLOAD_ID | Upload ID when SOURCE = UPLOAD |
 | - | CHANGED_BY | Login user (XD05: batch user ID) |
 | - | CHANGED_DT | Server date-time |
 
-#### 16. Update TB_H_STG_GTOPAS – Rows of the new Current period with SYNC_STATUS 0
+#### 16. Delete TB_H_STG_APPOLE_EXPORT – SP_STG_WRITE: the unsent row of the key when the value is back to the value already sent for the period
+- Source: XD05 process 1 / 2 (SP_STG_WRITE, SOURCE BATCH)
+
+| Source field | Destination field | Description |
+|---|---|---|
+| - | STG_ID | Unsent row (SYNC_STATUS 0) of the key |
+
+#### 17. Update TB_H_STG_GTOPAS – SP_STG_WRITE: a new change of a key that already has an unsent row (SYNC_STATUS 0) updates that row
+- Source: XD05 process 1 / 2 (SP_STG_WRITE, SOURCE BATCH)
+
+| Source field | Destination field | Description |
+|---|---|---|
+| - | ACTION | 'ADD' / 'DELETE' (what the master needs) |
+| - | SOURCE | Caller of the last change |
+| - | UPLOAD_ID | Upload ID when SOURCE = UPLOAD |
+| - | CHANGED_BY | Login user (XD05: batch user ID) |
+| - | CHANGED_DT | Server date-time |
+
+#### 18. Delete TB_H_STG_GTOPAS – SP_STG_WRITE: the unsent row of the key when the value is back to the value already sent for the period
+- Source: XD05 process 1 / 2 (SP_STG_WRITE, SOURCE BATCH)
+
+| Source field | Destination field | Description |
+|---|---|---|
+| - | STG_ID | Unsent row (SYNC_STATUS 0) of the key |
+
+#### 19. Update TB_H_STG_GTOPAS – Rows of the new Current period with SYNC_STATUS 0
 - Source: XD05 process 3 Period Rollover
 
 | Source field | Destination field | Description |
 |---|---|---|
 | - | SYNC_STATUS | '1' |
-| - | SYNC_DT | Time of the click / rollover |
-| - | SYNC_RUN_ID | Run ID YYYYMMDDHHMMSS |
+| - | SYNC_DT | Time of the [Sync] click / of the rollover: one value for every row of the run |
 | - | CHANGED_BY | Login user (rollover: batch user ID) |
 | - | CHANGED_DT | Server date-time |
 
@@ -537,7 +567,7 @@ One batch with two processes run in sequence: process 1 sets the part status fro
 - Schedule: day D of every month (system master, before the end of the month). The new period = the month after the run month (e.g. run 27-Nov -> period 202612 = Next).
 - Process 1: TB_R_PART_DAD_RESULT for the Next period, and one Kanban Crossdock Master row per part for the Next period: PART_STATUS from the result, Pcs/Case and Max Case/Day copied from the Current period. The Current period is not changed.
 - Process 2: Export Crossdock Master rows of the Next period for the Active parts (Order Type '**'). The Next period is view only on the screen.
-- Process 3 (day 1, 00:10): Period Rollover: Next becomes Current, Current becomes Past. The GTOPAS staging rows of the new Current period with SYNC_STATUS 0 get SYNC_STATUS 1, SYNC_DT and a run ID; then the RPA parent flow runs XD06 only (RUN_TYPE ROLLOVER). AP POLE got the period earlier by [Sync] (Effective Month / Year).
+- Process 3 (day 1, 00:10): Period Rollover: Next becomes Current, Current becomes Past. The GTOPAS staging rows of the new Current period with SYNC_STATUS 0 get SYNC_STATUS 1 and SYNC_DT = time of the rollover; then the RPA parent flow runs XD06 only (RUN_TYPE ROLLOVER). AP POLE got the period earlier by [Sync] (Effective Month / Year).
 - The manual [Run calculation] of the screen re-runs the Next period.
 
 | When | What |
@@ -549,7 +579,7 @@ One batch with two processes run in sequence: process 1 sets the part status fro
 ### 4.10 Period Rollover: send data (20-Nov)
 
 - GTOPAS WVJA5204 has no period: it always shows the Current month, so the Next period reaches GTOPAS only at the Period Rollover.
-- Rows taken: TB_H_STG_GTOPAS with SYNC_STATUS 0 and PERIOD = the new Current period (no date condition). Update: SYNC_STATUS 1, SYNC_DT = rollover time, SYNC_RUN_ID, CHANGED_BY / CHANGED_DT; Log of the run; start the RPA parent flow with RUN_TYPE ROLLOVER.
+- Rows taken: TB_H_STG_GTOPAS with SYNC_STATUS 0 and PERIOD = the new Current period (no date condition). Update (SP_STG_ROLLOVER): SYNC_STATUS 1, SYNC_DT = rollover time, CHANGED_BY / CHANGED_DT; Log of the run; start the RPA parent flow with RUN_TYPE ROLLOVER.
 - Rows of the old period still Non Sync are not sent any more (every selection has a PERIOD condition).
 
 ### 4.11 Staging rows of XD05
@@ -558,7 +588,7 @@ One batch with two processes run in sequence: process 1 sets the part status fro
 - Process 1 / 2 on day D: Kanban ADD (Pcs/Case, Max) for every part of the new period, OPERATION_TYPE against the Max sent for the previous period (AP POLE keeps the previous Effective Month active until a newer one comes). Active part: Export ADD per destination; DELETE (0) for a destination of the previous period not mapped any more. Inactive part: Export DELETE (0) per destination still > 0 in the previous period; in the later periods no row (AP POLE keeps the 0). GTOPAS rows only for a destination that appears or disappears. SOURCE BATCH, CREATED_BY batch user ID.
 - A part registered for the next period before day D keeps its next row; XD05 writes no second row for it. A Candidate part writes no staging row.
 - Process 3 Period Rollover: refer 4.10.
-- Superseded: a new row of a key marks the older unsent row of the same key SYNC_STATUS 2. A value set back to the value already sent for the period gets SYNC_STATUS 2 too (nothing to send). Keys: Kanban PERIOD + PART_NO; Export PERIOD + NSP_PART_NO + DEST_CODE + ORDER_TYPE; GTOPAS PERIOD + P_NO + DESTINATION_CODE.
+- One unsent row per key: a key has at most one row with SYNC_STATUS 0. A new change of the key updates that row (value, ACTION, OPERATION_TYPE, CHANGED_BY / CHANGED_DT); a change back to the value already sent for the period deletes it (nothing to send); a sent row (SYNC_STATUS 1) is never changed, the next change inserts a new row. Keys: Kanban PERIOD + PART_NO; Export PERIOD + NSP_PART_NO + DEST_CODE + ORDER_TYPE; GTOPAS PERIOD + P_NO + DESTINATION_CODE. TB_H_PART_CANDIDATE keeps every change.
 - Rules and simulation: deliverables/function_list_v2/erd/proposal_staging_sync (Proposal_Tables_Staging_Per_Target.xlsx, simulation/Staging_Header_Order.html, simulation/Staging_Per_Target_Full_Flow_Simulation.xlsx).
 
 ## 5. Logging messages
@@ -672,7 +702,7 @@ History of every change of a crossdock part for the History setting of XD01 (Add
 | CREATED_DT | DATETIME |  | N | Date and time of the change |
 
 #### TB_H_STG_APPOLE_KANBAN (history, proposed)
-AP POLE Kanban rows in the format of the upload file LLM9Q910, one row per Kanban change of a part + period, plus the header row (OPERATION_TYPE 5) when only the destinations changed. Written by SP_STG_WRITE (XD01, XD02, XD05); SYNC_STATUS set by SP_STG_SYNC. Read by XD07 through V_APPOLE_UPLOAD_KANBAN and V_APPOLE_UPLOAD_EXPORT.
+AP POLE Kanban rows in the format of the upload file LLM9Q910, one row per Kanban change of a part + period (one unsent row at a time: a new change updates it), plus the header row (OPERATION_TYPE 5) when only the destinations changed. Written by SP_STG_WRITE (XD01, XD02, XD05); SYNC_STATUS and SYNC_DT set by SP_STG_SYNC. Read by XD07 through V_APPOLE_UPLOAD_KANBAN and V_APPOLE_UPLOAD_EXPORT.
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
@@ -690,16 +720,15 @@ AP POLE Kanban rows in the format of the upload file LLM9Q910, one row per Kanba
 | OPERATION_TYPE | NUMBER(1) |  | N | Header of the part, set by SP_STG_WRITE at the save: 1 = Max down, 2 = Max up, 3 = Max same (only Pcs/Case changed, or a new period with the same Max), 4 = never sent, 5 = Kanban unchanged, only the destinations changed (ACTION KEEP). 1 to 4 against the last Max sent: same period, else the latest earlier period. Upload: 1 -> the Export rows of the part in EXPORT_PRE before KANBAN; 2, 3, 4 -> KANBAN then EXPORT_POST; 5 -> EXPORT_POST only, the row is not in the KANBAN file |
 | SOURCE | VARCHAR(6) |  | N | SCREEN / UPLOAD / BATCH (XD05) |
 | UPLOAD_ID | VARCHAR(TBD) |  | Y | Upload of the Kanban or Export Excel (Log); NULL when SOURCE is not UPLOAD |
-| SYNC_STATUS | CHAR(1) |  | N | 0 = to send, 1 = sent, 2 = Superseded at the save (a newer row of the key, or back to the value already sent). Set by SP_STG_WRITE (0, 2) and SP_STG_SYNC / Period Rollover (1). Default '0' |
-| SYNC_DT | DATETIME |  | Y | Time of the [Sync] / Period Rollover that sent the row; Last Sent on the screen = latest value |
-| SYNC_RUN_ID | VARCHAR(14) |  | Y | Run ID YYYYMMDDHHMMSS; [Re-send last Sync] sends the rows of the last run again |
+| SYNC_STATUS | CHAR(1) |  | N | 0 = to send (written or updated by SP_STG_WRITE), 1 = sent (SP_STG_SYNC at [Sync], SP_STG_ROLLOVER for GTOPAS). One row with 0 per key at a time: a new change of the key updates it. Default '0' |
+| SYNC_DT | DATETIME2(0) |  | Y | Time of the [Sync] click (or of the Period Rollover), the same value for every row of that click: the RPA reads the rows of a run by SYNC_DT; [Re-send last Sync] = MAX(SYNC_DT); Last Sent on the screen = latest value |
 | CREATED_BY | VARCHAR(20) |  | N | User of the save / upload, or XD05BATCH |
 | CREATED_DT | DATETIME |  | N | Time of the insert (same transaction as the master update) |
-| CHANGED_BY | VARCHAR(20) |  | Y | User of the save that made the row Superseded, of [Sync], or XD05BATCH (Period Rollover) |
+| CHANGED_BY | VARCHAR(20) |  | Y | User of the save that updated the unsent row, of [Sync], or XD05BATCH (Period Rollover) |
 | CHANGED_DT | DATETIME |  | Y | Time of that update |
 
 #### TB_H_STG_APPOLE_EXPORT (history, proposed)
-AP POLE Export rows in the format of the upload file LLM9Q880, one row per added, changed or removed destination + order type of a part + period. Written by SP_STG_WRITE (XD01, XD03, XD05); SYNC_STATUS set by SP_STG_SYNC. Read by XD07 through V_APPOLE_UPLOAD_EXPORT.
+AP POLE Export rows in the format of the upload file LLM9Q880, one row per added, changed or removed destination + order type of a part + period (one unsent row per key: a new change updates it). Written by SP_STG_WRITE (XD01, XD03, XD05); SYNC_STATUS and SYNC_DT set by SP_STG_SYNC. Read by XD07 through V_APPOLE_UPLOAD_EXPORT.
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
@@ -716,16 +745,15 @@ AP POLE Export rows in the format of the upload file LLM9Q880, one row per added
 | MAX_SHIPPING_BOX_RCS | NUMBER(5) |  | N | Case/Day of the destination; 0 = delete. File / screen column: Max Shipping Box (RCS) |
 | SOURCE | VARCHAR(6) |  | N | SCREEN / UPLOAD / BATCH (XD05) |
 | UPLOAD_ID | VARCHAR(TBD) |  | Y | Upload of the Kanban or Export Excel (Log); NULL when SOURCE is not UPLOAD |
-| SYNC_STATUS | CHAR(1) |  | N | 0 = to send, 1 = sent, 2 = Superseded at the save (a newer row of the key, or back to the value already sent). Set by SP_STG_WRITE (0, 2) and SP_STG_SYNC / Period Rollover (1). Default '0' |
-| SYNC_DT | DATETIME |  | Y | Time of the [Sync] / Period Rollover that sent the row; Last Sent on the screen = latest value |
-| SYNC_RUN_ID | VARCHAR(14) |  | Y | Run ID YYYYMMDDHHMMSS; [Re-send last Sync] sends the rows of the last run again |
+| SYNC_STATUS | CHAR(1) |  | N | 0 = to send (written or updated by SP_STG_WRITE), 1 = sent (SP_STG_SYNC at [Sync], SP_STG_ROLLOVER for GTOPAS). One row with 0 per key at a time: a new change of the key updates it. Default '0' |
+| SYNC_DT | DATETIME2(0) |  | Y | Time of the [Sync] click (or of the Period Rollover), the same value for every row of that click: the RPA reads the rows of a run by SYNC_DT; [Re-send last Sync] = MAX(SYNC_DT); Last Sent on the screen = latest value |
 | CREATED_BY | VARCHAR(20) |  | N | User of the save / upload, or XD05BATCH |
 | CREATED_DT | DATETIME |  | N | Time of the insert (same transaction as the master update) |
-| CHANGED_BY | VARCHAR(20) |  | Y | User of the save that made the row Superseded, of [Sync], or XD05BATCH (Period Rollover) |
+| CHANGED_BY | VARCHAR(20) |  | Y | User of the save that updated the unsent row, of [Sync], or XD05BATCH (Period Rollover) |
 | CHANGED_DT | DATETIME |  | Y | Time of that update |
 
 #### TB_H_STG_GTOPAS (history, proposed)
-GTOPAS WVJA5204 rows: a part + destination to add or delete, written by SP_STG_WRITE only when the destination appears or disappears for the part (any order type) and GTOPAS does not have that state yet. Sent by [Sync] (Current period) or the Period Rollover (new Current period). Read by XD06.
+GTOPAS WVJA5204 rows: a part + destination to add or delete, written by SP_STG_WRITE only when the destination appears or disappears for the part (any order type) and GTOPAS does not have that state yet (one unsent row per key). Sent by [Sync] (Current period) or the Period Rollover (new Current period). Read by XD06.
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
@@ -741,12 +769,11 @@ GTOPAS WVJA5204 rows: a part + destination to add or delete, written by SP_STG_W
 | ORDER_TRANSPORTATION_CODE | CHAR(1) |  | N | Always 2. File / screen column: Order Transportation Code. Default '2' |
 | SOURCE | VARCHAR(6) |  | N | SCREEN / UPLOAD / BATCH (XD05) |
 | UPLOAD_ID | VARCHAR(TBD) |  | Y | Upload of the Kanban or Export Excel (Log); NULL when SOURCE is not UPLOAD |
-| SYNC_STATUS | CHAR(1) |  | N | 0 = to send, 1 = sent, 2 = Superseded at the save (a newer row of the key, or back to the value already sent). Set by SP_STG_WRITE (0, 2) and SP_STG_SYNC / Period Rollover (1). Default '0' |
-| SYNC_DT | DATETIME |  | Y | Time of the [Sync] / Period Rollover that sent the row; Last Sent on the screen = latest value |
-| SYNC_RUN_ID | VARCHAR(14) |  | Y | Run ID YYYYMMDDHHMMSS; [Re-send last Sync] sends the rows of the last run again |
+| SYNC_STATUS | CHAR(1) |  | N | 0 = to send (written or updated by SP_STG_WRITE), 1 = sent (SP_STG_SYNC at [Sync], SP_STG_ROLLOVER for GTOPAS). One row with 0 per key at a time: a new change of the key updates it. Default '0' |
+| SYNC_DT | DATETIME2(0) |  | Y | Time of the [Sync] click (or of the Period Rollover), the same value for every row of that click: the RPA reads the rows of a run by SYNC_DT; [Re-send last Sync] = MAX(SYNC_DT); Last Sent on the screen = latest value |
 | CREATED_BY | VARCHAR(20) |  | N | User of the save / upload, or XD05BATCH |
 | CREATED_DT | DATETIME |  | N | Time of the insert (same transaction as the master update) |
-| CHANGED_BY | VARCHAR(20) |  | Y | User of the save that made the row Superseded, of [Sync], or XD05BATCH (Period Rollover) |
+| CHANGED_BY | VARCHAR(20) |  | Y | User of the save that updated the unsent row, of [Sync], or XD05BATCH (Period Rollover) |
 | CHANGED_DT | DATETIME |  | Y | Time of that update |
 
 #### TB_M_PART_CANDIDATE_DEST (transaction, existing)

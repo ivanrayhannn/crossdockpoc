@@ -313,6 +313,7 @@
      "name": "DUMMY PART 003"
     }
    ],
+   "deleted": [],
    "AP": {
     "kan": {
      "DUMMY-001": {
@@ -816,6 +817,7 @@
      "name": "DUMMY PART 003"
     }
    ],
+   "deleted": [],
    "AP": {
     "kan": {
      "DUMMY-001": {
@@ -994,9 +996,9 @@
    },
    "calls": [
     "NSP check (RSARI): DUMMY-001 202611 total Case/Day 30 ≤ Max 30 → save allowed",
-    "SP_STG_WRITE('EXPORT', 'EDIT', '202611', 'DUMMY-001', JAPAN **, 14)\n  → E6: SYNC_STATUS 0; GTOPAS: no change for JAPAN",
+    "SP_STG_WRITE('EXPORT', '202611', 'DUMMY-001', JAPAN **, 14)\n  → E6 inserted, SYNC_STATUS 0; GTOPAS: no change for JAPAN",
     "  header: no unsent Kanban row of DUMMY-001 202611 → K4 OPERATION_TYPE 5 (Kanban unchanged, current values, not uploaded)",
-    "SP_STG_WRITE('EXPORT', 'EDIT', '202611', 'DUMMY-001', KOREA **, 16)\n  → E7: SYNC_STATUS 0; GTOPAS: no change for KOREA"
+    "SP_STG_WRITE('EXPORT', '202611', 'DUMMY-001', KOREA **, 16)\n  → E7 inserted, SYNC_STATUS 0; GTOPAS: no change for KOREA"
    ],
    "touched": [
     "E6",
@@ -1379,6 +1381,7 @@
      "name": "DUMMY PART 003"
     }
    ],
+   "deleted": [],
    "AP": {
     "kan": {
      "DUMMY-001": {
@@ -1568,10 +1571,10 @@
     "n": 1
    },
    "calls": [
-    "SP_STG_SYNC('20261105100000', Current 202611, Next 202612, RSARI)\n  → AP POLE rows with SYNC_STATUS 0 of 202611 and 202612 → 1; GTOPAS rows of 202611 → 1; LAST_SYNC_DATE_APPOLE = 05-Nov-2026 10:00\n  → start the parent flow CDX_SYNC_PARENT (RUN_ID 20261105100000, RUN_TYPE SYNC)",
-    "Parent flow: SELECT COUNT(*) FROM TB_H_STG_GTOPAS WHERE SYNC_RUN_ID = '20261105100000' → 0 → scenario 2: XD07 at once",
+    "SP_STG_SYNC(SYNC_DT '2026-11-05 10:00:00', Current 202611, Next 202612, RSARI)\n  → AP POLE rows with SYNC_STATUS 0 of 202611 and 202612 → 1 with SYNC_DT = time of the click; GTOPAS rows of 202611 → 1; LAST_SYNC_DATE_APPOLE\n  → start the parent flow CDX_SYNC_PARENT (SYNC_DT 2026-11-05 10:00:00, RUN_TYPE SYNC)",
+    "Parent flow: SELECT COUNT(*) FROM TB_H_STG_GTOPAS WHERE SYNC_STATUS = '1' AND SYNC_DT = '2026-11-05 10:00:00' → 0 → scenario 2: XD07 at once",
     "XD07 AP POLE: read the views for the run",
-    "View, file of the Export rows per part (Kanban row with the same RUN_ID, part and period):",
+    "View, file of the Export rows per part (Kanban row with the same SYNC_DT, part and period):",
     "  DUMMY-001 202611: header K4, OPERATION_TYPE 5 → EXPORT_POST only (header not in the KANBAN file)",
     "  no Kanban row with OPERATION_TYPE 1 to 4 in this run → no KANBAN file",
     "XD07: EXPORT_POST (2) → SUCCESS. E-mail SUCCESS (one per run)"
@@ -2031,6 +2034,7 @@
      "name": "DUMMY PART 003"
     }
    ],
+   "deleted": [],
    "AP": {
     "kan": {
      "DUMMY-001": {
@@ -2273,7 +2277,7 @@
    },
    "calls": [
     "NSP check (DANGGRAINI): DUMMY-004 202611 total Case/Day 0 ≤ Max 20 → save allowed",
-    "SP_STG_WRITE('KANBAN', 'ADD', '202611', 'DUMMY-004', Pcs 6, Max 20)\n  → K5: OPERATION_TYPE 4 (never sent), SYNC_STATUS 0"
+    "SP_STG_WRITE('KANBAN', '202611', 'DUMMY-004', Pcs 6, Max 20)\n  → K5 inserted: OPERATION_TYPE 4 (never sent), SYNC_STATUS 0"
    ],
    "touched": [
     "K5",
@@ -2673,6 +2677,7 @@
      "name": "DUMMY PART 003"
     }
    ],
+   "deleted": [],
    "AP": {
     "kan": {
      "DUMMY-001": {
@@ -2899,8 +2904,8 @@
    },
    "calls": [
     "NSP check (RSARI): DUMMY-004 202611 total Case/Day 20 ≤ Max 20 → save allowed",
-    "SP_STG_WRITE('EXPORT', 'ADD', '202611', 'DUMMY-004', KOREA **, 12)\n  → E8: SYNC_STATUS 0; GTOPAS G6 ADD",
-    "SP_STG_WRITE('EXPORT', 'ADD', '202611', 'DUMMY-004', USA **, 8)\n  → E9: SYNC_STATUS 0; GTOPAS G7 ADD"
+    "SP_STG_WRITE('EXPORT', '202611', 'DUMMY-004', KOREA **, 12)\n  → E8 inserted, SYNC_STATUS 0; GTOPAS G6 ADD inserted",
+    "SP_STG_WRITE('EXPORT', '202611', 'DUMMY-004', USA **, 8)\n  → E9 inserted, SYNC_STATUS 0; GTOPAS G7 ADD inserted"
    ],
    "touched": [
     "E8",
@@ -3384,6 +3389,7 @@
      "chd": null
     }
    ],
+   "deleted": [],
    "AP": {
     "kan": {
      "DUMMY-001": {
@@ -3721,9 +3727,9 @@
     "XD03 file check: .xlsx, sheet Upload, 6 columns, 8 rows → OK; row check → OK (all-or-nothing)",
     "DUMMY-001, DUMMY-003, DUMMY-004: same as the mapping of 202611 → skipped (LOG6)",
     "NSP check (RSARI): DUMMY-002 202611 total Case/Day 20 ≤ Max 28 → save allowed",
-    "SP_STG_WRITE('EXPORT', 'EDIT', '202611', 'DUMMY-002', TAIWAN **, 12)\n  → E10: SYNC_STATUS 0; GTOPAS: no change for TAIWAN",
+    "SP_STG_WRITE('EXPORT', '202611', 'DUMMY-002', TAIWAN **, 12)\n  → E10 inserted, SYNC_STATUS 0; GTOPAS: no change for TAIWAN",
     "  header: no unsent Kanban row of DUMMY-002 202611 → K6 OPERATION_TYPE 5 (Kanban unchanged, current values, not uploaded)",
-    "SP_STG_WRITE('EXPORT', 'ADD', '202611', 'DUMMY-002', THAILAND **, 8)\n  → E11: SYNC_STATUS 0; GTOPAS G8 ADD",
+    "SP_STG_WRITE('EXPORT', '202611', 'DUMMY-002', THAILAND **, 8)\n  → E11 inserted, SYNC_STATUS 0; GTOPAS G8 ADD inserted",
     "Upload log COMPLETED, result report made"
    ],
    "touched": [
@@ -4288,6 +4294,7 @@
      "chd": null
     }
    ],
+   "deleted": [],
    "AP": {
     "kan": {
      "DUMMY-001": {
@@ -4569,7 +4576,7 @@
    "actor": "DANGGRAINI",
    "label": "Max down",
    "kind": "edit",
-   "story": "Procurement lowers DUMMY-002 Max 28 → 20. The header 5 of 09:30 is Superseded by a Kanban EDIT with OPERATION_TYPE 1 (last sent Max 28).",
+   "story": "Procurement lowers DUMMY-002 Max 28 → 20. The unsent header 5 of 09:30 is updated into a Kanban EDIT with OPERATION_TYPE 1 (last sent Max 28): one unsent row per part + period.",
    "input": {
     "kind": "part",
     "title": "Edit part data",
@@ -4628,11 +4635,10 @@
    },
    "calls": [
     "NSP check (DANGGRAINI): DUMMY-002 202611 total Case/Day 20 ≤ Max 20 → save allowed",
-    "SP_STG_WRITE('KANBAN', 'EDIT', '202611', 'DUMMY-002', Pcs 12, Max 20)\n  → K7: OPERATION_TYPE 1 (last sent Max 28 in 202611), SYNC_STATUS 0; K6 → 2 Superseded"
+    "SP_STG_WRITE('KANBAN', '202611', 'DUMMY-002', Pcs 12, Max 20)\n  → K6 updated (one unsent row per key): OPERATION_TYPE 1 (last sent Max 28 in 202611)"
    ],
    "touched": [
     "K6",
-    "K7",
     "H9",
     "M202611|DUMMY-002"
    ],
@@ -4801,14 +4807,14 @@
     {
      "id": 6,
      "per": "202611",
-     "act": "KEEP",
+     "act": "EDIT",
      "ps": "Active",
      "p": "DUMMY-002",
      "pcs": 12,
-     "max": 28,
-     "op": 5,
-     "st": 2,
-     "src": "UPLOAD",
+     "max": 20,
+     "op": 1,
+     "st": 0,
+     "src": "SCREEN",
      "by": "RSARI",
      "dt": "10-Nov-2026 09:30",
      "run": null,
@@ -4818,27 +4824,6 @@
      "name": "DUMMY PART 002",
      "chb": "DANGGRAINI",
      "chd": "10-Nov-2026 10:00"
-    },
-    {
-     "id": 7,
-     "per": "202611",
-     "act": "EDIT",
-     "ps": "Active",
-     "p": "DUMMY-002",
-     "pcs": 12,
-     "max": 20,
-     "op": 1,
-     "st": 0,
-     "src": "SCREEN",
-     "by": "DANGGRAINI",
-     "dt": "10-Nov-2026 10:00",
-     "run": null,
-     "sdt": null,
-     "seq": null,
-     "upl": null,
-     "name": "DUMMY PART 002",
-     "chb": null,
-     "chd": null
     }
    ],
    "E": [
@@ -5209,6 +5194,7 @@
      "chd": null
     }
    ],
+   "deleted": [],
    "AP": {
     "kan": {
      "DUMMY-001": {
@@ -5512,19 +5498,19 @@
     "n": 2
    },
    "calls": [
-    "SP_STG_SYNC('20261110110000', Current 202611, Next 202612, RSARI)\n  → AP POLE rows with SYNC_STATUS 0 of 202611 and 202612 → 1; GTOPAS rows of 202611 → 1; LAST_SYNC_DATE_APPOLE = 10-Nov-2026 11:00\n  → start the parent flow CDX_SYNC_PARENT (RUN_ID 20261110110000, RUN_TYPE SYNC)",
-    "Parent flow: SELECT COUNT(*) FROM TB_H_STG_GTOPAS WHERE SYNC_RUN_ID = '20261110110000' → 3 → scenario 1: XD06 first, XD07 only when GTOPAS succeeded",
+    "SP_STG_SYNC(SYNC_DT '2026-11-10 11:00:00', Current 202611, Next 202612, RSARI)\n  → AP POLE rows with SYNC_STATUS 0 of 202611 and 202612 → 1 with SYNC_DT = time of the click; GTOPAS rows of 202611 → 1; LAST_SYNC_DATE_APPOLE\n  → start the parent flow CDX_SYNC_PARENT (SYNC_DT 2026-11-10 11:00:00, RUN_TYPE SYNC)",
+    "Parent flow: SELECT COUNT(*) FROM TB_H_STG_GTOPAS WHERE SYNC_STATUS = '1' AND SYNC_DT = '2026-11-10 11:00:00' → 3 → scenario 1: XD06 first, XD07 only when GTOPAS succeeded",
     "XD06 GTOPAS: 3 row(s), 3 OK",
     "XD07 AP POLE: read the views for the run",
-    "View, file of the Export rows per part (Kanban row with the same RUN_ID, part and period):",
-    "  DUMMY-002 202611: header K7, OPERATION_TYPE 1 → EXPORT_PRE (before KANBAN)",
+    "View, file of the Export rows per part (Kanban row with the same SYNC_DT, part and period):",
+    "  DUMMY-002 202611: header K6, OPERATION_TYPE 1 → EXPORT_PRE (before KANBAN)",
     "  DUMMY-004 202611: header K5, OPERATION_TYPE 4 → EXPORT_POST (after KANBAN)",
-    "  KANBAN file (OPERATION_TYPE 1 to 4): K5, K7",
+    "  KANBAN file (OPERATION_TYPE 1 to 4): K5, K6",
     "XD07: EXPORT_PRE (2) → KANBAN (2) → EXPORT_POST (2) → SUCCESS. E-mail SUCCESS (one per run)"
    ],
    "touched": [
     "K5",
-    "K7",
+    "K6",
     "E8",
     "E9",
     "E10",
@@ -5600,7 +5586,7 @@
     "kan": [
      {
       "r": {
-       "id": 7,
+       "id": 6,
        "per": "202611",
        "act": "EDIT",
        "ps": "Active",
@@ -5610,12 +5596,12 @@
        "op": 1,
        "st": 1,
        "src": "SCREEN",
-       "by": "DANGGRAINI",
-       "dt": "10-Nov-2026 10:00",
+       "by": "RSARI",
+       "dt": "10-Nov-2026 09:30",
        "run": "20261110110000",
        "sdt": "10-Nov-2026 11:00",
        "seq": 3,
-       "upl": null,
+       "upl": "UPL00001",
        "name": "DUMMY PART 002",
        "chb": "RSARI",
        "chd": "10-Nov-2026 11:00"
@@ -5954,27 +5940,6 @@
     {
      "id": 6,
      "per": "202611",
-     "act": "KEEP",
-     "ps": "Active",
-     "p": "DUMMY-002",
-     "pcs": 12,
-     "max": 28,
-     "op": 5,
-     "st": 2,
-     "src": "UPLOAD",
-     "by": "RSARI",
-     "dt": "10-Nov-2026 09:30",
-     "run": null,
-     "sdt": null,
-     "seq": null,
-     "upl": "UPL00001",
-     "name": "DUMMY PART 002",
-     "chb": "DANGGRAINI",
-     "chd": "10-Nov-2026 10:00"
-    },
-    {
-     "id": 7,
-     "per": "202611",
      "act": "EDIT",
      "ps": "Active",
      "p": "DUMMY-002",
@@ -5983,12 +5948,12 @@
      "op": 1,
      "st": 1,
      "src": "SCREEN",
-     "by": "DANGGRAINI",
-     "dt": "10-Nov-2026 10:00",
+     "by": "RSARI",
+     "dt": "10-Nov-2026 09:30",
      "run": "20261110110000",
      "sdt": "10-Nov-2026 11:00",
      "seq": 3,
-     "upl": null,
+     "upl": "UPL00001",
      "name": "DUMMY PART 002",
      "chb": "RSARI",
      "chd": "10-Nov-2026 11:00"
@@ -6362,6 +6327,7 @@
      "chd": "10-Nov-2026 11:00"
     }
    ],
+   "deleted": [],
    "AP": {
     "kan": {
      "DUMMY-001": {
@@ -6741,34 +6707,34 @@
     ]
    },
    "calls": [
-    "SP_STG_WRITE('KANBAN', 'ADD', '202612', 'DUMMY-001', Pcs 10, Max 26)\n  → K8: OPERATION_TYPE 1 (last sent Max 30 in 202611), SYNC_STATUS 0",
-    "SP_STG_WRITE('EXPORT', 'ADD', '202612', 'DUMMY-001', JAPAN **, 12)\n  → E12: SYNC_STATUS 0; GTOPAS: no change for JAPAN",
-    "SP_STG_WRITE('EXPORT', 'ADD', '202612', 'DUMMY-001', KOREA **, 14)\n  → E13: SYNC_STATUS 0; GTOPAS: no change for KOREA",
-    "SP_STG_WRITE('KANBAN', 'ADD', '202612', 'DUMMY-002', Pcs 12, Max 20)\n  → K9: OPERATION_TYPE 3 (last sent Max 20 in 202611), SYNC_STATUS 0",
-    "SP_STG_WRITE('EXPORT', 'ADD', '202612', 'DUMMY-002', TAIWAN **, 20)\n  → E14: SYNC_STATUS 0; GTOPAS: no change for TAIWAN",
-    "SP_STG_WRITE('EXPORT', 'DELETE', '202612', 'DUMMY-002', THAILAND **, 0)\n  → E15: SYNC_STATUS 0; GTOPAS G9 DELETE",
-    "SP_STG_WRITE('KANBAN', 'ADD', '202612', 'DUMMY-003', Pcs 8, Max 14)\n  → K10: OPERATION_TYPE 3 (last sent Max 14 in 202611), SYNC_STATUS 0",
-    "SP_STG_WRITE('EXPORT', 'DELETE', '202612', 'DUMMY-003', USA **, 0)\n  → E16: SYNC_STATUS 0; GTOPAS G10 DELETE",
-    "SP_STG_WRITE('EXPORT', 'DELETE', '202612', 'DUMMY-003', THAILAND **, 0)\n  → E17: SYNC_STATUS 0; GTOPAS G11 DELETE",
-    "SP_STG_WRITE('KANBAN', 'ADD', '202612', 'DUMMY-004', Pcs 6, Max 24)\n  → K11: OPERATION_TYPE 2 (last sent Max 20 in 202611), SYNC_STATUS 0",
-    "SP_STG_WRITE('EXPORT', 'ADD', '202612', 'DUMMY-004', KOREA **, 14)\n  → E18: SYNC_STATUS 0; GTOPAS: no change for KOREA",
-    "SP_STG_WRITE('EXPORT', 'ADD', '202612', 'DUMMY-004', USA **, 10)\n  → E19: SYNC_STATUS 0; GTOPAS: no change for USA",
+    "SP_STG_WRITE('KANBAN', '202612', 'DUMMY-001', Pcs 10, Max 26)\n  → K7 inserted: OPERATION_TYPE 1 (last sent Max 30 in 202611), SYNC_STATUS 0",
+    "SP_STG_WRITE('EXPORT', '202612', 'DUMMY-001', JAPAN **, 12)\n  → E12 inserted, SYNC_STATUS 0; GTOPAS: no change for JAPAN",
+    "SP_STG_WRITE('EXPORT', '202612', 'DUMMY-001', KOREA **, 14)\n  → E13 inserted, SYNC_STATUS 0; GTOPAS: no change for KOREA",
+    "SP_STG_WRITE('KANBAN', '202612', 'DUMMY-002', Pcs 12, Max 20)\n  → K8 inserted: OPERATION_TYPE 3 (last sent Max 20 in 202611), SYNC_STATUS 0",
+    "SP_STG_WRITE('EXPORT', '202612', 'DUMMY-002', TAIWAN **, 20)\n  → E14 inserted, SYNC_STATUS 0; GTOPAS: no change for TAIWAN",
+    "SP_STG_WRITE('EXPORT', '202612', 'DUMMY-002', THAILAND **, 0)\n  → E15 inserted, SYNC_STATUS 0; GTOPAS G9 DELETE inserted",
+    "SP_STG_WRITE('KANBAN', '202612', 'DUMMY-003', Pcs 8, Max 14)\n  → K9 inserted: OPERATION_TYPE 3 (last sent Max 14 in 202611), SYNC_STATUS 0",
+    "SP_STG_WRITE('EXPORT', '202612', 'DUMMY-003', USA **, 0)\n  → E16 inserted, SYNC_STATUS 0; GTOPAS G10 DELETE inserted",
+    "SP_STG_WRITE('EXPORT', '202612', 'DUMMY-003', THAILAND **, 0)\n  → E17 inserted, SYNC_STATUS 0; GTOPAS G11 DELETE inserted",
+    "SP_STG_WRITE('KANBAN', '202612', 'DUMMY-004', Pcs 6, Max 24)\n  → K10 inserted: OPERATION_TYPE 2 (last sent Max 20 in 202611), SYNC_STATUS 0",
+    "SP_STG_WRITE('EXPORT', '202612', 'DUMMY-004', KOREA **, 14)\n  → E18 inserted, SYNC_STATUS 0; GTOPAS: no change for KOREA",
+    "SP_STG_WRITE('EXPORT', '202612', 'DUMMY-004', USA **, 10)\n  → E19 inserted, SYNC_STATUS 0; GTOPAS: no change for USA",
     "DUMMY-006 Candidate: no staging row"
    ],
    "touched": [
-    "K8",
+    "K7",
     "E12",
     "E13",
-    "K9",
+    "K8",
     "E14",
     "E15",
     "G9",
-    "K10",
+    "K9",
     "E16",
     "G10",
     "E17",
     "G11",
-    "K11",
+    "K10",
     "E18",
     "E19",
     "H10",
@@ -6991,27 +6957,6 @@
     {
      "id": 6,
      "per": "202611",
-     "act": "KEEP",
-     "ps": "Active",
-     "p": "DUMMY-002",
-     "pcs": 12,
-     "max": 28,
-     "op": 5,
-     "st": 2,
-     "src": "UPLOAD",
-     "by": "RSARI",
-     "dt": "10-Nov-2026 09:30",
-     "run": null,
-     "sdt": null,
-     "seq": null,
-     "upl": "UPL00001",
-     "name": "DUMMY PART 002",
-     "chb": "DANGGRAINI",
-     "chd": "10-Nov-2026 10:00"
-    },
-    {
-     "id": 7,
-     "per": "202611",
      "act": "EDIT",
      "ps": "Active",
      "p": "DUMMY-002",
@@ -7020,18 +6965,18 @@
      "op": 1,
      "st": 1,
      "src": "SCREEN",
-     "by": "DANGGRAINI",
-     "dt": "10-Nov-2026 10:00",
+     "by": "RSARI",
+     "dt": "10-Nov-2026 09:30",
      "run": "20261110110000",
      "sdt": "10-Nov-2026 11:00",
      "seq": 3,
-     "upl": null,
+     "upl": "UPL00001",
      "name": "DUMMY PART 002",
      "chb": "RSARI",
      "chd": "10-Nov-2026 11:00"
     },
     {
-     "id": 8,
+     "id": 7,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -7052,7 +6997,7 @@
      "chd": null
     },
     {
-     "id": 9,
+     "id": 8,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -7073,7 +7018,7 @@
      "chd": null
     },
     {
-     "id": 10,
+     "id": 9,
      "per": "202612",
      "act": "ADD",
      "ps": "Inactive",
@@ -7094,7 +7039,7 @@
      "chd": null
     },
     {
-     "id": 11,
+     "id": 10,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -7697,6 +7642,7 @@
      "chd": null
     }
    ],
+   "deleted": [],
    "AP": {
     "kan": {
      "DUMMY-001": {
@@ -8504,27 +8450,6 @@
     {
      "id": 6,
      "per": "202611",
-     "act": "KEEP",
-     "ps": "Active",
-     "p": "DUMMY-002",
-     "pcs": 12,
-     "max": 28,
-     "op": 5,
-     "st": 2,
-     "src": "UPLOAD",
-     "by": "RSARI",
-     "dt": "10-Nov-2026 09:30",
-     "run": null,
-     "sdt": null,
-     "seq": null,
-     "upl": "UPL00001",
-     "name": "DUMMY PART 002",
-     "chb": "DANGGRAINI",
-     "chd": "10-Nov-2026 10:00"
-    },
-    {
-     "id": 7,
-     "per": "202611",
      "act": "EDIT",
      "ps": "Active",
      "p": "DUMMY-002",
@@ -8533,18 +8458,18 @@
      "op": 1,
      "st": 1,
      "src": "SCREEN",
-     "by": "DANGGRAINI",
-     "dt": "10-Nov-2026 10:00",
+     "by": "RSARI",
+     "dt": "10-Nov-2026 09:30",
      "run": "20261110110000",
      "sdt": "10-Nov-2026 11:00",
      "seq": 3,
-     "upl": null,
+     "upl": "UPL00001",
      "name": "DUMMY PART 002",
      "chb": "RSARI",
      "chd": "10-Nov-2026 11:00"
     },
     {
-     "id": 8,
+     "id": 7,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -8565,7 +8490,7 @@
      "chd": null
     },
     {
-     "id": 9,
+     "id": 8,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -8586,7 +8511,7 @@
      "chd": null
     },
     {
-     "id": 10,
+     "id": 9,
      "per": "202612",
      "act": "ADD",
      "ps": "Inactive",
@@ -8607,7 +8532,7 @@
      "chd": null
     },
     {
-     "id": 11,
+     "id": 10,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -9210,6 +9135,7 @@
      "chd": null
     }
    ],
+   "deleted": [],
    "AP": {
     "kan": {
      "DUMMY-001": {
@@ -9787,22 +9713,22 @@
     "n": 4
    },
    "calls": [
-    "SP_STG_SYNC('20261127100000', Current 202611, Next 202612, RSARI)\n  → AP POLE rows with SYNC_STATUS 0 of 202611 and 202612 → 1; GTOPAS rows of 202611 → 1; LAST_SYNC_DATE_APPOLE = 27-Nov-2026 10:00\n  → start the parent flow CDX_SYNC_PARENT (RUN_ID 20261127100000, RUN_TYPE SYNC)",
-    "Parent flow: SELECT COUNT(*) FROM TB_H_STG_GTOPAS WHERE SYNC_RUN_ID = '20261127100000' → 0 → scenario 2: XD07 at once",
+    "SP_STG_SYNC(SYNC_DT '2026-11-27 10:00:00', Current 202611, Next 202612, RSARI)\n  → AP POLE rows with SYNC_STATUS 0 of 202611 and 202612 → 1 with SYNC_DT = time of the click; GTOPAS rows of 202611 → 1; LAST_SYNC_DATE_APPOLE\n  → start the parent flow CDX_SYNC_PARENT (SYNC_DT 2026-11-27 10:00:00, RUN_TYPE SYNC)",
+    "Parent flow: SELECT COUNT(*) FROM TB_H_STG_GTOPAS WHERE SYNC_STATUS = '1' AND SYNC_DT = '2026-11-27 10:00:00' → 0 → scenario 2: XD07 at once",
     "XD07 AP POLE: read the views for the run",
-    "View, file of the Export rows per part (Kanban row with the same RUN_ID, part and period):",
-    "  DUMMY-001 202612: header K8, OPERATION_TYPE 1 → EXPORT_PRE (before KANBAN)",
-    "  DUMMY-002 202612: header K9, OPERATION_TYPE 3 → EXPORT_POST (after KANBAN)",
-    "  DUMMY-003 202612: header K10, OPERATION_TYPE 3 → EXPORT_POST (after KANBAN)",
-    "  DUMMY-004 202612: header K11, OPERATION_TYPE 2 → EXPORT_POST (after KANBAN)",
-    "  KANBAN file (OPERATION_TYPE 1 to 4): K8, K9, K10, K11",
+    "View, file of the Export rows per part (Kanban row with the same SYNC_DT, part and period):",
+    "  DUMMY-001 202612: header K7, OPERATION_TYPE 1 → EXPORT_PRE (before KANBAN)",
+    "  DUMMY-002 202612: header K8, OPERATION_TYPE 3 → EXPORT_POST (after KANBAN)",
+    "  DUMMY-003 202612: header K9, OPERATION_TYPE 3 → EXPORT_POST (after KANBAN)",
+    "  DUMMY-004 202612: header K10, OPERATION_TYPE 2 → EXPORT_POST (after KANBAN)",
+    "  KANBAN file (OPERATION_TYPE 1 to 4): K7, K8, K9, K10",
     "XD07: EXPORT_PRE (2) → KANBAN (4) → EXPORT_POST (6) → SUCCESS. E-mail SUCCESS (one per run)"
    ],
    "touched": [
+    "K7",
     "K8",
     "K9",
     "K10",
-    "K11",
     "E12",
     "E13",
     "E14",
@@ -9879,7 +9805,7 @@
     "kan": [
      {
       "r": {
-       "id": 8,
+       "id": 7,
        "per": "202612",
        "act": "ADD",
        "ps": "Active",
@@ -9907,7 +9833,7 @@
      },
      {
       "r": {
-       "id": 9,
+       "id": 8,
        "per": "202612",
        "act": "ADD",
        "ps": "Active",
@@ -9935,7 +9861,7 @@
      },
      {
       "r": {
-       "id": 10,
+       "id": 9,
        "per": "202612",
        "act": "ADD",
        "ps": "Inactive",
@@ -9963,7 +9889,7 @@
      },
      {
       "r": {
-       "id": 11,
+       "id": 10,
        "per": "202612",
        "act": "ADD",
        "ps": "Active",
@@ -10401,27 +10327,6 @@
     {
      "id": 6,
      "per": "202611",
-     "act": "KEEP",
-     "ps": "Active",
-     "p": "DUMMY-002",
-     "pcs": 12,
-     "max": 28,
-     "op": 5,
-     "st": 2,
-     "src": "UPLOAD",
-     "by": "RSARI",
-     "dt": "10-Nov-2026 09:30",
-     "run": null,
-     "sdt": null,
-     "seq": null,
-     "upl": "UPL00001",
-     "name": "DUMMY PART 002",
-     "chb": "DANGGRAINI",
-     "chd": "10-Nov-2026 10:00"
-    },
-    {
-     "id": 7,
-     "per": "202611",
      "act": "EDIT",
      "ps": "Active",
      "p": "DUMMY-002",
@@ -10430,18 +10335,18 @@
      "op": 1,
      "st": 1,
      "src": "SCREEN",
-     "by": "DANGGRAINI",
-     "dt": "10-Nov-2026 10:00",
+     "by": "RSARI",
+     "dt": "10-Nov-2026 09:30",
      "run": "20261110110000",
      "sdt": "10-Nov-2026 11:00",
      "seq": 3,
-     "upl": null,
+     "upl": "UPL00001",
      "name": "DUMMY PART 002",
      "chb": "RSARI",
      "chd": "10-Nov-2026 11:00"
     },
     {
-     "id": 8,
+     "id": 7,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -10462,7 +10367,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 9,
+     "id": 8,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -10483,7 +10388,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 10,
+     "id": 9,
      "per": "202612",
      "act": "ADD",
      "ps": "Inactive",
@@ -10504,7 +10409,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 11,
+     "id": 10,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -11107,6 +11012,7 @@
      "chd": null
     }
    ],
+   "deleted": [],
    "AP": {
     "kan": {
      "DUMMY-001": {
@@ -11705,8 +11611,8 @@
    "story": "202612 becomes Current. The parent flow runs XD06 only: it deletes DUMMY-002 THAILAND, DUMMY-003 USA and THAILAND in GTOPAS. DUMMY-006 and DUMMY-007 can now be edited.",
    "input": null,
    "calls": [
-    "Period Rollover (XD05 process 3): 202612 becomes Current\n  → GTOPAS rows of 202612 with SYNC_STATUS 0 → 1 (3 row(s)), run 20261201001000\n  → start the parent flow CDX_SYNC_PARENT (RUN_TYPE ROLLOVER)",
-    "Parent flow: SELECT COUNT(*) FROM TB_H_STG_GTOPAS WHERE SYNC_RUN_ID = '20261201001000' → 3 → RUN_TYPE ROLLOVER: XD06 only",
+    "Period Rollover (XD05 process 3): 202612 becomes Current\n  → SP_STG_ROLLOVER: GTOPAS rows of 202612 with SYNC_STATUS 0 → 1 (3 row(s)), SYNC_DT 2026-12-01 00:10:00\n  → start the parent flow CDX_SYNC_PARENT (RUN_TYPE ROLLOVER)",
+    "Parent flow: SELECT COUNT(*) FROM TB_H_STG_GTOPAS WHERE SYNC_STATUS = '1' AND SYNC_DT = '2026-12-01 00:10:00' → 3 → RUN_TYPE ROLLOVER: XD06 only",
     "XD06 GTOPAS: 3 row(s), 3 OK",
     "E-mail SUCCESS: GTOPAS result of the rollover"
    ],
@@ -11997,27 +11903,6 @@
     {
      "id": 6,
      "per": "202611",
-     "act": "KEEP",
-     "ps": "Active",
-     "p": "DUMMY-002",
-     "pcs": 12,
-     "max": 28,
-     "op": 5,
-     "st": 2,
-     "src": "UPLOAD",
-     "by": "RSARI",
-     "dt": "10-Nov-2026 09:30",
-     "run": null,
-     "sdt": null,
-     "seq": null,
-     "upl": "UPL00001",
-     "name": "DUMMY PART 002",
-     "chb": "DANGGRAINI",
-     "chd": "10-Nov-2026 10:00"
-    },
-    {
-     "id": 7,
-     "per": "202611",
      "act": "EDIT",
      "ps": "Active",
      "p": "DUMMY-002",
@@ -12026,18 +11911,18 @@
      "op": 1,
      "st": 1,
      "src": "SCREEN",
-     "by": "DANGGRAINI",
-     "dt": "10-Nov-2026 10:00",
+     "by": "RSARI",
+     "dt": "10-Nov-2026 09:30",
      "run": "20261110110000",
      "sdt": "10-Nov-2026 11:00",
      "seq": 3,
-     "upl": null,
+     "upl": "UPL00001",
      "name": "DUMMY PART 002",
      "chb": "RSARI",
      "chd": "10-Nov-2026 11:00"
     },
     {
-     "id": 8,
+     "id": 7,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -12058,7 +11943,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 9,
+     "id": 8,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -12079,7 +11964,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 10,
+     "id": 9,
      "per": "202612",
      "act": "ADD",
      "ps": "Inactive",
@@ -12100,7 +11985,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 11,
+     "id": 10,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -12703,6 +12588,7 @@
      "chd": "01-Dec-2026 00:10"
     }
    ],
+   "deleted": [],
    "AP": {
     "kan": {
      "DUMMY-001": {
@@ -13322,13 +13208,13 @@
    },
    "calls": [
     "NSP check (RSARI): DUMMY-001 202612 total Case/Day 25 ≤ Max 26 → save allowed",
-    "SP_STG_WRITE('EXPORT', 'EDIT', '202612', 'DUMMY-001', JAPAN **, 15)\n  → E20: SYNC_STATUS 0; GTOPAS: no change for JAPAN",
-    "  header: no unsent Kanban row of DUMMY-001 202612 → K12 OPERATION_TYPE 5 (Kanban unchanged, current values, not uploaded)",
-    "SP_STG_WRITE('EXPORT', 'EDIT', '202612', 'DUMMY-001', KOREA **, 10)\n  → E21: SYNC_STATUS 0; GTOPAS: no change for KOREA"
+    "SP_STG_WRITE('EXPORT', '202612', 'DUMMY-001', JAPAN **, 15)\n  → E20 inserted, SYNC_STATUS 0; GTOPAS: no change for JAPAN",
+    "  header: no unsent Kanban row of DUMMY-001 202612 → K11 OPERATION_TYPE 5 (Kanban unchanged, current values, not uploaded)",
+    "SP_STG_WRITE('EXPORT', '202612', 'DUMMY-001', KOREA **, 10)\n  → E21 inserted, SYNC_STATUS 0; GTOPAS: no change for KOREA"
    ],
    "touched": [
     "E20",
-    "K12",
+    "K11",
     "E21",
     "H21",
     "H22",
@@ -13550,27 +13436,6 @@
     {
      "id": 6,
      "per": "202611",
-     "act": "KEEP",
-     "ps": "Active",
-     "p": "DUMMY-002",
-     "pcs": 12,
-     "max": 28,
-     "op": 5,
-     "st": 2,
-     "src": "UPLOAD",
-     "by": "RSARI",
-     "dt": "10-Nov-2026 09:30",
-     "run": null,
-     "sdt": null,
-     "seq": null,
-     "upl": "UPL00001",
-     "name": "DUMMY PART 002",
-     "chb": "DANGGRAINI",
-     "chd": "10-Nov-2026 10:00"
-    },
-    {
-     "id": 7,
-     "per": "202611",
      "act": "EDIT",
      "ps": "Active",
      "p": "DUMMY-002",
@@ -13579,18 +13444,18 @@
      "op": 1,
      "st": 1,
      "src": "SCREEN",
-     "by": "DANGGRAINI",
-     "dt": "10-Nov-2026 10:00",
+     "by": "RSARI",
+     "dt": "10-Nov-2026 09:30",
      "run": "20261110110000",
      "sdt": "10-Nov-2026 11:00",
      "seq": 3,
-     "upl": null,
+     "upl": "UPL00001",
      "name": "DUMMY PART 002",
      "chb": "RSARI",
      "chd": "10-Nov-2026 11:00"
     },
     {
-     "id": 8,
+     "id": 7,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -13611,7 +13476,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 9,
+     "id": 8,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -13632,7 +13497,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 10,
+     "id": 9,
      "per": "202612",
      "act": "ADD",
      "ps": "Inactive",
@@ -13653,7 +13518,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 11,
+     "id": 10,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -13674,7 +13539,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 12,
+     "id": 11,
      "per": "202612",
      "act": "KEEP",
      "ps": "Active",
@@ -14317,6 +14182,7 @@
      "chd": "01-Dec-2026 00:10"
     }
    ],
+   "deleted": [],
    "AP": {
     "kan": {
      "DUMMY-001": {
@@ -14941,7 +14807,7 @@
    "actor": "RSARI",
    "label": "Back to the sent value",
    "kind": "edit",
-   "story": "D/S puts JAPAN back to 12 and adds USA 4 (total 26). JAPAN 12 is the value already sent: the unsent 15 and the new 12 are both Superseded, nothing goes for JAPAN. USA is new for DUMMY-001 → GTOPAS ADD.",
+   "story": "D/S puts JAPAN back to 12 and adds USA 4 (total 26). JAPAN 12 is the value already sent: the unsent row (15) is deleted, nothing goes for JAPAN. USA is new for DUMMY-001 → GTOPAS ADD.",
    "input": {
     "kind": "mapping",
     "title": "Edit mapping",
@@ -14975,13 +14841,12 @@
    },
    "calls": [
     "NSP check (RSARI): DUMMY-001 202612 total Case/Day 26 ≤ Max 26 → save allowed",
-    "SP_STG_WRITE('EXPORT', 'EDIT', '202612', 'DUMMY-001', JAPAN **, 12)\n  → E22: SYNC_STATUS 2 (back to the value sent, nothing to send); E20 → 2 Superseded; GTOPAS: no change for JAPAN",
-    "SP_STG_WRITE('EXPORT', 'ADD', '202612', 'DUMMY-001', USA **, 4)\n  → E23: SYNC_STATUS 0; GTOPAS G12 ADD"
+    "SP_STG_WRITE('EXPORT', '202612', 'DUMMY-001', JAPAN **, 12)\n  → back to the value sent: unsent E20 deleted (nothing to send); GTOPAS: no change for JAPAN",
+    "SP_STG_WRITE('EXPORT', '202612', 'DUMMY-001', USA **, 4)\n  → E22 inserted, SYNC_STATUS 0; GTOPAS G12 ADD inserted"
    ],
    "touched": [
     "E20",
     "E22",
-    "E23",
     "G12",
     "H23",
     "H24",
@@ -15204,27 +15069,6 @@
     {
      "id": 6,
      "per": "202611",
-     "act": "KEEP",
-     "ps": "Active",
-     "p": "DUMMY-002",
-     "pcs": 12,
-     "max": 28,
-     "op": 5,
-     "st": 2,
-     "src": "UPLOAD",
-     "by": "RSARI",
-     "dt": "10-Nov-2026 09:30",
-     "run": null,
-     "sdt": null,
-     "seq": null,
-     "upl": "UPL00001",
-     "name": "DUMMY PART 002",
-     "chb": "DANGGRAINI",
-     "chd": "10-Nov-2026 10:00"
-    },
-    {
-     "id": 7,
-     "per": "202611",
      "act": "EDIT",
      "ps": "Active",
      "p": "DUMMY-002",
@@ -15233,18 +15077,18 @@
      "op": 1,
      "st": 1,
      "src": "SCREEN",
-     "by": "DANGGRAINI",
-     "dt": "10-Nov-2026 10:00",
+     "by": "RSARI",
+     "dt": "10-Nov-2026 09:30",
      "run": "20261110110000",
      "sdt": "10-Nov-2026 11:00",
      "seq": 3,
-     "upl": null,
+     "upl": "UPL00001",
      "name": "DUMMY PART 002",
      "chb": "RSARI",
      "chd": "10-Nov-2026 11:00"
     },
     {
-     "id": 8,
+     "id": 7,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -15265,7 +15109,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 9,
+     "id": 8,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -15286,7 +15130,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 10,
+     "id": 9,
      "per": "202612",
      "act": "ADD",
      "ps": "Inactive",
@@ -15307,7 +15151,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 11,
+     "id": 10,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -15328,7 +15172,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 12,
+     "id": 11,
      "per": "202612",
      "act": "KEEP",
      "ps": "Active",
@@ -15731,26 +15575,6 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 20,
-     "per": "202612",
-     "act": "EDIT",
-     "p": "DUMMY-001",
-     "d": "JAPAN",
-     "ot": "**",
-     "cd": 15,
-     "st": 2,
-     "src": "SCREEN",
-     "by": "RSARI",
-     "dt": "03-Dec-2026 09:00",
-     "run": null,
-     "sdt": null,
-     "seq": null,
-     "upl": null,
-     "name": "DUMMY PART 001",
-     "chb": "RSARI",
-     "chd": "03-Dec-2026 09:30"
-    },
-    {
      "id": 21,
      "per": "202612",
      "act": "EDIT",
@@ -15772,26 +15596,6 @@
     },
     {
      "id": 22,
-     "per": "202612",
-     "act": "EDIT",
-     "p": "DUMMY-001",
-     "d": "JAPAN",
-     "ot": "**",
-     "cd": 12,
-     "st": 2,
-     "src": "SCREEN",
-     "by": "RSARI",
-     "dt": "03-Dec-2026 09:30",
-     "run": null,
-     "sdt": null,
-     "seq": null,
-     "upl": null,
-     "name": "DUMMY PART 001",
-     "chb": null,
-     "chd": null
-    },
-    {
-     "id": 23,
      "per": "202612",
      "act": "ADD",
      "p": "DUMMY-001",
@@ -16027,6 +15831,33 @@
      "name": "DUMMY PART 001",
      "chb": null,
      "chd": null
+    }
+   ],
+   "deleted": [
+    {
+     "tag": "E20",
+     "tbl": "E",
+     "row": {
+      "id": 20,
+      "per": "202612",
+      "act": "EDIT",
+      "p": "DUMMY-001",
+      "d": "JAPAN",
+      "ot": "**",
+      "cd": 15,
+      "st": 0,
+      "src": "SCREEN",
+      "by": "RSARI",
+      "dt": "03-Dec-2026 09:00",
+      "run": null,
+      "sdt": null,
+      "seq": null,
+      "upl": null,
+      "name": "DUMMY PART 001",
+      "chb": null,
+      "chd": null
+     },
+     "why": "back to the value sent"
     }
    ],
    "AP": {
@@ -16725,14 +16556,14 @@
    },
    "calls": [
     "NSP check (RSARI): DUMMY-004 202612 total Case/Day 24 ≤ Max 24 → save allowed",
-    "SP_STG_WRITE('EXPORT', 'DELETE', '202612', 'DUMMY-004', KOREA **, 0)\n  → E24: SYNC_STATUS 0; GTOPAS: no change for KOREA",
-    "  header: no unsent Kanban row of DUMMY-004 202612 → K13 OPERATION_TYPE 5 (Kanban unchanged, current values, not uploaded)",
-    "SP_STG_WRITE('EXPORT', 'ADD', '202612', 'DUMMY-004', KOREA C, 14)\n  → E25: SYNC_STATUS 0; GTOPAS: no change for KOREA"
+    "SP_STG_WRITE('EXPORT', '202612', 'DUMMY-004', KOREA **, 0)\n  → E23 inserted, SYNC_STATUS 0; GTOPAS: no change for KOREA",
+    "  header: no unsent Kanban row of DUMMY-004 202612 → K12 OPERATION_TYPE 5 (Kanban unchanged, current values, not uploaded)",
+    "SP_STG_WRITE('EXPORT', '202612', 'DUMMY-004', KOREA C, 14)\n  → E24 inserted, SYNC_STATUS 0; GTOPAS: no change for KOREA"
    ],
    "touched": [
+    "E23",
+    "K12",
     "E24",
-    "K13",
-    "E25",
     "H25",
     "H26",
     "D202612|DUMMY-004|KOREA|C"
@@ -16953,27 +16784,6 @@
     {
      "id": 6,
      "per": "202611",
-     "act": "KEEP",
-     "ps": "Active",
-     "p": "DUMMY-002",
-     "pcs": 12,
-     "max": 28,
-     "op": 5,
-     "st": 2,
-     "src": "UPLOAD",
-     "by": "RSARI",
-     "dt": "10-Nov-2026 09:30",
-     "run": null,
-     "sdt": null,
-     "seq": null,
-     "upl": "UPL00001",
-     "name": "DUMMY PART 002",
-     "chb": "DANGGRAINI",
-     "chd": "10-Nov-2026 10:00"
-    },
-    {
-     "id": 7,
-     "per": "202611",
      "act": "EDIT",
      "ps": "Active",
      "p": "DUMMY-002",
@@ -16982,18 +16792,18 @@
      "op": 1,
      "st": 1,
      "src": "SCREEN",
-     "by": "DANGGRAINI",
-     "dt": "10-Nov-2026 10:00",
+     "by": "RSARI",
+     "dt": "10-Nov-2026 09:30",
      "run": "20261110110000",
      "sdt": "10-Nov-2026 11:00",
      "seq": 3,
-     "upl": null,
+     "upl": "UPL00001",
      "name": "DUMMY PART 002",
      "chb": "RSARI",
      "chd": "10-Nov-2026 11:00"
     },
     {
-     "id": 8,
+     "id": 7,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -17014,7 +16824,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 9,
+     "id": 8,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -17035,7 +16845,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 10,
+     "id": 9,
      "per": "202612",
      "act": "ADD",
      "ps": "Inactive",
@@ -17056,7 +16866,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 11,
+     "id": 10,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -17077,7 +16887,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 12,
+     "id": 11,
      "per": "202612",
      "act": "KEEP",
      "ps": "Active",
@@ -17098,7 +16908,7 @@
      "chd": null
     },
     {
-     "id": 13,
+     "id": 12,
      "per": "202612",
      "act": "KEEP",
      "ps": "Active",
@@ -17501,26 +17311,6 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 20,
-     "per": "202612",
-     "act": "EDIT",
-     "p": "DUMMY-001",
-     "d": "JAPAN",
-     "ot": "**",
-     "cd": 15,
-     "st": 2,
-     "src": "SCREEN",
-     "by": "RSARI",
-     "dt": "03-Dec-2026 09:00",
-     "run": null,
-     "sdt": null,
-     "seq": null,
-     "upl": null,
-     "name": "DUMMY PART 001",
-     "chb": "RSARI",
-     "chd": "03-Dec-2026 09:30"
-    },
-    {
      "id": 21,
      "per": "202612",
      "act": "EDIT",
@@ -17543,26 +17333,6 @@
     {
      "id": 22,
      "per": "202612",
-     "act": "EDIT",
-     "p": "DUMMY-001",
-     "d": "JAPAN",
-     "ot": "**",
-     "cd": 12,
-     "st": 2,
-     "src": "SCREEN",
-     "by": "RSARI",
-     "dt": "03-Dec-2026 09:30",
-     "run": null,
-     "sdt": null,
-     "seq": null,
-     "upl": null,
-     "name": "DUMMY PART 001",
-     "chb": null,
-     "chd": null
-    },
-    {
-     "id": 23,
-     "per": "202612",
      "act": "ADD",
      "p": "DUMMY-001",
      "d": "USA",
@@ -17581,7 +17351,7 @@
      "chd": null
     },
     {
-     "id": 24,
+     "id": 23,
      "per": "202612",
      "act": "DELETE",
      "p": "DUMMY-004",
@@ -17601,7 +17371,7 @@
      "chd": null
     },
     {
-     "id": 25,
+     "id": 24,
      "per": "202612",
      "act": "ADD",
      "p": "DUMMY-004",
@@ -17839,6 +17609,7 @@
      "chd": null
     }
    ],
+   "deleted": [],
    "AP": {
     "kan": {
      "DUMMY-001": {
@@ -18605,10 +18376,10 @@
    },
    "calls": [
     "NSP check (DANGGRAINI): DUMMY-003 202612 total Case/Day 0 ≤ Max 18 → save allowed",
-    "SP_STG_WRITE('KANBAN', 'EDIT', '202612', 'DUMMY-003', Pcs 8, Max 18)\n  → K14: OPERATION_TYPE 2 (last sent Max 14 in 202612), SYNC_STATUS 0"
+    "SP_STG_WRITE('KANBAN', '202612', 'DUMMY-003', Pcs 8, Max 18)\n  → K13 inserted: OPERATION_TYPE 2 (last sent Max 14 in 202612), SYNC_STATUS 0"
    ],
    "touched": [
-    "K14",
+    "K13",
     "H27",
     "H28",
     "M202612|DUMMY-003"
@@ -18829,27 +18600,6 @@
     {
      "id": 6,
      "per": "202611",
-     "act": "KEEP",
-     "ps": "Active",
-     "p": "DUMMY-002",
-     "pcs": 12,
-     "max": 28,
-     "op": 5,
-     "st": 2,
-     "src": "UPLOAD",
-     "by": "RSARI",
-     "dt": "10-Nov-2026 09:30",
-     "run": null,
-     "sdt": null,
-     "seq": null,
-     "upl": "UPL00001",
-     "name": "DUMMY PART 002",
-     "chb": "DANGGRAINI",
-     "chd": "10-Nov-2026 10:00"
-    },
-    {
-     "id": 7,
-     "per": "202611",
      "act": "EDIT",
      "ps": "Active",
      "p": "DUMMY-002",
@@ -18858,18 +18608,18 @@
      "op": 1,
      "st": 1,
      "src": "SCREEN",
-     "by": "DANGGRAINI",
-     "dt": "10-Nov-2026 10:00",
+     "by": "RSARI",
+     "dt": "10-Nov-2026 09:30",
      "run": "20261110110000",
      "sdt": "10-Nov-2026 11:00",
      "seq": 3,
-     "upl": null,
+     "upl": "UPL00001",
      "name": "DUMMY PART 002",
      "chb": "RSARI",
      "chd": "10-Nov-2026 11:00"
     },
     {
-     "id": 8,
+     "id": 7,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -18890,7 +18640,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 9,
+     "id": 8,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -18911,7 +18661,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 10,
+     "id": 9,
      "per": "202612",
      "act": "ADD",
      "ps": "Inactive",
@@ -18932,7 +18682,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 11,
+     "id": 10,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -18953,7 +18703,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 12,
+     "id": 11,
      "per": "202612",
      "act": "KEEP",
      "ps": "Active",
@@ -18974,7 +18724,7 @@
      "chd": null
     },
     {
-     "id": 13,
+     "id": 12,
      "per": "202612",
      "act": "KEEP",
      "ps": "Active",
@@ -18995,7 +18745,7 @@
      "chd": null
     },
     {
-     "id": 14,
+     "id": 13,
      "per": "202612",
      "act": "EDIT",
      "ps": "Active",
@@ -19398,26 +19148,6 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 20,
-     "per": "202612",
-     "act": "EDIT",
-     "p": "DUMMY-001",
-     "d": "JAPAN",
-     "ot": "**",
-     "cd": 15,
-     "st": 2,
-     "src": "SCREEN",
-     "by": "RSARI",
-     "dt": "03-Dec-2026 09:00",
-     "run": null,
-     "sdt": null,
-     "seq": null,
-     "upl": null,
-     "name": "DUMMY PART 001",
-     "chb": "RSARI",
-     "chd": "03-Dec-2026 09:30"
-    },
-    {
      "id": 21,
      "per": "202612",
      "act": "EDIT",
@@ -19440,26 +19170,6 @@
     {
      "id": 22,
      "per": "202612",
-     "act": "EDIT",
-     "p": "DUMMY-001",
-     "d": "JAPAN",
-     "ot": "**",
-     "cd": 12,
-     "st": 2,
-     "src": "SCREEN",
-     "by": "RSARI",
-     "dt": "03-Dec-2026 09:30",
-     "run": null,
-     "sdt": null,
-     "seq": null,
-     "upl": null,
-     "name": "DUMMY PART 001",
-     "chb": null,
-     "chd": null
-    },
-    {
-     "id": 23,
-     "per": "202612",
      "act": "ADD",
      "p": "DUMMY-001",
      "d": "USA",
@@ -19478,7 +19188,7 @@
      "chd": null
     },
     {
-     "id": 24,
+     "id": 23,
      "per": "202612",
      "act": "DELETE",
      "p": "DUMMY-004",
@@ -19498,7 +19208,7 @@
      "chd": null
     },
     {
-     "id": 25,
+     "id": 24,
      "per": "202612",
      "act": "ADD",
      "p": "DUMMY-004",
@@ -19736,6 +19446,7 @@
      "chd": null
     }
    ],
+   "deleted": [],
    "AP": {
     "kan": {
      "DUMMY-001": {
@@ -20482,10 +20193,10 @@
    },
    "calls": [
     "NSP check (RSARI): DUMMY-003 202612 total Case/Day 10 ≤ Max 18 → save allowed",
-    "SP_STG_WRITE('EXPORT', 'ADD', '202612', 'DUMMY-003', THAILAND **, 10)\n  → E26: SYNC_STATUS 0; GTOPAS G13 ADD"
+    "SP_STG_WRITE('EXPORT', '202612', 'DUMMY-003', THAILAND **, 10)\n  → E25 inserted, SYNC_STATUS 0; GTOPAS G13 ADD inserted"
    ],
    "touched": [
-    "E26",
+    "E25",
     "G13",
     "H29",
     "D202612|DUMMY-003|THAILAND|**"
@@ -20708,27 +20419,6 @@
     {
      "id": 6,
      "per": "202611",
-     "act": "KEEP",
-     "ps": "Active",
-     "p": "DUMMY-002",
-     "pcs": 12,
-     "max": 28,
-     "op": 5,
-     "st": 2,
-     "src": "UPLOAD",
-     "by": "RSARI",
-     "dt": "10-Nov-2026 09:30",
-     "run": null,
-     "sdt": null,
-     "seq": null,
-     "upl": "UPL00001",
-     "name": "DUMMY PART 002",
-     "chb": "DANGGRAINI",
-     "chd": "10-Nov-2026 10:00"
-    },
-    {
-     "id": 7,
-     "per": "202611",
      "act": "EDIT",
      "ps": "Active",
      "p": "DUMMY-002",
@@ -20737,18 +20427,18 @@
      "op": 1,
      "st": 1,
      "src": "SCREEN",
-     "by": "DANGGRAINI",
-     "dt": "10-Nov-2026 10:00",
+     "by": "RSARI",
+     "dt": "10-Nov-2026 09:30",
      "run": "20261110110000",
      "sdt": "10-Nov-2026 11:00",
      "seq": 3,
-     "upl": null,
+     "upl": "UPL00001",
      "name": "DUMMY PART 002",
      "chb": "RSARI",
      "chd": "10-Nov-2026 11:00"
     },
     {
-     "id": 8,
+     "id": 7,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -20769,7 +20459,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 9,
+     "id": 8,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -20790,7 +20480,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 10,
+     "id": 9,
      "per": "202612",
      "act": "ADD",
      "ps": "Inactive",
@@ -20811,7 +20501,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 11,
+     "id": 10,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -20832,7 +20522,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 12,
+     "id": 11,
      "per": "202612",
      "act": "KEEP",
      "ps": "Active",
@@ -20853,7 +20543,7 @@
      "chd": null
     },
     {
-     "id": 13,
+     "id": 12,
      "per": "202612",
      "act": "KEEP",
      "ps": "Active",
@@ -20874,7 +20564,7 @@
      "chd": null
     },
     {
-     "id": 14,
+     "id": 13,
      "per": "202612",
      "act": "EDIT",
      "ps": "Active",
@@ -21277,26 +20967,6 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 20,
-     "per": "202612",
-     "act": "EDIT",
-     "p": "DUMMY-001",
-     "d": "JAPAN",
-     "ot": "**",
-     "cd": 15,
-     "st": 2,
-     "src": "SCREEN",
-     "by": "RSARI",
-     "dt": "03-Dec-2026 09:00",
-     "run": null,
-     "sdt": null,
-     "seq": null,
-     "upl": null,
-     "name": "DUMMY PART 001",
-     "chb": "RSARI",
-     "chd": "03-Dec-2026 09:30"
-    },
-    {
      "id": 21,
      "per": "202612",
      "act": "EDIT",
@@ -21319,26 +20989,6 @@
     {
      "id": 22,
      "per": "202612",
-     "act": "EDIT",
-     "p": "DUMMY-001",
-     "d": "JAPAN",
-     "ot": "**",
-     "cd": 12,
-     "st": 2,
-     "src": "SCREEN",
-     "by": "RSARI",
-     "dt": "03-Dec-2026 09:30",
-     "run": null,
-     "sdt": null,
-     "seq": null,
-     "upl": null,
-     "name": "DUMMY PART 001",
-     "chb": null,
-     "chd": null
-    },
-    {
-     "id": 23,
-     "per": "202612",
      "act": "ADD",
      "p": "DUMMY-001",
      "d": "USA",
@@ -21357,7 +21007,7 @@
      "chd": null
     },
     {
-     "id": 24,
+     "id": 23,
      "per": "202612",
      "act": "DELETE",
      "p": "DUMMY-004",
@@ -21377,7 +21027,7 @@
      "chd": null
     },
     {
-     "id": 25,
+     "id": 24,
      "per": "202612",
      "act": "ADD",
      "p": "DUMMY-004",
@@ -21397,9 +21047,9 @@
      "chd": null
     },
     {
-     "id": 26,
+     "id": 25,
      "per": "202612",
-     "act": "ADD",
+     "act": "EDIT",
      "p": "DUMMY-003",
      "d": "THAILAND",
      "ot": "**",
@@ -21653,6 +21303,7 @@
      "chd": null
     }
    ],
+   "deleted": [],
    "AP": {
     "kan": {
      "DUMMY-001": {
@@ -22407,20 +22058,20 @@
     "n": 3
    },
    "calls": [
-    "SP_STG_SYNC('20261204100000', Current 202612, Next 202701, RSARI)\n  → AP POLE rows with SYNC_STATUS 0 of 202612 and 202701 → 1; GTOPAS rows of 202612 → 1; LAST_SYNC_DATE_APPOLE = 04-Dec-2026 10:00\n  → start the parent flow CDX_SYNC_PARENT (RUN_ID 20261204100000, RUN_TYPE SYNC)",
-    "Parent flow: SELECT COUNT(*) FROM TB_H_STG_GTOPAS WHERE SYNC_RUN_ID = '20261204100000' → 2 → scenario 1: XD06 first, XD07 only when GTOPAS succeeded",
+    "SP_STG_SYNC(SYNC_DT '2026-12-04 10:00:00', Current 202612, Next 202701, RSARI)\n  → AP POLE rows with SYNC_STATUS 0 of 202612 and 202701 → 1 with SYNC_DT = time of the click; GTOPAS rows of 202612 → 1; LAST_SYNC_DATE_APPOLE\n  → start the parent flow CDX_SYNC_PARENT (SYNC_DT 2026-12-04 10:00:00, RUN_TYPE SYNC)",
+    "Parent flow: SELECT COUNT(*) FROM TB_H_STG_GTOPAS WHERE SYNC_STATUS = '1' AND SYNC_DT = '2026-12-04 10:00:00' → 2 → scenario 1: XD06 first, XD07 only when GTOPAS succeeded",
     "XD06 GTOPAS: 2 row(s), 1 OK, FAILED DUMMY-003 THAILAND",
     "GTOPAS FAILED → AP POLE stops: XD07 is not started. E-mail FAILED → D/S: [Re-send last Sync]"
    ],
    "touched": [
+    "K11",
     "K12",
     "K13",
-    "K14",
     "E21",
+    "E22",
     "E23",
     "E24",
     "E25",
-    "E26",
     "G12",
     "G13"
    ],
@@ -22692,27 +22343,6 @@
     {
      "id": 6,
      "per": "202611",
-     "act": "KEEP",
-     "ps": "Active",
-     "p": "DUMMY-002",
-     "pcs": 12,
-     "max": 28,
-     "op": 5,
-     "st": 2,
-     "src": "UPLOAD",
-     "by": "RSARI",
-     "dt": "10-Nov-2026 09:30",
-     "run": null,
-     "sdt": null,
-     "seq": null,
-     "upl": "UPL00001",
-     "name": "DUMMY PART 002",
-     "chb": "DANGGRAINI",
-     "chd": "10-Nov-2026 10:00"
-    },
-    {
-     "id": 7,
-     "per": "202611",
      "act": "EDIT",
      "ps": "Active",
      "p": "DUMMY-002",
@@ -22721,18 +22351,18 @@
      "op": 1,
      "st": 1,
      "src": "SCREEN",
-     "by": "DANGGRAINI",
-     "dt": "10-Nov-2026 10:00",
+     "by": "RSARI",
+     "dt": "10-Nov-2026 09:30",
      "run": "20261110110000",
      "sdt": "10-Nov-2026 11:00",
      "seq": 3,
-     "upl": null,
+     "upl": "UPL00001",
      "name": "DUMMY PART 002",
      "chb": "RSARI",
      "chd": "10-Nov-2026 11:00"
     },
     {
-     "id": 8,
+     "id": 7,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -22753,7 +22383,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 9,
+     "id": 8,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -22774,7 +22404,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 10,
+     "id": 9,
      "per": "202612",
      "act": "ADD",
      "ps": "Inactive",
@@ -22795,7 +22425,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 11,
+     "id": 10,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -22816,7 +22446,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 12,
+     "id": 11,
      "per": "202612",
      "act": "KEEP",
      "ps": "Active",
@@ -22837,7 +22467,7 @@
      "chd": "04-Dec-2026 10:00"
     },
     {
-     "id": 13,
+     "id": 12,
      "per": "202612",
      "act": "KEEP",
      "ps": "Active",
@@ -22858,7 +22488,7 @@
      "chd": "04-Dec-2026 10:00"
     },
     {
-     "id": 14,
+     "id": 13,
      "per": "202612",
      "act": "EDIT",
      "ps": "Active",
@@ -23261,26 +22891,6 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 20,
-     "per": "202612",
-     "act": "EDIT",
-     "p": "DUMMY-001",
-     "d": "JAPAN",
-     "ot": "**",
-     "cd": 15,
-     "st": 2,
-     "src": "SCREEN",
-     "by": "RSARI",
-     "dt": "03-Dec-2026 09:00",
-     "run": null,
-     "sdt": null,
-     "seq": null,
-     "upl": null,
-     "name": "DUMMY PART 001",
-     "chb": "RSARI",
-     "chd": "03-Dec-2026 09:30"
-    },
-    {
      "id": 21,
      "per": "202612",
      "act": "EDIT",
@@ -23303,26 +22913,6 @@
     {
      "id": 22,
      "per": "202612",
-     "act": "EDIT",
-     "p": "DUMMY-001",
-     "d": "JAPAN",
-     "ot": "**",
-     "cd": 12,
-     "st": 2,
-     "src": "SCREEN",
-     "by": "RSARI",
-     "dt": "03-Dec-2026 09:30",
-     "run": null,
-     "sdt": null,
-     "seq": null,
-     "upl": null,
-     "name": "DUMMY PART 001",
-     "chb": null,
-     "chd": null
-    },
-    {
-     "id": 23,
-     "per": "202612",
      "act": "ADD",
      "p": "DUMMY-001",
      "d": "USA",
@@ -23341,7 +22931,7 @@
      "chd": "04-Dec-2026 10:00"
     },
     {
-     "id": 24,
+     "id": 23,
      "per": "202612",
      "act": "DELETE",
      "p": "DUMMY-004",
@@ -23361,7 +22951,7 @@
      "chd": "04-Dec-2026 10:00"
     },
     {
-     "id": 25,
+     "id": 24,
      "per": "202612",
      "act": "ADD",
      "p": "DUMMY-004",
@@ -23381,9 +22971,9 @@
      "chd": "04-Dec-2026 10:00"
     },
     {
-     "id": 26,
+     "id": 25,
      "per": "202612",
-     "act": "ADD",
+     "act": "EDIT",
      "p": "DUMMY-003",
      "d": "THAILAND",
      "ot": "**",
@@ -23637,6 +23227,7 @@
      "chd": "04-Dec-2026 10:00"
     }
    ],
+   "deleted": [],
    "AP": {
     "kan": {
      "DUMMY-001": {
@@ -24392,15 +23983,15 @@
     "run": "20261204100000"
    },
    "calls": [
-    "[Re-send last Sync]: the parent flow starts again with RUN_ID 20261204100000 (RUN_TYPE RESEND); nothing changes in the staging",
-    "Parent flow: SELECT COUNT(*) FROM TB_H_STG_GTOPAS WHERE SYNC_RUN_ID = '20261204100000' → 2 → scenario 1: XD06 first, XD07 only when GTOPAS succeeded",
+    "[Re-send last Sync]: last run = MAX(SYNC_DT) = 2026-12-04 10:00:00; the parent flow starts again with it (RUN_TYPE RESEND); nothing changes in the staging",
+    "Parent flow: SELECT COUNT(*) FROM TB_H_STG_GTOPAS WHERE SYNC_STATUS = '1' AND SYNC_DT = '2026-12-04 10:00:00' → 2 → scenario 1: XD06 first, XD07 only when GTOPAS succeeded",
     "XD06 GTOPAS: 2 row(s), 2 OK (1 already in the wanted state)",
     "XD07 AP POLE: read the views for the run",
-    "View, file of the Export rows per part (Kanban row with the same RUN_ID, part and period):",
-    "  DUMMY-001 202612: header K12, OPERATION_TYPE 5 → EXPORT_POST only (header not in the KANBAN file)",
-    "  DUMMY-003 202612: header K14, OPERATION_TYPE 2 → EXPORT_POST (after KANBAN)",
-    "  DUMMY-004 202612: header K13, OPERATION_TYPE 5 → EXPORT_POST only (header not in the KANBAN file)",
-    "  KANBAN file (OPERATION_TYPE 1 to 4): K14",
+    "View, file of the Export rows per part (Kanban row with the same SYNC_DT, part and period):",
+    "  DUMMY-001 202612: header K11, OPERATION_TYPE 5 → EXPORT_POST only (header not in the KANBAN file)",
+    "  DUMMY-003 202612: header K13, OPERATION_TYPE 2 → EXPORT_POST (after KANBAN)",
+    "  DUMMY-004 202612: header K12, OPERATION_TYPE 5 → EXPORT_POST only (header not in the KANBAN file)",
+    "  KANBAN file (OPERATION_TYPE 1 to 4): K13",
     "XD07: KANBAN (1) → EXPORT_POST (5) → SUCCESS. E-mail SUCCESS (one per run)"
    ],
    "touched": [],
@@ -24410,7 +24001,7 @@
     "kan": [
      {
       "r": {
-       "id": 14,
+       "id": 13,
        "per": "202612",
        "act": "EDIT",
        "ps": "Active",
@@ -24470,7 +24061,7 @@
      },
      {
       "r": {
-       "id": 23,
+       "id": 22,
        "per": "202612",
        "act": "ADD",
        "p": "DUMMY-001",
@@ -24500,9 +24091,9 @@
      },
      {
       "r": {
-       "id": 26,
+       "id": 25,
        "per": "202612",
-       "act": "ADD",
+       "act": "EDIT",
        "p": "DUMMY-003",
        "d": "THAILAND",
        "ot": "**",
@@ -24530,7 +24121,7 @@
      },
      {
       "r": {
-       "id": 24,
+       "id": 23,
        "per": "202612",
        "act": "DELETE",
        "p": "DUMMY-004",
@@ -24560,7 +24151,7 @@
      },
      {
       "r": {
-       "id": 25,
+       "id": 24,
        "per": "202612",
        "act": "ADD",
        "p": "DUMMY-004",
@@ -24859,27 +24450,6 @@
     {
      "id": 6,
      "per": "202611",
-     "act": "KEEP",
-     "ps": "Active",
-     "p": "DUMMY-002",
-     "pcs": 12,
-     "max": 28,
-     "op": 5,
-     "st": 2,
-     "src": "UPLOAD",
-     "by": "RSARI",
-     "dt": "10-Nov-2026 09:30",
-     "run": null,
-     "sdt": null,
-     "seq": null,
-     "upl": "UPL00001",
-     "name": "DUMMY PART 002",
-     "chb": "DANGGRAINI",
-     "chd": "10-Nov-2026 10:00"
-    },
-    {
-     "id": 7,
-     "per": "202611",
      "act": "EDIT",
      "ps": "Active",
      "p": "DUMMY-002",
@@ -24888,18 +24458,18 @@
      "op": 1,
      "st": 1,
      "src": "SCREEN",
-     "by": "DANGGRAINI",
-     "dt": "10-Nov-2026 10:00",
+     "by": "RSARI",
+     "dt": "10-Nov-2026 09:30",
      "run": "20261110110000",
      "sdt": "10-Nov-2026 11:00",
      "seq": 3,
-     "upl": null,
+     "upl": "UPL00001",
      "name": "DUMMY PART 002",
      "chb": "RSARI",
      "chd": "10-Nov-2026 11:00"
     },
     {
-     "id": 8,
+     "id": 7,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -24920,7 +24490,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 9,
+     "id": 8,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -24941,7 +24511,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 10,
+     "id": 9,
      "per": "202612",
      "act": "ADD",
      "ps": "Inactive",
@@ -24962,7 +24532,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 11,
+     "id": 10,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -24983,7 +24553,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 12,
+     "id": 11,
      "per": "202612",
      "act": "KEEP",
      "ps": "Active",
@@ -25004,7 +24574,7 @@
      "chd": "04-Dec-2026 10:00"
     },
     {
-     "id": 13,
+     "id": 12,
      "per": "202612",
      "act": "KEEP",
      "ps": "Active",
@@ -25025,7 +24595,7 @@
      "chd": "04-Dec-2026 10:00"
     },
     {
-     "id": 14,
+     "id": 13,
      "per": "202612",
      "act": "EDIT",
      "ps": "Active",
@@ -25428,26 +24998,6 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 20,
-     "per": "202612",
-     "act": "EDIT",
-     "p": "DUMMY-001",
-     "d": "JAPAN",
-     "ot": "**",
-     "cd": 15,
-     "st": 2,
-     "src": "SCREEN",
-     "by": "RSARI",
-     "dt": "03-Dec-2026 09:00",
-     "run": null,
-     "sdt": null,
-     "seq": null,
-     "upl": null,
-     "name": "DUMMY PART 001",
-     "chb": "RSARI",
-     "chd": "03-Dec-2026 09:30"
-    },
-    {
      "id": 21,
      "per": "202612",
      "act": "EDIT",
@@ -25470,26 +25020,6 @@
     {
      "id": 22,
      "per": "202612",
-     "act": "EDIT",
-     "p": "DUMMY-001",
-     "d": "JAPAN",
-     "ot": "**",
-     "cd": 12,
-     "st": 2,
-     "src": "SCREEN",
-     "by": "RSARI",
-     "dt": "03-Dec-2026 09:30",
-     "run": null,
-     "sdt": null,
-     "seq": null,
-     "upl": null,
-     "name": "DUMMY PART 001",
-     "chb": null,
-     "chd": null
-    },
-    {
-     "id": 23,
-     "per": "202612",
      "act": "ADD",
      "p": "DUMMY-001",
      "d": "USA",
@@ -25508,7 +25038,7 @@
      "chd": "04-Dec-2026 10:00"
     },
     {
-     "id": 24,
+     "id": 23,
      "per": "202612",
      "act": "DELETE",
      "p": "DUMMY-004",
@@ -25528,7 +25058,7 @@
      "chd": "04-Dec-2026 10:00"
     },
     {
-     "id": 25,
+     "id": 24,
      "per": "202612",
      "act": "ADD",
      "p": "DUMMY-004",
@@ -25548,9 +25078,9 @@
      "chd": "04-Dec-2026 10:00"
     },
     {
-     "id": 26,
+     "id": 25,
      "per": "202612",
-     "act": "ADD",
+     "act": "EDIT",
      "p": "DUMMY-003",
      "d": "THAILAND",
      "ot": "**",
@@ -25804,6 +25334,7 @@
      "chd": "04-Dec-2026 10:00"
     }
    ],
+   "deleted": [],
    "AP": {
     "kan": {
      "DUMMY-001": {
@@ -26659,11 +26190,11 @@
     "INSERT TB_M_PART_CANDIDATE DUMMY-005 PERIOD 202612, PART_STATUS Candidate, Pcs 5, Max 15 (Upload XD02, flag A)",
     "DUMMY-005 is Candidate: no staging row (not sent to AP POLE or GTOPAS)",
     "NSP check (DANGGRAINI): DUMMY-002 202612 total Case/Day 20 ≤ Max 20 → save allowed",
-    "SP_STG_WRITE('KANBAN', 'EDIT', '202612', 'DUMMY-002', Pcs 15, Max 20)\n  → K15: OPERATION_TYPE 3 (last sent Max 20 in 202612), SYNC_STATUS 0",
+    "SP_STG_WRITE('KANBAN', '202612', 'DUMMY-002', Pcs 15, Max 20)\n  → K14 inserted: OPERATION_TYPE 3 (last sent Max 20 in 202612), SYNC_STATUS 0",
     "Upload log COMPLETED, result report made"
    ],
    "touched": [
-    "K15",
+    "K14",
     "H30",
     "M202612|DUMMY-002",
     "H31",
@@ -26894,27 +26425,6 @@
     {
      "id": 6,
      "per": "202611",
-     "act": "KEEP",
-     "ps": "Active",
-     "p": "DUMMY-002",
-     "pcs": 12,
-     "max": 28,
-     "op": 5,
-     "st": 2,
-     "src": "UPLOAD",
-     "by": "RSARI",
-     "dt": "10-Nov-2026 09:30",
-     "run": null,
-     "sdt": null,
-     "seq": null,
-     "upl": "UPL00001",
-     "name": "DUMMY PART 002",
-     "chb": "DANGGRAINI",
-     "chd": "10-Nov-2026 10:00"
-    },
-    {
-     "id": 7,
-     "per": "202611",
      "act": "EDIT",
      "ps": "Active",
      "p": "DUMMY-002",
@@ -26923,18 +26433,18 @@
      "op": 1,
      "st": 1,
      "src": "SCREEN",
-     "by": "DANGGRAINI",
-     "dt": "10-Nov-2026 10:00",
+     "by": "RSARI",
+     "dt": "10-Nov-2026 09:30",
      "run": "20261110110000",
      "sdt": "10-Nov-2026 11:00",
      "seq": 3,
-     "upl": null,
+     "upl": "UPL00001",
      "name": "DUMMY PART 002",
      "chb": "RSARI",
      "chd": "10-Nov-2026 11:00"
     },
     {
-     "id": 8,
+     "id": 7,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -26955,7 +26465,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 9,
+     "id": 8,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -26976,7 +26486,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 10,
+     "id": 9,
      "per": "202612",
      "act": "ADD",
      "ps": "Inactive",
@@ -26997,7 +26507,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 11,
+     "id": 10,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -27018,7 +26528,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 12,
+     "id": 11,
      "per": "202612",
      "act": "KEEP",
      "ps": "Active",
@@ -27039,7 +26549,7 @@
      "chd": "04-Dec-2026 10:00"
     },
     {
-     "id": 13,
+     "id": 12,
      "per": "202612",
      "act": "KEEP",
      "ps": "Active",
@@ -27060,7 +26570,7 @@
      "chd": "04-Dec-2026 10:00"
     },
     {
-     "id": 14,
+     "id": 13,
      "per": "202612",
      "act": "EDIT",
      "ps": "Active",
@@ -27081,7 +26591,7 @@
      "chd": "04-Dec-2026 10:00"
     },
     {
-     "id": 15,
+     "id": 14,
      "per": "202612",
      "act": "EDIT",
      "ps": "Active",
@@ -27484,26 +26994,6 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 20,
-     "per": "202612",
-     "act": "EDIT",
-     "p": "DUMMY-001",
-     "d": "JAPAN",
-     "ot": "**",
-     "cd": 15,
-     "st": 2,
-     "src": "SCREEN",
-     "by": "RSARI",
-     "dt": "03-Dec-2026 09:00",
-     "run": null,
-     "sdt": null,
-     "seq": null,
-     "upl": null,
-     "name": "DUMMY PART 001",
-     "chb": "RSARI",
-     "chd": "03-Dec-2026 09:30"
-    },
-    {
      "id": 21,
      "per": "202612",
      "act": "EDIT",
@@ -27526,26 +27016,6 @@
     {
      "id": 22,
      "per": "202612",
-     "act": "EDIT",
-     "p": "DUMMY-001",
-     "d": "JAPAN",
-     "ot": "**",
-     "cd": 12,
-     "st": 2,
-     "src": "SCREEN",
-     "by": "RSARI",
-     "dt": "03-Dec-2026 09:30",
-     "run": null,
-     "sdt": null,
-     "seq": null,
-     "upl": null,
-     "name": "DUMMY PART 001",
-     "chb": null,
-     "chd": null
-    },
-    {
-     "id": 23,
-     "per": "202612",
      "act": "ADD",
      "p": "DUMMY-001",
      "d": "USA",
@@ -27564,7 +27034,7 @@
      "chd": "04-Dec-2026 10:00"
     },
     {
-     "id": 24,
+     "id": 23,
      "per": "202612",
      "act": "DELETE",
      "p": "DUMMY-004",
@@ -27584,7 +27054,7 @@
      "chd": "04-Dec-2026 10:00"
     },
     {
-     "id": 25,
+     "id": 24,
      "per": "202612",
      "act": "ADD",
      "p": "DUMMY-004",
@@ -27604,9 +27074,9 @@
      "chd": "04-Dec-2026 10:00"
     },
     {
-     "id": 26,
+     "id": 25,
      "per": "202612",
-     "act": "ADD",
+     "act": "EDIT",
      "p": "DUMMY-003",
      "d": "THAILAND",
      "ot": "**",
@@ -27860,6 +27330,7 @@
      "chd": "04-Dec-2026 10:00"
     }
    ],
+   "deleted": [],
    "AP": {
     "kan": {
      "DUMMY-001": {
@@ -28736,38 +28207,38 @@
     ]
    },
    "calls": [
-    "SP_STG_WRITE('KANBAN', 'ADD', '202701', 'DUMMY-001', Pcs 10, Max 26)\n  → K16: OPERATION_TYPE 3 (last sent Max 26 in 202612), SYNC_STATUS 0",
-    "SP_STG_WRITE('EXPORT', 'ADD', '202701', 'DUMMY-001', JAPAN **, 12)\n  → E27: SYNC_STATUS 0; GTOPAS: no change for JAPAN",
-    "SP_STG_WRITE('EXPORT', 'ADD', '202701', 'DUMMY-001', KOREA **, 10)\n  → E28: SYNC_STATUS 0; GTOPAS: no change for KOREA",
-    "SP_STG_WRITE('EXPORT', 'ADD', '202701', 'DUMMY-001', USA **, 4)\n  → E29: SYNC_STATUS 0; GTOPAS: no change for USA",
-    "SP_STG_WRITE('KANBAN', 'ADD', '202701', 'DUMMY-002', Pcs 15, Max 20)\n  → K17: OPERATION_TYPE 3 (last sent Max 20 in 202612), SYNC_STATUS 0",
-    "SP_STG_WRITE('EXPORT', 'ADD', '202701', 'DUMMY-002', TAIWAN **, 20)\n  → E30: SYNC_STATUS 0; GTOPAS: no change for TAIWAN",
-    "SP_STG_WRITE('KANBAN', 'ADD', '202701', 'DUMMY-003', Pcs 8, Max 18)\n  → K18: OPERATION_TYPE 3 (last sent Max 18 in 202612), SYNC_STATUS 0",
-    "SP_STG_WRITE('EXPORT', 'ADD', '202701', 'DUMMY-003', THAILAND **, 10)\n  → E31: SYNC_STATUS 0; GTOPAS: no change for THAILAND",
-    "SP_STG_WRITE('KANBAN', 'ADD', '202701', 'DUMMY-004', Pcs 6, Max 24)\n  → K19: OPERATION_TYPE 3 (last sent Max 24 in 202612), SYNC_STATUS 0",
-    "SP_STG_WRITE('EXPORT', 'DELETE', '202701', 'DUMMY-004', KOREA C, 0)\n  → E32: SYNC_STATUS 0; GTOPAS G14 DELETE",
-    "SP_STG_WRITE('EXPORT', 'DELETE', '202701', 'DUMMY-004', USA **, 0)\n  → E33: SYNC_STATUS 0; GTOPAS G15 DELETE",
+    "SP_STG_WRITE('KANBAN', '202701', 'DUMMY-001', Pcs 10, Max 26)\n  → K15 inserted: OPERATION_TYPE 3 (last sent Max 26 in 202612), SYNC_STATUS 0",
+    "SP_STG_WRITE('EXPORT', '202701', 'DUMMY-001', JAPAN **, 12)\n  → E26 inserted, SYNC_STATUS 0; GTOPAS: no change for JAPAN",
+    "SP_STG_WRITE('EXPORT', '202701', 'DUMMY-001', KOREA **, 10)\n  → E27 inserted, SYNC_STATUS 0; GTOPAS: no change for KOREA",
+    "SP_STG_WRITE('EXPORT', '202701', 'DUMMY-001', USA **, 4)\n  → E28 inserted, SYNC_STATUS 0; GTOPAS: no change for USA",
+    "SP_STG_WRITE('KANBAN', '202701', 'DUMMY-002', Pcs 15, Max 20)\n  → K16 inserted: OPERATION_TYPE 3 (last sent Max 20 in 202612), SYNC_STATUS 0",
+    "SP_STG_WRITE('EXPORT', '202701', 'DUMMY-002', TAIWAN **, 20)\n  → E29 inserted, SYNC_STATUS 0; GTOPAS: no change for TAIWAN",
+    "SP_STG_WRITE('KANBAN', '202701', 'DUMMY-003', Pcs 8, Max 18)\n  → K17 inserted: OPERATION_TYPE 3 (last sent Max 18 in 202612), SYNC_STATUS 0",
+    "SP_STG_WRITE('EXPORT', '202701', 'DUMMY-003', THAILAND **, 10)\n  → E30 inserted, SYNC_STATUS 0; GTOPAS: no change for THAILAND",
+    "SP_STG_WRITE('KANBAN', '202701', 'DUMMY-004', Pcs 6, Max 24)\n  → K18 inserted: OPERATION_TYPE 3 (last sent Max 24 in 202612), SYNC_STATUS 0",
+    "SP_STG_WRITE('EXPORT', '202701', 'DUMMY-004', KOREA C, 0)\n  → E31 inserted, SYNC_STATUS 0; GTOPAS G14 DELETE inserted",
+    "SP_STG_WRITE('EXPORT', '202701', 'DUMMY-004', USA **, 0)\n  → E32 inserted, SYNC_STATUS 0; GTOPAS G15 DELETE inserted",
     "DUMMY-005 Candidate: no staging row",
-    "SP_STG_WRITE('KANBAN', 'ADD', '202701', 'DUMMY-006', Pcs 4, Max 10)\n  → K20: OPERATION_TYPE 4 (never sent), SYNC_STATUS 0",
-    "SP_STG_WRITE('EXPORT', 'ADD', '202701', 'DUMMY-006', TAIWAN **, 10)\n  → E34: SYNC_STATUS 0; GTOPAS G16 ADD",
+    "SP_STG_WRITE('KANBAN', '202701', 'DUMMY-006', Pcs 4, Max 10)\n  → K19 inserted: OPERATION_TYPE 4 (never sent), SYNC_STATUS 0",
+    "SP_STG_WRITE('EXPORT', '202701', 'DUMMY-006', TAIWAN **, 10)\n  → E33 inserted, SYNC_STATUS 0; GTOPAS G16 ADD inserted",
     "DUMMY-007 Candidate: no staging row"
    ],
    "touched": [
-    "K16",
+    "K15",
+    "E26",
     "E27",
     "E28",
+    "K16",
     "E29",
     "K17",
     "E30",
     "K18",
     "E31",
-    "K19",
-    "E32",
     "G14",
-    "E33",
+    "E32",
     "G15",
-    "K20",
-    "E34",
+    "K19",
+    "E33",
     "G16",
     "M202701|DUMMY-001",
     "D202701|DUMMY-001|JAPAN|**",
@@ -29074,27 +28545,6 @@
     {
      "id": 6,
      "per": "202611",
-     "act": "KEEP",
-     "ps": "Active",
-     "p": "DUMMY-002",
-     "pcs": 12,
-     "max": 28,
-     "op": 5,
-     "st": 2,
-     "src": "UPLOAD",
-     "by": "RSARI",
-     "dt": "10-Nov-2026 09:30",
-     "run": null,
-     "sdt": null,
-     "seq": null,
-     "upl": "UPL00001",
-     "name": "DUMMY PART 002",
-     "chb": "DANGGRAINI",
-     "chd": "10-Nov-2026 10:00"
-    },
-    {
-     "id": 7,
-     "per": "202611",
      "act": "EDIT",
      "ps": "Active",
      "p": "DUMMY-002",
@@ -29103,18 +28553,18 @@
      "op": 1,
      "st": 1,
      "src": "SCREEN",
-     "by": "DANGGRAINI",
-     "dt": "10-Nov-2026 10:00",
+     "by": "RSARI",
+     "dt": "10-Nov-2026 09:30",
      "run": "20261110110000",
      "sdt": "10-Nov-2026 11:00",
      "seq": 3,
-     "upl": null,
+     "upl": "UPL00001",
      "name": "DUMMY PART 002",
      "chb": "RSARI",
      "chd": "10-Nov-2026 11:00"
     },
     {
-     "id": 8,
+     "id": 7,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -29135,7 +28585,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 9,
+     "id": 8,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -29156,7 +28606,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 10,
+     "id": 9,
      "per": "202612",
      "act": "ADD",
      "ps": "Inactive",
@@ -29177,7 +28627,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 11,
+     "id": 10,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -29198,7 +28648,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 12,
+     "id": 11,
      "per": "202612",
      "act": "KEEP",
      "ps": "Active",
@@ -29219,7 +28669,7 @@
      "chd": "04-Dec-2026 10:00"
     },
     {
-     "id": 13,
+     "id": 12,
      "per": "202612",
      "act": "KEEP",
      "ps": "Active",
@@ -29240,7 +28690,7 @@
      "chd": "04-Dec-2026 10:00"
     },
     {
-     "id": 14,
+     "id": 13,
      "per": "202612",
      "act": "EDIT",
      "ps": "Active",
@@ -29261,7 +28711,7 @@
      "chd": "04-Dec-2026 10:00"
     },
     {
-     "id": 15,
+     "id": 14,
      "per": "202612",
      "act": "EDIT",
      "ps": "Active",
@@ -29282,7 +28732,7 @@
      "chd": null
     },
     {
-     "id": 16,
+     "id": 15,
      "per": "202701",
      "act": "ADD",
      "ps": "Active",
@@ -29303,7 +28753,7 @@
      "chd": null
     },
     {
-     "id": 17,
+     "id": 16,
      "per": "202701",
      "act": "ADD",
      "ps": "Active",
@@ -29324,7 +28774,7 @@
      "chd": null
     },
     {
-     "id": 18,
+     "id": 17,
      "per": "202701",
      "act": "ADD",
      "ps": "Active",
@@ -29345,7 +28795,7 @@
      "chd": null
     },
     {
-     "id": 19,
+     "id": 18,
      "per": "202701",
      "act": "ADD",
      "ps": "Inactive",
@@ -29366,7 +28816,7 @@
      "chd": null
     },
     {
-     "id": 20,
+     "id": 19,
      "per": "202701",
      "act": "ADD",
      "ps": "Active",
@@ -29769,26 +29219,6 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 20,
-     "per": "202612",
-     "act": "EDIT",
-     "p": "DUMMY-001",
-     "d": "JAPAN",
-     "ot": "**",
-     "cd": 15,
-     "st": 2,
-     "src": "SCREEN",
-     "by": "RSARI",
-     "dt": "03-Dec-2026 09:00",
-     "run": null,
-     "sdt": null,
-     "seq": null,
-     "upl": null,
-     "name": "DUMMY PART 001",
-     "chb": "RSARI",
-     "chd": "03-Dec-2026 09:30"
-    },
-    {
      "id": 21,
      "per": "202612",
      "act": "EDIT",
@@ -29811,26 +29241,6 @@
     {
      "id": 22,
      "per": "202612",
-     "act": "EDIT",
-     "p": "DUMMY-001",
-     "d": "JAPAN",
-     "ot": "**",
-     "cd": 12,
-     "st": 2,
-     "src": "SCREEN",
-     "by": "RSARI",
-     "dt": "03-Dec-2026 09:30",
-     "run": null,
-     "sdt": null,
-     "seq": null,
-     "upl": null,
-     "name": "DUMMY PART 001",
-     "chb": null,
-     "chd": null
-    },
-    {
-     "id": 23,
-     "per": "202612",
      "act": "ADD",
      "p": "DUMMY-001",
      "d": "USA",
@@ -29849,7 +29259,7 @@
      "chd": "04-Dec-2026 10:00"
     },
     {
-     "id": 24,
+     "id": 23,
      "per": "202612",
      "act": "DELETE",
      "p": "DUMMY-004",
@@ -29869,7 +29279,7 @@
      "chd": "04-Dec-2026 10:00"
     },
     {
-     "id": 25,
+     "id": 24,
      "per": "202612",
      "act": "ADD",
      "p": "DUMMY-004",
@@ -29889,9 +29299,9 @@
      "chd": "04-Dec-2026 10:00"
     },
     {
-     "id": 26,
+     "id": 25,
      "per": "202612",
-     "act": "ADD",
+     "act": "EDIT",
      "p": "DUMMY-003",
      "d": "THAILAND",
      "ot": "**",
@@ -29909,7 +29319,7 @@
      "chd": "04-Dec-2026 10:00"
     },
     {
-     "id": 27,
+     "id": 26,
      "per": "202701",
      "act": "ADD",
      "p": "DUMMY-001",
@@ -29929,7 +29339,7 @@
      "chd": null
     },
     {
-     "id": 28,
+     "id": 27,
      "per": "202701",
      "act": "ADD",
      "p": "DUMMY-001",
@@ -29949,7 +29359,7 @@
      "chd": null
     },
     {
-     "id": 29,
+     "id": 28,
      "per": "202701",
      "act": "ADD",
      "p": "DUMMY-001",
@@ -29969,7 +29379,7 @@
      "chd": null
     },
     {
-     "id": 30,
+     "id": 29,
      "per": "202701",
      "act": "ADD",
      "p": "DUMMY-002",
@@ -29989,7 +29399,7 @@
      "chd": null
     },
     {
-     "id": 31,
+     "id": 30,
      "per": "202701",
      "act": "ADD",
      "p": "DUMMY-003",
@@ -30009,7 +29419,7 @@
      "chd": null
     },
     {
-     "id": 32,
+     "id": 31,
      "per": "202701",
      "act": "DELETE",
      "p": "DUMMY-004",
@@ -30029,7 +29439,7 @@
      "chd": null
     },
     {
-     "id": 33,
+     "id": 32,
      "per": "202701",
      "act": "DELETE",
      "p": "DUMMY-004",
@@ -30049,7 +29459,7 @@
      "chd": null
     },
     {
-     "id": 34,
+     "id": 33,
      "per": "202701",
      "act": "ADD",
      "p": "DUMMY-006",
@@ -30359,6 +29769,7 @@
      "chd": null
     }
    ],
+   "deleted": [],
    "AP": {
     "kan": {
      "DUMMY-001": {
@@ -31333,33 +30744,33 @@
     "n": 6
    },
    "calls": [
-    "SP_STG_SYNC('20261227100000', Current 202612, Next 202701, RSARI)\n  → AP POLE rows with SYNC_STATUS 0 of 202612 and 202701 → 1; GTOPAS rows of 202612 → 1; LAST_SYNC_DATE_APPOLE = 27-Dec-2026 10:00\n  → start the parent flow CDX_SYNC_PARENT (RUN_ID 20261227100000, RUN_TYPE SYNC)",
-    "Parent flow: SELECT COUNT(*) FROM TB_H_STG_GTOPAS WHERE SYNC_RUN_ID = '20261227100000' → 0 → scenario 2: XD07 at once",
+    "SP_STG_SYNC(SYNC_DT '2026-12-27 10:00:00', Current 202612, Next 202701, RSARI)\n  → AP POLE rows with SYNC_STATUS 0 of 202612 and 202701 → 1 with SYNC_DT = time of the click; GTOPAS rows of 202612 → 1; LAST_SYNC_DATE_APPOLE\n  → start the parent flow CDX_SYNC_PARENT (SYNC_DT 2026-12-27 10:00:00, RUN_TYPE SYNC)",
+    "Parent flow: SELECT COUNT(*) FROM TB_H_STG_GTOPAS WHERE SYNC_STATUS = '1' AND SYNC_DT = '2026-12-27 10:00:00' → 0 → scenario 2: XD07 at once",
     "XD07 AP POLE: read the views for the run",
-    "View, file of the Export rows per part (Kanban row with the same RUN_ID, part and period):",
-    "  DUMMY-001 202701: header K16, OPERATION_TYPE 3 → EXPORT_POST (after KANBAN)",
-    "  DUMMY-002 202701: header K17, OPERATION_TYPE 3 → EXPORT_POST (after KANBAN)",
-    "  DUMMY-003 202701: header K18, OPERATION_TYPE 3 → EXPORT_POST (after KANBAN)",
-    "  DUMMY-004 202701: header K19, OPERATION_TYPE 3 → EXPORT_POST (after KANBAN)",
-    "  DUMMY-006 202701: header K20, OPERATION_TYPE 4 → EXPORT_POST (after KANBAN)",
-    "  KANBAN file (OPERATION_TYPE 1 to 4): K15, K16, K17, K18, K19, K20",
+    "View, file of the Export rows per part (Kanban row with the same SYNC_DT, part and period):",
+    "  DUMMY-001 202701: header K15, OPERATION_TYPE 3 → EXPORT_POST (after KANBAN)",
+    "  DUMMY-002 202701: header K16, OPERATION_TYPE 3 → EXPORT_POST (after KANBAN)",
+    "  DUMMY-003 202701: header K17, OPERATION_TYPE 3 → EXPORT_POST (after KANBAN)",
+    "  DUMMY-004 202701: header K18, OPERATION_TYPE 3 → EXPORT_POST (after KANBAN)",
+    "  DUMMY-006 202701: header K19, OPERATION_TYPE 4 → EXPORT_POST (after KANBAN)",
+    "  KANBAN file (OPERATION_TYPE 1 to 4): K14, K15, K16, K17, K18, K19",
     "XD07: KANBAN (6) → EXPORT_POST (8) → SUCCESS. E-mail SUCCESS (one per run)"
    ],
    "touched": [
+    "K14",
     "K15",
     "K16",
     "K17",
     "K18",
     "K19",
-    "K20",
+    "E26",
     "E27",
     "E28",
     "E29",
     "E30",
     "E31",
     "E32",
-    "E33",
-    "E34"
+    "E33"
    ],
    "files": {
     "run": "20261227100000",
@@ -31367,7 +30778,7 @@
     "kan": [
      {
       "r": {
-       "id": 15,
+       "id": 14,
        "per": "202612",
        "act": "EDIT",
        "ps": "Active",
@@ -31395,7 +30806,7 @@
      },
      {
       "r": {
-       "id": 16,
+       "id": 15,
        "per": "202701",
        "act": "ADD",
        "ps": "Active",
@@ -31423,7 +30834,7 @@
      },
      {
       "r": {
-       "id": 17,
+       "id": 16,
        "per": "202701",
        "act": "ADD",
        "ps": "Active",
@@ -31451,7 +30862,7 @@
      },
      {
       "r": {
-       "id": 18,
+       "id": 17,
        "per": "202701",
        "act": "ADD",
        "ps": "Active",
@@ -31479,7 +30890,7 @@
      },
      {
       "r": {
-       "id": 19,
+       "id": 18,
        "per": "202701",
        "act": "ADD",
        "ps": "Inactive",
@@ -31507,7 +30918,7 @@
      },
      {
       "r": {
-       "id": 20,
+       "id": 19,
        "per": "202701",
        "act": "ADD",
        "ps": "Active",
@@ -31537,7 +30948,7 @@
     "post": [
      {
       "r": {
-       "id": 27,
+       "id": 26,
        "per": "202701",
        "act": "ADD",
        "p": "DUMMY-001",
@@ -31567,7 +30978,7 @@
      },
      {
       "r": {
-       "id": 28,
+       "id": 27,
        "per": "202701",
        "act": "ADD",
        "p": "DUMMY-001",
@@ -31597,7 +31008,7 @@
      },
      {
       "r": {
-       "id": 29,
+       "id": 28,
        "per": "202701",
        "act": "ADD",
        "p": "DUMMY-001",
@@ -31627,7 +31038,7 @@
      },
      {
       "r": {
-       "id": 30,
+       "id": 29,
        "per": "202701",
        "act": "ADD",
        "p": "DUMMY-002",
@@ -31657,7 +31068,7 @@
      },
      {
       "r": {
-       "id": 31,
+       "id": 30,
        "per": "202701",
        "act": "ADD",
        "p": "DUMMY-003",
@@ -31687,7 +31098,7 @@
      },
      {
       "r": {
-       "id": 32,
+       "id": 31,
        "per": "202701",
        "act": "DELETE",
        "p": "DUMMY-004",
@@ -31717,7 +31128,7 @@
      },
      {
       "r": {
-       "id": 33,
+       "id": 32,
        "per": "202701",
        "act": "DELETE",
        "p": "DUMMY-004",
@@ -31747,7 +31158,7 @@
      },
      {
       "r": {
-       "id": 34,
+       "id": 33,
        "per": "202701",
        "act": "ADD",
        "p": "DUMMY-006",
@@ -32075,27 +31486,6 @@
     {
      "id": 6,
      "per": "202611",
-     "act": "KEEP",
-     "ps": "Active",
-     "p": "DUMMY-002",
-     "pcs": 12,
-     "max": 28,
-     "op": 5,
-     "st": 2,
-     "src": "UPLOAD",
-     "by": "RSARI",
-     "dt": "10-Nov-2026 09:30",
-     "run": null,
-     "sdt": null,
-     "seq": null,
-     "upl": "UPL00001",
-     "name": "DUMMY PART 002",
-     "chb": "DANGGRAINI",
-     "chd": "10-Nov-2026 10:00"
-    },
-    {
-     "id": 7,
-     "per": "202611",
      "act": "EDIT",
      "ps": "Active",
      "p": "DUMMY-002",
@@ -32104,18 +31494,18 @@
      "op": 1,
      "st": 1,
      "src": "SCREEN",
-     "by": "DANGGRAINI",
-     "dt": "10-Nov-2026 10:00",
+     "by": "RSARI",
+     "dt": "10-Nov-2026 09:30",
      "run": "20261110110000",
      "sdt": "10-Nov-2026 11:00",
      "seq": 3,
-     "upl": null,
+     "upl": "UPL00001",
      "name": "DUMMY PART 002",
      "chb": "RSARI",
      "chd": "10-Nov-2026 11:00"
     },
     {
-     "id": 8,
+     "id": 7,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -32136,7 +31526,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 9,
+     "id": 8,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -32157,7 +31547,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 10,
+     "id": 9,
      "per": "202612",
      "act": "ADD",
      "ps": "Inactive",
@@ -32178,7 +31568,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 11,
+     "id": 10,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -32199,7 +31589,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 12,
+     "id": 11,
      "per": "202612",
      "act": "KEEP",
      "ps": "Active",
@@ -32220,7 +31610,7 @@
      "chd": "04-Dec-2026 10:00"
     },
     {
-     "id": 13,
+     "id": 12,
      "per": "202612",
      "act": "KEEP",
      "ps": "Active",
@@ -32241,7 +31631,7 @@
      "chd": "04-Dec-2026 10:00"
     },
     {
-     "id": 14,
+     "id": 13,
      "per": "202612",
      "act": "EDIT",
      "ps": "Active",
@@ -32262,7 +31652,7 @@
      "chd": "04-Dec-2026 10:00"
     },
     {
-     "id": 15,
+     "id": 14,
      "per": "202612",
      "act": "EDIT",
      "ps": "Active",
@@ -32283,7 +31673,7 @@
      "chd": "27-Dec-2026 10:00"
     },
     {
-     "id": 16,
+     "id": 15,
      "per": "202701",
      "act": "ADD",
      "ps": "Active",
@@ -32304,7 +31694,7 @@
      "chd": "27-Dec-2026 10:00"
     },
     {
-     "id": 17,
+     "id": 16,
      "per": "202701",
      "act": "ADD",
      "ps": "Active",
@@ -32325,7 +31715,7 @@
      "chd": "27-Dec-2026 10:00"
     },
     {
-     "id": 18,
+     "id": 17,
      "per": "202701",
      "act": "ADD",
      "ps": "Active",
@@ -32346,7 +31736,7 @@
      "chd": "27-Dec-2026 10:00"
     },
     {
-     "id": 19,
+     "id": 18,
      "per": "202701",
      "act": "ADD",
      "ps": "Inactive",
@@ -32367,7 +31757,7 @@
      "chd": "27-Dec-2026 10:00"
     },
     {
-     "id": 20,
+     "id": 19,
      "per": "202701",
      "act": "ADD",
      "ps": "Active",
@@ -32770,26 +32160,6 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 20,
-     "per": "202612",
-     "act": "EDIT",
-     "p": "DUMMY-001",
-     "d": "JAPAN",
-     "ot": "**",
-     "cd": 15,
-     "st": 2,
-     "src": "SCREEN",
-     "by": "RSARI",
-     "dt": "03-Dec-2026 09:00",
-     "run": null,
-     "sdt": null,
-     "seq": null,
-     "upl": null,
-     "name": "DUMMY PART 001",
-     "chb": "RSARI",
-     "chd": "03-Dec-2026 09:30"
-    },
-    {
      "id": 21,
      "per": "202612",
      "act": "EDIT",
@@ -32812,26 +32182,6 @@
     {
      "id": 22,
      "per": "202612",
-     "act": "EDIT",
-     "p": "DUMMY-001",
-     "d": "JAPAN",
-     "ot": "**",
-     "cd": 12,
-     "st": 2,
-     "src": "SCREEN",
-     "by": "RSARI",
-     "dt": "03-Dec-2026 09:30",
-     "run": null,
-     "sdt": null,
-     "seq": null,
-     "upl": null,
-     "name": "DUMMY PART 001",
-     "chb": null,
-     "chd": null
-    },
-    {
-     "id": 23,
-     "per": "202612",
      "act": "ADD",
      "p": "DUMMY-001",
      "d": "USA",
@@ -32850,7 +32200,7 @@
      "chd": "04-Dec-2026 10:00"
     },
     {
-     "id": 24,
+     "id": 23,
      "per": "202612",
      "act": "DELETE",
      "p": "DUMMY-004",
@@ -32870,7 +32220,7 @@
      "chd": "04-Dec-2026 10:00"
     },
     {
-     "id": 25,
+     "id": 24,
      "per": "202612",
      "act": "ADD",
      "p": "DUMMY-004",
@@ -32890,9 +32240,9 @@
      "chd": "04-Dec-2026 10:00"
     },
     {
-     "id": 26,
+     "id": 25,
      "per": "202612",
-     "act": "ADD",
+     "act": "EDIT",
      "p": "DUMMY-003",
      "d": "THAILAND",
      "ot": "**",
@@ -32910,7 +32260,7 @@
      "chd": "04-Dec-2026 10:00"
     },
     {
-     "id": 27,
+     "id": 26,
      "per": "202701",
      "act": "ADD",
      "p": "DUMMY-001",
@@ -32930,7 +32280,7 @@
      "chd": "27-Dec-2026 10:00"
     },
     {
-     "id": 28,
+     "id": 27,
      "per": "202701",
      "act": "ADD",
      "p": "DUMMY-001",
@@ -32950,7 +32300,7 @@
      "chd": "27-Dec-2026 10:00"
     },
     {
-     "id": 29,
+     "id": 28,
      "per": "202701",
      "act": "ADD",
      "p": "DUMMY-001",
@@ -32970,7 +32320,7 @@
      "chd": "27-Dec-2026 10:00"
     },
     {
-     "id": 30,
+     "id": 29,
      "per": "202701",
      "act": "ADD",
      "p": "DUMMY-002",
@@ -32990,7 +32340,7 @@
      "chd": "27-Dec-2026 10:00"
     },
     {
-     "id": 31,
+     "id": 30,
      "per": "202701",
      "act": "ADD",
      "p": "DUMMY-003",
@@ -33010,7 +32360,7 @@
      "chd": "27-Dec-2026 10:00"
     },
     {
-     "id": 32,
+     "id": 31,
      "per": "202701",
      "act": "DELETE",
      "p": "DUMMY-004",
@@ -33030,7 +32380,7 @@
      "chd": "27-Dec-2026 10:00"
     },
     {
-     "id": 33,
+     "id": 32,
      "per": "202701",
      "act": "DELETE",
      "p": "DUMMY-004",
@@ -33050,7 +32400,7 @@
      "chd": "27-Dec-2026 10:00"
     },
     {
-     "id": 34,
+     "id": 33,
      "per": "202701",
      "act": "ADD",
      "p": "DUMMY-006",
@@ -33360,6 +32710,7 @@
      "chd": null
     }
    ],
+   "deleted": [],
    "AP": {
     "kan": {
      "DUMMY-001": {
@@ -34365,8 +33716,8 @@
    "story": "202701 becomes Current. XD06 only: deletes DUMMY-004 KOREA and USA, adds DUMMY-006 TAIWAN in GTOPAS.",
    "input": null,
    "calls": [
-    "Period Rollover (XD05 process 3): 202701 becomes Current\n  → GTOPAS rows of 202701 with SYNC_STATUS 0 → 1 (3 row(s)), run 20270101001000\n  → start the parent flow CDX_SYNC_PARENT (RUN_TYPE ROLLOVER)",
-    "Parent flow: SELECT COUNT(*) FROM TB_H_STG_GTOPAS WHERE SYNC_RUN_ID = '20270101001000' → 3 → RUN_TYPE ROLLOVER: XD06 only",
+    "Period Rollover (XD05 process 3): 202701 becomes Current\n  → SP_STG_ROLLOVER: GTOPAS rows of 202701 with SYNC_STATUS 0 → 1 (3 row(s)), SYNC_DT 2027-01-01 00:10:00\n  → start the parent flow CDX_SYNC_PARENT (RUN_TYPE ROLLOVER)",
+    "Parent flow: SELECT COUNT(*) FROM TB_H_STG_GTOPAS WHERE SYNC_STATUS = '1' AND SYNC_DT = '2027-01-01 00:10:00' → 3 → RUN_TYPE ROLLOVER: XD06 only",
     "XD06 GTOPAS: 3 row(s), 3 OK",
     "E-mail SUCCESS: GTOPAS result of the rollover"
    ],
@@ -34728,27 +34079,6 @@
     {
      "id": 6,
      "per": "202611",
-     "act": "KEEP",
-     "ps": "Active",
-     "p": "DUMMY-002",
-     "pcs": 12,
-     "max": 28,
-     "op": 5,
-     "st": 2,
-     "src": "UPLOAD",
-     "by": "RSARI",
-     "dt": "10-Nov-2026 09:30",
-     "run": null,
-     "sdt": null,
-     "seq": null,
-     "upl": "UPL00001",
-     "name": "DUMMY PART 002",
-     "chb": "DANGGRAINI",
-     "chd": "10-Nov-2026 10:00"
-    },
-    {
-     "id": 7,
-     "per": "202611",
      "act": "EDIT",
      "ps": "Active",
      "p": "DUMMY-002",
@@ -34757,18 +34087,18 @@
      "op": 1,
      "st": 1,
      "src": "SCREEN",
-     "by": "DANGGRAINI",
-     "dt": "10-Nov-2026 10:00",
+     "by": "RSARI",
+     "dt": "10-Nov-2026 09:30",
      "run": "20261110110000",
      "sdt": "10-Nov-2026 11:00",
      "seq": 3,
-     "upl": null,
+     "upl": "UPL00001",
      "name": "DUMMY PART 002",
      "chb": "RSARI",
      "chd": "10-Nov-2026 11:00"
     },
     {
-     "id": 8,
+     "id": 7,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -34789,7 +34119,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 9,
+     "id": 8,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -34810,7 +34140,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 10,
+     "id": 9,
      "per": "202612",
      "act": "ADD",
      "ps": "Inactive",
@@ -34831,7 +34161,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 11,
+     "id": 10,
      "per": "202612",
      "act": "ADD",
      "ps": "Active",
@@ -34852,7 +34182,7 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 12,
+     "id": 11,
      "per": "202612",
      "act": "KEEP",
      "ps": "Active",
@@ -34873,7 +34203,7 @@
      "chd": "04-Dec-2026 10:00"
     },
     {
-     "id": 13,
+     "id": 12,
      "per": "202612",
      "act": "KEEP",
      "ps": "Active",
@@ -34894,7 +34224,7 @@
      "chd": "04-Dec-2026 10:00"
     },
     {
-     "id": 14,
+     "id": 13,
      "per": "202612",
      "act": "EDIT",
      "ps": "Active",
@@ -34915,7 +34245,7 @@
      "chd": "04-Dec-2026 10:00"
     },
     {
-     "id": 15,
+     "id": 14,
      "per": "202612",
      "act": "EDIT",
      "ps": "Active",
@@ -34936,7 +34266,7 @@
      "chd": "27-Dec-2026 10:00"
     },
     {
-     "id": 16,
+     "id": 15,
      "per": "202701",
      "act": "ADD",
      "ps": "Active",
@@ -34957,7 +34287,7 @@
      "chd": "27-Dec-2026 10:00"
     },
     {
-     "id": 17,
+     "id": 16,
      "per": "202701",
      "act": "ADD",
      "ps": "Active",
@@ -34978,7 +34308,7 @@
      "chd": "27-Dec-2026 10:00"
     },
     {
-     "id": 18,
+     "id": 17,
      "per": "202701",
      "act": "ADD",
      "ps": "Active",
@@ -34999,7 +34329,7 @@
      "chd": "27-Dec-2026 10:00"
     },
     {
-     "id": 19,
+     "id": 18,
      "per": "202701",
      "act": "ADD",
      "ps": "Inactive",
@@ -35020,7 +34350,7 @@
      "chd": "27-Dec-2026 10:00"
     },
     {
-     "id": 20,
+     "id": 19,
      "per": "202701",
      "act": "ADD",
      "ps": "Active",
@@ -35423,26 +34753,6 @@
      "chd": "27-Nov-2026 10:00"
     },
     {
-     "id": 20,
-     "per": "202612",
-     "act": "EDIT",
-     "p": "DUMMY-001",
-     "d": "JAPAN",
-     "ot": "**",
-     "cd": 15,
-     "st": 2,
-     "src": "SCREEN",
-     "by": "RSARI",
-     "dt": "03-Dec-2026 09:00",
-     "run": null,
-     "sdt": null,
-     "seq": null,
-     "upl": null,
-     "name": "DUMMY PART 001",
-     "chb": "RSARI",
-     "chd": "03-Dec-2026 09:30"
-    },
-    {
      "id": 21,
      "per": "202612",
      "act": "EDIT",
@@ -35465,26 +34775,6 @@
     {
      "id": 22,
      "per": "202612",
-     "act": "EDIT",
-     "p": "DUMMY-001",
-     "d": "JAPAN",
-     "ot": "**",
-     "cd": 12,
-     "st": 2,
-     "src": "SCREEN",
-     "by": "RSARI",
-     "dt": "03-Dec-2026 09:30",
-     "run": null,
-     "sdt": null,
-     "seq": null,
-     "upl": null,
-     "name": "DUMMY PART 001",
-     "chb": null,
-     "chd": null
-    },
-    {
-     "id": 23,
-     "per": "202612",
      "act": "ADD",
      "p": "DUMMY-001",
      "d": "USA",
@@ -35503,7 +34793,7 @@
      "chd": "04-Dec-2026 10:00"
     },
     {
-     "id": 24,
+     "id": 23,
      "per": "202612",
      "act": "DELETE",
      "p": "DUMMY-004",
@@ -35523,7 +34813,7 @@
      "chd": "04-Dec-2026 10:00"
     },
     {
-     "id": 25,
+     "id": 24,
      "per": "202612",
      "act": "ADD",
      "p": "DUMMY-004",
@@ -35543,9 +34833,9 @@
      "chd": "04-Dec-2026 10:00"
     },
     {
-     "id": 26,
+     "id": 25,
      "per": "202612",
-     "act": "ADD",
+     "act": "EDIT",
      "p": "DUMMY-003",
      "d": "THAILAND",
      "ot": "**",
@@ -35563,7 +34853,7 @@
      "chd": "04-Dec-2026 10:00"
     },
     {
-     "id": 27,
+     "id": 26,
      "per": "202701",
      "act": "ADD",
      "p": "DUMMY-001",
@@ -35583,7 +34873,7 @@
      "chd": "27-Dec-2026 10:00"
     },
     {
-     "id": 28,
+     "id": 27,
      "per": "202701",
      "act": "ADD",
      "p": "DUMMY-001",
@@ -35603,7 +34893,7 @@
      "chd": "27-Dec-2026 10:00"
     },
     {
-     "id": 29,
+     "id": 28,
      "per": "202701",
      "act": "ADD",
      "p": "DUMMY-001",
@@ -35623,7 +34913,7 @@
      "chd": "27-Dec-2026 10:00"
     },
     {
-     "id": 30,
+     "id": 29,
      "per": "202701",
      "act": "ADD",
      "p": "DUMMY-002",
@@ -35643,7 +34933,7 @@
      "chd": "27-Dec-2026 10:00"
     },
     {
-     "id": 31,
+     "id": 30,
      "per": "202701",
      "act": "ADD",
      "p": "DUMMY-003",
@@ -35663,7 +34953,7 @@
      "chd": "27-Dec-2026 10:00"
     },
     {
-     "id": 32,
+     "id": 31,
      "per": "202701",
      "act": "DELETE",
      "p": "DUMMY-004",
@@ -35683,7 +34973,7 @@
      "chd": "27-Dec-2026 10:00"
     },
     {
-     "id": 33,
+     "id": 32,
      "per": "202701",
      "act": "DELETE",
      "p": "DUMMY-004",
@@ -35703,7 +34993,7 @@
      "chd": "27-Dec-2026 10:00"
     },
     {
-     "id": 34,
+     "id": 33,
      "per": "202701",
      "act": "ADD",
      "p": "DUMMY-006",
@@ -36013,6 +35303,7 @@
      "chd": "01-Jan-2027 00:10"
     }
    ],
+   "deleted": [],
    "AP": {
     "kan": {
      "DUMMY-001": {

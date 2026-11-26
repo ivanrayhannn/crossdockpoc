@@ -12,7 +12,7 @@ from build_ap_pole_guide import build_sheet
 HERE = os.path.dirname(os.path.abspath(__file__))
 RUN = '20261110110000'
 CAP = ('AP POLE and GTOPAS pictures: screens given by the user (a red mark comes from the original picture). NSP picture: prototype. '
-       f'Query results and files: example data of the full flow simulation (dummy parts DUMMY-00x, run {RUN}); yellow header = helper '
+       f'Query results and files: example data of the full flow simulation (dummy parts DUMMY-00x, [Sync] of 2026-11-10 11:00:00); yellow header = helper '
        'column of NSP, not written to the file or the screen.')
 
 XD07 = {
@@ -21,11 +21,11 @@ XD07 = {
     'caption': CAP,
     'meta': [('Function', 'XD07 RPA Cross Dock Master to AP POLE (desktop flow CDX_XD07_APPOLE, started by the parent flow CDX_SYNC_PARENT)'),
              ('Started by', 'D/S [Sync] or [Re-send last Sync] on NSP. Scenario 1: after XD06 GTOPAS succeeded. Scenario 2: at once.'),
-             ('Input', 'RUN_ID of the run; views V_APPOLE_UPLOAD_EXPORT / V_APPOLE_UPLOAD_KANBAN (read-only DB user)'),
+             ('Input', 'SYNC_DT of the run (time of the [Sync] click, given by the parent flow); views V_APPOLE_UPLOAD_EXPORT / V_APPOLE_UPLOAD_KANBAN, rows with SYNC_STATUS 1 and that SYNC_DT (read-only DB user)'),
              ('Output', 'Files uploaded on AP POLE in the order 1 EXPORT_PRE, 2 KANBAN, 3 EXPORT_POST; e-mail SUCCESS / FAILED')],
     'blocks': [
         ('step', 'NSP: D/S clicks [Sync (n)]',
-         'Export Crossdock Master, ongoing period. [Sync] sets the staging rows 0 -> 1 with the run ID and starts the parent flow. '
+         'Export Crossdock Master, ongoing period. [Sync] sets the staging rows 0 -> 1 with SYNC_DT = time of the click and starts the parent flow with that SYNC_DT. '
          'This is the only manual step; everything below is the robot.', 'r01_nsp_sync.png'),
         ('step', 'Get data: file 1 EXPORT_PRE',
          'The robot reads the Export rows of the run for file 1: parts whose Max Case/Day goes down (OPERATION_TYPE 1). '
@@ -59,7 +59,8 @@ XD07 = {
     'notes': ['File names follow the templates decided for the staging (LLM9Q910 Kanban, LLM9Q880 Export). The Report Type names on the '
               'AP POLE screen are LM9Q900 / LM9Q870: which report type takes which template is TBC with the AP POLE team.',
               'The AP POLE screens are the screens given by the user (16-Nov), not taken during a robot run.',
-              'Order of the files: EXPORT_PRE before KANBAN when Max goes down, so AP POLE never has destinations above the Max.'],
+              'Order of the files: EXPORT_PRE before KANBAN when Max goes down, so AP POLE never has destinations above the Max.',
+              'One row per key: a part edited twice before [Sync] has one row with the last value (the unsent row is updated, not added). [Re-send last Sync] reads MAX(SYNC_DT).'],
 }
 
 XD06 = {
@@ -68,14 +69,14 @@ XD06 = {
     'caption': CAP,
     'meta': [('Function', 'XD06 IF Cross Dock Master to GTOPAS (desktop flow CDX_XD06_GTOPAS, started by the parent flow CDX_SYNC_PARENT)'),
              ('Started by', 'Scenario 1 of [Sync] / [Re-send last Sync] (run with GTOPAS rows), or the Period Rollover on day 1 (00:10)'),
-             ('Input', 'RUN_ID of the run; table TB_H_STG_GTOPAS (read-only DB user)'),
+             ('Input', 'SYNC_DT of the run; table TB_H_STG_GTOPAS, rows with SYNC_STATUS 1 and that SYNC_DT (read-only DB user)'),
              ('Output', 'Rows added / deleted on GTOPAS WVJA5204 (Depot 01); STATUS to the parent flow; e-mail')],
     'blocks': [
         ('step', 'NSP: D/S clicks [Sync (n)] (or Period Rollover)',
          'The run has GTOPAS rows (a part became Active / Inactive, a destination was added / removed): the parent flow starts XD06 first. '
          'The Period Rollover starts XD06 by itself, no screen.', 'r01_nsp_sync.png'),
         ('step', 'Get data: rows of the run ([Sync])',
-         'The robot reads TB_H_STG_GTOPAS of the run: one row per part + destination, ACTION ADD or DELETE. Example: run of 10-Nov, three ADD rows.',
+         'The robot reads TB_H_STG_GTOPAS with SYNC_STATUS 1 and the SYNC_DT of the run: one row per part + destination, ACTION ADD or DELETE. Example: run of 10-Nov, three ADD rows.',
          'r10_gtopas_rows_add.png'),
         ('step', 'Get data: rows of the run (Period Rollover)',
          'Example: rollover of 01-Jan, two DELETE rows (part became Inactive) and one ADD row (part became Active).', 'r11_gtopas_rows_rollover.png'),

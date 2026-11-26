@@ -21,13 +21,14 @@
 | 0.9 | FID Rayhan | 20-Nov-26 |  | TB_R_CROSSDOCK_IF_RESULT removed; the parts of the run come from the send time on TB_M_PART_CANDIDATE (GTOPAS_SYNC_DT / APPOLE_SYNC_DT) and SYNC_RUN_ID (20-Nov). |
 | 1.0 | FID Rayhan | 22-Nov-26 |  | Source = TB_H_PART_CANDIDATE_STG_SYNC only; parts of the run by GTOPAS_SYNC_STATUS 0 + PERIOD ([Sync] Current, Period Rollover new period), no date condition (22-Nov). |
 | 1.1 | FID Rayhan | 23-Nov-26 |  | Source TB_H_STG_GTOPAS (rows ADD / DELETE of the run); started by the RPA parent flow: scenario 1 GTOPAS before AP POLE, a failed GTOPAS stops AP POLE; Period Rollover XD06 only (23-Nov). |
+| 1.2 | FID Rayhan | 26-Nov-26 |  | Staging: no SYNC_RUN_ID, the run is SYNC_DT (one value per [Sync] click / rollover); one unsent row per key (a new change updates it, back to the sent value deletes it); SYNC_STATUS 0 / 1. SQL: prepare_code/sql/crossdock_staging_sync.sql. |
 
 ## 1. General
 
 ### Objective
 
 - To make the GTOPAS Crossdock Master (WVJA5204, Depot 01) follow NSP by an RPA: add the part + destination rows that appear in NSP and delete the rows that disappear.
-- Source data: only TB_H_STG_GTOPAS (read-only DB user), rows of the run ID: [Sync] (Current period), [Re-send last Sync] or the Period Rollover (new Current period, XD05 process 3).
+- Source data: only TB_H_STG_GTOPAS (read-only DB user), rows of the run (SYNC_DT): [Sync] (Current period), [Re-send last Sync] or the Period Rollover (new Current period, XD05 process 3).
 - Started by the RPA parent flow: in scenario 1 XD06 runs before XD07 and its result decides whether XD07 starts (refer 4.1).
 - GTOPAS has no period: it always shows the Current month, so the Next period reaches GTOPAS only at the Period Rollover.
 - The robot writes nothing back to NSP; the result comes by the notification e-mail.
@@ -40,7 +41,7 @@
 
 | Name | Type | Description |
 |---|---|---|
-| TB_H_STG_GTOPAS | DB | Rows with SYNC_RUN_ID = run ID: ACTION ADD / DELETE per part + destination |
+| TB_H_STG_GTOPAS | DB | Rows with SYNC_STATUS '1' and SYNC_DT = SYNC_DT of the run: ACTION ADD / DELETE per part + destination |
 | GTOPAS WVJA5204 | System | Rows of the parts of the run (Depot 01), read by the robot |
 
 ### Output
@@ -77,7 +78,7 @@
 
 ```mermaid
 flowchart TB
-  p1["1. Start (run ID, RUN_TYPE from the parent flow)"]
+  p1["1. Start (SYNC_DT, RUN_TYPE from the parent flow)"]
   src[("TB_H_STG_GTOPAS")]
   p2["2. Rows of the run (ADD / DELETE)"]
   gi[("GTOPAS WVJA5204")]
@@ -94,8 +95,8 @@ flowchart TB
   p5 --> log
 ```
 
-1. The parent flow starts XD06 with the run ID and RUN_TYPE (SYNC / RESEND: scenario 1; ROLLOVER). NSP has already set the rows to SYNC_STATUS 1 with this run ID. Write LOG1.
-2. Read TB_H_STG_GTOPAS (read-only DB user): rows with SYNC_RUN_ID = run ID, ordered by P_NO, DESTINATION_CODE.
+1. The parent flow starts XD06 with SYNC_DT and RUN_TYPE (SYNC / RESEND: scenario 1; ROLLOVER). NSP has already set the rows to SYNC_STATUS 1 with this SYNC_DT. Write LOG1.
+2. Read TB_H_STG_GTOPAS (read-only DB user): rows with SYNC_STATUS '1' and SYNC_DT = SYNC_DT of the run, ordered by P_NO, DESTINATION_CODE.
   - ACTION ADD: Depot 01, P/No., Destination Code, Maker A, Domestic/Overseas 2, TOPAS Order Type 3, Order Transportation Code 2.
   - ACTION DELETE: the row of P/No. + Destination Code (MT = DEL on the screen).
 3. Process every row on WVJA5204 (Depot 01). Write LOG3 per row.
@@ -107,7 +108,7 @@ flowchart TB
 ## 3. Data edit mapping
 
 #### 1. Insert GTOPAS Crossdock Master (WVJA5204, by RPA) – Part + destination added (not in NSP scope; done on the screen)
-- Source: TB_H_STG_GTOPAS (keys: SYNC_RUN_ID = Run ID, ACTION = 'ADD')
+- Source: TB_H_STG_GTOPAS (keys: SYNC_DT = SYNC_DT of the run (SYNC_STATUS 1), ACTION = 'ADD')
 
 | Source field | Destination field | Description |
 |---|---|---|
@@ -120,7 +121,7 @@ flowchart TB
 | ORDER_TRANSPORTATION_CODE | Order Transportation Code | '2' |
 
 #### 2. Delete GTOPAS Crossdock Master (WVJA5204, by RPA) – Row of P/No. + Destination Code (MT = DEL)
-- Source: TB_H_STG_GTOPAS (keys: SYNC_RUN_ID = Run ID, ACTION = 'DELETE')
+- Source: TB_H_STG_GTOPAS (keys: SYNC_DT = SYNC_DT of the run (SYNC_STATUS 1), ACTION = 'DELETE')
 
 | Source field | Destination field | Description |
 |---|---|---|
@@ -134,7 +135,7 @@ flowchart TB
 | Source field | Destination field | Description |
 |---|---|---|
 | - | BATCH_ID | 'XD06_RPA_GTOPAS' |
-| - | RUN_ID | Run ID |
+| - | SYNC_DT | SYNC_DT of the run |
 | - | STATUS | SUCCESS / FAILED |
 | - | MESSAGE | LOG1 - LOG6 |
 | - | START_DT / END_DT | Start and end date-time |
@@ -143,11 +144,11 @@ flowchart TB
 
 ### 4.1 Parent Flow and Scenarios
 
-- One Power Automate parent flow per run (CDX_SYNC_PARENT), started by NSP with RUN_ID and RUN_TYPE (SYNC, RESEND, ROLLOVER).
+- One Power Automate parent flow per run (CDX_SYNC_PARENT), started by NSP with SYNC_DT (the run) and RUN_TYPE (SYNC, RESEND, ROLLOVER).
 - Scenario 1 (run with GTOPAS rows: a part becomes Active or Inactive, a destination is added or removed): XD06 GTOPAS first; XD07 AP POLE starts only when every GTOPAS row succeeded. When GTOPAS fails, AP POLE stops: XD07 does not start and the e-mail says FAILED.
 - Scenario 2 (run without GTOPAS rows: Max Case/Day, Pcs/Case, Case/Day, order type of a destination that stays): XD07 only.
 - Period Rollover (RUN_TYPE ROLLOVER): XD06 only, for the GTOPAS rows of the new Current period.
-- Choice of the scenario: SELECT COUNT(*) FROM TB_H_STG_GTOPAS WHERE SYNC_RUN_ID = run ID (> 0: scenario 1).
+- Choice of the scenario: SELECT COUNT(*) FROM TB_H_STG_GTOPAS WHERE SYNC_STATUS = '1' AND SYNC_DT = <SYNC_DT of the run> (> 0: scenario 1).
 
 ### 4.2 Rows and Rules
 
@@ -159,7 +160,7 @@ flowchart TB
 ### 4.3 Errors and Re-send
 
 - A failed row is listed and the next rows are processed. The result goes back to the parent flow: FAILED stops AP POLE in scenario 1.
-- When the e-mail says FAILED, the D/S team clicks [Re-send last Sync] before the next [Sync]: the same run ID; rows done before are OK again (already in GTOPAS / already gone).
+- When the e-mail says FAILED, the D/S team clicks [Re-send last Sync] before the next [Sync]: the same SYNC_DT; rows done before are OK again (already in GTOPAS / already gone).
 
 | Case | GTOPAS (XD06) | AP POLE (XD07) | D/S does |
 |---|---|---|---|
@@ -187,8 +188,8 @@ flowchart TB
 | Sender | Shared mailbox of the RPA (Office 365 Outlook connector "Send an email (V2)"), TBC |
 | To | User who clicked [Sync] (e-mail sent by NSP in the request of the flow) + D/S team mailing list |
 | Cc | RPA PIC; for FAILED also the NSP PIC |
-| Subject | [Crossdock Sync][SYNC \| RESEND \| ROLLOVER][SUCCESS \| FAILED] Run <RUN_ID> - <n> part(s) |
-| Body 1. Run | RUN_ID, RUN_TYPE, scenario, targets run, started / ended, [Sync] by <user> at <date-time>, period(s) sent |
+| Subject | [Crossdock Sync][SYNC \| RESEND \| ROLLOVER][SUCCESS \| FAILED] Run <SYNC_DT> - <n> part(s) |
+| Body 1. Run | SYNC_DT, RUN_TYPE, scenario, targets run, started / ended, [Sync] by <user> at <date-time>, period(s) sent |
 | Body 2. Summary | Parts processed; registered / kept / deleted rows per P/No. + Destination Code |
 | Body 3. Error (FAILED) | Step, part, destination and message of the error (LOG4 / LOG5); parts not processed |
 | Body 4. Action | SUCCESS: no action. FAILED: click [Re-send last Sync] on Crossdock Master Setting; contact the RPA PIC when it fails again |
@@ -204,17 +205,17 @@ flowchart TB
 
 | ID | Event | Cause | Type | Message | Action |
 |---|---|---|---|---|---|
-| LOG1 | Batch start | Parent flow: scenario 1 or Period Rollover | Info | RPA cross dock master to GTOPAS started. Run <RUN_ID>, <n> row(s). | system: Write the log.; user: - |
-| LOG2 | Batch end | Bot finishes | Info | RPA cross dock master to GTOPAS ended. Run <RUN_ID>, added <a>, deleted <d>, already done <k>, failed <f>, status <STATUS>. | system: Write the log.; user: - |
+| LOG1 | Batch start | Parent flow: scenario 1 or Period Rollover | Info | RPA cross dock master to GTOPAS started. Run <SYNC_DT>, <n> row(s). | system: Write the log.; user: - |
+| LOG2 | Batch end | Bot finishes | Info | RPA cross dock master to GTOPAS ended. Run <SYNC_DT>, added <a>, deleted <d>, already done <k>, failed <f>, status <STATUS>. | system: Write the log.; user: - |
 | LOG3 | Row changed | Add / Delete on WVJA5204 | Info | <ADD / DELETE> <P_NO> <DEST_CODE>. | system: Write the log.; user: - |
 | LOG4 | Row failed / error (try-catch) | Login, screen, timeout or GTOPAS error message | Error | RPA to GTOPAS failed at <STEP> <P_NO> <DEST_CODE>: <ERROR_DETAIL>. | system: Row error: list the row and go to the next row. Login or screen error: stop. STATUS FAILED; in scenario 1 the parent flow does not start XD07.; user: Click [Re-send last Sync]; contact PIC if it persists. |
 | LOG5 | Unexpected error | Any other system error | Critical | Unexpected error: <ERROR_DETAIL>. | system: Stop. STATUS = ERROR.; user: User contact PIC |
-| LOG6 | Notification email | End of the run (SUCCESS / FAILED) | Info | Notification email <SUCCESS / FAILED> of run <RUN_ID> sent to <recipients>. | system: Write the log.; user: Read the email; FAILED: click [Re-send last Sync]. |
+| LOG6 | Notification email | End of the run (SUCCESS / FAILED) | Info | Notification email <SUCCESS / FAILED> of run <SYNC_DT> sent to <recipients>. | system: Write the log.; user: Read the email; FAILED: click [Re-send last Sync]. |
 
 ## 7. Tables
 
 #### TB_H_STG_GTOPAS (history, proposed)
-GTOPAS WVJA5204 rows: a part + destination to add or delete, written by SP_STG_WRITE only when the destination appears or disappears for the part (any order type) and GTOPAS does not have that state yet. Sent by [Sync] (Current period) or the Period Rollover (new Current period). Read by XD06.
+GTOPAS WVJA5204 rows: a part + destination to add or delete, written by SP_STG_WRITE only when the destination appears or disappears for the part (any order type) and GTOPAS does not have that state yet (one unsent row per key). Sent by [Sync] (Current period) or the Period Rollover (new Current period). Read by XD06.
 
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
@@ -230,10 +231,9 @@ GTOPAS WVJA5204 rows: a part + destination to add or delete, written by SP_STG_W
 | ORDER_TRANSPORTATION_CODE | CHAR(1) |  | N | Always 2. File / screen column: Order Transportation Code. Default '2' |
 | SOURCE | VARCHAR(6) |  | N | SCREEN / UPLOAD / BATCH (XD05) |
 | UPLOAD_ID | VARCHAR(TBD) |  | Y | Upload of the Kanban or Export Excel (Log); NULL when SOURCE is not UPLOAD |
-| SYNC_STATUS | CHAR(1) |  | N | 0 = to send, 1 = sent, 2 = Superseded at the save (a newer row of the key, or back to the value already sent). Set by SP_STG_WRITE (0, 2) and SP_STG_SYNC / Period Rollover (1). Default '0' |
-| SYNC_DT | DATETIME |  | Y | Time of the [Sync] / Period Rollover that sent the row; Last Sent on the screen = latest value |
-| SYNC_RUN_ID | VARCHAR(14) |  | Y | Run ID YYYYMMDDHHMMSS; [Re-send last Sync] sends the rows of the last run again |
+| SYNC_STATUS | CHAR(1) |  | N | 0 = to send (written or updated by SP_STG_WRITE), 1 = sent (SP_STG_SYNC at [Sync], SP_STG_ROLLOVER for GTOPAS). One row with 0 per key at a time: a new change of the key updates it. Default '0' |
+| SYNC_DT | DATETIME2(0) |  | Y | Time of the [Sync] click (or of the Period Rollover), the same value for every row of that click: the RPA reads the rows of a run by SYNC_DT; [Re-send last Sync] = MAX(SYNC_DT); Last Sent on the screen = latest value |
 | CREATED_BY | VARCHAR(20) |  | N | User of the save / upload, or XD05BATCH |
 | CREATED_DT | DATETIME |  | N | Time of the insert (same transaction as the master update) |
-| CHANGED_BY | VARCHAR(20) |  | Y | User of the save that made the row Superseded, of [Sync], or XD05BATCH (Period Rollover) |
+| CHANGED_BY | VARCHAR(20) |  | Y | User of the save that updated the unsent row, of [Sync], or XD05BATCH (Period Rollover) |
 | CHANGED_DT | DATETIME |  | Y | Time of that update |

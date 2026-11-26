@@ -117,16 +117,16 @@ fp = Sheet(wb.create_sheet('Flow Process'))
 fp.title('Alur proses (dari save sampai AP POLE dan GTOPAS)')
 fp.table([('No', 0), ('Proses', 0), ('Siapa', 0), ('Yang terjadi', 0)], [
     [0, 'Add Part (XD01 / XD02 flag A)', 'Procurement', 'Part baru selalu Candidate. Period dipilih: bulan berjalan (default) atau Next; part berlaku mulai period itu. Pilih bulan berjalan setelah tanggal D: baris Next ikut dibuat. Candidate belum dikirim, jadi nggak ada baris staging.'],
-    [1, 'Save di screen / upload (XD01, XD02, XD03)', 'Procurement, D/S', 'Master di-update dulu, lalu SP_STG_WRITE dipanggil per nilai yang berubah. SP nulis baris ke tabel staging (status 0), nandain baris lama yang belum terkirim jadi 2 (Superseded), dan ngisi OPERATION_TYPE di baris Kanban.'],
+    [1, 'Save di screen / upload (XD01, XD02, XD03)', 'Procurement, D/S', 'Master di-update dulu, lalu SP_STG_WRITE dipanggil per nilai yang berubah. SP nulis baris ke tabel staging (status 0), satu key cuma punya satu baris status 0: kalau udah ada, baris itu yang di-update (bukan insert baru); kalau nilainya balik ke yang udah terkirim, baris itu dihapus. Baris status 1 nggak pernah diubah. SP juga ngisi OPERATION_TYPE di baris Kanban.'],
     [2, 'XD05 day D (period baru)', 'Batch', 'Bikin period Next. Kanban ADD buat semua part (OPERATION_TYPE dibanding Max period sebelumnya), Export ADD per destinasi, DELETE (0) buat destinasi period lalu yang udah nggak dipakai atau part yang jadi Inactive.'],
     [3, 'Cuma Export yang berubah', 'SP_STG_WRITE', 'Kalau part + period belum punya baris Kanban status 0, SP nulis header ACTION KEEP dengan OPERATION_TYPE 5 (nilai Kanban yang lagi berlaku). Header ini nggak ikut diupload.'],
-    [4, '[Sync]', 'D/S', 'SP_STG_SYNC cuma ngubah status 0 jadi 1 + RUN_ID (AP POLE: period Current dan Next, GTOPAS: Current aja). Nggak ada aturan yang dihitung di sini. Habis itu parent flow RPA jalan.'],
+    [4, '[Sync]', 'D/S', 'SP_STG_SYNC cuma ngubah status 0 jadi 1 + SYNC_DT = waktu klik [Sync] (AP POLE: period Current dan Next, GTOPAS: Current aja). Nggak ada aturan yang dihitung di sini. Habis itu parent flow RPA jalan.'],
     [4.5, 'Parent flow RPA', 'Power Automate', 'Cek ada baris GTOPAS di run atau nggak. Ada (part jadi Active / Inactive, destinasi ditambah / dihapus): skenario 1, XD06 dulu, XD07 jalan cuma kalau GTOPAS berhasil. Nggak ada: skenario 2, langsung XD07. Period Rollover: XD06 aja.'],
     [5, 'View', 'NSP (database)', 'Nentuin file: header OPERATION_TYPE 1 → Export part itu masuk EXPORT_PRE (sebelum KANBAN), selain itu EXPORT_POST. Header 5 nggak masuk file KANBAN. Di dalam file, baris yang turun / DELETE dulu baru yang naik / ADD (ROW_ORDER).'],
-    [6, 'XD07 (RPA AP POLE)', 'Bot', 'Upload per run: EXPORT_PRE → KANBAN → EXPORT_POST. File yang kosong nggak dibikin. Nama file: <template>_<RUN_ID>_<urutan>_<nama>.xls.'],
+    [6, 'XD07 (RPA AP POLE)', 'Bot', 'Upload per run: EXPORT_PRE → KANBAN → EXPORT_POST. File yang kosong nggak dibikin. Bot baca WHERE SYNC_STATUS = 1 AND SYNC_DT = waktu klik. Nama file: <template>_<SYNC_DT yyyymmddhhmmss>_<urutan>_<nama>.xls.'],
     [7, 'XD06 (RPA GTOPAS)', 'Bot', 'Nambah / hapus part + destinasi di WVJA5204 sesuai ACTION. Baris yang udah ada / udah hilang dihitung OK. Baris gagal dicatat, baris lain tetap jalan; hasil FAILED bikin XD07 nggak jalan. GTOPAS nggak punya period, jadi period Next nunggu Period Rollover.'],
-    [8, 'Period Rollover (tanggal 1)', 'Batch', 'Period Next jadi Current. Baris GTOPAS period itu yang masih status 0 jadi 1 dan dikirim ke XD06.'],
-    [9, 'E-mail FAILED', 'D/S', 'Klik [Re-send last Sync]: run ID sama, GTOPAS dulu (kalau ada), lalu file AP POLE dengan urutan sama. Re-send dulu sebelum [Sync] berikutnya.'],
+    [8, 'Period Rollover (tanggal 1)', 'Batch', 'Period Next jadi Current. Baris GTOPAS period itu yang masih status 0 jadi 1 + SYNC_DT waktu rollover, lalu dikirim ke XD06.'],
+    [9, 'E-mail FAILED', 'D/S', 'Klik [Re-send last Sync]: SYNC_DT terakhir (MAX(SYNC_DT)), baris sama, GTOPAS dulu (kalau ada), lalu file AP POLE dengan urutan sama. Re-send dulu sebelum [Sync] berikutnya.'],
 ])
 fp.h('Business rules')
 fp.note('\n'.join([
@@ -138,7 +138,7 @@ fp.note('\n'.join([
     '6. Ganti destinasi atau ganti Order Type: DELETE (0) dulu, baru ADD, di file yang sama.',
     '7. Active → Inactive: DELETE (0) semua destinasi, Kanban tetap di AP POLE (header 5).',
     '8. Period baru: AP POLE tetap pakai data period lama sampai ada baris baru, jadi NSP selalu nambahin baris period baru.',
-    '9. Nilai diubah lalu balik ke nilai yang udah terkirim sebelum [Sync]: nggak ada yang dikirim (Superseded).',
+    '9. Nilai diubah lalu balik ke nilai yang udah terkirim sebelum [Sync]: baris status 0 dihapus, nggak ada yang dikirim.',
     '10. GTOPAS cuma dapat baris kalau destinasi muncul atau hilang buat part itu (order type apa pun).',
     '11. GTOPAS gagal di skenario 1: AP POLE nggak dikirim sama sekali sampai Re-send berhasil.',
     '12. Candidate bisa jadi Active lewat layar (Procurement) atau XD05; nggak ada yang balik ke Candidate.',
@@ -151,7 +151,7 @@ lg = Sheet(wb.create_sheet('Legend'))
 lg.title('Legend')
 lg.h('Warna')
 lg.table([('Warna', 0), ('Artinya', 0)], [['', 'Header biru: kolom yang ada di file upload / layar GTOPAS'], ['', 'Header kuning: kolom bantu (cuma di NSP, nggak ikut file)'],
-                                         ['', 'SYNC_STATUS 0: belum terkirim'], ['', 'SYNC_STATUS 1: udah terkirim'], ['', 'SYNC_STATUS 2: Superseded, nggak dikirim'],
+                                         ['', 'SYNC_STATUS 0: belum terkirim'], ['', 'SYNC_STATUS 1: udah terkirim'], ['', 'Abu-abu, SYNC_STATUS "0 · deleted": baris yang dihapus di langkah ini (balik ke nilai terkirim, atau header tanpa baris Export)'],
                                          ['', 'Cek AP POLE OK'], ['', 'Cek AP POLE ditolak / GTOPAS FAILED / e-mail FAILED'], ['▶', 'Baris yang ditulis / diubah di langkah ini (kolom Changed)']],
          fills=[HDR, HELP, ST_FILL[0], ST_FILL[1], ST_FILL[2], OK, NG, None])
 lg.h('OPERATION_TYPE (header di TB_H_STG_APPOLE_KANBAN)')
@@ -166,7 +166,8 @@ lg.h('Kolom lain')
 lg.table([('Kolom', 0), ('Isi', 0)], [
     ['ACTION', 'ADD / EDIT / DELETE; KEEP = header kode 5'],
     ['ROW_ORDER (view)', '1 = turun atau DELETE (0), 2 = naik atau ADD, dibanding nilai terakhir yang terkirim buat key itu'],
-    ['SYNC_RUN_ID', 'Run [Sync] / Rollover / Re-send (YYYYMMDDHHMMSS)'],
+    ['SYNC_STATUS', '0 = belum terkirim (maks. satu baris per key), 1 = udah terkirim'],
+    ['SYNC_DT', 'Waktu klik [Sync] / Period Rollover, diisi NSP waktu status jadi 1; bot baca baris satu run pakai SYNC_DT. Re-send = MAX(SYNC_DT)'],
     ['File', 'EXPORT_PRE (LLM9Q880, urutan 1), KANBAN (LLM9Q910, urutan 2), EXPORT_POST (LLM9Q880, urutan 3)'],
     ['Cek AP POLE', 'Total Max Shipping Box (RCS) part di bulan itu ≤ Max Shipping Box Qty, dicek habis tiap baris diupload'],
     ['Destinasi (dummy)', ', '.join(f'{k} {v}' for k, v in DEST.items())],
@@ -287,19 +288,25 @@ for i, s in enumerate(STEPS):
     sh.h('GTOPAS WVJA5204 after the step (part + destination)')
     sh.table([('P/No.', 0), ('Destination Code', 0)], [[k.split('|')[0], DEST[k.split('|')[1]] + ' ' + k.split('|')[1]] for k in sorted(s['GT'])])
     # staging
-    st_txt = {0: '0', 1: '1', 2: '2'}
+    st_txt = {0: '0', 1: '1'}
+    sdt = lambda run: f'{run[:4]}-{run[4:6]}-{run[6:8]} {run[8:10]}:{run[10:12]}:{run[12:14]}' if run else None
+    def rows_of(tag):
+        rs = [dict(r) for r in s[tag]] + [dict(d['row'], dele=True) for d in s.get('deleted', []) if d['tbl'] == tag]
+        return sorted(rs, key=lambda r: r['id'])
+    stv = lambda r: st_txt[r['st']] + (' · deleted' if r.get('dele') else '')
+    mark = lambda tag, r: '▶' if r.get('dele') or '%s%d' % (tag, r['id']) in s['touched'] else ''
     sh.h('TB_H_STG_APPOLE_KANBAN')
-    sh.table([('Changed', 1), ('STG_ID', 1), ('PERIOD', 1), ('ACTION', 1), ('PART_STATUS', 1), ('EFFECTIVE_MONTH_YEAR', 0), ('OPERATOR_ID', 0), ('PART_NO', 0), ('PART_NAME', 0), ('SHIPPING_BOX_QTY', 0), ('MAX_SHIPPING_BOX_QTY', 0), ('MAX_ALLOWANCE_QTY', 0), ('OPERATION_TYPE', 1), ('SOURCE', 1), ('UPLOAD_ID', 1), ('SYNC_STATUS', 1), ('SYNC_DT', 1), ('SYNC_RUN_ID', 1), ('CREATED_BY', 1), ('CREATED_DT', 1), ('CHANGED_BY', 1), ('CHANGED_DT', 1)],
-             [['▶' if 'K%d' % r['id'] in s['touched'] else '', r['id'], r['per'], r['act'], r['ps'], my(r['per']), 'P6', r['p'], name(r['p']), r['pcs'], r['max'], r['pcs'] * r['max'], r['op'], r['src'], nz(r.get('upl')), st_txt[r['st']], nz(r.get('sdt')), nz(r['run']), r['by'], r['dt'], nz(r.get('chb')), nz(r.get('chd'))] for r in s['K']],
-             fills=[ST_FILL[r['st']] for r in s['K']])
+    sh.table([('Changed', 1), ('STG_ID', 1), ('PERIOD', 1), ('ACTION', 1), ('PART_STATUS', 1), ('EFFECTIVE_MONTH_YEAR', 0), ('OPERATOR_ID', 0), ('PART_NO', 0), ('PART_NAME', 0), ('SHIPPING_BOX_QTY', 0), ('MAX_SHIPPING_BOX_QTY', 0), ('MAX_ALLOWANCE_QTY', 0), ('OPERATION_TYPE', 1), ('SOURCE', 1), ('UPLOAD_ID', 1), ('SYNC_STATUS', 1), ('SYNC_DT', 1), ('CREATED_BY', 1), ('CREATED_DT', 1), ('CHANGED_BY', 1), ('CHANGED_DT', 1)],
+             [[mark('K', r), r['id'], r['per'], r['act'], r['ps'], my(r['per']), 'P6', r['p'], name(r['p']), r['pcs'], r['max'], r['pcs'] * r['max'], r['op'], r['src'], nz(r.get('upl')), stv(r), nz(sdt(r.get('run'))), r['by'], r['dt'], nz(r.get('chb')), nz(r.get('chd'))] for r in rows_of('K')],
+             fills=[ST_FILL[2] if r.get('dele') else ST_FILL[r['st']] for r in rows_of('K')])
     sh.h('TB_H_STG_APPOLE_EXPORT')
-    sh.table([('Changed', 1), ('STG_ID', 1), ('PERIOD', 1), ('NSP_PART_NO', 1), ('DEST_CODE', 1), ('ACTION', 1), ('EFFECTIVE_MONTH_YEAR', 0), ('PART_NO', 0), ('BUYER_PD', 0), ('ORDER_TYPE', 0), ('TRANSPORT_CODE', 0), ('MAX_SHIPPING_BOX_RCS', 0), ('SOURCE', 1), ('UPLOAD_ID', 1), ('SYNC_STATUS', 1), ('SYNC_DT', 1), ('SYNC_RUN_ID', 1), ('CREATED_BY', 1), ('CREATED_DT', 1), ('CHANGED_BY', 1), ('CHANGED_DT', 1)],
-             [['▶' if 'E%d' % r['id'] in s['touched'] else '', r['id'], r['per'], r['p'], DEST[r['d']], r['act'], my(r['per']), r['p'].replace('-', ''), bpd(r['d']), r['ot'], 2, r['cd'], r['src'], nz(r.get('upl')), st_txt[r['st']], nz(r.get('sdt')), nz(r['run']), r['by'], r['dt'], nz(r.get('chb')), nz(r.get('chd'))] for r in s['E']],
-             fills=[ST_FILL[r['st']] for r in s['E']])
+    sh.table([('Changed', 1), ('STG_ID', 1), ('PERIOD', 1), ('NSP_PART_NO', 1), ('DEST_CODE', 1), ('ACTION', 1), ('EFFECTIVE_MONTH_YEAR', 0), ('PART_NO', 0), ('BUYER_PD', 0), ('ORDER_TYPE', 0), ('TRANSPORT_CODE', 0), ('MAX_SHIPPING_BOX_RCS', 0), ('SOURCE', 1), ('UPLOAD_ID', 1), ('SYNC_STATUS', 1), ('SYNC_DT', 1), ('CREATED_BY', 1), ('CREATED_DT', 1), ('CHANGED_BY', 1), ('CHANGED_DT', 1)],
+             [[mark('E', r), r['id'], r['per'], r['p'], DEST[r['d']], r['act'], my(r['per']), r['p'].replace('-', ''), bpd(r['d']), r['ot'], 2, r['cd'], r['src'], nz(r.get('upl')), stv(r), nz(sdt(r.get('run'))), r['by'], r['dt'], nz(r.get('chb')), nz(r.get('chd'))] for r in rows_of('E')],
+             fills=[ST_FILL[2] if r.get('dele') else ST_FILL[r['st']] for r in rows_of('E')])
     sh.h('TB_H_STG_GTOPAS')
-    sh.table([('Changed', 1), ('STG_ID', 1), ('PERIOD', 1), ('ACTION', 1), ('DEPOT_CODE', 0), ('P_NO', 0), ('DESTINATION_CODE', 0), ('MAKER_CODE', 0), ('DOMESTIC_OVERSEAS', 0), ('TOPAS_ORDER_TYPE', 0), ('ORDER_TRANSPORTATION_CODE', 0), ('SOURCE', 1), ('UPLOAD_ID', 1), ('SYNC_STATUS', 1), ('SYNC_DT', 1), ('SYNC_RUN_ID', 1), ('CREATED_BY', 1), ('CREATED_DT', 1), ('CHANGED_BY', 1), ('CHANGED_DT', 1)],
-             [['▶' if 'G%d' % r['id'] in s['touched'] else '', r['id'], r['per'], r['act'], '01', r['p'], DEST[r['d']], 'A', 2, 3, 2, r['src'], nz(r.get('upl')), st_txt[r['st']], nz(r.get('sdt')), nz(r['run']), r['by'], r['dt'], nz(r.get('chb')), nz(r.get('chd'))] for r in s['G']],
-             fills=[ST_FILL[r['st']] for r in s['G']])
+    sh.table([('Changed', 1), ('STG_ID', 1), ('PERIOD', 1), ('ACTION', 1), ('DEPOT_CODE', 0), ('P_NO', 0), ('DESTINATION_CODE', 0), ('MAKER_CODE', 0), ('DOMESTIC_OVERSEAS', 0), ('TOPAS_ORDER_TYPE', 0), ('ORDER_TRANSPORTATION_CODE', 0), ('SOURCE', 1), ('UPLOAD_ID', 1), ('SYNC_STATUS', 1), ('SYNC_DT', 1), ('CREATED_BY', 1), ('CREATED_DT', 1), ('CHANGED_BY', 1), ('CHANGED_DT', 1)],
+             [[mark('G', r), r['id'], r['per'], r['act'], '01', r['p'], DEST[r['d']], 'A', 2, 3, 2, r['src'], nz(r.get('upl')), stv(r), nz(sdt(r.get('run'))), r['by'], r['dt'], nz(r.get('chb')), nz(r.get('chd'))] for r in rows_of('G')],
+             fills=[ST_FILL[2] if r.get('dele') else ST_FILL[r['st']] for r in rows_of('G')])
     sh.done()
     sh.ws.column_dimensions['A'].width = max(sh.ws.column_dimensions['A'].width or 0, 22)
 
