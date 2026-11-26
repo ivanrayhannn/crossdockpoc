@@ -23,3 +23,5 @@ done < $V/specs/outputs.txt
 # Markdown copy of the UISS for coding (prepare_code/)
 python3 prepare_code/build_md.py > /dev/null
 echo "built prepare_code (Markdown)"
+python3 prepare_code/build_knowledge.py > /dev/null
+echo "built prepare_code/knowledge (one file for Project knowledge)"
