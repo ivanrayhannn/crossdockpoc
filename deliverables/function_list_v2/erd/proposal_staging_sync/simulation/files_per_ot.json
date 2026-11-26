@@ -1,0 +1,4981 @@
+{
+ "res": [
+  {
+   "s": {
+    "id": "max-down",
+    "ot": [
+     1
+    ],
+    "title": "Max goes down",
+    "short": "Max down",
+    "story": "Procurement lowers DUMMY-001 Max Case/Day 20 → 16. The destinations have to fit first, so D/S changes the mapping before: JAPAN 12 → 6, KOREA 8 → 10 (total 16, still ≤ 20 when saved).",
+    "acts": [
+     [
+      "10-Dec 09:00",
+      "RSARI",
+      "Export Crossdock Master: DUMMY-001 JAPAN 12 → 6, KOREA 8 → 10"
+     ],
+     [
+      "10-Dec 09:30",
+      "DANGGRAINI",
+      "Kanban Crossdock Master: DUMMY-001 Max 20 → 16"
+     ]
+    ],
+    "why": "OPERATION_TYPE 1: AP POLE still has Max 20 until the KANBAN file. The Export rows go first (EXPORT_PRE), the down row (ROW_ORDER 1) before the up row (2), so the total never passes the Max that AP POLE has at that moment.",
+    "wrong": [
+     "kanFirst",
+     "upFirst"
+    ]
+   },
+   "before": {
+    "DUMMY-001": {
+     "st": "Active",
+     "pcs": 12,
+     "max": 20,
+     "d": {
+      "JAPAN|**": 12,
+      "KOREA|**": 8
+     }
+    },
+    "DUMMY-002": {
+     "st": "Active",
+     "pcs": 10,
+     "max": 16,
+     "d": {
+      "TAIWAN|**": 10,
+      "USA|**": 6
+     }
+    },
+    "DUMMY-003": {
+     "st": "Active",
+     "pcs": 8,
+     "max": 10,
+     "d": {
+      "THAILAND|**": 10
+     }
+    },
+    "DUMMY-004": {
+     "st": "Candidate",
+     "pcs": 6,
+     "max": 20,
+     "d": {}
+    }
+   },
+   "after": {
+    "DUMMY-001": {
+     "st": "Active",
+     "pcs": 12,
+     "max": 16,
+     "d": {
+      "JAPAN|**": 6,
+      "KOREA|**": 10
+     }
+    },
+    "DUMMY-002": {
+     "st": "Active",
+     "pcs": 10,
+     "max": 16,
+     "d": {
+      "TAIWAN|**": 10,
+      "USA|**": 6
+     }
+    },
+    "DUMMY-003": {
+     "st": "Active",
+     "pcs": 8,
+     "max": 10,
+     "d": {
+      "THAILAND|**": 10
+     }
+    },
+    "DUMMY-004": {
+     "st": "Candidate",
+     "pcs": 6,
+     "max": 20,
+     "d": {}
+    }
+   },
+   "apBefore": {
+    "kan": {
+     "DUMMY-001": {
+      "202612": {
+       "pcs": 12,
+       "max": 20
+      }
+     },
+     "DUMMY-002": {
+      "202612": {
+       "pcs": 10,
+       "max": 16
+      }
+     },
+     "DUMMY-003": {
+      "202612": {
+       "pcs": 8,
+       "max": 10
+      }
+     }
+    },
+    "exp": {
+     "DUMMY-001": {
+      "JAPAN|**": {
+       "202612": 12
+      },
+      "KOREA|**": {
+       "202612": 8
+      }
+     },
+     "DUMMY-002": {
+      "TAIWAN|**": {
+       "202612": 10
+      },
+      "USA|**": {
+       "202612": 6
+      }
+     },
+     "DUMMY-003": {
+      "THAILAND|**": {
+       "202612": 10
+      }
+     }
+    }
+   },
+   "log": [
+    "NSP check (RSARI): DUMMY-001 202612 total Case/Day 16 ≤ Max 20 → save allowed",
+    "SP_STG_WRITE('EXPORT', '202612', 'DUMMY-001', JAPAN **, 6)\n  → E6 inserted, SYNC_STATUS 0; GTOPAS: no change for JAPAN",
+    "  header: no unsent Kanban row of DUMMY-001 202612 → K4 OPERATION_TYPE 5 (Kanban unchanged, current values, not uploaded)",
+    "SP_STG_WRITE('EXPORT', '202612', 'DUMMY-001', KOREA **, 10)\n  → E7 inserted, SYNC_STATUS 0; GTOPAS: no change for KOREA",
+    "NSP check (DANGGRAINI): DUMMY-001 202612 total Case/Day 16 ≤ Max 16 → save allowed",
+    "SP_STG_WRITE('KANBAN', '202612', 'DUMMY-001', Pcs 12, Max 16)\n  → K4 updated (one unsent row per key): OPERATION_TYPE 1 (last sent Max 20 in 202612)"
+   ],
+   "sync": [
+    "SP_STG_SYNC(SYNC_DT '2026-12-10 11:00:00', Current 202612, Next 202701, RSARI)\n  → AP POLE rows with SYNC_STATUS 0 of 202612 and 202701 → 1 with SYNC_DT = time of the click; GTOPAS rows of 202612 → 1; LAST_SYNC_DATE_APPOLE\n  → start the parent flow CDX_SYNC_PARENT (SYNC_DT 2026-12-10 11:00:00, RUN_TYPE SYNC)",
+    "Parent flow: SELECT COUNT(*) FROM V_GTOPAS_CROSSDOCK WHERE SYNC_DT = '2026-12-10 11:00:00' → 0 → scenario 2: XD07 at once",
+    "XD07 AP POLE: read the views for the run",
+    "View, file of the Export rows per part (Kanban row with the same SYNC_DT, part and period):",
+    "  DUMMY-001 202612: header K4, OPERATION_TYPE 1 → EXPORT_PRE (before KANBAN)",
+    "  KANBAN file (OPERATION_TYPE 1 to 4): K4",
+    "XD07: EXPORT_PRE (2) → KANBAN (1) → SUCCESS. E-mail SUCCESS (one per run)"
+   ],
+   "f": {
+    "run": "20261210110000",
+    "pre": [
+     {
+      "r": {
+       "id": 6,
+       "per": "202612",
+       "act": "EDIT",
+       "p": "DUMMY-001",
+       "d": "JAPAN",
+       "ot": "**",
+       "cd": 6,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "RSARI",
+       "dt": "10-Dec 09:00",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "file": "PRE",
+      "ro": 1,
+      "prev": 12,
+      "chk": {
+       "t": 14,
+       "mx": 20,
+       "ok": true
+      }
+     },
+     {
+      "r": {
+       "id": 7,
+       "per": "202612",
+       "act": "EDIT",
+       "p": "DUMMY-001",
+       "d": "KOREA",
+       "ot": "**",
+       "cd": 10,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "RSARI",
+       "dt": "10-Dec 09:00",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "file": "PRE",
+      "ro": 2,
+      "prev": 8,
+      "chk": {
+       "t": 16,
+       "mx": 20,
+       "ok": true
+      }
+     }
+    ],
+    "kan": [
+     {
+      "r": {
+       "id": 4,
+       "per": "202612",
+       "act": "EDIT",
+       "ps": "Active",
+       "p": "DUMMY-001",
+       "pcs": 12,
+       "max": 16,
+       "op": 1,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "RSARI",
+       "dt": "10-Dec 09:00",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "chk": {
+       "t": 16,
+       "mx": 16,
+       "ok": true
+      }
+     }
+    ],
+    "post": []
+   },
+   "ok": [
+    [
+     "e",
+     {
+      "r": {
+       "id": 6,
+       "per": "202612",
+       "act": "EDIT",
+       "p": "DUMMY-001",
+       "d": "JAPAN",
+       "ot": "**",
+       "cd": 6,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "RSARI",
+       "dt": "10-Dec 09:00",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "file": "PRE",
+      "ro": 1,
+      "prev": 12,
+      "chk": {
+       "t": 14,
+       "mx": 20,
+       "ok": true
+      }
+     },
+     1
+    ],
+    [
+     "e",
+     {
+      "r": {
+       "id": 7,
+       "per": "202612",
+       "act": "EDIT",
+       "p": "DUMMY-001",
+       "d": "KOREA",
+       "ot": "**",
+       "cd": 10,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "RSARI",
+       "dt": "10-Dec 09:00",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "file": "PRE",
+      "ro": 2,
+      "prev": 8,
+      "chk": {
+       "t": 16,
+       "mx": 20,
+       "ok": true
+      }
+     },
+     1
+    ],
+    [
+     "k",
+     {
+      "r": {
+       "id": 4,
+       "per": "202612",
+       "act": "EDIT",
+       "ps": "Active",
+       "p": "DUMMY-001",
+       "pcs": 12,
+       "max": 16,
+       "op": 1,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "RSARI",
+       "dt": "10-Dec 09:00",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "chk": {
+       "t": 16,
+       "mx": 16,
+       "ok": true
+      }
+     },
+     2
+    ]
+   ],
+   "wrong": [
+    {
+     "label": "KANBAN before the Export rows",
+     "rows": [
+      {
+       "kind": "k",
+       "x": {
+        "r": {
+         "id": 4,
+         "per": "202612",
+         "act": "EDIT",
+         "ps": "Active",
+         "p": "DUMMY-001",
+         "pcs": 12,
+         "max": 16,
+         "op": 1,
+         "st": 1,
+         "src": "SCREEN",
+         "by": "RSARI",
+         "dt": "10-Dec 09:00",
+         "run": "20261210110000",
+         "sdt": "10-Dec 11:00",
+         "seq": 2
+        },
+        "chk": {
+         "t": 16,
+         "mx": 16,
+         "ok": true
+        }
+       },
+       "chk": {
+        "t": 20,
+        "mx": 16,
+        "ok": false
+       }
+      },
+      {
+       "kind": "e",
+       "x": {
+        "r": {
+         "id": 6,
+         "per": "202612",
+         "act": "EDIT",
+         "p": "DUMMY-001",
+         "d": "JAPAN",
+         "ot": "**",
+         "cd": 6,
+         "st": 1,
+         "src": "SCREEN",
+         "by": "RSARI",
+         "dt": "10-Dec 09:00",
+         "run": "20261210110000",
+         "sdt": "10-Dec 11:00",
+         "seq": 2
+        },
+        "file": "PRE",
+        "ro": 1,
+        "prev": 12,
+        "chk": {
+         "t": 14,
+         "mx": 20,
+         "ok": true
+        }
+       },
+       "skip": true
+      },
+      {
+       "kind": "e",
+       "x": {
+        "r": {
+         "id": 7,
+         "per": "202612",
+         "act": "EDIT",
+         "p": "DUMMY-001",
+         "d": "KOREA",
+         "ot": "**",
+         "cd": 10,
+         "st": 1,
+         "src": "SCREEN",
+         "by": "RSARI",
+         "dt": "10-Dec 09:00",
+         "run": "20261210110000",
+         "sdt": "10-Dec 11:00",
+         "seq": 2
+        },
+        "file": "PRE",
+        "ro": 2,
+        "prev": 8,
+        "chk": {
+         "t": 16,
+         "mx": 20,
+         "ok": true
+        }
+       },
+       "skip": true
+      }
+     ]
+    },
+    {
+     "label": "up / ADD rows before down / DELETE rows (ROW_ORDER ignored)",
+     "rows": [
+      {
+       "kind": "e",
+       "x": {
+        "r": {
+         "id": 7,
+         "per": "202612",
+         "act": "EDIT",
+         "p": "DUMMY-001",
+         "d": "KOREA",
+         "ot": "**",
+         "cd": 10,
+         "st": 1,
+         "src": "SCREEN",
+         "by": "RSARI",
+         "dt": "10-Dec 09:00",
+         "run": "20261210110000",
+         "sdt": "10-Dec 11:00",
+         "seq": 2
+        },
+        "file": "PRE",
+        "ro": 2,
+        "prev": 8,
+        "chk": {
+         "t": 16,
+         "mx": 20,
+         "ok": true
+        }
+       },
+       "chk": {
+        "t": 22,
+        "mx": 20,
+        "ok": false
+       }
+      },
+      {
+       "kind": "e",
+       "x": {
+        "r": {
+         "id": 6,
+         "per": "202612",
+         "act": "EDIT",
+         "p": "DUMMY-001",
+         "d": "JAPAN",
+         "ot": "**",
+         "cd": 6,
+         "st": 1,
+         "src": "SCREEN",
+         "by": "RSARI",
+         "dt": "10-Dec 09:00",
+         "run": "20261210110000",
+         "sdt": "10-Dec 11:00",
+         "seq": 2
+        },
+        "file": "PRE",
+        "ro": 1,
+        "prev": 12,
+        "chk": {
+         "t": 14,
+         "mx": 20,
+         "ok": true
+        }
+       },
+       "skip": true
+      },
+      {
+       "kind": "k",
+       "x": {
+        "r": {
+         "id": 4,
+         "per": "202612",
+         "act": "EDIT",
+         "ps": "Active",
+         "p": "DUMMY-001",
+         "pcs": 12,
+         "max": 16,
+         "op": 1,
+         "st": 1,
+         "src": "SCREEN",
+         "by": "RSARI",
+         "dt": "10-Dec 09:00",
+         "run": "20261210110000",
+         "sdt": "10-Dec 11:00",
+         "seq": 2
+        },
+        "chk": {
+         "t": 16,
+         "mx": 16,
+         "ok": true
+        }
+       },
+       "skip": true
+      }
+     ]
+    }
+   ],
+   "rpa": {
+    "run": "20261210110000",
+    "type": "SYNC",
+    "sc": "2",
+    "gRows": 0,
+    "g": "skipped",
+    "gFail": [],
+    "ap": "SUCCESS",
+    "apFile": null,
+    "files": [
+     "EXPORT_PRE (2)",
+     "KANBAN (1)"
+    ]
+   },
+   "gsent": [],
+   "K": [
+    {
+     "id": 4,
+     "per": "202612",
+     "act": "EDIT",
+     "ps": "Active",
+     "p": "DUMMY-001",
+     "pcs": 12,
+     "max": 16,
+     "op": 1,
+     "st": 1,
+     "src": "SCREEN",
+     "by": "RSARI",
+     "dt": "10-Dec 09:00",
+     "run": "20261210110000",
+     "sdt": "10-Dec 11:00",
+     "seq": 2
+    }
+   ],
+   "E": [
+    {
+     "id": 6,
+     "per": "202612",
+     "act": "EDIT",
+     "p": "DUMMY-001",
+     "d": "JAPAN",
+     "ot": "**",
+     "cd": 6,
+     "st": 1,
+     "src": "SCREEN",
+     "by": "RSARI",
+     "dt": "10-Dec 09:00",
+     "run": "20261210110000",
+     "sdt": "10-Dec 11:00",
+     "seq": 2
+    },
+    {
+     "id": 7,
+     "per": "202612",
+     "act": "EDIT",
+     "p": "DUMMY-001",
+     "d": "KOREA",
+     "ot": "**",
+     "cd": 10,
+     "st": 1,
+     "src": "SCREEN",
+     "by": "RSARI",
+     "dt": "10-Dec 09:00",
+     "run": "20261210110000",
+     "sdt": "10-Dec 11:00",
+     "seq": 2
+    }
+   ],
+   "G": [],
+   "deleted": []
+  },
+  {
+   "s": {
+    "id": "max-up",
+    "ot": [
+     2
+    ],
+    "title": "Max goes up",
+    "short": "Max up",
+    "story": "Procurement raises DUMMY-002 Max 16 → 24, then D/S uses the room: TAIWAN 10 → 14, USA 6 → 10 (total 24).",
+    "acts": [
+     [
+      "10-Dec 09:00",
+      "DANGGRAINI",
+      "Kanban Crossdock Master: DUMMY-002 Max 16 → 24"
+     ],
+     [
+      "10-Dec 09:20",
+      "RSARI",
+      "Export Crossdock Master: DUMMY-002 TAIWAN 10 → 14, USA 6 → 10"
+     ]
+    ],
+    "why": "OPERATION_TYPE 2: the new Max goes first (KANBAN), then the destinations (EXPORT_POST). Sent the other way, TAIWAN 14 + USA 6 = 20 is above the old Max 16.",
+    "wrong": [
+     "expFirst"
+    ]
+   },
+   "before": {
+    "DUMMY-001": {
+     "st": "Active",
+     "pcs": 12,
+     "max": 20,
+     "d": {
+      "JAPAN|**": 12,
+      "KOREA|**": 8
+     }
+    },
+    "DUMMY-002": {
+     "st": "Active",
+     "pcs": 10,
+     "max": 16,
+     "d": {
+      "TAIWAN|**": 10,
+      "USA|**": 6
+     }
+    },
+    "DUMMY-003": {
+     "st": "Active",
+     "pcs": 8,
+     "max": 10,
+     "d": {
+      "THAILAND|**": 10
+     }
+    },
+    "DUMMY-004": {
+     "st": "Candidate",
+     "pcs": 6,
+     "max": 20,
+     "d": {}
+    }
+   },
+   "after": {
+    "DUMMY-001": {
+     "st": "Active",
+     "pcs": 12,
+     "max": 20,
+     "d": {
+      "JAPAN|**": 12,
+      "KOREA|**": 8
+     }
+    },
+    "DUMMY-002": {
+     "st": "Active",
+     "pcs": 10,
+     "max": 24,
+     "d": {
+      "TAIWAN|**": 14,
+      "USA|**": 10
+     }
+    },
+    "DUMMY-003": {
+     "st": "Active",
+     "pcs": 8,
+     "max": 10,
+     "d": {
+      "THAILAND|**": 10
+     }
+    },
+    "DUMMY-004": {
+     "st": "Candidate",
+     "pcs": 6,
+     "max": 20,
+     "d": {}
+    }
+   },
+   "apBefore": {
+    "kan": {
+     "DUMMY-001": {
+      "202612": {
+       "pcs": 12,
+       "max": 20
+      }
+     },
+     "DUMMY-002": {
+      "202612": {
+       "pcs": 10,
+       "max": 16
+      }
+     },
+     "DUMMY-003": {
+      "202612": {
+       "pcs": 8,
+       "max": 10
+      }
+     }
+    },
+    "exp": {
+     "DUMMY-001": {
+      "JAPAN|**": {
+       "202612": 12
+      },
+      "KOREA|**": {
+       "202612": 8
+      }
+     },
+     "DUMMY-002": {
+      "TAIWAN|**": {
+       "202612": 10
+      },
+      "USA|**": {
+       "202612": 6
+      }
+     },
+     "DUMMY-003": {
+      "THAILAND|**": {
+       "202612": 10
+      }
+     }
+    }
+   },
+   "log": [
+    "NSP check (DANGGRAINI): DUMMY-002 202612 total Case/Day 16 ≤ Max 24 → save allowed",
+    "SP_STG_WRITE('KANBAN', '202612', 'DUMMY-002', Pcs 10, Max 24)\n  → K4 inserted: OPERATION_TYPE 2 (last sent Max 16 in 202612), SYNC_STATUS 0",
+    "NSP check (RSARI): DUMMY-002 202612 total Case/Day 24 ≤ Max 24 → save allowed",
+    "SP_STG_WRITE('EXPORT', '202612', 'DUMMY-002', TAIWAN **, 14)\n  → E6 inserted, SYNC_STATUS 0; GTOPAS: no change for TAIWAN",
+    "SP_STG_WRITE('EXPORT', '202612', 'DUMMY-002', USA **, 10)\n  → E7 inserted, SYNC_STATUS 0; GTOPAS: no change for USA"
+   ],
+   "sync": [
+    "SP_STG_SYNC(SYNC_DT '2026-12-10 11:00:00', Current 202612, Next 202701, RSARI)\n  → AP POLE rows with SYNC_STATUS 0 of 202612 and 202701 → 1 with SYNC_DT = time of the click; GTOPAS rows of 202612 → 1; LAST_SYNC_DATE_APPOLE\n  → start the parent flow CDX_SYNC_PARENT (SYNC_DT 2026-12-10 11:00:00, RUN_TYPE SYNC)",
+    "Parent flow: SELECT COUNT(*) FROM V_GTOPAS_CROSSDOCK WHERE SYNC_DT = '2026-12-10 11:00:00' → 0 → scenario 2: XD07 at once",
+    "XD07 AP POLE: read the views for the run",
+    "View, file of the Export rows per part (Kanban row with the same SYNC_DT, part and period):",
+    "  DUMMY-002 202612: header K4, OPERATION_TYPE 2 → EXPORT_POST (after KANBAN)",
+    "  KANBAN file (OPERATION_TYPE 1 to 4): K4",
+    "XD07: KANBAN (1) → EXPORT_POST (2) → SUCCESS. E-mail SUCCESS (one per run)"
+   ],
+   "f": {
+    "run": "20261210110000",
+    "pre": [],
+    "kan": [
+     {
+      "r": {
+       "id": 4,
+       "per": "202612",
+       "act": "EDIT",
+       "ps": "Active",
+       "p": "DUMMY-002",
+       "pcs": 10,
+       "max": 24,
+       "op": 2,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "DANGGRAINI",
+       "dt": "10-Dec 09:00",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "chk": {
+       "t": 16,
+       "mx": 24,
+       "ok": true
+      }
+     }
+    ],
+    "post": [
+     {
+      "r": {
+       "id": 6,
+       "per": "202612",
+       "act": "EDIT",
+       "p": "DUMMY-002",
+       "d": "TAIWAN",
+       "ot": "**",
+       "cd": 14,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "RSARI",
+       "dt": "10-Dec 09:20",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "file": "POST",
+      "ro": 2,
+      "prev": 10,
+      "chk": {
+       "t": 20,
+       "mx": 24,
+       "ok": true
+      }
+     },
+     {
+      "r": {
+       "id": 7,
+       "per": "202612",
+       "act": "EDIT",
+       "p": "DUMMY-002",
+       "d": "USA",
+       "ot": "**",
+       "cd": 10,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "RSARI",
+       "dt": "10-Dec 09:20",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "file": "POST",
+      "ro": 2,
+      "prev": 6,
+      "chk": {
+       "t": 24,
+       "mx": 24,
+       "ok": true
+      }
+     }
+    ]
+   },
+   "ok": [
+    [
+     "k",
+     {
+      "r": {
+       "id": 4,
+       "per": "202612",
+       "act": "EDIT",
+       "ps": "Active",
+       "p": "DUMMY-002",
+       "pcs": 10,
+       "max": 24,
+       "op": 2,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "DANGGRAINI",
+       "dt": "10-Dec 09:00",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "chk": {
+       "t": 16,
+       "mx": 24,
+       "ok": true
+      }
+     },
+     2
+    ],
+    [
+     "e",
+     {
+      "r": {
+       "id": 6,
+       "per": "202612",
+       "act": "EDIT",
+       "p": "DUMMY-002",
+       "d": "TAIWAN",
+       "ot": "**",
+       "cd": 14,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "RSARI",
+       "dt": "10-Dec 09:20",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "file": "POST",
+      "ro": 2,
+      "prev": 10,
+      "chk": {
+       "t": 20,
+       "mx": 24,
+       "ok": true
+      }
+     },
+     3
+    ],
+    [
+     "e",
+     {
+      "r": {
+       "id": 7,
+       "per": "202612",
+       "act": "EDIT",
+       "p": "DUMMY-002",
+       "d": "USA",
+       "ot": "**",
+       "cd": 10,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "RSARI",
+       "dt": "10-Dec 09:20",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "file": "POST",
+      "ro": 2,
+      "prev": 6,
+      "chk": {
+       "t": 24,
+       "mx": 24,
+       "ok": true
+      }
+     },
+     3
+    ]
+   ],
+   "wrong": [
+    {
+     "label": "Export rows before KANBAN",
+     "rows": [
+      {
+       "kind": "e",
+       "x": {
+        "r": {
+         "id": 6,
+         "per": "202612",
+         "act": "EDIT",
+         "p": "DUMMY-002",
+         "d": "TAIWAN",
+         "ot": "**",
+         "cd": 14,
+         "st": 1,
+         "src": "SCREEN",
+         "by": "RSARI",
+         "dt": "10-Dec 09:20",
+         "run": "20261210110000",
+         "sdt": "10-Dec 11:00",
+         "seq": 2
+        },
+        "file": "POST",
+        "ro": 2,
+        "prev": 10,
+        "chk": {
+         "t": 20,
+         "mx": 24,
+         "ok": true
+        }
+       },
+       "chk": {
+        "t": 20,
+        "mx": 16,
+        "ok": false
+       }
+      },
+      {
+       "kind": "e",
+       "x": {
+        "r": {
+         "id": 7,
+         "per": "202612",
+         "act": "EDIT",
+         "p": "DUMMY-002",
+         "d": "USA",
+         "ot": "**",
+         "cd": 10,
+         "st": 1,
+         "src": "SCREEN",
+         "by": "RSARI",
+         "dt": "10-Dec 09:20",
+         "run": "20261210110000",
+         "sdt": "10-Dec 11:00",
+         "seq": 2
+        },
+        "file": "POST",
+        "ro": 2,
+        "prev": 6,
+        "chk": {
+         "t": 24,
+         "mx": 24,
+         "ok": true
+        }
+       },
+       "skip": true
+      },
+      {
+       "kind": "k",
+       "x": {
+        "r": {
+         "id": 4,
+         "per": "202612",
+         "act": "EDIT",
+         "ps": "Active",
+         "p": "DUMMY-002",
+         "pcs": 10,
+         "max": 24,
+         "op": 2,
+         "st": 1,
+         "src": "SCREEN",
+         "by": "DANGGRAINI",
+         "dt": "10-Dec 09:00",
+         "run": "20261210110000",
+         "sdt": "10-Dec 11:00",
+         "seq": 2
+        },
+        "chk": {
+         "t": 16,
+         "mx": 24,
+         "ok": true
+        }
+       },
+       "skip": true
+      }
+     ]
+    }
+   ],
+   "rpa": {
+    "run": "20261210110000",
+    "type": "SYNC",
+    "sc": "2",
+    "gRows": 0,
+    "g": "skipped",
+    "gFail": [],
+    "ap": "SUCCESS",
+    "apFile": null,
+    "files": [
+     "KANBAN (1)",
+     "EXPORT_POST (2)"
+    ]
+   },
+   "gsent": [],
+   "K": [
+    {
+     "id": 4,
+     "per": "202612",
+     "act": "EDIT",
+     "ps": "Active",
+     "p": "DUMMY-002",
+     "pcs": 10,
+     "max": 24,
+     "op": 2,
+     "st": 1,
+     "src": "SCREEN",
+     "by": "DANGGRAINI",
+     "dt": "10-Dec 09:00",
+     "run": "20261210110000",
+     "sdt": "10-Dec 11:00",
+     "seq": 2
+    }
+   ],
+   "E": [
+    {
+     "id": 6,
+     "per": "202612",
+     "act": "EDIT",
+     "p": "DUMMY-002",
+     "d": "TAIWAN",
+     "ot": "**",
+     "cd": 14,
+     "st": 1,
+     "src": "SCREEN",
+     "by": "RSARI",
+     "dt": "10-Dec 09:20",
+     "run": "20261210110000",
+     "sdt": "10-Dec 11:00",
+     "seq": 2
+    },
+    {
+     "id": 7,
+     "per": "202612",
+     "act": "EDIT",
+     "p": "DUMMY-002",
+     "d": "USA",
+     "ot": "**",
+     "cd": 10,
+     "st": 1,
+     "src": "SCREEN",
+     "by": "RSARI",
+     "dt": "10-Dec 09:20",
+     "run": "20261210110000",
+     "sdt": "10-Dec 11:00",
+     "seq": 2
+    }
+   ],
+   "G": [],
+   "deleted": []
+  },
+  {
+   "s": {
+    "id": "pcs-only",
+    "ot": [
+     3
+    ],
+    "title": "Only Pcs/Case changes",
+    "short": "Max same",
+    "story": "Procurement changes DUMMY-003 Pcs/Case 8 → 10. Max stays 10, the mapping does not change.",
+    "acts": [
+     [
+      "10-Dec 09:00",
+      "DANGGRAINI",
+      "Kanban Crossdock Master: DUMMY-003 Pcs/Case 8 → 10"
+     ]
+    ],
+    "why": "OPERATION_TYPE 3: Max is the same, so the order does not matter for the check. The part has no Export row in the run: only file 2 KANBAN is made.",
+    "wrong": []
+   },
+   "before": {
+    "DUMMY-001": {
+     "st": "Active",
+     "pcs": 12,
+     "max": 20,
+     "d": {
+      "JAPAN|**": 12,
+      "KOREA|**": 8
+     }
+    },
+    "DUMMY-002": {
+     "st": "Active",
+     "pcs": 10,
+     "max": 16,
+     "d": {
+      "TAIWAN|**": 10,
+      "USA|**": 6
+     }
+    },
+    "DUMMY-003": {
+     "st": "Active",
+     "pcs": 8,
+     "max": 10,
+     "d": {
+      "THAILAND|**": 10
+     }
+    },
+    "DUMMY-004": {
+     "st": "Candidate",
+     "pcs": 6,
+     "max": 20,
+     "d": {}
+    }
+   },
+   "after": {
+    "DUMMY-001": {
+     "st": "Active",
+     "pcs": 12,
+     "max": 20,
+     "d": {
+      "JAPAN|**": 12,
+      "KOREA|**": 8
+     }
+    },
+    "DUMMY-002": {
+     "st": "Active",
+     "pcs": 10,
+     "max": 16,
+     "d": {
+      "TAIWAN|**": 10,
+      "USA|**": 6
+     }
+    },
+    "DUMMY-003": {
+     "st": "Active",
+     "pcs": 10,
+     "max": 10,
+     "d": {
+      "THAILAND|**": 10
+     }
+    },
+    "DUMMY-004": {
+     "st": "Candidate",
+     "pcs": 6,
+     "max": 20,
+     "d": {}
+    }
+   },
+   "apBefore": {
+    "kan": {
+     "DUMMY-001": {
+      "202612": {
+       "pcs": 12,
+       "max": 20
+      }
+     },
+     "DUMMY-002": {
+      "202612": {
+       "pcs": 10,
+       "max": 16
+      }
+     },
+     "DUMMY-003": {
+      "202612": {
+       "pcs": 8,
+       "max": 10
+      }
+     }
+    },
+    "exp": {
+     "DUMMY-001": {
+      "JAPAN|**": {
+       "202612": 12
+      },
+      "KOREA|**": {
+       "202612": 8
+      }
+     },
+     "DUMMY-002": {
+      "TAIWAN|**": {
+       "202612": 10
+      },
+      "USA|**": {
+       "202612": 6
+      }
+     },
+     "DUMMY-003": {
+      "THAILAND|**": {
+       "202612": 10
+      }
+     }
+    }
+   },
+   "log": [
+    "NSP check (DANGGRAINI): DUMMY-003 202612 total Case/Day 10 ≤ Max 10 → save allowed",
+    "SP_STG_WRITE('KANBAN', '202612', 'DUMMY-003', Pcs 10, Max 10)\n  → K4 inserted: OPERATION_TYPE 3 (last sent Max 10 in 202612), SYNC_STATUS 0"
+   ],
+   "sync": [
+    "SP_STG_SYNC(SYNC_DT '2026-12-10 11:00:00', Current 202612, Next 202701, RSARI)\n  → AP POLE rows with SYNC_STATUS 0 of 202612 and 202701 → 1 with SYNC_DT = time of the click; GTOPAS rows of 202612 → 1; LAST_SYNC_DATE_APPOLE\n  → start the parent flow CDX_SYNC_PARENT (SYNC_DT 2026-12-10 11:00:00, RUN_TYPE SYNC)",
+    "Parent flow: SELECT COUNT(*) FROM V_GTOPAS_CROSSDOCK WHERE SYNC_DT = '2026-12-10 11:00:00' → 0 → scenario 2: XD07 at once",
+    "XD07 AP POLE: read the views for the run",
+    "View, file of the Export rows per part (Kanban row with the same SYNC_DT, part and period):",
+    "  no Export row in this run",
+    "  KANBAN file (OPERATION_TYPE 1 to 4): K4",
+    "XD07: KANBAN (1) → SUCCESS. E-mail SUCCESS (one per run)"
+   ],
+   "f": {
+    "run": "20261210110000",
+    "pre": [],
+    "kan": [
+     {
+      "r": {
+       "id": 4,
+       "per": "202612",
+       "act": "EDIT",
+       "ps": "Active",
+       "p": "DUMMY-003",
+       "pcs": 10,
+       "max": 10,
+       "op": 3,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "DANGGRAINI",
+       "dt": "10-Dec 09:00",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "chk": {
+       "t": 10,
+       "mx": 10,
+       "ok": true
+      }
+     }
+    ],
+    "post": []
+   },
+   "ok": [
+    [
+     "k",
+     {
+      "r": {
+       "id": 4,
+       "per": "202612",
+       "act": "EDIT",
+       "ps": "Active",
+       "p": "DUMMY-003",
+       "pcs": 10,
+       "max": 10,
+       "op": 3,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "DANGGRAINI",
+       "dt": "10-Dec 09:00",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "chk": {
+       "t": 10,
+       "mx": 10,
+       "ok": true
+      }
+     },
+     2
+    ]
+   ],
+   "wrong": [],
+   "rpa": {
+    "run": "20261210110000",
+    "type": "SYNC",
+    "sc": "2",
+    "gRows": 0,
+    "g": "skipped",
+    "gFail": [],
+    "ap": "SUCCESS",
+    "apFile": null,
+    "files": [
+     "KANBAN (1)"
+    ]
+   },
+   "gsent": [],
+   "K": [
+    {
+     "id": 4,
+     "per": "202612",
+     "act": "EDIT",
+     "ps": "Active",
+     "p": "DUMMY-003",
+     "pcs": 10,
+     "max": 10,
+     "op": 3,
+     "st": 1,
+     "src": "SCREEN",
+     "by": "DANGGRAINI",
+     "dt": "10-Dec 09:00",
+     "run": "20261210110000",
+     "sdt": "10-Dec 11:00",
+     "seq": 2
+    }
+   ],
+   "E": [],
+   "G": [],
+   "deleted": []
+  },
+  {
+   "s": {
+    "id": "new-part",
+    "ot": [
+     4
+    ],
+    "title": "New part, never sent",
+    "short": "New part",
+    "story": "Procurement makes DUMMY-004 Active (was Candidate, never sent), then D/S maps it: KOREA 12, USA 8.",
+    "acts": [
+     [
+      "10-Dec 09:00",
+      "DANGGRAINI",
+      "Kanban Crossdock Master: DUMMY-004 Candidate → Active"
+     ],
+     [
+      "10-Dec 09:15",
+      "RSARI",
+      "Export Crossdock Master: DUMMY-004 KOREA 12, USA 8"
+     ]
+    ],
+    "why": "OPERATION_TYPE 4: AP POLE does not know the part yet, so KANBAN goes first, then EXPORT_POST. The run has GTOPAS rows (two new destinations): scenario 1, XD06 runs before XD07.",
+    "wrong": [
+     "expFirst"
+    ]
+   },
+   "before": {
+    "DUMMY-001": {
+     "st": "Active",
+     "pcs": 12,
+     "max": 20,
+     "d": {
+      "JAPAN|**": 12,
+      "KOREA|**": 8
+     }
+    },
+    "DUMMY-002": {
+     "st": "Active",
+     "pcs": 10,
+     "max": 16,
+     "d": {
+      "TAIWAN|**": 10,
+      "USA|**": 6
+     }
+    },
+    "DUMMY-003": {
+     "st": "Active",
+     "pcs": 8,
+     "max": 10,
+     "d": {
+      "THAILAND|**": 10
+     }
+    },
+    "DUMMY-004": {
+     "st": "Candidate",
+     "pcs": 6,
+     "max": 20,
+     "d": {}
+    }
+   },
+   "after": {
+    "DUMMY-001": {
+     "st": "Active",
+     "pcs": 12,
+     "max": 20,
+     "d": {
+      "JAPAN|**": 12,
+      "KOREA|**": 8
+     }
+    },
+    "DUMMY-002": {
+     "st": "Active",
+     "pcs": 10,
+     "max": 16,
+     "d": {
+      "TAIWAN|**": 10,
+      "USA|**": 6
+     }
+    },
+    "DUMMY-003": {
+     "st": "Active",
+     "pcs": 8,
+     "max": 10,
+     "d": {
+      "THAILAND|**": 10
+     }
+    },
+    "DUMMY-004": {
+     "st": "Active",
+     "pcs": 6,
+     "max": 20,
+     "d": {
+      "KOREA|**": 12,
+      "USA|**": 8
+     }
+    }
+   },
+   "apBefore": {
+    "kan": {
+     "DUMMY-001": {
+      "202612": {
+       "pcs": 12,
+       "max": 20
+      }
+     },
+     "DUMMY-002": {
+      "202612": {
+       "pcs": 10,
+       "max": 16
+      }
+     },
+     "DUMMY-003": {
+      "202612": {
+       "pcs": 8,
+       "max": 10
+      }
+     }
+    },
+    "exp": {
+     "DUMMY-001": {
+      "JAPAN|**": {
+       "202612": 12
+      },
+      "KOREA|**": {
+       "202612": 8
+      }
+     },
+     "DUMMY-002": {
+      "TAIWAN|**": {
+       "202612": 10
+      },
+      "USA|**": {
+       "202612": 6
+      }
+     },
+     "DUMMY-003": {
+      "THAILAND|**": {
+       "202612": 10
+      }
+     }
+    }
+   },
+   "log": [
+    "NSP check (DANGGRAINI): DUMMY-004 202612 total Case/Day 0 ≤ Max 20 → save allowed",
+    "SP_STG_WRITE('KANBAN', '202612', 'DUMMY-004', Pcs 6, Max 20)\n  → K4 inserted: OPERATION_TYPE 4 (never sent), SYNC_STATUS 0",
+    "NSP check (RSARI): DUMMY-004 202612 total Case/Day 20 ≤ Max 20 → save allowed",
+    "SP_STG_WRITE('EXPORT', '202612', 'DUMMY-004', KOREA **, 12)\n  → E6 inserted, SYNC_STATUS 0; GTOPAS G6 ADD inserted",
+    "SP_STG_WRITE('EXPORT', '202612', 'DUMMY-004', USA **, 8)\n  → E7 inserted, SYNC_STATUS 0; GTOPAS G7 ADD inserted"
+   ],
+   "sync": [
+    "SP_STG_SYNC(SYNC_DT '2026-12-10 11:00:00', Current 202612, Next 202701, RSARI)\n  → AP POLE rows with SYNC_STATUS 0 of 202612 and 202701 → 1 with SYNC_DT = time of the click; GTOPAS rows of 202612 → 1; LAST_SYNC_DATE_APPOLE\n  → start the parent flow CDX_SYNC_PARENT (SYNC_DT 2026-12-10 11:00:00, RUN_TYPE SYNC)",
+    "Parent flow: SELECT COUNT(*) FROM V_GTOPAS_CROSSDOCK WHERE SYNC_DT = '2026-12-10 11:00:00' → 2 → scenario 1: XD06 first, XD07 only when GTOPAS succeeded",
+    "XD06 GTOPAS: 2 row(s), 2 OK",
+    "XD07 AP POLE: read the views for the run",
+    "View, file of the Export rows per part (Kanban row with the same SYNC_DT, part and period):",
+    "  DUMMY-004 202612: header K4, OPERATION_TYPE 4 → EXPORT_POST (after KANBAN)",
+    "  KANBAN file (OPERATION_TYPE 1 to 4): K4",
+    "XD07: KANBAN (1) → EXPORT_POST (2) → SUCCESS. E-mail SUCCESS (one per run)"
+   ],
+   "f": {
+    "run": "20261210110000",
+    "pre": [],
+    "kan": [
+     {
+      "r": {
+       "id": 4,
+       "per": "202612",
+       "act": "ADD",
+       "ps": "Active",
+       "p": "DUMMY-004",
+       "pcs": 6,
+       "max": 20,
+       "op": 4,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "DANGGRAINI",
+       "dt": "10-Dec 09:00",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "chk": {
+       "t": 0,
+       "mx": 20,
+       "ok": true
+      }
+     }
+    ],
+    "post": [
+     {
+      "r": {
+       "id": 6,
+       "per": "202612",
+       "act": "ADD",
+       "p": "DUMMY-004",
+       "d": "KOREA",
+       "ot": "**",
+       "cd": 12,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "RSARI",
+       "dt": "10-Dec 09:15",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "file": "POST",
+      "ro": 2,
+      "prev": null,
+      "chk": {
+       "t": 12,
+       "mx": 20,
+       "ok": true
+      }
+     },
+     {
+      "r": {
+       "id": 7,
+       "per": "202612",
+       "act": "ADD",
+       "p": "DUMMY-004",
+       "d": "USA",
+       "ot": "**",
+       "cd": 8,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "RSARI",
+       "dt": "10-Dec 09:15",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "file": "POST",
+      "ro": 2,
+      "prev": null,
+      "chk": {
+       "t": 20,
+       "mx": 20,
+       "ok": true
+      }
+     }
+    ]
+   },
+   "ok": [
+    [
+     "k",
+     {
+      "r": {
+       "id": 4,
+       "per": "202612",
+       "act": "ADD",
+       "ps": "Active",
+       "p": "DUMMY-004",
+       "pcs": 6,
+       "max": 20,
+       "op": 4,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "DANGGRAINI",
+       "dt": "10-Dec 09:00",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "chk": {
+       "t": 0,
+       "mx": 20,
+       "ok": true
+      }
+     },
+     2
+    ],
+    [
+     "e",
+     {
+      "r": {
+       "id": 6,
+       "per": "202612",
+       "act": "ADD",
+       "p": "DUMMY-004",
+       "d": "KOREA",
+       "ot": "**",
+       "cd": 12,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "RSARI",
+       "dt": "10-Dec 09:15",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "file": "POST",
+      "ro": 2,
+      "prev": null,
+      "chk": {
+       "t": 12,
+       "mx": 20,
+       "ok": true
+      }
+     },
+     3
+    ],
+    [
+     "e",
+     {
+      "r": {
+       "id": 7,
+       "per": "202612",
+       "act": "ADD",
+       "p": "DUMMY-004",
+       "d": "USA",
+       "ot": "**",
+       "cd": 8,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "RSARI",
+       "dt": "10-Dec 09:15",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "file": "POST",
+      "ro": 2,
+      "prev": null,
+      "chk": {
+       "t": 20,
+       "mx": 20,
+       "ok": true
+      }
+     },
+     3
+    ]
+   ],
+   "wrong": [
+    {
+     "label": "Export rows before KANBAN",
+     "rows": [
+      {
+       "kind": "e",
+       "x": {
+        "r": {
+         "id": 6,
+         "per": "202612",
+         "act": "ADD",
+         "p": "DUMMY-004",
+         "d": "KOREA",
+         "ot": "**",
+         "cd": 12,
+         "st": 1,
+         "src": "SCREEN",
+         "by": "RSARI",
+         "dt": "10-Dec 09:15",
+         "run": "20261210110000",
+         "sdt": "10-Dec 11:00",
+         "seq": 2
+        },
+        "file": "POST",
+        "ro": 2,
+        "prev": null,
+        "chk": {
+         "t": 12,
+         "mx": 20,
+         "ok": true
+        }
+       },
+       "chk": {
+        "t": 12,
+        "ok": false
+       }
+      },
+      {
+       "kind": "e",
+       "x": {
+        "r": {
+         "id": 7,
+         "per": "202612",
+         "act": "ADD",
+         "p": "DUMMY-004",
+         "d": "USA",
+         "ot": "**",
+         "cd": 8,
+         "st": 1,
+         "src": "SCREEN",
+         "by": "RSARI",
+         "dt": "10-Dec 09:15",
+         "run": "20261210110000",
+         "sdt": "10-Dec 11:00",
+         "seq": 2
+        },
+        "file": "POST",
+        "ro": 2,
+        "prev": null,
+        "chk": {
+         "t": 20,
+         "mx": 20,
+         "ok": true
+        }
+       },
+       "skip": true
+      },
+      {
+       "kind": "k",
+       "x": {
+        "r": {
+         "id": 4,
+         "per": "202612",
+         "act": "ADD",
+         "ps": "Active",
+         "p": "DUMMY-004",
+         "pcs": 6,
+         "max": 20,
+         "op": 4,
+         "st": 1,
+         "src": "SCREEN",
+         "by": "DANGGRAINI",
+         "dt": "10-Dec 09:00",
+         "run": "20261210110000",
+         "sdt": "10-Dec 11:00",
+         "seq": 2
+        },
+        "chk": {
+         "t": 0,
+         "mx": 20,
+         "ok": true
+        }
+       },
+       "skip": true
+      }
+     ]
+    }
+   ],
+   "rpa": {
+    "run": "20261210110000",
+    "type": "SYNC",
+    "sc": "1",
+    "gRows": 2,
+    "g": "SUCCESS",
+    "gFail": [],
+    "ap": "SUCCESS",
+    "apFile": null,
+    "files": [
+     "KANBAN (1)",
+     "EXPORT_POST (2)"
+    ]
+   },
+   "gsent": [
+    {
+     "id": 6,
+     "per": "202612",
+     "act": "ADD",
+     "p": "DUMMY-004",
+     "d": "KOREA",
+     "st": 1,
+     "src": "SCREEN",
+     "by": "RSARI",
+     "dt": "10-Dec 09:15",
+     "run": "20261210110000",
+     "sdt": "10-Dec 11:00",
+     "seq": 2,
+     "res": "OK"
+    },
+    {
+     "id": 7,
+     "per": "202612",
+     "act": "ADD",
+     "p": "DUMMY-004",
+     "d": "USA",
+     "st": 1,
+     "src": "SCREEN",
+     "by": "RSARI",
+     "dt": "10-Dec 09:15",
+     "run": "20261210110000",
+     "sdt": "10-Dec 11:00",
+     "seq": 2,
+     "res": "OK"
+    }
+   ],
+   "K": [
+    {
+     "id": 4,
+     "per": "202612",
+     "act": "ADD",
+     "ps": "Active",
+     "p": "DUMMY-004",
+     "pcs": 6,
+     "max": 20,
+     "op": 4,
+     "st": 1,
+     "src": "SCREEN",
+     "by": "DANGGRAINI",
+     "dt": "10-Dec 09:00",
+     "run": "20261210110000",
+     "sdt": "10-Dec 11:00",
+     "seq": 2
+    }
+   ],
+   "E": [
+    {
+     "id": 6,
+     "per": "202612",
+     "act": "ADD",
+     "p": "DUMMY-004",
+     "d": "KOREA",
+     "ot": "**",
+     "cd": 12,
+     "st": 1,
+     "src": "SCREEN",
+     "by": "RSARI",
+     "dt": "10-Dec 09:15",
+     "run": "20261210110000",
+     "sdt": "10-Dec 11:00",
+     "seq": 2
+    },
+    {
+     "id": 7,
+     "per": "202612",
+     "act": "ADD",
+     "p": "DUMMY-004",
+     "d": "USA",
+     "ot": "**",
+     "cd": 8,
+     "st": 1,
+     "src": "SCREEN",
+     "by": "RSARI",
+     "dt": "10-Dec 09:15",
+     "run": "20261210110000",
+     "sdt": "10-Dec 11:00",
+     "seq": 2
+    }
+   ],
+   "G": [
+    {
+     "id": 6,
+     "per": "202612",
+     "act": "ADD",
+     "p": "DUMMY-004",
+     "d": "KOREA",
+     "st": 1,
+     "src": "SCREEN",
+     "by": "RSARI",
+     "dt": "10-Dec 09:15",
+     "run": "20261210110000",
+     "sdt": "10-Dec 11:00",
+     "seq": 2
+    },
+    {
+     "id": 7,
+     "per": "202612",
+     "act": "ADD",
+     "p": "DUMMY-004",
+     "d": "USA",
+     "st": 1,
+     "src": "SCREEN",
+     "by": "RSARI",
+     "dt": "10-Dec 09:15",
+     "run": "20261210110000",
+     "sdt": "10-Dec 11:00",
+     "seq": 2
+    }
+   ],
+   "deleted": []
+  },
+  {
+   "s": {
+    "id": "dest-only",
+    "ot": [
+     5
+    ],
+    "title": "Only the destinations change",
+    "short": "Destinations only",
+    "story": "D/S changes DUMMY-002 only: USA 6 → 4 and adds THAILAND 2 (total 16 = Max). Pcs/Case and Max do not change.",
+    "acts": [
+     [
+      "10-Dec 09:00",
+      "RSARI",
+      "Export Crossdock Master: DUMMY-002 USA 6 → 4, THAILAND new 2"
+     ]
+    ],
+    "why": "OPERATION_TYPE 5: SP_STG_WRITE writes a header row (ACTION KEEP) with the current Kanban values. The header is not uploaded: only EXPORT_POST, USA (down, ROW_ORDER 1) before THAILAND (add, 2). THAILAND is a new destination: GTOPAS ADD, scenario 1.",
+    "wrong": [
+     "upFirst"
+    ]
+   },
+   "before": {
+    "DUMMY-001": {
+     "st": "Active",
+     "pcs": 12,
+     "max": 20,
+     "d": {
+      "JAPAN|**": 12,
+      "KOREA|**": 8
+     }
+    },
+    "DUMMY-002": {
+     "st": "Active",
+     "pcs": 10,
+     "max": 16,
+     "d": {
+      "TAIWAN|**": 10,
+      "USA|**": 6
+     }
+    },
+    "DUMMY-003": {
+     "st": "Active",
+     "pcs": 8,
+     "max": 10,
+     "d": {
+      "THAILAND|**": 10
+     }
+    },
+    "DUMMY-004": {
+     "st": "Candidate",
+     "pcs": 6,
+     "max": 20,
+     "d": {}
+    }
+   },
+   "after": {
+    "DUMMY-001": {
+     "st": "Active",
+     "pcs": 12,
+     "max": 20,
+     "d": {
+      "JAPAN|**": 12,
+      "KOREA|**": 8
+     }
+    },
+    "DUMMY-002": {
+     "st": "Active",
+     "pcs": 10,
+     "max": 16,
+     "d": {
+      "TAIWAN|**": 10,
+      "USA|**": 4,
+      "THAILAND|**": 2
+     }
+    },
+    "DUMMY-003": {
+     "st": "Active",
+     "pcs": 8,
+     "max": 10,
+     "d": {
+      "THAILAND|**": 10
+     }
+    },
+    "DUMMY-004": {
+     "st": "Candidate",
+     "pcs": 6,
+     "max": 20,
+     "d": {}
+    }
+   },
+   "apBefore": {
+    "kan": {
+     "DUMMY-001": {
+      "202612": {
+       "pcs": 12,
+       "max": 20
+      }
+     },
+     "DUMMY-002": {
+      "202612": {
+       "pcs": 10,
+       "max": 16
+      }
+     },
+     "DUMMY-003": {
+      "202612": {
+       "pcs": 8,
+       "max": 10
+      }
+     }
+    },
+    "exp": {
+     "DUMMY-001": {
+      "JAPAN|**": {
+       "202612": 12
+      },
+      "KOREA|**": {
+       "202612": 8
+      }
+     },
+     "DUMMY-002": {
+      "TAIWAN|**": {
+       "202612": 10
+      },
+      "USA|**": {
+       "202612": 6
+      }
+     },
+     "DUMMY-003": {
+      "THAILAND|**": {
+       "202612": 10
+      }
+     }
+    }
+   },
+   "log": [
+    "NSP check (RSARI): DUMMY-002 202612 total Case/Day 16 ≤ Max 16 → save allowed",
+    "SP_STG_WRITE('EXPORT', '202612', 'DUMMY-002', USA **, 4)\n  → E6 inserted, SYNC_STATUS 0; GTOPAS: no change for USA",
+    "  header: no unsent Kanban row of DUMMY-002 202612 → K4 OPERATION_TYPE 5 (Kanban unchanged, current values, not uploaded)",
+    "SP_STG_WRITE('EXPORT', '202612', 'DUMMY-002', THAILAND **, 2)\n  → E7 inserted, SYNC_STATUS 0; GTOPAS G6 ADD inserted"
+   ],
+   "sync": [
+    "SP_STG_SYNC(SYNC_DT '2026-12-10 11:00:00', Current 202612, Next 202701, RSARI)\n  → AP POLE rows with SYNC_STATUS 0 of 202612 and 202701 → 1 with SYNC_DT = time of the click; GTOPAS rows of 202612 → 1; LAST_SYNC_DATE_APPOLE\n  → start the parent flow CDX_SYNC_PARENT (SYNC_DT 2026-12-10 11:00:00, RUN_TYPE SYNC)",
+    "Parent flow: SELECT COUNT(*) FROM V_GTOPAS_CROSSDOCK WHERE SYNC_DT = '2026-12-10 11:00:00' → 1 → scenario 1: XD06 first, XD07 only when GTOPAS succeeded",
+    "XD06 GTOPAS: 1 row(s), 1 OK",
+    "XD07 AP POLE: read the views for the run",
+    "View, file of the Export rows per part (Kanban row with the same SYNC_DT, part and period):",
+    "  DUMMY-002 202612: header K4, OPERATION_TYPE 5 → EXPORT_POST only (header not in the KANBAN file)",
+    "  no Kanban row with OPERATION_TYPE 1 to 4 in this run → no KANBAN file",
+    "XD07: EXPORT_POST (2) → SUCCESS. E-mail SUCCESS (one per run)"
+   ],
+   "f": {
+    "run": "20261210110000",
+    "pre": [],
+    "kan": [],
+    "post": [
+     {
+      "r": {
+       "id": 6,
+       "per": "202612",
+       "act": "EDIT",
+       "p": "DUMMY-002",
+       "d": "USA",
+       "ot": "**",
+       "cd": 4,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "RSARI",
+       "dt": "10-Dec 09:00",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "file": "POST",
+      "ro": 1,
+      "prev": 6,
+      "chk": {
+       "t": 14,
+       "mx": 16,
+       "ok": true
+      }
+     },
+     {
+      "r": {
+       "id": 7,
+       "per": "202612",
+       "act": "ADD",
+       "p": "DUMMY-002",
+       "d": "THAILAND",
+       "ot": "**",
+       "cd": 2,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "RSARI",
+       "dt": "10-Dec 09:00",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "file": "POST",
+      "ro": 2,
+      "prev": null,
+      "chk": {
+       "t": 16,
+       "mx": 16,
+       "ok": true
+      }
+     }
+    ]
+   },
+   "ok": [
+    [
+     "e",
+     {
+      "r": {
+       "id": 6,
+       "per": "202612",
+       "act": "EDIT",
+       "p": "DUMMY-002",
+       "d": "USA",
+       "ot": "**",
+       "cd": 4,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "RSARI",
+       "dt": "10-Dec 09:00",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "file": "POST",
+      "ro": 1,
+      "prev": 6,
+      "chk": {
+       "t": 14,
+       "mx": 16,
+       "ok": true
+      }
+     },
+     3
+    ],
+    [
+     "e",
+     {
+      "r": {
+       "id": 7,
+       "per": "202612",
+       "act": "ADD",
+       "p": "DUMMY-002",
+       "d": "THAILAND",
+       "ot": "**",
+       "cd": 2,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "RSARI",
+       "dt": "10-Dec 09:00",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "file": "POST",
+      "ro": 2,
+      "prev": null,
+      "chk": {
+       "t": 16,
+       "mx": 16,
+       "ok": true
+      }
+     },
+     3
+    ]
+   ],
+   "wrong": [
+    {
+     "label": "up / ADD rows before down / DELETE rows (ROW_ORDER ignored)",
+     "rows": [
+      {
+       "kind": "e",
+       "x": {
+        "r": {
+         "id": 7,
+         "per": "202612",
+         "act": "ADD",
+         "p": "DUMMY-002",
+         "d": "THAILAND",
+         "ot": "**",
+         "cd": 2,
+         "st": 1,
+         "src": "SCREEN",
+         "by": "RSARI",
+         "dt": "10-Dec 09:00",
+         "run": "20261210110000",
+         "sdt": "10-Dec 11:00",
+         "seq": 2
+        },
+        "file": "POST",
+        "ro": 2,
+        "prev": null,
+        "chk": {
+         "t": 16,
+         "mx": 16,
+         "ok": true
+        }
+       },
+       "chk": {
+        "t": 18,
+        "mx": 16,
+        "ok": false
+       }
+      },
+      {
+       "kind": "e",
+       "x": {
+        "r": {
+         "id": 6,
+         "per": "202612",
+         "act": "EDIT",
+         "p": "DUMMY-002",
+         "d": "USA",
+         "ot": "**",
+         "cd": 4,
+         "st": 1,
+         "src": "SCREEN",
+         "by": "RSARI",
+         "dt": "10-Dec 09:00",
+         "run": "20261210110000",
+         "sdt": "10-Dec 11:00",
+         "seq": 2
+        },
+        "file": "POST",
+        "ro": 1,
+        "prev": 6,
+        "chk": {
+         "t": 14,
+         "mx": 16,
+         "ok": true
+        }
+       },
+       "skip": true
+      }
+     ]
+    }
+   ],
+   "rpa": {
+    "run": "20261210110000",
+    "type": "SYNC",
+    "sc": "1",
+    "gRows": 1,
+    "g": "SUCCESS",
+    "gFail": [],
+    "ap": "SUCCESS",
+    "apFile": null,
+    "files": [
+     "EXPORT_POST (2)"
+    ]
+   },
+   "gsent": [
+    {
+     "id": 6,
+     "per": "202612",
+     "act": "ADD",
+     "p": "DUMMY-002",
+     "d": "THAILAND",
+     "st": 1,
+     "src": "SCREEN",
+     "by": "RSARI",
+     "dt": "10-Dec 09:00",
+     "run": "20261210110000",
+     "sdt": "10-Dec 11:00",
+     "seq": 2,
+     "res": "OK"
+    }
+   ],
+   "K": [
+    {
+     "id": 4,
+     "per": "202612",
+     "act": "KEEP",
+     "ps": "Active",
+     "p": "DUMMY-002",
+     "pcs": 10,
+     "max": 16,
+     "op": 5,
+     "st": 1,
+     "src": "SCREEN",
+     "by": "RSARI",
+     "dt": "10-Dec 09:00",
+     "run": "20261210110000",
+     "sdt": "10-Dec 11:00",
+     "seq": 2
+    }
+   ],
+   "E": [
+    {
+     "id": 6,
+     "per": "202612",
+     "act": "EDIT",
+     "p": "DUMMY-002",
+     "d": "USA",
+     "ot": "**",
+     "cd": 4,
+     "st": 1,
+     "src": "SCREEN",
+     "by": "RSARI",
+     "dt": "10-Dec 09:00",
+     "run": "20261210110000",
+     "sdt": "10-Dec 11:00",
+     "seq": 2
+    },
+    {
+     "id": 7,
+     "per": "202612",
+     "act": "ADD",
+     "p": "DUMMY-002",
+     "d": "THAILAND",
+     "ot": "**",
+     "cd": 2,
+     "st": 1,
+     "src": "SCREEN",
+     "by": "RSARI",
+     "dt": "10-Dec 09:00",
+     "run": "20261210110000",
+     "sdt": "10-Dec 11:00",
+     "seq": 2
+    }
+   ],
+   "G": [
+    {
+     "id": 6,
+     "per": "202612",
+     "act": "ADD",
+     "p": "DUMMY-002",
+     "d": "THAILAND",
+     "st": 1,
+     "src": "SCREEN",
+     "by": "RSARI",
+     "dt": "10-Dec 09:00",
+     "run": "20261210110000",
+     "sdt": "10-Dec 11:00",
+     "seq": 2
+    }
+   ],
+   "deleted": []
+  },
+  {
+   "s": {
+    "id": "order-type",
+    "ot": [
+     5
+    ],
+    "title": "Order Type changes",
+    "short": "Order Type",
+    "story": "D/S changes DUMMY-001 JAPAN from order type ** to C, same 12.",
+    "acts": [
+     [
+      "10-Dec 09:00",
+      "RSARI",
+      "Export Crossdock Master: DUMMY-001 JAPAN order type ** → C"
+     ]
+    ],
+    "why": "Order type is part of the AP POLE key: DELETE (0) of JAPAN ** first, then ADD of JAPAN C, in the same file. GTOPAS keys on part + destination only: JAPAN stays, no GTOPAS row, scenario 2.",
+    "wrong": [
+     "upFirst"
+    ]
+   },
+   "before": {
+    "DUMMY-001": {
+     "st": "Active",
+     "pcs": 12,
+     "max": 20,
+     "d": {
+      "JAPAN|**": 12,
+      "KOREA|**": 8
+     }
+    },
+    "DUMMY-002": {
+     "st": "Active",
+     "pcs": 10,
+     "max": 16,
+     "d": {
+      "TAIWAN|**": 10,
+      "USA|**": 6
+     }
+    },
+    "DUMMY-003": {
+     "st": "Active",
+     "pcs": 8,
+     "max": 10,
+     "d": {
+      "THAILAND|**": 10
+     }
+    },
+    "DUMMY-004": {
+     "st": "Candidate",
+     "pcs": 6,
+     "max": 20,
+     "d": {}
+    }
+   },
+   "after": {
+    "DUMMY-001": {
+     "st": "Active",
+     "pcs": 12,
+     "max": 20,
+     "d": {
+      "JAPAN|C": 12,
+      "KOREA|**": 8
+     }
+    },
+    "DUMMY-002": {
+     "st": "Active",
+     "pcs": 10,
+     "max": 16,
+     "d": {
+      "TAIWAN|**": 10,
+      "USA|**": 6
+     }
+    },
+    "DUMMY-003": {
+     "st": "Active",
+     "pcs": 8,
+     "max": 10,
+     "d": {
+      "THAILAND|**": 10
+     }
+    },
+    "DUMMY-004": {
+     "st": "Candidate",
+     "pcs": 6,
+     "max": 20,
+     "d": {}
+    }
+   },
+   "apBefore": {
+    "kan": {
+     "DUMMY-001": {
+      "202612": {
+       "pcs": 12,
+       "max": 20
+      }
+     },
+     "DUMMY-002": {
+      "202612": {
+       "pcs": 10,
+       "max": 16
+      }
+     },
+     "DUMMY-003": {
+      "202612": {
+       "pcs": 8,
+       "max": 10
+      }
+     }
+    },
+    "exp": {
+     "DUMMY-001": {
+      "JAPAN|**": {
+       "202612": 12
+      },
+      "KOREA|**": {
+       "202612": 8
+      }
+     },
+     "DUMMY-002": {
+      "TAIWAN|**": {
+       "202612": 10
+      },
+      "USA|**": {
+       "202612": 6
+      }
+     },
+     "DUMMY-003": {
+      "THAILAND|**": {
+       "202612": 10
+      }
+     }
+    }
+   },
+   "log": [
+    "NSP check (RSARI): DUMMY-001 202612 total Case/Day 20 ≤ Max 20 → save allowed",
+    "SP_STG_WRITE('EXPORT', '202612', 'DUMMY-001', JAPAN **, 0)\n  → E6 inserted, SYNC_STATUS 0; GTOPAS: no change for JAPAN",
+    "  header: no unsent Kanban row of DUMMY-001 202612 → K4 OPERATION_TYPE 5 (Kanban unchanged, current values, not uploaded)",
+    "SP_STG_WRITE('EXPORT', '202612', 'DUMMY-001', JAPAN C, 12)\n  → E7 inserted, SYNC_STATUS 0; GTOPAS: no change for JAPAN"
+   ],
+   "sync": [
+    "SP_STG_SYNC(SYNC_DT '2026-12-10 11:00:00', Current 202612, Next 202701, RSARI)\n  → AP POLE rows with SYNC_STATUS 0 of 202612 and 202701 → 1 with SYNC_DT = time of the click; GTOPAS rows of 202612 → 1; LAST_SYNC_DATE_APPOLE\n  → start the parent flow CDX_SYNC_PARENT (SYNC_DT 2026-12-10 11:00:00, RUN_TYPE SYNC)",
+    "Parent flow: SELECT COUNT(*) FROM V_GTOPAS_CROSSDOCK WHERE SYNC_DT = '2026-12-10 11:00:00' → 0 → scenario 2: XD07 at once",
+    "XD07 AP POLE: read the views for the run",
+    "View, file of the Export rows per part (Kanban row with the same SYNC_DT, part and period):",
+    "  DUMMY-001 202612: header K4, OPERATION_TYPE 5 → EXPORT_POST only (header not in the KANBAN file)",
+    "  no Kanban row with OPERATION_TYPE 1 to 4 in this run → no KANBAN file",
+    "XD07: EXPORT_POST (2) → SUCCESS. E-mail SUCCESS (one per run)"
+   ],
+   "f": {
+    "run": "20261210110000",
+    "pre": [],
+    "kan": [],
+    "post": [
+     {
+      "r": {
+       "id": 6,
+       "per": "202612",
+       "act": "DELETE",
+       "p": "DUMMY-001",
+       "d": "JAPAN",
+       "ot": "**",
+       "cd": 0,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "RSARI",
+       "dt": "10-Dec 09:00",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "file": "POST",
+      "ro": 1,
+      "prev": 12,
+      "chk": {
+       "t": 8,
+       "mx": 20,
+       "ok": true
+      }
+     },
+     {
+      "r": {
+       "id": 7,
+       "per": "202612",
+       "act": "ADD",
+       "p": "DUMMY-001",
+       "d": "JAPAN",
+       "ot": "C",
+       "cd": 12,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "RSARI",
+       "dt": "10-Dec 09:00",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "file": "POST",
+      "ro": 2,
+      "prev": null,
+      "chk": {
+       "t": 20,
+       "mx": 20,
+       "ok": true
+      }
+     }
+    ]
+   },
+   "ok": [
+    [
+     "e",
+     {
+      "r": {
+       "id": 6,
+       "per": "202612",
+       "act": "DELETE",
+       "p": "DUMMY-001",
+       "d": "JAPAN",
+       "ot": "**",
+       "cd": 0,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "RSARI",
+       "dt": "10-Dec 09:00",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "file": "POST",
+      "ro": 1,
+      "prev": 12,
+      "chk": {
+       "t": 8,
+       "mx": 20,
+       "ok": true
+      }
+     },
+     3
+    ],
+    [
+     "e",
+     {
+      "r": {
+       "id": 7,
+       "per": "202612",
+       "act": "ADD",
+       "p": "DUMMY-001",
+       "d": "JAPAN",
+       "ot": "C",
+       "cd": 12,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "RSARI",
+       "dt": "10-Dec 09:00",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "file": "POST",
+      "ro": 2,
+      "prev": null,
+      "chk": {
+       "t": 20,
+       "mx": 20,
+       "ok": true
+      }
+     },
+     3
+    ]
+   ],
+   "wrong": [
+    {
+     "label": "up / ADD rows before down / DELETE rows (ROW_ORDER ignored)",
+     "rows": [
+      {
+       "kind": "e",
+       "x": {
+        "r": {
+         "id": 7,
+         "per": "202612",
+         "act": "ADD",
+         "p": "DUMMY-001",
+         "d": "JAPAN",
+         "ot": "C",
+         "cd": 12,
+         "st": 1,
+         "src": "SCREEN",
+         "by": "RSARI",
+         "dt": "10-Dec 09:00",
+         "run": "20261210110000",
+         "sdt": "10-Dec 11:00",
+         "seq": 2
+        },
+        "file": "POST",
+        "ro": 2,
+        "prev": null,
+        "chk": {
+         "t": 20,
+         "mx": 20,
+         "ok": true
+        }
+       },
+       "chk": {
+        "t": 32,
+        "mx": 20,
+        "ok": false
+       }
+      },
+      {
+       "kind": "e",
+       "x": {
+        "r": {
+         "id": 6,
+         "per": "202612",
+         "act": "DELETE",
+         "p": "DUMMY-001",
+         "d": "JAPAN",
+         "ot": "**",
+         "cd": 0,
+         "st": 1,
+         "src": "SCREEN",
+         "by": "RSARI",
+         "dt": "10-Dec 09:00",
+         "run": "20261210110000",
+         "sdt": "10-Dec 11:00",
+         "seq": 2
+        },
+        "file": "POST",
+        "ro": 1,
+        "prev": 12,
+        "chk": {
+         "t": 8,
+         "mx": 20,
+         "ok": true
+        }
+       },
+       "skip": true
+      }
+     ]
+    }
+   ],
+   "rpa": {
+    "run": "20261210110000",
+    "type": "SYNC",
+    "sc": "2",
+    "gRows": 0,
+    "g": "skipped",
+    "gFail": [],
+    "ap": "SUCCESS",
+    "apFile": null,
+    "files": [
+     "EXPORT_POST (2)"
+    ]
+   },
+   "gsent": [],
+   "K": [
+    {
+     "id": 4,
+     "per": "202612",
+     "act": "KEEP",
+     "ps": "Active",
+     "p": "DUMMY-001",
+     "pcs": 12,
+     "max": 20,
+     "op": 5,
+     "st": 1,
+     "src": "SCREEN",
+     "by": "RSARI",
+     "dt": "10-Dec 09:00",
+     "run": "20261210110000",
+     "sdt": "10-Dec 11:00",
+     "seq": 2
+    }
+   ],
+   "E": [
+    {
+     "id": 6,
+     "per": "202612",
+     "act": "DELETE",
+     "p": "DUMMY-001",
+     "d": "JAPAN",
+     "ot": "**",
+     "cd": 0,
+     "st": 1,
+     "src": "SCREEN",
+     "by": "RSARI",
+     "dt": "10-Dec 09:00",
+     "run": "20261210110000",
+     "sdt": "10-Dec 11:00",
+     "seq": 2
+    },
+    {
+     "id": 7,
+     "per": "202612",
+     "act": "ADD",
+     "p": "DUMMY-001",
+     "d": "JAPAN",
+     "ot": "C",
+     "cd": 12,
+     "st": 1,
+     "src": "SCREEN",
+     "by": "RSARI",
+     "dt": "10-Dec 09:00",
+     "run": "20261210110000",
+     "sdt": "10-Dec 11:00",
+     "seq": 2
+    }
+   ],
+   "G": [],
+   "deleted": []
+  },
+  {
+   "s": {
+    "id": "inactive",
+    "ot": [
+     5
+    ],
+    "title": "Active → Inactive",
+    "short": "Inactive",
+    "story": "Procurement sets DUMMY-003 Inactive. NSP removes its mapping (THAILAND).",
+    "acts": [
+     [
+      "10-Dec 09:00",
+      "DANGGRAINI",
+      "Kanban Crossdock Master: DUMMY-003 Active → Inactive"
+     ]
+    ],
+    "why": "The Kanban stays in AP POLE (header 5, not uploaded); every destination is sent as 0 in EXPORT_POST. GTOPAS DELETE of THAILAND: scenario 1.",
+    "wrong": []
+   },
+   "before": {
+    "DUMMY-001": {
+     "st": "Active",
+     "pcs": 12,
+     "max": 20,
+     "d": {
+      "JAPAN|**": 12,
+      "KOREA|**": 8
+     }
+    },
+    "DUMMY-002": {
+     "st": "Active",
+     "pcs": 10,
+     "max": 16,
+     "d": {
+      "TAIWAN|**": 10,
+      "USA|**": 6
+     }
+    },
+    "DUMMY-003": {
+     "st": "Active",
+     "pcs": 8,
+     "max": 10,
+     "d": {
+      "THAILAND|**": 10
+     }
+    },
+    "DUMMY-004": {
+     "st": "Candidate",
+     "pcs": 6,
+     "max": 20,
+     "d": {}
+    }
+   },
+   "after": {
+    "DUMMY-001": {
+     "st": "Active",
+     "pcs": 12,
+     "max": 20,
+     "d": {
+      "JAPAN|**": 12,
+      "KOREA|**": 8
+     }
+    },
+    "DUMMY-002": {
+     "st": "Active",
+     "pcs": 10,
+     "max": 16,
+     "d": {
+      "TAIWAN|**": 10,
+      "USA|**": 6
+     }
+    },
+    "DUMMY-003": {
+     "st": "Inactive",
+     "pcs": 8,
+     "max": 10,
+     "d": {}
+    },
+    "DUMMY-004": {
+     "st": "Candidate",
+     "pcs": 6,
+     "max": 20,
+     "d": {}
+    }
+   },
+   "apBefore": {
+    "kan": {
+     "DUMMY-001": {
+      "202612": {
+       "pcs": 12,
+       "max": 20
+      }
+     },
+     "DUMMY-002": {
+      "202612": {
+       "pcs": 10,
+       "max": 16
+      }
+     },
+     "DUMMY-003": {
+      "202612": {
+       "pcs": 8,
+       "max": 10
+      }
+     }
+    },
+    "exp": {
+     "DUMMY-001": {
+      "JAPAN|**": {
+       "202612": 12
+      },
+      "KOREA|**": {
+       "202612": 8
+      }
+     },
+     "DUMMY-002": {
+      "TAIWAN|**": {
+       "202612": 10
+      },
+      "USA|**": {
+       "202612": 6
+      }
+     },
+     "DUMMY-003": {
+      "THAILAND|**": {
+       "202612": 10
+      }
+     }
+    }
+   },
+   "log": [
+    "DUMMY-003 Active → Inactive: the mapping of 202612 is removed (TB_M_PART_CANDIDATE_DEST)",
+    "SP_STG_WRITE('EXPORT', '202612', 'DUMMY-003', THAILAND **, 0)\n  → E6 inserted, SYNC_STATUS 0; GTOPAS G6 DELETE inserted",
+    "  header: no unsent Kanban row of DUMMY-003 202612 → K4 OPERATION_TYPE 5 (Kanban unchanged, current values, not uploaded)"
+   ],
+   "sync": [
+    "SP_STG_SYNC(SYNC_DT '2026-12-10 11:00:00', Current 202612, Next 202701, RSARI)\n  → AP POLE rows with SYNC_STATUS 0 of 202612 and 202701 → 1 with SYNC_DT = time of the click; GTOPAS rows of 202612 → 1; LAST_SYNC_DATE_APPOLE\n  → start the parent flow CDX_SYNC_PARENT (SYNC_DT 2026-12-10 11:00:00, RUN_TYPE SYNC)",
+    "Parent flow: SELECT COUNT(*) FROM V_GTOPAS_CROSSDOCK WHERE SYNC_DT = '2026-12-10 11:00:00' → 1 → scenario 1: XD06 first, XD07 only when GTOPAS succeeded",
+    "XD06 GTOPAS: 1 row(s), 1 OK",
+    "XD07 AP POLE: read the views for the run",
+    "View, file of the Export rows per part (Kanban row with the same SYNC_DT, part and period):",
+    "  DUMMY-003 202612: header K4, OPERATION_TYPE 5 → EXPORT_POST only (header not in the KANBAN file)",
+    "  no Kanban row with OPERATION_TYPE 1 to 4 in this run → no KANBAN file",
+    "XD07: EXPORT_POST (1) → SUCCESS. E-mail SUCCESS (one per run)"
+   ],
+   "f": {
+    "run": "20261210110000",
+    "pre": [],
+    "kan": [],
+    "post": [
+     {
+      "r": {
+       "id": 6,
+       "per": "202612",
+       "act": "DELETE",
+       "p": "DUMMY-003",
+       "d": "THAILAND",
+       "ot": "**",
+       "cd": 0,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "DANGGRAINI",
+       "dt": "10-Dec 09:00",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "file": "POST",
+      "ro": 1,
+      "prev": 10,
+      "chk": {
+       "t": 0,
+       "mx": 10,
+       "ok": true
+      }
+     }
+    ]
+   },
+   "ok": [
+    [
+     "e",
+     {
+      "r": {
+       "id": 6,
+       "per": "202612",
+       "act": "DELETE",
+       "p": "DUMMY-003",
+       "d": "THAILAND",
+       "ot": "**",
+       "cd": 0,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "DANGGRAINI",
+       "dt": "10-Dec 09:00",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "file": "POST",
+      "ro": 1,
+      "prev": 10,
+      "chk": {
+       "t": 0,
+       "mx": 10,
+       "ok": true
+      }
+     },
+     3
+    ]
+   ],
+   "wrong": [],
+   "rpa": {
+    "run": "20261210110000",
+    "type": "SYNC",
+    "sc": "1",
+    "gRows": 1,
+    "g": "SUCCESS",
+    "gFail": [],
+    "ap": "SUCCESS",
+    "apFile": null,
+    "files": [
+     "EXPORT_POST (1)"
+    ]
+   },
+   "gsent": [
+    {
+     "id": 6,
+     "per": "202612",
+     "act": "DELETE",
+     "p": "DUMMY-003",
+     "d": "THAILAND",
+     "st": 1,
+     "src": "SCREEN",
+     "by": "DANGGRAINI",
+     "dt": "10-Dec 09:00",
+     "run": "20261210110000",
+     "sdt": "10-Dec 11:00",
+     "seq": 2,
+     "res": "OK"
+    }
+   ],
+   "K": [
+    {
+     "id": 4,
+     "per": "202612",
+     "act": "KEEP",
+     "ps": "Inactive",
+     "p": "DUMMY-003",
+     "pcs": 8,
+     "max": 10,
+     "op": 5,
+     "st": 1,
+     "src": "SCREEN",
+     "by": "DANGGRAINI",
+     "dt": "10-Dec 09:00",
+     "run": "20261210110000",
+     "sdt": "10-Dec 11:00",
+     "seq": 2
+    }
+   ],
+   "E": [
+    {
+     "id": 6,
+     "per": "202612",
+     "act": "DELETE",
+     "p": "DUMMY-003",
+     "d": "THAILAND",
+     "ot": "**",
+     "cd": 0,
+     "st": 1,
+     "src": "SCREEN",
+     "by": "DANGGRAINI",
+     "dt": "10-Dec 09:00",
+     "run": "20261210110000",
+     "sdt": "10-Dec 11:00",
+     "seq": 2
+    }
+   ],
+   "G": [
+    {
+     "id": 6,
+     "per": "202612",
+     "act": "DELETE",
+     "p": "DUMMY-003",
+     "d": "THAILAND",
+     "st": 1,
+     "src": "SCREEN",
+     "by": "DANGGRAINI",
+     "dt": "10-Dec 09:00",
+     "run": "20261210110000",
+     "sdt": "10-Dec 11:00",
+     "seq": 2
+    }
+   ],
+   "deleted": []
+  },
+  {
+   "s": {
+    "id": "twice",
+    "ot": [
+     5
+    ],
+    "title": "Same key edited twice before [Sync]",
+    "short": "Edited twice",
+    "story": "D/S changes DUMMY-002 USA 6 → 4, then 4 → 5 before [Sync]. D/S also changes TAIWAN 10 → 8 and then back to 10.",
+    "acts": [
+     [
+      "10-Dec 09:00",
+      "RSARI",
+      "DUMMY-002 USA 6 → 4, TAIWAN 10 → 8"
+     ],
+     [
+      "10-Dec 09:40",
+      "RSARI",
+      "DUMMY-002 USA 4 → 5, TAIWAN 8 → 10 (back to the value sent)"
+     ]
+    ],
+    "why": "One unsent row per key: the USA row is updated to 5, not added. TAIWAN is back to the value sent (10), so its unsent row is deleted. The run sends one row: USA 5.",
+    "wrong": []
+   },
+   "before": {
+    "DUMMY-001": {
+     "st": "Active",
+     "pcs": 12,
+     "max": 20,
+     "d": {
+      "JAPAN|**": 12,
+      "KOREA|**": 8
+     }
+    },
+    "DUMMY-002": {
+     "st": "Active",
+     "pcs": 10,
+     "max": 16,
+     "d": {
+      "TAIWAN|**": 10,
+      "USA|**": 6
+     }
+    },
+    "DUMMY-003": {
+     "st": "Active",
+     "pcs": 8,
+     "max": 10,
+     "d": {
+      "THAILAND|**": 10
+     }
+    },
+    "DUMMY-004": {
+     "st": "Candidate",
+     "pcs": 6,
+     "max": 20,
+     "d": {}
+    }
+   },
+   "after": {
+    "DUMMY-001": {
+     "st": "Active",
+     "pcs": 12,
+     "max": 20,
+     "d": {
+      "JAPAN|**": 12,
+      "KOREA|**": 8
+     }
+    },
+    "DUMMY-002": {
+     "st": "Active",
+     "pcs": 10,
+     "max": 16,
+     "d": {
+      "TAIWAN|**": 10,
+      "USA|**": 5
+     }
+    },
+    "DUMMY-003": {
+     "st": "Active",
+     "pcs": 8,
+     "max": 10,
+     "d": {
+      "THAILAND|**": 10
+     }
+    },
+    "DUMMY-004": {
+     "st": "Candidate",
+     "pcs": 6,
+     "max": 20,
+     "d": {}
+    }
+   },
+   "apBefore": {
+    "kan": {
+     "DUMMY-001": {
+      "202612": {
+       "pcs": 12,
+       "max": 20
+      }
+     },
+     "DUMMY-002": {
+      "202612": {
+       "pcs": 10,
+       "max": 16
+      }
+     },
+     "DUMMY-003": {
+      "202612": {
+       "pcs": 8,
+       "max": 10
+      }
+     }
+    },
+    "exp": {
+     "DUMMY-001": {
+      "JAPAN|**": {
+       "202612": 12
+      },
+      "KOREA|**": {
+       "202612": 8
+      }
+     },
+     "DUMMY-002": {
+      "TAIWAN|**": {
+       "202612": 10
+      },
+      "USA|**": {
+       "202612": 6
+      }
+     },
+     "DUMMY-003": {
+      "THAILAND|**": {
+       "202612": 10
+      }
+     }
+    }
+   },
+   "log": [
+    "NSP check (RSARI): DUMMY-002 202612 total Case/Day 12 ≤ Max 16 → save allowed",
+    "SP_STG_WRITE('EXPORT', '202612', 'DUMMY-002', TAIWAN **, 8)\n  → E6 inserted, SYNC_STATUS 0; GTOPAS: no change for TAIWAN",
+    "  header: no unsent Kanban row of DUMMY-002 202612 → K4 OPERATION_TYPE 5 (Kanban unchanged, current values, not uploaded)",
+    "SP_STG_WRITE('EXPORT', '202612', 'DUMMY-002', USA **, 4)\n  → E7 inserted, SYNC_STATUS 0; GTOPAS: no change for USA",
+    "NSP check (RSARI): DUMMY-002 202612 total Case/Day 15 ≤ Max 16 → save allowed",
+    "SP_STG_WRITE('EXPORT', '202612', 'DUMMY-002', TAIWAN **, 10)\n  → back to the value sent: unsent E6 deleted (nothing to send); GTOPAS: no change for TAIWAN",
+    "SP_STG_WRITE('EXPORT', '202612', 'DUMMY-002', USA **, 5)\n  → E7 updated to 5 (one unsent row per key); GTOPAS: no change for USA"
+   ],
+   "sync": [
+    "SP_STG_SYNC(SYNC_DT '2026-12-10 11:00:00', Current 202612, Next 202701, RSARI)\n  → AP POLE rows with SYNC_STATUS 0 of 202612 and 202701 → 1 with SYNC_DT = time of the click; GTOPAS rows of 202612 → 1; LAST_SYNC_DATE_APPOLE\n  → start the parent flow CDX_SYNC_PARENT (SYNC_DT 2026-12-10 11:00:00, RUN_TYPE SYNC)",
+    "Parent flow: SELECT COUNT(*) FROM V_GTOPAS_CROSSDOCK WHERE SYNC_DT = '2026-12-10 11:00:00' → 0 → scenario 2: XD07 at once",
+    "XD07 AP POLE: read the views for the run",
+    "View, file of the Export rows per part (Kanban row with the same SYNC_DT, part and period):",
+    "  DUMMY-002 202612: header K4, OPERATION_TYPE 5 → EXPORT_POST only (header not in the KANBAN file)",
+    "  no Kanban row with OPERATION_TYPE 1 to 4 in this run → no KANBAN file",
+    "XD07: EXPORT_POST (1) → SUCCESS. E-mail SUCCESS (one per run)"
+   ],
+   "f": {
+    "run": "20261210110000",
+    "pre": [],
+    "kan": [],
+    "post": [
+     {
+      "r": {
+       "id": 7,
+       "per": "202612",
+       "act": "EDIT",
+       "p": "DUMMY-002",
+       "d": "USA",
+       "ot": "**",
+       "cd": 5,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "RSARI",
+       "dt": "10-Dec 09:00",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "file": "POST",
+      "ro": 1,
+      "prev": 6,
+      "chk": {
+       "t": 15,
+       "mx": 16,
+       "ok": true
+      }
+     }
+    ]
+   },
+   "ok": [
+    [
+     "e",
+     {
+      "r": {
+       "id": 7,
+       "per": "202612",
+       "act": "EDIT",
+       "p": "DUMMY-002",
+       "d": "USA",
+       "ot": "**",
+       "cd": 5,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "RSARI",
+       "dt": "10-Dec 09:00",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "file": "POST",
+      "ro": 1,
+      "prev": 6,
+      "chk": {
+       "t": 15,
+       "mx": 16,
+       "ok": true
+      }
+     },
+     3
+    ]
+   ],
+   "wrong": [],
+   "rpa": {
+    "run": "20261210110000",
+    "type": "SYNC",
+    "sc": "2",
+    "gRows": 0,
+    "g": "skipped",
+    "gFail": [],
+    "ap": "SUCCESS",
+    "apFile": null,
+    "files": [
+     "EXPORT_POST (1)"
+    ]
+   },
+   "gsent": [],
+   "K": [
+    {
+     "id": 4,
+     "per": "202612",
+     "act": "KEEP",
+     "ps": "Active",
+     "p": "DUMMY-002",
+     "pcs": 10,
+     "max": 16,
+     "op": 5,
+     "st": 1,
+     "src": "SCREEN",
+     "by": "RSARI",
+     "dt": "10-Dec 09:00",
+     "run": "20261210110000",
+     "sdt": "10-Dec 11:00",
+     "seq": 2
+    }
+   ],
+   "E": [
+    {
+     "id": 7,
+     "per": "202612",
+     "act": "EDIT",
+     "p": "DUMMY-002",
+     "d": "USA",
+     "ot": "**",
+     "cd": 5,
+     "st": 1,
+     "src": "SCREEN",
+     "by": "RSARI",
+     "dt": "10-Dec 09:00",
+     "run": "20261210110000",
+     "sdt": "10-Dec 11:00",
+     "seq": 2
+    }
+   ],
+   "G": [],
+   "deleted": [
+    {
+     "tag": "E6",
+     "tbl": "E",
+     "row": {
+      "id": 6,
+      "per": "202612",
+      "act": "EDIT",
+      "p": "DUMMY-002",
+      "d": "TAIWAN",
+      "ot": "**",
+      "cd": 8,
+      "st": 0,
+      "src": "SCREEN",
+      "by": "RSARI",
+      "dt": "10-Dec 09:00",
+      "run": null,
+      "sdt": null,
+      "seq": null
+     },
+     "why": "back to the value sent"
+    }
+   ]
+  },
+  {
+   "s": {
+    "id": "mixed",
+    "ot": [
+     1,
+     2,
+     3,
+     4
+    ],
+    "title": "One [Sync] with several parts",
+    "short": "Mixed run",
+    "story": "The changes of the first four scenarios saved on the same day and sent by one [Sync]: DUMMY-001 Max down, DUMMY-002 Max up, DUMMY-003 Pcs/Case only, DUMMY-004 new part.",
+    "acts": [
+     [
+      "10-Dec 09:00",
+      "RSARI",
+      "DUMMY-001 JAPAN 12 → 6, KOREA 8 → 10"
+     ],
+     [
+      "10-Dec 09:30",
+      "DANGGRAINI",
+      "DUMMY-001 Max 20 → 16"
+     ],
+     [
+      "10-Dec 09:40",
+      "DANGGRAINI",
+      "DUMMY-002 Max 16 → 24"
+     ],
+     [
+      "10-Dec 09:50",
+      "RSARI",
+      "DUMMY-002 TAIWAN 10 → 14, USA 6 → 10"
+     ],
+     [
+      "10-Dec 10:00",
+      "DANGGRAINI",
+      "DUMMY-003 Pcs/Case 8 → 10"
+     ],
+     [
+      "10-Dec 10:10",
+      "DANGGRAINI",
+      "DUMMY-004 Candidate → Active"
+     ],
+     [
+      "10-Dec 10:20",
+      "RSARI",
+      "DUMMY-004 KOREA 12, USA 8"
+     ]
+    ],
+    "why": "The file of an Export row follows the OPERATION_TYPE of its own part: DUMMY-001 (1) in EXPORT_PRE, DUMMY-002 (2) and DUMMY-004 (4) in EXPORT_POST. KANBAN holds all four parts. Each file is sorted by part, then ROW_ORDER.",
+    "wrong": [
+     "kanFirst",
+     "expFirst"
+    ]
+   },
+   "before": {
+    "DUMMY-001": {
+     "st": "Active",
+     "pcs": 12,
+     "max": 20,
+     "d": {
+      "JAPAN|**": 12,
+      "KOREA|**": 8
+     }
+    },
+    "DUMMY-002": {
+     "st": "Active",
+     "pcs": 10,
+     "max": 16,
+     "d": {
+      "TAIWAN|**": 10,
+      "USA|**": 6
+     }
+    },
+    "DUMMY-003": {
+     "st": "Active",
+     "pcs": 8,
+     "max": 10,
+     "d": {
+      "THAILAND|**": 10
+     }
+    },
+    "DUMMY-004": {
+     "st": "Candidate",
+     "pcs": 6,
+     "max": 20,
+     "d": {}
+    }
+   },
+   "after": {
+    "DUMMY-001": {
+     "st": "Active",
+     "pcs": 12,
+     "max": 16,
+     "d": {
+      "JAPAN|**": 6,
+      "KOREA|**": 10
+     }
+    },
+    "DUMMY-002": {
+     "st": "Active",
+     "pcs": 10,
+     "max": 24,
+     "d": {
+      "TAIWAN|**": 14,
+      "USA|**": 10
+     }
+    },
+    "DUMMY-003": {
+     "st": "Active",
+     "pcs": 10,
+     "max": 10,
+     "d": {
+      "THAILAND|**": 10
+     }
+    },
+    "DUMMY-004": {
+     "st": "Active",
+     "pcs": 6,
+     "max": 20,
+     "d": {
+      "KOREA|**": 12,
+      "USA|**": 8
+     }
+    }
+   },
+   "apBefore": {
+    "kan": {
+     "DUMMY-001": {
+      "202612": {
+       "pcs": 12,
+       "max": 20
+      }
+     },
+     "DUMMY-002": {
+      "202612": {
+       "pcs": 10,
+       "max": 16
+      }
+     },
+     "DUMMY-003": {
+      "202612": {
+       "pcs": 8,
+       "max": 10
+      }
+     }
+    },
+    "exp": {
+     "DUMMY-001": {
+      "JAPAN|**": {
+       "202612": 12
+      },
+      "KOREA|**": {
+       "202612": 8
+      }
+     },
+     "DUMMY-002": {
+      "TAIWAN|**": {
+       "202612": 10
+      },
+      "USA|**": {
+       "202612": 6
+      }
+     },
+     "DUMMY-003": {
+      "THAILAND|**": {
+       "202612": 10
+      }
+     }
+    }
+   },
+   "log": [
+    "NSP check (RSARI): DUMMY-001 202612 total Case/Day 16 ≤ Max 20 → save allowed",
+    "SP_STG_WRITE('EXPORT', '202612', 'DUMMY-001', JAPAN **, 6)\n  → E6 inserted, SYNC_STATUS 0; GTOPAS: no change for JAPAN",
+    "  header: no unsent Kanban row of DUMMY-001 202612 → K4 OPERATION_TYPE 5 (Kanban unchanged, current values, not uploaded)",
+    "SP_STG_WRITE('EXPORT', '202612', 'DUMMY-001', KOREA **, 10)\n  → E7 inserted, SYNC_STATUS 0; GTOPAS: no change for KOREA",
+    "NSP check (DANGGRAINI): DUMMY-001 202612 total Case/Day 16 ≤ Max 16 → save allowed",
+    "SP_STG_WRITE('KANBAN', '202612', 'DUMMY-001', Pcs 12, Max 16)\n  → K4 updated (one unsent row per key): OPERATION_TYPE 1 (last sent Max 20 in 202612)",
+    "NSP check (DANGGRAINI): DUMMY-002 202612 total Case/Day 16 ≤ Max 24 → save allowed",
+    "SP_STG_WRITE('KANBAN', '202612', 'DUMMY-002', Pcs 10, Max 24)\n  → K5 inserted: OPERATION_TYPE 2 (last sent Max 16 in 202612), SYNC_STATUS 0",
+    "NSP check (RSARI): DUMMY-002 202612 total Case/Day 24 ≤ Max 24 → save allowed",
+    "SP_STG_WRITE('EXPORT', '202612', 'DUMMY-002', TAIWAN **, 14)\n  → E8 inserted, SYNC_STATUS 0; GTOPAS: no change for TAIWAN",
+    "SP_STG_WRITE('EXPORT', '202612', 'DUMMY-002', USA **, 10)\n  → E9 inserted, SYNC_STATUS 0; GTOPAS: no change for USA",
+    "NSP check (DANGGRAINI): DUMMY-003 202612 total Case/Day 10 ≤ Max 10 → save allowed",
+    "SP_STG_WRITE('KANBAN', '202612', 'DUMMY-003', Pcs 10, Max 10)\n  → K6 inserted: OPERATION_TYPE 3 (last sent Max 10 in 202612), SYNC_STATUS 0",
+    "NSP check (DANGGRAINI): DUMMY-004 202612 total Case/Day 0 ≤ Max 20 → save allowed",
+    "SP_STG_WRITE('KANBAN', '202612', 'DUMMY-004', Pcs 6, Max 20)\n  → K7 inserted: OPERATION_TYPE 4 (never sent), SYNC_STATUS 0",
+    "NSP check (RSARI): DUMMY-004 202612 total Case/Day 20 ≤ Max 20 → save allowed",
+    "SP_STG_WRITE('EXPORT', '202612', 'DUMMY-004', KOREA **, 12)\n  → E10 inserted, SYNC_STATUS 0; GTOPAS G6 ADD inserted",
+    "SP_STG_WRITE('EXPORT', '202612', 'DUMMY-004', USA **, 8)\n  → E11 inserted, SYNC_STATUS 0; GTOPAS G7 ADD inserted"
+   ],
+   "sync": [
+    "SP_STG_SYNC(SYNC_DT '2026-12-10 11:00:00', Current 202612, Next 202701, RSARI)\n  → AP POLE rows with SYNC_STATUS 0 of 202612 and 202701 → 1 with SYNC_DT = time of the click; GTOPAS rows of 202612 → 1; LAST_SYNC_DATE_APPOLE\n  → start the parent flow CDX_SYNC_PARENT (SYNC_DT 2026-12-10 11:00:00, RUN_TYPE SYNC)",
+    "Parent flow: SELECT COUNT(*) FROM V_GTOPAS_CROSSDOCK WHERE SYNC_DT = '2026-12-10 11:00:00' → 2 → scenario 1: XD06 first, XD07 only when GTOPAS succeeded",
+    "XD06 GTOPAS: 2 row(s), 2 OK",
+    "XD07 AP POLE: read the views for the run",
+    "View, file of the Export rows per part (Kanban row with the same SYNC_DT, part and period):",
+    "  DUMMY-001 202612: header K4, OPERATION_TYPE 1 → EXPORT_PRE (before KANBAN)",
+    "  DUMMY-002 202612: header K5, OPERATION_TYPE 2 → EXPORT_POST (after KANBAN)",
+    "  DUMMY-004 202612: header K7, OPERATION_TYPE 4 → EXPORT_POST (after KANBAN)",
+    "  KANBAN file (OPERATION_TYPE 1 to 4): K4, K5, K6, K7",
+    "XD07: EXPORT_PRE (2) → KANBAN (4) → EXPORT_POST (4) → SUCCESS. E-mail SUCCESS (one per run)"
+   ],
+   "f": {
+    "run": "20261210110000",
+    "pre": [
+     {
+      "r": {
+       "id": 6,
+       "per": "202612",
+       "act": "EDIT",
+       "p": "DUMMY-001",
+       "d": "JAPAN",
+       "ot": "**",
+       "cd": 6,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "RSARI",
+       "dt": "10-Dec 09:00",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "file": "PRE",
+      "ro": 1,
+      "prev": 12,
+      "chk": {
+       "t": 14,
+       "mx": 20,
+       "ok": true
+      }
+     },
+     {
+      "r": {
+       "id": 7,
+       "per": "202612",
+       "act": "EDIT",
+       "p": "DUMMY-001",
+       "d": "KOREA",
+       "ot": "**",
+       "cd": 10,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "RSARI",
+       "dt": "10-Dec 09:00",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "file": "PRE",
+      "ro": 2,
+      "prev": 8,
+      "chk": {
+       "t": 16,
+       "mx": 20,
+       "ok": true
+      }
+     }
+    ],
+    "kan": [
+     {
+      "r": {
+       "id": 4,
+       "per": "202612",
+       "act": "EDIT",
+       "ps": "Active",
+       "p": "DUMMY-001",
+       "pcs": 12,
+       "max": 16,
+       "op": 1,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "RSARI",
+       "dt": "10-Dec 09:00",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "chk": {
+       "t": 16,
+       "mx": 16,
+       "ok": true
+      }
+     },
+     {
+      "r": {
+       "id": 5,
+       "per": "202612",
+       "act": "EDIT",
+       "ps": "Active",
+       "p": "DUMMY-002",
+       "pcs": 10,
+       "max": 24,
+       "op": 2,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "DANGGRAINI",
+       "dt": "10-Dec 09:40",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "chk": {
+       "t": 16,
+       "mx": 24,
+       "ok": true
+      }
+     },
+     {
+      "r": {
+       "id": 6,
+       "per": "202612",
+       "act": "EDIT",
+       "ps": "Active",
+       "p": "DUMMY-003",
+       "pcs": 10,
+       "max": 10,
+       "op": 3,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "DANGGRAINI",
+       "dt": "10-Dec 10:00",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "chk": {
+       "t": 10,
+       "mx": 10,
+       "ok": true
+      }
+     },
+     {
+      "r": {
+       "id": 7,
+       "per": "202612",
+       "act": "ADD",
+       "ps": "Active",
+       "p": "DUMMY-004",
+       "pcs": 6,
+       "max": 20,
+       "op": 4,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "DANGGRAINI",
+       "dt": "10-Dec 10:10",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "chk": {
+       "t": 0,
+       "mx": 20,
+       "ok": true
+      }
+     }
+    ],
+    "post": [
+     {
+      "r": {
+       "id": 8,
+       "per": "202612",
+       "act": "EDIT",
+       "p": "DUMMY-002",
+       "d": "TAIWAN",
+       "ot": "**",
+       "cd": 14,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "RSARI",
+       "dt": "10-Dec 09:50",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "file": "POST",
+      "ro": 2,
+      "prev": 10,
+      "chk": {
+       "t": 20,
+       "mx": 24,
+       "ok": true
+      }
+     },
+     {
+      "r": {
+       "id": 9,
+       "per": "202612",
+       "act": "EDIT",
+       "p": "DUMMY-002",
+       "d": "USA",
+       "ot": "**",
+       "cd": 10,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "RSARI",
+       "dt": "10-Dec 09:50",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "file": "POST",
+      "ro": 2,
+      "prev": 6,
+      "chk": {
+       "t": 24,
+       "mx": 24,
+       "ok": true
+      }
+     },
+     {
+      "r": {
+       "id": 10,
+       "per": "202612",
+       "act": "ADD",
+       "p": "DUMMY-004",
+       "d": "KOREA",
+       "ot": "**",
+       "cd": 12,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "RSARI",
+       "dt": "10-Dec 10:20",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "file": "POST",
+      "ro": 2,
+      "prev": null,
+      "chk": {
+       "t": 12,
+       "mx": 20,
+       "ok": true
+      }
+     },
+     {
+      "r": {
+       "id": 11,
+       "per": "202612",
+       "act": "ADD",
+       "p": "DUMMY-004",
+       "d": "USA",
+       "ot": "**",
+       "cd": 8,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "RSARI",
+       "dt": "10-Dec 10:20",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "file": "POST",
+      "ro": 2,
+      "prev": null,
+      "chk": {
+       "t": 20,
+       "mx": 20,
+       "ok": true
+      }
+     }
+    ]
+   },
+   "ok": [
+    [
+     "e",
+     {
+      "r": {
+       "id": 6,
+       "per": "202612",
+       "act": "EDIT",
+       "p": "DUMMY-001",
+       "d": "JAPAN",
+       "ot": "**",
+       "cd": 6,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "RSARI",
+       "dt": "10-Dec 09:00",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "file": "PRE",
+      "ro": 1,
+      "prev": 12,
+      "chk": {
+       "t": 14,
+       "mx": 20,
+       "ok": true
+      }
+     },
+     1
+    ],
+    [
+     "e",
+     {
+      "r": {
+       "id": 7,
+       "per": "202612",
+       "act": "EDIT",
+       "p": "DUMMY-001",
+       "d": "KOREA",
+       "ot": "**",
+       "cd": 10,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "RSARI",
+       "dt": "10-Dec 09:00",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "file": "PRE",
+      "ro": 2,
+      "prev": 8,
+      "chk": {
+       "t": 16,
+       "mx": 20,
+       "ok": true
+      }
+     },
+     1
+    ],
+    [
+     "k",
+     {
+      "r": {
+       "id": 4,
+       "per": "202612",
+       "act": "EDIT",
+       "ps": "Active",
+       "p": "DUMMY-001",
+       "pcs": 12,
+       "max": 16,
+       "op": 1,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "RSARI",
+       "dt": "10-Dec 09:00",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "chk": {
+       "t": 16,
+       "mx": 16,
+       "ok": true
+      }
+     },
+     2
+    ],
+    [
+     "k",
+     {
+      "r": {
+       "id": 5,
+       "per": "202612",
+       "act": "EDIT",
+       "ps": "Active",
+       "p": "DUMMY-002",
+       "pcs": 10,
+       "max": 24,
+       "op": 2,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "DANGGRAINI",
+       "dt": "10-Dec 09:40",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "chk": {
+       "t": 16,
+       "mx": 24,
+       "ok": true
+      }
+     },
+     2
+    ],
+    [
+     "k",
+     {
+      "r": {
+       "id": 6,
+       "per": "202612",
+       "act": "EDIT",
+       "ps": "Active",
+       "p": "DUMMY-003",
+       "pcs": 10,
+       "max": 10,
+       "op": 3,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "DANGGRAINI",
+       "dt": "10-Dec 10:00",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "chk": {
+       "t": 10,
+       "mx": 10,
+       "ok": true
+      }
+     },
+     2
+    ],
+    [
+     "k",
+     {
+      "r": {
+       "id": 7,
+       "per": "202612",
+       "act": "ADD",
+       "ps": "Active",
+       "p": "DUMMY-004",
+       "pcs": 6,
+       "max": 20,
+       "op": 4,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "DANGGRAINI",
+       "dt": "10-Dec 10:10",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "chk": {
+       "t": 0,
+       "mx": 20,
+       "ok": true
+      }
+     },
+     2
+    ],
+    [
+     "e",
+     {
+      "r": {
+       "id": 8,
+       "per": "202612",
+       "act": "EDIT",
+       "p": "DUMMY-002",
+       "d": "TAIWAN",
+       "ot": "**",
+       "cd": 14,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "RSARI",
+       "dt": "10-Dec 09:50",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "file": "POST",
+      "ro": 2,
+      "prev": 10,
+      "chk": {
+       "t": 20,
+       "mx": 24,
+       "ok": true
+      }
+     },
+     3
+    ],
+    [
+     "e",
+     {
+      "r": {
+       "id": 9,
+       "per": "202612",
+       "act": "EDIT",
+       "p": "DUMMY-002",
+       "d": "USA",
+       "ot": "**",
+       "cd": 10,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "RSARI",
+       "dt": "10-Dec 09:50",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "file": "POST",
+      "ro": 2,
+      "prev": 6,
+      "chk": {
+       "t": 24,
+       "mx": 24,
+       "ok": true
+      }
+     },
+     3
+    ],
+    [
+     "e",
+     {
+      "r": {
+       "id": 10,
+       "per": "202612",
+       "act": "ADD",
+       "p": "DUMMY-004",
+       "d": "KOREA",
+       "ot": "**",
+       "cd": 12,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "RSARI",
+       "dt": "10-Dec 10:20",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "file": "POST",
+      "ro": 2,
+      "prev": null,
+      "chk": {
+       "t": 12,
+       "mx": 20,
+       "ok": true
+      }
+     },
+     3
+    ],
+    [
+     "e",
+     {
+      "r": {
+       "id": 11,
+       "per": "202612",
+       "act": "ADD",
+       "p": "DUMMY-004",
+       "d": "USA",
+       "ot": "**",
+       "cd": 8,
+       "st": 1,
+       "src": "SCREEN",
+       "by": "RSARI",
+       "dt": "10-Dec 10:20",
+       "run": "20261210110000",
+       "sdt": "10-Dec 11:00",
+       "seq": 2
+      },
+      "file": "POST",
+      "ro": 2,
+      "prev": null,
+      "chk": {
+       "t": 20,
+       "mx": 20,
+       "ok": true
+      }
+     },
+     3
+    ]
+   ],
+   "wrong": [
+    {
+     "label": "KANBAN before the Export rows",
+     "rows": [
+      {
+       "kind": "k",
+       "x": {
+        "r": {
+         "id": 4,
+         "per": "202612",
+         "act": "EDIT",
+         "ps": "Active",
+         "p": "DUMMY-001",
+         "pcs": 12,
+         "max": 16,
+         "op": 1,
+         "st": 1,
+         "src": "SCREEN",
+         "by": "RSARI",
+         "dt": "10-Dec 09:00",
+         "run": "20261210110000",
+         "sdt": "10-Dec 11:00",
+         "seq": 2
+        },
+        "chk": {
+         "t": 16,
+         "mx": 16,
+         "ok": true
+        }
+       },
+       "chk": {
+        "t": 20,
+        "mx": 16,
+        "ok": false
+       }
+      },
+      {
+       "kind": "k",
+       "x": {
+        "r": {
+         "id": 5,
+         "per": "202612",
+         "act": "EDIT",
+         "ps": "Active",
+         "p": "DUMMY-002",
+         "pcs": 10,
+         "max": 24,
+         "op": 2,
+         "st": 1,
+         "src": "SCREEN",
+         "by": "DANGGRAINI",
+         "dt": "10-Dec 09:40",
+         "run": "20261210110000",
+         "sdt": "10-Dec 11:00",
+         "seq": 2
+        },
+        "chk": {
+         "t": 16,
+         "mx": 24,
+         "ok": true
+        }
+       },
+       "skip": true
+      },
+      {
+       "kind": "k",
+       "x": {
+        "r": {
+         "id": 6,
+         "per": "202612",
+         "act": "EDIT",
+         "ps": "Active",
+         "p": "DUMMY-003",
+         "pcs": 10,
+         "max": 10,
+         "op": 3,
+         "st": 1,
+         "src": "SCREEN",
+         "by": "DANGGRAINI",
+         "dt": "10-Dec 10:00",
+         "run": "20261210110000",
+         "sdt": "10-Dec 11:00",
+         "seq": 2
+        },
+        "chk": {
+         "t": 10,
+         "mx": 10,
+         "ok": true
+        }
+       },
+       "skip": true
+      },
+      {
+       "kind": "k",
+       "x": {
+        "r": {
+         "id": 7,
+         "per": "202612",
+         "act": "ADD",
+         "ps": "Active",
+         "p": "DUMMY-004",
+         "pcs": 6,
+         "max": 20,
+         "op": 4,
+         "st": 1,
+         "src": "SCREEN",
+         "by": "DANGGRAINI",
+         "dt": "10-Dec 10:10",
+         "run": "20261210110000",
+         "sdt": "10-Dec 11:00",
+         "seq": 2
+        },
+        "chk": {
+         "t": 0,
+         "mx": 20,
+         "ok": true
+        }
+       },
+       "skip": true
+      },
+      {
+       "kind": "e",
+       "x": {
+        "r": {
+         "id": 6,
+         "per": "202612",
+         "act": "EDIT",
+         "p": "DUMMY-001",
+         "d": "JAPAN",
+         "ot": "**",
+         "cd": 6,
+         "st": 1,
+         "src": "SCREEN",
+         "by": "RSARI",
+         "dt": "10-Dec 09:00",
+         "run": "20261210110000",
+         "sdt": "10-Dec 11:00",
+         "seq": 2
+        },
+        "file": "PRE",
+        "ro": 1,
+        "prev": 12,
+        "chk": {
+         "t": 14,
+         "mx": 20,
+         "ok": true
+        }
+       },
+       "skip": true
+      },
+      {
+       "kind": "e",
+       "x": {
+        "r": {
+         "id": 7,
+         "per": "202612",
+         "act": "EDIT",
+         "p": "DUMMY-001",
+         "d": "KOREA",
+         "ot": "**",
+         "cd": 10,
+         "st": 1,
+         "src": "SCREEN",
+         "by": "RSARI",
+         "dt": "10-Dec 09:00",
+         "run": "20261210110000",
+         "sdt": "10-Dec 11:00",
+         "seq": 2
+        },
+        "file": "PRE",
+        "ro": 2,
+        "prev": 8,
+        "chk": {
+         "t": 16,
+         "mx": 20,
+         "ok": true
+        }
+       },
+       "skip": true
+      },
+      {
+       "kind": "e",
+       "x": {
+        "r": {
+         "id": 8,
+         "per": "202612",
+         "act": "EDIT",
+         "p": "DUMMY-002",
+         "d": "TAIWAN",
+         "ot": "**",
+         "cd": 14,
+         "st": 1,
+         "src": "SCREEN",
+         "by": "RSARI",
+         "dt": "10-Dec 09:50",
+         "run": "20261210110000",
+         "sdt": "10-Dec 11:00",
+         "seq": 2
+        },
+        "file": "POST",
+        "ro": 2,
+        "prev": 10,
+        "chk": {
+         "t": 20,
+         "mx": 24,
+         "ok": true
+        }
+       },
+       "skip": true
+      },
+      {
+       "kind": "e",
+       "x": {
+        "r": {
+         "id": 9,
+         "per": "202612",
+         "act": "EDIT",
+         "p": "DUMMY-002",
+         "d": "USA",
+         "ot": "**",
+         "cd": 10,
+         "st": 1,
+         "src": "SCREEN",
+         "by": "RSARI",
+         "dt": "10-Dec 09:50",
+         "run": "20261210110000",
+         "sdt": "10-Dec 11:00",
+         "seq": 2
+        },
+        "file": "POST",
+        "ro": 2,
+        "prev": 6,
+        "chk": {
+         "t": 24,
+         "mx": 24,
+         "ok": true
+        }
+       },
+       "skip": true
+      },
+      {
+       "kind": "e",
+       "x": {
+        "r": {
+         "id": 10,
+         "per": "202612",
+         "act": "ADD",
+         "p": "DUMMY-004",
+         "d": "KOREA",
+         "ot": "**",
+         "cd": 12,
+         "st": 1,
+         "src": "SCREEN",
+         "by": "RSARI",
+         "dt": "10-Dec 10:20",
+         "run": "20261210110000",
+         "sdt": "10-Dec 11:00",
+         "seq": 2
+        },
+        "file": "POST",
+        "ro": 2,
+        "prev": null,
+        "chk": {
+         "t": 12,
+         "mx": 20,
+         "ok": true
+        }
+       },
+       "skip": true
+      },
+      {
+       "kind": "e",
+       "x": {
+        "r": {
+         "id": 11,
+         "per": "202612",
+         "act": "ADD",
+         "p": "DUMMY-004",
+         "d": "USA",
+         "ot": "**",
+         "cd": 8,
+         "st": 1,
+         "src": "SCREEN",
+         "by": "RSARI",
+         "dt": "10-Dec 10:20",
+         "run": "20261210110000",
+         "sdt": "10-Dec 11:00",
+         "seq": 2
+        },
+        "file": "POST",
+        "ro": 2,
+        "prev": null,
+        "chk": {
+         "t": 20,
+         "mx": 20,
+         "ok": true
+        }
+       },
+       "skip": true
+      }
+     ]
+    },
+    {
+     "label": "Export rows before KANBAN",
+     "rows": [
+      {
+       "kind": "e",
+       "x": {
+        "r": {
+         "id": 6,
+         "per": "202612",
+         "act": "EDIT",
+         "p": "DUMMY-001",
+         "d": "JAPAN",
+         "ot": "**",
+         "cd": 6,
+         "st": 1,
+         "src": "SCREEN",
+         "by": "RSARI",
+         "dt": "10-Dec 09:00",
+         "run": "20261210110000",
+         "sdt": "10-Dec 11:00",
+         "seq": 2
+        },
+        "file": "PRE",
+        "ro": 1,
+        "prev": 12,
+        "chk": {
+         "t": 14,
+         "mx": 20,
+         "ok": true
+        }
+       },
+       "chk": {
+        "t": 14,
+        "mx": 20,
+        "ok": true
+       }
+      },
+      {
+       "kind": "e",
+       "x": {
+        "r": {
+         "id": 7,
+         "per": "202612",
+         "act": "EDIT",
+         "p": "DUMMY-001",
+         "d": "KOREA",
+         "ot": "**",
+         "cd": 10,
+         "st": 1,
+         "src": "SCREEN",
+         "by": "RSARI",
+         "dt": "10-Dec 09:00",
+         "run": "20261210110000",
+         "sdt": "10-Dec 11:00",
+         "seq": 2
+        },
+        "file": "PRE",
+        "ro": 2,
+        "prev": 8,
+        "chk": {
+         "t": 16,
+         "mx": 20,
+         "ok": true
+        }
+       },
+       "chk": {
+        "t": 16,
+        "mx": 20,
+        "ok": true
+       }
+      },
+      {
+       "kind": "e",
+       "x": {
+        "r": {
+         "id": 8,
+         "per": "202612",
+         "act": "EDIT",
+         "p": "DUMMY-002",
+         "d": "TAIWAN",
+         "ot": "**",
+         "cd": 14,
+         "st": 1,
+         "src": "SCREEN",
+         "by": "RSARI",
+         "dt": "10-Dec 09:50",
+         "run": "20261210110000",
+         "sdt": "10-Dec 11:00",
+         "seq": 2
+        },
+        "file": "POST",
+        "ro": 2,
+        "prev": 10,
+        "chk": {
+         "t": 20,
+         "mx": 24,
+         "ok": true
+        }
+       },
+       "chk": {
+        "t": 20,
+        "mx": 16,
+        "ok": false
+       }
+      },
+      {
+       "kind": "e",
+       "x": {
+        "r": {
+         "id": 9,
+         "per": "202612",
+         "act": "EDIT",
+         "p": "DUMMY-002",
+         "d": "USA",
+         "ot": "**",
+         "cd": 10,
+         "st": 1,
+         "src": "SCREEN",
+         "by": "RSARI",
+         "dt": "10-Dec 09:50",
+         "run": "20261210110000",
+         "sdt": "10-Dec 11:00",
+         "seq": 2
+        },
+        "file": "POST",
+        "ro": 2,
+        "prev": 6,
+        "chk": {
+         "t": 24,
+         "mx": 24,
+         "ok": true
+        }
+       },
+       "skip": true
+      },
+      {
+       "kind": "e",
+       "x": {
+        "r": {
+         "id": 10,
+         "per": "202612",
+         "act": "ADD",
+         "p": "DUMMY-004",
+         "d": "KOREA",
+         "ot": "**",
+         "cd": 12,
+         "st": 1,
+         "src": "SCREEN",
+         "by": "RSARI",
+         "dt": "10-Dec 10:20",
+         "run": "20261210110000",
+         "sdt": "10-Dec 11:00",
+         "seq": 2
+        },
+        "file": "POST",
+        "ro": 2,
+        "prev": null,
+        "chk": {
+         "t": 12,
+         "mx": 20,
+         "ok": true
+        }
+       },
+       "skip": true
+      },
+      {
+       "kind": "e",
+       "x": {
+        "r": {
+         "id": 11,
+         "per": "202612",
+         "act": "ADD",
+         "p": "DUMMY-004",
+         "d": "USA",
+         "ot": "**",
+         "cd": 8,
+         "st": 1,
+         "src": "SCREEN",
+         "by": "RSARI",
+         "dt": "10-Dec 10:20",
+         "run": "20261210110000",
+         "sdt": "10-Dec 11:00",
+         "seq": 2
+        },
+        "file": "POST",
+        "ro": 2,
+        "prev": null,
+        "chk": {
+         "t": 20,
+         "mx": 20,
+         "ok": true
+        }
+       },
+       "skip": true
+      },
+      {
+       "kind": "k",
+       "x": {
+        "r": {
+         "id": 4,
+         "per": "202612",
+         "act": "EDIT",
+         "ps": "Active",
+         "p": "DUMMY-001",
+         "pcs": 12,
+         "max": 16,
+         "op": 1,
+         "st": 1,
+         "src": "SCREEN",
+         "by": "RSARI",
+         "dt": "10-Dec 09:00",
+         "run": "20261210110000",
+         "sdt": "10-Dec 11:00",
+         "seq": 2
+        },
+        "chk": {
+         "t": 16,
+         "mx": 16,
+         "ok": true
+        }
+       },
+       "skip": true
+      },
+      {
+       "kind": "k",
+       "x": {
+        "r": {
+         "id": 5,
+         "per": "202612",
+         "act": "EDIT",
+         "ps": "Active",
+         "p": "DUMMY-002",
+         "pcs": 10,
+         "max": 24,
+         "op": 2,
+         "st": 1,
+         "src": "SCREEN",
+         "by": "DANGGRAINI",
+         "dt": "10-Dec 09:40",
+         "run": "20261210110000",
+         "sdt": "10-Dec 11:00",
+         "seq": 2
+        },
+        "chk": {
+         "t": 16,
+         "mx": 24,
+         "ok": true
+        }
+       },
+       "skip": true
+      },
+      {
+       "kind": "k",
+       "x": {
+        "r": {
+         "id": 6,
+         "per": "202612",
+         "act": "EDIT",
+         "ps": "Active",
+         "p": "DUMMY-003",
+         "pcs": 10,
+         "max": 10,
+         "op": 3,
+         "st": 1,
+         "src": "SCREEN",
+         "by": "DANGGRAINI",
+         "dt": "10-Dec 10:00",
+         "run": "20261210110000",
+         "sdt": "10-Dec 11:00",
+         "seq": 2
+        },
+        "chk": {
+         "t": 10,
+         "mx": 10,
+         "ok": true
+        }
+       },
+       "skip": true
+      },
+      {
+       "kind": "k",
+       "x": {
+        "r": {
+         "id": 7,
+         "per": "202612",
+         "act": "ADD",
+         "ps": "Active",
+         "p": "DUMMY-004",
+         "pcs": 6,
+         "max": 20,
+         "op": 4,
+         "st": 1,
+         "src": "SCREEN",
+         "by": "DANGGRAINI",
+         "dt": "10-Dec 10:10",
+         "run": "20261210110000",
+         "sdt": "10-Dec 11:00",
+         "seq": 2
+        },
+        "chk": {
+         "t": 0,
+         "mx": 20,
+         "ok": true
+        }
+       },
+       "skip": true
+      }
+     ]
+    }
+   ],
+   "rpa": {
+    "run": "20261210110000",
+    "type": "SYNC",
+    "sc": "1",
+    "gRows": 2,
+    "g": "SUCCESS",
+    "gFail": [],
+    "ap": "SUCCESS",
+    "apFile": null,
+    "files": [
+     "EXPORT_PRE (2)",
+     "KANBAN (4)",
+     "EXPORT_POST (4)"
+    ]
+   },
+   "gsent": [
+    {
+     "id": 6,
+     "per": "202612",
+     "act": "ADD",
+     "p": "DUMMY-004",
+     "d": "KOREA",
+     "st": 1,
+     "src": "SCREEN",
+     "by": "RSARI",
+     "dt": "10-Dec 10:20",
+     "run": "20261210110000",
+     "sdt": "10-Dec 11:00",
+     "seq": 2,
+     "res": "OK"
+    },
+    {
+     "id": 7,
+     "per": "202612",
+     "act": "ADD",
+     "p": "DUMMY-004",
+     "d": "USA",
+     "st": 1,
+     "src": "SCREEN",
+     "by": "RSARI",
+     "dt": "10-Dec 10:20",
+     "run": "20261210110000",
+     "sdt": "10-Dec 11:00",
+     "seq": 2,
+     "res": "OK"
+    }
+   ],
+   "K": [
+    {
+     "id": 4,
+     "per": "202612",
+     "act": "EDIT",
+     "ps": "Active",
+     "p": "DUMMY-001",
+     "pcs": 12,
+     "max": 16,
+     "op": 1,
+     "st": 1,
+     "src": "SCREEN",
+     "by": "RSARI",
+     "dt": "10-Dec 09:00",
+     "run": "20261210110000",
+     "sdt": "10-Dec 11:00",
+     "seq": 2
+    },
+    {
+     "id": 5,
+     "per": "202612",
+     "act": "EDIT",
+     "ps": "Active",
+     "p": "DUMMY-002",
+     "pcs": 10,
+     "max": 24,
+     "op": 2,
+     "st": 1,
+     "src": "SCREEN",
+     "by": "DANGGRAINI",
+     "dt": "10-Dec 09:40",
+     "run": "20261210110000",
+     "sdt": "10-Dec 11:00",
+     "seq": 2
+    },
+    {
+     "id": 6,
+     "per": "202612",
+     "act": "EDIT",
+     "ps": "Active",
+     "p": "DUMMY-003",
+     "pcs": 10,
+     "max": 10,
+     "op": 3,
+     "st": 1,
+     "src": "SCREEN",
+     "by": "DANGGRAINI",
+     "dt": "10-Dec 10:00",
+     "run": "20261210110000",
+     "sdt": "10-Dec 11:00",
+     "seq": 2
+    },
+    {
+     "id": 7,
+     "per": "202612",
+     "act": "ADD",
+     "ps": "Active",
+     "p": "DUMMY-004",
+     "pcs": 6,
+     "max": 20,
+     "op": 4,
+     "st": 1,
+     "src": "SCREEN",
+     "by": "DANGGRAINI",
+     "dt": "10-Dec 10:10",
+     "run": "20261210110000",
+     "sdt": "10-Dec 11:00",
+     "seq": 2
+    }
+   ],
+   "E": [
+    {
+     "id": 6,
+     "per": "202612",
+     "act": "EDIT",
+     "p": "DUMMY-001",
+     "d": "JAPAN",
+     "ot": "**",
+     "cd": 6,
+     "st": 1,
+     "src": "SCREEN",
+     "by": "RSARI",
+     "dt": "10-Dec 09:00",
+     "run": "20261210110000",
+     "sdt": "10-Dec 11:00",
+     "seq": 2
+    },
+    {
+     "id": 7,
+     "per": "202612",
+     "act": "EDIT",
+     "p": "DUMMY-001",
+     "d": "KOREA",
+     "ot": "**",
+     "cd": 10,
+     "st": 1,
+     "src": "SCREEN",
+     "by": "RSARI",
+     "dt": "10-Dec 09:00",
+     "run": "20261210110000",
+     "sdt": "10-Dec 11:00",
+     "seq": 2
+    },
+    {
+     "id": 8,
+     "per": "202612",
+     "act": "EDIT",
+     "p": "DUMMY-002",
+     "d": "TAIWAN",
+     "ot": "**",
+     "cd": 14,
+     "st": 1,
+     "src": "SCREEN",
+     "by": "RSARI",
+     "dt": "10-Dec 09:50",
+     "run": "20261210110000",
+     "sdt": "10-Dec 11:00",
+     "seq": 2
+    },
+    {
+     "id": 9,
+     "per": "202612",
+     "act": "EDIT",
+     "p": "DUMMY-002",
+     "d": "USA",
+     "ot": "**",
+     "cd": 10,
+     "st": 1,
+     "src": "SCREEN",
+     "by": "RSARI",
+     "dt": "10-Dec 09:50",
+     "run": "20261210110000",
+     "sdt": "10-Dec 11:00",
+     "seq": 2
+    },
+    {
+     "id": 10,
+     "per": "202612",
+     "act": "ADD",
+     "p": "DUMMY-004",
+     "d": "KOREA",
+     "ot": "**",
+     "cd": 12,
+     "st": 1,
+     "src": "SCREEN",
+     "by": "RSARI",
+     "dt": "10-Dec 10:20",
+     "run": "20261210110000",
+     "sdt": "10-Dec 11:00",
+     "seq": 2
+    },
+    {
+     "id": 11,
+     "per": "202612",
+     "act": "ADD",
+     "p": "DUMMY-004",
+     "d": "USA",
+     "ot": "**",
+     "cd": 8,
+     "st": 1,
+     "src": "SCREEN",
+     "by": "RSARI",
+     "dt": "10-Dec 10:20",
+     "run": "20261210110000",
+     "sdt": "10-Dec 11:00",
+     "seq": 2
+    }
+   ],
+   "G": [
+    {
+     "id": 6,
+     "per": "202612",
+     "act": "ADD",
+     "p": "DUMMY-004",
+     "d": "KOREA",
+     "st": 1,
+     "src": "SCREEN",
+     "by": "RSARI",
+     "dt": "10-Dec 10:20",
+     "run": "20261210110000",
+     "sdt": "10-Dec 11:00",
+     "seq": 2
+    },
+    {
+     "id": 7,
+     "per": "202612",
+     "act": "ADD",
+     "p": "DUMMY-004",
+     "d": "USA",
+     "st": 1,
+     "src": "SCREEN",
+     "by": "RSARI",
+     "dt": "10-Dec 10:20",
+     "run": "20261210110000",
+     "sdt": "10-Dec 11:00",
+     "seq": 2
+    }
+   ],
+   "deleted": []
+  }
+ ],
+ "dest": {
+  "JAPAN": "9722D10",
+  "KOREA": "9715310",
+  "TAIWAN": "9811110",
+  "USA": "9600110",
+  "THAILAND": "9655510"
+ },
+ "run": "20261210110000",
+ "sdt": "2026-12-10 11:00:00"
+}
