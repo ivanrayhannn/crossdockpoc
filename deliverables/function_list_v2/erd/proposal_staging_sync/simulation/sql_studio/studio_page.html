@@ -153,6 +153,7 @@ function drawSchema() {
 }
 function pick(i) {
   cur = i; const q = DATA.queries[i];
+  if (q.run && runsInDb().list.includes(q.run) && q.run !== run) { run = q.run; drawRuns(); }
   $('qt').textContent = q.t; $('qd').textContent = q.d;
   $('sql').value = q.sql.replaceAll('{{RUN}}', run);
   drawList();
