@@ -111,6 +111,7 @@ REVISIONS = [
     ('0.3', '23-Nov-2026', 'Staging per target: TB_H_PART_CANDIDATE_STG_SYNC replaced by TB_H_STG_APPOLE_KANBAN, TB_H_STG_APPOLE_EXPORT and TB_H_STG_GTOPAS; '
                            'EFFECTIVE_START_DATE removed from TB_M_PART_CANDIDATE (a part takes effect from its first registered period)'),
     ('0.4', '26-Nov-2026', 'Staging tables: SYNC_RUN_ID removed (the run is SYNC_DT, one value per [Sync] click); SYNC_STATUS 0 / 1 (one unsent row per key)'),
+    ('0.5', '26-Nov-2026', 'TB_H_STG_APPOLE_KANBAN / _EXPORT: EFFECTIVE_MONTH_YEAR removed (same value as PERIOD); the views make Effective Month / Year for the upload file'),
 ]
 
 

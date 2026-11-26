@@ -35,10 +35,9 @@ AP POLE Kanban rows in the format of the upload file LLM9Q910, one row per Kanba
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
 | STG_ID | BIGINT | Y | N | Running number: order of the inserts |
-| PERIOD | CHAR(6) |  | N | Calculation period YYYYMM. FK1 (PART_NO, PERIOD) -> TB_M_PART_CANDIDATE |
+| PERIOD | CHAR(6) |  | N | Calculation period YYYYMM. FK1 (PART_NO, PERIOD) -> TB_M_PART_CANDIDATE. File column Effective Month / Year = MM/YYYY of PERIOD, made by the view (not stored) |
 | ACTION | VARCHAR(6) |  | N | ADD (new part, new period) / EDIT (Pcs/Case or Max changed) / KEEP (header written by an Export save, Kanban unchanged) |
 | PART_STATUS | VARCHAR(10) |  | N | Active / Inactive in the period when the row is written (an Inactive part stays in the AP POLE Kanban) |
-| EFFECTIVE_MONTH_YEAR | CHAR(7) |  | N | MM/YYYY of PERIOD. File / screen column: Effective Month / Year |
 | OPERATOR_ID | CHAR(2) |  | N | Always P6. File / screen column: Operator ID. Default 'P6' |
 | PART_NO | VARCHAR(TBD) |  | N | Part number with "-" (NSP format); FK1. File / screen column: Part No. |
 | PART_NAME | VARCHAR(TBD) |  | N | From TB_M_PART_CANDIDATE at the insert. File / screen column: Part Name |
@@ -63,11 +62,10 @@ AP POLE Export rows in the format of the upload file LLM9Q880, one row per added
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
 | STG_ID | BIGINT | Y | N | Running number: order of the inserts |
-| PERIOD | CHAR(6) |  | N | Calculation period YYYYMM. FK1 (NSP_PART_NO, PERIOD) -> TB_M_PART_CANDIDATE |
+| PERIOD | CHAR(6) |  | N | Calculation period YYYYMM. FK1 (NSP_PART_NO, PERIOD) -> TB_M_PART_CANDIDATE. File column Effective Month / Year = MM/YYYY of PERIOD, made by the view (not stored) |
 | NSP_PART_NO | VARCHAR(TBD) |  | N | Part number with "-" (key back to NSP); FK1 |
 | DEST_CODE | CHAR(7) |  | N | Destination code, 7 digits. No FK: a DELETE row points to a removed destination |
 | ACTION | VARCHAR(6) |  | N | ADD / EDIT / DELETE (DELETE = Max Shipping Box (RCS) 0) |
-| EFFECTIVE_MONTH_YEAR | CHAR(7) |  | N | MM/YYYY of PERIOD. File / screen column: Effective Month / Year |
 | PART_NO | VARCHAR(TBD) |  | N | Part number without "-". File / screen column: Part No. |
 | BUYER_PD | CHAR(8) |  | N | DEST_CODE in 5-2 format. File / screen column: Buyer-PD |
 | ORDER_TYPE | VARCHAR(2) |  | N | '**', 'C', '9', 'V' (system master). File / screen column: Order Type |
@@ -597,6 +595,7 @@ GTOPAS WVJA5204 rows: a part + destination to add or delete, written by SP_STG_W
 | 1.0 | FID Rayhan | 22-Nov-26 |  | Upload files LLM9Q910 / LLM9Q880 instead of the screen steps; source = TB_H_PART_CANDIDATE_STG_SYNC only; SEND_SEQ order 1 / 2 / 3 (22-Nov). |
 | 1.1 | FID Rayhan | 23-Nov-26 |  | Source: views V_APPOLE_UPLOAD_KANBAN / _EXPORT on TB_H_STG_APPOLE_KANBAN / _EXPORT; files EXPORT_PRE, KANBAN, EXPORT_POST from OPERATION_TYPE; started by the RPA parent flow (scenario 1 after GTOPAS OK, scenario 2 at once) (23-Nov). |
 | 1.2 | FID Rayhan | 26-Nov-26 |  | Staging: no SYNC_RUN_ID, the run is SYNC_DT (one value per [Sync] click / rollover); one unsent row per key (a new change updates it, back to the sent value deletes it); SYNC_STATUS 0 / 1. SQL: prepare_code/sql/crossdock_staging_sync.sql. |
+| 1.3 | FID Rayhan | 26-Nov-26 |  | TB_H_STG_APPOLE_KANBAN / _EXPORT: EFFECTIVE_MONTH_YEAR removed (same value as PERIOD); the views make Effective Month / Year (MM/YYYY of PERIOD) for the upload file. |
 
 #### 1. General
 
@@ -642,7 +641,7 @@ GTOPAS WVJA5204 rows: a part + destination to add or delete, written by SP_STG_W
 
 | Column | NSP source / rule |
 |---|---|
-| Effective Month / Year | EFFECTIVE_MONTH_YEAR (MM/YYYY) |
+| Effective Month / Year | EFFECTIVE_MONTH_YEAR of the view (MM/YYYY of PERIOD) |
 | Operator ID | 'P6' |
 | Part No. | PART_NO with "-" |
 | Part Name | PART_NAME |
@@ -655,7 +654,7 @@ GTOPAS WVJA5204 rows: a part + destination to add or delete, written by SP_STG_W
 
 | Column | NSP source / rule |
 |---|---|
-| Effective Month / Year | EFFECTIVE_MONTH_YEAR (MM/YYYY) |
+| Effective Month / Year | EFFECTIVE_MONTH_YEAR of the view (MM/YYYY of PERIOD) |
 | Part No. | PART_NO without "-" |
 | Buyer-PD | BUYER_PD (DEST_CODE as 5-2, e.g. 9722D-10) |
 | Order Type | ORDER_TYPE |
@@ -701,7 +700,7 @@ flowchart TB
 
 | Source field | Destination field | Description |
 |---|---|---|
-| EFFECTIVE_MONTH_YEAR | Effective Month / Year | MM/YYYY |
+| EFFECTIVE_MONTH_YEAR | Effective Month / Year | MM/YYYY of PERIOD, made by the view |
 | OPERATOR_ID | Operator ID | 'P6' |
 | PART_NO | Part No. | With "-" |
 | PART_NAME | Part Name |  |
@@ -714,7 +713,7 @@ flowchart TB
 
 | Source field | Destination field | Description |
 |---|---|---|
-| EFFECTIVE_MONTH_YEAR | Effective Month / Year | MM/YYYY |
+| EFFECTIVE_MONTH_YEAR | Effective Month / Year | MM/YYYY of PERIOD, made by the view |
 | PART_NO | Part No. | Without "-" |
 | BUYER_PD | Buyer-PD | 5-2 format |
 | ORDER_TYPE | Order Type |  |
@@ -821,10 +820,9 @@ AP POLE Kanban rows in the format of the upload file LLM9Q910, one row per Kanba
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
 | STG_ID | BIGINT | Y | N | Running number: order of the inserts |
-| PERIOD | CHAR(6) |  | N | Calculation period YYYYMM. FK1 (PART_NO, PERIOD) -> TB_M_PART_CANDIDATE |
+| PERIOD | CHAR(6) |  | N | Calculation period YYYYMM. FK1 (PART_NO, PERIOD) -> TB_M_PART_CANDIDATE. File column Effective Month / Year = MM/YYYY of PERIOD, made by the view (not stored) |
 | ACTION | VARCHAR(6) |  | N | ADD (new part, new period) / EDIT (Pcs/Case or Max changed) / KEEP (header written by an Export save, Kanban unchanged) |
 | PART_STATUS | VARCHAR(10) |  | N | Active / Inactive in the period when the row is written (an Inactive part stays in the AP POLE Kanban) |
-| EFFECTIVE_MONTH_YEAR | CHAR(7) |  | N | MM/YYYY of PERIOD. File / screen column: Effective Month / Year |
 | OPERATOR_ID | CHAR(2) |  | N | Always P6. File / screen column: Operator ID. Default 'P6' |
 | PART_NO | VARCHAR(TBD) |  | N | Part number with "-" (NSP format); FK1. File / screen column: Part No. |
 | PART_NAME | VARCHAR(TBD) |  | N | From TB_M_PART_CANDIDATE at the insert. File / screen column: Part Name |
@@ -847,11 +845,10 @@ AP POLE Export rows in the format of the upload file LLM9Q880, one row per added
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
 | STG_ID | BIGINT | Y | N | Running number: order of the inserts |
-| PERIOD | CHAR(6) |  | N | Calculation period YYYYMM. FK1 (NSP_PART_NO, PERIOD) -> TB_M_PART_CANDIDATE |
+| PERIOD | CHAR(6) |  | N | Calculation period YYYYMM. FK1 (NSP_PART_NO, PERIOD) -> TB_M_PART_CANDIDATE. File column Effective Month / Year = MM/YYYY of PERIOD, made by the view (not stored) |
 | NSP_PART_NO | VARCHAR(TBD) |  | N | Part number with "-" (key back to NSP); FK1 |
 | DEST_CODE | CHAR(7) |  | N | Destination code, 7 digits. No FK: a DELETE row points to a removed destination |
 | ACTION | VARCHAR(6) |  | N | ADD / EDIT / DELETE (DELETE = Max Shipping Box (RCS) 0) |
-| EFFECTIVE_MONTH_YEAR | CHAR(7) |  | N | MM/YYYY of PERIOD. File / screen column: Effective Month / Year |
 | PART_NO | VARCHAR(TBD) |  | N | Part number without "-". File / screen column: Part No. |
 | BUYER_PD | CHAR(8) |  | N | DEST_CODE in 5-2 format. File / screen column: Buyer-PD |
 | ORDER_TYPE | VARCHAR(2) |  | N | '**', 'C', '9', 'V' (system master). File / screen column: Order Type |
@@ -910,7 +907,6 @@ CREATE TABLE TB_H_STG_APPOLE_KANBAN (
   PERIOD                     CHAR(6) NOT NULL,
   ACTION                     VARCHAR(6) NOT NULL,
   PART_STATUS                VARCHAR(10) NOT NULL,
-  EFFECTIVE_MONTH_YEAR       CHAR(7) NOT NULL,
   OPERATOR_ID                CHAR(2) NOT NULL DEFAULT 'P6',
   PART_NO                    VARCHAR(30) NOT NULL,
   PART_NAME                  VARCHAR(30) NOT NULL,
@@ -942,7 +938,6 @@ CREATE TABLE TB_H_STG_APPOLE_EXPORT (
   NSP_PART_NO                VARCHAR(30) NOT NULL,
   DEST_CODE                  CHAR(7) NOT NULL,
   ACTION                     VARCHAR(6) NOT NULL,
-  EFFECTIVE_MONTH_YEAR       CHAR(7) NOT NULL,
   PART_NO                    VARCHAR(30) NOT NULL,
   BUYER_PD                   CHAR(8) NOT NULL,
   ORDER_TYPE                 VARCHAR(2) NOT NULL,
@@ -1013,7 +1008,7 @@ CREATE PROCEDURE SP_STG_WRITE
   @USER_ID      VARCHAR(20)
 AS
 BEGIN
-  DECLARE @NOW DATETIME = GETDATE(), @EFF CHAR(7) = RIGHT(@PERIOD, 2) + '/' + LEFT(@PERIOD, 4);
+  DECLARE @NOW DATETIME = GETDATE();
 
   IF @LEVEL = 'KANBAN'
   BEGIN
@@ -1046,10 +1041,10 @@ BEGIN
     ELSE
       -- 3c. no unsent row yet: insert
       INSERT INTO TB_H_STG_APPOLE_KANBAN
-        (PERIOD, ACTION, PART_STATUS, EFFECTIVE_MONTH_YEAR, OPERATOR_ID, PART_NO, PART_NAME,
+        (PERIOD, ACTION, PART_STATUS, OPERATOR_ID, PART_NO, PART_NAME,
          SHIPPING_BOX_QTY, MAX_SHIPPING_BOX_QTY, MAX_ALLOWANCE_QTY, OPERATION_TYPE,
          SYNC_STATUS, SOURCE, UPLOAD_ID, CREATED_BY, CREATED_DT)
-      SELECT @PERIOD, @ACT, @PART_STATUS, @EFF, 'P6', @PART_NO, m.PART_NAME,
+      SELECT @PERIOD, @ACT, @PART_STATUS, 'P6', @PART_NO, m.PART_NAME,
              @PCS_CASE, @MAX_CASE_DAY, @PCS_CASE * @MAX_CASE_DAY, @OP,
              '0', @SOURCE, @UPLOAD_ID, @USER_ID, @NOW
       FROM   TB_M_PART_CANDIDATE m WHERE m.PART_NO = @PART_NO AND m.PERIOD = @PERIOD;
@@ -1091,10 +1086,10 @@ BEGIN
     ELSE
       -- 3c. insert
       INSERT INTO TB_H_STG_APPOLE_EXPORT
-        (PERIOD, NSP_PART_NO, DEST_CODE, ACTION, EFFECTIVE_MONTH_YEAR, PART_NO, BUYER_PD,
+        (PERIOD, NSP_PART_NO, DEST_CODE, ACTION, PART_NO, BUYER_PD,
          ORDER_TYPE, TRANSPORT_CODE, MAX_SHIPPING_BOX_RCS, SYNC_STATUS, SOURCE, UPLOAD_ID, CREATED_BY, CREATED_DT)
       VALUES
-        (@PERIOD, @PART_NO, @DEST_CODE, @EACT, @EFF, REPLACE(@PART_NO, '-', ''),
+        (@PERIOD, @PART_NO, @DEST_CODE, @EACT, REPLACE(@PART_NO, '-', ''),
          LEFT(@DEST_CODE, 5) + '-' + RIGHT(@DEST_CODE, 2), @ORDER_TYPE, '2', @CASE_DAY,
          '0', @SOURCE, @UPLOAD_ID, @USER_ID, @NOW);
 
@@ -1136,10 +1131,10 @@ BEGIN
                              WHERE PART_NO = @PART_NO AND PERIOD = @PERIOD AND SYNC_STATUS = '0');
   IF @PEND_E > 0 AND @PEND_K IS NULL                        -- Export waits, no Kanban row: header 5 with the current values
     INSERT INTO TB_H_STG_APPOLE_KANBAN
-      (PERIOD, ACTION, PART_STATUS, EFFECTIVE_MONTH_YEAR, OPERATOR_ID, PART_NO, PART_NAME,
+      (PERIOD, ACTION, PART_STATUS, OPERATOR_ID, PART_NO, PART_NAME,
        SHIPPING_BOX_QTY, MAX_SHIPPING_BOX_QTY, MAX_ALLOWANCE_QTY, OPERATION_TYPE,
        SYNC_STATUS, SOURCE, UPLOAD_ID, CREATED_BY, CREATED_DT)
-    SELECT @PERIOD, 'KEEP', m.PART_STATUS, RIGHT(@PERIOD, 2) + '/' + LEFT(@PERIOD, 4), 'P6', @PART_NO, m.PART_NAME,
+    SELECT @PERIOD, 'KEEP', m.PART_STATUS, 'P6', @PART_NO, m.PART_NAME,
            m.PCS_CASE, m.MAX_CASE_DAY, m.PCS_CASE * m.MAX_CASE_DAY, 5,
            '0', @SOURCE, @UPLOAD_ID, @USER_ID, @NOW
     FROM   TB_M_PART_CANDIDATE m WHERE m.PART_NO = @PART_NO AND m.PERIOD = @PERIOD;
@@ -1189,7 +1184,8 @@ GO
 -- File KANBAN (order 2): Kanban rows of a run
 CREATE VIEW V_APPOLE_UPLOAD_KANBAN AS
 SELECT k.SYNC_DT, 2 AS FILE_NO, k.STG_ID, k.PERIOD, k.OPERATION_TYPE,
-       k.EFFECTIVE_MONTH_YEAR, k.OPERATOR_ID, k.PART_NO, k.PART_NAME,
+       SUBSTRING(k.PERIOD, 5, 2) + '/' + LEFT(k.PERIOD, 4) AS EFFECTIVE_MONTH_YEAR,   -- MM/YYYY of PERIOD, not stored
+       k.OPERATOR_ID, k.PART_NO, k.PART_NAME,
        k.SHIPPING_BOX_QTY, k.MAX_SHIPPING_BOX_QTY, k.MAX_ALLOWANCE_QTY
 FROM   TB_H_STG_APPOLE_KANBAN k
 WHERE  k.SYNC_STATUS = '1'
@@ -1213,7 +1209,8 @@ SELECT e.SYNC_DT,
        CASE WHEN k.OPERATION_TYPE = 1 THEN 'EXPORT_PRE' ELSE 'EXPORT_POST' END AS FILE_NAME,
        CASE WHEN e.PREV_RCS IS NOT NULL AND e.MAX_SHIPPING_BOX_RCS < e.PREV_RCS THEN 1 ELSE 2 END AS ROW_ORDER,
        e.PERIOD, e.NSP_PART_NO, e.STG_ID,
-       e.EFFECTIVE_MONTH_YEAR, e.PART_NO, e.BUYER_PD, e.ORDER_TYPE, e.TRANSPORT_CODE, e.MAX_SHIPPING_BOX_RCS
+       SUBSTRING(e.PERIOD, 5, 2) + '/' + LEFT(e.PERIOD, 4) AS EFFECTIVE_MONTH_YEAR,   -- MM/YYYY of PERIOD, not stored
+       e.PART_NO, e.BUYER_PD, e.ORDER_TYPE, e.TRANSPORT_CODE, e.MAX_SHIPPING_BOX_RCS
 FROM   e
 JOIN   TB_H_STG_APPOLE_KANBAN k                              -- every part of the run has its header (1 to 5)
        ON  k.SYNC_DT = e.SYNC_DT AND k.PERIOD = e.PERIOD

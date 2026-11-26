@@ -22,6 +22,7 @@
 | 1.0 | FID Rayhan | 22-Nov-26 |  | Upload files LLM9Q910 / LLM9Q880 instead of the screen steps; source = TB_H_PART_CANDIDATE_STG_SYNC only; SEND_SEQ order 1 / 2 / 3 (22-Nov). |
 | 1.1 | FID Rayhan | 23-Nov-26 |  | Source: views V_APPOLE_UPLOAD_KANBAN / _EXPORT on TB_H_STG_APPOLE_KANBAN / _EXPORT; files EXPORT_PRE, KANBAN, EXPORT_POST from OPERATION_TYPE; started by the RPA parent flow (scenario 1 after GTOPAS OK, scenario 2 at once) (23-Nov). |
 | 1.2 | FID Rayhan | 26-Nov-26 |  | Staging: no SYNC_RUN_ID, the run is SYNC_DT (one value per [Sync] click / rollover); one unsent row per key (a new change updates it, back to the sent value deletes it); SYNC_STATUS 0 / 1. SQL: prepare_code/sql/crossdock_staging_sync.sql. |
+| 1.3 | FID Rayhan | 26-Nov-26 |  | TB_H_STG_APPOLE_KANBAN / _EXPORT: EFFECTIVE_MONTH_YEAR removed (same value as PERIOD); the views make Effective Month / Year (MM/YYYY of PERIOD) for the upload file. |
 
 ## 1. General
 
@@ -67,7 +68,7 @@
 
 | Column | NSP source / rule |
 |---|---|
-| Effective Month / Year | EFFECTIVE_MONTH_YEAR (MM/YYYY) |
+| Effective Month / Year | EFFECTIVE_MONTH_YEAR of the view (MM/YYYY of PERIOD) |
 | Operator ID | 'P6' |
 | Part No. | PART_NO with "-" |
 | Part Name | PART_NAME |
@@ -80,7 +81,7 @@
 
 | Column | NSP source / rule |
 |---|---|
-| Effective Month / Year | EFFECTIVE_MONTH_YEAR (MM/YYYY) |
+| Effective Month / Year | EFFECTIVE_MONTH_YEAR of the view (MM/YYYY of PERIOD) |
 | Part No. | PART_NO without "-" |
 | Buyer-PD | BUYER_PD (DEST_CODE as 5-2, e.g. 9722D-10) |
 | Order Type | ORDER_TYPE |
@@ -126,7 +127,7 @@ flowchart TB
 
 | Source field | Destination field | Description |
 |---|---|---|
-| EFFECTIVE_MONTH_YEAR | Effective Month / Year | MM/YYYY |
+| EFFECTIVE_MONTH_YEAR | Effective Month / Year | MM/YYYY of PERIOD, made by the view |
 | OPERATOR_ID | Operator ID | 'P6' |
 | PART_NO | Part No. | With "-" |
 | PART_NAME | Part Name |  |
@@ -139,7 +140,7 @@ flowchart TB
 
 | Source field | Destination field | Description |
 |---|---|---|
-| EFFECTIVE_MONTH_YEAR | Effective Month / Year | MM/YYYY |
+| EFFECTIVE_MONTH_YEAR | Effective Month / Year | MM/YYYY of PERIOD, made by the view |
 | PART_NO | Part No. | Without "-" |
 | BUYER_PD | Buyer-PD | 5-2 format |
 | ORDER_TYPE | Order Type |  |
@@ -246,10 +247,9 @@ AP POLE Kanban rows in the format of the upload file LLM9Q910, one row per Kanba
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
 | STG_ID | BIGINT | Y | N | Running number: order of the inserts |
-| PERIOD | CHAR(6) |  | N | Calculation period YYYYMM. FK1 (PART_NO, PERIOD) -> TB_M_PART_CANDIDATE |
+| PERIOD | CHAR(6) |  | N | Calculation period YYYYMM. FK1 (PART_NO, PERIOD) -> TB_M_PART_CANDIDATE. File column Effective Month / Year = MM/YYYY of PERIOD, made by the view (not stored) |
 | ACTION | VARCHAR(6) |  | N | ADD (new part, new period) / EDIT (Pcs/Case or Max changed) / KEEP (header written by an Export save, Kanban unchanged) |
 | PART_STATUS | VARCHAR(10) |  | N | Active / Inactive in the period when the row is written (an Inactive part stays in the AP POLE Kanban) |
-| EFFECTIVE_MONTH_YEAR | CHAR(7) |  | N | MM/YYYY of PERIOD. File / screen column: Effective Month / Year |
 | OPERATOR_ID | CHAR(2) |  | N | Always P6. File / screen column: Operator ID. Default 'P6' |
 | PART_NO | VARCHAR(TBD) |  | N | Part number with "-" (NSP format); FK1. File / screen column: Part No. |
 | PART_NAME | VARCHAR(TBD) |  | N | From TB_M_PART_CANDIDATE at the insert. File / screen column: Part Name |
@@ -272,11 +272,10 @@ AP POLE Export rows in the format of the upload file LLM9Q880, one row per added
 | Column | Type | PK | Null | Description |
 |---|---|---|---|---|
 | STG_ID | BIGINT | Y | N | Running number: order of the inserts |
-| PERIOD | CHAR(6) |  | N | Calculation period YYYYMM. FK1 (NSP_PART_NO, PERIOD) -> TB_M_PART_CANDIDATE |
+| PERIOD | CHAR(6) |  | N | Calculation period YYYYMM. FK1 (NSP_PART_NO, PERIOD) -> TB_M_PART_CANDIDATE. File column Effective Month / Year = MM/YYYY of PERIOD, made by the view (not stored) |
 | NSP_PART_NO | VARCHAR(TBD) |  | N | Part number with "-" (key back to NSP); FK1 |
 | DEST_CODE | CHAR(7) |  | N | Destination code, 7 digits. No FK: a DELETE row points to a removed destination |
 | ACTION | VARCHAR(6) |  | N | ADD / EDIT / DELETE (DELETE = Max Shipping Box (RCS) 0) |
-| EFFECTIVE_MONTH_YEAR | CHAR(7) |  | N | MM/YYYY of PERIOD. File / screen column: Effective Month / Year |
 | PART_NO | VARCHAR(TBD) |  | N | Part number without "-". File / screen column: Part No. |
 | BUYER_PD | CHAR(8) |  | N | DEST_CODE in 5-2 format. File / screen column: Buyer-PD |
 | ORDER_TYPE | VARCHAR(2) |  | N | '**', 'C', '9', 'V' (system master). File / screen column: Order Type |

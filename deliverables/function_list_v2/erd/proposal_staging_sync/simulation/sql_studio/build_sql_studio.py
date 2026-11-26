@@ -32,7 +32,10 @@ def strip_comments_before(b, word):
 
 tables = [to_sqlite_table(b) for b in batches('TABLE')]
 indexes = [strip_comments_before(b, 'CREATE INDEX') for b in batches('INDEX')]
-views = [strip_comments_before(b, 'CREATE VIEW') for b in batches('VIEW')]
+# T-SQL string functions of the views -> SQLite
+views = [re.sub(r"SUBSTRING\((\w)\.PERIOD, 5, 2\) \+ '/' \+ LEFT\((\w)\.PERIOD, 4\)", r"substr(\1.PERIOD, 5, 2) || '/' || substr(\2.PERIOD, 1, 4)",
+                strip_comments_before(b, 'CREATE VIEW')) for b in batches('VIEW')]
+assert all('SUBSTRING' not in v for v in views)
 assert len(tables) == 3 and len(views) == 2, (len(tables), len(views))
 DDL = '\n\n'.join(tables + indexes + views)
 
@@ -52,11 +55,11 @@ bpd = lambda d: DEST[d][:5] + '-' + DEST[d][5:]
 ins = []
 for r in DATA['K']:
     ins.append('INSERT INTO TB_H_STG_APPOLE_KANBAN VALUES (' + ', '.join(q(v) for v in [
-        r['id'], r['per'], r['act'], r['ps'], my(r['per']), 'P6', r['p'], 'DUMMY PART ' + r['p'][-3:], r['pcs'], r['max'], r['pcs'] * r['max'],
+        r['id'], r['per'], r['act'], r['ps'], 'P6', r['p'], 'DUMMY PART ' + r['p'][-3:], r['pcs'], r['max'], r['pcs'] * r['max'],
         r['op'], r['src'], None, str(r['st']), sdt(r['run']), r['by'], r['dt'], r.get('chb'), r.get('chd')]) + ');')
 for r in DATA['E']:
     ins.append('INSERT INTO TB_H_STG_APPOLE_EXPORT VALUES (' + ', '.join(q(v) for v in [
-        r['id'], r['per'], r['p'], DEST[r['d']], r['act'], my(r['per']), r['p'].replace('-', ''), bpd(r['d']), r['ot'], '2', r['cd'],
+        r['id'], r['per'], r['p'], DEST[r['d']], r['act'], r['p'].replace('-', ''), bpd(r['d']), r['ot'], '2', r['cd'],
         r['src'], None, str(r['st']), sdt(r['run']), r['by'], r['dt'], r.get('chb'), r.get('chd')]) + ');')
 for r in DATA['G']:
     ins.append('INSERT INTO TB_H_STG_GTOPAS VALUES (' + ', '.join(q(v) for v in [

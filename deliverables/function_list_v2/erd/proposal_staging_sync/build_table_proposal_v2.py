@@ -77,10 +77,9 @@ def dest():
 
 KAN = [
     ['STG_ID', 'BIGINT', 'Y', 'N', 'identity', '', 'Running number: order of the inserts', 'New'],
-    ['PERIOD', 'CHAR(6)', '', 'N', '', '', 'Calculation period YYYYMM. FK1 (PART_NO, PERIOD) -> TB_M_PART_CANDIDATE', 'New'],
+    ['PERIOD', 'CHAR(6)', '', 'N', '', '', 'Calculation period YYYYMM. FK1 (PART_NO, PERIOD) -> TB_M_PART_CANDIDATE. File column Effective Month / Year = MM/YYYY of PERIOD, made by the view (not stored)', 'New'],
     ['ACTION', 'VARCHAR(6)', '', 'N', '', '', 'ADD (new part, new period) / EDIT (Pcs/Case or Max changed) / KEEP (header written by an Export save, Kanban unchanged)', 'New'],
     ['PART_STATUS', 'VARCHAR(10)', '', 'N', '', '', 'Active / Inactive in the period when the row is written (an Inactive part stays in the AP POLE Kanban)', 'New'],
-    ['EFFECTIVE_MONTH_YEAR', 'CHAR(7)', '', 'N', '', 'Effective Month / Year', 'MM/YYYY of PERIOD', 'New'],
     ['OPERATOR_ID', 'CHAR(2)', '', 'N', "'P6'", 'Operator ID', 'Always P6', 'New'],
     ['PART_NO', 'VARCHAR(TBD)', '', 'N', '', 'Part No.', 'Part number with "-" (NSP format); FK1', 'New'],
     ['PART_NAME', 'VARCHAR(TBD)', '', 'N', '', 'Part Name', 'From TB_M_PART_CANDIDATE at the insert', 'New'],
@@ -94,11 +93,10 @@ KAN = [
 
 EXP = [
     ['STG_ID', 'BIGINT', 'Y', 'N', 'identity', '', 'Running number: order of the inserts', 'New'],
-    ['PERIOD', 'CHAR(6)', '', 'N', '', '', 'Calculation period YYYYMM. FK1 (NSP_PART_NO, PERIOD) -> TB_M_PART_CANDIDATE', 'New'],
+    ['PERIOD', 'CHAR(6)', '', 'N', '', '', 'Calculation period YYYYMM. FK1 (NSP_PART_NO, PERIOD) -> TB_M_PART_CANDIDATE. File column Effective Month / Year = MM/YYYY of PERIOD, made by the view (not stored)', 'New'],
     ['NSP_PART_NO', 'VARCHAR(TBD)', '', 'N', '', '', 'Part number with "-" (key back to NSP); FK1', 'New'],
     ['DEST_CODE', 'CHAR(7)', '', 'N', '', '', 'Destination code, 7 digits. No FK: a DELETE row points to a removed destination', 'New'],
     ['ACTION', 'VARCHAR(6)', '', 'N', '', '', 'ADD / EDIT / DELETE (DELETE = Max Shipping Box (RCS) 0)', 'New'],
-    ['EFFECTIVE_MONTH_YEAR', 'CHAR(7)', '', 'N', '', 'Effective Month / Year', 'MM/YYYY of PERIOD', 'New'],
     ['PART_NO', 'VARCHAR(TBD)', '', 'N', '', 'Part No.', 'Part number without "-"', 'New'],
     ['BUYER_PD', 'CHAR(8)', '', 'N', '', 'Buyer-PD', 'DEST_CODE in 5-2 format', 'New'],
     ['ORDER_TYPE', 'VARCHAR(2)', '', 'N', '', 'Order Type', "'**', 'C', '9', 'V' (system master)", 'New'],
