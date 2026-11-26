@@ -283,3 +283,10 @@ FROM {K} k WHERE k.SYNC_STATUS = '1' ORDER BY k.OPERATION_TYPE, k.SYNC_DT, k.PAR
           f"SELECT MAX(SYNC_DT) AS LAST_RUN FROM (SELECT SYNC_DT FROM {K} WHERE SYNC_STATUS = '1' UNION ALL SELECT SYNC_DT FROM {E} WHERE SYNC_STATUS = '1'\n  UNION ALL SELECT SYNC_DT FROM {G} WHERE SYNC_STATUS = '1') s;", 'GO', '']
 open(TSQL_OUT, 'w', encoding='utf-8').write('\n'.join(lines))
 print('saved', os.path.relpath(TSQL_OUT, ROOT))
+
+# ---------- copy for the web app (menu Master > Staging Sync SQL): sql.js served with the app, not from the CDN ----------
+APP_SIM = os.path.join(ROOT, 'app', 'public', 'simulations')
+if os.path.isdir(APP_SIM):
+    open(os.path.join(APP_SIM, 'staging-sql-studio.html'), 'w', encoding='utf-8').write(
+        page.replace('https://cdn.jsdelivr.net/npm/sql.js@1.10.2/dist/sql-asm.js', 'sql-asm.js'))
+    print('saved app/public/simulations/staging-sql-studio.html')

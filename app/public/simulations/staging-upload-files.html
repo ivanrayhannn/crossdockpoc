@@ -1,0 +1,540 @@
+<title>Staging to Upload Files</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: scenario picker on top, then one reading column per scenario: change → staging → view → files → AP POLE check.
+   Light only, the look of the other Crossdock simulations (white, light blue, dark blue). Yellow header = helper column of NSP. */
+:root {
+  --bg: #ffffff; --surface: #ffffff; --ink: #0f2540; --muted: #4f6580; --line: #c9dcef;
+  --accent: #123a6b; --accent-soft: #e6f0fb; --grid: #d6e4f2; --th: #dcebfa; --th-ink: #123a6b;
+  --help: #fff1c2; --help-ink: #6b4e00;
+  --ok: #2c7a3f; --ok-soft: #e1f2e5; --ng: #b23b2e; --ng-soft: #fbe3df; --off: #f3f6fa;
+  --f1: #7a3fa0; --f2: #123a6b; --f3: #1f7a74;
+  --f-display: "IBM Plex Sans Condensed", "Arial Narrow", Arial, sans-serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", Arial, sans-serif;
+  --f-mono: "IBM Plex Mono", Consolas, "Courier New", monospace;
+  color-scheme: light;
+}
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--f-body); }
+.wrap { max-width: 1320px; margin: 0 auto; padding-block: 24px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 32px; }
+h1, h2, h3, h4 { font-family: var(--f-display); text-wrap: balance; margin: 0; letter-spacing: .01em; }
+h1 { font-size: 2rem; line-height: 1.15; } h2 { font-size: 1.45rem; } h3 { font-size: 1.08rem; } h4 { font-size: .95rem; }
+p { margin: 0; max-width: 80ch; }
+.eyebrow { font: 600 .72rem/1 var(--f-body); text-transform: uppercase; letter-spacing: .09em; color: var(--accent); }
+.sub { color: var(--muted); }
+header, section, .stack { display: grid; gap: 12px; min-width: 0; }
+code, .mono { font-family: var(--f-mono); font-size: .86em; }
+.tbl { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: .82rem; font-variant-numeric: tabular-nums; }
+th, td { padding: 6px 9px; border-bottom: 1px solid var(--grid); border-right: 1px solid var(--grid); text-align: left; white-space: nowrap; vertical-align: top; }
+th:last-child, td:last-child { border-right: 0; } tr:last-child td { border-bottom: 0; }
+th { font: 600 .7rem/1.3 var(--f-body); text-transform: uppercase; letter-spacing: .05em; color: var(--th-ink); background: var(--th); border-bottom: 1px solid var(--line); }
+th.h { background: var(--help); color: var(--help-ink); }
+td { font-family: var(--f-mono); font-size: .8rem; }
+td.t { white-space: normal; font-family: var(--f-body); min-width: 220px; }
+td.n { text-align: right; }
+tr.del td { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--muted); }
+tr.skip td { color: var(--muted); background: var(--off); }
+tr.bad td { background: var(--ng-soft); }
+.ok { color: var(--ok); font-weight: 600; font-family: var(--f-body); }
+.ng { color: var(--ng); font-weight: 600; font-family: var(--f-body); }
+.chg { color: var(--accent); font-weight: 600; }
+.legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; }
+.lg { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: grid; gap: 4px; align-content: start; }
+.lg b { font-family: var(--f-display); font-size: 1rem; }
+.ot { display: inline-grid; place-items: center; min-width: 1.6em; height: 1.6em; padding: 0 .35em; border-radius: 5px; background: var(--accent); color: #fff; font: 600 .78rem/1 var(--f-mono); }
+.picker { display: flex; flex-wrap: wrap; gap: 8px; }
+.pick { display: grid; gap: 4px; text-align: left; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; font: 500 .85rem/1.2 var(--f-body); }
+.pick .ots { display: flex; gap: 4px; }
+.pick[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); background: var(--accent-soft); }
+.pick:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.scen { display: grid; gap: 28px; border-top: 2px solid var(--accent); padding-top: 20px; }
+.story { display: grid; gap: 8px; }
+.why { background: var(--accent-soft); border-radius: 8px; padding: 12px 14px; max-width: 100ch; }
+.order { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; align-items: stretch; }
+@media (max-width: 720px) { .order { grid-template-columns: 1fr; } }
+.fstep { border: 1px solid var(--line); border-top: 4px solid var(--fc); border-radius: 8px; padding: 10px 12px; display: grid; gap: 2px; }
+.fstep.off { border-top-color: var(--line); background: var(--off); color: var(--muted); }
+.fstep .no { font: 600 .72rem/1 var(--f-body); text-transform: uppercase; letter-spacing: .08em; color: var(--fc); }
+.fstep.off .no { color: var(--muted); }
+.fstep b { font-family: var(--f-display); font-size: 1.05rem; }
+.f1 { --fc: var(--f1); } .f2 { --fc: var(--f2); } .f3 { --fc: var(--f3); }
+.file { border: 1px solid var(--line); border-left: 4px solid var(--fc); border-radius: 8px; padding: 12px 14px; display: grid; gap: 8px; min-width: 0; }
+.file .fn { font: 500 .8rem/1.3 var(--f-mono); color: var(--muted); overflow-wrap: anywhere; }
+.files { display: grid; gap: 14px; }
+.pill { display: inline-block; padding: 1px 8px; border-radius: 99px; font: 600 .72rem/1.5 var(--f-body); }
+.p-ok { background: var(--ok-soft); color: var(--ok); } .p-ng { background: var(--ng-soft); color: var(--ng); } .p-off { background: var(--off); color: var(--muted); }
+.fb { display: inline-block; min-width: 1.4em; text-align: center; border-radius: 4px; color: #fff; font: 600 .72rem/1.5 var(--f-mono); background: var(--fc); }
+details { border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; }
+summary { cursor: pointer; font-weight: 600; color: var(--accent); }
+pre.calls { margin: 10px 0 0; padding: 10px 12px; font: .78rem/1.6 var(--f-mono); white-space: pre-wrap; background: var(--accent-soft); border-radius: 6px; overflow-x: auto; }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr)); gap: 16px; }
+.note { font-size: .85rem; color: var(--muted); }
+@media (prefers-reduced-motion: no-preference) { .scen { animation: in .18s ease-out; } @keyframes in { from { opacity: .4; } to { opacity: 1; } } }
+</style>
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Crossdock Master · staging per target · XD07 RPA AP POLE</span>
+    <h1>From the staging tables to the upload files</h1>
+    <p class="sub">Each scenario starts from the same state (period 202612 already sent to AP POLE and GTOPAS), changes the master, then D/S clicks [Sync] at 10-Dec 11:00. SP_STG_SYNC sets the rows to SYNC_STATUS 1 with SYNC_DT 2026-12-10 11:00:00. The robot reads the views with that SYNC_DT and fills up to three files. Pick a scenario.</p>
+  </header>
+  <section aria-labelledby="lg-h">
+    <h2 id="lg-h">OPERATION_TYPE decides the file order of a part</h2>
+    <div class="legend" id="legend"></div>
+  </section>
+  <section aria-labelledby="pk-h">
+    <h2 id="pk-h">Scenarios</h2>
+    <div class="picker" id="picker" role="group" aria-label="Scenario"></div>
+  </section>
+  <div id="scen"></div>
+</div>
+<script>
+
+// ---------- engine: the rules of SP_STG_WRITE, SP_STG_SYNC, the views and AP POLE ----------
+const DEST = { JAPAN: '9722D10', KOREA: '9715310', TAIWAN: '9811110', USA: '9600110', THAILAND: '9655510' };
+const NAME = (p) => 'DUMMY PART ' + p.slice(-3);
+const my = (per) => per.slice(4) + '/' + per.slice(0, 4);
+const clone = (o) => JSON.parse(JSON.stringify(o));
+let M = {}, K = [], E = [], G = [], AP = { kan: {}, exp: {} }, GT = {}, ids = { k: 0, e: 0, g: 0 }, seq = 0;
+let calls = [], touched = [], deleted = [], files = null, gsent = null, now = '', rpa = null;
+// SYNC_DT of a run: 20261110110000 -> 2026-11-10 11:00:00 (the run is the time of the [Sync] click)
+const sdtOf = (run) => `${run.slice(0, 4)}-${run.slice(4, 6)}-${run.slice(6, 8)} ${run.slice(8, 10)}:${run.slice(10, 12)}:${run.slice(12, 14)}`;
+
+const byPerSeq = (a, b) => (a.per !== b.per ? (a.per < b.per ? -1 : 1) : (a.seq - b.seq) || (a.id - b.id));
+function lastSent(arr, keyOf, key, per, beforeSeq) {
+  return arr.filter((r) => r.st === 1 && keyOf(r) === key && r.per <= per && (beforeSeq == null || r.seq < beforeSeq)).sort(byPerSeq).pop();
+}
+const kKey = (r) => r.p, eKey = (r) => r.p + '|' + r.d + '|' + r.ot, gKey = (r) => r.p + '|' + r.d;
+
+// one unsent row per key (26-Nov): a new change updates it, a change back to the value sent deletes it; no status 2
+function delRow(arr, tag, r, why) {
+  arr.splice(arr.indexOf(r), 1);
+  deleted.push({ tag: tag + r.id, tbl: tag, row: clone(r), why });
+  touched.push(tag + r.id);
+}
+function spKanban(act, per, p, by, src) {
+  const m = M[per][p];
+  const sent = lastSent(K, kKey, p, per);
+  const pend = K.find((r) => r.p === p && r.per === per && r.st === 0);
+  const op = !sent ? 4 : m.max < sent.max ? 1 : m.max > sent.max ? 2 : 3;
+  const a = sent && sent.per === per ? 'EDIT' : 'ADD';
+  const why = sent ? `last sent Max ${sent.max} in ${sent.per}` : 'never sent';
+  let line = `SP_STG_WRITE('KANBAN', '${per}', '${p}', Pcs ${m.pcs}, Max ${m.max})\n  → `;
+  if (sent && sent.per === per && sent.max === m.max && sent.pcs === m.pcs) {
+    if (pend) { delRow(K, 'K', pend, 'back to the values sent'); line += `back to the values sent for ${per}: unsent K${pend.id} deleted (nothing to send)`; }
+    else line += `same as the values sent for ${per}: no row`;
+  } else if (pend) {
+    Object.assign(pend, { act: a, ps: m.st, pcs: m.pcs, max: m.max, op, src });
+    touched.push('K' + pend.id);
+    line += `K${pend.id} updated (one unsent row per key): OPERATION_TYPE ${op} (${why})`;
+  } else {
+    const r = { id: ++ids.k, per, act: a, ps: m.st, p, pcs: m.pcs, max: m.max, op, st: 0, src, by, dt: now, run: null, sdt: null, seq: null };
+    K.push(r); touched.push('K' + r.id);
+    line += `K${r.id} inserted: OPERATION_TYPE ${op} (${why}), SYNC_STATUS 0`;
+  }
+  calls.push(line);
+  header(per, p, by, src);
+}
+// header rule (code 5): a part + period with an unsent Export row always has one unsent Kanban row
+function header(per, p, by, src) {
+  const pe = E.filter((r) => r.per === per && r.p === p && r.st === 0).length;
+  const pk = K.find((r) => r.per === per && r.p === p && r.st === 0);
+  if (pe && !pk) {
+    const m = M[per][p];
+    const r = { id: ++ids.k, per, act: 'KEEP', ps: m.st, p, pcs: m.pcs, max: m.max, op: 5, st: 0, src, by, dt: now, run: null, sdt: null, seq: null };
+    K.push(r); touched.push('K' + r.id);
+    calls.push(`  header: no unsent Kanban row of ${p} ${per} → K${r.id} OPERATION_TYPE 5 (Kanban unchanged, current values, not uploaded)`);
+  } else if (!pe && pk && pk.op === 5) {
+    delRow(K, 'K', pk, 'header without Export row');
+    calls.push(`  header: no unsent Export row of ${p} ${per} any more → header K${pk.id} deleted`);
+  }
+}
+function spExport(act, per, p, d, ot, cd, by, src) {
+  const key = p + '|' + d + '|' + ot;
+  const sent = lastSent(E, eKey, key, per);
+  const pend = E.find((r) => eKey(r) === key && r.per === per && r.st === 0);
+  const a = cd === 0 ? 'DELETE' : sent && sent.per === per ? 'EDIT' : 'ADD';
+  let line = `SP_STG_WRITE('EXPORT', '${per}', '${p}', ${d} ${ot}, ${cd})\n  → `;
+  if ((sent && sent.per === per && sent.cd === cd) || (!sent && cd === 0)) {
+    if (pend) { delRow(E, 'E', pend, 'back to the value sent'); line += `back to the value sent: unsent E${pend.id} deleted (nothing to send)`; }
+    else line += 'same as the value sent: no row';
+  } else if (pend) {
+    Object.assign(pend, { act: a, cd, src });
+    touched.push('E' + pend.id);
+    line += `E${pend.id} updated to ${cd} (one unsent row per key)`;
+  } else {
+    const r = { id: ++ids.e, per, act: a, p, d, ot, cd, st: 0, src, by, dt: now, run: null, sdt: null, seq: null };
+    E.push(r); touched.push('E' + r.id);
+    line += `E${r.id} inserted, SYNC_STATUS 0`;
+  }
+  // GTOPAS: what the master needs for part + destination (any order type) against what GTOPAS has
+  const need = Object.entries(M[per][p].d).some(([k, v]) => k.split('|')[0] === d && v > 0) ? 'ADD' : 'DELETE';
+  const gs = lastSent(G, gKey, p + '|' + d, per);
+  const gSent = gs ? gs.act : 'DELETE';
+  const gp = G.find((r) => gKey(r) === p + '|' + d && r.per === per && r.st === 0);
+  if (need === gSent) {
+    if (gp) { delRow(G, 'G', gp, 'GTOPAS already has it'); line += `; GTOPAS G${gp.id} deleted (GTOPAS already has this state)`; }
+    else line += '; GTOPAS: no change for ' + d;
+  } else if (gp) {
+    if (gp.act !== need) { gp.act = need; gp.src = src; touched.push('G' + gp.id); line += `; GTOPAS G${gp.id} updated to ${need}`; }
+    else line += `; GTOPAS G${gp.id} ${need} already waits`;
+  } else {
+    const g = { id: ++ids.g, per, act: need, p, d, st: 0, src, by, dt: now, run: null, sdt: null, seq: null };
+    G.push(g); touched.push('G' + g.id); line += `; GTOPAS G${g.id} ${need} inserted`;
+  }
+  calls.push(line);
+  header(per, p, by, src);
+}
+function total(per, p) { return Object.values(M[per][p].d).reduce((a, b) => a + b, 0); }
+function check(per, p, by) {
+  const t = total(per, p), mx = M[per][p].max;
+  if (t > mx) throw new Error(`NSP check failed ${p} ${per}: ${t} > ${mx}`);
+  calls.push(`NSP check (${by}): ${p} ${per} total Case/Day ${t} ≤ Max ${mx} → save allowed`);
+}
+// screen / upload saves
+function savePart(per, p, ch, by, src = 'SCREEN') {
+  const m = M[per][p], old = clone(m);
+  Object.assign(m, ch);
+  if (old.st === 'Active' && m.st === 'Inactive') {
+    const ds = Object.entries(m.d); m.d = {};
+    calls.push(`${p} Active → Inactive: the mapping of ${per} is removed (TB_M_PART_CANDIDATE_DEST)`);
+    ds.forEach(([k]) => { const [d, ot] = k.split('|'); spExport('DELETE', per, p, d, ot, 0, by, src); });
+    return;
+  }
+  check(per, p, by);
+  if (m.st !== 'Active') { calls.push(`${p} is ${m.st}: no staging row`); return; }
+  if (old.st === 'Candidate') return spKanban('ADD', per, p, by, src);
+  if (old.pcs !== m.pcs || old.max !== m.max) spKanban('EDIT', per, p, by, src);
+  else calls.push(`${p}: Pcs/Case and Max unchanged → no Kanban change`);
+}
+function saveMapping(per, p, nd, by, src = 'SCREEN') {
+  const m = M[per][p], od = m.d;
+  m.d = clone(nd);
+  check(per, p, by);
+  Object.keys(od).filter((k) => !(k in nd)).forEach((k) => { const [d, ot] = k.split('|'); spExport('DELETE', per, p, d, ot, 0, by, src); });
+  Object.entries(nd).forEach(([k, v]) => { const [d, ot] = k.split('|'); if (!(k in od)) spExport('ADD', per, p, d, ot, v, by, src); else if (od[k] !== v) spExport('EDIT', per, p, d, ot, v, by, src); });
+}
+function xd05(prevPer, per, spec) {
+  M[per] = {};
+  Object.entries(spec).forEach(([p, s]) => { M[per][p] = { st: s.st, pcs: s.pcs, max: s.max, d: clone(s.d || {}) }; });
+  Object.entries(spec).forEach(([p, s]) => {
+    if (s.st === 'Candidate') { calls.push(`${p} Candidate: no staging row`); return; }
+    spKanban('ADD', per, p, 'XD05BATCH', 'BATCH');
+    const prev = (M[prevPer][p] || { d: {} }).d;
+    Object.entries(s.d || {}).forEach(([k, v]) => { const [d, ot] = k.split('|'); spExport('ADD', per, p, d, ot, v, 'XD05BATCH', 'BATCH'); });
+    Object.entries(prev).filter(([k, v]) => v > 0 && !(k in (s.d || {}))).forEach(([k]) => { const [d, ot] = k.split('|'); spExport('DELETE', per, p, d, ot, 0, 'XD05BATCH', 'BATCH'); });
+  });
+}
+// AP POLE
+const eff = (mp, per) => { const ks = Object.keys(mp || {}).filter((x) => x <= per).sort(); return ks.length ? mp[ks[ks.length - 1]] : undefined; };
+function apTotal(p, per) { return Object.values(AP.exp[p] || {}).reduce((a, mp) => a + (eff(mp, per) || 0), 0); }
+function apRow(kind, r) {
+  const month = r.per;
+  if (kind === 'k') { (AP.kan[r.p] ||= {})[month] = { pcs: r.pcs, max: r.max }; }
+  else { ((AP.exp[r.p] ||= {})[r.d + '|' + r.ot] ||= {})[month] = r.cd; }
+  const t = apTotal(r.p, month), mx = (eff(AP.kan[r.p], month) || {}).max;
+  return { t, mx, ok: mx != null && t <= mx };
+}
+function view(run) {
+  const kr = K.filter((r) => r.st === 1 && r.run === run), er = E.filter((r) => r.st === 1 && r.run === run);
+  const rows = er.map((e) => {
+    const h = kr.find((k) => k.per === e.per && k.p === e.p);   // always found: code 5 when the Kanban did not change
+    const prev = lastSent(E, eKey, eKey(e), e.per, e.seq);
+    return { r: e, file: h && h.op === 1 ? 'PRE' : 'POST', ro: prev && e.cd < prev.cd ? 1 : 2, prev: prev ? prev.cd : null };
+  });
+  const sortE = (a, b) => (a.r.per !== b.r.per ? (a.r.per < b.r.per ? -1 : 1) : a.r.p !== b.r.p ? (a.r.p < b.r.p ? -1 : 1) : (a.ro - b.ro) || (a.r.id - b.r.id));
+  return {
+    pre: rows.filter((x) => x.file === 'PRE').sort(sortE),
+    kan: kr.filter((r) => r.op !== 5).sort((a, b) => (a.per !== b.per ? (a.per < b.per ? -1 : 1) : a.p < b.p ? -1 : 1)).map((r) => ({ r })),
+    post: rows.filter((x) => x.file === 'POST').sort(sortE),
+  };
+}
+function upload(run) {
+  const f = view(run);
+  const kr = K.filter((r) => r.st === 1 && r.run === run);
+  const parts = [...new Set(E.filter((r) => r.st === 1 && r.run === run).map((r) => r.per + '|' + r.p))].sort();
+  calls.push('View, file of the Export rows per part (Kanban row with the same SYNC_DT, part and period):');
+  parts.forEach((x) => {
+    const [per, p] = x.split('|'); const h = kr.find((k) => k.per === per && k.p === p);
+    calls.push(`  ${p} ${per}: header K${h.id}, OPERATION_TYPE ${h.op} → ` + (h.op === 1 ? 'EXPORT_PRE (before KANBAN)' : h.op === 5 ? 'EXPORT_POST only (header not in the KANBAN file)' : 'EXPORT_POST (after KANBAN)'));
+  });
+  if (!parts.length) calls.push('  no Export row in this run');
+  const kf = kr.filter((k) => k.op !== 5);
+  calls.push(kf.length ? `  KANBAN file (OPERATION_TYPE 1 to 4): ${kf.map((k) => 'K' + k.id).join(', ')}` : '  no Kanban row with OPERATION_TYPE 1 to 4 in this run → no KANBAN file');
+  f.pre.forEach((x) => (x.chk = apRow('e', x.r)));
+  f.kan.forEach((x) => (x.chk = apRow('k', x.r)));
+  f.post.forEach((x) => (x.chk = apRow('e', x.r)));
+  files = { run, ...f };
+}
+function gApply(rows) { rows.forEach((r) => { if (r.act === 'ADD') GT[r.p + '|' + r.d] = true; else delete GT[r.p + '|' + r.d]; }); gsent = rows; }
+function spSync(run, cur, next, by, opt = {}) {
+  seq += 1;
+  const take = (arr, tag, pers) => arr.filter((r) => r.st === 0 && pers.includes(r.per)).forEach((r) => { r.st = 1; r.run = run; r.sdt = now; r.seq = seq; touched.push(tag + r.id); });
+  take(K, 'K', [cur, next]); take(E, 'E', [cur, next]);
+  const g = G.filter((r) => r.st === 0 && r.per === cur);
+  take(G, 'G', [cur]);
+  calls.push(`SP_STG_SYNC(SYNC_DT '${sdtOf(run)}', Current ${cur}, Next ${next}, ${by})\n  → AP POLE rows with SYNC_STATUS 0 of ${cur} and ${next} → 1 with SYNC_DT = time of the click; GTOPAS rows of ${cur} → 1; LAST_SYNC_DATE_APPOLE\n  → start the parent flow CDX_SYNC_PARENT (SYNC_DT ${sdtOf(run)}, RUN_TYPE SYNC)`);
+  return parent(run, 'SYNC', opt);
+}
+function rollover(run, per, opt = {}) {
+  seq += 1;
+  const g = G.filter((r) => r.st === 0 && r.per === per);
+  g.forEach((r) => { r.st = 1; r.run = run; r.sdt = now; r.seq = seq; touched.push('G' + r.id); });
+  calls.push(`Period Rollover (XD05 process 3): ${per} becomes Current\n  → SP_STG_ROLLOVER: GTOPAS rows of ${per} with SYNC_STATUS 0 → 1 (${g.length} row(s)), SYNC_DT ${sdtOf(run)}\n  → start the parent flow CDX_SYNC_PARENT (RUN_TYPE ROLLOVER)`);
+  return parent(run, 'ROLLOVER', opt);
+}
+function resend(run, opt = {}) {
+  calls.push(`[Re-send last Sync]: last run = MAX(SYNC_DT) = ${sdtOf(run)}; the parent flow starts again with it (RUN_TYPE RESEND); nothing changes in the staging`);
+  return parent(run, 'RESEND', opt);
+}
+// ---------- RPA parent flow: scenario 1 (GTOPAS rows in the run) or 2 (none); rollover = XD06 only ----------
+function parent(run, type, opt) {
+  const g = G.filter((r) => r.run === run && r.st === 1);
+  const sc = type === 'ROLLOVER' ? 'Rollover' : g.length ? '1' : '2';
+  rpa = { run, type, sc, gRows: g.length, g: 'skipped', gFail: [], ap: 'skipped', apFile: null };
+  calls.push(`Parent flow: SELECT COUNT(*) FROM TB_H_STG_GTOPAS WHERE SYNC_STATUS = '1' AND SYNC_DT = '${sdtOf(run)}' → ${g.length}` +
+    (type === 'ROLLOVER' ? ' → RUN_TYPE ROLLOVER: XD06 only' : g.length ? ' → scenario 1: XD06 first, XD07 only when GTOPAS succeeded' : ' → scenario 2: XD07 at once'));
+  if (sc !== '2') {
+    const fail = g.filter((r) => (opt.failG || []).includes(r.p + '|' + r.d));
+    const done = g.filter((r) => !fail.includes(r));
+    const before = done.filter((r) => (r.act === 'ADD') === !!GT[r.p + '|' + r.d]);
+    gApply(done);
+    gsent = g.map((r) => ({ ...r, res: fail.includes(r) ? 'FAILED' : before.includes(r) ? 'OK (already ' + (r.act === 'ADD' ? 'there' : 'gone') + ')' : 'OK' }));
+    rpa.g = fail.length ? 'FAILED' : 'SUCCESS';
+    rpa.gFail = fail.map((r) => r.p + ' ' + r.d);
+    calls.push(`XD06 GTOPAS: ${g.length} row(s), ${done.length} OK` + (fail.length ? `, FAILED ${rpa.gFail.join(', ')}` : '') + (before.length ? ` (${before.length} already in the wanted state)` : ''));
+    if (fail.length && type !== 'ROLLOVER') { rpa.ap = 'not started'; calls.push('GTOPAS FAILED → AP POLE stops: XD07 is not started. E-mail FAILED → D/S: [Re-send last Sync]'); return; }
+  }
+  if (type === 'ROLLOVER') { calls.push(`E-mail ${rpa.g}: GTOPAS result of the rollover`); return; }
+  calls.push('XD07 AP POLE: read the views for the run');
+  upload(run);
+  const all = [['EXPORT_PRE', files.pre], ['KANBAN', files.kan], ['EXPORT_POST', files.post]];
+  const bad = all.find(([, l]) => l.some((x) => !x.chk.ok));
+  rpa.ap = bad ? 'FAILED' : 'SUCCESS'; rpa.apFile = bad ? bad[0] : null;
+  rpa.files = all.filter(([, l]) => l.length).map(([n, l]) => n + ' (' + l.length + ')');
+  calls.push(`XD07: ${rpa.files.join(' → ') || 'no file'} → ${rpa.ap}. E-mail ${rpa.g === 'FAILED' || rpa.ap === 'FAILED' ? 'FAILED' : 'SUCCESS'} (one per run)`);
+}
+// ---------- Add Part (XD01): Period = Current (default) or Next ----------
+function addPart(per, p, v, by, opt = {}) {
+  M[per] ||= {};
+  M[per][p] = { st: 'Candidate', pcs: v.pcs, max: v.max, d: {} };
+  calls.push(`INSERT TB_M_PART_CANDIDATE ${p} PERIOD ${per}, PART_STATUS Candidate, Pcs ${v.pcs}, Max ${v.max} (${opt.label || 'Add Part'})`);
+  if (opt.next) { M[opt.next][p] = { st: 'Candidate', pcs: v.pcs, max: v.max, d: {} }; calls.push(`XD05 already made ${opt.next} (after day D) → INSERT the same row for ${opt.next}, so the next XD05 run calculates the part`); }
+  calls.push(`${p} is Candidate: no staging row (not sent to AP POLE or GTOPAS)`);
+}
+
+// ---------- scenarios: each starts from the same sent state, changes the master, then one [Sync] ----------
+const RUN = '20261210110000', PER = '202612', NEXT = '202701', DS = 'RSARI', PR = 'DANGGRAINI';
+const BASE = {
+  'DUMMY-001': { st: 'Active', pcs: 12, max: 20, d: { 'JAPAN|**': 12, 'KOREA|**': 8 } },
+  'DUMMY-002': { st: 'Active', pcs: 10, max: 16, d: { 'TAIWAN|**': 10, 'USA|**': 6 } },
+  'DUMMY-003': { st: 'Active', pcs: 8, max: 10, d: { 'THAILAND|**': 10 } },
+  'DUMMY-004': { st: 'Candidate', pcs: 6, max: 20, d: {} },
+};
+function base() {
+  M = { [PER]: clone(BASE), [NEXT]: {} }; K = []; E = []; G = []; AP = { kan: {}, exp: {} }; GT = {}; ids = { k: 0, e: 0, g: 0 }; seq = 1;
+  now = '30-Nov-2026 02:00';
+  ['DUMMY-001', 'DUMMY-002', 'DUMMY-003'].forEach((p) => {
+    spKanban('ADD', PER, p, 'XD05BATCH', 'BATCH');
+    Object.entries(M[PER][p].d).forEach(([k, v]) => { const [d, ot] = k.split('|'); spExport('ADD', PER, p, d, ot, v, 'XD05BATCH', 'BATCH'); });
+  });
+  [K, E, G].forEach((arr) => arr.forEach((r) => { r.st = 1; r.run = '20261201090000'; r.seq = 1; }));
+  K.forEach((r) => apRow('k', r)); E.forEach((r) => apRow('e', r)); G.forEach((r) => (GT[r.p + '|' + r.d] = true));
+  calls = []; touched = []; deleted = []; files = null; gsent = null; rpa = null;
+}
+// upload orders used to show why the order matters
+const ORDER = {
+  kanFirst: { label: 'KANBAN before the Export rows', rows: (f) => [...f.kan.map((x) => ['k', x]), ...f.pre.map((x) => ['e', x]), ...f.post.map((x) => ['e', x])] },
+  expFirst: { label: 'Export rows before KANBAN', rows: (f) => [...f.pre.map((x) => ['e', x]), ...f.post.map((x) => ['e', x]), ...f.kan.map((x) => ['k', x])] },
+  upFirst: { label: 'up / ADD rows before down / DELETE rows (ROW_ORDER ignored)', rows: (f) => {
+    const flip = (l) => [...l].sort((a, b) => b.ro - a.ro);
+    return [...flip(f.pre).map((x) => ['e', x]), ...f.kan.map((x) => ['k', x]), ...flip(f.post).map((x) => ['e', x])];
+  } },
+};
+const SCEN = [
+  { id: 'max-down', ot: [1], title: 'Max goes down', short: 'Max down',
+    story: 'Procurement lowers DUMMY-001 Max Case/Day 20 → 16. The destinations have to fit first, so D/S changes the mapping before: JAPAN 12 → 6, KOREA 8 → 10 (total 16, still ≤ 20 when saved).',
+    acts: [['10-Dec 09:00', DS, 'Export Crossdock Master: DUMMY-001 JAPAN 12 → 6, KOREA 8 → 10', () => saveMapping(PER, 'DUMMY-001', { 'JAPAN|**': 6, 'KOREA|**': 10 }, DS)],
+           ['10-Dec 09:30', PR, 'Kanban Crossdock Master: DUMMY-001 Max 20 → 16', () => savePart(PER, 'DUMMY-001', { max: 16 }, PR)]],
+    why: 'OPERATION_TYPE 1: AP POLE still has Max 20 until the KANBAN file. The Export rows go first (EXPORT_PRE), the down row (ROW_ORDER 1) before the up row (2), so the total never passes the Max that AP POLE has at that moment.',
+    wrong: ['kanFirst', 'upFirst'] },
+  { id: 'max-up', ot: [2], title: 'Max goes up', short: 'Max up',
+    story: 'Procurement raises DUMMY-002 Max 16 → 24, then D/S uses the room: TAIWAN 10 → 14, USA 6 → 10 (total 24).',
+    acts: [['10-Dec 09:00', PR, 'Kanban Crossdock Master: DUMMY-002 Max 16 → 24', () => savePart(PER, 'DUMMY-002', { max: 24 }, PR)],
+           ['10-Dec 09:20', DS, 'Export Crossdock Master: DUMMY-002 TAIWAN 10 → 14, USA 6 → 10', () => saveMapping(PER, 'DUMMY-002', { 'TAIWAN|**': 14, 'USA|**': 10 }, DS)]],
+    why: 'OPERATION_TYPE 2: the new Max goes first (KANBAN), then the destinations (EXPORT_POST). Sent the other way, TAIWAN 14 + USA 6 = 20 is above the old Max 16.',
+    wrong: ['expFirst'] },
+  { id: 'pcs-only', ot: [3], title: 'Only Pcs/Case changes', short: 'Max same',
+    story: 'Procurement changes DUMMY-003 Pcs/Case 8 → 10. Max stays 10, the mapping does not change.',
+    acts: [['10-Dec 09:00', PR, 'Kanban Crossdock Master: DUMMY-003 Pcs/Case 8 → 10', () => savePart(PER, 'DUMMY-003', { pcs: 10 }, PR)]],
+    why: 'OPERATION_TYPE 3: Max is the same, so the order does not matter for the check. The part has no Export row in the run: only file 2 KANBAN is made.',
+    wrong: [] },
+  { id: 'new-part', ot: [4], title: 'New part, never sent', short: 'New part',
+    story: 'Procurement makes DUMMY-004 Active (was Candidate, never sent), then D/S maps it: KOREA 12, USA 8.',
+    acts: [['10-Dec 09:00', PR, 'Kanban Crossdock Master: DUMMY-004 Candidate → Active', () => savePart(PER, 'DUMMY-004', { st: 'Active' }, PR)],
+           ['10-Dec 09:15', DS, 'Export Crossdock Master: DUMMY-004 KOREA 12, USA 8', () => saveMapping(PER, 'DUMMY-004', { 'KOREA|**': 12, 'USA|**': 8 }, DS)]],
+    why: 'OPERATION_TYPE 4: AP POLE does not know the part yet, so KANBAN goes first, then EXPORT_POST. The run has GTOPAS rows (two new destinations): scenario 1, XD06 runs before XD07.',
+    wrong: ['expFirst'] },
+  { id: 'dest-only', ot: [5], title: 'Only the destinations change', short: 'Destinations only',
+    story: 'D/S changes DUMMY-002 only: USA 6 → 4 and adds THAILAND 2 (total 16 = Max). Pcs/Case and Max do not change.',
+    acts: [['10-Dec 09:00', DS, 'Export Crossdock Master: DUMMY-002 USA 6 → 4, THAILAND new 2', () => saveMapping(PER, 'DUMMY-002', { 'TAIWAN|**': 10, 'USA|**': 4, 'THAILAND|**': 2 }, DS)]],
+    why: 'OPERATION_TYPE 5: SP_STG_WRITE writes a header row (ACTION KEEP) with the current Kanban values. The header is not uploaded: only EXPORT_POST, USA (down, ROW_ORDER 1) before THAILAND (add, 2). THAILAND is a new destination: GTOPAS ADD, scenario 1.',
+    wrong: ['upFirst'] },
+  { id: 'order-type', ot: [5], title: 'Order Type changes', short: 'Order Type',
+    story: 'D/S changes DUMMY-001 JAPAN from order type ** to C, same 12.',
+    acts: [['10-Dec 09:00', DS, 'Export Crossdock Master: DUMMY-001 JAPAN order type ** → C', () => saveMapping(PER, 'DUMMY-001', { 'JAPAN|C': 12, 'KOREA|**': 8 }, DS)]],
+    why: 'Order type is part of the AP POLE key: DELETE (0) of JAPAN ** first, then ADD of JAPAN C, in the same file. GTOPAS keys on part + destination only: JAPAN stays, no GTOPAS row, scenario 2.',
+    wrong: ['upFirst'] },
+  { id: 'inactive', ot: [5], title: 'Active → Inactive', short: 'Inactive',
+    story: 'Procurement sets DUMMY-003 Inactive. NSP removes its mapping (THAILAND).',
+    acts: [['10-Dec 09:00', PR, 'Kanban Crossdock Master: DUMMY-003 Active → Inactive', () => savePart(PER, 'DUMMY-003', { st: 'Inactive' }, PR)]],
+    why: 'The Kanban stays in AP POLE (header 5, not uploaded); every destination is sent as 0 in EXPORT_POST. GTOPAS DELETE of THAILAND: scenario 1.',
+    wrong: [] },
+  { id: 'twice', ot: [5], title: 'Same key edited twice before [Sync]', short: 'Edited twice',
+    story: 'D/S changes DUMMY-002 USA 6 → 4, then 4 → 5 before [Sync]. D/S also changes TAIWAN 10 → 8 and then back to 10.',
+    acts: [['10-Dec 09:00', DS, 'DUMMY-002 USA 6 → 4, TAIWAN 10 → 8', () => saveMapping(PER, 'DUMMY-002', { 'TAIWAN|**': 8, 'USA|**': 4 }, DS)],
+           ['10-Dec 09:40', DS, 'DUMMY-002 USA 4 → 5, TAIWAN 8 → 10 (back to the value sent)', () => saveMapping(PER, 'DUMMY-002', { 'TAIWAN|**': 10, 'USA|**': 5 }, DS)]],
+    why: 'One unsent row per key: the USA row is updated to 5, not added. TAIWAN is back to the value sent (10), so its unsent row is deleted. The run sends one row: USA 5.',
+    wrong: [] },
+  { id: 'mixed', ot: [1, 2, 3, 4], title: 'One [Sync] with several parts', short: 'Mixed run',
+    story: 'The changes of the first four scenarios saved on the same day and sent by one [Sync]: DUMMY-001 Max down, DUMMY-002 Max up, DUMMY-003 Pcs/Case only, DUMMY-004 new part.',
+    acts: [['10-Dec 09:00', DS, 'DUMMY-001 JAPAN 12 → 6, KOREA 8 → 10', () => saveMapping(PER, 'DUMMY-001', { 'JAPAN|**': 6, 'KOREA|**': 10 }, DS)],
+           ['10-Dec 09:30', PR, 'DUMMY-001 Max 20 → 16', () => savePart(PER, 'DUMMY-001', { max: 16 }, PR)],
+           ['10-Dec 09:40', PR, 'DUMMY-002 Max 16 → 24', () => savePart(PER, 'DUMMY-002', { max: 24 }, PR)],
+           ['10-Dec 09:50', DS, 'DUMMY-002 TAIWAN 10 → 14, USA 6 → 10', () => saveMapping(PER, 'DUMMY-002', { 'TAIWAN|**': 14, 'USA|**': 10 }, DS)],
+           ['10-Dec 10:00', PR, 'DUMMY-003 Pcs/Case 8 → 10', () => savePart(PER, 'DUMMY-003', { pcs: 10 }, PR)],
+           ['10-Dec 10:10', PR, 'DUMMY-004 Candidate → Active', () => savePart(PER, 'DUMMY-004', { st: 'Active' }, PR)],
+           ['10-Dec 10:20', DS, 'DUMMY-004 KOREA 12, USA 8', () => saveMapping(PER, 'DUMMY-004', { 'KOREA|**': 12, 'USA|**': 8 }, DS)]],
+    why: 'The file of an Export row follows the OPERATION_TYPE of its own part: DUMMY-001 (1) in EXPORT_PRE, DUMMY-002 (2) and DUMMY-004 (4) in EXPORT_POST. KANBAN holds all four parts. Each file is sorted by part, then ROW_ORDER.',
+    wrong: ['kanFirst', 'expFirst'] },
+];
+function runScen(s) {
+  base();
+  const before = clone(M[PER]);
+  s.acts.forEach(([t, by, , fn]) => { now = t; fn(); });
+  const log = calls.slice(); calls = [];
+  const apBefore = clone(AP);
+  now = '10-Dec 11:00';
+  spSync(RUN, PER, NEXT, DS);
+  const f = files || { pre: [], kan: [], post: [] };
+  const ok = [...f.pre.map((x) => ['e', x, 1]), ...f.kan.map((x) => ['k', x, 2]), ...f.post.map((x) => ['e', x, 3])];
+  const apAfter = AP;
+  const wrong = s.wrong.map((w) => {
+    AP = clone(apBefore);
+    const rows = []; let stop = false;
+    ORDER[w].rows(f).forEach(([kind, x]) => { if (stop) { rows.push({ kind, x, skip: true }); return; } const chk = apRow(kind, x.r); rows.push({ kind, x, chk }); if (!chk.ok) stop = true; });
+    return { label: ORDER[w].label, rows };
+  });
+  AP = apAfter;
+  return { s, before, after: clone(M[PER]), apBefore, log, sync: calls.slice(), f, ok, wrong, rpa: clone(rpa), gsent: clone(gsent || []),
+    K: K.filter((r) => r.run === RUN), E: E.filter((r) => r.run === RUN), G: G.filter((r) => r.run === RUN), deleted: clone(deleted) };
+}
+const RES = SCEN.map(runScen);
+// ---------- view ----------
+const LEG = [
+  [1, 'Max down', 'EXPORT_PRE → KANBAN', 'The destinations come down first, so they fit the old Max still in AP POLE.'],
+  [2, 'Max up', 'KANBAN → EXPORT_POST', 'The new Max goes first, then the destinations use it.'],
+  [3, 'Max same', 'KANBAN → EXPORT_POST', 'Only Pcs/Case changed, or a new period with the same Max.'],
+  [4, 'Never sent', 'KANBAN → EXPORT_POST', 'AP POLE needs the part before any destination.'],
+  [5, 'Destinations only', 'EXPORT_POST only', 'Header row ACTION KEEP with the current Kanban values; not in the KANBAN file.'],
+];
+const FILES = [['pre', 1, 'EXPORT_PRE', 'LLM9Q880'], ['kan', 2, 'KANBAN', 'LLM9Q910'], ['post', 3, 'EXPORT_POST', 'LLM9Q880']];
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const bpd = (d) => DEST[d].slice(0, 5) + '-' + DEST[d].slice(5);
+const th = (cols) => '<tr>' + cols.map(([c, h]) => `<th${h ? ' class="h"' : ''}>${c}</th>`).join('') + '</tr>';
+const tbl = (cols, rows, empty) => `<div class="tbl"><table><thead>${th(cols)}</thead><tbody>${rows.join('') || `<tr><td class="t" colspan="${cols.length}">${empty}</td></tr>`}</tbody></table></div>`;
+const fname = (n, nm, tpl) => `${tpl}_${RUN}_${n}_${nm}.xls`;
+const H = 1;
+
+document.getElementById('legend').innerHTML = LEG.map(([n, t, o, d]) => `<div class="lg"><span><span class="ot">${n}</span> <b>${t}</b></span><span class="mono">${o}</span><span class="note">${d}</span></div>`).join('');
+
+function changes(x) {
+  const rows = [];
+  Object.keys(x.after).forEach((p) => {
+    const a = x.after[p], b = x.before[p];
+    ['st', 'pcs', 'max'].forEach((k) => { if (a[k] !== b[k]) rows.push([p, { st: 'Status', pcs: 'Pcs/Case', max: 'Max Case/Day' }[k], b[k], a[k]]); });
+    const keys = [...new Set([...Object.keys(b.d), ...Object.keys(a.d)])];
+    keys.forEach((k) => { if (a.d[k] !== b.d[k]) { const [d, ot] = k.split('|'); rows.push([p, `Case/Day ${d} (${ot})`, b.d[k] ?? '–', a.d[k] ?? 'removed']); } });
+  });
+  return tbl([['Part'], ['Item'], ['Before (sent)'], ['After']], rows.map((r) => `<tr><td>${r[0]}</td><td class="t">${r[1]}</td><td>${r[2]}</td><td class="chg">${r[3]}</td></tr>`), 'No change');
+}
+function staging(x) {
+  const del = (tag) => x.deleted.filter((d) => d.tbl === tag).map((d) => ({ ...d.row, del: d.why }));
+  const kr = [...x.K, ...del('K')].sort((a, b) => a.id - b.id), er = [...x.E, ...del('E')].sort((a, b) => a.id - b.id), gr = [...x.G, ...del('G')].sort((a, b) => a.id - b.id);
+  const st = (r) => r.del ? `deleted (${r.del})` : '1';
+  const sdt = (r) => r.del ? 'NULL' : sdtOf(RUN);
+  const k = tbl([['STG_ID', H], ['PERIOD', H], ['ACTION', H], ['PART_NO'], ['SHIPPING_BOX_QTY'], ['MAX_SHIPPING_BOX_QTY'], ['OPERATION_TYPE', H], ['SYNC_STATUS', H], ['SYNC_DT', H]],
+    kr.map((r) => `<tr class="${r.del ? 'del' : ''}"><td>${r.id}</td><td>${r.per}</td><td>${r.act}</td><td>${r.p}</td><td class="n">${r.pcs}</td><td class="n">${r.max}</td><td><span class="ot">${r.op}</span></td><td>${st(r)}</td><td>${sdt(r)}</td></tr>`), 'No Kanban row in the run');
+  const e = tbl([['STG_ID', H], ['PERIOD', H], ['NSP_PART_NO', H], ['DEST_CODE', H], ['ACTION', H], ['BUYER_PD'], ['ORDER_TYPE'], ['MAX_SHIPPING_BOX_RCS'], ['SYNC_STATUS', H], ['SYNC_DT', H]],
+    er.map((r) => `<tr class="${r.del ? 'del' : ''}"><td>${r.id}</td><td>${r.per}</td><td>${r.p}</td><td>${DEST[r.d]} <span class="note">${r.d}</span></td><td>${r.act}</td><td>${bpd(r.d)}</td><td>${r.ot}</td><td class="n">${r.cd}</td><td>${st(r)}</td><td>${sdt(r)}</td></tr>`), 'No Export row in the run');
+  const g = gr.length ? `<div class="stack"><h4>TB_H_STG_GTOPAS</h4>${tbl([['STG_ID', H], ['PERIOD', H], ['ACTION', H], ['P_NO'], ['DESTINATION_CODE'], ['SYNC_STATUS', H], ['SYNC_DT', H]],
+    gr.map((r) => `<tr class="${r.del ? 'del' : ''}"><td>${r.id}</td><td>${r.per}</td><td>${r.act}</td><td>${r.p}</td><td>${DEST[r.d]} <span class="note">${r.d}</span></td><td>${st(r)}</td><td>${sdt(r)}</td></tr>`), '')}</div>` : '';
+  return `<div class="stack"><h4>TB_H_STG_APPOLE_KANBAN</h4>${k}</div><div class="stack"><h4>TB_H_STG_APPOLE_EXPORT</h4>${e}</div>${g}`;
+}
+function viewRows(x) {
+  const hdr = (p) => x.K.find((k) => k.p === p);
+  const rows = [...x.f.pre.map((v) => [1, v]), ...x.f.post.map((v) => [3, v])].sort((a, b) => a[0] - b[0]);
+  const e = tbl([['STG_ID', H], ['NSP_PART_NO', H], ['FILE_NO', H], ['ROW_ORDER', H], ['BUYER_PD'], ['ORDER_TYPE'], ['MAX_SHIPPING_BOX_RCS'], ['Why', H]],
+    rows.map(([n, v]) => { const h = hdr(v.r.p); const dir = v.prev == null ? 'new key' : v.r.cd < v.prev ? `down ${v.prev} → ${v.r.cd}` : `up ${v.prev} → ${v.r.cd}`;
+      return `<tr><td>${v.r.id}</td><td>${v.r.p}</td><td><span class="fb f${n}">${n}</span></td><td>${v.ro}</td><td>${bpd(v.r.d)}</td><td>${v.r.ot}</td><td class="n">${v.r.cd}</td><td class="t">Header K${h.id} OPERATION_TYPE ${h.op} → file ${n}; ${dir} → ROW_ORDER ${v.ro}</td></tr>`; }), 'No row');
+  const kv = tbl([['STG_ID', H], ['PART_NO'], ['OPERATION_TYPE', H], ['In file 2?', H]],
+    x.K.map((r) => `<tr><td>${r.id}</td><td>${r.p}</td><td><span class="ot">${r.op}</span></td><td class="t">${r.op === 5 ? 'No: header only (ACTION KEEP), Kanban unchanged' : 'Yes'}</td></tr>`), 'No row');
+  return `<div class="stack"><div class="stack"><h4>V_APPOLE_UPLOAD_EXPORT</h4><code>WHERE SYNC_DT = '${sdtOf(RUN)}'</code>${e}</div><div class="stack"><h4>V_APPOLE_UPLOAD_KANBAN</h4><code>WHERE SYNC_DT = '${sdtOf(RUN)}'</code>${kv}</div></div>`;
+}
+function orderStrip(x) {
+  return `<div class="order">${FILES.map(([k, n, nm]) => { const l = x.f[k]; return `<div class="fstep f${n}${l.length ? '' : ' off'}"><span class="no">File ${n}</span><b>${nm}</b><span class="note">${l.length ? l.length + ' row(s)' : 'no row: file not made'}</span></div>`; }).join('')}</div>`;
+}
+function fileCards(x) {
+  return `<div class="files">${FILES.filter(([k]) => x.f[k].length).map(([k, n, nm, tpl]) => {
+    const l = x.f[k];
+    const body = k === 'kan'
+      ? tbl([['Effective Month / Year'], ['Operator ID'], ['Part No.'], ['Part Name'], ['Shipping Box Qty'], ['Max Shipping Box Qty'], ['Max Allowance Qty']],
+          l.map((v) => `<tr><td>${my(v.r.per)}</td><td>P6</td><td>${v.r.p}</td><td>${NAME(v.r.p)}</td><td class="n">${v.r.pcs}</td><td class="n">${v.r.max}</td><td class="n">${v.r.pcs * v.r.max}</td></tr>`), '')
+      : tbl([['Effective Month / Year'], ['Part No.'], ['Buyer-PD'], ['Order Type'], ['Transport Code'], ['Max Shipping Box (RCS)']],
+          l.map((v) => `<tr><td>${my(v.r.per)}</td><td>${v.r.p.replace(/-/g, '')}</td><td>${bpd(v.r.d)}</td><td>${v.r.ot}</td><td>2</td><td class="n">${v.r.cd}</td></tr>`), '');
+    return `<div class="file f${n}"><h4><span class="fb f${n}">${n}</span> ${nm} · template ${tpl}</h4><span class="fn">${fname(n, nm, tpl)}</span>${body}</div>`;
+  }).join('') || '<p class="note">No file: nothing to upload to AP POLE in this run.</p>'}</div>`;
+}
+function rowName(kind, v) { return kind === 'k' ? `${v.r.p} Kanban Max ${v.r.max}` : `${v.r.p} ${v.r.d} ${bpd(v.r.d)} (${v.r.ot}) → ${v.r.cd}`; }
+function checkTbl(rows) {
+  return tbl([['#'], ['File'], ['Row'], ['Part total (RCS)'], ['Max in AP POLE'], ['Result']],
+    rows.map((y, i) => {
+      if (y.skip) return `<tr class="skip"><td>${i + 1}</td><td></td><td class="t">${rowName(y.kind, y.x)}</td><td></td><td></td><td class="t">not uploaded (the run stopped)</td></tr>`;
+      const n = y.n || '';
+      return `<tr class="${y.chk.ok ? '' : 'bad'}"><td>${i + 1}</td><td>${n ? `<span class="fb f${n}">${n}</span>` : (y.kind === 'k' ? 'KANBAN' : 'Export')}</td><td class="t">${rowName(y.kind, y.x)}</td><td class="n">${y.chk.t}</td><td class="n">${y.chk.mx ?? '– (part not in AP POLE)'}</td><td>${y.chk.ok ? '<span class="ok">OK</span>' : '<span class="ng">Rejected: total above Max</span>'}</td></tr>`;
+    }), 'No row uploaded');
+}
+function gtopas(x) {
+  const r = x.rpa;
+  const sc = r.sc === '1' ? 'Scenario 1: GTOPAS rows in the run, XD06 first, XD07 only when XD06 succeeded' : 'Scenario 2: no GTOPAS row, XD07 at once';
+  const g = x.gsent.length ? tbl([['ACTION'], ['P/No.'], ['Destination Code'], ['XD06 result']], x.gsent.map((y) => `<tr><td>${y.act}</td><td>${y.p}</td><td>${DEST[y.d]} <span class="note">${y.d}</span></td><td>${y.res}</td></tr>`), '') : '';
+  return `<p><span class="pill ${r.sc === '1' ? 'p-ok' : 'p-off'}">${r.sc === '1' ? 'XD06 + XD07' : 'XD07 only'}</span> ${sc}. Result: XD06 ${r.g}, XD07 ${r.ap}.</p>${g}`;
+}
+function render(i) {
+  const x = RES[i], s = x.s;
+  document.querySelectorAll('.pick').forEach((b, j) => b.setAttribute('aria-pressed', String(j === i)));
+  const okRows = x.ok.map(([kind, v, n]) => ({ kind, x: v, chk: v.chk, n }));
+  document.getElementById('scen').innerHTML = `<article class="scen" aria-live="polite">
+    <div class="story"><span class="eyebrow">Scenario ${i + 1} · OPERATION_TYPE ${s.ot.join(', ')}</span><h2>${esc(s.title)}</h2><p>${esc(s.story)}</p></div>
+    <section><h3>1. What the users saved</h3>
+      ${tbl([['Time'], ['User'], ['Save']], s.acts.map(([t, by, txt]) => `<tr><td>${t}</td><td>${by}</td><td class="t">${esc(txt)}</td></tr>`), '')}
+      ${changes(x)}
+      <details><summary>SP_STG_WRITE calls of these saves</summary><pre class="calls">${esc(x.log.join('\n'))}</pre></details></section>
+    <section><h3>2. Staging rows of the run (after [Sync]: SYNC_STATUS 1, SYNC_DT ${sdtOf(RUN)})</h3>${staging(x)}</section>
+    <section><h3>3. What the views give the robot</h3>${viewRows(x)}</section>
+    <section><h3>4. Upload files, in the order of upload</h3>${orderStrip(x)}<div class="why">${esc(s.why)}</div>${fileCards(x)}</section>
+    <section><h3>5. AP POLE check after each uploaded row</h3><p class="note">AP POLE checks that the Max Shipping Box (RCS) of all Buyer-PD of the part in the month stays ≤ Max Shipping Box Qty.</p>${checkTbl(okRows)}</section>
+    ${x.wrong.map((w, j) => `<section><h3>5${'bcd'[j]}. If the robot used another order: ${esc(w.label)}</h3>${checkTbl(w.rows)}</section>`).join('')}
+    <section><h3>6. RPA parent flow</h3>${gtopas(x)}
+      <details><summary>[Sync] and robot log</summary><pre class="calls">${esc(x.sync.join('\n'))}</pre></details></section>
+  </article>`;
+}
+document.getElementById('picker').innerHTML = SCEN.map((s, i) => `<button class="pick" type="button" id="pick-${s.id}" aria-pressed="false" data-i="${i}"><span class="ots">${s.ot.map((o) => `<span class="ot">${o}</span>`).join('')}</span>${esc(s.short)}</button>`).join('');
+document.getElementById('picker').addEventListener('click', (e) => { const b = e.target.closest('.pick'); if (!b) return; const i = +b.dataset.i; render(i); try { history.replaceState(null, '', '#' + SCEN[i].id); } catch (_) {} });
+const fromHash = () => Math.max(0, SCEN.findIndex((s) => '#' + s.id === location.hash));
+window.addEventListener('hashchange', () => render(fromHash()));
+render(fromHash());
+</script>
