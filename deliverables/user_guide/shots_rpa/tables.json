@@ -283,7 +283,7 @@
   ]
  },
  "r10_gtopas_rows_add": {
-  "sql": "SELECT * FROM TB_H_STG_GTOPAS WHERE SYNC_STATUS = '1' AND SYNC_DT = '2026-11-10 11:00:00' ORDER BY P_NO, DESTINATION_CODE",
+  "sql": "SELECT * FROM V_GTOPAS_CROSSDOCK WHERE SYNC_DT = '2026-11-10 11:00:00' ORDER BY P_NO, DESTINATION_CODE",
   "note": null,
   "head": [
    "STG_ID",
@@ -342,7 +342,7 @@
   ]
  },
  "r11_gtopas_rows_rollover": {
-  "sql": "SELECT * FROM TB_H_STG_GTOPAS WHERE SYNC_STATUS = '1' AND SYNC_DT = '2027-01-01 00:10:00' ORDER BY P_NO, DESTINATION_CODE",
+  "sql": "SELECT * FROM V_GTOPAS_CROSSDOCK WHERE SYNC_DT = '2027-01-01 00:10:00' ORDER BY P_NO, DESTINATION_CODE",
   "note": null,
   "head": [
    "STG_ID",

@@ -6,10 +6,10 @@ import { SimulationFrame } from '../../components/SimulationFrame';
  * deliverables/function_list_v2/erd/proposal_staging_sync/simulation/sql_studio/build_sql_studio.py.
  */
 export function StagingSqlPage() {
-  return <SimulationFrame file="staging-sql-studio.html?v=1" title="Staging SQL Studio" />;
+  return <SimulationFrame file="staging-sql-studio.html?v=2" title="Staging SQL Studio" />;
 }
 
 /** Staging Upload Files: from the staging rows of a [Sync] to the EXPORT_PRE, KANBAN and EXPORT_POST files, per OPERATION_TYPE. */
 export function StagingUploadFilesPage() {
-  return <SimulationFrame file="staging-upload-files.html?v=2" title="Staging to upload files simulation" />;
+  return <SimulationFrame file="staging-upload-files.html?v=3" title="Staging to upload files simulation" />;
 }

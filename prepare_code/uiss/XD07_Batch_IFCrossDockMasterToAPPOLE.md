@@ -24,6 +24,7 @@
 | 1.2 | FID Rayhan | 26-Nov-26 |  | Staging: no SYNC_RUN_ID, the run is SYNC_DT (one value per [Sync] click / rollover); one unsent row per key (a new change updates it, back to the sent value deletes it); SYNC_STATUS 0 / 1. SQL: prepare_code/sql/crossdock_staging_sync.sql. |
 | 1.3 | FID Rayhan | 26-Nov-26 |  | TB_H_STG_APPOLE_KANBAN / _EXPORT: EFFECTIVE_MONTH_YEAR removed (same value as PERIOD); the views make Effective Month / Year (MM/YYYY of PERIOD) for the upload file. |
 | 1.4 | FID Rayhan | 26-Nov-26 |  | Upload files after the template LLM9Q910: Effective Month and Effective Year in two columns (the robot splits EFFECTIVE_MONTH_YEAR of the view); Kanban Max Allowance Qty left empty (AP POLE calculates it); data from row 4 of the templates. |
+| 1.5 | FID Rayhan | 26-Nov-26 |  | The robots read views only: new view V_GTOPAS_CROSSDOCK (TB_H_STG_GTOPAS rows with SYNC_STATUS 1) for XD06 and the parent flow; view definitions added to the Tables. |
 
 ## 1. General
 
@@ -173,7 +174,7 @@ flowchart TB
 - Scenario 1 (run with GTOPAS rows: a part becomes Active or Inactive, a destination is added or removed): XD06 GTOPAS first; XD07 AP POLE starts only when every GTOPAS row succeeded. When GTOPAS fails, AP POLE stops: XD07 does not start and the e-mail says FAILED.
 - Scenario 2 (run without GTOPAS rows: Max Case/Day, Pcs/Case, Case/Day, order type of a destination that stays): XD07 only.
 - Period Rollover (RUN_TYPE ROLLOVER): XD06 only, for the GTOPAS rows of the new Current period.
-- Choice of the scenario: SELECT COUNT(*) FROM TB_H_STG_GTOPAS WHERE SYNC_STATUS = '1' AND SYNC_DT = <SYNC_DT of the run> (> 0: scenario 1).
+- Choice of the scenario: SELECT COUNT(*) FROM V_GTOPAS_CROSSDOCK WHERE SYNC_DT = <SYNC_DT of the run> (> 0: scenario 1).
 
 ### 4.2 Files and Order
 
@@ -296,3 +297,40 @@ AP POLE Export rows in the format of the upload file LLM9Q880, one row per added
 | CREATED_DT | DATETIME |  | N | Time of the insert (same transaction as the master update) |
 | CHANGED_BY | VARCHAR(20) |  | Y | User of the save that updated the unsent row, of [Sync], or XD05BATCH (Period Rollover) |
 | CHANGED_DT | DATETIME |  | Y | Time of that update |
+
+#### V_APPOLE_UPLOAD_KANBAN (view, proposed)
+View (File 2 KANBAN (LLM9Q910) of XD07). Kanban rows of a run with OPERATION_TYPE 1 to 4. FROM TB_H_STG_APPOLE_KANBAN k WHERE k.SYNC_STATUS = '1' AND k.OPERATION_TYPE <> 5 (5 = header, not uploaded). The robot filters WHERE SYNC_DT = :sync_dt ORDER BY PERIOD, PART_NO.
+
+| Column | Type | PK | Null | Description |
+|---|---|---|---|---|
+| SYNC_DT | DATETIME2(0) |  | Y | Helper, not written: Run filter (time of the [Sync] click). Source: k.SYNC_DT |
+| FILE_NO | NUMBER(1) |  | Y | Helper, not written: Upload order of the file: 2 = KANBAN. Source: 2 (constant) |
+| STG_ID | BIGINT |  | Y | Helper, not written: Row of the staging table. Source: k.STG_ID |
+| PERIOD | CHAR(6) |  | Y | Helper, not written: Calculation period YYYYMM; sort key. Source: k.PERIOD |
+| OPERATION_TYPE | NUMBER(1) |  | Y | Helper, not written: 1 Max down, 2 Max up, 3 Max same, 4 never sent (5 is left out). Source: k.OPERATION_TYPE |
+| EFFECTIVE_MONTH_YEAR | CHAR(7) |  | Y | Effective Month, Effective Year: MM/YYYY of PERIOD, not stored; the robot splits it into the two template columns. Source: SUBSTRING(PERIOD, 5, 2) + '/' + LEFT(PERIOD, 4) |
+| OPERATOR_ID | CHAR(2) |  | Y | Operator ID: 'P6'. Source: k.OPERATOR_ID |
+| PART_NO | VARCHAR(TBD) |  | Y | Part No.: With "-" (kept for now, 26-Nov). Source: k.PART_NO |
+| PART_NAME | VARCHAR(TBD) |  | Y | Part Name: Source: k.PART_NAME |
+| SHIPPING_BOX_QTY | NUMBER(5) |  | Y | Shipping Box Qty: Pcs/Case. Source: k.SHIPPING_BOX_QTY |
+| MAX_SHIPPING_BOX_QTY | NUMBER(5) |  | Y | Max Shipping Box Qty: Max Case/Day. Source: k.MAX_SHIPPING_BOX_QTY |
+| MAX_ALLOWANCE_QTY | NUMBER(9) |  | Y | (not written): Max Allowance Qty of the file is left empty (26-Nov). Source: k.MAX_ALLOWANCE_QTY |
+
+#### V_APPOLE_UPLOAD_EXPORT (view, proposed)
+View (Files 1 EXPORT_PRE and 3 EXPORT_POST (LLM9Q880) of XD07). Export rows of a run. FROM TB_H_STG_APPOLE_EXPORT (SYNC_STATUS '1') JOIN the Kanban header of the part (same SYNC_DT, PERIOD, part). The robot filters WHERE SYNC_DT = :sync_dt AND FILE_NO = 1 or 3 ORDER BY PERIOD, NSP_PART_NO, ROW_ORDER, STG_ID.
+
+| Column | Type | PK | Null | Description |
+|---|---|---|---|---|
+| SYNC_DT | DATETIME2(0) |  | Y | Helper, not written: Run filter. Source: e.SYNC_DT |
+| FILE_NO | NUMBER(1) |  | Y | Helper, not written: 1 = EXPORT_PRE (before KANBAN), 3 = EXPORT_POST (after KANBAN). Source: CASE WHEN k.OPERATION_TYPE = 1 THEN 1 ELSE 3 END |
+| FILE_NAME | VARCHAR(11) |  | Y | Helper, not written: Name part of the file. Source: CASE WHEN k.OPERATION_TYPE = 1 THEN 'EXPORT_PRE' ELSE 'EXPORT_POST' END |
+| ROW_ORDER | NUMBER(1) |  | Y | Helper, not written: 1 = down or DELETE (0) before 2 = up or ADD; PREV_RCS = LAG of the value sent before (same part, destination, order type). Source: CASE WHEN PREV_RCS IS NOT NULL AND MAX_SHIPPING_BOX_RCS < PREV_RCS THEN 1 ELSE 2 END |
+| PERIOD | CHAR(6) |  | Y | Helper, not written: Sort key. Source: e.PERIOD |
+| NSP_PART_NO | VARCHAR(TBD) |  | Y | Helper, not written: Part with "-"; sort key. Source: e.NSP_PART_NO |
+| STG_ID | BIGINT |  | Y | Helper, not written: Last sort key. Source: e.STG_ID |
+| EFFECTIVE_MONTH_YEAR | CHAR(7) |  | Y | Effective Month, Effective Year: MM/YYYY of PERIOD, not stored; the robot splits it. Source: SUBSTRING(PERIOD, 5, 2) + '/' + LEFT(PERIOD, 4) |
+| PART_NO | VARCHAR(TBD) |  | Y | Part No.: Without "-". Source: e.PART_NO |
+| BUYER_PD | CHAR(8) |  | Y | Buyer-PD: DEST_CODE as 5-2. Source: e.BUYER_PD |
+| ORDER_TYPE | VARCHAR(2) |  | Y | Order Type: Source: e.ORDER_TYPE |
+| TRANSPORT_CODE | CHAR(1) |  | Y | Transport Code: '2'. Source: e.TRANSPORT_CODE |
+| MAX_SHIPPING_BOX_RCS | NUMBER(5) |  | Y | Max Shipping Box (RCS): 0 = delete the destination. Source: e.MAX_SHIPPING_BOX_RCS |

@@ -11,7 +11,8 @@
 --   SP_STG_SYNC      XD01 [Sync]: NSP takes the time of the click once, passes it as @SYNC_DT, then starts the RPA parent
 --                    flow with the same SYNC_DT.
 --   SP_STG_ROLLOVER  XD05 process 3 (Period Rollover, day 1): GTOPAS rows of the new Current period, same idea.
---   Views            read by XD07 (AP POLE files); TB_H_STG_GTOPAS read by XD06. The robots use a read-only DB user.
+--   Views            V_APPOLE_UPLOAD_KANBAN / _EXPORT read by XD07 (AP POLE files), V_GTOPAS_CROSSDOCK read by XD06 and the
+--                    parent flow. The robots use a read-only DB user with SELECT on the views only.
 --
 -- One unsent row per key (SYNC_STATUS 0):
 --   Kanban  PERIOD + PART_NO        Export  PERIOD + NSP_PART_NO + DEST_CODE + ORDER_TYPE        GTOPAS  PERIOD + P_NO + DESTINATION_CODE
@@ -309,7 +310,7 @@ END;
 GO
 
 -- =====================================================================================================
--- 4. Views of the AP POLE upload files (XD07)
+-- 4. Views read by the robots: AP POLE upload files (XD07) and GTOPAS screen rows (XD06)
 -- =====================================================================================================
 -- File KANBAN (order 2): Kanban rows of a run
 CREATE VIEW V_APPOLE_UPLOAD_KANBAN AS
@@ -347,14 +348,23 @@ JOIN   TB_H_STG_APPOLE_KANBAN k                              -- every part of th
        AND k.PART_NO = e.NSP_PART_NO AND k.SYNC_STATUS = '1';
 GO
 
+-- GTOPAS screen WVJA5204 (XD06): GTOPAS rows of a run ([Sync] or Period Rollover)
+CREATE VIEW V_GTOPAS_CROSSDOCK AS
+SELECT g.SYNC_DT, g.STG_ID, g.PERIOD, g.ACTION,
+       g.DEPOT_CODE, g.P_NO, g.DESTINATION_CODE, g.MAKER_CODE,
+       g.DOMESTIC_OVERSEAS, g.TOPAS_ORDER_TYPE, g.ORDER_TRANSPORTATION_CODE
+FROM   TB_H_STG_GTOPAS g
+WHERE  g.SYNC_STATUS = '1';
+GO
+
 -- =====================================================================================================
 -- 5. Queries (robots: read-only DB user; NSP: re-send)
 -- =====================================================================================================
 -- Parent flow: scenario 1 (GTOPAS first) when > 0, scenario 2 (AP POLE only) when 0. :sync_dt = SYNC_DT given by NSP
-SELECT COUNT(*) FROM TB_H_STG_GTOPAS WHERE SYNC_STATUS = '1' AND SYNC_DT = :sync_dt;
+SELECT COUNT(*) FROM V_GTOPAS_CROSSDOCK WHERE SYNC_DT = :sync_dt;
 
 -- XD06 GTOPAS: rows to add / delete on WVJA5204
-SELECT * FROM TB_H_STG_GTOPAS WHERE SYNC_STATUS = '1' AND SYNC_DT = :sync_dt ORDER BY P_NO, DESTINATION_CODE;
+SELECT * FROM V_GTOPAS_CROSSDOCK WHERE SYNC_DT = :sync_dt ORDER BY P_NO, DESTINATION_CODE;
 
 -- XD07 AP POLE: files in this order (a file without rows is not made)
 SELECT * FROM V_APPOLE_UPLOAD_EXPORT WHERE SYNC_DT = :sync_dt AND FILE_NO = 1 ORDER BY PERIOD, NSP_PART_NO, ROW_ORDER, STG_ID;  -- 1 EXPORT_PRE (LLM9Q880)

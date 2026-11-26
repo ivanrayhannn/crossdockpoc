@@ -55,9 +55,9 @@ Not written to the file:
 | SYNC_DT | Filter of the run: WHERE SYNC_DT = :sync_dt |
 | DEST_CODE, ACTION, SOURCE, UPLOAD_ID, SYNC_STATUS, CREATED_\* / CHANGED_\* | Table only, not in the view; not written |
 
-## 3. GTOPAS: TB_H_STG_GTOPAS → screen WVJA5204
+## 3. GTOPAS: TB_H_STG_GTOPAS → V_GTOPAS_CROSSDOCK → screen WVJA5204
 
-| Screen field (WVJA5204) | Staging column | ACTION = ADD (register a row) | ACTION = DELETE (MT = DEL) | Example ADD (run 2026-12-10 11:00:00) | Example DELETE (run 2026-12-08 11:00:00) |
+| Screen field (WVJA5204) | Column (staging = view) | ACTION = ADD (register a row) | ACTION = DELETE (MT = DEL) | Example ADD (run 2026-12-10 11:00:00) | Example DELETE (run 2026-12-08 11:00:00) |
 |---|---|---|---|---|---|
 | Search: Depot Code (\*) | DEPOT_CODE | Search with '01' | Search with '01' | 01 | 01 |
 | Search: P/No. | P_NO | Search, to check the row is not there yet | Search the row to delete | DUMMY-005 | DUMMY-003 |
@@ -78,8 +78,8 @@ Not typed on the screen:
 |---|---|
 | STG_ID, PERIOD | Not on the screen; ORDER BY P_NO, DESTINATION_CODE |
 | ACTION | ADD = register the row, DELETE = MT DEL on the row |
-| SYNC_DT | Filter of the run: WHERE SYNC_STATUS = '1' AND SYNC_DT = :sync_dt (table, no view) |
-| SOURCE, UPLOAD_ID, SYNC_STATUS, CREATED_\* / CHANGED_\* | Not used by the robot |
+| SYNC_DT | Filter of the run: WHERE SYNC_DT = :sync_dt (the view keeps SYNC_STATUS 1 only) |
+| SOURCE, UPLOAD_ID, SYNC_STATUS, CREATED_\* / CHANGED_\* | Table only, not in the view |
 
 ## 4. Files and order of one run
 
@@ -88,7 +88,7 @@ Not typed on the screen:
 | 1 | EXPORT_PRE | LLM9Q880 | LLM9Q880_<yyyymmddhhmmss of SYNC_DT>_1_EXPORT_PRE.xls | V_APPOLE_UPLOAD_EXPORT WHERE SYNC_DT = :sync_dt AND FILE_NO = 1 ORDER BY PERIOD, NSP_PART_NO, ROW_ORDER, STG_ID | Export rows of parts whose Max goes down (OPERATION_TYPE 1) |
 | 2 | KANBAN | LLM9Q910 | LLM9Q910_<yyyymmddhhmmss>_2_KANBAN.xls | V_APPOLE_UPLOAD_KANBAN WHERE SYNC_DT = :sync_dt ORDER BY PERIOD, PART_NO | Kanban rows with OPERATION_TYPE 1 to 4 |
 | 3 | EXPORT_POST | LLM9Q880 | LLM9Q880_<yyyymmddhhmmss>_3_EXPORT_POST.xls | V_APPOLE_UPLOAD_EXPORT WHERE SYNC_DT = :sync_dt AND FILE_NO = 3 ORDER BY PERIOD, NSP_PART_NO, ROW_ORDER, STG_ID | Every other Export row (OPERATION_TYPE 2 to 5) |
-| - | GTOPAS (XD06) | Screen WVJA5204 | - | TB_H_STG_GTOPAS WHERE SYNC_STATUS = '1' AND SYNC_DT = :sync_dt ORDER BY P_NO, DESTINATION_CODE | Run before XD07 when the run has GTOPAS rows (scenario 1) |
+| - | GTOPAS (XD06) | Screen WVJA5204 | - | V_GTOPAS_CROSSDOCK WHERE SYNC_DT = :sync_dt ORDER BY P_NO, DESTINATION_CODE | Run before XD07 when the run has GTOPAS rows (scenario 1) |
 
 ## 5. Notes and points to confirm
 

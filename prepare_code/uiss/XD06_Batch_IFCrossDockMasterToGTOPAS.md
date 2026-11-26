@@ -22,13 +22,14 @@
 | 1.0 | FID Rayhan | 22-Nov-26 |  | Source = TB_H_PART_CANDIDATE_STG_SYNC only; parts of the run by GTOPAS_SYNC_STATUS 0 + PERIOD ([Sync] Current, Period Rollover new period), no date condition (22-Nov). |
 | 1.1 | FID Rayhan | 23-Nov-26 |  | Source TB_H_STG_GTOPAS (rows ADD / DELETE of the run); started by the RPA parent flow: scenario 1 GTOPAS before AP POLE, a failed GTOPAS stops AP POLE; Period Rollover XD06 only (23-Nov). |
 | 1.2 | FID Rayhan | 26-Nov-26 |  | Staging: no SYNC_RUN_ID, the run is SYNC_DT (one value per [Sync] click / rollover); one unsent row per key (a new change updates it, back to the sent value deletes it); SYNC_STATUS 0 / 1. SQL: prepare_code/sql/crossdock_staging_sync.sql. |
+| 1.3 | FID Rayhan | 26-Nov-26 |  | The robots read views only: new view V_GTOPAS_CROSSDOCK (TB_H_STG_GTOPAS rows with SYNC_STATUS 1) for XD06 and the parent flow; view definitions added to the Tables. |
 
 ## 1. General
 
 ### Objective
 
 - To make the GTOPAS Crossdock Master (WVJA5204, Depot 01) follow NSP by an RPA: add the part + destination rows that appear in NSP and delete the rows that disappear.
-- Source data: only TB_H_STG_GTOPAS (read-only DB user), rows of the run (SYNC_DT): [Sync] (Current period), [Re-send last Sync] or the Period Rollover (new Current period, XD05 process 3).
+- Source data: only V_GTOPAS_CROSSDOCK (rows of TB_H_STG_GTOPAS with SYNC_STATUS 1; read-only DB user), rows of the run (SYNC_DT): [Sync] (Current period), [Re-send last Sync] or the Period Rollover (new Current period, XD05 process 3).
 - Started by the RPA parent flow: in scenario 1 XD06 runs before XD07 and its result decides whether XD07 starts (refer 4.1).
 - GTOPAS has no period: it always shows the Current month, so the Next period reaches GTOPAS only at the Period Rollover.
 - The robot writes nothing back to NSP; the result comes by the notification e-mail.
@@ -41,7 +42,7 @@
 
 | Name | Type | Description |
 |---|---|---|
-| TB_H_STG_GTOPAS | DB | Rows with SYNC_STATUS '1' and SYNC_DT = SYNC_DT of the run: ACTION ADD / DELETE per part + destination |
+| V_GTOPAS_CROSSDOCK | DB | Rows with SYNC_STATUS '1' and SYNC_DT = SYNC_DT of the run: ACTION ADD / DELETE per part + destination |
 | GTOPAS WVJA5204 | System | Rows of the parts of the run (Depot 01), read by the robot |
 
 ### Output
@@ -79,7 +80,7 @@
 ```mermaid
 flowchart TB
   p1["1. Start (SYNC_DT, RUN_TYPE from the parent flow)"]
-  src[("TB_H_STG_GTOPAS")]
+  src[("V_GTOPAS_CROSSDOCK")]
   p2["2. Rows of the run (ADD / DELETE)"]
   gi[("GTOPAS WVJA5204")]
   p3["3. Per row: Add or Delete (already done = OK)"]
@@ -96,7 +97,7 @@ flowchart TB
 ```
 
 1. The parent flow starts XD06 with SYNC_DT and RUN_TYPE (SYNC / RESEND: scenario 1; ROLLOVER). NSP has already set the rows to SYNC_STATUS 1 with this SYNC_DT. Write LOG1.
-2. Read TB_H_STG_GTOPAS (read-only DB user): rows with SYNC_STATUS '1' and SYNC_DT = SYNC_DT of the run, ordered by P_NO, DESTINATION_CODE.
+2. Read V_GTOPAS_CROSSDOCK (read-only DB user): rows with SYNC_DT = SYNC_DT of the run, ordered by P_NO, DESTINATION_CODE.
   - ACTION ADD: Depot 01, P/No., Destination Code, Maker A, Domestic/Overseas 2, TOPAS Order Type 3, Order Transportation Code 2.
   - ACTION DELETE: the row of P/No. + Destination Code (MT = DEL on the screen).
 3. Process every row on WVJA5204 (Depot 01). Write LOG3 per row.
@@ -108,7 +109,7 @@ flowchart TB
 ## 3. Data edit mapping
 
 #### 1. Insert GTOPAS Crossdock Master (WVJA5204, by RPA) – Part + destination added (not in NSP scope; done on the screen)
-- Source: TB_H_STG_GTOPAS (keys: SYNC_DT = SYNC_DT of the run (SYNC_STATUS 1), ACTION = 'ADD')
+- Source: V_GTOPAS_CROSSDOCK (keys: SYNC_DT = SYNC_DT of the run, ACTION = 'ADD')
 
 | Source field | Destination field | Description |
 |---|---|---|
@@ -121,7 +122,7 @@ flowchart TB
 | ORDER_TRANSPORTATION_CODE | Order Transportation Code | '2' |
 
 #### 2. Delete GTOPAS Crossdock Master (WVJA5204, by RPA) – Row of P/No. + Destination Code (MT = DEL)
-- Source: TB_H_STG_GTOPAS (keys: SYNC_DT = SYNC_DT of the run (SYNC_STATUS 1), ACTION = 'DELETE')
+- Source: V_GTOPAS_CROSSDOCK (keys: SYNC_DT = SYNC_DT of the run, ACTION = 'DELETE')
 
 | Source field | Destination field | Description |
 |---|---|---|
@@ -148,11 +149,11 @@ flowchart TB
 - Scenario 1 (run with GTOPAS rows: a part becomes Active or Inactive, a destination is added or removed): XD06 GTOPAS first; XD07 AP POLE starts only when every GTOPAS row succeeded. When GTOPAS fails, AP POLE stops: XD07 does not start and the e-mail says FAILED.
 - Scenario 2 (run without GTOPAS rows: Max Case/Day, Pcs/Case, Case/Day, order type of a destination that stays): XD07 only.
 - Period Rollover (RUN_TYPE ROLLOVER): XD06 only, for the GTOPAS rows of the new Current period.
-- Choice of the scenario: SELECT COUNT(*) FROM TB_H_STG_GTOPAS WHERE SYNC_STATUS = '1' AND SYNC_DT = <SYNC_DT of the run> (> 0: scenario 1).
+- Choice of the scenario: SELECT COUNT(*) FROM V_GTOPAS_CROSSDOCK WHERE SYNC_DT = <SYNC_DT of the run> (> 0: scenario 1).
 
 ### 4.2 Rows and Rules
 
-- XD06 reads only TB_H_STG_GTOPAS: one row per part + destination that appears (ADD) or disappears (DELETE) for the part, whatever the order type. NSP writes the row at the save (SP_STG_WRITE) and sends it with SP_STG_SYNC (Current period) or the Period Rollover.
+- XD06 reads only V_GTOPAS_CROSSDOCK (TB_H_STG_GTOPAS rows with SYNC_STATUS 1): one row per part + destination that appears (ADD) or disappears (DELETE) for the part, whatever the order type. NSP writes the row at the save (SP_STG_WRITE) and sends it with SP_STG_SYNC (Current period) or the Period Rollover.
 - A Case/Day change or an order type change of a destination that stays writes no GTOPAS row.
 - Rows of the parts outside the run are not touched.
 - Rules and simulation: deliverables/function_list_v2/erd/proposal_staging_sync (Proposal_Tables_Staging_Per_Target.xlsx, simulation/Staging_Header_Order.html, simulation/Staging_Per_Target_Full_Flow_Simulation.xlsx).
@@ -237,3 +238,20 @@ GTOPAS WVJA5204 rows: a part + destination to add or delete, written by SP_STG_W
 | CREATED_DT | DATETIME |  | N | Time of the insert (same transaction as the master update) |
 | CHANGED_BY | VARCHAR(20) |  | Y | User of the save that updated the unsent row, of [Sync], or XD05BATCH (Period Rollover) |
 | CHANGED_DT | DATETIME |  | Y | Time of that update |
+
+#### V_GTOPAS_CROSSDOCK (view, proposed)
+View (Rows of the GTOPAS screen Crossdock Master (WVJA5204) of XD06). GTOPAS rows of a run. FROM TB_H_STG_GTOPAS g WHERE g.SYNC_STATUS = '1'. The robot filters WHERE SYNC_DT = :sync_dt ORDER BY P_NO, DESTINATION_CODE; the parent flow counts the same rows (scenario 1 when > 0).
+
+| Column | Type | PK | Null | Description |
+|---|---|---|---|---|
+| SYNC_DT | DATETIME2(0) |  | Y | Helper, not written: Run filter ([Sync] or Period Rollover). Source: g.SYNC_DT |
+| STG_ID | BIGINT |  | Y | Helper, not written: Row of the staging table. Source: g.STG_ID |
+| PERIOD | CHAR(6) |  | Y | Helper, not written: Period of the row (GTOPAS has no period). Source: g.PERIOD |
+| ACTION | VARCHAR(6) |  | Y | MT (DELETE = DEL): ADD = register the row, DELETE = MT DEL on the row. Source: g.ACTION |
+| DEPOT_CODE | CHAR(2) |  | Y | Depot Code: '01' (also the search condition). Source: g.DEPOT_CODE |
+| P_NO | VARCHAR(TBD) |  | Y | P/No.: With "-". Source: g.P_NO |
+| DESTINATION_CODE | CHAR(7) |  | Y | Destination Code: 7 digits. Source: g.DESTINATION_CODE |
+| MAKER_CODE | CHAR(1) |  | Y | Maker Code: 'A'. Source: g.MAKER_CODE |
+| DOMESTIC_OVERSEAS | CHAR(1) |  | Y | Domestic/Overseas: '2'. Source: g.DOMESTIC_OVERSEAS |
+| TOPAS_ORDER_TYPE | CHAR(1) |  | Y | TOPAS Order Type: '3'. Source: g.TOPAS_ORDER_TYPE |
+| ORDER_TRANSPORTATION_CODE | CHAR(1) |  | Y | Order Transportation Code: '2'. Source: g.ORDER_TRANSPORTATION_CODE |

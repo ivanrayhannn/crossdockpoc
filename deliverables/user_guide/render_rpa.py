@@ -102,10 +102,10 @@ render('r07_file3_export_post', FILE_EXP, [file_exp(x) for x in f['post']], sql=
 GT_COLS = ['STG_ID', 'PERIOD', 'ACTION', 'DEPOT_CODE', 'P_NO', 'DESTINATION_CODE', 'MAKER_CODE', 'DOMESTIC_OVERSEAS', 'TOPAS_ORDER_TYPE', 'ORDER_TRANSPORTATION_CODE']
 gt_row = lambda g: [g['id'], g['per'], g['act'], '01', g['p'], DEST[g['d']], 'A', 2, 3, 2]
 render('r10_gtopas_rows_add', GT_COLS, [gt_row(g) for g in s['gsent']], helper=('STG_ID', 'PERIOD', 'ACTION'),
-       sql=f"SELECT * FROM TB_H_STG_GTOPAS WHERE SYNC_STATUS = '1' AND SYNC_DT = '{SDT}' ORDER BY P_NO, DESTINATION_CODE")
+       sql=f"SELECT * FROM V_GTOPAS_CROSSDOCK WHERE SYNC_DT = '{SDT}' ORDER BY P_NO, DESTINATION_CODE")
 ro = step('20270101001000')
 render('r11_gtopas_rows_rollover', GT_COLS, [gt_row(g) for g in ro['gsent']], helper=('STG_ID', 'PERIOD', 'ACTION'),
-       sql="SELECT * FROM TB_H_STG_GTOPAS WHERE SYNC_STATUS = '1' AND SYNC_DT = '2027-01-01 00:10:00' ORDER BY P_NO, DESTINATION_CODE")
+       sql="SELECT * FROM V_GTOPAS_CROSSDOCK WHERE SYNC_DT = '2027-01-01 00:10:00' ORDER BY P_NO, DESTINATION_CODE")
 add = s['gsent'][0]
 render('r12_gtopas_add_illustration',
        ['No', 'MT', 'R', 'Depot Code', 'Maker Code', 'P/No.', 'Domestic/Overseas', 'Destination Code', 'TOPAS Order Type', 'Order Transportation Code'],

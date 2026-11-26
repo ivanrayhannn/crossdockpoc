@@ -76,14 +76,14 @@ XD06 = {
     'caption': CAP,
     'meta': [('Function', 'XD06 IF Cross Dock Master to GTOPAS (desktop flow CDX_XD06_GTOPAS, started by the parent flow CDX_SYNC_PARENT)'),
              ('Started by', 'Scenario 1 of [Sync] / [Re-send last Sync] (run with GTOPAS rows), or the Period Rollover on day 1 (00:10)'),
-             ('Input', 'SYNC_DT of the run; table TB_H_STG_GTOPAS, rows with SYNC_STATUS 1 and that SYNC_DT (read-only DB user)'),
+             ('Input', 'SYNC_DT of the run; view V_GTOPAS_CROSSDOCK (rows of TB_H_STG_GTOPAS with SYNC_STATUS 1), rows with that SYNC_DT (read-only DB user)'),
              ('Output', 'Rows added / deleted on GTOPAS WVJA5204 (Depot 01); STATUS to the parent flow; e-mail')],
     'blocks': [
         ('step', 'NSP: D/S clicks [Sync (n)] (or Period Rollover)',
          'The run has GTOPAS rows (a part became Active / Inactive, a destination was added / removed): the parent flow starts XD06 first. '
          'The Period Rollover starts XD06 by itself, no screen.', 'r01_nsp_sync.png'),
         ('step', 'Get data: rows of the run ([Sync])',
-         'The robot reads TB_H_STG_GTOPAS with SYNC_STATUS 1 and the SYNC_DT of the run: one row per part + destination, ACTION ADD or DELETE. Example: run of 10-Nov, three ADD rows.',
+         'The robot reads V_GTOPAS_CROSSDOCK with the SYNC_DT of the run: one row per part + destination, ACTION ADD or DELETE. Example: run of 10-Nov, three ADD rows.',
          'r10_gtopas_rows_add.png'),
         ('step', 'Get data: rows of the run (Period Rollover)',
          'Example: rollover of 01-Jan, two DELETE rows (part became Inactive) and one ADD row (part became Active).', 'r11_gtopas_rows_rollover.png'),

@@ -19,6 +19,9 @@ TABLES = [
     ('HIS-03', 'TB_H_STG_APPOLE_KANBAN', 'Staging AP POLE Kanban', 'History', 'Kanban changes in the AP POLE Kanban upload format (LLM9Q910) and the header of the part (OPERATION_TYPE 1 to 5); read by XD07 (proposal 23-Nov).'),
     ('HIS-04', 'TB_H_STG_APPOLE_EXPORT', 'Staging AP POLE Export', 'History', 'Destination changes in the AP POLE Export upload format (LLM9Q880); read by XD07 (proposal 23-Nov).'),
     ('HIS-05', 'TB_H_STG_GTOPAS', 'Staging GTOPAS', 'History', 'Part + destination Add / Delete for GTOPAS WVJA5204; read by XD06 (proposal 23-Nov).'),
+    ('VW-01', 'V_APPOLE_UPLOAD_KANBAN', 'View AP POLE Kanban Upload', 'View', 'File 2 KANBAN (LLM9Q910) of XD07: Kanban rows of a run with OPERATION_TYPE 1 to 4 (proposal 26-Nov).'),
+    ('VW-02', 'V_APPOLE_UPLOAD_EXPORT', 'View AP POLE Export Upload', 'View', 'Files 1 EXPORT_PRE and 3 EXPORT_POST (LLM9Q880) of XD07: Export rows of a run with FILE_NO and ROW_ORDER (proposal 26-Nov).'),
+    ('VW-03', 'V_GTOPAS_CROSSDOCK', 'View GTOPAS Crossdock', 'View', 'Rows of the GTOPAS screen WVJA5204 for XD06 and the count of the parent flow (proposal 26-Nov).'),
     ('HIS-02', 'TB_H_CROSSDOCK_ORDER_CHANGE', 'Crossdock Order Change History', 'History', 'Change Order Number (XD11): cancelled qty in an ASN moved to other lines.'),
     ('TR-01', 'TB_R_PART_DAD_RESULT', 'DAD Volume Calculation Result', 'Transaction', 'Result of XD05 process 1 per part and period.'),
     ('TR-03', 'TB_R_INSTRUCTION', 'Crossdock Instruction', 'Transaction', 'Real mapping of Create ASN: case x customer order line x PO.'),
@@ -36,7 +39,7 @@ TABLES = [
     ('EXT-05', 'TB_R_DAILY_ORDER_PART', 'Daily Order Part', 'Existing', 'Existing (reference): ASN part x case written by Submit ASN.'),
     ('EXT-06', 'TB_R_CASE_LABEL_LAST_SEQ', 'Case Label Last Seq', 'Existing', 'Existing (reference): last sequence of the ASN number and the case label.'),
 ]
-ID_FILL = {'MST': '92D050', 'HIS': 'B4C6E7', 'TR': 'F4B084', 'TMP': 'D9D9D9', 'REP': 'CCC0DA', 'EXT': 'BFBFBF'}
+ID_FILL = {'VW': 'FFE699', 'MST': '92D050', 'HIS': 'B4C6E7', 'TR': 'F4B084', 'TMP': 'D9D9D9', 'REP': 'CCC0DA', 'EXT': 'BFBFBF'}
 GREY = PatternFill('solid', fgColor='FFD9D9D9')
 thin = Side(style='thin', color='FF000000')
 BOX = Border(left=thin, right=thin, top=thin, bottom=thin)
@@ -112,6 +115,7 @@ REVISIONS = [
                            'EFFECTIVE_START_DATE removed from TB_M_PART_CANDIDATE (a part takes effect from its first registered period)'),
     ('0.4', '26-Nov-2026', 'Staging tables: SYNC_RUN_ID removed (the run is SYNC_DT, one value per [Sync] click); SYNC_STATUS 0 / 1 (one unsent row per key)'),
     ('0.5', '26-Nov-2026', 'TB_H_STG_APPOLE_KANBAN / _EXPORT: EFFECTIVE_MONTH_YEAR removed (same value as PERIOD); the views make Effective Month / Year for the upload file'),
+    ('0.6', '26-Nov-2026', 'Views V_APPOLE_UPLOAD_KANBAN, V_APPOLE_UPLOAD_EXPORT and V_GTOPAS_CROSSDOCK (new) added: the robots read the views only'),
 ]
 
 
@@ -138,6 +142,12 @@ def proposal(tables, used):
             ('TB_H_STG_GTOPAS', tp.GTO, 'Part + destination rows for GTOPAS WVJA5204', ['XD01', 'XD03', 'XD05', 'XD06'])):
         tables[name] = (d, conv(rows))
         used[name] = fids
+    # views read by the robots: no key, no logging; the source of each column goes in the description
+    for name, purpose, d, rows in tp.VIEWS:
+        tables[name] = (d, [(c, typ, '', 'Y', f"{file_col or c.replace('_', ' ').title()}; {d2.rstrip('.') + '. ' if d2 else ''}Source: {src}."
+                             + ('' if file_col else ' Helper column, not written to the file / screen.'))
+                            for c, typ, src, file_col, d2 in rows])
+        used[name] = ['XD06'] if 'GTOPAS' in name else ['XD07']
 
 
 def build():
@@ -184,7 +194,7 @@ def build():
         put(tl, r, 'W', 'AN', name, font=F8)
         put(tl, r, 'AO', 'AU', f'{sizes}{"*" if unknown else ""}', font=F8, align='right')
         put(tl, r, 'AV', 'BB', pk_sizes, font=F8, align='right')
-        put(tl, r, 'BC', 'BG', 'Yes', font=F8, align='center')
+        put(tl, r, 'BC', 'BG', 'No' if kind == 'View' else 'Yes', font=F8, align='center')
         put(tl, r, 'BH', 'BL', '', font=F8)
         put(tl, r, 'BM', 'BR', '', font=F8)
         put(tl, r, 'BS', 'CV', f'{kind}: {desc}', font=F8)
@@ -213,7 +223,7 @@ def build():
         put(ws, 6, 'BU', 'CE', 'PK Row Size (B)', True)
         put(ws, 6, 'CF', 'CJ', pk_sizes, align='right')
         put(ws, 6, 'CK', 'CQ', 'Logging', True)
-        put(ws, 6, 'CR', 'CV', 'Yes', align='center')
+        put(ws, 6, 'CR', 'CV', 'No' if kind == 'View' else 'Yes', align='center')
         put(ws, 7, 'B', 'G', 'Desc', True)
         put(ws, 7, 'H', 'CV', f'{lname}: {desc} Used by: {", ".join(sorted(set(used.get(name, [])))) or "-"}.')
         heads = [('B', 'D', 'No.'), ('E', 'U', 'Field Name'), ('V', 'AL', 'Logical Name'), ('AM', 'AR', 'Type'), ('AS', 'AV', 'Len'), ('AW', 'AZ', 'Prec'),

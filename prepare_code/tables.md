@@ -25,6 +25,9 @@ One definition per table (the most complete one among the UISS); "Used by" = fun
 | TB_R_PRA_DAILY_ORDER_PART | transaction | existing | XD08, XD09, XD10, XD11 |
 | TB_T_INSTRUCTION_D | transaction | proposed | XD09, XD10 |
 | TB_T_INSTRUCTION_H | transaction | proposed | XD09, XD10 |
+| V_APPOLE_UPLOAD_EXPORT | view | proposed | XD07 |
+| V_APPOLE_UPLOAD_KANBAN | view | proposed | XD07 |
+| V_GTOPAS_CROSSDOCK | view | proposed | XD06 |
 
 #### TB_H_CROSSDOCK_ORDER_CHANGE (history, proposed)
 Used by: XD11
@@ -583,3 +586,63 @@ Draft of ASN Crossdock, header (DR XD09 (11-Nov)): one row per unit = Customer O
 | CREATE_BY | VARCHAR(20) |  | N | Login user; LEFT(CREATE_BY, 4) = company code of the user (rows of the company) |
 | UPDATE_DT | TIMESTAMP |  | Y | Last update date-time |
 | UPDATE_BY | VARCHAR(20) |  | Y | Last update user |
+
+#### V_APPOLE_UPLOAD_EXPORT (view, proposed)
+Used by: XD07
+
+View (Files 1 EXPORT_PRE and 3 EXPORT_POST (LLM9Q880) of XD07). Export rows of a run. FROM TB_H_STG_APPOLE_EXPORT (SYNC_STATUS '1') JOIN the Kanban header of the part (same SYNC_DT, PERIOD, part). The robot filters WHERE SYNC_DT = :sync_dt AND FILE_NO = 1 or 3 ORDER BY PERIOD, NSP_PART_NO, ROW_ORDER, STG_ID.
+
+| Column | Type | PK | Null | Description |
+|---|---|---|---|---|
+| SYNC_DT | DATETIME2(0) |  | Y | Helper, not written: Run filter. Source: e.SYNC_DT |
+| FILE_NO | NUMBER(1) |  | Y | Helper, not written: 1 = EXPORT_PRE (before KANBAN), 3 = EXPORT_POST (after KANBAN). Source: CASE WHEN k.OPERATION_TYPE = 1 THEN 1 ELSE 3 END |
+| FILE_NAME | VARCHAR(11) |  | Y | Helper, not written: Name part of the file. Source: CASE WHEN k.OPERATION_TYPE = 1 THEN 'EXPORT_PRE' ELSE 'EXPORT_POST' END |
+| ROW_ORDER | NUMBER(1) |  | Y | Helper, not written: 1 = down or DELETE (0) before 2 = up or ADD; PREV_RCS = LAG of the value sent before (same part, destination, order type). Source: CASE WHEN PREV_RCS IS NOT NULL AND MAX_SHIPPING_BOX_RCS < PREV_RCS THEN 1 ELSE 2 END |
+| PERIOD | CHAR(6) |  | Y | Helper, not written: Sort key. Source: e.PERIOD |
+| NSP_PART_NO | VARCHAR(TBD) |  | Y | Helper, not written: Part with "-"; sort key. Source: e.NSP_PART_NO |
+| STG_ID | BIGINT |  | Y | Helper, not written: Last sort key. Source: e.STG_ID |
+| EFFECTIVE_MONTH_YEAR | CHAR(7) |  | Y | Effective Month, Effective Year: MM/YYYY of PERIOD, not stored; the robot splits it. Source: SUBSTRING(PERIOD, 5, 2) + '/' + LEFT(PERIOD, 4) |
+| PART_NO | VARCHAR(TBD) |  | Y | Part No.: Without "-". Source: e.PART_NO |
+| BUYER_PD | CHAR(8) |  | Y | Buyer-PD: DEST_CODE as 5-2. Source: e.BUYER_PD |
+| ORDER_TYPE | VARCHAR(2) |  | Y | Order Type: Source: e.ORDER_TYPE |
+| TRANSPORT_CODE | CHAR(1) |  | Y | Transport Code: '2'. Source: e.TRANSPORT_CODE |
+| MAX_SHIPPING_BOX_RCS | NUMBER(5) |  | Y | Max Shipping Box (RCS): 0 = delete the destination. Source: e.MAX_SHIPPING_BOX_RCS |
+
+#### V_APPOLE_UPLOAD_KANBAN (view, proposed)
+Used by: XD07
+
+View (File 2 KANBAN (LLM9Q910) of XD07). Kanban rows of a run with OPERATION_TYPE 1 to 4. FROM TB_H_STG_APPOLE_KANBAN k WHERE k.SYNC_STATUS = '1' AND k.OPERATION_TYPE <> 5 (5 = header, not uploaded). The robot filters WHERE SYNC_DT = :sync_dt ORDER BY PERIOD, PART_NO.
+
+| Column | Type | PK | Null | Description |
+|---|---|---|---|---|
+| SYNC_DT | DATETIME2(0) |  | Y | Helper, not written: Run filter (time of the [Sync] click). Source: k.SYNC_DT |
+| FILE_NO | NUMBER(1) |  | Y | Helper, not written: Upload order of the file: 2 = KANBAN. Source: 2 (constant) |
+| STG_ID | BIGINT |  | Y | Helper, not written: Row of the staging table. Source: k.STG_ID |
+| PERIOD | CHAR(6) |  | Y | Helper, not written: Calculation period YYYYMM; sort key. Source: k.PERIOD |
+| OPERATION_TYPE | NUMBER(1) |  | Y | Helper, not written: 1 Max down, 2 Max up, 3 Max same, 4 never sent (5 is left out). Source: k.OPERATION_TYPE |
+| EFFECTIVE_MONTH_YEAR | CHAR(7) |  | Y | Effective Month, Effective Year: MM/YYYY of PERIOD, not stored; the robot splits it into the two template columns. Source: SUBSTRING(PERIOD, 5, 2) + '/' + LEFT(PERIOD, 4) |
+| OPERATOR_ID | CHAR(2) |  | Y | Operator ID: 'P6'. Source: k.OPERATOR_ID |
+| PART_NO | VARCHAR(TBD) |  | Y | Part No.: With "-" (kept for now, 26-Nov). Source: k.PART_NO |
+| PART_NAME | VARCHAR(TBD) |  | Y | Part Name: Source: k.PART_NAME |
+| SHIPPING_BOX_QTY | NUMBER(5) |  | Y | Shipping Box Qty: Pcs/Case. Source: k.SHIPPING_BOX_QTY |
+| MAX_SHIPPING_BOX_QTY | NUMBER(5) |  | Y | Max Shipping Box Qty: Max Case/Day. Source: k.MAX_SHIPPING_BOX_QTY |
+| MAX_ALLOWANCE_QTY | NUMBER(9) |  | Y | (not written): Max Allowance Qty of the file is left empty (26-Nov). Source: k.MAX_ALLOWANCE_QTY |
+
+#### V_GTOPAS_CROSSDOCK (view, proposed)
+Used by: XD06
+
+View (Rows of the GTOPAS screen Crossdock Master (WVJA5204) of XD06). GTOPAS rows of a run. FROM TB_H_STG_GTOPAS g WHERE g.SYNC_STATUS = '1'. The robot filters WHERE SYNC_DT = :sync_dt ORDER BY P_NO, DESTINATION_CODE; the parent flow counts the same rows (scenario 1 when > 0).
+
+| Column | Type | PK | Null | Description |
+|---|---|---|---|---|
+| SYNC_DT | DATETIME2(0) |  | Y | Helper, not written: Run filter ([Sync] or Period Rollover). Source: g.SYNC_DT |
+| STG_ID | BIGINT |  | Y | Helper, not written: Row of the staging table. Source: g.STG_ID |
+| PERIOD | CHAR(6) |  | Y | Helper, not written: Period of the row (GTOPAS has no period). Source: g.PERIOD |
+| ACTION | VARCHAR(6) |  | Y | MT (DELETE = DEL): ADD = register the row, DELETE = MT DEL on the row. Source: g.ACTION |
+| DEPOT_CODE | CHAR(2) |  | Y | Depot Code: '01' (also the search condition). Source: g.DEPOT_CODE |
+| P_NO | VARCHAR(TBD) |  | Y | P/No.: With "-". Source: g.P_NO |
+| DESTINATION_CODE | CHAR(7) |  | Y | Destination Code: 7 digits. Source: g.DESTINATION_CODE |
+| MAKER_CODE | CHAR(1) |  | Y | Maker Code: 'A'. Source: g.MAKER_CODE |
+| DOMESTIC_OVERSEAS | CHAR(1) |  | Y | Domestic/Overseas: '2'. Source: g.DOMESTIC_OVERSEAS |
+| TOPAS_ORDER_TYPE | CHAR(1) |  | Y | TOPAS Order Type: '3'. Source: g.TOPAS_ORDER_TYPE |
+| ORDER_TRANSPORTATION_CODE | CHAR(1) |  | Y | Order Transportation Code: '2'. Source: g.ORDER_TRANSPORTATION_CODE |

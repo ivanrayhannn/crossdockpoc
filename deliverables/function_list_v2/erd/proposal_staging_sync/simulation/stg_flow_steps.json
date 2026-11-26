@@ -1572,7 +1572,7 @@
    },
    "calls": [
     "SP_STG_SYNC(SYNC_DT '2026-11-05 10:00:00', Current 202611, Next 202612, RSARI)\n  → AP POLE rows with SYNC_STATUS 0 of 202611 and 202612 → 1 with SYNC_DT = time of the click; GTOPAS rows of 202611 → 1; LAST_SYNC_DATE_APPOLE\n  → start the parent flow CDX_SYNC_PARENT (SYNC_DT 2026-11-05 10:00:00, RUN_TYPE SYNC)",
-    "Parent flow: SELECT COUNT(*) FROM TB_H_STG_GTOPAS WHERE SYNC_STATUS = '1' AND SYNC_DT = '2026-11-05 10:00:00' → 0 → scenario 2: XD07 at once",
+    "Parent flow: SELECT COUNT(*) FROM V_GTOPAS_CROSSDOCK WHERE SYNC_DT = '2026-11-05 10:00:00' → 0 → scenario 2: XD07 at once",
     "XD07 AP POLE: read the views for the run",
     "View, file of the Export rows per part (Kanban row with the same SYNC_DT, part and period):",
     "  DUMMY-001 202611: header K4, OPERATION_TYPE 5 → EXPORT_POST only (header not in the KANBAN file)",
@@ -5499,7 +5499,7 @@
    },
    "calls": [
     "SP_STG_SYNC(SYNC_DT '2026-11-10 11:00:00', Current 202611, Next 202612, RSARI)\n  → AP POLE rows with SYNC_STATUS 0 of 202611 and 202612 → 1 with SYNC_DT = time of the click; GTOPAS rows of 202611 → 1; LAST_SYNC_DATE_APPOLE\n  → start the parent flow CDX_SYNC_PARENT (SYNC_DT 2026-11-10 11:00:00, RUN_TYPE SYNC)",
-    "Parent flow: SELECT COUNT(*) FROM TB_H_STG_GTOPAS WHERE SYNC_STATUS = '1' AND SYNC_DT = '2026-11-10 11:00:00' → 3 → scenario 1: XD06 first, XD07 only when GTOPAS succeeded",
+    "Parent flow: SELECT COUNT(*) FROM V_GTOPAS_CROSSDOCK WHERE SYNC_DT = '2026-11-10 11:00:00' → 3 → scenario 1: XD06 first, XD07 only when GTOPAS succeeded",
     "XD06 GTOPAS: 3 row(s), 3 OK",
     "XD07 AP POLE: read the views for the run",
     "View, file of the Export rows per part (Kanban row with the same SYNC_DT, part and period):",
@@ -9714,7 +9714,7 @@
    },
    "calls": [
     "SP_STG_SYNC(SYNC_DT '2026-11-27 10:00:00', Current 202611, Next 202612, RSARI)\n  → AP POLE rows with SYNC_STATUS 0 of 202611 and 202612 → 1 with SYNC_DT = time of the click; GTOPAS rows of 202611 → 1; LAST_SYNC_DATE_APPOLE\n  → start the parent flow CDX_SYNC_PARENT (SYNC_DT 2026-11-27 10:00:00, RUN_TYPE SYNC)",
-    "Parent flow: SELECT COUNT(*) FROM TB_H_STG_GTOPAS WHERE SYNC_STATUS = '1' AND SYNC_DT = '2026-11-27 10:00:00' → 0 → scenario 2: XD07 at once",
+    "Parent flow: SELECT COUNT(*) FROM V_GTOPAS_CROSSDOCK WHERE SYNC_DT = '2026-11-27 10:00:00' → 0 → scenario 2: XD07 at once",
     "XD07 AP POLE: read the views for the run",
     "View, file of the Export rows per part (Kanban row with the same SYNC_DT, part and period):",
     "  DUMMY-001 202612: header K7, OPERATION_TYPE 1 → EXPORT_PRE (before KANBAN)",
@@ -11612,7 +11612,7 @@
    "input": null,
    "calls": [
     "Period Rollover (XD05 process 3): 202612 becomes Current\n  → SP_STG_ROLLOVER: GTOPAS rows of 202612 with SYNC_STATUS 0 → 1 (3 row(s)), SYNC_DT 2026-12-01 00:10:00\n  → start the parent flow CDX_SYNC_PARENT (RUN_TYPE ROLLOVER)",
-    "Parent flow: SELECT COUNT(*) FROM TB_H_STG_GTOPAS WHERE SYNC_STATUS = '1' AND SYNC_DT = '2026-12-01 00:10:00' → 3 → RUN_TYPE ROLLOVER: XD06 only",
+    "Parent flow: SELECT COUNT(*) FROM V_GTOPAS_CROSSDOCK WHERE SYNC_DT = '2026-12-01 00:10:00' → 3 → RUN_TYPE ROLLOVER: XD06 only",
     "XD06 GTOPAS: 3 row(s), 3 OK",
     "E-mail SUCCESS: GTOPAS result of the rollover"
    ],
@@ -22059,7 +22059,7 @@
    },
    "calls": [
     "SP_STG_SYNC(SYNC_DT '2026-12-04 10:00:00', Current 202612, Next 202701, RSARI)\n  → AP POLE rows with SYNC_STATUS 0 of 202612 and 202701 → 1 with SYNC_DT = time of the click; GTOPAS rows of 202612 → 1; LAST_SYNC_DATE_APPOLE\n  → start the parent flow CDX_SYNC_PARENT (SYNC_DT 2026-12-04 10:00:00, RUN_TYPE SYNC)",
-    "Parent flow: SELECT COUNT(*) FROM TB_H_STG_GTOPAS WHERE SYNC_STATUS = '1' AND SYNC_DT = '2026-12-04 10:00:00' → 2 → scenario 1: XD06 first, XD07 only when GTOPAS succeeded",
+    "Parent flow: SELECT COUNT(*) FROM V_GTOPAS_CROSSDOCK WHERE SYNC_DT = '2026-12-04 10:00:00' → 2 → scenario 1: XD06 first, XD07 only when GTOPAS succeeded",
     "XD06 GTOPAS: 2 row(s), 1 OK, FAILED DUMMY-003 THAILAND",
     "GTOPAS FAILED → AP POLE stops: XD07 is not started. E-mail FAILED → D/S: [Re-send last Sync]"
    ],
@@ -23984,7 +23984,7 @@
    },
    "calls": [
     "[Re-send last Sync]: last run = MAX(SYNC_DT) = 2026-12-04 10:00:00; the parent flow starts again with it (RUN_TYPE RESEND); nothing changes in the staging",
-    "Parent flow: SELECT COUNT(*) FROM TB_H_STG_GTOPAS WHERE SYNC_STATUS = '1' AND SYNC_DT = '2026-12-04 10:00:00' → 2 → scenario 1: XD06 first, XD07 only when GTOPAS succeeded",
+    "Parent flow: SELECT COUNT(*) FROM V_GTOPAS_CROSSDOCK WHERE SYNC_DT = '2026-12-04 10:00:00' → 2 → scenario 1: XD06 first, XD07 only when GTOPAS succeeded",
     "XD06 GTOPAS: 2 row(s), 2 OK (1 already in the wanted state)",
     "XD07 AP POLE: read the views for the run",
     "View, file of the Export rows per part (Kanban row with the same SYNC_DT, part and period):",
@@ -30745,7 +30745,7 @@
    },
    "calls": [
     "SP_STG_SYNC(SYNC_DT '2026-12-27 10:00:00', Current 202612, Next 202701, RSARI)\n  → AP POLE rows with SYNC_STATUS 0 of 202612 and 202701 → 1 with SYNC_DT = time of the click; GTOPAS rows of 202612 → 1; LAST_SYNC_DATE_APPOLE\n  → start the parent flow CDX_SYNC_PARENT (SYNC_DT 2026-12-27 10:00:00, RUN_TYPE SYNC)",
-    "Parent flow: SELECT COUNT(*) FROM TB_H_STG_GTOPAS WHERE SYNC_STATUS = '1' AND SYNC_DT = '2026-12-27 10:00:00' → 0 → scenario 2: XD07 at once",
+    "Parent flow: SELECT COUNT(*) FROM V_GTOPAS_CROSSDOCK WHERE SYNC_DT = '2026-12-27 10:00:00' → 0 → scenario 2: XD07 at once",
     "XD07 AP POLE: read the views for the run",
     "View, file of the Export rows per part (Kanban row with the same SYNC_DT, part and period):",
     "  DUMMY-001 202701: header K15, OPERATION_TYPE 3 → EXPORT_POST (after KANBAN)",
@@ -33717,7 +33717,7 @@
    "input": null,
    "calls": [
     "Period Rollover (XD05 process 3): 202701 becomes Current\n  → SP_STG_ROLLOVER: GTOPAS rows of 202701 with SYNC_STATUS 0 → 1 (3 row(s)), SYNC_DT 2027-01-01 00:10:00\n  → start the parent flow CDX_SYNC_PARENT (RUN_TYPE ROLLOVER)",
-    "Parent flow: SELECT COUNT(*) FROM TB_H_STG_GTOPAS WHERE SYNC_STATUS = '1' AND SYNC_DT = '2027-01-01 00:10:00' → 3 → RUN_TYPE ROLLOVER: XD06 only",
+    "Parent flow: SELECT COUNT(*) FROM V_GTOPAS_CROSSDOCK WHERE SYNC_DT = '2027-01-01 00:10:00' → 3 → RUN_TYPE ROLLOVER: XD06 only",
     "XD06 GTOPAS: 3 row(s), 3 OK",
     "E-mail SUCCESS: GTOPAS result of the rollover"
    ],
