@@ -1,0 +1,398 @@
+{
+ "r02_view_export_pre": {
+  "sql": "SELECT * FROM V_APPOLE_UPLOAD_EXPORT WHERE SYNC_STATUS = '1' AND SYNC_DT = '2026-11-10 11:00:00' AND FILE_NO = 1 ORDER BY PERIOD, NSP_PART_NO, ROW_ORDER, STG_ID",
+  "note": null,
+  "head": [
+   "STG_ID",
+   "PERIOD",
+   "NSP_PART_NO",
+   "FILE_NO",
+   "ROW_ORDER",
+   "EFFECTIVE_MONTH_YEAR",
+   "PART_NO",
+   "BUYER_PD",
+   "ORDER_TYPE",
+   "TRANSPORT_CODE",
+   "MAX_SHIPPING_BOX_RCS"
+  ],
+  "helper": [
+   "STG_ID",
+   "PERIOD",
+   "NSP_PART_NO",
+   "FILE_NO",
+   "ROW_ORDER"
+  ],
+  "rows": [
+   [
+    10,
+    "202611",
+    "DUMMY-002",
+    1,
+    1,
+    "11/2026",
+    "DUMMY002",
+    "98111-10",
+    "**",
+    2,
+    12
+   ],
+   [
+    11,
+    "202611",
+    "DUMMY-002",
+    1,
+    2,
+    "11/2026",
+    "DUMMY002",
+    "96555-10",
+    "**",
+    2,
+    8
+   ]
+  ]
+ },
+ "r03_view_kanban": {
+  "sql": "SELECT * FROM V_APPOLE_UPLOAD_KANBAN WHERE SYNC_STATUS = '1' AND SYNC_DT = '2026-11-10 11:00:00' ORDER BY PERIOD, PART_NO",
+  "note": null,
+  "head": [
+   "STG_ID",
+   "PERIOD",
+   "OPERATION_TYPE",
+   "EFFECTIVE_MONTH_YEAR",
+   "OPERATOR_ID",
+   "PART_NO",
+   "PART_NAME",
+   "SHIPPING_BOX_QTY",
+   "MAX_SHIPPING_BOX_QTY",
+   "MAX_ALLOWANCE_QTY"
+  ],
+  "helper": [
+   "STG_ID",
+   "PERIOD",
+   "OPERATION_TYPE"
+  ],
+  "rows": [
+   [
+    6,
+    "202611",
+    1,
+    "11/2026",
+    "P6",
+    "DUMMY-002",
+    "DUMMY PART 002",
+    12,
+    20,
+    240
+   ],
+   [
+    5,
+    "202611",
+    4,
+    "11/2026",
+    "P6",
+    "DUMMY-004",
+    "DUMMY PART 004",
+    6,
+    20,
+    120
+   ]
+  ]
+ },
+ "r04_view_export_post": {
+  "sql": "SELECT * FROM V_APPOLE_UPLOAD_EXPORT WHERE SYNC_STATUS = '1' AND SYNC_DT = '2026-11-10 11:00:00' AND FILE_NO = 3 ORDER BY PERIOD, NSP_PART_NO, ROW_ORDER, STG_ID",
+  "note": null,
+  "head": [
+   "STG_ID",
+   "PERIOD",
+   "NSP_PART_NO",
+   "FILE_NO",
+   "ROW_ORDER",
+   "EFFECTIVE_MONTH_YEAR",
+   "PART_NO",
+   "BUYER_PD",
+   "ORDER_TYPE",
+   "TRANSPORT_CODE",
+   "MAX_SHIPPING_BOX_RCS"
+  ],
+  "helper": [
+   "STG_ID",
+   "PERIOD",
+   "NSP_PART_NO",
+   "FILE_NO",
+   "ROW_ORDER"
+  ],
+  "rows": [
+   [
+    8,
+    "202611",
+    "DUMMY-004",
+    3,
+    2,
+    "11/2026",
+    "DUMMY004",
+    "97153-10",
+    "**",
+    2,
+    12
+   ],
+   [
+    9,
+    "202611",
+    "DUMMY-004",
+    3,
+    2,
+    "11/2026",
+    "DUMMY004",
+    "96001-10",
+    "**",
+    2,
+    8
+   ]
+  ]
+ },
+ "r05_file1_export_pre": {
+  "sql": "LLM9Q880_20261110110000_1_EXPORT_PRE.xls (template LLM9Q880)",
+  "note": null,
+  "head": [
+   "Effective Month / Year",
+   "Part No.",
+   "Buyer-PD",
+   "Order Type",
+   "Transport Code",
+   "Max Shipping Box (RCS)"
+  ],
+  "helper": [],
+  "rows": [
+   [
+    "11/2026",
+    "DUMMY002",
+    "98111-10",
+    "**",
+    2,
+    12
+   ],
+   [
+    "11/2026",
+    "DUMMY002",
+    "96555-10",
+    "**",
+    2,
+    8
+   ]
+  ]
+ },
+ "r06_file2_kanban": {
+  "sql": "LLM9Q910_20261110110000_2_KANBAN.xls (template LLM9Q910)",
+  "note": null,
+  "head": [
+   "Effective Month / Year",
+   "Operator ID",
+   "Part No.",
+   "Part Name",
+   "Shipping Box Qty",
+   "Max Shipping Box Qty",
+   "Max Allowance Qty"
+  ],
+  "helper": [],
+  "rows": [
+   [
+    "11/2026",
+    "P6",
+    "DUMMY-002",
+    "DUMMY PART 002",
+    12,
+    20,
+    240
+   ],
+   [
+    "11/2026",
+    "P6",
+    "DUMMY-004",
+    "DUMMY PART 004",
+    6,
+    20,
+    120
+   ]
+  ]
+ },
+ "r07_file3_export_post": {
+  "sql": "LLM9Q880_20261110110000_3_EXPORT_POST.xls (template LLM9Q880)",
+  "note": null,
+  "head": [
+   "Effective Month / Year",
+   "Part No.",
+   "Buyer-PD",
+   "Order Type",
+   "Transport Code",
+   "Max Shipping Box (RCS)"
+  ],
+  "helper": [],
+  "rows": [
+   [
+    "11/2026",
+    "DUMMY004",
+    "97153-10",
+    "**",
+    2,
+    12
+   ],
+   [
+    "11/2026",
+    "DUMMY004",
+    "96001-10",
+    "**",
+    2,
+    8
+   ]
+  ]
+ },
+ "r10_gtopas_rows_add": {
+  "sql": "SELECT * FROM TB_H_STG_GTOPAS WHERE SYNC_STATUS = '1' AND SYNC_DT = '2026-11-10 11:00:00' ORDER BY P_NO, DESTINATION_CODE",
+  "note": null,
+  "head": [
+   "STG_ID",
+   "PERIOD",
+   "ACTION",
+   "DEPOT_CODE",
+   "P_NO",
+   "DESTINATION_CODE",
+   "MAKER_CODE",
+   "DOMESTIC_OVERSEAS",
+   "TOPAS_ORDER_TYPE",
+   "ORDER_TRANSPORTATION_CODE"
+  ],
+  "helper": [
+   "STG_ID",
+   "PERIOD",
+   "ACTION"
+  ],
+  "rows": [
+   [
+    6,
+    "202611",
+    "ADD",
+    "01",
+    "DUMMY-004",
+    "9715310",
+    "A",
+    2,
+    3,
+    2
+   ],
+   [
+    7,
+    "202611",
+    "ADD",
+    "01",
+    "DUMMY-004",
+    "9600110",
+    "A",
+    2,
+    3,
+    2
+   ],
+   [
+    8,
+    "202611",
+    "ADD",
+    "01",
+    "DUMMY-002",
+    "9655510",
+    "A",
+    2,
+    3,
+    2
+   ]
+  ]
+ },
+ "r11_gtopas_rows_rollover": {
+  "sql": "SELECT * FROM TB_H_STG_GTOPAS WHERE SYNC_STATUS = '1' AND SYNC_DT = '2027-01-01 00:10:00' ORDER BY P_NO, DESTINATION_CODE",
+  "note": null,
+  "head": [
+   "STG_ID",
+   "PERIOD",
+   "ACTION",
+   "DEPOT_CODE",
+   "P_NO",
+   "DESTINATION_CODE",
+   "MAKER_CODE",
+   "DOMESTIC_OVERSEAS",
+   "TOPAS_ORDER_TYPE",
+   "ORDER_TRANSPORTATION_CODE"
+  ],
+  "helper": [
+   "STG_ID",
+   "PERIOD",
+   "ACTION"
+  ],
+  "rows": [
+   [
+    14,
+    "202701",
+    "DELETE",
+    "01",
+    "DUMMY-004",
+    "9715310",
+    "A",
+    2,
+    3,
+    2
+   ],
+   [
+    15,
+    "202701",
+    "DELETE",
+    "01",
+    "DUMMY-004",
+    "9600110",
+    "A",
+    2,
+    3,
+    2
+   ],
+   [
+    16,
+    "202701",
+    "ADD",
+    "01",
+    "DUMMY-006",
+    "9811110",
+    "A",
+    2,
+    3,
+    2
+   ]
+  ]
+ },
+ "r12_gtopas_add_illustration": {
+  "sql": null,
+  "note": "ILLUSTRATION, not a screenshot: register row on GTOPAS WVJA5204 (screenshot of the register screen to be added)",
+  "head": [
+   "No",
+   "MT",
+   "R",
+   "Depot Code",
+   "Maker Code",
+   "P/No.",
+   "Domestic/Overseas",
+   "Destination Code",
+   "TOPAS Order Type",
+   "Order Transportation Code"
+  ],
+  "helper": [],
+  "rows": [
+   [
+    "",
+    "",
+    "",
+    "01",
+    "A",
+    "DUMMY-004",
+    2,
+    "9715310",
+    3,
+    2
+   ]
+  ]
+ }
+}

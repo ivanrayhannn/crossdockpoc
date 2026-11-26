@@ -22,12 +22,14 @@ STEPS, DEST = data['steps'], data['dest']
 fill = lambda c: PatternFill('solid', fgColor=c)
 HDR, HELP, SQLF, ILL = fill('D9E1F2'), fill('FFF2CC'), fill('F2F2F2'), fill('FCE4D6')
 tmp = tempfile.mkdtemp()
+TABLES = {}  # name -> query / file name, header, rows: written to shots_rpa/tables.json for the Markdown copy
 my = lambda per: per[4:] + '/' + per[:4]
 bpd = lambda d: DEST[d][:5] + '-' + DEST[d][5:]
 
 
 def render(name, head, rows, sql=None, helper=(), note=None):
     """Excel-like picture: optional SQL line, header (yellow = helper column, not in the file), rows."""
+    TABLES[name] = {'sql': sql, 'note': note, 'head': head, 'helper': list(helper), 'rows': rows}
     wb = openpyxl.Workbook()
     ws = wb.active
     r0 = 1
@@ -107,3 +109,4 @@ render('r12_gtopas_add_illustration',
        ['No', 'MT', 'R', 'Depot Code', 'Maker Code', 'P/No.', 'Domestic/Overseas', 'Destination Code', 'TOPAS Order Type', 'Order Transportation Code'],
        [['', '', '', '01', 'A', add['p'], 2, DEST[add['d']], 3, 2]],
        note='ILLUSTRATION, not a screenshot: register row on GTOPAS WVJA5204 (screenshot of the register screen to be added)')
+json.dump(TABLES, open(os.path.join(OUT, 'tables.json'), 'w'), indent=1)
