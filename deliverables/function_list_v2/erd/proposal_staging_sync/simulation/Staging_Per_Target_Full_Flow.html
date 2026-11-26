@@ -375,7 +375,7 @@ function parent(run, type, opt) {
   const g = G.filter((r) => r.run === run && r.st === 1);
   const sc = type === 'ROLLOVER' ? 'Rollover' : g.length ? '1' : '2';
   rpa = { run, type, sc, gRows: g.length, g: 'skipped', gFail: [], ap: 'skipped', apFile: null };
-  calls.push(`Parent flow: SELECT COUNT(*) FROM TB_H_STG_GTOPAS WHERE SYNC_STATUS = '1' AND SYNC_DT = '${sdtOf(run)}' → ${g.length}` +
+  calls.push(`Parent flow: SELECT COUNT(*) FROM V_GTOPAS_CROSSDOCK WHERE SYNC_DT = '${sdtOf(run)}' → ${g.length}` +
     (type === 'ROLLOVER' ? ' → RUN_TYPE ROLLOVER: XD06 only' : g.length ? ' → scenario 1: XD06 first, XD07 only when GTOPAS succeeded' : ' → scenario 2: XD07 at once'));
   if (sc !== '2') {
     const fail = g.filter((r) => (opt.failG || []).includes(r.p + '|' + r.d));

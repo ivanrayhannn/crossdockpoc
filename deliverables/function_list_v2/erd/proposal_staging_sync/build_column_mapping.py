@@ -76,8 +76,8 @@ EXP_HELP = [
     ['DEST_CODE, ACTION, SOURCE, UPLOAD_ID, SYNC_STATUS, CREATED_* / CHANGED_*', 'Table only, not in the view; not written'],
 ]
 
-# ---------- GTOPAS: TB_H_STG_GTOPAS -> screen WVJA5204 ----------
-GHEAD = ['Screen field (WVJA5204)', 'Staging column', 'ACTION = ADD (register a row)', 'ACTION = DELETE (MT = DEL)', f'Example ADD (run {EX_RUN})', 'Example DELETE (run 2026-12-08 11:00:00)']
+# ---------- GTOPAS: TB_H_STG_GTOPAS -> V_GTOPAS_CROSSDOCK -> screen WVJA5204 ----------
+GHEAD = ['Screen field (WVJA5204)', 'Column (staging = view)', 'ACTION = ADD (register a row)', 'ACTION = DELETE (MT = DEL)', f'Example ADD (run {EX_RUN})', 'Example DELETE (run 2026-12-08 11:00:00)']
 GTO = [
     ['Search: Depot Code (*)', 'DEPOT_CODE', "Search with '01'", "Search with '01'", '01', '01'],
     ['Search: P/No.', 'P_NO', 'Search, to check the row is not there yet', 'Search the row to delete', ga['p'], gd['p']],
@@ -95,15 +95,15 @@ GTO = [
 G_HELP = [
     ['STG_ID, PERIOD', 'Not on the screen; ORDER BY P_NO, DESTINATION_CODE'],
     ['ACTION', 'ADD = register the row, DELETE = MT DEL on the row'],
-    ['SYNC_DT', "Filter of the run: WHERE SYNC_STATUS = '1' AND SYNC_DT = :sync_dt (table, no view)"],
-    ['SOURCE, UPLOAD_ID, SYNC_STATUS, CREATED_* / CHANGED_*', 'Not used by the robot'],
+    ['SYNC_DT', 'Filter of the run: WHERE SYNC_DT = :sync_dt (the view keeps SYNC_STATUS 1 only)'],
+    ['SOURCE, UPLOAD_ID, SYNC_STATUS, CREATED_* / CHANGED_*', 'Table only, not in the view'],
 ]
 
 FILES = [
     ['1', 'EXPORT_PRE', 'LLM9Q880', 'LLM9Q880_<yyyymmddhhmmss of SYNC_DT>_1_EXPORT_PRE.xls', 'V_APPOLE_UPLOAD_EXPORT WHERE SYNC_DT = :sync_dt AND FILE_NO = 1 ORDER BY PERIOD, NSP_PART_NO, ROW_ORDER, STG_ID', 'Export rows of parts whose Max goes down (OPERATION_TYPE 1)'],
     ['2', 'KANBAN', 'LLM9Q910', 'LLM9Q910_<yyyymmddhhmmss>_2_KANBAN.xls', 'V_APPOLE_UPLOAD_KANBAN WHERE SYNC_DT = :sync_dt ORDER BY PERIOD, PART_NO', 'Kanban rows with OPERATION_TYPE 1 to 4'],
     ['3', 'EXPORT_POST', 'LLM9Q880', 'LLM9Q880_<yyyymmddhhmmss>_3_EXPORT_POST.xls', 'V_APPOLE_UPLOAD_EXPORT WHERE SYNC_DT = :sync_dt AND FILE_NO = 3 ORDER BY PERIOD, NSP_PART_NO, ROW_ORDER, STG_ID', 'Every other Export row (OPERATION_TYPE 2 to 5)'],
-    ['-', 'GTOPAS (XD06)', 'Screen WVJA5204', '-', "TB_H_STG_GTOPAS WHERE SYNC_STATUS = '1' AND SYNC_DT = :sync_dt ORDER BY P_NO, DESTINATION_CODE", 'Run before XD07 when the run has GTOPAS rows (scenario 1)'],
+    ['-', 'GTOPAS (XD06)', 'Screen WVJA5204', '-', 'V_GTOPAS_CROSSDOCK WHERE SYNC_DT = :sync_dt ORDER BY P_NO, DESTINATION_CODE', 'Run before XD07 when the run has GTOPAS rows (scenario 1)'],
 ]
 NOTES = [
     'Decided 26-Nov: Effective Month and Effective Year are two columns in both templates; the views keep EFFECTIVE_MONTH_YEAR (MM/YYYY) and the robot splits it.',
@@ -169,7 +169,7 @@ r = table(ws, r, HEAD, EXP, W)
 r = label(ws, r, 'Columns used by the robot but not written to the file')
 table(ws, r, ['Column', 'Use'], EXP_HELP, head_fill=HELP)
 
-ws, r = sheet('3 GTOPAS WVJA5204', 'TB_H_STG_GTOPAS → GTOPAS screen Crossdock Master (WVJA5204)',
+ws, r = sheet('3 GTOPAS WVJA5204', 'TB_H_STG_GTOPAS → V_GTOPAS_CROSSDOCK → GTOPAS screen Crossdock Master (WVJA5204)',
               'XD06: one screen action per row, Menu Supply > Master > Crossdock Master. No file: the robot works on the screen.')
 r = table(ws, r, GHEAD, GTO, [28, 28, 40, 40, 24, 28])
 r = label(ws, r, 'Columns used by the robot but not typed on the screen')
@@ -199,7 +199,7 @@ L = ['# Column mapping: staging tables to the AP POLE files and the GTOPAS scree
      'Not written to the file:', '', mdt(['Column', 'Use'], KAN_HELP),
      '## 2. Export: TB_H_STG_APPOLE_EXPORT → V_APPOLE_UPLOAD_EXPORT → LLM9Q880 (files 1 EXPORT_PRE, 3 EXPORT_POST)', '', mdt(HEAD, EXP),
      'Not written to the file:', '', mdt(['Column', 'Use'], EXP_HELP),
-     '## 3. GTOPAS: TB_H_STG_GTOPAS → screen WVJA5204', '', mdt(GHEAD, GTO), 'Not typed on the screen:', '', mdt(['Column', 'Use'], G_HELP),
+     '## 3. GTOPAS: TB_H_STG_GTOPAS → V_GTOPAS_CROSSDOCK → screen WVJA5204', '', mdt(GHEAD, GTO), 'Not typed on the screen:', '', mdt(['Column', 'Use'], G_HELP),
      '## 4. Files and order of one run', '', mdt(['Order', 'File', 'Template / screen', 'File name', 'Query of the robot', 'Rows'], FILES),
      '## 5. Notes and points to confirm', ''] + [f'{i + 1}. {n}' for i, n in enumerate(NOTES)] + ['']
 open(MD, 'w', encoding='utf-8').write('\n'.join(L))

@@ -36,7 +36,7 @@ indexes = [strip_comments_before(b, 'CREATE INDEX') for b in batches('INDEX')]
 views = [re.sub(r"SUBSTRING\((\w)\.PERIOD, 5, 2\) \+ '/' \+ LEFT\((\w)\.PERIOD, 4\)", r"substr(\1.PERIOD, 5, 2) || '/' || substr(\2.PERIOD, 1, 4)",
                 strip_comments_before(b, 'CREATE VIEW')) for b in batches('VIEW')]
 assert all('SUBSTRING' not in v for v in views)
-assert len(tables) == 3 and len(views) == 2, (len(tables), len(views))
+assert len(tables) == 3 and len(views) == 3, (len(tables), len(views))
 DDL = '\n\n'.join(tables + indexes + views)
 
 
@@ -92,9 +92,9 @@ ORDER BY k.SYNC_DT, k.PERIOD, k.PART_NO;"""
 
 QUERIES = [
     ('Robot (read-only DB user)', 'Parent flow: scenario 1 or 2', 'More than 0 GTOPAS rows in the run: scenario 1, XD06 first, XD07 only when XD06 succeeded. 0: scenario 2, XD07 only.',
-     f"SELECT COUNT(*) AS GTOPAS_ROWS\nFROM   {G}\nWHERE  SYNC_STATUS = '1' AND SYNC_DT = '{{{{RUN}}}}';"),
+     "SELECT COUNT(*) AS GTOPAS_ROWS\nFROM   V_GTOPAS_CROSSDOCK\nWHERE  SYNC_DT = '{{RUN}}';"),
     ('Robot (read-only DB user)', 'XD06: GTOPAS rows of the run', 'One row per part + destination, ACTION ADD or DELETE on WVJA5204.',
-     f"SELECT STG_ID, ACTION, DEPOT_CODE, P_NO, DESTINATION_CODE, MAKER_CODE,\n       DOMESTIC_OVERSEAS, TOPAS_ORDER_TYPE, ORDER_TRANSPORTATION_CODE\nFROM   {G}\nWHERE  SYNC_STATUS = '1' AND SYNC_DT = '{{{{RUN}}}}'\nORDER BY P_NO, DESTINATION_CODE;"),
+     f"SELECT STG_ID, ACTION, DEPOT_CODE, P_NO, DESTINATION_CODE, MAKER_CODE,\n       DOMESTIC_OVERSEAS, TOPAS_ORDER_TYPE, ORDER_TRANSPORTATION_CODE\nFROM   V_GTOPAS_CROSSDOCK\nWHERE  SYNC_DT = '{{{{RUN}}}}'\nORDER BY P_NO, DESTINATION_CODE;"),
     ('Robot (read-only DB user)', 'XD07 file 1: EXPORT_PRE', 'Export rows of parts whose Max goes down (header OPERATION_TYPE 1). Template LLM9Q880. No row = file not made.',
      "SELECT * FROM V_APPOLE_UPLOAD_EXPORT\nWHERE  SYNC_DT = '{{RUN}}' AND FILE_NO = 1\nORDER BY PERIOD, NSP_PART_NO, ROW_ORDER, STG_ID;"),
     ('Robot (read-only DB user)', 'XD07 file 2: KANBAN', 'Kanban rows with OPERATION_TYPE 1 to 4 (a header 5 is not uploaded). Template LLM9Q910.',
@@ -316,6 +316,7 @@ lines = ['-- ===================================================================
          '-- =====================================================================================================', '',
          "IF OBJECT_ID('V_APPOLE_UPLOAD_EXPORT', 'V') IS NOT NULL DROP VIEW V_APPOLE_UPLOAD_EXPORT;",
          "IF OBJECT_ID('V_APPOLE_UPLOAD_KANBAN', 'V') IS NOT NULL DROP VIEW V_APPOLE_UPLOAD_KANBAN;",
+         "IF OBJECT_ID('V_GTOPAS_CROSSDOCK', 'V') IS NOT NULL DROP VIEW V_GTOPAS_CROSSDOCK;",
          "IF OBJECT_ID('TB_H_STG_GTOPAS', 'U') IS NOT NULL DROP TABLE TB_H_STG_GTOPAS;",
          "IF OBJECT_ID('TB_H_STG_APPOLE_EXPORT', 'U') IS NOT NULL DROP TABLE TB_H_STG_APPOLE_EXPORT;",
          "IF OBJECT_ID('TB_H_STG_APPOLE_KANBAN', 'U') IS NOT NULL DROP TABLE TB_H_STG_APPOLE_KANBAN;", 'GO', '',
@@ -335,9 +336,9 @@ for b in t_tables:
 lines += ['-- 3. Queries. Change @SYNC_DT to look at another run.',
           "DECLARE @SYNC_DT DATETIME2(0) = '" + DEF_RUN + "';", '',
           '-- Parent flow: > 0 = scenario 1 (XD06 then XD07), 0 = scenario 2 (XD07 only)',
-          f"SELECT COUNT(*) AS GTOPAS_ROWS FROM {G} WHERE SYNC_STATUS = '1' AND SYNC_DT = @SYNC_DT;", '',
+          "SELECT COUNT(*) AS GTOPAS_ROWS FROM V_GTOPAS_CROSSDOCK WHERE SYNC_DT = @SYNC_DT;", '',
           '-- XD06 GTOPAS',
-          f"SELECT STG_ID, ACTION, DEPOT_CODE, P_NO, DESTINATION_CODE, MAKER_CODE, DOMESTIC_OVERSEAS, TOPAS_ORDER_TYPE, ORDER_TRANSPORTATION_CODE\nFROM {G} WHERE SYNC_STATUS = '1' AND SYNC_DT = @SYNC_DT ORDER BY P_NO, DESTINATION_CODE;", '',
+          f"SELECT STG_ID, ACTION, DEPOT_CODE, P_NO, DESTINATION_CODE, MAKER_CODE, DOMESTIC_OVERSEAS, TOPAS_ORDER_TYPE, ORDER_TRANSPORTATION_CODE\nFROM V_GTOPAS_CROSSDOCK WHERE SYNC_DT = @SYNC_DT ORDER BY P_NO, DESTINATION_CODE;", '',
           '-- XD07 file 1 EXPORT_PRE, file 2 KANBAN, file 3 EXPORT_POST (a file without rows is not made)',
           'SELECT * FROM V_APPOLE_UPLOAD_EXPORT WHERE SYNC_DT = @SYNC_DT AND FILE_NO = 1 ORDER BY PERIOD, NSP_PART_NO, ROW_ORDER, STG_ID;',
           'SELECT * FROM V_APPOLE_UPLOAD_KANBAN WHERE SYNC_DT = @SYNC_DT ORDER BY PERIOD, PART_NO;',

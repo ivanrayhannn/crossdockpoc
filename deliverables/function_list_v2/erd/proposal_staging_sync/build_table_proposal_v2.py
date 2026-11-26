@@ -118,6 +118,92 @@ GTO = [
 ] + AUDIT
 
 
+
+# ---------- views read by the robots (read-only DB user): one row per row of a file / of the GTOPAS screen ----------
+def _t(rows, name):
+    return next(r[1] for r in rows if r[0] == name)
+
+
+MMYYYY = "SUBSTRING(PERIOD, 5, 2) + '/' + LEFT(PERIOD, 4)"
+VIEW_COLS = ['No', 'Column', 'Type', 'Source (table column or expression)', 'In upload file / screen', 'Description']
+VIEW_WID = [5, 26, 14, 46, 26, 80]
+VIEWS = [
+    ('V_APPOLE_UPLOAD_KANBAN', 'File 2 KANBAN (LLM9Q910) of XD07',
+     "Kanban rows of a run with OPERATION_TYPE 1 to 4. FROM TB_H_STG_APPOLE_KANBAN k WHERE k.SYNC_STATUS = '1' AND k.OPERATION_TYPE <> 5 "
+     "(5 = header, not uploaded). The robot filters WHERE SYNC_DT = :sync_dt ORDER BY PERIOD, PART_NO.", [
+        ['SYNC_DT', _t(KAN, 'SYNC_DT'), 'k.SYNC_DT', '', 'Run filter (time of the [Sync] click)'],
+        ['FILE_NO', 'NUMBER(1)', '2 (constant)', '', 'Upload order of the file: 2 = KANBAN'],
+        ['STG_ID', _t(KAN, 'STG_ID'), 'k.STG_ID', '', 'Row of the staging table'],
+        ['PERIOD', _t(KAN, 'PERIOD'), 'k.PERIOD', '', 'Calculation period YYYYMM; sort key'],
+        ['OPERATION_TYPE', _t(KAN, 'OPERATION_TYPE'), 'k.OPERATION_TYPE', '', '1 Max down, 2 Max up, 3 Max same, 4 never sent (5 is left out)'],
+        ['EFFECTIVE_MONTH_YEAR', 'CHAR(7)', MMYYYY, 'Effective Month, Effective Year', 'MM/YYYY of PERIOD, not stored; the robot splits it into the two template columns'],
+        ['OPERATOR_ID', _t(KAN, 'OPERATOR_ID'), 'k.OPERATOR_ID', 'Operator ID', "'P6'"],
+        ['PART_NO', _t(KAN, 'PART_NO'), 'k.PART_NO', 'Part No.', 'With "-" (kept for now, 26-Nov)'],
+        ['PART_NAME', _t(KAN, 'PART_NAME'), 'k.PART_NAME', 'Part Name', ''],
+        ['SHIPPING_BOX_QTY', _t(KAN, 'SHIPPING_BOX_QTY'), 'k.SHIPPING_BOX_QTY', 'Shipping Box Qty', 'Pcs/Case'],
+        ['MAX_SHIPPING_BOX_QTY', _t(KAN, 'MAX_SHIPPING_BOX_QTY'), 'k.MAX_SHIPPING_BOX_QTY', 'Max Shipping Box Qty', 'Max Case/Day'],
+        ['MAX_ALLOWANCE_QTY', _t(KAN, 'MAX_ALLOWANCE_QTY'), 'k.MAX_ALLOWANCE_QTY', '(not written)', 'Max Allowance Qty of the file is left empty (26-Nov)'],
+    ]),
+    ('V_APPOLE_UPLOAD_EXPORT', 'Files 1 EXPORT_PRE and 3 EXPORT_POST (LLM9Q880) of XD07',
+     "Export rows of a run. FROM TB_H_STG_APPOLE_EXPORT (SYNC_STATUS '1') JOIN the Kanban header of the part (same SYNC_DT, PERIOD, part). "
+     "The robot filters WHERE SYNC_DT = :sync_dt AND FILE_NO = 1 or 3 ORDER BY PERIOD, NSP_PART_NO, ROW_ORDER, STG_ID.", [
+        ['SYNC_DT', _t(EXP, 'SYNC_DT'), 'e.SYNC_DT', '', 'Run filter'],
+        ['FILE_NO', 'NUMBER(1)', 'CASE WHEN k.OPERATION_TYPE = 1 THEN 1 ELSE 3 END', '', '1 = EXPORT_PRE (before KANBAN), 3 = EXPORT_POST (after KANBAN)'],
+        ['FILE_NAME', 'VARCHAR(11)', "CASE WHEN k.OPERATION_TYPE = 1 THEN 'EXPORT_PRE' ELSE 'EXPORT_POST' END", '', 'Name part of the file'],
+        ['ROW_ORDER', 'NUMBER(1)', 'CASE WHEN PREV_RCS IS NOT NULL AND MAX_SHIPPING_BOX_RCS < PREV_RCS THEN 1 ELSE 2 END',
+         '', '1 = down or DELETE (0) before 2 = up or ADD; PREV_RCS = LAG of the value sent before (same part, destination, order type)'],
+        ['PERIOD', _t(EXP, 'PERIOD'), 'e.PERIOD', '', 'Sort key'],
+        ['NSP_PART_NO', _t(EXP, 'NSP_PART_NO'), 'e.NSP_PART_NO', '', 'Part with "-"; sort key'],
+        ['STG_ID', _t(EXP, 'STG_ID'), 'e.STG_ID', '', 'Last sort key'],
+        ['EFFECTIVE_MONTH_YEAR', 'CHAR(7)', MMYYYY, 'Effective Month, Effective Year', 'MM/YYYY of PERIOD, not stored; the robot splits it'],
+        ['PART_NO', _t(EXP, 'PART_NO'), 'e.PART_NO', 'Part No.', 'Without "-"'],
+        ['BUYER_PD', _t(EXP, 'BUYER_PD'), 'e.BUYER_PD', 'Buyer-PD', 'DEST_CODE as 5-2'],
+        ['ORDER_TYPE', _t(EXP, 'ORDER_TYPE'), 'e.ORDER_TYPE', 'Order Type', ''],
+        ['TRANSPORT_CODE', _t(EXP, 'TRANSPORT_CODE'), 'e.TRANSPORT_CODE', 'Transport Code', "'2'"],
+        ['MAX_SHIPPING_BOX_RCS', _t(EXP, 'MAX_SHIPPING_BOX_RCS'), 'e.MAX_SHIPPING_BOX_RCS', 'Max Shipping Box (RCS)', '0 = delete the destination'],
+    ]),
+    ('V_GTOPAS_CROSSDOCK', 'Rows of the GTOPAS screen Crossdock Master (WVJA5204) of XD06',
+     "GTOPAS rows of a run. FROM TB_H_STG_GTOPAS g WHERE g.SYNC_STATUS = '1'. The robot filters WHERE SYNC_DT = :sync_dt "
+     "ORDER BY P_NO, DESTINATION_CODE; the parent flow counts the same rows (scenario 1 when > 0).", [
+        ['SYNC_DT', _t(GTO, 'SYNC_DT'), 'g.SYNC_DT', '', 'Run filter ([Sync] or Period Rollover)'],
+        ['STG_ID', _t(GTO, 'STG_ID'), 'g.STG_ID', '', 'Row of the staging table'],
+        ['PERIOD', _t(GTO, 'PERIOD'), 'g.PERIOD', '', 'Period of the row (GTOPAS has no period)'],
+        ['ACTION', _t(GTO, 'ACTION'), 'g.ACTION', 'MT (DELETE = DEL)', 'ADD = register the row, DELETE = MT DEL on the row'],
+        ['DEPOT_CODE', _t(GTO, 'DEPOT_CODE'), 'g.DEPOT_CODE', 'Depot Code', "'01' (also the search condition)"],
+        ['P_NO', _t(GTO, 'P_NO'), 'g.P_NO', 'P/No.', 'With "-"'],
+        ['DESTINATION_CODE', _t(GTO, 'DESTINATION_CODE'), 'g.DESTINATION_CODE', 'Destination Code', '7 digits'],
+        ['MAKER_CODE', _t(GTO, 'MAKER_CODE'), 'g.MAKER_CODE', 'Maker Code', "'A'"],
+        ['DOMESTIC_OVERSEAS', _t(GTO, 'DOMESTIC_OVERSEAS'), 'g.DOMESTIC_OVERSEAS', 'Domestic/Overseas', "'2'"],
+        ['TOPAS_ORDER_TYPE', _t(GTO, 'TOPAS_ORDER_TYPE'), 'g.TOPAS_ORDER_TYPE', 'TOPAS Order Type', "'3'"],
+        ['ORDER_TRANSPORTATION_CODE', _t(GTO, 'ORDER_TRANSPORTATION_CODE'), 'g.ORDER_TRANSPORTATION_CODE', 'Order Transportation Code', "'2'"],
+    ]),
+]
+
+
+def view_sheet(wb, title, name, purpose, desc, rows):
+    ws = wb.create_sheet(title)
+    ws.sheet_view.showGridLines = False
+    ws['A1'] = f'{name} (view, new: {purpose})'
+    ws['A1'].font = Font(name='Arial', size=12, bold=True)
+    ws['A2'] = desc
+    ws['A2'].font = Font(name='Arial', size=9, italic=True)
+    for c, h in enumerate(VIEW_COLS, 1):
+        x = ws.cell(4, c, h)
+        x.font, x.fill, x.border = FB, HDR, BOX
+        x.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+    for i, row in enumerate(rows, 1):
+        for c, v in enumerate([i] + row, 1):
+            x = ws.cell(4 + i, c, v)
+            x.font, x.border = F, BOX
+            x.alignment = Alignment(wrap_text=True, vertical='top')
+            if c == 2 and not row[3]:
+                x.fill = HELP   # helper column: not written to the file / screen
+    for c, w in enumerate(VIEW_WID, 1):
+        ws.column_dimensions[get_column_letter(c)].width = w
+    ws.cell(6 + len(rows), 1, 'Yellow column = helper (filter, sort, file choice), not written to the file / screen. Read-only DB user of the robots: SELECT on the views only.').font = F
+    ws.freeze_panes = 'C5'
+
+
 def sheet(wb, title, table, desc, rows, notes):
     ws = wb.create_sheet(title)
     ws.sheet_view.showGridLines = False
@@ -172,6 +258,7 @@ def summary(wb):
         ['SP_STG_ROLLOVER', 'Stored procedure', 'New', 'Period Rollover (XD05 process 3): GTOPAS rows of the new Current period 0 -> 1 with SYNC_DT'],
         ['V_APPOLE_UPLOAD_KANBAN', 'View', 'New', 'File KANBAN (order 2): Kanban rows of a run (SYNC_DT) with OPERATION_TYPE 1 to 4'],
         ['V_APPOLE_UPLOAD_EXPORT', 'View', 'New', 'Files EXPORT_PRE (1) and EXPORT_POST (3) from the header OPERATION_TYPE; ROW_ORDER 1 down / 2 up'],
+        ['V_GTOPAS_CROSSDOCK', 'View', 'New', 'GTOPAS rows of a run (SYNC_DT) for WVJA5204, read by XD06 and counted by the parent flow'],
     ]
     for i, row in enumerate(rows, 3):
         for c, v in enumerate(row, 1):
@@ -220,7 +307,10 @@ def main():
           'Insert / update / delete by SP_STG_WRITE (EXPORT); sent by [Sync] (Current period) or the Period Rollover (new Current period).', GTO, [
               'PK: STG_ID. FK1: (P_NO, PERIOD) -> TB_M_PART_CANDIDATE. Key: PERIOD + P_NO + DESTINATION_CODE.',
               'IX1: SYNC_STATUS, PERIOD. IX2: SYNC_DT (rows of a run). IX3: P_NO, DESTINATION_CODE, PERIOD, SYNC_DT (last sent action).',
-              'No MT column: the RPA deletes the row on WVJA5204 (MT = DEL) when ACTION = DELETE.'])
+              'No MT column: the RPA deletes the row on WVJA5204 (MT = DEL) when ACTION = DELETE.',
+              'Read by V_GTOPAS_CROSSDOCK (rows of a run, SYNC_STATUS 1).'])
+    for i, (name, purpose, desc, rows) in enumerate(VIEWS, 6):
+        view_sheet(wb, f'{i}. {name}', name, purpose, desc, rows)
     summary(wb)
     wb.save(OUT)
     print('saved', OUT)

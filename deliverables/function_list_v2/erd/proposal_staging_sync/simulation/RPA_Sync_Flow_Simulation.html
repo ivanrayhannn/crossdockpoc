@@ -118,7 +118,7 @@ tr.r-touch td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
         </ol>
       </div>
     </div>
-    <p class="note">The parent decides with one query: <code>SELECT COUNT(*) FROM TB_H_STG_GTOPAS WHERE SYNC_STATUS = '1' AND SYNC_DT = :sync_dt</code>. More than 0 → scenario 1, 0 → scenario 2.
+    <p class="note">The parent decides with one query: <code>SELECT COUNT(*) FROM V_GTOPAS_CROSSDOCK WHERE SYNC_DT = :sync_dt</code>. More than 0 → scenario 1, 0 → scenario 2.
       The staging already writes a GTOPAS row only when a destination appears or disappears for a part, so the count is exactly "the part list of GTOPAS changes".</p>
   </section>
 
@@ -127,39 +127,39 @@ tr.r-touch td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
     <div class="mer"><pre class="mermaid">
 %%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#e6f0fb', 'primaryBorderColor': '#123a6b', 'primaryTextColor': '#0f2540', 'lineColor': '#4f6580', 'fontFamily': 'IBM Plex Sans, Arial, sans-serif', 'fontSize': '13px'}}}%%
 flowchart TD
-  T0["NSP: [Sync] / [Re-send last Sync] / Period Rollover<br/>staging rows 0 → 1 with RUN_ID (SP_STG_SYNC)"] --> P0["Parent cloud flow starts<br/>input RUN_ID, RUN_TYPE"]
+  T0["NSP: [Sync] / [Re-send last Sync] / Period Rollover<br/>staging rows 0 → 1 with SYNC_DT (SP_STG_SYNC)"] --> P0["Parent cloud flow starts<br/>input SYNC_DT, RUN_TYPE"]
   P0 --> Q0{"RUN_TYPE = ROLLOVER?"}
   Q0 -- yes --> G0["Child desktop flow XD06<br/>GTOPAS rows of the new Current period"] --> M0["E-mail: GTOPAS result"]
-  Q0 -- no --> Q1{"GTOPAS rows in the run?<br/>COUNT(*) TB_H_STG_GTOPAS<br/>WHERE SYNC_DT = :sync_dt"}
+  Q0 -- no --> Q1{"GTOPAS rows in the run?<br/>COUNT(*) V_GTOPAS_CROSSDOCK<br/>WHERE SYNC_DT = :sync_dt"}
   Q1 -- "yes: scenario 1" --> G1["Child desktop flow XD06<br/>Add / Delete on WVJA5204<br/>(every row, failed rows listed)"]
   G1 --> Q2{"GTOPAS all rows OK?"}
   Q2 -- no --> X1["AP POLE stops: XD07 not started"] --> M1["E-mail FAILED:<br/>GTOPAS rows failed, AP POLE not sent<br/>→ D/S: [Re-send last Sync]"]
   Q2 -- yes --> A1
-  Q1 -- "no: scenario 2" --> A1["Read the views for RUN_ID<br/>V_APPOLE_UPLOAD_EXPORT / _KANBAN"]
+  Q1 -- "no: scenario 2" --> A1["Read the views for SYNC_DT<br/>V_APPOLE_UPLOAD_EXPORT / _KANBAN"]
   A1 --> A2["Child desktop flow XD07<br/>1 EXPORT_PRE → 2 KANBAN → 3 EXPORT_POST<br/>(stop at the first rejected row)"]
   A2 --> Q3{"AP POLE all files OK?"}
   Q3 -- yes --> M2["E-mail SUCCESS:<br/>GTOPAS (if any) + AP POLE files"]
   Q3 -- no --> M3["E-mail FAILED:<br/>file and row rejected, files not sent<br/>→ D/S: [Re-send last Sync]"]
     </pre></div>
-    <p class="note">Empty files are not made: XD07 skips EXPORT_PRE or KANBAN when the view returns no row for them. [Re-send last Sync] runs the same flow with the same RUN_ID.</p>
+    <p class="note">Empty files are not made: XD07 skips EXPORT_PRE or KANBAN when the view returns no row for them. [Re-send last Sync] runs the same flow with the same SYNC_DT.</p>
   </section>
 
   <section>
     <h2>Power Automate structure</h2>
     <pre class="tree">CDX_SYNC_PARENT (cloud flow, in one Solution)
- │  trigger: started by NSP with RUN_ID, RUN_TYPE (SYNC / RESEND / ROLLOVER)
- ├─ SQL (read-only user): COUNT GTOPAS rows of RUN_ID → scenario 1 or 2
+ │  trigger: started by NSP with SYNC_DT, RUN_TYPE (SYNC / RESEND / ROLLOVER)
+ ├─ SQL (read-only user): COUNT V_GTOPAS_CROSSDOCK rows of SYNC_DT → scenario 1 or 2
  ├─ [scenario 1 or ROLLOVER] Run desktop flow CDX_XD06_GTOPAS
- │     input : RUN_ID          output: STATUS (SUCCESS / FAILED), FAILED_ROWS
- │     subflows: Login → for each TB_H_STG_GTOPAS row of RUN_ID: Add or Delete (MT = DEL) → Logout
+ │     input : SYNC_DT         output: STATUS (SUCCESS / FAILED), FAILED_ROWS
+ │     subflows: Login → for each V_GTOPAS_CROSSDOCK row of SYNC_DT: Add or Delete (MT = DEL) → Logout
  │     a row already in the wanted state (Add of an existing row, Delete of a missing row) = OK
  ├─ Condition: STATUS = FAILED → send e-mail, Terminate (AP POLE not started)
  ├─ [not ROLLOVER] Run desktop flow CDX_XD07_APPOLE
- │     input : RUN_ID          output: STATUS, FILE, ROW, MESSAGE
+ │     input : SYNC_DT         output: STATUS, FILE, ROW, MESSAGE
  │     subflows: Read views → Build file from the stored template (LLM9Q880 / LLM9Q910)
  │               → Upload 1 EXPORT_PRE → Upload 2 KANBAN → Upload 3 EXPORT_POST → Logout
  │     stop at the first file AP POLE rejects (the next files depend on it)
- └─ Send e-mail (one per run): RUN_ID, scenario, GTOPAS result, AP POLE result per file</pre>
+ └─ Send e-mail (one per run): SYNC_DT, scenario, GTOPAS result, AP POLE result per file</pre>
     <p class="note">The robots write nothing back to NSP; the result is the e-mail. Child cloud flows need the same Solution; desktop flows called from a cloud flow need the premium / unattended licence of the tenant (to check with the Power Platform admin).</p>
   </section>
 
@@ -427,7 +427,7 @@ function parent(run, type, opt) {
   const g = G.filter((r) => r.run === run && r.st === 1);
   const sc = type === 'ROLLOVER' ? 'Rollover' : g.length ? '1' : '2';
   rpa = { run, type, sc, gRows: g.length, g: 'skipped', gFail: [], ap: 'skipped', apFile: null };
-  calls.push(`Parent flow: SELECT COUNT(*) FROM TB_H_STG_GTOPAS WHERE SYNC_STATUS = '1' AND SYNC_DT = '${sdtOf(run)}' → ${g.length}` +
+  calls.push(`Parent flow: SELECT COUNT(*) FROM V_GTOPAS_CROSSDOCK WHERE SYNC_DT = '${sdtOf(run)}' → ${g.length}` +
     (type === 'ROLLOVER' ? ' → RUN_TYPE ROLLOVER: XD06 only' : g.length ? ' → scenario 1: XD06 first, XD07 only when GTOPAS succeeded' : ' → scenario 2: XD07 at once'));
   if (sc !== '2') {
     const fail = g.filter((r) => (opt.failG || []).includes(r.p + '|' + r.d));
