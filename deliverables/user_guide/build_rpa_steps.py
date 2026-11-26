@@ -39,9 +39,11 @@ XD07 = {
         ('step', 'Get data: file 3 EXPORT_POST',
          'Every other Export row of the run (OPERATION_TYPE 2, 3, 4 or 5 on the Kanban row of the part).', 'r04_view_export_post.png'),
         ('step', 'Fill the template: file 1',
-         'Copy of the stored template LLM9Q880, one row per Export row, helper columns left out. A file without rows is not made.', 'r05_file1_export_pre.png'),
-        ('step', 'Fill the template: file 2', 'Copy of the stored template LLM9Q910, one row per Kanban row.', 'r06_file2_kanban.png'),
-        ('step', 'Fill the template: file 3', 'Copy of the stored template LLM9Q880.', 'r07_file3_export_post.png'),
+         'Copy of the stored template LLM9Q880, one row per Export row from row 4 (header on row 3), helper columns left out. Effective Month and '
+         'Effective Year: the robot splits EFFECTIVE_MONTH_YEAR (MM/YYYY). Grey columns stay empty. A file without rows is not made.', 'r05_file1_export_pre.png'),
+        ('step', 'Fill the template: file 2', 'Copy of the stored template LLM9Q910, one row per Kanban row from row 4. Max Allowance Qty and the columns after it stay empty '
+         '(AP POLE calculates Max Allowance Qty).', 'r06_file2_kanban.png'),
+        ('step', 'Fill the template: file 3', 'Copy of the stored template LLM9Q880, same columns as file 1.', 'r07_file3_export_post.png'),
         ('step', 'AP POLE: log in, menu Master',
          'The robot logs in to AP POLE (https://ap-pole.toyota-asia.com/lm9/) with the robot user and opens the menu Master.', 'a01_menu_master.png'),
         ('step', 'Upload file 1 EXPORT_PRE',
@@ -64,6 +66,7 @@ XD07 = {
               'AP POLE screen are LM9Q900 / LM9Q870: which report type takes which template is TBC with the AP POLE team.',
               'The AP POLE screens are the screens given by the user (16-Nov), not taken during a robot run.',
               'Order of the files: EXPORT_PRE before KANBAN when Max goes down, so AP POLE never has destinations above the Max.',
+              'Column mapping per template column: prepare_code/rpa/Column_Mapping_Staging_To_Upload.md (Column_Mapping_Staging_To_Upload.xlsx).',
               'One row per key: a part edited twice before [Sync] has one row with the last value (the unsent row is updated, not added). [Re-send last Sync] reads MAX(SYNC_DT).'],
 }
 

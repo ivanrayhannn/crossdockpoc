@@ -100,6 +100,13 @@
    "date": "26-Nov-26",
    "reviewed_by": "",
    "description": "TB_H_STG_APPOLE_KANBAN / _EXPORT: EFFECTIVE_MONTH_YEAR removed (same value as PERIOD); the views make Effective Month / Year (MM/YYYY of PERIOD) for the upload file."
+  },
+  {
+   "revision": "1.4",
+   "author": "FID Rayhan",
+   "date": "26-Nov-26",
+   "reviewed_by": "",
+   "description": "Upload files after the template LLM9Q910: Effective Month and Effective Year in two columns (the robot splits EFFECTIVE_MONTH_YEAR of the view); Kanban Max Allowance Qty left empty (AP POLE calculates it); data from row 4 of the templates."
   }
  ],
  "doc_type": "batch",
@@ -263,8 +270,12 @@
     ],
     "rows": [
      [
-      "Effective Month / Year",
-      "EFFECTIVE_MONTH_YEAR of the view (MM/YYYY of PERIOD)"
+      "Effective Month",
+      "MM of EFFECTIVE_MONTH_YEAR (the robot splits MM/YYYY of the view)"
+     ],
+     [
+      "Effective Year",
+      "YYYY of EFFECTIVE_MONTH_YEAR"
      ],
      [
       "Operator ID",
@@ -288,11 +299,15 @@
      ],
      [
       "Max Allowance Qty",
-      "MAX_ALLOWANCE_QTY"
+      "Empty (AP POLE calculates it)"
      ],
      [
-      "Packing/Pallet Type ... Outer-Qty",
+      "Packing/Pallet Type, Recv Area Code, Location No, Recv Contain Box Code, Store, Inner 1 / 2 / 3 / M-PKG Part No. / Location / Qty, Outer-PKG Part No. / Location / Qty",
       "Empty"
+     ],
+     [
+      "Layout",
+      "Row 1 title, row 3 header, data from row 4"
      ]
     ]
    },
@@ -310,8 +325,12 @@
     ],
     "rows": [
      [
-      "Effective Month / Year",
-      "EFFECTIVE_MONTH_YEAR of the view (MM/YYYY of PERIOD)"
+      "Effective Month",
+      "MM of EFFECTIVE_MONTH_YEAR (the robot splits MM/YYYY of the view)"
+     ],
+     [
+      "Effective Year",
+      "YYYY of EFFECTIVE_MONTH_YEAR"
      ],
      [
       "Part No.",
@@ -336,6 +355,10 @@
      [
       "Shipping Box Qty, Max Shipping Box by Part No., Max Allowance Qty, Packing/Pallet Type",
       "Empty"
+     ],
+     [
+      "Layout",
+      "Row 1 title, row 3 header, data from row 4"
      ]
     ]
    }
@@ -436,7 +459,7 @@
     ]
    },
    {
-    "text": "Fill the stored templates: one file per kind, Current and Next period together (Effective Month / Year per row). Name <template>_<SYNC_DT YYYYMMDDHHMMSS>_<order>_<name>.xls, e.g. LLM9Q880_20261204100000_1_EXPORT_PRE.xls. A file without rows is not made.",
+    "text": "Fill the stored templates: one file per kind, Current and Next period together (Effective Month and Effective Year per row, split from MM/YYYY; data from row 4). Name <template>_<SYNC_DT YYYYMMDDHHMMSS>_<order>_<name>.xls, e.g. LLM9Q880_20261204100000_1_EXPORT_PRE.xls. A file without rows is not made.",
     "children": [
      "Inside an Export file, per part: rows going down or DELETE (ROW_ORDER 1) first, then up or ADD (ROW_ORDER 2)."
     ]
@@ -470,8 +493,13 @@
     "mappings": [
      {
       "source_field": "EFFECTIVE_MONTH_YEAR",
-      "dest_field": "Effective Month / Year",
-      "description": "MM/YYYY of PERIOD, made by the view"
+      "dest_field": "Effective Month",
+      "description": "MM part of MM/YYYY, split by the robot"
+     },
+     {
+      "source_field": "EFFECTIVE_MONTH_YEAR",
+      "dest_field": "Effective Year",
+      "description": "YYYY part of MM/YYYY, split by the robot"
      },
      {
       "source_field": "OPERATOR_ID",
@@ -499,9 +527,9 @@
       "description": "Max Case/Day"
      },
      {
-      "source_field": "MAX_ALLOWANCE_QTY",
+      "source_field": "-",
       "dest_field": "Max Allowance Qty",
-      "description": "Shipping Box Qty x Max Shipping Box Qty"
+      "description": "Empty (AP POLE calculates it)"
      }
     ]
    },
@@ -527,8 +555,13 @@
     "mappings": [
      {
       "source_field": "EFFECTIVE_MONTH_YEAR",
-      "dest_field": "Effective Month / Year",
-      "description": "MM/YYYY of PERIOD, made by the view"
+      "dest_field": "Effective Month",
+      "description": "MM part of MM/YYYY, split by the robot"
+     },
+     {
+      "source_field": "EFFECTIVE_MONTH_YEAR",
+      "dest_field": "Effective Year",
+      "description": "YYYY part of MM/YYYY, split by the robot"
      },
      {
       "source_field": "PART_NO",

@@ -29,20 +29,24 @@ EX_RUN = '2026-12-10 11:00:00'
 
 # ---------- Kanban: TB_H_STG_APPOLE_KANBAN -> V_APPOLE_UPLOAD_KANBAN -> LLM9Q910 ----------
 HEAD = ['Col', 'File column (template)', 'Staging column', 'View column', 'Rule for the robot', f'Example (run {EX_RUN})', 'Remark']
+TPL_EMPTY = ['Packing/Pallet Type', 'Recv Area Code', 'Location No', 'Recv Contain Box Code', 'Store', 'Inner 1-PKG Part No.', 'Inner 1-Location',
+             'Inner 1-Qty', 'Inner 2-PKG Part No.', 'Inner 2-Location', 'Inner 2-Qty', 'Inner 3-PKG Part No.', 'Inner 3-Location', 'Inner 3-Qty',
+             'Inner M-PKG Part No.', 'Inner M-Location', 'Inner M-Qty', 'Outer-PKG Part No.', 'Outer-Location', 'Outer-Qty']
 KAN = [
-    ['A', 'Effective Month', 'PERIOD', 'EFFECTIVE_MONTH_YEAR (MM/YYYY)', 'Month of PERIOD, 2 digits: RIGHT(PERIOD, 2), or the part before "/" of EFFECTIVE_MONTH_YEAR', k['per'][4:], 'Text with leading zero (01 to 12)'],
-    ['B', 'Effective Year', 'PERIOD', 'EFFECTIVE_MONTH_YEAR (MM/YYYY)', 'Year of PERIOD: LEFT(PERIOD, 4), or the part after "/"', k['per'][:4], ''],
+    ['A', 'Effective Month', 'PERIOD', 'EFFECTIVE_MONTH_YEAR (MM/YYYY)', 'The robot splits EFFECTIVE_MONTH_YEAR: the part before "/" (decided 26-Nov)', int(k['per'][4:]), 'Number in the template sample (11)'],
+    ['B', 'Effective Year', 'PERIOD', 'EFFECTIVE_MONTH_YEAR (MM/YYYY)', 'The robot splits EFFECTIVE_MONTH_YEAR: the part after "/"', int(k['per'][:4]), ''],
     ['C', 'Operator ID', 'OPERATOR_ID', 'OPERATOR_ID', "As is (always 'P6')", 'P6', 'Fixed value'],
-    ['D', 'Part No.', 'PART_NO', 'PART_NO', 'As is, with "-" (NSP format)', k['p'], 'Kanban file keeps the "-"; the Export file does not'],
+    ['D', 'Part No.', 'PART_NO', 'PART_NO', 'As is, with "-" (NSP format, UISS XD07; kept for now, 26-Nov)', k['p'], 'The template sample has no "-" (52101BZA40): to check with AP POLE'],
     ['E', 'Part Name', 'PART_NAME', 'PART_NAME', 'As is', 'DUMMY PART ' + k['p'][-3:], 'Copied from TB_M_PART_CANDIDATE at the insert'],
     ['F', 'Shipping Box Qty', 'SHIPPING_BOX_QTY', 'SHIPPING_BOX_QTY', 'As is (Pcs/Case)', k['pcs'], ''],
     ['G', 'Max Shipping Box Qty', 'MAX_SHIPPING_BOX_QTY', 'MAX_SHIPPING_BOX_QTY', 'As is (Max Case/Day)', k['max'], ''],
-    ['H', 'Max Allowance Qty', 'MAX_ALLOWANCE_QTY', 'MAX_ALLOWANCE_QTY', 'As is (Shipping Box Qty x Max Shipping Box Qty)', k['pcs'] * k['max'], 'TBC: the AP POLE screen calculates it; keep or leave empty in the file'],
-    ['I ...', 'Packing/Pallet Type ... Outer-Qty', '-', '-', 'Leave empty', '', 'Not in NSP scope'],
+    ['H', 'Max Allowance Qty', '-', '-', 'Leave empty (decided 26-Nov: not filled, AP POLE calculates it)', '', 'MAX_ALLOWANCE_QTY of the staging is not written'],
+    ['I to AB', ', '.join(TPL_EMPTY), '-', '-', 'Leave empty', '', 'Not in NSP scope; the template sample has one space in these cells'],
 ]
 KAN_HELP = [
     ['STG_ID', 'Order of the rows; not written'],
-    ['PERIOD', 'Source of Effective Month / Year; ORDER BY PERIOD, PART_NO'],
+    ['PERIOD', 'Same month as EFFECTIVE_MONTH_YEAR; ORDER BY PERIOD, PART_NO'],
+    ['MAX_ALLOWANCE_QTY', 'In the view but not written (Max Allowance Qty is left empty, 26-Nov)'],
     ['OPERATION_TYPE', 'The view returns 1 to 4 only (5 = header, not uploaded); decides the file of the Export rows of the part'],
     ['FILE_NO', 'Always 2 (file KANBAN, uploaded after EXPORT_PRE and before EXPORT_POST)'],
     ['SYNC_DT', "Filter of the run: WHERE SYNC_DT = :sync_dt (the view keeps SYNC_STATUS = '1' only)"],
@@ -51,8 +55,8 @@ KAN_HELP = [
 
 # ---------- Export: TB_H_STG_APPOLE_EXPORT -> V_APPOLE_UPLOAD_EXPORT -> LLM9Q880 ----------
 EXP = [
-    ['A', 'Effective Month', 'PERIOD', 'EFFECTIVE_MONTH_YEAR (MM/YYYY)', 'Month of PERIOD, 2 digits: RIGHT(PERIOD, 2)', e['per'][4:], 'Text with leading zero'],
-    ['B', 'Effective Year', 'PERIOD', 'EFFECTIVE_MONTH_YEAR (MM/YYYY)', 'Year of PERIOD: LEFT(PERIOD, 4)', e['per'][:4], ''],
+    ['A', 'Effective Month', 'PERIOD', 'EFFECTIVE_MONTH_YEAR (MM/YYYY)', 'The robot splits EFFECTIVE_MONTH_YEAR: the part before "/" (decided 26-Nov)', e['per'][4:], 'The LM9Q870 sample shows 01'],
+    ['B', 'Effective Year', 'PERIOD', 'EFFECTIVE_MONTH_YEAR (MM/YYYY)', 'The robot splits EFFECTIVE_MONTH_YEAR: the part after "/"', e['per'][:4], ''],
     ['C', 'Part No.', 'PART_NO', 'PART_NO', 'As is, without "-" (stored without "-")', e['p'].replace('-', ''), 'NSP_PART_NO (with "-") is the helper key'],
     ['D', 'Shipping Box Qty', '-', '-', 'Leave empty', '', 'Grey column of the template'],
     ['E', 'Max Shipping Box by Part No.', '-', '-', 'Leave empty', '', 'Grey column of the template'],
@@ -102,9 +106,11 @@ FILES = [
     ['-', 'GTOPAS (XD06)', 'Screen WVJA5204', '-', "TB_H_STG_GTOPAS WHERE SYNC_STATUS = '1' AND SYNC_DT = :sync_dt ORDER BY P_NO, DESTINATION_CODE", 'Run before XD07 when the run has GTOPAS rows (scenario 1)'],
 ]
 NOTES = [
-    'The AP POLE templates have Effective Month and Effective Year in two columns (template LM9Q870). The views return EFFECTIVE_MONTH_YEAR as MM/YYYY: the robot splits it, or takes month and year from PERIOD. TBC: give the views two columns (EFFECTIVE_MONTH, EFFECTIVE_YEAR) so the robot copies them as they are.',
-    'Kanban Max Allowance Qty: the UISS sends Shipping Box Qty x Max Shipping Box Qty; the AP POLE screen calculates it. TBC with the AP POLE team whether the upload needs it.',
-    'Kanban Part No. keeps "-", Export Part No. has no "-" (as in the UISS XD07). TBC with the AP POLE team.',
+    'Decided 26-Nov: Effective Month and Effective Year are two columns in both templates; the views keep EFFECTIVE_MONTH_YEAR (MM/YYYY) and the robot splits it.',
+    'Decided 26-Nov: Kanban Max Allowance Qty is not filled (AP POLE calculates it). The template sample has 120 with Shipping Box Qty 6 and Max 24 (6 x 24 = 144), so it is not the simple product.',
+    'Decided 26-Nov: Kanban Part No. keeps "-" as in the UISS for now. To check: the template sample has 52101BZA40 (no "-"), like the Export file.',
+    'Template LLM9Q910 (received 26-Nov): Sheet1, row 1 title "Cross Dock Kanban Part Master Report", row 3 header (28 columns A to AB), data from row 4. Columns I to AB are empty; the sample has one space in them: blank or space, TBC with AP POLE.',
+    'Template LLM9Q880 (picture of LM9Q870): row 1 title "Export Customer Cross Dock Master Report", header row 3, data from row 4; grey columns are empty.',
     'A file without rows is not made. Upload order 1 EXPORT_PRE, 2 KANBAN, 3 EXPORT_POST; an upload error stops the run.',
     'Header rows (Kanban OPERATION_TYPE 5) are not in any file: the view V_APPOLE_UPLOAD_KANBAN leaves them out.',
     'Example values are dummy data of the SQL Studio (Master > Staging Sync SQL in the web prototype).',
@@ -152,13 +158,13 @@ def label(ws, r, text):
 
 W = [7, 26, 24, 30, 52, 22, 48]
 ws, r = sheet('1 Kanban LLM9Q910', 'TB_H_STG_APPOLE_KANBAN → V_APPOLE_UPLOAD_KANBAN → file LLM9Q910 (Cross Dock Kanban Part Master)',
-              'File 2 KANBAN, Report Type LM9Q900 on AP POLE Common File Upload. One file row per view row.')
+              'File 2 KANBAN, Report Type LM9Q900 on AP POLE Common File Upload. Template LLM9Q910: row 3 header, one row per view row from row 4.')
 r = table(ws, r, HEAD, KAN, W)
 r = label(ws, r, 'Columns used by the robot but not written to the file')
 table(ws, r, ['Column', 'Use'], KAN_HELP, head_fill=HELP)
 
 ws, r = sheet('2 Export LLM9Q880', 'TB_H_STG_APPOLE_EXPORT → V_APPOLE_UPLOAD_EXPORT → file LLM9Q880 (Export Customer Cross Dock Master)',
-              'Files 1 EXPORT_PRE and 3 EXPORT_POST, Report Type LM9Q870 on AP POLE Common File Upload. Template columns as in template LM9Q870.')
+              'Files 1 EXPORT_PRE and 3 EXPORT_POST, Report Type LM9Q870 on AP POLE Common File Upload. Template LLM9Q880: row 3 header, data from row 4.')
 r = table(ws, r, HEAD, EXP, W)
 r = label(ws, r, 'Columns used by the robot but not written to the file')
 table(ws, r, ['Column', 'Use'], EXP_HELP, head_fill=HELP)

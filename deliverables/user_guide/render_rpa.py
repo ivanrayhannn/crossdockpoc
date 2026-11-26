@@ -88,11 +88,13 @@ render('r03_view_kanban', KAN_COLS,
        sql=f"SELECT * FROM V_APPOLE_UPLOAD_KANBAN WHERE SYNC_STATUS = '1' AND SYNC_DT = '{SDT}' ORDER BY PERIOD, PART_NO")
 render('r04_view_export_post', EXP_COLS, [exp_row(x, 3) for x in f['post']], helper=EXP_HELP,
        sql=f"SELECT * FROM V_APPOLE_UPLOAD_EXPORT WHERE SYNC_STATUS = '1' AND SYNC_DT = '{SDT}' AND FILE_NO = 3 ORDER BY PERIOD, NSP_PART_NO, ROW_ORDER, STG_ID")
-FILE_EXP = ['Effective Month / Year', 'Part No.', 'Buyer-PD', 'Order Type', 'Transport Code', 'Max Shipping Box (RCS)']
-file_exp = lambda x: [my(x['r']['per']), x['r']['p'].replace('-', ''), bpd(x['r']['d']), x['r']['ot'], 2, x['r']['cd']]
+# template columns (LLM9Q880: row 3 header, data from row 4); grey columns stay empty
+FILE_EXP = ['Effective Month', 'Effective Year', 'Part No.', 'Shipping Box Qty', 'Max Shipping Box by Part No.', 'Buyer-PD', 'Order Type', 'Transport Code',
+            'Max Shipping Box (RCS)', 'Max Allowance Qty', 'Packing/Pallet Type']
+file_exp = lambda x: [x['r']['per'][4:], x['r']['per'][:4], x['r']['p'].replace('-', ''), '', '', bpd(x['r']['d']), x['r']['ot'], 2, x['r']['cd'], '', '']
 render('r05_file1_export_pre', FILE_EXP, [file_exp(x) for x in f['pre']], sql=f'LLM9Q880_{RUN}_1_EXPORT_PRE.xls (template LLM9Q880)')
-render('r06_file2_kanban', ['Effective Month / Year', 'Operator ID', 'Part No.', 'Part Name', 'Shipping Box Qty', 'Max Shipping Box Qty', 'Max Allowance Qty'],
-       [[my(x['r']['per']), 'P6', x['r']['p'], 'DUMMY PART ' + x['r']['p'][-3:], x['r']['pcs'], x['r']['max'], x['r']['pcs'] * x['r']['max']] for x in f['kan']],
+render('r06_file2_kanban', ['Effective Month', 'Effective Year', 'Operator ID', 'Part No.', 'Part Name', 'Shipping Box Qty', 'Max Shipping Box Qty', 'Max Allowance Qty', 'Packing/Pallet Type ... Outer-Qty'],
+       [[x['r']['per'][4:], x['r']['per'][:4], 'P6', x['r']['p'], 'DUMMY PART ' + x['r']['p'][-3:], x['r']['pcs'], x['r']['max'], '', ''] for x in f['kan']],
        sql=f'LLM9Q910_{RUN}_2_KANBAN.xls (template LLM9Q910)')
 render('r07_file3_export_post', FILE_EXP, [file_exp(x) for x in f['post']], sql=f'LLM9Q880_{RUN}_3_EXPORT_POST.xls (template LLM9Q880)')
 

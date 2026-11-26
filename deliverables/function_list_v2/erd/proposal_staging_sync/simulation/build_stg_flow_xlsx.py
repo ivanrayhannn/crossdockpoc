@@ -237,13 +237,13 @@ for i, s in enumerate(STEPS):
         for title, key in ((f'XD07 · 1 EXPORT_PRE · LLM9Q880_{run}_1_EXPORT_PRE.xls', 'pre'), (f'XD07 · 3 EXPORT_POST · LLM9Q880_{run}_3_EXPORT_POST.xls', 'post')):
             if key == 'post' and f['kan']:
                 sh.h(f'XD07 · 2 KANBAN · LLM9Q910_{run}_2_KANBAN.xls')
-                sh.table([('Effective Month / Year', 0), ('Operator ID', 0), ('Part No.', 0), ('Part Name', 0), ('Shipping Box Qty', 0), ('Max Shipping Box Qty', 0), ('Max Allowance Qty', 0), ('OPERATION_TYPE', 1), ('AP POLE check', 1)],
-                         [[my(x['r']['per']), 'P6', x['r']['p'], name(x['r']['p']), x['r']['pcs'], x['r']['max'], x['r']['pcs'] * x['r']['max'], x['r']['op'], chk(x['chk'])] for x in f['kan']],
+                sh.table([('Effective Month', 0), ('Effective Year', 0), ('Operator ID', 0), ('Part No.', 0), ('Part Name', 0), ('Shipping Box Qty', 0), ('Max Shipping Box Qty', 0), ('Max Allowance Qty', 0), ('OPERATION_TYPE', 1), ('AP POLE check', 1)],
+                         [[x['r']['per'][4:], x['r']['per'][:4], 'P6', x['r']['p'], name(x['r']['p']), x['r']['pcs'], x['r']['max'], '', x['r']['op'], chk(x['chk'])] for x in f['kan']],
                          fills=[OK if x['chk']['ok'] else NG for x in f['kan']])
             if f[key]:
                 sh.h(title)
-                sh.table([('Effective Month / Year', 0), ('Part No.', 0), ('Buyer-PD', 0), ('Order Type', 0), ('Transport Code', 0), ('Max Shipping Box (RCS)', 0), ('Destination', 1), ('ROW_ORDER (view)', 1), ('AP POLE check', 1)],
-                         [[my(x['r']['per']), x['r']['p'].replace('-', ''), bpd(x['r']['d']), x['r']['ot'], 2, x['r']['cd'], x['r']['d'], f"{x['ro']} {'down' if x['ro'] == 1 else 'up'} ({'was ' + str(x['prev']) if x['prev'] is not None else 'new'})", chk(x['chk'])] for x in f[key]],
+                sh.table([('Effective Month', 0), ('Effective Year', 0), ('Part No.', 0), ('Shipping Box Qty', 0), ('Max Shipping Box by Part No.', 0), ('Buyer-PD', 0), ('Order Type', 0), ('Transport Code', 0), ('Max Shipping Box (RCS)', 0), ('Max Allowance Qty', 0), ('Packing/Pallet Type', 0), ('Destination', 1), ('ROW_ORDER (view)', 1), ('AP POLE check', 1)],
+                         [[x['r']['per'][4:], x['r']['per'][:4], x['r']['p'].replace('-', ''), '', '', bpd(x['r']['d']), x['r']['ot'], 2, x['r']['cd'], '', '', x['r']['d'], f"{x['ro']} {'down' if x['ro'] == 1 else 'up'} ({'was ' + str(x['prev']) if x['prev'] is not None else 'new'})", chk(x['chk'])] for x in f[key]],
                          fills=[OK if x['chk']['ok'] else NG for x in f[key]])
         if key == 'post' and f['kan'] and not f['post']:
             pass

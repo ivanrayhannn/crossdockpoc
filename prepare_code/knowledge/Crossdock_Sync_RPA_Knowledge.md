@@ -250,36 +250,36 @@ SELECT * FROM V_APPOLE_UPLOAD_EXPORT WHERE SYNC_STATUS = '1' AND SYNC_DT = '2026
 
 ##### 5. Fill the template: file 1
 
-Copy of the stored template LLM9Q880, one row per Export row, helper columns left out. A file without rows is not made.
+Copy of the stored template LLM9Q880, one row per Export row from row 4 (header on row 3), helper columns left out. Effective Month and Effective Year: the robot splits EFFECTIVE_MONTH_YEAR (MM/YYYY). Grey columns stay empty. A file without rows is not made.
 
 File: `LLM9Q880_20261110110000_1_EXPORT_PRE.xls (template LLM9Q880)`
 
-| Effective Month / Year | Part No. | Buyer-PD | Order Type | Transport Code | Max Shipping Box (RCS) |
-|---|---|---|---|---|---|
-| 11/2026 | DUMMY002 | 98111-10 | \*\* | 2 | 12 |
-| 11/2026 | DUMMY002 | 96555-10 | \*\* | 2 | 8 |
+| Effective Month | Effective Year | Part No. | Shipping Box Qty | Max Shipping Box by Part No. | Buyer-PD | Order Type | Transport Code | Max Shipping Box (RCS) | Max Allowance Qty | Packing/Pallet Type |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 11 | 2026 | DUMMY002 |  |  | 98111-10 | \*\* | 2 | 12 |  |  |
+| 11 | 2026 | DUMMY002 |  |  | 96555-10 | \*\* | 2 | 8 |  |  |
 
 ##### 6. Fill the template: file 2
 
-Copy of the stored template LLM9Q910, one row per Kanban row.
+Copy of the stored template LLM9Q910, one row per Kanban row from row 4. Max Allowance Qty and the columns after it stay empty (AP POLE calculates Max Allowance Qty).
 
 File: `LLM9Q910_20261110110000_2_KANBAN.xls (template LLM9Q910)`
 
-| Effective Month / Year | Operator ID | Part No. | Part Name | Shipping Box Qty | Max Shipping Box Qty | Max Allowance Qty |
-|---|---|---|---|---|---|---|
-| 11/2026 | P6 | DUMMY-002 | DUMMY PART 002 | 12 | 20 | 240 |
-| 11/2026 | P6 | DUMMY-004 | DUMMY PART 004 | 6 | 20 | 120 |
+| Effective Month | Effective Year | Operator ID | Part No. | Part Name | Shipping Box Qty | Max Shipping Box Qty | Max Allowance Qty | Packing/Pallet Type ... Outer-Qty |
+|---|---|---|---|---|---|---|---|---|
+| 11 | 2026 | P6 | DUMMY-002 | DUMMY PART 002 | 12 | 20 |  |  |
+| 11 | 2026 | P6 | DUMMY-004 | DUMMY PART 004 | 6 | 20 |  |  |
 
 ##### 7. Fill the template: file 3
 
-Copy of the stored template LLM9Q880.
+Copy of the stored template LLM9Q880, same columns as file 1.
 
 File: `LLM9Q880_20261110110000_3_EXPORT_POST.xls (template LLM9Q880)`
 
-| Effective Month / Year | Part No. | Buyer-PD | Order Type | Transport Code | Max Shipping Box (RCS) |
-|---|---|---|---|---|---|
-| 11/2026 | DUMMY004 | 97153-10 | \*\* | 2 | 12 |
-| 11/2026 | DUMMY004 | 96001-10 | \*\* | 2 | 8 |
+| Effective Month | Effective Year | Part No. | Shipping Box Qty | Max Shipping Box by Part No. | Buyer-PD | Order Type | Transport Code | Max Shipping Box (RCS) | Max Allowance Qty | Packing/Pallet Type |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 11 | 2026 | DUMMY004 |  |  | 97153-10 | \*\* | 2 | 12 |  |  |
+| 11 | 2026 | DUMMY004 |  |  | 96001-10 | \*\* | 2 | 8 |  |  |
 
 ##### 8. AP POLE: log in, menu Master
 
@@ -326,6 +326,7 @@ The robot gives STATUS back to the parent flow; the parent flow sends one e-mail
 - File names follow the templates decided for the staging (LLM9Q910 Kanban, LLM9Q880 Export). The Report Type names on the AP POLE screen are LM9Q900 / LM9Q870: which report type takes which template is TBC with the AP POLE team.
 - The AP POLE screens are the screens given by the user (16-Nov), not taken during a robot run.
 - Order of the files: EXPORT_PRE before KANBAN when Max goes down, so AP POLE never has destinations above the Max.
+- Column mapping per template column: prepare_code/rpa/Column_Mapping_Staging_To_Upload.md (Column_Mapping_Staging_To_Upload.xlsx).
 - One row per key: a part edited twice before [Sync] has one row with the last value (the unsent row is updated, not added). [Re-send last Sync] reads MAX(SYNC_DT).
 
 ## 5. UISS XD06 IF Cross Dock Master to GTOPAS
@@ -597,6 +598,7 @@ GTOPAS WVJA5204 rows: a part + destination to add or delete, written by SP_STG_W
 | 1.1 | FID Rayhan | 23-Nov-26 |  | Source: views V_APPOLE_UPLOAD_KANBAN / _EXPORT on TB_H_STG_APPOLE_KANBAN / _EXPORT; files EXPORT_PRE, KANBAN, EXPORT_POST from OPERATION_TYPE; started by the RPA parent flow (scenario 1 after GTOPAS OK, scenario 2 at once) (23-Nov). |
 | 1.2 | FID Rayhan | 26-Nov-26 |  | Staging: no SYNC_RUN_ID, the run is SYNC_DT (one value per [Sync] click / rollover); one unsent row per key (a new change updates it, back to the sent value deletes it); SYNC_STATUS 0 / 1. SQL: prepare_code/sql/crossdock_staging_sync.sql. |
 | 1.3 | FID Rayhan | 26-Nov-26 |  | TB_H_STG_APPOLE_KANBAN / _EXPORT: EFFECTIVE_MONTH_YEAR removed (same value as PERIOD); the views make Effective Month / Year (MM/YYYY of PERIOD) for the upload file. |
+| 1.4 | FID Rayhan | 26-Nov-26 |  | Upload files after the template LLM9Q910: Effective Month and Effective Year in two columns (the robot splits EFFECTIVE_MONTH_YEAR of the view); Kanban Max Allowance Qty left empty (AP POLE calculates it); data from row 4 of the templates. |
 
 #### 1. General
 
@@ -642,26 +644,30 @@ GTOPAS WVJA5204 rows: a part + destination to add or delete, written by SP_STG_W
 
 | Column | NSP source / rule |
 |---|---|
-| Effective Month / Year | EFFECTIVE_MONTH_YEAR of the view (MM/YYYY of PERIOD) |
+| Effective Month | MM of EFFECTIVE_MONTH_YEAR (the robot splits MM/YYYY of the view) |
+| Effective Year | YYYY of EFFECTIVE_MONTH_YEAR |
 | Operator ID | 'P6' |
 | Part No. | PART_NO with "-" |
 | Part Name | PART_NAME |
 | Shipping Box Qty | SHIPPING_BOX_QTY (Pcs/Case) |
 | Max Shipping Box Qty | MAX_SHIPPING_BOX_QTY (Max Case/Day) |
-| Max Allowance Qty | MAX_ALLOWANCE_QTY |
-| Packing/Pallet Type ... Outer-Qty | Empty |
+| Max Allowance Qty | Empty (AP POLE calculates it) |
+| Packing/Pallet Type, Recv Area Code, Location No, Recv Contain Box Code, Store, Inner 1 / 2 / 3 / M-PKG Part No. / Location / Qty, Outer-PKG Part No. / Location / Qty | Empty |
+| Layout | Row 1 title, row 3 header, data from row 4 |
 
 ##### LLM9Q880 Export Customer Cross Dock Master (files EXPORT_PRE and EXPORT_POST, orders 1 and 3)
 
 | Column | NSP source / rule |
 |---|---|
-| Effective Month / Year | EFFECTIVE_MONTH_YEAR of the view (MM/YYYY of PERIOD) |
+| Effective Month | MM of EFFECTIVE_MONTH_YEAR (the robot splits MM/YYYY of the view) |
+| Effective Year | YYYY of EFFECTIVE_MONTH_YEAR |
 | Part No. | PART_NO without "-" |
 | Buyer-PD | BUYER_PD (DEST_CODE as 5-2, e.g. 9722D-10) |
 | Order Type | ORDER_TYPE |
 | Transport Code | TRANSPORT_CODE '2' |
 | Max Shipping Box (RCS) | MAX_SHIPPING_BOX_RCS (0 for DELETE) |
 | Shipping Box Qty, Max Shipping Box by Part No., Max Allowance Qty, Packing/Pallet Type | Empty |
+| Layout | Row 1 title, row 3 header, data from row 4 |
 
 #### 2. Function flow
 
@@ -688,7 +694,7 @@ flowchart TB
 2. Read the views (read-only DB user) for the SYNC_DT of the run:
   - V_APPOLE_UPLOAD_EXPORT WHERE FILE_NO = 1 (EXPORT_PRE) and FILE_NO = 3 (EXPORT_POST), ORDER BY PERIOD, NSP_PART_NO, ROW_ORDER, STG_ID.
   - V_APPOLE_UPLOAD_KANBAN (OPERATION_TYPE 1 to 4), ORDER BY PERIOD, PART_NO.
-3. Fill the stored templates: one file per kind, Current and Next period together (Effective Month / Year per row). Name <template>_<SYNC_DT YYYYMMDDHHMMSS>_<order>_<name>.xls, e.g. LLM9Q880_20261204100000_1_EXPORT_PRE.xls. A file without rows is not made.
+3. Fill the stored templates: one file per kind, Current and Next period together (Effective Month and Effective Year per row, split from MM/YYYY; data from row 4). Name <template>_<SYNC_DT YYYYMMDDHHMMSS>_<order>_<name>.xls, e.g. LLM9Q880_20261204100000_1_EXPORT_PRE.xls. A file without rows is not made.
   - Inside an Export file, per part: rows going down or DELETE (ROW_ORDER 1) first, then up or ADD (ROW_ORDER 2).
 4. Upload the files one at a time: 1 EXPORT_PRE -> 2 KANBAN -> 3 EXPORT_POST, and wait for each result. Write LOG3 per file.
 5. A rejected file stops the run (LOG4): the files already uploaded stay in AP POLE; the next files wait for [Re-send last Sync].
@@ -701,20 +707,22 @@ flowchart TB
 
 | Source field | Destination field | Description |
 |---|---|---|
-| EFFECTIVE_MONTH_YEAR | Effective Month / Year | MM/YYYY of PERIOD, made by the view |
+| EFFECTIVE_MONTH_YEAR | Effective Month | MM part of MM/YYYY, split by the robot |
+| EFFECTIVE_MONTH_YEAR | Effective Year | YYYY part of MM/YYYY, split by the robot |
 | OPERATOR_ID | Operator ID | 'P6' |
 | PART_NO | Part No. | With "-" |
 | PART_NAME | Part Name |  |
 | SHIPPING_BOX_QTY | Shipping Box Qty | Pcs/Case |
 | MAX_SHIPPING_BOX_QTY | Max Shipping Box Qty | Max Case/Day |
-| MAX_ALLOWANCE_QTY | Max Allowance Qty | Shipping Box Qty x Max Shipping Box Qty |
+| - | Max Allowance Qty | Empty (AP POLE calculates it) |
 
 ###### 2. Insert LLM9Q880 Export Customer Cross Dock Master (upload files) – Files EXPORT_PRE and EXPORT_POST: one row per Export row of the run, ordered by ROW_ORDER per part
 - Source: V_APPOLE_UPLOAD_EXPORT (keys: SYNC_DT = SYNC_DT of the run (SYNC_STATUS 1), FILE_NO = 1 (EXPORT_PRE) / 3 (EXPORT_POST))
 
 | Source field | Destination field | Description |
 |---|---|---|
-| EFFECTIVE_MONTH_YEAR | Effective Month / Year | MM/YYYY of PERIOD, made by the view |
+| EFFECTIVE_MONTH_YEAR | Effective Month | MM part of MM/YYYY, split by the robot |
+| EFFECTIVE_MONTH_YEAR | Effective Year | YYYY part of MM/YYYY, split by the robot |
 | PART_NO | Part No. | Without "-" |
 | BUYER_PD | Buyer-PD | 5-2 format |
 | ORDER_TYPE | Order Type |  |
@@ -1245,22 +1253,23 @@ SELECT MAX(SYNC_DT) FROM (
 
 | Col | File column (template) | Staging column | View column | Rule for the robot | Example (run 2026-12-10 11:00:00) | Remark |
 |---|---|---|---|---|---|---|
-| A | Effective Month | PERIOD | EFFECTIVE_MONTH_YEAR (MM/YYYY) | Month of PERIOD, 2 digits: RIGHT(PERIOD, 2), or the part before "/" of EFFECTIVE_MONTH_YEAR | 12 | Text with leading zero (01 to 12) |
-| B | Effective Year | PERIOD | EFFECTIVE_MONTH_YEAR (MM/YYYY) | Year of PERIOD: LEFT(PERIOD, 4), or the part after "/" | 2026 |  |
+| A | Effective Month | PERIOD | EFFECTIVE_MONTH_YEAR (MM/YYYY) | The robot splits EFFECTIVE_MONTH_YEAR: the part before "/" (decided 26-Nov) | 12 | Number in the template sample (11) |
+| B | Effective Year | PERIOD | EFFECTIVE_MONTH_YEAR (MM/YYYY) | The robot splits EFFECTIVE_MONTH_YEAR: the part after "/" | 2026 |  |
 | C | Operator ID | OPERATOR_ID | OPERATOR_ID | As is (always 'P6') | P6 | Fixed value |
-| D | Part No. | PART_NO | PART_NO | As is, with "-" (NSP format) | DUMMY-004 | Kanban file keeps the "-"; the Export file does not |
+| D | Part No. | PART_NO | PART_NO | As is, with "-" (NSP format, UISS XD07; kept for now, 26-Nov) | DUMMY-004 | The template sample has no "-" (52101BZA40): to check with AP POLE |
 | E | Part Name | PART_NAME | PART_NAME | As is | DUMMY PART 004 | Copied from TB_M_PART_CANDIDATE at the insert |
 | F | Shipping Box Qty | SHIPPING_BOX_QTY | SHIPPING_BOX_QTY | As is (Pcs/Case) | 6 |  |
 | G | Max Shipping Box Qty | MAX_SHIPPING_BOX_QTY | MAX_SHIPPING_BOX_QTY | As is (Max Case/Day) | 14 |  |
-| H | Max Allowance Qty | MAX_ALLOWANCE_QTY | MAX_ALLOWANCE_QTY | As is (Shipping Box Qty x Max Shipping Box Qty) | 84 | TBC: the AP POLE screen calculates it; keep or leave empty in the file |
-| I ... | Packing/Pallet Type ... Outer-Qty | - | - | Leave empty |  | Not in NSP scope |
+| H | Max Allowance Qty | - | - | Leave empty (decided 26-Nov: not filled, AP POLE calculates it) |  | MAX_ALLOWANCE_QTY of the staging is not written |
+| I to AB | Packing/Pallet Type, Recv Area Code, Location No, Recv Contain Box Code, Store, Inner 1-PKG Part No., Inner 1-Location, Inner 1-Qty, Inner 2-PKG Part No., Inner 2-Location, Inner 2-Qty, Inner 3-PKG Part No., Inner 3-Location, Inner 3-Qty, Inner M-PKG Part No., Inner M-Location, Inner M-Qty, Outer-PKG Part No., Outer-Location, Outer-Qty | - | - | Leave empty |  | Not in NSP scope; the template sample has one space in these cells |
 
 Not written to the file:
 
 | Column | Use |
 |---|---|
 | STG_ID | Order of the rows; not written |
-| PERIOD | Source of Effective Month / Year; ORDER BY PERIOD, PART_NO |
+| PERIOD | Same month as EFFECTIVE_MONTH_YEAR; ORDER BY PERIOD, PART_NO |
+| MAX_ALLOWANCE_QTY | In the view but not written (Max Allowance Qty is left empty, 26-Nov) |
 | OPERATION_TYPE | The view returns 1 to 4 only (5 = header, not uploaded); decides the file of the Export rows of the part |
 | FILE_NO | Always 2 (file KANBAN, uploaded after EXPORT_PRE and before EXPORT_POST) |
 | SYNC_DT | Filter of the run: WHERE SYNC_DT = :sync_dt (the view keeps SYNC_STATUS = '1' only) |
@@ -1270,8 +1279,8 @@ Not written to the file:
 
 | Col | File column (template) | Staging column | View column | Rule for the robot | Example (run 2026-12-10 11:00:00) | Remark |
 |---|---|---|---|---|---|---|
-| A | Effective Month | PERIOD | EFFECTIVE_MONTH_YEAR (MM/YYYY) | Month of PERIOD, 2 digits: RIGHT(PERIOD, 2) | 12 | Text with leading zero |
-| B | Effective Year | PERIOD | EFFECTIVE_MONTH_YEAR (MM/YYYY) | Year of PERIOD: LEFT(PERIOD, 4) | 2026 |  |
+| A | Effective Month | PERIOD | EFFECTIVE_MONTH_YEAR (MM/YYYY) | The robot splits EFFECTIVE_MONTH_YEAR: the part before "/" (decided 26-Nov) | 12 | The LM9Q870 sample shows 01 |
+| B | Effective Year | PERIOD | EFFECTIVE_MONTH_YEAR (MM/YYYY) | The robot splits EFFECTIVE_MONTH_YEAR: the part after "/" | 2026 |  |
 | C | Part No. | PART_NO | PART_NO | As is, without "-" (stored without "-") | DUMMY004 | NSP_PART_NO (with "-") is the helper key |
 | D | Shipping Box Qty | - | - | Leave empty |  | Grey column of the template |
 | E | Max Shipping Box by Part No. | - | - | Leave empty |  | Grey column of the template |
@@ -1330,9 +1339,11 @@ Not typed on the screen:
 
 ### 5. Notes and points to confirm
 
-1. The AP POLE templates have Effective Month and Effective Year in two columns (template LM9Q870). The views return EFFECTIVE_MONTH_YEAR as MM/YYYY: the robot splits it, or takes month and year from PERIOD. TBC: give the views two columns (EFFECTIVE_MONTH, EFFECTIVE_YEAR) so the robot copies them as they are.
-2. Kanban Max Allowance Qty: the UISS sends Shipping Box Qty x Max Shipping Box Qty; the AP POLE screen calculates it. TBC with the AP POLE team whether the upload needs it.
-3. Kanban Part No. keeps "-", Export Part No. has no "-" (as in the UISS XD07). TBC with the AP POLE team.
-4. A file without rows is not made. Upload order 1 EXPORT_PRE, 2 KANBAN, 3 EXPORT_POST; an upload error stops the run.
-5. Header rows (Kanban OPERATION_TYPE 5) are not in any file: the view V_APPOLE_UPLOAD_KANBAN leaves them out.
-6. Example values are dummy data of the SQL Studio (Master > Staging Sync SQL in the web prototype).
+1. Decided 26-Nov: Effective Month and Effective Year are two columns in both templates; the views keep EFFECTIVE_MONTH_YEAR (MM/YYYY) and the robot splits it.
+2. Decided 26-Nov: Kanban Max Allowance Qty is not filled (AP POLE calculates it). The template sample has 120 with Shipping Box Qty 6 and Max 24 (6 x 24 = 144), so it is not the simple product.
+3. Decided 26-Nov: Kanban Part No. keeps "-" as in the UISS for now. To check: the template sample has 52101BZA40 (no "-"), like the Export file.
+4. Template LLM9Q910 (received 26-Nov): Sheet1, row 1 title "Cross Dock Kanban Part Master Report", row 3 header (28 columns A to AB), data from row 4. Columns I to AB are empty; the sample has one space in them: blank or space, TBC with AP POLE.
+5. Template LLM9Q880 (picture of LM9Q870): row 1 title "Export Customer Cross Dock Master Report", header row 3, data from row 4; grey columns are empty.
+6. A file without rows is not made. Upload order 1 EXPORT_PRE, 2 KANBAN, 3 EXPORT_POST; an upload error stops the run.
+7. Header rows (Kanban OPERATION_TYPE 5) are not in any file: the view V_APPOLE_UPLOAD_KANBAN leaves them out.
+8. Example values are dummy data of the SQL Studio (Master > Staging Sync SQL in the web prototype).
