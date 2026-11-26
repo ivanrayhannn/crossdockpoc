@@ -16,7 +16,7 @@ import { ConfirmationPage } from './features/confirmation/ConfirmationPage';
 
 import { LogMonitoringPage } from './features/logMonitoring/LogMonitoringPage';
 import { MenuSettingsPage } from './features/menuSettings/MenuSettingsPage';
-import { StagingSqlPage } from './features/stagingSql/StagingSqlPage';
+import { StagingSqlPage, StagingUploadFilesPage } from './features/stagingSql/StagingSqlPage';
 import { hashForRoute, routeFromHash } from './routes';
 import type { RouteKey } from './routes';
 
@@ -126,6 +126,14 @@ function App() {
     return (
       <AppShell activeItem="Staging Sync SQL" onNavigate={navigate} breadcrumb={<Breadcrumb group="Master" label="Staging Sync SQL" />}>
         <StagingSqlPage />
+      </AppShell>
+    );
+  }
+
+  if (route === 'staging-files') {
+    return (
+      <AppShell activeItem="Staging Upload Files" onNavigate={navigate} breadcrumb={<Breadcrumb group="Master" label="Staging Upload Files" />}>
+        <StagingUploadFilesPage />
       </AppShell>
     );
   }
