@@ -11,5 +11,5 @@ export function StagingSqlPage() {
 
 /** Staging Upload Files: from the staging rows of a [Sync] to the EXPORT_PRE, KANBAN and EXPORT_POST files, per OPERATION_TYPE. */
 export function StagingUploadFilesPage() {
-  return <SimulationFrame file="staging-upload-files.html?v=1" title="Staging to upload files simulation" />;
+  return <SimulationFrame file="staging-upload-files.html?v=2" title="Staging to upload files simulation" />;
 }

@@ -491,11 +491,11 @@ function fileCards(x) {
   return `<div class="files">${FILES.filter(([k]) => x.f[k].length).map(([k, n, nm, tpl]) => {
     const l = x.f[k];
     const body = k === 'kan'
-      ? tbl([['Effective Month / Year'], ['Operator ID'], ['Part No.'], ['Part Name'], ['Shipping Box Qty'], ['Max Shipping Box Qty'], ['Max Allowance Qty']],
-          l.map((v) => `<tr><td>${my(v.r.per)}</td><td>P6</td><td>${v.r.p}</td><td>${NAME(v.r.p)}</td><td class="n">${v.r.pcs}</td><td class="n">${v.r.max}</td><td class="n">${v.r.pcs * v.r.max}</td></tr>`), '')
-      : tbl([['Effective Month / Year'], ['Part No.'], ['Buyer-PD'], ['Order Type'], ['Transport Code'], ['Max Shipping Box (RCS)']],
-          l.map((v) => `<tr><td>${my(v.r.per)}</td><td>${v.r.p.replace(/-/g, '')}</td><td>${bpd(v.r.d)}</td><td>${v.r.ot}</td><td>2</td><td class="n">${v.r.cd}</td></tr>`), '');
-    return `<div class="file f${n}"><h4><span class="fb f${n}">${n}</span> ${nm} · template ${tpl}</h4><span class="fn">${fname(n, nm, tpl)}</span>${body}</div>`;
+      ? tbl([['Effective Month'], ['Effective Year'], ['Operator ID'], ['Part No.'], ['Part Name'], ['Shipping Box Qty'], ['Max Shipping Box Qty'], ['Max Allowance Qty'], ['Packing/Pallet Type … Outer-Qty']],
+          l.map((v) => `<tr><td>${v.r.per.slice(4)}</td><td>${v.r.per.slice(0, 4)}</td><td>P6</td><td>${v.r.p}</td><td>${NAME(v.r.p)}</td><td class="n">${v.r.pcs}</td><td class="n">${v.r.max}</td><td></td><td></td></tr>`), '')
+      : tbl([['Effective Month'], ['Effective Year'], ['Part No.'], ['Shipping Box Qty'], ['Max Shipping Box by Part No.'], ['Buyer-PD'], ['Order Type'], ['Transport Code'], ['Max Shipping Box (RCS)'], ['Max Allowance Qty'], ['Packing/Pallet Type']],
+          l.map((v) => `<tr><td>${v.r.per.slice(4)}</td><td>${v.r.per.slice(0, 4)}</td><td>${v.r.p.replace(/-/g, '')}</td><td></td><td></td><td>${bpd(v.r.d)}</td><td>${v.r.ot}</td><td>2</td><td class="n">${v.r.cd}</td><td></td><td></td></tr>`), '');
+    return `<div class="file f${n}"><h4><span class="fb f${n}">${n}</span> ${nm} · template ${tpl}</h4><span class="fn">${fname(n, nm, tpl)} · header on row 3, data from row 4, empty columns left blank</span>${body}</div>`;
   }).join('') || '<p class="note">No file: nothing to upload to AP POLE in this run.</p>'}</div>`;
 }
 function rowName(kind, v) { return kind === 'k' ? `${v.r.p} Kanban Max ${v.r.max}` : `${v.r.p} ${v.r.d} ${bpd(v.r.d)} (${v.r.ot}) → ${v.r.cd}`; }

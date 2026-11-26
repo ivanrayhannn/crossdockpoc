@@ -584,10 +584,10 @@ const chk = (c) => `<td class="${c.ok ? 'okc' : 'ngc'}">${c.ok ? 'OK' : 'Rejecte
 function fileTable(title, list, kind) {
   if (!list.length) return '';
   const body = kind === 'k'
-    ? '<table><thead><tr><th>Effective Month / Year</th><th>Operator ID</th><th>Part No.</th><th>Part Name</th><th>Shipping Box Qty</th><th>Max Shipping Box Qty</th><th>Max Allowance Qty</th><th class="h">OPERATION_TYPE</th><th class="h">AP POLE check after the row</th></tr></thead><tbody>' +
-      list.map((x) => `<tr><td>${my(x.r.per)}</td><td>P6</td><td>${x.r.p}</td><td>${NAME(x.r.p)}</td><td class="n">${x.r.pcs}</td><td class="n">${x.r.max}</td><td class="n">${x.r.pcs * x.r.max}</td><td>${x.r.op}</td>${chk(x.chk)}</tr>`).join('') + '</tbody></table>'
-    : '<table><thead><tr><th>Effective Month / Year</th><th>Part No.</th><th>Buyer-PD</th><th>Order Type</th><th>Transport Code</th><th>Max Shipping Box (RCS)</th><th class="h">ROW_ORDER (view)</th><th class="h">AP POLE check after the row</th></tr></thead><tbody>' +
-      list.map((x) => `<tr><td>${my(x.r.per)}</td><td>${x.r.p.replace(/-/g, '')}</td><td>${DEST[x.r.d].slice(0, 5)}-${DEST[x.r.d].slice(5)} ${x.r.d}</td><td>${x.r.ot}</td><td>2</td><td class="n">${x.r.cd}</td><td>${x.ro} ${x.ro === 1 ? 'down' : 'up'}${x.prev != null ? ' (was ' + x.prev + ')' : ' (new)'}</td>${chk(x.chk)}</tr>`).join('') + '</tbody></table>';
+    ? '<table><thead><tr><th>Effective Month</th><th>Effective Year</th><th>Operator ID</th><th>Part No.</th><th>Part Name</th><th>Shipping Box Qty</th><th>Max Shipping Box Qty</th><th>Max Allowance Qty</th><th class="h">OPERATION_TYPE</th><th class="h">AP POLE check after the row</th></tr></thead><tbody>' +
+      list.map((x) => `<tr><td>${x.r.per.slice(4)}</td><td>${x.r.per.slice(0, 4)}</td><td>P6</td><td>${x.r.p}</td><td>${NAME(x.r.p)}</td><td class="n">${x.r.pcs}</td><td class="n">${x.r.max}</td><td></td><td>${x.r.op}</td>${chk(x.chk)}</tr>`).join('') + '</tbody></table>'
+    : '<table><thead><tr><th>Effective Month</th><th>Effective Year</th><th>Part No.</th><th>Shipping Box Qty</th><th>Max Shipping Box by Part No.</th><th>Buyer-PD</th><th>Order Type</th><th>Transport Code</th><th>Max Shipping Box (RCS)</th><th>Max Allowance Qty</th><th>Packing/Pallet Type</th><th class="h">ROW_ORDER (view)</th><th class="h">AP POLE check after the row</th></tr></thead><tbody>' +
+      list.map((x) => `<tr><td>${x.r.per.slice(4)}</td><td>${x.r.per.slice(0, 4)}</td><td>${x.r.p.replace(/-/g, '')}</td><td></td><td></td><td>${DEST[x.r.d].slice(0, 5)}-${DEST[x.r.d].slice(5)} ${x.r.d}</td><td>${x.r.ot}</td><td>2</td><td class="n">${x.r.cd}</td><td></td><td></td><td>${x.ro} ${x.ro === 1 ? 'down' : 'up'}${x.prev != null ? ' (was ' + x.prev + ')' : ' (new)'}</td>${chk(x.chk)}</tr>`).join('') + '</tbody></table>';
   return `<div class="file"><h4>${title}</h4><div class="tbl">${body}</div></div>`;
 }
 function master(s) {

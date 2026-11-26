@@ -60,36 +60,36 @@ SELECT * FROM V_APPOLE_UPLOAD_EXPORT WHERE SYNC_STATUS = '1' AND SYNC_DT = '2026
 
 ### 5. Fill the template: file 1
 
-Copy of the stored template LLM9Q880, one row per Export row, helper columns left out. A file without rows is not made.
+Copy of the stored template LLM9Q880, one row per Export row from row 4 (header on row 3), helper columns left out. Effective Month and Effective Year: the robot splits EFFECTIVE_MONTH_YEAR (MM/YYYY). Grey columns stay empty. A file without rows is not made.
 
 File: `LLM9Q880_20261110110000_1_EXPORT_PRE.xls (template LLM9Q880)`
 
-| Effective Month / Year | Part No. | Buyer-PD | Order Type | Transport Code | Max Shipping Box (RCS) |
-|---|---|---|---|---|---|
-| 11/2026 | DUMMY002 | 98111-10 | \*\* | 2 | 12 |
-| 11/2026 | DUMMY002 | 96555-10 | \*\* | 2 | 8 |
+| Effective Month | Effective Year | Part No. | Shipping Box Qty | Max Shipping Box by Part No. | Buyer-PD | Order Type | Transport Code | Max Shipping Box (RCS) | Max Allowance Qty | Packing/Pallet Type |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 11 | 2026 | DUMMY002 |  |  | 98111-10 | \*\* | 2 | 12 |  |  |
+| 11 | 2026 | DUMMY002 |  |  | 96555-10 | \*\* | 2 | 8 |  |  |
 
 ### 6. Fill the template: file 2
 
-Copy of the stored template LLM9Q910, one row per Kanban row.
+Copy of the stored template LLM9Q910, one row per Kanban row from row 4. Max Allowance Qty and the columns after it stay empty (AP POLE calculates Max Allowance Qty).
 
 File: `LLM9Q910_20261110110000_2_KANBAN.xls (template LLM9Q910)`
 
-| Effective Month / Year | Operator ID | Part No. | Part Name | Shipping Box Qty | Max Shipping Box Qty | Max Allowance Qty |
-|---|---|---|---|---|---|---|
-| 11/2026 | P6 | DUMMY-002 | DUMMY PART 002 | 12 | 20 | 240 |
-| 11/2026 | P6 | DUMMY-004 | DUMMY PART 004 | 6 | 20 | 120 |
+| Effective Month | Effective Year | Operator ID | Part No. | Part Name | Shipping Box Qty | Max Shipping Box Qty | Max Allowance Qty | Packing/Pallet Type ... Outer-Qty |
+|---|---|---|---|---|---|---|---|---|
+| 11 | 2026 | P6 | DUMMY-002 | DUMMY PART 002 | 12 | 20 |  |  |
+| 11 | 2026 | P6 | DUMMY-004 | DUMMY PART 004 | 6 | 20 |  |  |
 
 ### 7. Fill the template: file 3
 
-Copy of the stored template LLM9Q880.
+Copy of the stored template LLM9Q880, same columns as file 1.
 
 File: `LLM9Q880_20261110110000_3_EXPORT_POST.xls (template LLM9Q880)`
 
-| Effective Month / Year | Part No. | Buyer-PD | Order Type | Transport Code | Max Shipping Box (RCS) |
-|---|---|---|---|---|---|
-| 11/2026 | DUMMY004 | 97153-10 | \*\* | 2 | 12 |
-| 11/2026 | DUMMY004 | 96001-10 | \*\* | 2 | 8 |
+| Effective Month | Effective Year | Part No. | Shipping Box Qty | Max Shipping Box by Part No. | Buyer-PD | Order Type | Transport Code | Max Shipping Box (RCS) | Max Allowance Qty | Packing/Pallet Type |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 11 | 2026 | DUMMY004 |  |  | 97153-10 | \*\* | 2 | 12 |  |  |
+| 11 | 2026 | DUMMY004 |  |  | 96001-10 | \*\* | 2 | 8 |  |  |
 
 ### 8. AP POLE: log in, menu Master
 
@@ -136,4 +136,5 @@ The robot gives STATUS back to the parent flow; the parent flow sends one e-mail
 - File names follow the templates decided for the staging (LLM9Q910 Kanban, LLM9Q880 Export). The Report Type names on the AP POLE screen are LM9Q900 / LM9Q870: which report type takes which template is TBC with the AP POLE team.
 - The AP POLE screens are the screens given by the user (16-Nov), not taken during a robot run.
 - Order of the files: EXPORT_PRE before KANBAN when Max goes down, so AP POLE never has destinations above the Max.
+- Column mapping per template column: prepare_code/rpa/Column_Mapping_Staging_To_Upload.md (Column_Mapping_Staging_To_Upload.xlsx).
 - One row per key: a part edited twice before [Sync] has one row with the last value (the unsent row is updated, not added). [Re-send last Sync] reads MAX(SYNC_DT).
