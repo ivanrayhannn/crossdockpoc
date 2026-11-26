@@ -2,8 +2,8 @@
 - query results of the bot (the staging tables / views of NSP, read-only DB user),
 - the upload files the bot fills from the stored templates,
 - an illustration of the GTOPAS register row (no screenshot of the register screen yet).
-Data: the full flow simulation (erd/proposal_staging_sync/simulation/stg_flow_steps.json): run 20261110110000 (scenario 1) and the
-Period Rollover run 20270101001000. Dummy parts and destinations. Run: python3 render_rpa.py"""
+Data: the full flow simulation (erd/proposal_staging_sync/simulation/stg_flow_steps.json): [Sync] of 2026-11-10 11:00:00 (scenario 1) and
+the Period Rollover of 2027-01-01 00:10:00. Dummy parts and destinations. Run: python3 render_rpa.py"""
 import json
 import os
 import subprocess
@@ -71,20 +71,21 @@ def step(run, label=None):
 
 # ---------- XD07: run 20261110110000 ----------
 RUN = '20261110110000'
+SDT = '2026-11-10 11:00:00'  # SYNC_DT of the run = time of the [Sync] click
 s = step(RUN, '[Sync] · scenario 1')
 f = s['files']
 EXP_COLS = ['STG_ID', 'PERIOD', 'NSP_PART_NO', 'FILE_NO', 'ROW_ORDER', 'EFFECTIVE_MONTH_YEAR', 'PART_NO', 'BUYER_PD', 'ORDER_TYPE', 'TRANSPORT_CODE', 'MAX_SHIPPING_BOX_RCS']
 EXP_HELP = ('STG_ID', 'PERIOD', 'NSP_PART_NO', 'FILE_NO', 'ROW_ORDER')
 exp_row = lambda x, n: [x['r']['id'], x['r']['per'], x['r']['p'], n, x['ro'], my(x['r']['per']), x['r']['p'].replace('-', ''), bpd(x['r']['d']), x['r']['ot'], 2, x['r']['cd']]
 render('r02_view_export_pre', EXP_COLS, [exp_row(x, 1) for x in f['pre']], helper=EXP_HELP,
-       sql=f"SELECT * FROM V_APPOLE_UPLOAD_EXPORT WHERE SYNC_RUN_ID = '{RUN}' AND FILE_NO = 1 ORDER BY PERIOD, NSP_PART_NO, ROW_ORDER, STG_ID")
+       sql=f"SELECT * FROM V_APPOLE_UPLOAD_EXPORT WHERE SYNC_STATUS = '1' AND SYNC_DT = '{SDT}' AND FILE_NO = 1 ORDER BY PERIOD, NSP_PART_NO, ROW_ORDER, STG_ID")
 KAN_COLS = ['STG_ID', 'PERIOD', 'OPERATION_TYPE', 'EFFECTIVE_MONTH_YEAR', 'OPERATOR_ID', 'PART_NO', 'PART_NAME', 'SHIPPING_BOX_QTY', 'MAX_SHIPPING_BOX_QTY', 'MAX_ALLOWANCE_QTY']
 render('r03_view_kanban', KAN_COLS,
        [[x['r']['id'], x['r']['per'], x['r']['op'], my(x['r']['per']), 'P6', x['r']['p'], 'DUMMY PART ' + x['r']['p'][-3:], x['r']['pcs'], x['r']['max'], x['r']['pcs'] * x['r']['max']] for x in f['kan']],
        helper=('STG_ID', 'PERIOD', 'OPERATION_TYPE'),
-       sql=f"SELECT * FROM V_APPOLE_UPLOAD_KANBAN WHERE SYNC_RUN_ID = '{RUN}' ORDER BY PERIOD, PART_NO")
+       sql=f"SELECT * FROM V_APPOLE_UPLOAD_KANBAN WHERE SYNC_STATUS = '1' AND SYNC_DT = '{SDT}' ORDER BY PERIOD, PART_NO")
 render('r04_view_export_post', EXP_COLS, [exp_row(x, 3) for x in f['post']], helper=EXP_HELP,
-       sql=f"SELECT * FROM V_APPOLE_UPLOAD_EXPORT WHERE SYNC_RUN_ID = '{RUN}' AND FILE_NO = 3 ORDER BY PERIOD, NSP_PART_NO, ROW_ORDER, STG_ID")
+       sql=f"SELECT * FROM V_APPOLE_UPLOAD_EXPORT WHERE SYNC_STATUS = '1' AND SYNC_DT = '{SDT}' AND FILE_NO = 3 ORDER BY PERIOD, NSP_PART_NO, ROW_ORDER, STG_ID")
 FILE_EXP = ['Effective Month / Year', 'Part No.', 'Buyer-PD', 'Order Type', 'Transport Code', 'Max Shipping Box (RCS)']
 file_exp = lambda x: [my(x['r']['per']), x['r']['p'].replace('-', ''), bpd(x['r']['d']), x['r']['ot'], 2, x['r']['cd']]
 render('r05_file1_export_pre', FILE_EXP, [file_exp(x) for x in f['pre']], sql=f'LLM9Q880_{RUN}_1_EXPORT_PRE.xls (template LLM9Q880)')
@@ -97,10 +98,10 @@ render('r07_file3_export_post', FILE_EXP, [file_exp(x) for x in f['post']], sql=
 GT_COLS = ['STG_ID', 'PERIOD', 'ACTION', 'DEPOT_CODE', 'P_NO', 'DESTINATION_CODE', 'MAKER_CODE', 'DOMESTIC_OVERSEAS', 'TOPAS_ORDER_TYPE', 'ORDER_TRANSPORTATION_CODE']
 gt_row = lambda g: [g['id'], g['per'], g['act'], '01', g['p'], DEST[g['d']], 'A', 2, 3, 2]
 render('r10_gtopas_rows_add', GT_COLS, [gt_row(g) for g in s['gsent']], helper=('STG_ID', 'PERIOD', 'ACTION'),
-       sql=f"SELECT * FROM TB_H_STG_GTOPAS WHERE SYNC_RUN_ID = '{RUN}' ORDER BY P_NO, DESTINATION_CODE")
+       sql=f"SELECT * FROM TB_H_STG_GTOPAS WHERE SYNC_STATUS = '1' AND SYNC_DT = '{SDT}' ORDER BY P_NO, DESTINATION_CODE")
 ro = step('20270101001000')
 render('r11_gtopas_rows_rollover', GT_COLS, [gt_row(g) for g in ro['gsent']], helper=('STG_ID', 'PERIOD', 'ACTION'),
-       sql="SELECT * FROM TB_H_STG_GTOPAS WHERE SYNC_RUN_ID = '20270101001000' ORDER BY P_NO, DESTINATION_CODE")
+       sql="SELECT * FROM TB_H_STG_GTOPAS WHERE SYNC_STATUS = '1' AND SYNC_DT = '2027-01-01 00:10:00' ORDER BY P_NO, DESTINATION_CODE")
 add = s['gsent'][0]
 render('r12_gtopas_add_illustration',
        ['No', 'MT', 'R', 'Depot Code', 'Maker Code', 'P/No.', 'Domestic/Overseas', 'Destination Code', 'TOPAS Order Type', 'Order Transportation Code'],

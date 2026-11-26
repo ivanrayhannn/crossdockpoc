@@ -3,6 +3,10 @@
 Input for the UISS update of XD01 / XD02 / XD03 (Kanban and Export Crossdock Master), XD05 (DAD calculation, Period Rollover),
 XD06 (RPA GTOPAS) and XD07 (RPA AP POLE). Status: agreed in discussion, not yet in the UISS / DB Structure.
 
+> Replaced by the staging per target (23-Nov) and the decision of 26-Nov: no run ID column, the run is SYNC_DT (time of the
+> [Sync] click), SYNC_STATUS 0 / 1, one unsent row per key. See Proposal_Tables_Staging_Per_Target.xlsx and
+> prepare_code/sql/crossdock_staging_sync.sql. This file stays as the record of 21-Nov.
+
 References:
 - Full flow simulation: https://claude.ai/artifact/34QuqNRQW79UK3M4ttMXeJ
 - Staging scenarios: https://claude.ai/artifact/LGxUkmQQcvHZb8UGq5BgWF

@@ -6,7 +6,7 @@
   "function_name": "XD07 RPA Cross Dock Master to AP POLE",
   "created_date": "18-Oct-26",
   "created_by": "FID Rayhan",
-  "updated_date": "23-Nov-26",
+  "updated_date": "26-Nov-26",
   "updated_by": "FID Rayhan"
  },
  "revisions": [
@@ -86,13 +86,20 @@
    "date": "23-Nov-26",
    "reviewed_by": "",
    "description": "Source: views V_APPOLE_UPLOAD_KANBAN / _EXPORT on TB_H_STG_APPOLE_KANBAN / _EXPORT; files EXPORT_PRE, KANBAN, EXPORT_POST from OPERATION_TYPE; started by the RPA parent flow (scenario 1 after GTOPAS OK, scenario 2 at once) (23-Nov)."
+  },
+  {
+   "revision": "1.2",
+   "author": "FID Rayhan",
+   "date": "26-Nov-26",
+   "reviewed_by": "",
+   "description": "Staging: no SYNC_RUN_ID, the run is SYNC_DT (one value per [Sync] click / rollover); one unsent row per key (a new change updates it, back to the sent value deletes it); SYNC_STATUS 0 / 1. SQL: prepare_code/sql/crossdock_staging_sync.sql."
   }
  ],
  "doc_type": "batch",
  "general": {
   "objective": [
    "To make the cross dock master of AP POLE follow NSP by an RPA that uploads the files Cross Dock Kanban Part Master (LLM9Q910) and Export Customer Cross Dock Master (LLM9Q880), filled from the stored templates.",
-   "Source data: the views V_APPOLE_UPLOAD_KANBAN and V_APPOLE_UPLOAD_EXPORT on TB_H_STG_APPOLE_KANBAN / _EXPORT (read-only DB user), rows of the run ID of [Sync] / [Re-send last Sync]. NSP set every rule at the save; the views only read it.",
+   "Source data: the views V_APPOLE_UPLOAD_KANBAN and V_APPOLE_UPLOAD_EXPORT on TB_H_STG_APPOLE_KANBAN / _EXPORT (read-only DB user), rows of the run (SYNC_DT) of [Sync] / [Re-send last Sync]. NSP set every rule at the save; the views only read it.",
    "Order: EXPORT_PRE (Export rows of the parts whose Max goes down) -> KANBAN -> EXPORT_POST (every other Export row). AP POLE checks every row: total Max Shipping Box (RCS) of the part <= Max Shipping Box Qty.",
    "Started by the RPA parent flow: in scenario 1 only after XD06 succeeded; in scenario 2 at once (refer 4.1).",
    "The robot writes nothing back to NSP; the result comes by the notification e-mail."
@@ -107,7 +114,7 @@
     },
     {
      "id": "b",
-     "label": "Parent flow starts XD07 with the run ID",
+     "label": "Parent flow starts XD07 with SYNC_DT",
      "type": "process"
     },
     {
@@ -333,7 +340,7 @@
    "nodes": [
     {
      "id": "p1",
-     "label": "Start (run ID from the parent flow)",
+     "label": "Start (SYNC_DT from the parent flow)",
      "type": "process",
      "step": 1
     },
@@ -413,16 +420,16 @@
    ]
   },
   "steps": [
-   "The parent flow starts XD07 with the run ID (scenario 1 after XD06 succeeded, scenario 2 at once). NSP has already set the rows to SYNC_STATUS 1 with this run ID. Write LOG1.",
+   "The parent flow starts XD07 with SYNC_DT (scenario 1 after XD06 succeeded, scenario 2 at once). NSP has already set the rows to SYNC_STATUS 1 with this SYNC_DT. Write LOG1.",
    {
-    "text": "Read the views (read-only DB user) for the run ID:",
+    "text": "Read the views (read-only DB user) for the SYNC_DT of the run:",
     "children": [
      "V_APPOLE_UPLOAD_EXPORT WHERE FILE_NO = 1 (EXPORT_PRE) and FILE_NO = 3 (EXPORT_POST), ORDER BY PERIOD, NSP_PART_NO, ROW_ORDER, STG_ID.",
      "V_APPOLE_UPLOAD_KANBAN (OPERATION_TYPE 1 to 4), ORDER BY PERIOD, PART_NO."
     ]
    },
    {
-    "text": "Fill the stored templates: one file per kind, Current and Next period together (Effective Month / Year per row). Name <template>_<run ID>_<order>_<name>.xls, e.g. LLM9Q880_20261204100000_1_EXPORT_PRE.xls. A file without rows is not made.",
+    "text": "Fill the stored templates: one file per kind, Current and Next period together (Effective Month / Year per row). Name <template>_<SYNC_DT YYYYMMDDHHMMSS>_<order>_<name>.xls, e.g. LLM9Q880_20261204100000_1_EXPORT_PRE.xls. A file without rows is not made.",
     "children": [
      "Inside an Export file, per part: rows going down or DELETE (ROW_ORDER 1) first, then up or ADD (ROW_ORDER 2)."
     ]
@@ -443,8 +450,8 @@
      "table": "V_APPOLE_UPLOAD_KANBAN",
      "keys": [
       {
-       "field": "RUN_ID",
-       "value": "Run ID"
+       "field": "SYNC_DT",
+       "value": "SYNC_DT of the run (SYNC_STATUS 1)"
       }
      ]
     },
@@ -496,8 +503,8 @@
      "table": "V_APPOLE_UPLOAD_EXPORT",
      "keys": [
       {
-       "field": "RUN_ID",
-       "value": "Run ID"
+       "field": "SYNC_DT",
+       "value": "SYNC_DT of the run (SYNC_STATUS 1)"
       },
       {
        "field": "FILE_NO",
@@ -558,8 +565,8 @@
      },
      {
       "source_field": "-",
-      "dest_field": "RUN_ID",
-      "description": "Run ID"
+      "dest_field": "SYNC_DT",
+      "description": "SYNC_DT of the run"
      },
      {
       "source_field": "-",
@@ -591,11 +598,11 @@
    "marker": "-",
    "level": 0,
    "items": [
-    "One Power Automate parent flow per run (CDX_SYNC_PARENT), started by NSP with RUN_ID and RUN_TYPE (SYNC, RESEND, ROLLOVER).",
+    "One Power Automate parent flow per run (CDX_SYNC_PARENT), started by NSP with SYNC_DT (the run) and RUN_TYPE (SYNC, RESEND, ROLLOVER).",
     "Scenario 1 (run with GTOPAS rows: a part becomes Active or Inactive, a destination is added or removed): XD06 GTOPAS first; XD07 AP POLE starts only when every GTOPAS row succeeded. When GTOPAS fails, AP POLE stops: XD07 does not start and the e-mail says FAILED.",
     "Scenario 2 (run without GTOPAS rows: Max Case/Day, Pcs/Case, Case/Day, order type of a destination that stays): XD07 only.",
     "Period Rollover (RUN_TYPE ROLLOVER): XD06 only, for the GTOPAS rows of the new Current period.",
-    "Choice of the scenario: SELECT COUNT(*) FROM TB_H_STG_GTOPAS WHERE SYNC_RUN_ID = run ID (> 0: scenario 1)."
+    "Choice of the scenario: SELECT COUNT(*) FROM TB_H_STG_GTOPAS WHERE SYNC_STATUS = '1' AND SYNC_DT = <SYNC_DT of the run> (> 0: scenario 1)."
    ]
   },
   {
@@ -607,7 +614,7 @@
    "marker": "-",
    "level": 0,
    "items": [
-    "Upload files of AP POLE (views): EXPORT_PRE (LLM9Q880, order 1) = Export rows of the parts whose Kanban row of the run has OPERATION_TYPE 1; KANBAN (LLM9Q910, order 2) = Kanban rows of the run with OPERATION_TYPE 1 to 4; EXPORT_POST (LLM9Q880, order 3) = every other Export row of the run. Inside a file, per part, rows going down or DELETE (ROW_ORDER 1) come before rows going up or ADD (ROW_ORDER 2). An empty file is not made. File name <template>_<RUN_ID>_<order>_<name>.xls.",
+    "Upload files of AP POLE (views): EXPORT_PRE (LLM9Q880, order 1) = Export rows of the parts whose Kanban row of the run has OPERATION_TYPE 1; KANBAN (LLM9Q910, order 2) = Kanban rows of the run with OPERATION_TYPE 1 to 4; EXPORT_POST (LLM9Q880, order 3) = every other Export row of the run. Inside a file, per part, rows going down or DELETE (ROW_ORDER 1) come before rows going up or ADD (ROW_ORDER 2). An empty file is not made. File name <template>_<SYNC_DT YYYYMMDDHHMMSS>_<order>_<name>.xls.",
     "View rules: FILE_NO = 1 (EXPORT_PRE) when the Kanban row of the same run, part and period has OPERATION_TYPE 1, else 3 (EXPORT_POST; every part of a run has its Kanban row, OPERATION_TYPE 1 to 5). ROW_ORDER = 1 when MAX_SHIPPING_BOX_RCS is lower than the value sent before for the key (same period, else the latest earlier period), else 2. V_APPOLE_UPLOAD_KANBAN leaves out OPERATION_TYPE 5.",
     "Why the order: AP POLE checks every uploaded row (total Max Shipping Box (RCS) of the part <= Max Shipping Box Qty). When Max goes down the destinations come down first (EXPORT_PRE); when Max goes up, stays or is new the Max goes first (KANBAN). Inside a file the total first goes down, then up to the end value, so it never passes the Max.",
     "AP POLE keeps the rows of an Effective Month active until a newer month comes; NSP still sends every row of a new period."
@@ -670,7 +677,7 @@
    "level": 0,
    "items": [
     "A rejected file stops the run: the files already uploaded stay in AP POLE, the next files are not uploaded.",
-    "When the e-mail says FAILED, the D/S team clicks [Re-send last Sync] before the next [Sync]: the same run ID and the same files; AP POLE sets the same values again, so a repeat is safe.",
+    "When the e-mail says FAILED, the D/S team clicks [Re-send last Sync] before the next [Sync]: the same SYNC_DT and the same files; AP POLE sets the same values again, so a repeat is safe.",
     "Rules and simulation: deliverables/function_list_v2/erd/proposal_staging_sync (Proposal_Tables_Staging_Per_Target.xlsx, simulation/Staging_Header_Order.html, simulation/Staging_Per_Target_Full_Flow_Simulation.xlsx)."
    ]
   },
@@ -819,11 +826,11 @@
     ],
     [
      "Subject",
-     "[Crossdock Sync][SYNC | RESEND | ROLLOVER][SUCCESS | FAILED] Run <RUN_ID> - <n> part(s)"
+     "[Crossdock Sync][SYNC | RESEND | ROLLOVER][SUCCESS | FAILED] Run <SYNC_DT> - <n> part(s)"
     ],
     [
      "Body 1. Run",
-     "RUN_ID, RUN_TYPE, scenario, targets run, started / ended, [Sync] by <user> at <date-time>, period(s) sent"
+     "SYNC_DT, RUN_TYPE, scenario, targets run, started / ended, [Sync] by <user> at <date-time>, period(s) sent"
     ],
     [
      "Body 2. Summary",
@@ -868,7 +875,7 @@
    "cause": "Parent flow: scenario 1 after GTOPAS OK, or scenario 2",
    "type": "Info",
    "msg_id": "LOG1",
-   "message": "RPA cross dock master to AP POLE started. Run <RUN_ID>, <n> file(s).",
+   "message": "RPA cross dock master to AP POLE started. Run <SYNC_DT>, <n> file(s).",
    "action": {
     "system": "Write the log.",
     "user": "-"
@@ -879,7 +886,7 @@
    "cause": "Bot finishes",
    "type": "Info",
    "msg_id": "LOG2",
-   "message": "RPA cross dock master to AP POLE ended. Run <RUN_ID>, files uploaded <f>, rows <r>, status <STATUS>.",
+   "message": "RPA cross dock master to AP POLE ended. Run <SYNC_DT>, files uploaded <f>, rows <r>, status <STATUS>.",
    "action": {
     "system": "Write the log.",
     "user": "-"
@@ -923,7 +930,7 @@
    "cause": "End of the run (SUCCESS / FAILED)",
    "type": "Info",
    "msg_id": "LOG6",
-   "message": "Notification email <SUCCESS / FAILED> of run <RUN_ID> sent to <recipients>.",
+   "message": "Notification email <SUCCESS / FAILED> of run <SYNC_DT> sent to <recipients>.",
    "action": {
     "system": "Write the log.",
     "user": "Read the email; FAILED: click [Re-send last Sync]."
@@ -1041,21 +1048,14 @@
      "CHAR(1)",
      "",
      "N",
-     "0 = to send, 1 = sent, 2 = Superseded at the save (a newer row of the key, or back to the value already sent). Set by SP_STG_WRITE (0, 2) and SP_STG_SYNC / Period Rollover (1). Default '0'"
+     "0 = to send (written or updated by SP_STG_WRITE), 1 = sent (SP_STG_SYNC at [Sync], SP_STG_ROLLOVER for GTOPAS). One row with 0 per key at a time: a new change of the key updates it. Default '0'"
     ],
     [
      "SYNC_DT",
-     "DATETIME",
+     "DATETIME2(0)",
      "",
      "Y",
-     "Time of the [Sync] / Period Rollover that sent the row; Last Sent on the screen = latest value"
-    ],
-    [
-     "SYNC_RUN_ID",
-     "VARCHAR(14)",
-     "",
-     "Y",
-     "Run ID YYYYMMDDHHMMSS; [Re-send last Sync] sends the rows of the last run again"
+     "Time of the [Sync] click (or of the Period Rollover), the same value for every row of that click: the RPA reads the rows of a run by SYNC_DT; [Re-send last Sync] = MAX(SYNC_DT); Last Sent on the screen = latest value"
     ],
     [
      "CREATED_BY",
@@ -1076,7 +1076,7 @@
      "VARCHAR(20)",
      "",
      "Y",
-     "User of the save that made the row Superseded, of [Sync], or XD05BATCH (Period Rollover)"
+     "User of the save that updated the unsent row, of [Sync], or XD05BATCH (Period Rollover)"
     ],
     [
      "CHANGED_DT",
@@ -1086,7 +1086,7 @@
      "Time of that update"
     ]
    ],
-   "description": "AP POLE Kanban rows in the format of the upload file LLM9Q910, one row per Kanban change of a part + period, plus the header row (OPERATION_TYPE 5) when only the destinations changed. Written by SP_STG_WRITE (XD01, XD02, XD05); SYNC_STATUS set by SP_STG_SYNC. Read by XD07 through V_APPOLE_UPLOAD_KANBAN and V_APPOLE_UPLOAD_EXPORT."
+   "description": "AP POLE Kanban rows in the format of the upload file LLM9Q910, one row per Kanban change of a part + period (one unsent row at a time: a new change updates it), plus the header row (OPERATION_TYPE 5) when only the destinations changed. Written by SP_STG_WRITE (XD01, XD02, XD05); SYNC_STATUS and SYNC_DT set by SP_STG_SYNC. Read by XD07 through V_APPOLE_UPLOAD_KANBAN and V_APPOLE_UPLOAD_EXPORT."
   },
   {
    "name": "TB_H_STG_APPOLE_EXPORT",
@@ -1189,21 +1189,14 @@
      "CHAR(1)",
      "",
      "N",
-     "0 = to send, 1 = sent, 2 = Superseded at the save (a newer row of the key, or back to the value already sent). Set by SP_STG_WRITE (0, 2) and SP_STG_SYNC / Period Rollover (1). Default '0'"
+     "0 = to send (written or updated by SP_STG_WRITE), 1 = sent (SP_STG_SYNC at [Sync], SP_STG_ROLLOVER for GTOPAS). One row with 0 per key at a time: a new change of the key updates it. Default '0'"
     ],
     [
      "SYNC_DT",
-     "DATETIME",
+     "DATETIME2(0)",
      "",
      "Y",
-     "Time of the [Sync] / Period Rollover that sent the row; Last Sent on the screen = latest value"
-    ],
-    [
-     "SYNC_RUN_ID",
-     "VARCHAR(14)",
-     "",
-     "Y",
-     "Run ID YYYYMMDDHHMMSS; [Re-send last Sync] sends the rows of the last run again"
+     "Time of the [Sync] click (or of the Period Rollover), the same value for every row of that click: the RPA reads the rows of a run by SYNC_DT; [Re-send last Sync] = MAX(SYNC_DT); Last Sent on the screen = latest value"
     ],
     [
      "CREATED_BY",
@@ -1224,7 +1217,7 @@
      "VARCHAR(20)",
      "",
      "Y",
-     "User of the save that made the row Superseded, of [Sync], or XD05BATCH (Period Rollover)"
+     "User of the save that updated the unsent row, of [Sync], or XD05BATCH (Period Rollover)"
     ],
     [
      "CHANGED_DT",
@@ -1234,7 +1227,7 @@
      "Time of that update"
     ]
    ],
-   "description": "AP POLE Export rows in the format of the upload file LLM9Q880, one row per added, changed or removed destination + order type of a part + period. Written by SP_STG_WRITE (XD01, XD03, XD05); SYNC_STATUS set by SP_STG_SYNC. Read by XD07 through V_APPOLE_UPLOAD_EXPORT."
+   "description": "AP POLE Export rows in the format of the upload file LLM9Q880, one row per added, changed or removed destination + order type of a part + period (one unsent row per key: a new change updates it). Written by SP_STG_WRITE (XD01, XD03, XD05); SYNC_STATUS and SYNC_DT set by SP_STG_SYNC. Read by XD07 through V_APPOLE_UPLOAD_EXPORT."
   }
  ]
 }

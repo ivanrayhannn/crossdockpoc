@@ -94,7 +94,7 @@ def header(ws, title, page):
     put(ws, 2, 'AB', 'CJ', 'Crossdock Optimization (NSP)')
     put(ws, 2, 'CK', 'CN', 'Page', True)
     put(ws, 2, 'CO', 'CV', page)
-    for r, lab, val, lab2, d in ((3, 'Block Name', 'Crossdock', 'Created', '20-Oct-26'), (4, 'Document Name', 'DB Structure', 'Updated', '23-Nov-26')):
+    for r, lab, val, lab2, d in ((3, 'Block Name', 'Crossdock', 'Created', '20-Oct-26'), (4, 'Document Name', 'DB Structure', 'Updated', '26-Nov-26')):
         put(ws, r, 'B', 'N', lab, True)
         put(ws, r, 'O', 'AH', val)
         put(ws, r, 'AI', 'AS', 'Function Name' if r == 3 else 'Title', True)
@@ -110,6 +110,7 @@ REVISIONS = [
     ('0.2', '22-Nov-2026', 'TB_H_PART_CANDIDATE_STG_SYNC (staging of the sync); sync columns removed from TB_M_PART_CANDIDATE'),
     ('0.3', '23-Nov-2026', 'Staging per target: TB_H_PART_CANDIDATE_STG_SYNC replaced by TB_H_STG_APPOLE_KANBAN, TB_H_STG_APPOLE_EXPORT and TB_H_STG_GTOPAS; '
                            'EFFECTIVE_START_DATE removed from TB_M_PART_CANDIDATE (a part takes effect from its first registered period)'),
+    ('0.4', '26-Nov-2026', 'Staging tables: SYNC_RUN_ID removed (the run is SYNC_DT, one value per [Sync] click); SYNC_STATUS 0 / 1 (one unsent row per key)'),
 ]
 
 

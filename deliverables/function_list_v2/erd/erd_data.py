@@ -89,7 +89,7 @@ RELATIONS = [
     ('TB_M_PART_CANDIDATE', 'PART_NO, PERIOD', 'TB_H_STG_APPOLE_KANBAN', 'PART_NO, PERIOD', '1 : N', 'AP POLE Kanban rows (LLM9Q910) and the upload order of the part (OPERATION_TYPE), written by SP_STG_WRITE (logical)'),
     ('TB_M_PART_CANDIDATE_DEST', 'PART_NO, PERIOD, DEST_CODE, ORDER_TYPE', 'TB_H_STG_APPOLE_EXPORT', 'NSP_PART_NO, PERIOD, DEST_CODE, ORDER_TYPE', '1 : N', 'AP POLE Export rows (LLM9Q880) per destination change; DELETE rows stay after the mapping is gone (logical)'),
     ('TB_M_PART_CANDIDATE', 'PART_NO, PERIOD', 'TB_H_STG_GTOPAS', 'P_NO, PERIOD', '1 : N', 'GTOPAS rows: a destination appears or disappears for the part (logical)'),
-    ('TB_H_STG_APPOLE_KANBAN', 'SYNC_RUN_ID, PART_NO, PERIOD', 'TB_H_STG_APPOLE_EXPORT', 'SYNC_RUN_ID, NSP_PART_NO, PERIOD', '1 : N', 'Header of the part in a run: its OPERATION_TYPE sets the file of the Export rows (view V_APPOLE_UPLOAD_EXPORT)'),
+    ('TB_H_STG_APPOLE_KANBAN', 'SYNC_DT, PART_NO, PERIOD', 'TB_H_STG_APPOLE_EXPORT', 'SYNC_DT, NSP_PART_NO, PERIOD', '1 : N', 'Header of the part in a run: its OPERATION_TYPE sets the file of the Export rows (view V_APPOLE_UPLOAD_EXPORT)'),
     ('TB_M_PART_CANDIDATE', 'PART_NO', 'TB_R_ACTUAL_DEMAND_SUMMARY', 'PART_NO', '1 : N', 'Actual demand of the part (logical, no FK)'),
     ('TB_M_PART_CANDIDATE', 'PART_NO', 'TB_R_H0253_ORDER_CONTROL_PRE', 'SHIPPING_PART_NO', '1 : N', 'Crossdock customer order lines of an Active part (logical)'),
     ('TB_M_H0125_DESTINATION', 'DESTINATION_CD', 'TB_R_H0253_ORDER_CONTROL_PRE', 'DESTINATION_CD', '1 : N', 'Destination of the customer order'),
