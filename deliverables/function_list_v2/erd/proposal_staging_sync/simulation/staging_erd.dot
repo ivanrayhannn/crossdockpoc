@@ -1,0 +1,69 @@
+digraph ERD {
+  graph [rankdir=LR, bgcolor="transparent", nodesep=0.35, ranksep=0.9, fontname="IBM Plex Sans", pad=0.2];
+  node [shape=plaintext, fontname="IBM Plex Sans", fontsize=10];
+  edge [fontname="IBM Plex Sans", fontsize=9, color="#4f6580", fontcolor="#4f6580", arrowsize=0.7];
+
+  M [label=<<table border="1" cellborder="0" cellspacing="0" cellpadding="3" color="#c9dcef" bgcolor="#ffffff">
+    <tr><td bgcolor="#123a6b" align="left"><font color="#ffffff"><b>TB_M_PART_CANDIDATE</b></font></td></tr>
+    <tr><td align="left"><b>PK</b> PART_NO, PERIOD</td></tr>
+    <tr><td align="left">PART_STATUS · PCS_CASE · MAX_CASE_DAY</td></tr>
+    <tr><td align="left"><font color="#4f6580">Kanban Crossdock Master</font></td></tr></table>>];
+  MD [label=<<table border="1" cellborder="0" cellspacing="0" cellpadding="3" color="#c9dcef" bgcolor="#ffffff">
+    <tr><td bgcolor="#123a6b" align="left"><font color="#ffffff"><b>TB_M_PART_CANDIDATE_DEST</b></font></td></tr>
+    <tr><td align="left"><b>PK</b> PART_NO, PERIOD, DEST_CODE, ORDER_TYPE</td></tr>
+    <tr><td align="left">CASE_DAY</td></tr>
+    <tr><td align="left"><font color="#4f6580">Export Crossdock Master</font></td></tr></table>>];
+
+  K [label=<<table border="1" cellborder="0" cellspacing="0" cellpadding="3" color="#c9dcef" bgcolor="#ffffff">
+    <tr><td bgcolor="#dcebfa" align="left"><b>TB_H_STG_APPOLE_KANBAN</b></td></tr>
+    <tr><td align="left"><b>PK</b> STG_ID · <b>key</b> PERIOD + PART_NO</td></tr>
+    <tr><td align="left">ACTION · PART_STATUS · OPERATOR_ID · PART_NAME</td></tr>
+    <tr><td align="left">SHIPPING_BOX_QTY · MAX_SHIPPING_BOX_QTY · MAX_ALLOWANCE_QTY</td></tr>
+    <tr><td align="left" bgcolor="#fff1c2">OPERATION_TYPE 1-5 · SYNC_STATUS 0/1 · SYNC_DT</td></tr></table>>];
+  E [label=<<table border="1" cellborder="0" cellspacing="0" cellpadding="3" color="#c9dcef" bgcolor="#ffffff">
+    <tr><td bgcolor="#dcebfa" align="left"><b>TB_H_STG_APPOLE_EXPORT</b></td></tr>
+    <tr><td align="left"><b>PK</b> STG_ID · <b>key</b> PERIOD + NSP_PART_NO + DEST_CODE + ORDER_TYPE</td></tr>
+    <tr><td align="left">ACTION · PART_NO · BUYER_PD · TRANSPORT_CODE</td></tr>
+    <tr><td align="left">MAX_SHIPPING_BOX_RCS (0 = delete)</td></tr>
+    <tr><td align="left" bgcolor="#fff1c2">SYNC_STATUS 0/1 · SYNC_DT</td></tr></table>>];
+  G [label=<<table border="1" cellborder="0" cellspacing="0" cellpadding="3" color="#c9dcef" bgcolor="#ffffff">
+    <tr><td bgcolor="#dcebfa" align="left"><b>TB_H_STG_GTOPAS</b></td></tr>
+    <tr><td align="left"><b>PK</b> STG_ID · <b>key</b> PERIOD + P_NO + DESTINATION_CODE</td></tr>
+    <tr><td align="left">ACTION ADD / DELETE · DEPOT_CODE · MAKER_CODE</td></tr>
+    <tr><td align="left">DOMESTIC_OVERSEAS · TOPAS_ORDER_TYPE · ORDER_TRANSPORTATION_CODE</td></tr>
+    <tr><td align="left" bgcolor="#fff1c2">SYNC_STATUS 0/1 · SYNC_DT</td></tr></table>>];
+
+  VK [label=<<table border="1" cellborder="0" cellspacing="0" cellpadding="3" color="#1f7a74" bgcolor="#ffffff" style="dashed">
+    <tr><td bgcolor="#d5edea" align="left"><b>V_APPOLE_UPLOAD_KANBAN</b></td></tr>
+    <tr><td align="left">SYNC_STATUS 1 · OPERATION_TYPE 1-4</td></tr>
+    <tr><td align="left">FILE_NO 2 · EFFECTIVE_MONTH_YEAR (MM/YYYY)</td></tr></table>>];
+  VE [label=<<table border="1" cellborder="0" cellspacing="0" cellpadding="3" color="#1f7a74" bgcolor="#ffffff" style="dashed">
+    <tr><td bgcolor="#d5edea" align="left"><b>V_APPOLE_UPLOAD_EXPORT</b></td></tr>
+    <tr><td align="left">SYNC_STATUS 1 · JOIN header Kanban</td></tr>
+    <tr><td align="left">FILE_NO 1 / 3 · ROW_ORDER 1 / 2</td></tr>
+    <tr><td align="left">EFFECTIVE_MONTH_YEAR (MM/YYYY)</td></tr></table>>];
+  VG [label=<<table border="1" cellborder="0" cellspacing="0" cellpadding="3" color="#1f7a74" bgcolor="#ffffff" style="dashed">
+    <tr><td bgcolor="#d5edea" align="left"><b>V_GTOPAS_CROSSDOCK</b></td></tr>
+    <tr><td align="left">SYNC_STATUS 1</td></tr></table>>];
+
+  F1 [label=<<table border="1" cellborder="0" cellspacing="0" cellpadding="4" color="#7a3fa0" bgcolor="#f3ecf8">
+    <tr><td align="left"><b>1 EXPORT_PRE</b> · LLM9Q880</td></tr><tr><td align="left">header OPERATION_TYPE 1</td></tr></table>>];
+  F2 [label=<<table border="1" cellborder="0" cellspacing="0" cellpadding="4" color="#123a6b" bgcolor="#e6f0fb">
+    <tr><td align="left"><b>2 KANBAN</b> · LLM9Q910</td></tr><tr><td align="left">OPERATION_TYPE 1-4</td></tr></table>>];
+  F3 [label=<<table border="1" cellborder="0" cellspacing="0" cellpadding="4" color="#1f7a74" bgcolor="#e6f4f2">
+    <tr><td align="left"><b>3 EXPORT_POST</b> · LLM9Q880</td></tr><tr><td align="left">header OPERATION_TYPE 2-5</td></tr></table>>];
+  GS [label=<<table border="1" cellborder="0" cellspacing="0" cellpadding="4" color="#9a6400" bgcolor="#fff1d6">
+    <tr><td align="left"><b>GTOPAS WVJA5204</b></td></tr><tr><td align="left">ADD / MT = DEL (XD06)</td></tr></table>>];
+
+  M -> MD [label="1 : N", dir=none];
+  M -> K [label="1 : N  SP_STG_WRITE"];
+  MD -> E [label="1 : N  SP_STG_WRITE"];
+  MD -> G [label="1 : N  dest appears / disappears"];
+  K -> E [label="header of the part\n(SYNC_DT, PERIOD, part)", style=dashed, dir=none, constraint=false];
+  K -> VK; K -> VE [style=dashed]; E -> VE; G -> VG;
+  VE -> F1 [label="FILE_NO 1"]; VK -> F2; VE -> F3 [label="FILE_NO 3"]; VG -> GS;
+  F1 -> F2 [label="upload order", color="#c9dcef", fontcolor="#7d8fa6"]; F2 -> F3 [color="#c9dcef"];
+  {rank=same; K; E; G}
+  {rank=same; VK; VE; VG}
+  {rank=same; F1; F2; F3; GS}
+}
