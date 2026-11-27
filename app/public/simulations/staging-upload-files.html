@@ -43,6 +43,13 @@ tr.bad td { background: var(--ng-soft); }
 .ng { color: var(--ng); font-weight: 600; font-family: var(--f-body); }
 .chg { color: var(--accent); font-weight: 600; }
 .erd { padding: 8px; background: var(--surface); }
+.erdkinds { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; }
+.kchip { display: inline-flex; gap: 6px; align-items: center; font-size: .8rem; }
+.kchip i, .tcard summary i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; }
+.tcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr)); gap: 8px; }
+.tcard { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; min-width: 0; }
+.tcard summary { cursor: pointer; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.tcard .tbl { margin-top: 8px; max-height: 360px; overflow: auto; }
 .legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; }
 .lg { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: grid; gap: 4px; align-content: start; }
 .lg b { font-family: var(--f-display); font-size: 1rem; }
@@ -87,9 +94,1193 @@ pre.calls { margin: 10px 0 0; padding: 10px 12px; font: .78rem/1.6 var(--f-mono)
     <div class="legend" id="legend"></div>
   </section>
   <section aria-labelledby="erd-h">
-    <h2 id="erd-h">ERD: from the master to the upload files</h2>
-    <p class="sub">A save writes the master, then SP_STG_WRITE writes the staging rows. [Sync] sets them to SYNC_STATUS 1 with one SYNC_DT. The robots read the views only: XD07 makes the three AP POLE files, XD06 works on the GTOPAS screen. Yellow row = sync columns; dashed box = view.</p>
-    <div class="tbl erd"><svg role="img" aria-label="ERD: master tables, staging tables, views and AP POLE / GTOPAS targets" style="min-width:1500px;width:100%;height:auto"
+    <h2 id="erd-h">Data model</h2>
+    <p class="sub">ERD and LDM from the latest Concept ERD (Crossdock_ERD_4.xlsx, 27-Nov). The third view shows the staging tables and views of the 26-Nov proposal, which the latest ERD does not have yet.</p>
+    <div class="picker" role="tablist" aria-label="Data model view">
+      <button class="pick" type="button" role="tab" id="dm-erd" aria-pressed="true" aria-controls="dmp-erd">ERD (physical, latest)</button>
+      <button class="pick" type="button" role="tab" id="dm-ldm" aria-pressed="false" aria-controls="dmp-ldm">LDM (logical)</button>
+      <button class="pick" type="button" role="tab" id="dm-stg" aria-pressed="false" aria-controls="dmp-stg">Staging to upload files (proposal 26-Nov)</button>
+    </div>
+    <div id="dmp-erd" class="stack"><div class="erdkinds"><span class="kchip"><i style="background:#123a6b"></i>New table (Crossdock)</span><span class="kchip"><i style="background:#5b4a8b"></i>Replicated from DB Surrounding (GTOPAS)</span><span class="kchip"><i style="background:#595959"></i>Existing NSP table</span><span class="kchip"><i style="background:#a6a6a6"></i>Temporary (session)</span><span class="kchip"><i style="background:#d9d9d9"></i>Temporary (upload)</span><span class="note">Line: 1 (bar) to N (crow foot); dashed = logical, no FK. Only PK / FK columns are drawn; open a table below for all columns.</span></div><div class="tbl erd"><svg role="img" aria-label="Concept ERD latest: 22 Crossdock tables and their relationships" style="min-width:1700px;width:100%;height:auto"
+ viewBox="0.00 0.00 2273.70 1515.20" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(21.6 1493.6)">
+<title>ERD</title>
+
+<g id="edge2" class="edge">
+<title>nTB_M_H0125_DESTINATION&#45;&gt;nTB_R_ACTUAL_DEMAND_SUMMARY</title>
+<path fill="none" stroke="#4f6580" stroke-width="1.1" d="M133,-1330.2C133,-1296.95 133,-1245.8 133,-1203.66"/>
+<polygon fill="#4f6580" stroke="#4f6580" stroke-width="1.1" points="137,-1333.61 129,-1333.61 129,-1332.01 137,-1332.01 137,-1333.61"/>
+<polyline fill="none" stroke="#4f6580" stroke-width="1.1" points="133,-1334.41 133,-1330.41 "/>
+<polygon fill="#4f6580" stroke="#4f6580" stroke-width="1.1" points="133,-1203.63 136.6,-1195.63 133,-1199.63 133,-1195.63 133,-1195.63 133,-1195.63 133,-1199.63 129.4,-1195.63 133,-1203.63 133,-1203.63"/>
+</g>
+
+<g id="edge1" class="edge">
+<title>nTB_M_H0125_DESTINATION&#45;&gt;nTB_M_PART_CANDIDATE_DEST</title>
+<path fill="none" stroke="#4f6580" stroke-width="1.1" d="M161.23,-1331.06C188.96,-1297.6 232.35,-1244.92 269.2,-1198.7 319.56,-1135.54 376.08,-1062.45 415.03,-1011.74"/>
+<polygon fill="#4f6580" stroke="#4f6580" stroke-width="1.1" points="162.19,-1336.18 156.03,-1331.07 157.05,-1329.84 163.21,-1334.95 162.19,-1336.18"/>
+<polyline fill="none" stroke="#4f6580" stroke-width="1.1" points="158.6,-1334.24 161.15,-1331.16 "/>
+<polygon fill="#4f6580" stroke="#4f6580" stroke-width="1.1" points="415.06,-1011.71 422.78,-1007.55 417.49,-1008.53 419.93,-1005.36 419.93,-1005.36 419.93,-1005.36 417.49,-1008.53 417.07,-1003.17 415.06,-1011.71 415.06,-1011.71"/>
+</g>
+
+<g id="edge9" class="edge">
+<title>nTB_M_H0125_DESTINATION&#45;&gt;nTB_R_H0253_ORDER_CONTROL_PRE</title>
+<path fill="none" stroke="#4f6580" stroke-width="1.1" d="M213.41,-1333.03C252.78,-1319.05 301.3,-1304.27 346.3,-1297.3 568.71,-1262.85 829.87,-1301.71 985.61,-1333.19"/>
+<polygon fill="#4f6580" stroke="#4f6580" stroke-width="1.1" points="211.73,-1337.88 209.04,-1330.34 210.55,-1329.81 213.24,-1337.34 211.73,-1337.88"/>
+<polyline fill="none" stroke="#4f6580" stroke-width="1.1" points="209.63,-1334.38 213.4,-1333.03 "/>
+<polygon fill="#4f6580" stroke="#4f6580" stroke-width="1.1" points="986.03,-1333.27 993.15,-1338.39 989.95,-1334.07 993.87,-1334.87 993.87,-1334.87 993.87,-1334.87 989.95,-1334.07 994.59,-1331.34 986.03,-1333.27 986.03,-1333.27"/>
+</g>
+
+<g id="edge20" class="edge">
+<title>nTB_M_PART_MASTER&#45;&gt;nTB_M_PART_CANDIDATE</title>
+<path fill="none" stroke="#4f6580" stroke-width="1.1" stroke-dasharray="5,2" d="M580.8,-1365C604.59,-1365 629.81,-1365 654.24,-1365"/>
+<polygon fill="#4f6580" stroke="#4f6580" stroke-width="1.1" points="577.37,-1369 577.37,-1361 578.97,-1361 578.97,-1369 577.37,-1369"/>
+<polyline fill="none" stroke="#4f6580" stroke-width="1.1" points="576.57,-1365 580.57,-1365 "/>
+<polygon fill="#4f6580" stroke="#4f6580" stroke-width="1.1" points="654.49,-1365 662.49,-1368.6 658.49,-1365 662.49,-1365 662.49,-1365 662.49,-1365 658.49,-1365 662.49,-1361.4 654.49,-1365 654.49,-1365"/>
+</g>
+
+<g id="edge7" class="edge">
+<title>nTB_M_PART_CANDIDATE&#45;&gt;nTB_R_ACTUAL_DEMAND_SUMMARY</title>
+<path fill="none" stroke="#4f6580" stroke-width="1.1" stroke-dasharray="5,2" d="M678.85,-1324.53C566.56,-1284.72 394.86,-1223.84 274.08,-1181.02"/>
+<polygon fill="#4f6580" stroke="#4f6580" stroke-width="1.1" points="683.49,-1321.93 680.81,-1329.47 679.3,-1328.93 681.98,-1321.39 683.49,-1321.93"/>
+<polyline fill="none" stroke="#4f6580" stroke-width="1.1" points="682.9,-1325.97 679.13,-1324.63 "/>
+<polygon fill="#4f6580" stroke="#4f6580" stroke-width="1.1" points="273.74,-1180.9 267.41,-1174.83 269.97,-1179.56 266.2,-1178.23 266.2,-1178.23 266.2,-1178.23 269.97,-1179.56 265,-1181.62 273.74,-1180.9 273.74,-1180.9"/>
+</g>
+
+<g id="edge3" class="edge">
+<title>nTB_M_PART_CANDIDATE&#45;&gt;nTB_M_PART_CANDIDATE_DEST</title>
+<path fill="none" stroke="#4f6580" stroke-width="1.1" d="M759.15,-1322.33C700.64,-1248.56 580.35,-1096.93 512.46,-1011.35"/>
+<polygon fill="#4f6580" stroke="#4f6580" stroke-width="1.1" points="764.59,-1322.75 758.32,-1327.72 757.33,-1326.47 763.6,-1321.5 764.59,-1322.75"/>
+<polyline fill="none" stroke="#4f6580" stroke-width="1.1" points="761.95,-1325.86 759.47,-1322.73 "/>
+<polygon fill="#4f6580" stroke="#4f6580" stroke-width="1.1" points="512.43,-1011.31 510.28,-1002.81 509.95,-1008.18 507.46,-1005.05 507.46,-1005.05 507.46,-1005.05 509.95,-1008.18 504.64,-1007.28 512.43,-1011.31 512.43,-1011.31"/>
+</g>
+
+<g id="edge4" class="edge">
+<title>nTB_M_PART_CANDIDATE&#45;&gt;nTB_R_PART_DAD_RESULT</title>
+<path fill="none" stroke="#4f6580" stroke-width="1.1" d="M769.66,-1321.92C747.14,-1279.9 712.49,-1213.98 684.8,-1155.7 629.49,-1039.31 640.83,-996.92 569.2,-889.8 553.57,-866.43 532.67,-843.58 513.54,-824.83"/>
+<polygon fill="#4f6580" stroke="#4f6580" stroke-width="1.1" points="774.81,-1323.07 767.76,-1326.85 767,-1325.44 774.05,-1321.66 774.81,-1323.07"/>
+<polyline fill="none" stroke="#4f6580" stroke-width="1.1" points="771.66,-1325.66 769.77,-1322.14 "/>
+<polygon fill="#4f6580" stroke="#4f6580" stroke-width="1.1" points="513.42,-824.71 510.18,-816.56 510.55,-821.93 507.67,-819.15 507.67,-819.15 507.67,-819.15 510.55,-821.93 505.17,-821.73 513.42,-824.71 513.42,-824.71"/>
+</g>
+
+<g id="edge5" class="edge">
+<title>nTB_M_PART_CANDIDATE&#45;&gt;nTB_H_PART_CANDIDATE</title>
+<path fill="none" stroke="#4f6580" stroke-width="1.1" d="M793,-1321.65C793,-1277.61 793,-1209.22 793,-1161.08"/>
+<polygon fill="#4f6580" stroke="#4f6580" stroke-width="1.1" points="797,-1324.99 789,-1324.99 789,-1323.39 797,-1323.39 797,-1324.99"/>
+<polyline fill="none" stroke="#4f6580" stroke-width="1.1" points="793,-1325.79 793,-1321.79 "/>
+<polygon fill="#4f6580" stroke="#4f6580" stroke-width="1.1" points="793,-1160.94 796.6,-1152.94 793,-1156.94 793,-1152.94 793,-1152.94 793,-1152.94 793,-1156.94 789.4,-1152.94 793,-1160.94 793,-1160.94"/>
+</g>
+
+<g id="edge6" class="edge">
+<title>nTB_M_PART_CANDIDATE&#45;&gt;nTB_R_CROSSDOCK_IF_RESULT</title>
+<path fill="none" stroke="#4f6580" stroke-width="1.1" d="M826.14,-1322.05C868.01,-1262.38 931.19,-1150.83 901.2,-1054.3 888.16,-1012.34 859.61,-971.65 835.11,-942.17"/>
+<polygon fill="#4f6580" stroke="#4f6580" stroke-width="1.1" points="827.39,-1327.21 820.86,-1322.6 821.78,-1321.29 828.32,-1325.91 827.39,-1327.21"/>
+<polyline fill="none" stroke="#4f6580" stroke-width="1.1" points="823.66,-1325.56 825.97,-1322.29 "/>
+<polygon fill="#4f6580" stroke="#4f6580" stroke-width="1.1" points="835.11,-942.17 832.7,-933.74 832.53,-939.12 829.95,-936.06 829.95,-936.06 829.95,-936.06 832.53,-939.12 827.2,-938.38 835.11,-942.17 835.11,-942.17"/>
+</g>
+
+<g id="edge8" class="edge">
+<title>nTB_M_PART_CANDIDATE&#45;&gt;nTB_R_H0253_ORDER_CONTROL_PRE</title>
+<path fill="none" stroke="#4f6580" stroke-width="1.1" stroke-dasharray="5,2" d="M927.96,-1365C947.01,-1365 966.63,-1365 985.73,-1365"/>
+<polygon fill="#4f6580" stroke="#4f6580" stroke-width="1.1" points="924.7,-1369 924.7,-1361 926.3,-1361 926.3,-1369 924.7,-1369"/>
+<polyline fill="none" stroke="#4f6580" stroke-width="1.1" points="923.9,-1365 927.9,-1365 "/>
+<polygon fill="#4f6580" stroke="#4f6580" stroke-width="1.1" points="985.88,-1365 993.88,-1368.6 989.88,-1365 993.88,-1365 993.88,-1365 993.88,-1365 989.88,-1365 993.88,-1361.4 985.88,-1365 985.88,-1365"/>
+</g>
+
+<g id="edge11" class="edge">
+<title>nTB_R_H0253_ORDER_CONTROL_PRE&#45;&gt;nTB_R_INSTRUCTION</title>
+<path fill="none" stroke="#4f6580" stroke-width="1.1" d="M1256.09,-1365C1278.82,-1365 1302.38,-1365 1324.97,-1365"/>
+<polygon fill="#4f6580" stroke="#4f6580" stroke-width="1.1" points="1252.8,-1369 1252.8,-1361 1254.4,-1361 1254.4,-1369 1252.8,-1369"/>
+<polyline fill="none" stroke="#4f6580" stroke-width="1.1" points="1252,-1365 1256,-1365 "/>
+<polygon fill="#4f6580" stroke="#4f6580" stroke-width="1.1" points="1325.25,-1365 1333.25,-1368.6 1329.25,-1365 1333.25,-1365 1333.25,-1365 1333.25,-1365 1329.25,-1365 1333.25,-1361.4 1325.25,-1365 1325.25,-1365"/>
+</g>
+
+<g id="edge12" class="edge">
+<title>nTB_R_H0253_ORDER_CONTROL_PRE&#45;&gt;nTB_T_INSTRUCTION</title>
+<path fill="none" stroke="#4f6580" stroke-width="1.1" d="M1202.24,-1271.35C1251.04,-1213.68 1313.7,-1139.62 1364.18,-1079.97"/>
+<polygon fill="#4f6580" stroke="#4f6580" stroke-width="1.1" points="1203.11,-1276.52 1197,-1271.35 1198.03,-1270.13 1204.14,-1275.3 1203.11,-1276.52"/>
+<polyline fill="none" stroke="#4f6580" stroke-width="1.1" points="1199.54,-1274.55 1202.12,-1271.49 "/>
+<polygon fill="#4f6580" stroke="#4f6580" stroke-width="1.1" points="1364.48,-1079.62 1372.4,-1075.83 1367.06,-1076.56 1369.65,-1073.51 1369.65,-1073.51 1369.65,-1073.51 1367.06,-1076.56 1366.9,-1071.18 1364.48,-1079.62 1364.48,-1079.62"/>
+</g>
+
+<g id="edge10" class="edge">
+<title>nTB_R_INSTRUCTION&#45;&gt;nTB_H_CROSSDOCK_ORDER_CHANGE</title>
+<path fill="none" stroke="#4f6580" stroke-width="1.1" d="M1401.83,-1254.13C1328.33,-1094.88 1196.03,-808.24 1144.43,-696.44"/>
+<polygon fill="#4f6580" stroke="#4f6580" stroke-width="1.1" points="1406.89,-1255.55 1399.63,-1258.91 1398.96,-1257.45 1406.22,-1254.1 1406.89,-1255.55"/>
+<polyline fill="none" stroke="#4f6580" stroke-width="1.1" points="1403.6,-1257.96 1401.92,-1254.33 "/>
+<polygon fill="#4f6580" stroke="#4f6580" stroke-width="1.1" points="1144.36,-696.28 1144.27,-687.5 1142.68,-692.64 1141.01,-689.01 1141.01,-689.01 1141.01,-689.01 1142.68,-692.64 1137.74,-690.52 1144.36,-696.28 1144.36,-696.28"/>
+</g>
+
+<g id="edge13" class="edge">
+<title>nTB_R_PRA_DAILY_ORDER_MANIFEST&#45;&gt;nTB_R_PRA_DAILY_ORDER_PART</title>
+<path fill="none" stroke="#4f6580" stroke-width="1.1" d="M1783,-1329.83C1783,-1208.88 1783,-809.83 1783,-671.62"/>
+<polygon fill="#4f6580" stroke="#4f6580" stroke-width="1.1" points="1787,-1333.3 1779,-1333.3 1779,-1331.7 1787,-1331.7 1787,-1333.3"/>
+<polyline fill="none" stroke="#4f6580" stroke-width="1.1" points="1783,-1334.1 1783,-1330.1 "/>
+<polygon fill="#4f6580" stroke="#4f6580" stroke-width="1.1" points="1783,-671.29 1786.6,-663.29 1783,-667.29 1783,-663.29 1783,-663.29 1783,-663.29 1783,-667.29 1779.4,-663.29 1783,-671.29 1783,-671.29"/>
+</g>
+
+<g id="edge19" class="edge">
+<title>nTB_R_PRA_DAILY_ORDER_MANIFEST&#45;&gt;nTB_R_DAILY_ORDER_MANIFEST</title>
+<path fill="none" stroke="#4f6580" stroke-width="1.1" d="M1893.61,-1365C1923.6,-1365 1956.28,-1365 1987.05,-1365"/>
+<polygon fill="#4f6580" stroke="#4f6580" stroke-width="1.1" points="1890.03,-1369 1890.03,-1361 1891.63,-1361 1891.63,-1369 1890.03,-1369"/>
+<polyline fill="none" stroke="#4f6580" stroke-width="1.1" points="1889.23,-1365 1893.23,-1365 "/>
+<polygon fill="#4f6580" stroke="#4f6580" stroke-width="1.1" points="1987.25,-1365 1995.25,-1368.6 1991.25,-1365 1995.25,-1365 1995.25,-1365 1995.25,-1365 1991.25,-1365 1995.25,-1361.4 1987.25,-1365 1987.25,-1365"/>
+</g>
+
+<g id="edge15" class="edge">
+<title>nTB_R_PRA_DAILY_ORDER_PART&#45;&gt;nTB_R_INSTRUCTION</title>
+<path fill="none" stroke="#4f6580" stroke-width="1.1" d="M1763.84,-667.02C1713.93,-779.09 1578.62,-1082.93 1504.04,-1250.4"/>
+<polygon fill="#4f6580" stroke="#4f6580" stroke-width="1.1" points="1761.63,-662.16 1768.94,-665.41 1768.28,-666.88 1760.98,-663.62 1761.63,-662.16"/>
+<polyline fill="none" stroke="#4f6580" stroke-width="1.1" points="1765.61,-663.06 1763.98,-666.71 "/>
+<polygon fill="#4f6580" stroke="#4f6580" stroke-width="1.1" points="1504.01,-1250.47 1497.46,-1256.31 1502.38,-1254.12 1500.75,-1257.78 1500.75,-1257.78 1500.75,-1257.78 1502.38,-1254.12 1504.04,-1259.24 1504.01,-1250.47 1504.01,-1250.47"/>
+</g>
+
+<g id="edge16" class="edge">
+<title>nTB_R_PRA_DAILY_ORDER_PART&#45;&gt;nTB_T_INSTRUCTION</title>
+<path fill="none" stroke="#4f6580" stroke-width="1.1" d="M1743.24,-666.29C1696.08,-716.45 1615.77,-801.88 1551.56,-870.17"/>
+<polygon fill="#4f6580" stroke="#4f6580" stroke-width="1.1" points="1742.64,-661.09 1748.47,-666.57 1747.38,-667.73 1741.55,-662.25 1742.64,-661.09"/>
+<polyline fill="none" stroke="#4f6580" stroke-width="1.1" points="1746.11,-663.24 1743.37,-666.16 "/>
+<polygon fill="#4f6580" stroke="#4f6580" stroke-width="1.1" points="1551.27,-870.47 1543.17,-873.84 1548.53,-873.39 1545.79,-876.3 1545.79,-876.3 1545.79,-876.3 1548.53,-873.39 1548.42,-878.77 1551.27,-870.47 1551.27,-870.47"/>
+</g>
+
+<g id="edge14" class="edge">
+<title>nTB_R_PRA_DAILY_ORDER_PART&#45;&gt;nTB_R_PRA_DAILY_ORDER_MAPPED</title>
+<path fill="none" stroke="#4f6580" stroke-width="1.1" d="M1783,-580.79C1783,-484.68 1783,-253.3 1783,-146.61"/>
+<polygon fill="#4f6580" stroke="#4f6580" stroke-width="1.1" points="1787,-584.01 1779,-584.01 1779,-582.41 1787,-582.41 1787,-584.01"/>
+<polyline fill="none" stroke="#4f6580" stroke-width="1.1" points="1783,-584.81 1783,-580.81 "/>
+<polygon fill="#4f6580" stroke="#4f6580" stroke-width="1.1" points="1783,-146.53 1786.6,-138.53 1783,-142.53 1783,-138.53 1783,-138.53 1783,-138.53 1783,-142.53 1779.4,-138.53 1783,-146.53 1783,-146.53"/>
+</g>
+
+<g id="edge17" class="edge">
+<title>nTB_R_DAILY_ORDER_MANIFEST&#45;&gt;nTB_R_DAILY_ORDER_PART</title>
+<path fill="none" stroke="#4f6580" stroke-width="1.1" d="M2113,-1304.57C2113,-1156.39 2113,-776.03 2113,-623.6"/>
+<polygon fill="#4f6580" stroke="#4f6580" stroke-width="1.1" points="2117,-1308.16 2109,-1308.16 2109,-1306.56 2117,-1306.56 2117,-1308.16"/>
+<polyline fill="none" stroke="#4f6580" stroke-width="1.1" points="2113,-1308.96 2113,-1304.96 "/>
+<polygon fill="#4f6580" stroke="#4f6580" stroke-width="1.1" points="2113,-623.2 2116.6,-615.2 2113,-619.2 2113,-615.2 2113,-615.2 2113,-615.2 2113,-619.2 2109.4,-615.2 2113,-623.2 2113,-623.2"/>
+</g>
+
+<g id="edge18" class="edge">
+<title>nTB_R_DAILY_ORDER_PART&#45;&gt;nTB_R_INSTRUCTION</title>
+<path fill="none" stroke="#4f6580" stroke-width="1.1" d="M2064.53,-618.19C1955.27,-751.62 1688.23,-1077.73 1545.89,-1251.56"/>
+<polygon fill="#4f6580" stroke="#4f6580" stroke-width="1.1" points="2063.51,-613.12 2069.7,-618.19 2068.69,-619.43 2062.5,-614.36 2063.51,-613.12"/>
+<polyline fill="none" stroke="#4f6580" stroke-width="1.1" points="2067.11,-615.04 2064.58,-618.13 "/>
+<polygon fill="#4f6580" stroke="#4f6580" stroke-width="1.1" points="1545.74,-1251.74 1537.89,-1255.65 1543.21,-1254.84 1540.67,-1257.93 1540.67,-1257.93 1540.67,-1257.93 1543.21,-1254.84 1543.46,-1260.21 1545.74,-1251.74 1545.74,-1251.74"/>
+</g>
+
+<g id="edge21" class="edge">
+<title>nTB_R_CASE_LABEL_LAST_SEQ&#45;&gt;nTB_R_DAILY_ORDER_MANIFEST</title>
+<path fill="none" stroke="#4f6580" stroke-width="1.1" stroke-dasharray="5,2" d="M2097.65,-82.32C2069.93,-163.12 2012.51,-342.87 1992.3,-499.8 1953.65,-799.86 2048.52,-1157.62 2092.3,-1300.98"/>
+<polygon fill="#4f6580" stroke="#4f6580" stroke-width="1.1" points="2095.07,-77.54 2102.63,-80.14 2102.11,-81.65 2094.55,-79.05 2095.07,-77.54"/>
+<polyline fill="none" stroke="#4f6580" stroke-width="1.1" points="2099.11,-78.08 2097.81,-81.86 "/>
+<polygon fill="#4f6580" stroke="#4f6580" stroke-width="1.1" points="2092.37,-1301.23 2091.28,-1309.93 2093.55,-1305.05 2094.72,-1308.88 2094.72,-1308.88 2094.72,-1308.88 2093.55,-1305.05 2098.16,-1307.82 2092.37,-1301.23 2092.37,-1301.23"/>
+</g>
+
+<g id="node1" class="node">
+<title>nTB_M_H0125_DESTINATION</title>
+<polygon fill="#ffffff" stroke="transparent" points="41,-1338.5 41,-1391.5 225,-1391.5 225,-1338.5 41,-1338.5"/>
+<polygon fill="#5b4a8b" stroke="transparent" points="42,-1373 42,-1390 224,-1390 224,-1373 42,-1373"/>
+<text text-anchor="start" x="45" y="-1380" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00" fill="#ffffff">TB_M_H0125_DESTINATION</text>
+<text text-anchor="start" x="45" y="-1362" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">DESTINATION_CD</text>
+<text text-anchor="start" x="139" y="-1362" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(7)</text>
+<text text-anchor="start" x="206" y="-1363" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="45" y="-1345" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">+ 14 other columns</text>
+<polygon fill="none" stroke="#c9dcef" points="41,-1338.5 41,-1391.5 225,-1391.5 225,-1338.5 41,-1338.5"/>
+</g>
+
+<g id="node2" class="node">
+<title>nTB_R_ACTUAL_DEMAND_SUMMARY</title>
+<polygon fill="#ffffff" stroke="transparent" points="8,-1070.5 8,-1191.5 258,-1191.5 258,-1070.5 8,-1070.5"/>
+<polygon fill="#5b4a8b" stroke="transparent" points="9,-1173 9,-1190 257,-1190 257,-1173 9,-1173"/>
+<text text-anchor="start" x="12" y="-1180" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00" fill="#ffffff">TB_R_ACTUAL_DEMAND_SUMMARY</text>
+<text text-anchor="start" x="12" y="-1162" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">GROUPING_BUYER_CD</text>
+<text text-anchor="start" x="138" y="-1162" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(5)</text>
+<text text-anchor="start" x="220" y="-1163" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK, FK</text>
+<text text-anchor="start" x="12" y="-1145" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">GROUPING_PD_CD</text>
+<text text-anchor="start" x="138" y="-1145" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(2)</text>
+<text text-anchor="start" x="220" y="-1146" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK, FK</text>
+<text text-anchor="start" x="12" y="-1128" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">ORDER_TYPE_GROUP</text>
+<text text-anchor="start" x="138" y="-1128" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">CHAR(1)</text>
+<text text-anchor="start" x="220" y="-1129" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="12" y="-1111" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">DEMAND_MONTH_YEAR</text>
+<text text-anchor="start" x="138" y="-1111" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">CHAR(6)</text>
+<text text-anchor="start" x="220" y="-1112" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="12" y="-1094" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">PART_NO</text>
+<text text-anchor="start" x="138" y="-1094" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(TBD)</text>
+<text text-anchor="start" x="220" y="-1095" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK, FK</text>
+<text text-anchor="start" x="12" y="-1077" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">+ 15 other columns</text>
+<polygon fill="none" stroke="#c9dcef" points="8,-1070.5 8,-1191.5 258,-1191.5 258,-1070.5 8,-1070.5"/>
+</g>
+
+<g id="node3" class="node">
+<title>nTB_M_PART_MASTER</title>
+<polygon fill="#ffffff" stroke="transparent" points="357.5,-1304.5 357.5,-1425.5 568.5,-1425.5 568.5,-1304.5 357.5,-1304.5"/>
+<polygon fill="#595959" stroke="transparent" points="359,-1407 359,-1424 568,-1424 568,-1407 359,-1407"/>
+<text text-anchor="start" x="362" y="-1414" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00" fill="#ffffff">TB_M_PART_MASTER</text>
+<text text-anchor="start" x="362" y="-1396" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">PART_NO</text>
+<text text-anchor="start" x="477" y="-1396" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(15)</text>
+<text text-anchor="start" x="550" y="-1397" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="362" y="-1379" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">SUPPLIER_CD</text>
+<text text-anchor="start" x="477" y="-1379" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(4)</text>
+<text text-anchor="start" x="550" y="-1380" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="362" y="-1362" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">SUPPLIER_PLANT_CD</text>
+<text text-anchor="start" x="477" y="-1362" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(1)</text>
+<text text-anchor="start" x="550" y="-1363" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="362" y="-1345" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">DOCK_CD</text>
+<text text-anchor="start" x="477" y="-1345" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(2)</text>
+<text text-anchor="start" x="550" y="-1346" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="362" y="-1328" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">VALID_FROM</text>
+<text text-anchor="start" x="477" y="-1328" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">DATETIME</text>
+<text text-anchor="start" x="550" y="-1329" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="362" y="-1311" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">+ 25 other columns</text>
+<polygon fill="none" stroke="#c9dcef" points="357.5,-1304.5 357.5,-1425.5 568.5,-1425.5 568.5,-1304.5 357.5,-1304.5"/>
+</g>
+
+<g id="node4" class="node">
+<title>nTB_M_PART_CANDIDATE_DEST</title>
+<polygon fill="#ffffff" stroke="transparent" points="368,-897 368,-1001 558,-1001 558,-897 368,-897"/>
+<polygon fill="#123a6b" stroke="transparent" points="369,-983 369,-1000 557,-1000 557,-983 369,-983"/>
+<text text-anchor="start" x="372" y="-990" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00" fill="#ffffff">TB_M_PART_CANDIDATE_DEST</text>
+<text text-anchor="start" x="372" y="-972" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">PART_NO</text>
+<text text-anchor="start" x="447" y="-972" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(15)</text>
+<text text-anchor="start" x="520" y="-973" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK, FK</text>
+<text text-anchor="start" x="372" y="-955" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">DEST_CODE</text>
+<text text-anchor="start" x="447" y="-955" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">CHAR(7)</text>
+<text text-anchor="start" x="520" y="-956" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK, FK</text>
+<text text-anchor="start" x="372" y="-938" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">PERIOD</text>
+<text text-anchor="start" x="447" y="-938" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">DATETIME</text>
+<text text-anchor="start" x="520" y="-939" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="372" y="-921" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">ORDER_TYPE</text>
+<text text-anchor="start" x="447" y="-921" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR (5)</text>
+<text text-anchor="start" x="520" y="-922" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="372" y="-904" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">+ 7 other columns</text>
+<polygon fill="none" stroke="#c9dcef" points="368,-897 368,-1001 558,-1001 558,-897 368,-897"/>
+</g>
+
+<g id="node5" class="node">
+<title>nTB_R_PART_DAD_RESULT</title>
+<polygon fill="#ffffff" stroke="transparent" points="375,-745 375,-815 551,-815 551,-745 375,-745"/>
+<polygon fill="#123a6b" stroke="transparent" points="376,-797 376,-814 550,-814 550,-797 376,-797"/>
+<text text-anchor="start" x="379" y="-804" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00" fill="#ffffff">TB_R_PART_DAD_RESULT</text>
+<text text-anchor="start" x="379" y="-786" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">PERIOD</text>
+<text text-anchor="start" x="431" y="-786" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">CHAR(6)</text>
+<text text-anchor="start" x="513" y="-787" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="379" y="-769" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">PART_NO</text>
+<text text-anchor="start" x="431" y="-769" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(TBD)</text>
+<text text-anchor="start" x="513" y="-770" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK, FK</text>
+<text text-anchor="start" x="379" y="-752" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">+ 12 other columns</text>
+<polygon fill="none" stroke="#c9dcef" points="375,-745 375,-815 551,-815 551,-745 375,-745"/>
+</g>
+
+<g id="node6" class="node">
+<title>nTB_M_PART_CANDIDATE</title>
+<polygon fill="#ffffff" stroke="transparent" points="670.5,-1330 670.5,-1400 915.5,-1400 915.5,-1330 670.5,-1330"/>
+<polygon fill="#123a6b" stroke="transparent" points="672,-1382 672,-1399 915,-1399 915,-1382 672,-1382"/>
+<text text-anchor="start" x="675" y="-1389" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00" fill="#ffffff">TB_M_PART_CANDIDATE</text>
+<text text-anchor="start" x="675" y="-1371" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">PART_NO</text>
+<text text-anchor="start" x="805" y="-1371" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(15)</text>
+<text text-anchor="start" x="878" y="-1372" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK, FK</text>
+<text text-anchor="start" x="675" y="-1354" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">EFFECTIVE_START_DATE</text>
+<text text-anchor="start" x="805" y="-1354" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(6)</text>
+<text text-anchor="start" x="878" y="-1355" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="675" y="-1337" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">+ 15 other columns</text>
+<polygon fill="none" stroke="#c9dcef" points="670.5,-1330 670.5,-1400 915.5,-1400 915.5,-1330 670.5,-1330"/>
+</g>
+
+<g id="node7" class="node">
+<title>nTB_H_PART_CANDIDATE</title>
+<polygon fill="#ffffff" stroke="transparent" points="696,-1061.5 696,-1148.5 890,-1148.5 890,-1061.5 696,-1061.5"/>
+<polygon fill="#123a6b" stroke="transparent" points="697,-1130 697,-1147 889,-1147 889,-1130 697,-1130"/>
+<text text-anchor="start" x="700" y="-1137" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00" fill="#ffffff">TB_H_PART_CANDIDATE</text>
+<text text-anchor="start" x="700" y="-1119" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">PART_NO</text>
+<text text-anchor="start" x="770" y="-1119" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(TBD)</text>
+<text text-anchor="start" x="852" y="-1120" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK, FK</text>
+<text text-anchor="start" x="700" y="-1102" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">PERIOD</text>
+<text text-anchor="start" x="770" y="-1102" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(6)</text>
+<text text-anchor="start" x="852" y="-1103" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="700" y="-1085" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">FIELD_NAME</text>
+<text text-anchor="start" x="770" y="-1085" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(30)</text>
+<text text-anchor="start" x="852" y="-1086" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="700" y="-1068" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">+ 10 other columns</text>
+<polygon fill="none" stroke="#c9dcef" points="696,-1061.5 696,-1148.5 890,-1148.5 890,-1061.5 696,-1061.5"/>
+</g>
+
+<g id="node8" class="node">
+<title>nTB_R_CROSSDOCK_IF_RESULT</title>
+<polygon fill="#ffffff" stroke="transparent" points="684.5,-862 684.5,-932 901.5,-932 901.5,-862 684.5,-862"/>
+<polygon fill="#123a6b" stroke="transparent" points="686,-914 686,-931 901,-931 901,-914 686,-914"/>
+<text text-anchor="start" x="689" y="-921" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00" fill="#ffffff">TB_R_CROSSDOCK_IF_RESULT</text>
+<text text-anchor="start" x="689" y="-903" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">PART_NO</text>
+<text text-anchor="start" x="782" y="-903" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(TBD)</text>
+<text text-anchor="start" x="864" y="-904" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK, FK</text>
+<text text-anchor="start" x="689" y="-886" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">TARGET_SYSTEM</text>
+<text text-anchor="start" x="782" y="-886" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(10)</text>
+<text text-anchor="start" x="864" y="-887" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="689" y="-869" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">+ 9 other columns</text>
+<polygon fill="none" stroke="#c9dcef" points="684.5,-862 684.5,-932 901.5,-932 901.5,-862 684.5,-862"/>
+</g>
+
+<g id="node9" class="node">
+<title>nTB_T_PART_CANDIDATE_DEST</title>
+<polygon fill="#ffffff" stroke="transparent" points="711.5,-593 711.5,-629 874.5,-629 874.5,-593 711.5,-593"/>
+<polygon fill="#d9d9d9" stroke="transparent" points="713,-611 713,-628 874,-628 874,-611 713,-611"/>
+<text text-anchor="start" x="716" y="-618" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00" fill="#0f2540">TB_T_PART_CANDIDATE_DEST</text>
+<text text-anchor="start" x="716" y="-600" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">+ 6 other columns</text>
+<polygon fill="none" stroke="#c9dcef" points="711.5,-593 711.5,-629 874.5,-629 874.5,-593 711.5,-593"/>
+</g>
+
+<g id="node10" class="node">
+<title>nTB_T_PART_CANDIDATE</title>
+<polygon fill="#ffffff" stroke="transparent" points="727.5,-476 727.5,-512 858.5,-512 858.5,-476 727.5,-476"/>
+<polygon fill="#d9d9d9" stroke="transparent" points="729,-494 729,-511 858,-511 858,-494 729,-494"/>
+<text text-anchor="start" x="732" y="-501" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00" fill="#0f2540">TB_T_PART_CANDIDATE</text>
+<text text-anchor="start" x="732" y="-483" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">+ 11 other columns</text>
+<polygon fill="none" stroke="#c9dcef" points="727.5,-476 727.5,-512 858.5,-512 858.5,-476 727.5,-476"/>
+</g>
+
+<g id="node11" class="node">
+<title>nTB_R_H0253_ORDER_CONTROL_PRE</title>
+<polygon fill="#ffffff" stroke="transparent" points="1002,-1279 1002,-1451 1244,-1451 1244,-1279 1002,-1279"/>
+<polygon fill="#5b4a8b" stroke="transparent" points="1003,-1433 1003,-1450 1243,-1450 1243,-1433 1003,-1433"/>
+<text text-anchor="start" x="1006" y="-1440" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00" fill="#ffffff">TB_R_H0253_ORDER_CONTROL_PRE</text>
+<text text-anchor="start" x="1006" y="-1422" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">CUSTOMER_CD</text>
+<text text-anchor="start" x="1133" y="-1422" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(7)</text>
+<text text-anchor="start" x="1206" y="-1423" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="1006" y="-1405" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">CUSTOMER_ORDER_NO</text>
+<text text-anchor="start" x="1133" y="-1405" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(8)</text>
+<text text-anchor="start" x="1206" y="-1406" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="1006" y="-1388" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">ORDER_DT</text>
+<text text-anchor="start" x="1133" y="-1388" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">DATE</text>
+<text text-anchor="start" x="1206" y="-1389" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="1006" y="-1371" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">ORDER_TIME</text>
+<text text-anchor="start" x="1133" y="-1371" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(6)</text>
+<text text-anchor="start" x="1206" y="-1372" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="1006" y="-1354" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">DESTINATION_CD</text>
+<text text-anchor="start" x="1133" y="-1354" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(7)</text>
+<text text-anchor="start" x="1206" y="-1355" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK, FK</text>
+<text text-anchor="start" x="1006" y="-1337" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">DETAILED_ITEM_NO</text>
+<text text-anchor="start" x="1133" y="-1337" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(4)</text>
+<text text-anchor="start" x="1206" y="-1338" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="1006" y="-1320" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">SERIAL_NO</text>
+<text text-anchor="start" x="1133" y="-1320" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(7)</text>
+<text text-anchor="start" x="1206" y="-1321" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="1006" y="-1303" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">SHIPPING_PART_NO</text>
+<text text-anchor="start" x="1133" y="-1303" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(15)</text>
+<text text-anchor="start" x="1206" y="-1304" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">FK</text>
+<text text-anchor="start" x="1006" y="-1286" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">+ 44 other columns</text>
+<polygon fill="none" stroke="#c9dcef" points="1002,-1279 1002,-1451 1244,-1451 1244,-1279 1002,-1279"/>
+</g>
+
+<g id="node12" class="node">
+<title>nTB_H_CROSSDOCK_ORDER_CHANGE</title>
+<polygon fill="#ffffff" stroke="transparent" points="1024,-615 1024,-685 1222,-685 1222,-615 1024,-615"/>
+<polygon fill="#123a6b" stroke="transparent" points="1025,-667 1025,-684 1221,-684 1221,-667 1025,-667"/>
+<text text-anchor="start" x="1028" y="-674" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00" fill="#ffffff">TB_H_CROSSDOCK_ORDER_CHANGE</text>
+<text text-anchor="start" x="1028" y="-656" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">HIST_ID</text>
+<text text-anchor="start" x="1159" y="-656" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">BIGINT</text>
+<text text-anchor="start" x="1201" y="-657" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="1028" y="-639" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">FROM_INSTRUCTION_ID</text>
+<text text-anchor="start" x="1159" y="-639" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">BIGINT</text>
+<text text-anchor="start" x="1201" y="-640" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">FK</text>
+<text text-anchor="start" x="1028" y="-622" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">+ 19 other columns</text>
+<polygon fill="none" stroke="#c9dcef" points="1024,-615 1024,-685 1222,-685 1222,-615 1024,-615"/>
+</g>
+
+<g id="node13" class="node">
+<title>nTB_R_INSTRUCTION</title>
+<polygon fill="#ffffff" stroke="transparent" points="1341.5,-1262 1341.5,-1468 1564.5,-1468 1564.5,-1262 1341.5,-1262"/>
+<polygon fill="#123a6b" stroke="transparent" points="1343,-1450 1343,-1467 1564,-1467 1564,-1450 1343,-1450"/>
+<text text-anchor="start" x="1346" y="-1457" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00" fill="#ffffff">TB_R_INSTRUCTION</text>
+<text text-anchor="start" x="1346" y="-1439" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">INSTRUCTION_ID</text>
+<text text-anchor="start" x="1473" y="-1439" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">BIGINT</text>
+<text text-anchor="start" x="1546" y="-1440" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="1346" y="-1422" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">ORDER_DT</text>
+<text text-anchor="start" x="1473" y="-1422" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">DATE</text>
+<text text-anchor="start" x="1546" y="-1423" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">FK</text>
+<text text-anchor="start" x="1346" y="-1405" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">DESTINATION_CD</text>
+<text text-anchor="start" x="1473" y="-1405" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(7)</text>
+<text text-anchor="start" x="1546" y="-1406" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">FK</text>
+<text text-anchor="start" x="1346" y="-1388" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">CUSTOMER_CD</text>
+<text text-anchor="start" x="1473" y="-1388" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(7)</text>
+<text text-anchor="start" x="1546" y="-1389" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">FK</text>
+<text text-anchor="start" x="1346" y="-1371" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">CUSTOMER_ORDER_NO</text>
+<text text-anchor="start" x="1473" y="-1371" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(8)</text>
+<text text-anchor="start" x="1546" y="-1372" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">FK</text>
+<text text-anchor="start" x="1346" y="-1354" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">DETAILED_ITEM_NO</text>
+<text text-anchor="start" x="1473" y="-1354" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(4)</text>
+<text text-anchor="start" x="1546" y="-1355" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">FK</text>
+<text text-anchor="start" x="1346" y="-1337" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">SERIAL_NO</text>
+<text text-anchor="start" x="1473" y="-1337" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(7)</text>
+<text text-anchor="start" x="1546" y="-1338" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">FK</text>
+<text text-anchor="start" x="1346" y="-1320" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">MANIFEST_NO</text>
+<text text-anchor="start" x="1473" y="-1320" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(10)</text>
+<text text-anchor="start" x="1546" y="-1321" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">FK</text>
+<text text-anchor="start" x="1346" y="-1303" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">MANIFEST_ITEM</text>
+<text text-anchor="start" x="1473" y="-1303" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(4)</text>
+<text text-anchor="start" x="1546" y="-1304" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">FK</text>
+<text text-anchor="start" x="1346" y="-1286" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">CASE_NO</text>
+<text text-anchor="start" x="1473" y="-1286" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(8)</text>
+<text text-anchor="start" x="1546" y="-1287" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">FK</text>
+<text text-anchor="start" x="1346" y="-1269" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">+ 17 other columns</text>
+<polygon fill="none" stroke="#c9dcef" points="1341.5,-1262 1341.5,-1468 1564.5,-1468 1564.5,-1262 1341.5,-1262"/>
+</g>
+
+<g id="node14" class="node">
+<title>nTB_T_INSTRUCTION</title>
+<polygon fill="#ffffff" stroke="transparent" points="1337,-880.5 1337,-1069.5 1569,-1069.5 1569,-880.5 1337,-880.5"/>
+<polygon fill="#a6a6a6" stroke="transparent" points="1338,-1051 1338,-1068 1568,-1068 1568,-1051 1338,-1051"/>
+<text text-anchor="start" x="1341" y="-1058" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00" fill="#0f2540">TB_T_INSTRUCTION</text>
+<text text-anchor="start" x="1341" y="-1040" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">INSTRUCTION_ID</text>
+<text text-anchor="start" x="1468" y="-1040" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">BIGINT</text>
+<text text-anchor="start" x="1550" y="-1041" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="1341" y="-1023" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">CUSTOMER_CD</text>
+<text text-anchor="start" x="1468" y="-1023" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(7)</text>
+<text text-anchor="start" x="1550" y="-1024" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">FK</text>
+<text text-anchor="start" x="1341" y="-1006" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">CUSTOMER_ORDER_NO</text>
+<text text-anchor="start" x="1468" y="-1006" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(8)</text>
+<text text-anchor="start" x="1550" y="-1007" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">FK</text>
+<text text-anchor="start" x="1341" y="-989" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">ORDER_DT</text>
+<text text-anchor="start" x="1468" y="-989" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">DATE</text>
+<text text-anchor="start" x="1550" y="-990" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">FK</text>
+<text text-anchor="start" x="1341" y="-972" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">DESTINATION_CD</text>
+<text text-anchor="start" x="1468" y="-972" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(7)</text>
+<text text-anchor="start" x="1550" y="-973" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">FK</text>
+<text text-anchor="start" x="1341" y="-955" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">DETAILED_ITEM_NO</text>
+<text text-anchor="start" x="1468" y="-955" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(4)</text>
+<text text-anchor="start" x="1550" y="-956" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">FK</text>
+<text text-anchor="start" x="1341" y="-938" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">SERIAL_NO</text>
+<text text-anchor="start" x="1468" y="-938" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(7)</text>
+<text text-anchor="start" x="1550" y="-939" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">FK</text>
+<text text-anchor="start" x="1341" y="-921" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">MANIFEST_NO</text>
+<text text-anchor="start" x="1468" y="-921" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(TBD)</text>
+<text text-anchor="start" x="1550" y="-922" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">FK</text>
+<text text-anchor="start" x="1341" y="-904" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">MANIFEST_ITEM</text>
+<text text-anchor="start" x="1468" y="-904" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(TBD)</text>
+<text text-anchor="start" x="1550" y="-905" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">FK</text>
+<text text-anchor="start" x="1341" y="-887" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">+ 30 other columns</text>
+<polygon fill="none" stroke="#c9dcef" points="1337,-880.5 1337,-1069.5 1569,-1069.5 1569,-880.5 1337,-880.5"/>
+</g>
+
+<g id="node15" class="node">
+<title>nTB_R_INSTRUCTION_H</title>
+<polygon fill="#ffffff" stroke="transparent" points="1352,-364 1352,-468 1554,-468 1554,-364 1352,-364"/>
+<polygon fill="#a6a6a6" stroke="transparent" points="1353,-450 1353,-467 1553,-467 1553,-450 1353,-450"/>
+<text text-anchor="start" x="1356" y="-457" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00" fill="#0f2540">TB_R_INSTRUCTION_H</text>
+<text text-anchor="start" x="1356" y="-439" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">ORDER_DT</text>
+<text text-anchor="start" x="1462" y="-439" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">DATE</text>
+<text text-anchor="start" x="1535" y="-440" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="1356" y="-422" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">SHIPPING_PART_NO</text>
+<text text-anchor="start" x="1462" y="-422" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(15)</text>
+<text text-anchor="start" x="1535" y="-423" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="1356" y="-405" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">SUPPLIER_CD</text>
+<text text-anchor="start" x="1462" y="-405" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(4)</text>
+<text text-anchor="start" x="1535" y="-406" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="1356" y="-388" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">SUPPLIER_PLANT</text>
+<text text-anchor="start" x="1462" y="-388" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(1)</text>
+<text text-anchor="start" x="1535" y="-389" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="1356" y="-371" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">+ 14 other columns</text>
+<polygon fill="none" stroke="#c9dcef" points="1352,-364 1352,-468 1554,-468 1554,-364 1352,-364"/>
+</g>
+
+<g id="node16" class="node">
+<title>nTB_R_INSTRUCTION_D</title>
+<polygon fill="#ffffff" stroke="transparent" points="1341.5,-48.5 1341.5,-237.5 1564.5,-237.5 1564.5,-48.5 1341.5,-48.5"/>
+<polygon fill="#a6a6a6" stroke="transparent" points="1343,-219 1343,-236 1564,-236 1564,-219 1343,-219"/>
+<text text-anchor="start" x="1346" y="-226" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00" fill="#0f2540">TB_R_INSTRUCTION_D</text>
+<text text-anchor="start" x="1346" y="-208" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">ORDER_DT</text>
+<text text-anchor="start" x="1473" y="-208" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">DATE</text>
+<text text-anchor="start" x="1546" y="-209" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="1346" y="-191" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">SHIPPING_PART_NO</text>
+<text text-anchor="start" x="1473" y="-191" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(15)</text>
+<text text-anchor="start" x="1546" y="-192" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="1346" y="-174" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">SUPPLIER_CD</text>
+<text text-anchor="start" x="1473" y="-174" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(4)</text>
+<text text-anchor="start" x="1546" y="-175" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="1346" y="-157" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">SUPPLIER_PLANT</text>
+<text text-anchor="start" x="1473" y="-157" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(1)</text>
+<text text-anchor="start" x="1546" y="-158" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="1346" y="-140" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">CUSTOMER_ORDER_NO</text>
+<text text-anchor="start" x="1473" y="-140" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(8)</text>
+<text text-anchor="start" x="1546" y="-141" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="1346" y="-123" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">DESTINATION_CD</text>
+<text text-anchor="start" x="1473" y="-123" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(7)</text>
+<text text-anchor="start" x="1546" y="-124" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="1346" y="-106" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">DETAILED_ITEM_NO</text>
+<text text-anchor="start" x="1473" y="-106" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(4)</text>
+<text text-anchor="start" x="1546" y="-107" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="1346" y="-89" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">SERIAL_NO</text>
+<text text-anchor="start" x="1473" y="-89" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(7)</text>
+<text text-anchor="start" x="1546" y="-90" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="1346" y="-72" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">SEQ_NO</text>
+<text text-anchor="start" x="1473" y="-72" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(4)</text>
+<text text-anchor="start" x="1546" y="-73" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="1346" y="-55" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">+ 26 other columns</text>
+<polygon fill="none" stroke="#c9dcef" points="1341.5,-48.5 1341.5,-237.5 1564.5,-237.5 1564.5,-48.5 1341.5,-48.5"/>
+</g>
+
+<g id="node17" class="node">
+<title>nTB_R_PRA_DAILY_ORDER_MANIFEST</title>
+<polygon fill="#ffffff" stroke="transparent" points="1685,-1338.5 1685,-1391.5 1881,-1391.5 1881,-1338.5 1685,-1338.5"/>
+<polygon fill="#595959" stroke="transparent" points="1686,-1373 1686,-1390 1880,-1390 1880,-1373 1686,-1373"/>
+<text text-anchor="start" x="1689" y="-1380" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00" fill="#ffffff">TB_R_PRA_DAILY_ORDER_MANIFEST</text>
+<text text-anchor="start" x="1689" y="-1362" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">MANIFEST_NO</text>
+<text text-anchor="start" x="1778" y="-1362" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(20)</text>
+<text text-anchor="start" x="1856" y="-1363" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="1689" y="-1345" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">+ 53 other columns</text>
+<polygon fill="none" stroke="#c9dcef" points="1685,-1338.5 1685,-1391.5 1881,-1391.5 1881,-1338.5 1685,-1338.5"/>
+</g>
+
+<g id="node18" class="node">
+<title>nTB_R_PRA_DAILY_ORDER_PART</title>
+<polygon fill="#ffffff" stroke="transparent" points="1682,-589 1682,-659 1884,-659 1884,-589 1682,-589"/>
+<polygon fill="#595959" stroke="transparent" points="1683,-641 1683,-658 1883,-658 1883,-641 1683,-641"/>
+<text text-anchor="start" x="1686" y="-648" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00" fill="#ffffff">TB_R_PRA_DAILY_ORDER_PART</text>
+<text text-anchor="start" x="1686" y="-630" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">MANIFEST_NO</text>
+<text text-anchor="start" x="1773" y="-630" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(20)</text>
+<text text-anchor="start" x="1846" y="-631" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK, FK</text>
+<text text-anchor="start" x="1686" y="-613" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">MANIFEST_ITEM</text>
+<text text-anchor="start" x="1773" y="-613" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(4)</text>
+<text text-anchor="start" x="1846" y="-614" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="1686" y="-596" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">+ 36 other columns</text>
+<polygon fill="none" stroke="#c9dcef" points="1682,-589 1682,-659 1884,-659 1884,-589 1682,-589"/>
+</g>
+
+<g id="node19" class="node">
+<title>nTB_R_PRA_DAILY_ORDER_MAPPED</title>
+<polygon fill="#ffffff" stroke="transparent" points="1682,-47.5 1682,-134.5 1884,-134.5 1884,-47.5 1682,-47.5"/>
+<polygon fill="#123a6b" stroke="transparent" points="1683,-116 1683,-133 1883,-133 1883,-116 1683,-116"/>
+<text text-anchor="start" x="1686" y="-123" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00" fill="#ffffff">TB_R_PRA_DAILY_ORDER_MAPPED</text>
+<text text-anchor="start" x="1686" y="-105" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">PO_NO</text>
+<text text-anchor="start" x="1773" y="-105" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(8)</text>
+<text text-anchor="start" x="1846" y="-106" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="1686" y="-88" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">MANIFEST_NO</text>
+<text text-anchor="start" x="1773" y="-88" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(10)</text>
+<text text-anchor="start" x="1846" y="-89" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK, FK</text>
+<text text-anchor="start" x="1686" y="-71" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">MANIFEST_ITEM</text>
+<text text-anchor="start" x="1773" y="-71" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(4)</text>
+<text text-anchor="start" x="1846" y="-72" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK, FK</text>
+<text text-anchor="start" x="1686" y="-54" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">+ 9 other columns</text>
+<polygon fill="none" stroke="#c9dcef" points="1682,-47.5 1682,-134.5 1884,-134.5 1884,-47.5 1682,-47.5"/>
+</g>
+
+<g id="node20" class="node">
+<title>nTB_R_DAILY_ORDER_MANIFEST</title>
+<polygon fill="#ffffff" stroke="transparent" points="2003.5,-1313 2003.5,-1417 2222.5,-1417 2222.5,-1313 2003.5,-1313"/>
+<polygon fill="#595959" stroke="transparent" points="2005,-1399 2005,-1416 2222,-1416 2222,-1399 2005,-1399"/>
+<text text-anchor="start" x="2008" y="-1406" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00" fill="#ffffff">TB_R_DAILY_ORDER_MANIFEST</text>
+<text text-anchor="start" x="2008" y="-1388" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">SUPPLIER_CD</text>
+<text text-anchor="start" x="2112" y="-1388" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(4)</text>
+<text text-anchor="start" x="2185" y="-1389" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">FK</text>
+<text text-anchor="start" x="2008" y="-1371" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">SUPPLIER_PLANT</text>
+<text text-anchor="start" x="2112" y="-1371" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(1)</text>
+<text text-anchor="start" x="2185" y="-1372" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">FK</text>
+<text text-anchor="start" x="2008" y="-1354" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">SUB_MANIFEST_NO</text>
+<text text-anchor="start" x="2112" y="-1354" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(20)</text>
+<text text-anchor="start" x="2185" y="-1355" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="2008" y="-1337" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">MANIFEST_NO</text>
+<text text-anchor="start" x="2112" y="-1337" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(16)</text>
+<text text-anchor="start" x="2185" y="-1338" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK, FK</text>
+<text text-anchor="start" x="2008" y="-1320" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">+ 55 other columns</text>
+<polygon fill="none" stroke="#c9dcef" points="2003.5,-1313 2003.5,-1417 2222.5,-1417 2222.5,-1313 2003.5,-1313"/>
+</g>
+
+<g id="node21" class="node">
+<title>nTB_R_DAILY_ORDER_PART</title>
+<polygon fill="#ffffff" stroke="transparent" points="2003.5,-507 2003.5,-611 2222.5,-611 2222.5,-507 2003.5,-507"/>
+<polygon fill="#595959" stroke="transparent" points="2005,-593 2005,-610 2222,-610 2222,-593 2005,-593"/>
+<text text-anchor="start" x="2008" y="-600" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00" fill="#ffffff">TB_R_DAILY_ORDER_PART</text>
+<text text-anchor="start" x="2008" y="-582" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">SUB_MANIFEST_NO</text>
+<text text-anchor="start" x="2112" y="-582" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(20)</text>
+<text text-anchor="start" x="2185" y="-583" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK, FK</text>
+<text text-anchor="start" x="2008" y="-565" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">MANIFEST_NO</text>
+<text text-anchor="start" x="2112" y="-565" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(16)</text>
+<text text-anchor="start" x="2185" y="-566" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK, FK</text>
+<text text-anchor="start" x="2008" y="-548" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">MANIFEST_ITEM</text>
+<text text-anchor="start" x="2112" y="-548" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">NUMERIC</text>
+<text text-anchor="start" x="2185" y="-549" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="2008" y="-531" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">CASE_NO</text>
+<text text-anchor="start" x="2112" y="-531" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(9)</text>
+<text text-anchor="start" x="2185" y="-532" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="2008" y="-514" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">+ 33 other columns</text>
+<polygon fill="none" stroke="#c9dcef" points="2003.5,-507 2003.5,-611 2222.5,-611 2222.5,-507 2003.5,-507"/>
+</g>
+
+<g id="node22" class="node">
+<title>nTB_R_CASE_LABEL_LAST_SEQ</title>
+<polygon fill="#ffffff" stroke="transparent" points="2010.5,-4 2010.5,-74 2215.5,-74 2215.5,-4 2010.5,-4"/>
+<polygon fill="#595959" stroke="transparent" points="2012,-56 2012,-73 2215,-73 2215,-56 2012,-56"/>
+<text text-anchor="start" x="2015" y="-63" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00" fill="#ffffff">TB_R_CASE_LABEL_LAST_SEQ</text>
+<text text-anchor="start" x="2015" y="-45" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">SUPPLIER_CD</text>
+<text text-anchor="start" x="2130" y="-45" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(5)</text>
+<text text-anchor="start" x="2197" y="-46" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="2015" y="-28" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">SUPPLIER_PLANT_CD</text>
+<text text-anchor="start" x="2130" y="-28" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">VARCHAR(1)</text>
+<text text-anchor="start" x="2197" y="-29" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00">PK</text>
+<text text-anchor="start" x="2015" y="-11" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">+ 6 other columns</text>
+<polygon fill="none" stroke="#c9dcef" points="2010.5,-4 2010.5,-74 2215.5,-74 2215.5,-4 2010.5,-4"/>
+</g>
+</g>
+</svg>
+</div><h3>All columns (22 tables)</h3><div class="tcards"><details class="tcard"><summary><i style="background:#123a6b"></i><b>TB_H_CROSSDOCK_ORDER_CHANGE</b> <span class="note">21 columns · New table (Crossdock)</span></summary><div class="tbl"><table><thead><tr><th>Column</th><th>Type</th><th>Key</th></tr></thead><tbody><tr><td>HIST_ID</td><td>BIGINT</td><td>PK</td></tr><tr><td>ASN_NO</td><td>VARCHAR(15)</td><td></td></tr><tr><td>CASE_NO</td><td>VARCHAR(9)</td><td></td></tr><tr><td>PART_NO</td><td>VARCHAR(15)</td><td></td></tr><tr><td>FROM_CUSTOMER_CD</td><td>VARCHAR(7)</td><td></td></tr><tr><td>FROM_CUSTOMER_ORDER_NO</td><td>VARCHAR(8)</td><td></td></tr><tr><td>FROM_ORDER_DT</td><td>DATE</td><td></td></tr><tr><td>FROM_DESTINATION_CD</td><td>VARCHAR(7)</td><td></td></tr><tr><td>FROM_DETAILED_ITEM_NO</td><td>VARCHAR(4)</td><td></td></tr><tr><td>FROM_SERIAL_NO</td><td>VARCHAR(7)</td><td></td></tr><tr><td>TO_CUSTOMER_CD</td><td>VARCHAR(7)</td><td></td></tr><tr><td>TO_CUSTOMER_ORDER_NO</td><td>VARCHAR(8)</td><td></td></tr><tr><td>TO_ORDER_DT</td><td>DATE</td><td></td></tr><tr><td>TO_DESTINATION_CD</td><td>VARCHAR(7)</td><td></td></tr><tr><td>TO_DETAILED_ITEM_NO</td><td>VARCHAR(4)</td><td></td></tr><tr><td>TO_SERIAL_NO</td><td>VARCHAR(7)</td><td></td></tr><tr><td>QTY</td><td>NUMBER(8)</td><td></td></tr><tr><td>FROM_INSTRUCTION_ID</td><td>BIGINT</td><td>FK</td></tr><tr><td>TO_INSTRUCTION_ID</td><td>BIGINT</td><td></td></tr><tr><td>CREATED_BY</td><td>VARCHAR(20)</td><td></td></tr><tr><td>CREATED_DT</td><td>DATETIME</td><td></td></tr></tbody></table></div></details><details class="tcard"><summary><i style="background:#123a6b"></i><b>TB_H_PART_CANDIDATE</b> <span class="note">13 columns · New table (Crossdock)</span></summary><div class="tbl"><table><thead><tr><th>Column</th><th>Type</th><th>Key</th></tr></thead><tbody><tr><td>HIST_ID</td><td>BIGINT</td><td></td></tr><tr><td>PART_NO</td><td>VARCHAR(TBD)</td><td>PK, FK</td></tr><tr><td>PERIOD</td><td>VARCHAR(6)</td><td>PK</td></tr><tr><td>EVENT_TYPE</td><td>VARCHAR(10)</td><td></td></tr><tr><td>SOURCE</td><td>VARCHAR(10)</td><td></td></tr><tr><td>UPLOAD_ID</td><td>VARCHAR(500)</td><td></td></tr><tr><td>DEST_CODE</td><td>CHAR(7)</td><td></td></tr><tr><td>FIELD_NAME</td><td>VARCHAR(30)</td><td>PK</td></tr><tr><td>OLD_VALUE</td><td>VARCHAR(255)</td><td></td></tr><tr><td>NEW_VALUE</td><td>VARCHAR(255)</td><td></td></tr><tr><td>REMARK</td><td>VARCHAR(500)</td><td></td></tr><tr><td>CREATED_BY</td><td>VARCHAR(20)</td><td></td></tr><tr><td>CREATED_DT</td><td>DATETIME</td><td></td></tr></tbody></table></div></details><details class="tcard"><summary><i style="background:#123a6b"></i><b>TB_M_PART_CANDIDATE</b> <span class="note">17 columns · New table (Crossdock)</span></summary><div class="tbl"><table><thead><tr><th>Column</th><th>Type</th><th>Key</th></tr></thead><tbody><tr><td>PART_NO</td><td>VARCHAR(15)</td><td>PK, FK</td></tr><tr><td>PART_NAME</td><td>VARCHAR(50)</td><td></td></tr><tr><td>MIN_MAD</td><td>INT</td><td></td></tr><tr><td>PCS_CASE</td><td>INT</td><td></td></tr><tr><td>MAX_CASE_DAY</td><td>INT</td><td></td></tr><tr><td>TOTAL_PCS_DAY</td><td>INT</td><td></td></tr><tr><td>EFFECTIVE_START_DATE</td><td>VARCHAR(6)</td><td>PK</td></tr><tr><td>PART_STATUS</td><td>VARCHAR(1)</td><td></td></tr><tr><td>SYNC_STATUS</td><td>VARCHAR(1)</td><td></td></tr><tr><td>SYNC_DT</td><td>DATETIME</td><td></td></tr><tr><td>SYNC_MESSAGE</td><td>VARCHAR(500)</td><td></td></tr><tr><td>LAST_SOURCE</td><td>VARCHAR(20)</td><td></td></tr><tr><td>LAST_UPLOAD_ID</td><td>VARCHAR(500)</td><td></td></tr><tr><td>CREATED_BY</td><td>VARCHAR(20)</td><td></td></tr><tr><td>CREATED_DT</td><td>DATETIME</td><td></td></tr><tr><td>CHANGED_BY</td><td>VARCHAR(20)</td><td></td></tr><tr><td>CHANGED_DT</td><td>DATETIME</td><td></td></tr></tbody></table></div></details><details class="tcard"><summary><i style="background:#123a6b"></i><b>TB_M_PART_CANDIDATE_DEST</b> <span class="note">11 columns · New table (Crossdock)</span></summary><div class="tbl"><table><thead><tr><th>Column</th><th>Type</th><th>Key</th></tr></thead><tbody><tr><td>PART_NO</td><td>VARCHAR(15)</td><td>PK, FK</td></tr><tr><td>DEST_CODE</td><td>CHAR(7)</td><td>PK, FK</td></tr><tr><td>PERIOD</td><td>DATETIME</td><td>PK</td></tr><tr><td>ORDER_TYPE</td><td>VARCHAR (5)</td><td>PK</td></tr><tr><td>CASE_DAY</td><td>INT</td><td></td></tr><tr><td>PCS_DAY</td><td>INT</td><td></td></tr><tr><td>PERCENTAGE</td><td>INT</td><td></td></tr><tr><td>CREATED_BY</td><td>VARCHAR(20)</td><td></td></tr><tr><td>CREATED_DT</td><td>DATETIME</td><td></td></tr><tr><td>CHANGED_BY</td><td>VARCHAR(20)</td><td></td></tr><tr><td>CHANGED_DT</td><td>DATETIME</td><td></td></tr></tbody></table></div></details><details class="tcard"><summary><i style="background:#123a6b"></i><b>TB_R_CROSSDOCK_IF_RESULT</b> <span class="note">11 columns · New table (Crossdock)</span></summary><div class="tbl"><table><thead><tr><th>Column</th><th>Type</th><th>Key</th></tr></thead><tbody><tr><td>PART_NO</td><td>VARCHAR(TBD)</td><td>PK, FK</td></tr><tr><td>TARGET_SYSTEM</td><td>VARCHAR(10)</td><td>PK</td></tr><tr><td>PERIOD</td><td>CHAR(6)</td><td></td></tr><tr><td>IF_STATUS</td><td>VARCHAR(1)</td><td></td></tr><tr><td>IF_DT</td><td>DATETIME</td><td></td></tr><tr><td>IF_FILE_NAME</td><td>VARCHAR(100)</td><td></td></tr><tr><td>IF_MESSAGE</td><td>VARCHAR(500)</td><td></td></tr><tr><td>CREATED_BY</td><td>VARCHAR(TBD)</td><td></td></tr><tr><td>CREATED_DT</td><td>DATETIME</td><td></td></tr><tr><td>CHANGED_BY</td><td>VARCHAR(TBD)</td><td></td></tr><tr><td>CHANGED_DT</td><td>DATETIME</td><td></td></tr></tbody></table></div></details><details class="tcard"><summary><i style="background:#123a6b"></i><b>TB_R_INSTRUCTION</b> <span class="note">27 columns · New table (Crossdock)</span></summary><div class="tbl"><table><thead><tr><th>Column</th><th>Type</th><th>Key</th></tr></thead><tbody><tr><td>INSTRUCTION_ID</td><td>BIGINT</td><td>PK</td></tr><tr><td>SUPPLIER_CD</td><td>VARCHAR(4)</td><td></td></tr><tr><td>SUPPLIER_PLANT</td><td>VARCHAR(1)</td><td></td></tr><tr><td>CASE_SEQ</td><td>NUMBER(4)</td><td></td></tr><tr><td>LINE_SEQ</td><td>NUMBER(4)</td><td></td></tr><tr><td>PART_NO</td><td>VARCHAR(15)</td><td></td></tr><tr><td>ORDER_DT</td><td>DATE</td><td>FK</td></tr><tr><td>DESTINATION_CD</td><td>VARCHAR(7)</td><td>FK</td></tr><tr><td>CUSTOMER_CD</td><td>VARCHAR(7)</td><td>FK</td></tr><tr><td>CUSTOMER_ORDER_NO</td><td>VARCHAR(8)</td><td>FK</td></tr><tr><td>DETAILED_ITEM_NO</td><td>VARCHAR(4)</td><td>FK</td></tr><tr><td>SERIAL_NO</td><td>VARCHAR(7)</td><td>FK</td></tr><tr><td>QTY</td><td>NUMBER(8)</td><td></td></tr><tr><td>PO_NO</td><td>VARCHAR(8)</td><td></td></tr><tr><td>MANIFEST_NO</td><td>VARCHAR(10)</td><td>FK</td></tr><tr><td>MANIFEST_ITEM</td><td>VARCHAR(4)</td><td>FK</td></tr><tr><td>ORDER_QTY</td><td>NUMBER(8)</td><td></td></tr><tr><td>DELIVERY_DT</td><td>DATE</td><td></td></tr><tr><td>RIT_CYCLE</td><td>VARCHAR(1)</td><td></td></tr><tr><td>ROUTE</td><td>VARCHAR(4)</td><td></td></tr><tr><td>DRAFT_ID</td><td>VARCHAR(20)</td><td></td></tr><tr><td>ASN_NO</td><td>VARCHAR(13)</td><td></td></tr><tr><td>CASE_NO</td><td>VARCHAR(8)</td><td>FK</td></tr><tr><td>CREATED_BY</td><td>VARCHAR(20)</td><td></td></tr><tr><td>CREATED_DT</td><td>DATETIME</td><td></td></tr><tr><td>CHANGED_BY</td><td>VARCHAR(20)</td><td></td></tr><tr><td>CHANGED_DT</td><td>DATETIME</td><td></td></tr></tbody></table></div></details><details class="tcard"><summary><i style="background:#123a6b"></i><b>TB_R_PART_DAD_RESULT</b> <span class="note">14 columns · New table (Crossdock)</span></summary><div class="tbl"><table><thead><tr><th>Column</th><th>Type</th><th>Key</th></tr></thead><tbody><tr><td>PERIOD</td><td>CHAR(6)</td><td>PK</td></tr><tr><td>PART_NO</td><td>VARCHAR(TBD)</td><td>PK, FK</td></tr><tr><td>MONTH_FROM</td><td>CHAR(6)</td><td></td></tr><tr><td>MONTH_TO</td><td>CHAR(6)</td><td></td></tr><tr><td>NUM_OF_MONTH</td><td>INT</td><td></td></tr><tr><td>TOTAL_MAD</td><td>NUMBER(TBD,2)</td><td></td></tr><tr><td>AVG_MAD</td><td>NUMBER(TBD,2)</td><td></td></tr><tr><td>MIN_MAD</td><td>INT</td><td></td></tr><tr><td>OLD_STATUS</td><td>VARCHAR(TBD)</td><td></td></tr><tr><td>NEW_STATUS</td><td>VARCHAR(TBD)</td><td></td></tr><tr><td>CREATED_BY</td><td>VARCHAR(TBD)</td><td></td></tr><tr><td>CREATED_DT</td><td>DATETIME</td><td></td></tr><tr><td>CHANGED_BY</td><td>VARCHAR(20)</td><td></td></tr><tr><td>CHANGED_DT</td><td>DATETIME</td><td></td></tr></tbody></table></div></details><details class="tcard"><summary><i style="background:#123a6b"></i><b>TB_R_PRA_DAILY_ORDER_MAPPED</b> <span class="note">12 columns · New table (Crossdock)</span></summary><div class="tbl"><table><thead><tr><th>Column</th><th>Type</th><th>Key</th></tr></thead><tbody><tr><td>PO_NO</td><td>VARCHAR(8)</td><td>PK</td></tr><tr><td>MANIFEST_NO</td><td>VARCHAR(10)</td><td>PK, FK</td></tr><tr><td>MANIFEST_ITEM</td><td>VARCHAR(4)</td><td>PK, FK</td></tr><tr><td>PART_NO</td><td>VARCHAR(15)</td><td></td></tr><tr><td>SUPPLIER_CD</td><td>VARCHAR(4)</td><td></td></tr><tr><td>SUPPLIER_PLANT</td><td>VARCHAR(1)</td><td></td></tr><tr><td>ORDER_QTY</td><td>NUMBER(8)</td><td></td></tr><tr><td>MAPPED_QTY</td><td>NUMBER(8)</td><td></td></tr><tr><td>CREATED_BY</td><td>VARCHAR(20)</td><td></td></tr><tr><td>CREATED_DT</td><td>DATETIME</td><td></td></tr><tr><td>CHANGED_BY</td><td>VARCHAR(20)</td><td></td></tr><tr><td>CHANGED_DT</td><td>DATETIME</td><td></td></tr></tbody></table></div></details><details class="tcard"><summary><i style="background:#5b4a8b"></i><b>TB_M_H0125_DESTINATION</b> <span class="note">15 columns · Replicated from DB Surrounding (GTOPAS)</span></summary><div class="tbl"><table><thead><tr><th>Column</th><th>Type</th><th>Key</th></tr></thead><tbody><tr><td>DESTINATION_CD</td><td>VARCHAR(7)</td><td>PK</td></tr><tr><td>CUSTOMER_CD</td><td>VARCHAR(7)</td><td></td></tr><tr><td>ORDER_TRANSPORTATION_CD</td><td>VARCHAR(1)</td><td></td></tr><tr><td>BO_INSTRUCTION_CD</td><td>VARCHAR(1)</td><td></td></tr><tr><td>DESTINATION_NAME_ENG</td><td>VARCHAR(50)</td><td></td></tr><tr><td>REGION_CD</td><td>VARCHAR(2)</td><td></td></tr><tr><td>COUNTRY_NAME_ENG</td><td>VARCHAR(36)</td><td></td></tr><tr><td>POSTAL_CD_ENG</td><td>VARCHAR(10)</td><td></td></tr><tr><td>STATE_CD_ENG</td><td>VARCHAR(6)</td><td></td></tr><tr><td>DESTINATION_ADDR1_ENG</td><td>VARCHAR(50)</td><td></td></tr><tr><td>DESTINATION_ADDR2_ENG</td><td>VARCHAR(50)</td><td></td></tr><tr><td>CREATE_BY</td><td>VARCHAR(20)</td><td></td></tr><tr><td>CREATE_DT</td><td>TIMESTAMP</td><td></td></tr><tr><td>UPDATE_BY</td><td>VARCHAR(20)</td><td></td></tr><tr><td>UPDATE_DT</td><td>TIMESTAMP</td><td></td></tr></tbody></table></div></details><details class="tcard"><summary><i style="background:#5b4a8b"></i><b>TB_R_ACTUAL_DEMAND_SUMMARY</b> <span class="note">20 columns · Replicated from DB Surrounding (GTOPAS)</span></summary><div class="tbl"><table><thead><tr><th>Column</th><th>Type</th><th>Key</th></tr></thead><tbody><tr><td>GROUPING_BUYER_CD</td><td>VARCHAR(5)</td><td>PK, FK</td></tr><tr><td>GROUPING_PD_CD</td><td>VARCHAR(2)</td><td>PK, FK</td></tr><tr><td>ORDER_TYPE_GROUP</td><td>CHAR(1)</td><td>PK</td></tr><tr><td>DEMAND_MONTH_YEAR</td><td>CHAR(6)</td><td>PK</td></tr><tr><td>PART_NO</td><td>VARCHAR(TBD)</td><td>PK, FK</td></tr><tr><td>MAD</td><td>NUMBER(8,2)</td><td></td></tr><tr><td>DAD</td><td>NUMBER(8,2)</td><td></td></tr><tr><td>CREATE_DT</td><td>TIMESTAMP</td><td></td></tr><tr><td>CREATE_BY</td><td>VARCHAR(20)</td><td></td></tr><tr><td>UPDATE_DT</td><td>TIMESTAMP</td><td></td></tr><tr><td>UPDATE_BY</td><td>VARCHAR(20)</td><td></td></tr><tr><td>N01_QTY</td><td>NUMBER</td><td></td></tr><tr><td>N02_QTY</td><td>NUMBER</td><td></td></tr><tr><td>N03_QTY</td><td>NUMBER</td><td></td></tr><tr><td>N04_QTY</td><td>NUMBER</td><td></td></tr><tr><td>N05_QTY</td><td>NUMBER</td><td></td></tr><tr><td>N06_QTY</td><td>NUMBER</td><td></td></tr><tr><td>NUM_OF_OLD_PART_NO</td><td>NUMBER</td><td></td></tr><tr><td>NUM_OF_WORKINGDAY_6M</td><td>NUMBER</td><td></td></tr><tr><td>EM_MS_FLAG</td><td>CHAR(1)</td><td></td></tr></tbody></table></div></details><details class="tcard"><summary><i style="background:#5b4a8b"></i><b>TB_R_H0253_ORDER_CONTROL_PRE</b> <span class="note">52 columns · Replicated from DB Surrounding (GTOPAS)</span></summary><div class="tbl"><table><thead><tr><th>Column</th><th>Type</th><th>Key</th></tr></thead><tbody><tr><td>CUSTOMER_CD</td><td>VARCHAR(7)</td><td>PK</td></tr><tr><td>CUSTOMER_ORDER_NO</td><td>VARCHAR(8)</td><td>PK</td></tr><tr><td>ORDER_DT</td><td>DATE</td><td>PK</td></tr><tr><td>ORDER_TIME</td><td>VARCHAR(6)</td><td>PK</td></tr><tr><td>DESTINATION_CD</td><td>VARCHAR(7)</td><td>PK, FK</td></tr><tr><td>DETAILED_ITEM_NO</td><td>VARCHAR(4)</td><td>PK</td></tr><tr><td>SERIAL_NO</td><td>VARCHAR(7)</td><td>PK</td></tr><tr><td>TOPAS_ORDER_TYPE</td><td>VARCHAR(1)</td><td></td></tr><tr><td>DEMAND_HISTORY_UPDATE_DT</td><td>DATE</td><td></td></tr><tr><td>SHIPPING_MAKER_CD</td><td>VARCHAR(1)</td><td></td></tr><tr><td>SHIPPING_PART_NO</td><td>VARCHAR(15)</td><td>FK</td></tr><tr><td>ORIGINAL_SHIPPING_QTY</td><td>NUMBER(8)</td><td></td></tr><tr><td>ORDER_STATUS_QTY</td><td>NUMBER(8)</td><td></td></tr><tr><td>ORDER_STATUS</td><td>VARCHAR(1)</td><td></td></tr><tr><td>BO_INSTRUCTION_CD</td><td>VARCHAR(1)</td><td></td></tr><tr><td>BO_RELEASE_DT</td><td>DATE</td><td></td></tr><tr><td>ORDER_GROUP</td><td>VARCHAR(2)</td><td></td></tr><tr><td>DIRECT_DELIVERY_CD</td><td>VARCHAR(1)</td><td></td></tr><tr><td>DIRECT_DELIVERY_FLAG</td><td>VARCHAR(1)</td><td></td></tr><tr><td>CURRENCY_CD</td><td>VARCHAR(3)</td><td></td></tr><tr><td>LANDED_COST</td><td>NUMBER(14,3)</td><td></td></tr><tr><td>NET_PRICE</td><td>NUMBER(14,3)</td><td></td></tr><tr><td>SALES_PRICE</td><td>NUMBER(14,3)</td><td></td></tr><tr><td>EXPORT_SALES_PRICE</td><td>NUMBER(14,3)</td><td></td></tr><tr><td>SPECIAL_PRICE_CD</td><td>VARCHAR(1)</td><td></td></tr><tr><td>ORDER_DISCOUNT_CD</td><td>VARCHAR(4)</td><td></td></tr><tr><td>ITEM_DISCOUNT_RATE</td><td>NUMBER(6,1)</td><td></td></tr><tr><td>FIRST_ALLOCATION_DT</td><td>DATE</td><td></td></tr><tr><td>BO_HISTORY_CD</td><td>VARCHAR(1)</td><td></td></tr><tr><td>ORDER_ERROR_CD</td><td>VARCHAR(2)</td><td></td></tr><tr><td>RA_CD</td><td>VARCHAR(2)</td><td></td></tr><tr><td>PENDING_ORDER_CD</td><td>VARCHAR(2)</td><td></td></tr><tr><td>ORDER_PORTION_CD</td><td>VARCHAR(1)</td><td></td></tr><tr><td>ORDER_STATUS_DT</td><td>DATE</td><td></td></tr><tr><td>SHIPPING_PROCESS_CTRL_CD</td><td>VARCHAR(1)</td><td></td></tr><tr><td>PROCUREMENT_PROCESS_CTRL_CD</td><td>VARCHAR(1)</td><td></td></tr><tr><td>DANGEROUS_GOODS_CLASS</td><td>VARCHAR(4)</td><td></td></tr><tr><td>CREATE_DEMAND_FLAG</td><td>VARCHAR(1)</td><td></td></tr><tr><td>SPECIAL_CUSTOMER_FLAG</td><td>VARCHAR(1)</td><td></td></tr><tr><td>POSS_TRANSMISSION_JUDG_FLAG</td><td>VARCHAR(1)</td><td></td></tr><tr><td>REGISTRANT_ID</td><td>VARCHAR(13)</td><td></td></tr><tr><td>UPDATE_JOB_ID</td><td>VARCHAR(8)</td><td></td></tr><tr><td>UPDATE_OPERATION_ID</td><td>VARCHAR(13)</td><td></td></tr><tr><td>INTF_UPDATE_DT</td><td>TIMESTAMP</td><td></td></tr><tr><td>HOLD_FLAG</td><td>VARCHAR(1)</td><td></td></tr><tr><td>PO_MAPPED_FLAG</td><td>VARCHAR(1)</td><td></td></tr><tr><td>UPD_STATUS</td><td>VARCHAR(1)</td><td></td></tr><tr><td>CANCEL_MAPPED_FLAG</td><td>VARCHAR(1)</td><td></td></tr><tr><td>CREATE_DT</td><td>TIMESTAMP</td><td></td></tr><tr><td>CREATE_BY</td><td>VARCHAR(TBD)</td><td></td></tr><tr><td>UPDATE_DT</td><td>TIMESTAMP</td><td></td></tr><tr><td>UPDATE_BY</td><td>VARCHAR(TBD)</td><td></td></tr></tbody></table></div></details><details class="tcard"><summary><i style="background:#595959"></i><b>TB_M_PART_MASTER</b> <span class="note">30 columns · Existing NSP table</span></summary><div class="tbl"><table><thead><tr><th>Column</th><th>Type</th><th>Key</th></tr></thead><tbody><tr><td>PART_NO</td><td>VARCHAR(15)</td><td>PK</td></tr><tr><td>PART_NAME</td><td>VARCHAR(100)</td><td></td></tr><tr><td>COO</td><td>VARCHAR(25)</td><td></td></tr><tr><td>SUPPLIER_CD</td><td>VARCHAR(4)</td><td>PK</td></tr><tr><td>SUPPLIER_PLANT_CD</td><td>VARCHAR(1)</td><td>PK</td></tr><tr><td>SUB_SUPPLIER_CD</td><td>VARCHAR(4)</td><td></td></tr><tr><td>SUB_SUPPLIER_PLANT_CD</td><td>VARCHAR(1)</td><td></td></tr><tr><td>PCK_TYPE</td><td>VARCHAR(18)</td><td></td></tr><tr><td>KANBAN_QTY</td><td>NUMERIC</td><td></td></tr><tr><td>KANBAN_NO</td><td>VARCHAR(5)</td><td></td></tr><tr><td>DOCK_CD</td><td>VARCHAR(2)</td><td>PK</td></tr><tr><td>DG_FLAG</td><td>VARCHAR(1)</td><td></td></tr><tr><td>SYNC_DATE</td><td>DATETIME</td><td></td></tr><tr><td>VALID_FROM</td><td>DATETIME</td><td>PK</td></tr><tr><td>VALID_TO</td><td>DATETIME</td><td></td></tr><tr><td>LOCATION_GROUP_CD</td><td>VARCHAR(2)</td><td></td></tr><tr><td>PALLETIZE_CD</td><td>VARCHAR(2)</td><td></td></tr><tr><td>CREATED_DT</td><td>DATETIME</td><td></td></tr><tr><td>CREATED_BY</td><td>VARCHAR(20)</td><td></td></tr><tr><td>CHANGED_DT</td><td>DATETIME</td><td></td></tr><tr><td>CHANGED_BY</td><td>VARCHAR(20)</td><td></td></tr><tr><td>MAINTAIN_STS</td><td>VARCHAR(2)</td><td></td></tr><tr><td>SEND_TO_IFAST_DT</td><td>DATETIME</td><td></td></tr><tr><td>SEND_TO_IFAST_FLAG</td><td>VARCHAR(2)</td><td></td></tr><tr><td>SEND_TO_SPEX_DT</td><td>DATETIME</td><td></td></tr><tr><td>SEND_TO_SPEX_FLAG</td><td>VARCHAR(2)</td><td></td></tr><tr><td>SEND_TO_IPPCS_DT</td><td>DATETIME</td><td></td></tr><tr><td>SEND_TO_IPPCS_FLAG</td><td>VARCHAR(2)</td><td></td></tr><tr><td>RE_EXPORT_CD</td><td>VARCHAR(2)</td><td></td></tr><tr><td>CAR_FAMILY_CD</td><td>VARCHAR(4)</td><td></td></tr></tbody></table></div></details><details class="tcard"><summary><i style="background:#595959"></i><b>TB_R_CASE_LABEL_LAST_SEQ</b> <span class="note">8 columns · Existing NSP table</span></summary><div class="tbl"><table><thead><tr><th>Column</th><th>Type</th><th>Key</th></tr></thead><tbody><tr><td>SUPPLIER_CD</td><td>VARCHAR(5)</td><td>PK</td></tr><tr><td>SUPPLIER_PLANT_CD</td><td>VARCHAR(1)</td><td>PK</td></tr><tr><td>CASE_LABEL_LAST_SEQ</td><td>VARCHAR(3)</td><td></td></tr><tr><td>ASN_LAST_SEQ</td><td>VARCHAR(3)</td><td></td></tr><tr><td>CREATED_BY</td><td>VARCHAR(20)</td><td></td></tr><tr><td>CREATED_DT</td><td>DATETIME</td><td></td></tr><tr><td>CHANGED_BY</td><td>VARCHAR(20)</td><td></td></tr><tr><td>CHANGED_DT</td><td>DATETIME</td><td></td></tr></tbody></table></div></details><details class="tcard"><summary><i style="background:#595959"></i><b>TB_R_DAILY_ORDER_MANIFEST</b> <span class="note">59 columns · Existing NSP table</span></summary><div class="tbl"><table><thead><tr><th>Column</th><th>Type</th><th>Key</th></tr></thead><tbody><tr><td>DEPOT_CD</td><td>VARCHAR(20)</td><td></td></tr><tr><td>SUPPLIER_CD</td><td>VARCHAR(4)</td><td>FK</td></tr><tr><td>SUPPLIER_PLANT</td><td>VARCHAR(1)</td><td>FK</td></tr><tr><td>SUB_SUPP_CD</td><td>VARCHAR(4)</td><td></td></tr><tr><td>SUB_SUPP_PLANT</td><td>VARCHAR(1)</td><td></td></tr><tr><td>SUPPLIER_NAME</td><td>VARCHAR(50)</td><td></td></tr><tr><td>PO_NO</td><td>VARCHAR(20)</td><td></td></tr><tr><td>ASN_NO</td><td>VARCHAR(15)</td><td></td></tr><tr><td>INVOICE_NO</td><td>VARCHAR(15)</td><td></td></tr><tr><td>PO_DATE</td><td>DATETIME</td><td></td></tr><tr><td>ASN_DATE</td><td>DATETIME</td><td></td></tr><tr><td>SUB_MANIFEST_NO</td><td>VARCHAR(20)</td><td>PK</td></tr><tr><td>MANIFEST_NO</td><td>VARCHAR(16)</td><td>PK, FK</td></tr><tr><td>MAKER_CODE</td><td>VARCHAR(20)</td><td></td></tr><tr><td>PO_TRANSPORT_CD</td><td>VARCHAR(20)</td><td></td></tr><tr><td>ORDER_TYPE</td><td>VARCHAR(1)</td><td></td></tr><tr><td>CROSS_DOCK_FLAG</td><td>VARCHAR(3)</td><td></td></tr><tr><td>COMPANY_CD</td><td>VARCHAR(4)</td><td></td></tr><tr><td>RCV_PLANT_CD</td><td>VARCHAR(1)</td><td></td></tr><tr><td>DOCK_CD</td><td>VARCHAR(2)</td><td></td></tr><tr><td>TOTAL_ITEM</td><td>NUMERIC</td><td></td></tr><tr><td>TOTAL_QTY</td><td>NUMERIC</td><td></td></tr><tr><td>DELIVERY_DT_ORI</td><td>DATETIME</td><td></td></tr><tr><td>DELIVERY_DT_ADJUST</td><td>DATETIME</td><td></td></tr><tr><td>DELIVERY_DT_ACTUAL</td><td>DATETIME</td><td></td></tr><tr><td>SHIPPING_DOCK</td><td>VARCHAR(3)</td><td></td></tr><tr><td>SHIPPING_DT</td><td>DATETIME</td><td></td></tr><tr><td>SUPP_REFF_1</td><td>VARCHAR(25)</td><td></td></tr><tr><td>SUPP_REFF_2</td><td>VARCHAR(25)</td><td></td></tr><tr><td>SUB_ROUTE_CD</td><td>VARCHAR(10)</td><td></td></tr><tr><td>SUB_ROUTE_SEQ</td><td>VARCHAR(2)</td><td></td></tr><tr><td>SUB_ROUTE_DT</td><td>DATETIME</td><td></td></tr><tr><td>FST_X_DOC_CD</td><td>VARCHAR(15)</td><td></td></tr><tr><td>FST_X_PLANT_CD</td><td>DATETIME</td><td></td></tr><tr><td>FST_X_SHIPPING_DOCK_CD</td><td>VARCHAR(10)</td><td></td></tr><tr><td>FST_X_DOCK_ARRIVAL_DT</td><td>DATETIME</td><td></td></tr><tr><td>FST_X_DOCK_DEPART_DT</td><td>DATETIME</td><td></td></tr><tr><td>FST_X_DOCK_ROUTE_GRP_CD</td><td>VARCHAR(10)</td><td></td></tr><tr><td>FST_X_DOCK_SEQ_NO</td><td>VARCHAR(2)</td><td></td></tr><tr><td>FST_X_ROUTE_DT</td><td>DATETIME</td><td></td></tr><tr><td>FTP_FLAG</td><td>VARCHAR(3)</td><td></td></tr><tr><td>STATUS</td><td>VARCHAR(3)</td><td></td></tr><tr><td>REMARK</td><td>VARCHAR(20)</td><td></td></tr><tr><td>SEND_ASN_FLAG</td><td>VARCHAR(3)</td><td></td></tr><tr><td>SEND_ASN_DATE</td><td>DATETIME</td><td></td></tr><tr><td>SEND_GR_ADM_FLAG</td><td>VARCHAR(3)</td><td></td></tr><tr><td>SEND_GR_ADM_DATE</td><td>DATETIME</td><td></td></tr><tr><td>MANIFEST_LAST_SEQ</td><td>VARCHAR(2)</td><td></td></tr><tr><td>CREATED_BY</td><td>VARCHAR(20)</td><td></td></tr><tr><td>CREATED_DT</td><td>DATETIME</td><td></td></tr><tr><td>CHANGED_BY</td><td>VARCHAR(20)</td><td></td></tr><tr><td>CHANGED_DT</td><td>DATETIME</td><td></td></tr><tr><td>CASE_DELIVERED</td><td>NUMERIC</td><td></td></tr><tr><td>ITEM_DELIVERED</td><td>NUMERIC</td><td></td></tr><tr><td>QTY_DELIVERED</td><td>NUMERIC</td><td></td></tr><tr><td>CASE_RECEIVED</td><td>NUMERIC</td><td></td></tr><tr><td>ITEM_RECEIVED</td><td>NUMERIC</td><td></td></tr><tr><td>QTY_RECEIVED</td><td>NUMERIC</td><td></td></tr><tr><td>COMPLETE_DATE</td><td>DATETIME</td><td></td></tr></tbody></table></div></details><details class="tcard"><summary><i style="background:#595959"></i><b>TB_R_DAILY_ORDER_PART</b> <span class="note">37 columns · Existing NSP table</span></summary><div class="tbl"><table><thead><tr><th>Column</th><th>Type</th><th>Key</th></tr></thead><tbody><tr><td>PO_NO</td><td>VARCHAR(20)</td><td></td></tr><tr><td>PO_ITEM</td><td>VARCHAR(4)</td><td></td></tr><tr><td>SUB_MANIFEST_NO</td><td>VARCHAR(20)</td><td>PK, FK</td></tr><tr><td>SUB_MANIFEST_ITEM</td><td>NUMERIC</td><td></td></tr><tr><td>MANIFEST_NO</td><td>VARCHAR(16)</td><td>PK, FK</td></tr><tr><td>MANIFEST_ITEM</td><td>NUMERIC</td><td>PK</td></tr><tr><td>CASE_NO</td><td>VARCHAR(9)</td><td>PK</td></tr><tr><td>ASN_NO</td><td>VARCHAR(15)</td><td></td></tr><tr><td>ASN_DATE</td><td>DATETIME</td><td></td></tr><tr><td>PART_NO</td><td>VARCHAR(20)</td><td></td></tr><tr><td>PART_NAME</td><td>VARCHAR(50)</td><td></td></tr><tr><td>PO_QTY</td><td>NUMERIC</td><td></td></tr><tr><td>DELIVERY_QTY</td><td>NUMERIC</td><td></td></tr><tr><td>DELIVERY_QTY_ACTUAL</td><td>NUMERIC</td><td></td></tr><tr><td>QTY_PER_CONTAINER</td><td>NUMERIC</td><td></td></tr><tr><td>ORDER_PLAN_QTY_LOT</td><td>NUMERIC</td><td></td></tr><tr><td>DELIVERY_DT_ORI</td><td>DATETIME</td><td></td></tr><tr><td>DELIVERY_DT_ADJUST</td><td>DATETIME</td><td></td></tr><tr><td>DELIVERY_DT_ACTUAL</td><td>DATETIME</td><td></td></tr><tr><td>KANBAN_NO</td><td>VARCHAR(4)</td><td></td></tr><tr><td>PART_BARCODE</td><td>VARCHAR(25)</td><td></td></tr><tr><td>RECEIVE_PLANT_NAME</td><td>VARCHAR(25)</td><td></td></tr><tr><td>SUPPLIER_INFO1</td><td>VARCHAR(15)</td><td></td></tr><tr><td>SUPPLIER_INFO2</td><td>VARCHAR(15)</td><td></td></tr><tr><td>SUPPLIER_INFO3</td><td>VARCHAR(15)</td><td></td></tr><tr><td>IMPORTIR_INFO</td><td>VARCHAR(10)</td><td></td></tr><tr><td>IMPORTIR_INFO2</td><td>VARCHAR(10)</td><td></td></tr><tr><td>IMPORTIR_INFO3</td><td>VARCHAR(10)</td><td></td></tr><tr><td>IMPORTIR_INFO4</td><td>VARCHAR(10)</td><td></td></tr><tr><td>MOD_DST_CD</td><td>VARCHAR(4)</td><td></td></tr><tr><td>PLN_PCK_DT</td><td>DATETIME</td><td></td></tr><tr><td>PART_ADDRESS</td><td>VARCHAR(15)</td><td></td></tr><tr><td>STATUS</td><td>VARCHAR(3)</td><td></td></tr><tr><td>CREATED_BY</td><td>VARCHAR(20)</td><td></td></tr><tr><td>CREATED_DT</td><td>DATETIME</td><td></td></tr><tr><td>CHANGED_BY</td><td>VARCHAR(20)</td><td></td></tr><tr><td>CHANGED_DT</td><td>DATETIME</td><td></td></tr></tbody></table></div></details><details class="tcard"><summary><i style="background:#595959"></i><b>TB_R_PRA_DAILY_ORDER_MANIFEST</b> <span class="note">54 columns · Existing NSP table</span></summary><div class="tbl"><table><thead><tr><th>Column</th><th>Type</th><th>Key</th></tr></thead><tbody><tr><td>DEPOT_CD</td><td>VARCHAR(2)</td><td></td></tr><tr><td>SUPPLIER_CD</td><td>VARCHAR(4)</td><td></td></tr><tr><td>SUPPLIER_PLANT</td><td>VARCHAR(1)</td><td></td></tr><tr><td>SUB_SUPP_CD</td><td>VARCHAR(4)</td><td></td></tr><tr><td>SUB_SUPP_PLANT</td><td>VARCHAR(1)</td><td></td></tr><tr><td>SUPPLIER_NAME</td><td>VARCHAR(50)</td><td></td></tr><tr><td>PO_NO</td><td>VARCHAR(20)</td><td></td></tr><tr><td>PO_DT</td><td>DATETIME (inferred)</td><td></td></tr><tr><td>MANIFEST_NO</td><td>VARCHAR(20)</td><td>PK</td></tr><tr><td>MAKER_CODE</td><td>VARCHAR(20)</td><td></td></tr><tr><td>PO_TRANSPORT_CD</td><td>VARCHAR(20)</td><td></td></tr><tr><td>ORDER_TYPE</td><td>VARCHAR(2)</td><td></td></tr><tr><td>CROSS_DOCK_FLAG</td><td>VARCHAR(10)</td><td></td></tr><tr><td>COMPANY_CD</td><td>VARCHAR(10)</td><td></td></tr><tr><td>RCV_PLANT_CD</td><td>VARCHAR(10)</td><td></td></tr><tr><td>DOCK_CD</td><td>VARCHAR(4)</td><td></td></tr><tr><td>TOTAL_ITEM</td><td>NUMERIC</td><td></td></tr><tr><td>TOTAL_QTY</td><td>NUMERIC</td><td></td></tr><tr><td>TOTAL_QTY_DELIVERY</td><td>NUMERIC</td><td></td></tr><tr><td>RECEIVED_QTY</td><td>NUMERIC</td><td></td></tr><tr><td>TOTAL_QTY_REMAIN</td><td>NUMERIC</td><td></td></tr><tr><td>DELIVERY_DT</td><td>DATETIME</td><td></td></tr><tr><td>DELIVERY_DT_ACTUAL</td><td>DATETIME</td><td></td></tr><tr><td>SHIPPING_DOCK</td><td>VARCHAR(5)</td><td></td></tr><tr><td>SHIPPING_DT</td><td>DATETIME</td><td></td></tr><tr><td>SUB_ROUTE_CD</td><td>VARCHAR(10)</td><td></td></tr><tr><td>SUB_ROUTE_SEQ</td><td>VARCHAR(10)</td><td></td></tr><tr><td>SUB_ROUTE_DT</td><td>DATETIME</td><td></td></tr><tr><td>FST_X_DOC_CD</td><td>VARCHAR(5)</td><td></td></tr><tr><td>FST_X_PLANT_CD</td><td>VARCHAR(5)</td><td></td></tr><tr><td>FST_X_SHIPPING_DOCK_CD</td><td>VARCHAR(5)</td><td></td></tr><tr><td>FST_X_DOCK_ARRIVAL_DT</td><td>DATETIME</td><td></td></tr><tr><td>FST_X_DOCK_DEPART_DT</td><td>DATETIME</td><td></td></tr><tr><td>FST_X_DOCK_ROUTE_GRP_CD</td><td>VARCHAR(15)</td><td></td></tr><tr><td>FST_X_DOCK_SEQ_NO</td><td>VARCHAR(10)</td><td></td></tr><tr><td>FST_X_ROUTE_DT</td><td>DATETIME</td><td></td></tr><tr><td>FTP_FLAG</td><td>VARCHAR(4)</td><td></td></tr><tr><td>STATUS</td><td>VARCHAR(1)</td><td></td></tr><tr><td>REMARK</td><td>VARCHAR(100)</td><td></td></tr><tr><td>DOWNLOAD_FLAG</td><td>VARCHAR(2)</td><td></td></tr><tr><td>DOWNLOADED_BY</td><td>VARCHAR(20)</td><td></td></tr><tr><td>DOWNLOADED_DT</td><td>DATETIME</td><td></td></tr><tr><td>SEND_PO_ADM_FLAG</td><td>VARCHAR(2)</td><td></td></tr><tr><td>SEND_PO_ADM_DT</td><td>DATETIME (inferred)</td><td></td></tr><tr><td>CREATED_BY</td><td>VARCHAR(20)</td><td></td></tr><tr><td>CREATED_DT</td><td>DATETIME</td><td></td></tr><tr><td>CHANGED_BY</td><td>VARCHAR(20)</td><td></td></tr><tr><td>CHANGED_DT</td><td>DATETIME</td><td></td></tr><tr><td>RECEIVED_DT</td><td>DATETIME</td><td></td></tr><tr><td>MANIFEST_LAST_SEQ</td><td>VARCHAR(2+) (inferred)</td><td></td></tr><tr><td>CANCEL_QTY</td><td>NUMERIC (inferred)</td><td></td></tr><tr><td>CANCEL_DT</td><td>DATETIME (inferred)</td><td></td></tr><tr><td>SEND_FLAG_MDI</td><td>? (no data) (inferred)</td><td></td></tr><tr><td>SEND_DATE_MDI</td><td>? (no data) (inferred)</td><td></td></tr></tbody></table></div></details><details class="tcard"><summary><i style="background:#595959"></i><b>TB_R_PRA_DAILY_ORDER_PART</b> <span class="note">38 columns · Existing NSP table</span></summary><div class="tbl"><table><thead><tr><th>Column</th><th>Type</th><th>Key</th></tr></thead><tbody><tr><td>PO_NO</td><td>VARCHAR(20)</td><td></td></tr><tr><td>PO_ITEM</td><td>VARCHAR(4)</td><td></td></tr><tr><td>MANIFEST_NO</td><td>VARCHAR(20)</td><td>PK, FK</td></tr><tr><td>MANIFEST_ITEM</td><td>VARCHAR(4)</td><td>PK</td></tr><tr><td>ORI_PART_NO</td><td>VARCHAR(15)</td><td></td></tr><tr><td>PART_NO</td><td>VARCHAR(15)</td><td></td></tr><tr><td>PART_NAME</td><td>VARCHAR(50)</td><td></td></tr><tr><td>QTY_PER_CONTAINER</td><td>NUMERIC</td><td></td></tr><tr><td>ORDER_QTY</td><td>NUMERIC</td><td></td></tr><tr><td>ORDER_PLAN_QTY_LOT</td><td>NUMERIC</td><td></td></tr><tr><td>DELIVERY_QTY</td><td>NUMERIC</td><td></td></tr><tr><td>RECEIVED_QTY</td><td>NUMERIC</td><td></td></tr><tr><td>REMAIN_QTY</td><td>NUMERIC</td><td></td></tr><tr><td>DELIVERY_DT</td><td>DATETIME</td><td></td></tr><tr><td>RECEIVED_DT</td><td>DATETIME</td><td></td></tr><tr><td>KANBAN_NO</td><td>VARCHAR(5)</td><td></td></tr><tr><td>PART_BARCODE</td><td>VARCHAR(15)</td><td></td></tr><tr><td>RECEIVE_PLANT_NAME</td><td>VARCHAR(4)</td><td></td></tr><tr><td>SUPPLIER_INFO1</td><td>VARCHAR(20)</td><td></td></tr><tr><td>SUPPLIER_INFO2</td><td>VARCHAR(20)</td><td></td></tr><tr><td>SUPPLIER_INFO3</td><td>VARCHAR(20)</td><td></td></tr><tr><td>IMPORTIR_INFO</td><td>VARCHAR(20)</td><td></td></tr><tr><td>IMPORTIR_INFO2</td><td>VARCHAR(20)</td><td></td></tr><tr><td>IMPORTIR_INFO3</td><td>VARCHAR(20)</td><td></td></tr><tr><td>IMPORTIR_INFO4</td><td>VARCHAR(20)</td><td></td></tr><tr><td>MOD_DST_CD</td><td>VARCHAR(5)</td><td></td></tr><tr><td>PLN_PCK_DT</td><td>DATETIME</td><td></td></tr><tr><td>PART_ADDRESS</td><td>VARCHAR(15)</td><td></td></tr><tr><td>STATUS</td><td>VARCHAR(2)</td><td></td></tr><tr><td>CREATED_BY</td><td>VARCHAR(20)</td><td></td></tr><tr><td>CREATED_DT</td><td>DATETIME</td><td></td></tr><tr><td>CHANGED_BY</td><td>VARCHAR(20)</td><td></td></tr><tr><td>CHANGED_DT</td><td>DATETIME</td><td></td></tr><tr><td>DOCK_CD</td><td>VARCHAR(2+) (inferred)</td><td></td></tr><tr><td>CANCEL_QTY</td><td>NUMERIC (inferred)</td><td></td></tr><tr><td>CANCEL_DT</td><td>DATETIME (inferred)</td><td></td></tr><tr><td>SEND_FLAG_MDI</td><td>? (no data) (inferred)</td><td></td></tr><tr><td>SEND_DATE_MDI</td><td>? (no data) (inferred)</td><td></td></tr></tbody></table></div></details><details class="tcard"><summary><i style="background:#a6a6a6"></i><b>TB_R_INSTRUCTION_D</b> <span class="note">35 columns · Temporary (session)</span></summary><div class="tbl"><table><thead><tr><th>Column</th><th>Type</th><th>Key</th></tr></thead><tbody><tr><td>ORDER_DT</td><td>DATE</td><td>PK</td></tr><tr><td>SHIPPING_PART_NO</td><td>VARCHAR(15)</td><td>PK</td></tr><tr><td>SUPPLIER_CD</td><td>VARCHAR(4)</td><td>PK</td></tr><tr><td>SUPPLIER_PLANT</td><td>VARCHAR(1)</td><td>PK</td></tr><tr><td>SUB_SUPP_CD</td><td>VARCHAR(1)</td><td></td></tr><tr><td>SUB_SUPP_PLANT</td><td>VARCHAR(4)</td><td></td></tr><tr><td>CUSTOMER_ORDER_NO</td><td>VARCHAR(8)</td><td>PK</td></tr><tr><td>DESTINATION_CD</td><td>VARCHAR(7)</td><td>PK</td></tr><tr><td>DETAILED_ITEM_NO</td><td>VARCHAR(4)</td><td>PK</td></tr><tr><td>SERIAL_NO</td><td>VARCHAR(7)</td><td>PK</td></tr><tr><td>ORDER_STATUS_QTY</td><td>NUMBER(8)</td><td></td></tr><tr><td>SEQ_NO</td><td>VARCHAR(4)</td><td>PK</td></tr><tr><td>PO_NO</td><td>VARCHAR(20)</td><td></td></tr><tr><td>PO_ITEM</td><td>VARCHAR(4)</td><td></td></tr><tr><td>MANIFEST_NO</td><td>VARCHAR(20)</td><td></td></tr><tr><td>MANIFEST_ITEM</td><td>VARCHAR(4)</td><td></td></tr><tr><td>PO_QTY</td><td>NUMERIC</td><td></td></tr><tr><td>REMAINING_QTY</td><td>NUMERIC</td><td></td></tr><tr><td>CASE_NO</td><td>VARCHAR (8)</td><td></td></tr><tr><td>PO_STS</td><td>VARCAHR(1)</td><td></td></tr><tr><td>HOLD_STS</td><td>VARCAHR(1)</td><td></td></tr><tr><td>ALREADY_SUBMIT_STS</td><td>VARCAHR(1)</td><td></td></tr><tr><td>ASN_NO</td><td>VARCHAR(20)</td><td></td></tr><tr><td>SUB_MANIFEST_NO</td><td>VARCHAR(20)</td><td></td></tr><tr><td>ORDER_DT_REPLACEMENT</td><td>DATE</td><td></td></tr><tr><td>CUSTOMER_ORDER_NO_REPLACEMENT</td><td>VARCHAR(8)</td><td></td></tr><tr><td>DESTINATION_CD_REPLACEMENT</td><td>VARCHAR(7)</td><td></td></tr><tr><td>DETAILED_ITEM_NO_REPLACEMENT</td><td>VARCHAR(4)</td><td></td></tr><tr><td>SERIAL_NO_REPLACEMENT</td><td>VARCHAR(7)</td><td></td></tr><tr><td>ORDER_STATUS_QTY_REPLACEMENT</td><td>NUMBER(8)</td><td></td></tr><tr><td>REPLACEMENT_STS</td><td>VARCAHR(1)</td><td></td></tr><tr><td>CREATE_DT</td><td>TIMESTAMP</td><td></td></tr><tr><td>CREATE_BY</td><td>VARCHAR(20)</td><td></td></tr><tr><td>UPDATE_DT</td><td>TIMESTAMP</td><td></td></tr><tr><td>UPDATE_BY</td><td>VARCHAR(20)</td><td></td></tr></tbody></table></div></details><details class="tcard"><summary><i style="background:#a6a6a6"></i><b>TB_R_INSTRUCTION_H</b> <span class="note">18 columns · Temporary (session)</span></summary><div class="tbl"><table><thead><tr><th>Column</th><th>Type</th><th>Key</th></tr></thead><tbody><tr><td>ORDER_DT</td><td>DATE</td><td>PK</td></tr><tr><td>SHIPPING_PART_NO</td><td>VARCHAR(15)</td><td>PK</td></tr><tr><td>ORDER_STATUS_QTY</td><td>NUMBER(8)</td><td></td></tr><tr><td>SUPPLIER_CD</td><td>VARCHAR(4)</td><td>PK</td></tr><tr><td>SUPPLIER_PLANT</td><td>VARCHAR(1)</td><td>PK</td></tr><tr><td>SUB_SUPP_CD</td><td>VARCHAR(4)</td><td></td></tr><tr><td>SUB_SUPP_PLANT</td><td>VARCHAR(1)</td><td></td></tr><tr><td>CASE</td><td>NUMBER(8)</td><td></td></tr><tr><td>DELIVERY_DATE</td><td>DATETIME</td><td></td></tr><tr><td>SUB_ROUTE_CD</td><td>VARCHAR(10)</td><td></td></tr><tr><td>SUB_ROUTE_SEQ</td><td>VARCHAR(10)</td><td></td></tr><tr><td>SUBMIT_ASN_STS</td><td>VARCHAR(1)</td><td></td></tr><tr><td>HOLD_STS</td><td>VARCAHR(1)</td><td></td></tr><tr><td>ALREADY_SUBMIT_STS</td><td>VARCAHR(1)</td><td></td></tr><tr><td>CREATE_DT</td><td>TIMESTAMP</td><td></td></tr><tr><td>CREATE_BY</td><td>VARCHAR(20)</td><td></td></tr><tr><td>UPDATE_DT</td><td>TIMESTAMP</td><td></td></tr><tr><td>UPDATE_BY</td><td>VARCHAR(20)</td><td></td></tr></tbody></table></div></details><details class="tcard"><summary><i style="background:#a6a6a6"></i><b>TB_T_INSTRUCTION</b> <span class="note">39 columns · Temporary (session)</span></summary><div class="tbl"><table><thead><tr><th>Column</th><th>Type</th><th>Key</th></tr></thead><tbody><tr><td>INSTRUCTION_ID</td><td>BIGINT</td><td>PK</td></tr><tr><td>SORT_SEQ</td><td>NUMBER(6)</td><td></td></tr><tr><td>CUSTOMER_CD</td><td>VARCHAR(7)</td><td>FK</td></tr><tr><td>CUSTOMER_ORDER_NO</td><td>VARCHAR(8)</td><td>FK</td></tr><tr><td>ORDER_DT</td><td>DATE</td><td>FK</td></tr><tr><td>ORDER_TIME</td><td>VARCHAR(6)</td><td></td></tr><tr><td>DESTINATION_CD</td><td>VARCHAR(7)</td><td>FK</td></tr><tr><td>DETAILED_ITEM_NO</td><td>VARCHAR(4)</td><td>FK</td></tr><tr><td>SERIAL_NO</td><td>VARCHAR(7)</td><td>FK</td></tr><tr><td>PART_NO</td><td>VARCHAR(15)</td><td></td></tr><tr><td>ORDER_STATUS</td><td>VARCHAR(1)</td><td></td></tr><tr><td>CUST_ORDER_QTY</td><td>NUMBER(8)</td><td></td></tr><tr><td>OPEN_ORDER_QTY</td><td>NUMBER(8)</td><td></td></tr><tr><td>ASSIGNED_QTY</td><td>NUMBER(8)</td><td></td></tr><tr><td>PO_NO</td><td>VARCHAR(TBD)</td><td></td></tr><tr><td>PO_ITEM_NO</td><td>VARCHAR(4)</td><td></td></tr><tr><td>MANIFEST_NO</td><td>VARCHAR(TBD)</td><td>FK</td></tr><tr><td>MANIFEST_ITEM</td><td>VARCHAR(TBD)</td><td>FK</td></tr><tr><td>PO_DT</td><td>DATE</td><td></td></tr><tr><td>ORDER_QTY</td><td>NUMBER(TBD)</td><td></td></tr><tr><td>SUPPLIER_CD</td><td>VARCHAR(TBD)</td><td></td></tr><tr><td>SUPPLIER_PLANT</td><td>VARCHAR(TBD)</td><td></td></tr><tr><td>SUB_SUPPLIER_CD</td><td>VARCHAR(TBD)</td><td></td></tr><tr><td>SUB_SUPPLIER_PLANT</td><td>VARCHAR(TBD)</td><td></td></tr><tr><td>ORDER_TYPE</td><td>VARCHAR(TBD)</td><td></td></tr><tr><td>DOCK_CD</td><td>VARCHAR(TBD)</td><td></td></tr><tr><td>ETD_ORI</td><td>DATE</td><td></td></tr><tr><td>PCS_CASE</td><td>NUMBER(4)</td><td></td></tr><tr><td>CASE_SEQ</td><td>NUMBER(4)</td><td></td></tr><tr><td>LINE_SEQ</td><td>NUMBER(4)</td><td></td></tr><tr><td>CUM_DEST_QTY</td><td>NUMBER(8)</td><td></td></tr><tr><td>SEQ_QTY</td><td>NUMBER(4)</td><td></td></tr><tr><td>CUT_FLAG</td><td>VARCHAR(1)</td><td></td></tr><tr><td>GROUP_SEQ</td><td>NUMBER(4)</td><td></td></tr><tr><td>CROSSDOCK_STATUS</td><td>VARCHAR(1)</td><td></td></tr><tr><td>CREATE_DT</td><td>TIMESTAMP</td><td></td></tr><tr><td>CREATE_BY</td><td>VARCHAR(TBD)</td><td></td></tr><tr><td>UPDATE_DT</td><td>TIMESTAMP</td><td></td></tr><tr><td>UPDATE_BY</td><td>VARCHAR(TBD)</td><td></td></tr></tbody></table></div></details><details class="tcard"><summary><i style="background:#d9d9d9"></i><b>TB_T_PART_CANDIDATE</b> <span class="note">11 columns · Temporary (upload)</span></summary><div class="tbl"><table><thead><tr><th>Column</th><th>Type</th><th>Key</th></tr></thead><tbody><tr><td>PROCESS_ID</td><td>BIGINT</td><td></td></tr><tr><td>PART_NO</td><td>VARCHAR(MAX)</td><td></td></tr><tr><td>MIN_MAD</td><td>VARCHAR(MAX)</td><td></td></tr><tr><td>PCS_CASE</td><td>VARCHAR(MAX)</td><td></td></tr><tr><td>MAX_CASE_DAY</td><td>VARCHAR(MAX)</td><td></td></tr><tr><td>EFFECTIVE_START_DATE</td><td>VARCHAR(MAX)</td><td></td></tr><tr><td>PART_STATUS</td><td>VARCHAR(MAX)</td><td></td></tr><tr><td>CREATED_BY</td><td>VARCHAR(20)</td><td></td></tr><tr><td>CREATED_DT</td><td>DATETIME</td><td></td></tr><tr><td>CHANGED_BY</td><td>VARCHAR(20)</td><td></td></tr><tr><td>CHANGED_DT</td><td>DATETIME</td><td></td></tr></tbody></table></div></details><details class="tcard"><summary><i style="background:#d9d9d9"></i><b>TB_T_PART_CANDIDATE_DEST</b> <span class="note">6 columns · Temporary (upload)</span></summary><div class="tbl"><table><thead><tr><th>Column</th><th>Type</th><th>Key</th></tr></thead><tbody><tr><td>PROCESS_ID</td><td>BIGINT</td><td></td></tr><tr><td>PART_NO</td><td>VARCHAR(MAX)</td><td></td></tr><tr><td>DEST_CODE</td><td>VARCHAR(MAX)</td><td></td></tr><tr><td>CASE_DAY</td><td>VARCHAR(MAX)</td><td></td></tr><tr><td>CREATED_BY</td><td>VARCHAR(20)</td><td></td></tr><tr><td>CREATED_DT</td><td>DATETIME</td><td></td></tr></tbody></table></div></details></div></div>
+    <div id="dmp-ldm" class="stack" hidden><p class="note">Entities by business name; underlined = identifier, italic = reference to another entity; no data types. Line: bar-bar = exactly one, crow foot = many; dashed = logical link (no FK); the label reads from left to right. Not in the LDM (working tables of a process, not business data): TB_T_PART_CANDIDATE_DEST, TB_T_PART_CANDIDATE, TB_T_INSTRUCTION, TB_R_INSTRUCTION_H, TB_R_INSTRUCTION_D. Audit columns (created / changed) left out.</p><div class="tbl erd"><svg role="img" aria-label="Logical data model of Crossdock: 17 entities and their relationships" style="min-width:1500px;width:100%;height:auto"
+ viewBox="0.00 0.00 1367.20 1854.20" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(21.6 1832.6)">
+<title>LDM</title>
+
+<g id="node1" class="node">
+<title>TB_M_PART_MASTER</title>
+<path fill="#ffffff" stroke="transparent" d="M20,-953.5C20,-953.5 126,-953.5 126,-953.5 132,-953.5 138,-959.5 138,-965.5 138,-965.5 138,-1147.5 138,-1147.5 138,-1153.5 132,-1159.5 126,-1159.5 126,-1159.5 20,-1159.5 20,-1159.5 14,-1159.5 8,-1153.5 8,-1147.5 8,-1147.5 8,-965.5 8,-965.5 8,-959.5 14,-953.5 20,-953.5"/>
+<polygon fill="#595959" stroke="transparent" points="9,-1141.5 9,-1158.5 137,-1158.5 137,-1141.5 9,-1141.5"/>
+<text text-anchor="start" x="12" y="-1148.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00" fill="#ffffff">Part Master</text>
+<text text-anchor="start" x="12" y="-1131.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Part No.</text>
+<text text-anchor="start" x="126" y="-1130.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id</text>
+<text text-anchor="start" x="12" y="-1114.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Supplier Code</text>
+<text text-anchor="start" x="126" y="-1113.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id</text>
+<text text-anchor="start" x="12" y="-1097.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Supplier Plant Code</text>
+<text text-anchor="start" x="126" y="-1096.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id</text>
+<text text-anchor="start" x="12" y="-1080.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Dock Code</text>
+<text text-anchor="start" x="126" y="-1079.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id</text>
+<text text-anchor="start" x="12" y="-1063.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Valid From</text>
+<text text-anchor="start" x="126" y="-1062.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id</text>
+<text text-anchor="start" x="12" y="-1045.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Part Name</text>
+<text text-anchor="start" x="12" y="-1028.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Coo</text>
+<text text-anchor="start" x="12" y="-1011.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Sub Supplier Code</text>
+<text text-anchor="start" x="12" y="-994.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Sub Supplier Plant Code</text>
+<text text-anchor="start" x="12" y="-977.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Pck Type</text>
+<text text-anchor="start" x="12" y="-960.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">+ 16 more attributes</text>
+<path fill="none" stroke="#c9dcef" d="M20,-953.5C20,-953.5 126,-953.5 126,-953.5 132,-953.5 138,-959.5 138,-965.5 138,-965.5 138,-1147.5 138,-1147.5 138,-1153.5 132,-1159.5 126,-1159.5 126,-1159.5 20,-1159.5 20,-1159.5 14,-1159.5 8,-1153.5 8,-1147.5 8,-1147.5 8,-965.5 8,-965.5 8,-959.5 14,-953.5 20,-953.5"/>
+</g>
+
+<g id="node4" class="node">
+<title>TB_M_PART_CANDIDATE</title>
+<path fill="#ffffff" stroke="transparent" d="M305,-979C305,-979 410,-979 410,-979 416,-979 422,-985 422,-991 422,-991 422,-1122 422,-1122 422,-1128 416,-1134 410,-1134 410,-1134 305,-1134 305,-1134 299,-1134 293,-1128 293,-1122 293,-1122 293,-991 293,-991 293,-985 299,-979 305,-979"/>
+<polygon fill="#123a6b" stroke="transparent" points="294.5,-1115.5 294.5,-1132.5 421.5,-1132.5 421.5,-1115.5 294.5,-1115.5"/>
+<text text-anchor="start" x="297.5" y="-1122.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00" fill="#ffffff">Crossdock Part</text>
+<text text-anchor="start" x="297.5" y="-1105.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Part No.</text>
+<text text-anchor="start" x="390.5" y="-1104.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id · ref</text>
+<text text-anchor="start" x="297.5" y="-1088.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Effective Start Date</text>
+<text text-anchor="start" x="390.5" y="-1087.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id</text>
+<text text-anchor="start" x="297.5" y="-1070.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Part Name</text>
+<text text-anchor="start" x="297.5" y="-1053.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Min MAD</text>
+<text text-anchor="start" x="297.5" y="-1036.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Pcs Case</text>
+<text text-anchor="start" x="297.5" y="-1019.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Max Case Day</text>
+<text text-anchor="start" x="297.5" y="-1002.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Total Pcs Day</text>
+<text text-anchor="start" x="297.5" y="-985.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">+ 6 more attributes</text>
+<path fill="none" stroke="#c9dcef" d="M305,-979C305,-979 410,-979 410,-979 416,-979 422,-985 422,-991 422,-991 422,-1122 422,-1122 422,-1128 416,-1134 410,-1134 410,-1134 305,-1134 305,-1134 299,-1134 293,-1128 293,-1122 293,-1122 293,-991 293,-991 293,-985 299,-979 305,-979"/>
+</g>
+
+<g id="edge1" class="edge">
+<title>TB_M_PART_MASTER&#45;&gt;TB_M_PART_CANDIDATE</title>
+<path fill="none" stroke="#4f6580" stroke-dasharray="5,2" d="M150.03,-1056.5C189.08,-1056.5 236.65,-1056.5 276.28,-1056.5"/>
+<polygon fill="#4f6580" stroke="#4f6580" points="146.82,-1060.5 146.82,-1052.5 148.42,-1052.5 148.42,-1060.5 146.82,-1060.5"/>
+<polyline fill="none" stroke="#4f6580" points="146.02,-1056.5 150.02,-1056.5 "/>
+<polygon fill="#4f6580" stroke="#4f6580" points="276.61,-1056.5 284.61,-1060.1 280.61,-1056.5 284.61,-1056.5 284.61,-1056.5 284.61,-1056.5 280.61,-1056.5 284.61,-1052.9 276.61,-1056.5 276.61,-1056.5"/>
+<text text-anchor="middle" x="213.5" y="-1059.3" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="9.00" fill="#4f6580">is offered as</text>
+</g>
+
+<g id="node2" class="node">
+<title>TB_M_H0125_DESTINATION</title>
+<path fill="#ffffff" stroke="transparent" d="M301,-1367.5C301,-1367.5 414,-1367.5 414,-1367.5 420,-1367.5 426,-1373.5 426,-1379.5 426,-1379.5 426,-1493.5 426,-1493.5 426,-1499.5 420,-1505.5 414,-1505.5 414,-1505.5 301,-1505.5 301,-1505.5 295,-1505.5 289,-1499.5 289,-1493.5 289,-1493.5 289,-1379.5 289,-1379.5 289,-1373.5 295,-1367.5 301,-1367.5"/>
+<polygon fill="#5b4a8b" stroke="transparent" points="290.5,-1487.5 290.5,-1504.5 425.5,-1504.5 425.5,-1487.5 290.5,-1487.5"/>
+<text text-anchor="start" x="293.5" y="-1494.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00" fill="#ffffff">Destination</text>
+<text text-anchor="start" x="293.5" y="-1477.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Destination Code</text>
+<text text-anchor="start" x="414.5" y="-1476.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id</text>
+<text text-anchor="start" x="293.5" y="-1459.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Customer Code</text>
+<text text-anchor="start" x="293.5" y="-1442.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Order Transportation Code</text>
+<text text-anchor="start" x="293.5" y="-1425.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Bo Instruction Code</text>
+<text text-anchor="start" x="293.5" y="-1408.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Destination Name Eng</text>
+<text text-anchor="start" x="293.5" y="-1391.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Region Code</text>
+<text text-anchor="start" x="293.5" y="-1374.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">+ 5 more attributes</text>
+<path fill="none" stroke="#c9dcef" d="M301,-1367.5C301,-1367.5 414,-1367.5 414,-1367.5 420,-1367.5 426,-1373.5 426,-1379.5 426,-1379.5 426,-1493.5 426,-1493.5 426,-1499.5 420,-1505.5 414,-1505.5 414,-1505.5 301,-1505.5 301,-1505.5 295,-1505.5 289,-1499.5 289,-1493.5 289,-1493.5 289,-1379.5 289,-1379.5 289,-1373.5 295,-1367.5 301,-1367.5"/>
+</g>
+
+<g id="node3" class="node">
+<title>TB_R_ACTUAL_DEMAND_SUMMARY</title>
+<path fill="#ffffff" stroke="transparent" d="M625,-1117.5C625,-1117.5 737,-1117.5 737,-1117.5 743,-1117.5 749,-1123.5 749,-1129.5 749,-1129.5 749,-1311.5 749,-1311.5 749,-1317.5 743,-1323.5 737,-1323.5 737,-1323.5 625,-1323.5 625,-1323.5 619,-1323.5 613,-1317.5 613,-1311.5 613,-1311.5 613,-1129.5 613,-1129.5 613,-1123.5 619,-1117.5 625,-1117.5"/>
+<polygon fill="#5b4a8b" stroke="transparent" points="614,-1305.5 614,-1322.5 748,-1322.5 748,-1305.5 614,-1305.5"/>
+<text text-anchor="start" x="617" y="-1312.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00" fill="#ffffff">Actual Demand Summary</text>
+<text text-anchor="start" x="617" y="-1295.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Grouping Buyer Code</text>
+<text text-anchor="start" x="717" y="-1294.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id · ref</text>
+<text text-anchor="start" x="617" y="-1278.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Grouping Pd Code</text>
+<text text-anchor="start" x="717" y="-1277.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id · ref</text>
+<text text-anchor="start" x="617" y="-1261.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Order Type Group</text>
+<text text-anchor="start" x="717" y="-1260.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id</text>
+<text text-anchor="start" x="617" y="-1244.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Demand Month Year</text>
+<text text-anchor="start" x="717" y="-1243.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id</text>
+<text text-anchor="start" x="617" y="-1227.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Part No.</text>
+<text text-anchor="start" x="717" y="-1226.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id · ref</text>
+<text text-anchor="start" x="617" y="-1209.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">MAD</text>
+<text text-anchor="start" x="617" y="-1192.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">DAD</text>
+<text text-anchor="start" x="617" y="-1175.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">N01 Qty</text>
+<text text-anchor="start" x="617" y="-1158.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">N02 Qty</text>
+<text text-anchor="start" x="617" y="-1141.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">N03 Qty</text>
+<text text-anchor="start" x="617" y="-1124.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">+ 6 more attributes</text>
+<path fill="none" stroke="#c9dcef" d="M625,-1117.5C625,-1117.5 737,-1117.5 737,-1117.5 743,-1117.5 749,-1123.5 749,-1129.5 749,-1129.5 749,-1311.5 749,-1311.5 749,-1317.5 743,-1323.5 737,-1323.5 737,-1323.5 625,-1323.5 625,-1323.5 619,-1323.5 613,-1317.5 613,-1311.5 613,-1311.5 613,-1129.5 613,-1129.5 613,-1123.5 619,-1117.5 625,-1117.5"/>
+</g>
+
+<g id="edge7" class="edge">
+<title>TB_M_H0125_DESTINATION&#45;&gt;TB_R_ACTUAL_DEMAND_SUMMARY</title>
+<path fill="none" stroke="#4f6580" d="M399.56,-1356.06C418.5,-1326.16 443.59,-1294.44 474,-1273.5 509.92,-1248.76 556.54,-1235.57 596.34,-1228.54"/>
+<polygon fill="#4f6580" stroke="#4f6580" points="398.94,-1364.64 392.14,-1360.43 392.99,-1359.07 399.79,-1363.28 398.94,-1364.64"/>
+<polyline fill="none" stroke="#4f6580" points="395.12,-1363.21 397.23,-1359.82 "/>
+<polygon fill="#4f6580" stroke="#4f6580" points="401.05,-1361.24 394.25,-1357.03 395.1,-1355.67 401.89,-1359.88 401.05,-1361.24"/>
+<polyline fill="none" stroke="#4f6580" points="397.23,-1359.82 399.34,-1356.42 "/>
+<polygon fill="#4f6580" stroke="#4f6580" points="596.84,-1228.45 605.32,-1230.68 600.78,-1227.79 604.73,-1227.13 604.73,-1227.13 604.73,-1227.13 600.78,-1227.79 604.13,-1223.58 596.84,-1228.45 596.84,-1228.45"/>
+<text text-anchor="middle" x="510.5" y="-1276.3" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="9.00" fill="#4f6580">has</text>
+</g>
+
+<g id="node5" class="node">
+<title>TB_M_PART_CANDIDATE_DEST</title>
+<path fill="#ffffff" stroke="transparent" d="M629.5,-1367.5C629.5,-1367.5 732.5,-1367.5 732.5,-1367.5 738.5,-1367.5 744.5,-1373.5 744.5,-1379.5 744.5,-1379.5 744.5,-1493.5 744.5,-1493.5 744.5,-1499.5 738.5,-1505.5 732.5,-1505.5 732.5,-1505.5 629.5,-1505.5 629.5,-1505.5 623.5,-1505.5 617.5,-1499.5 617.5,-1493.5 617.5,-1493.5 617.5,-1379.5 617.5,-1379.5 617.5,-1373.5 623.5,-1367.5 629.5,-1367.5"/>
+<polygon fill="#123a6b" stroke="transparent" points="619,-1487.5 619,-1504.5 744,-1504.5 744,-1487.5 619,-1487.5"/>
+<text text-anchor="start" x="622" y="-1494.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00" fill="#ffffff">Part Destination Mapping</text>
+<text text-anchor="start" x="622" y="-1477.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Part No.</text>
+<text text-anchor="start" x="695" y="-1476.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id · ref</text>
+<text text-anchor="start" x="622" y="-1460.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Dest Code</text>
+<text text-anchor="start" x="695" y="-1459.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id · ref</text>
+<text text-anchor="start" x="622" y="-1443.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Period</text>
+<text text-anchor="start" x="695" y="-1442.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id</text>
+<text text-anchor="start" x="622" y="-1426.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Order Type</text>
+<text text-anchor="start" x="695" y="-1425.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id</text>
+<text text-anchor="start" x="622" y="-1408.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Case Day</text>
+<text text-anchor="start" x="622" y="-1391.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Pcs Day</text>
+<text text-anchor="start" x="622" y="-1374.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Percentage</text>
+<path fill="none" stroke="#c9dcef" d="M629.5,-1367.5C629.5,-1367.5 732.5,-1367.5 732.5,-1367.5 738.5,-1367.5 744.5,-1373.5 744.5,-1379.5 744.5,-1379.5 744.5,-1493.5 744.5,-1493.5 744.5,-1499.5 738.5,-1505.5 732.5,-1505.5 732.5,-1505.5 629.5,-1505.5 629.5,-1505.5 623.5,-1505.5 617.5,-1499.5 617.5,-1493.5 617.5,-1493.5 617.5,-1379.5 617.5,-1379.5 617.5,-1373.5 623.5,-1367.5 629.5,-1367.5"/>
+</g>
+
+<g id="edge3" class="edge">
+<title>TB_M_H0125_DESTINATION&#45;&gt;TB_M_PART_CANDIDATE_DEST</title>
+<path fill="none" stroke="#4f6580" d="M442.49,-1436.5C491.54,-1436.5 553.05,-1436.5 601.19,-1436.5"/>
+<polygon fill="#4f6580" stroke="#4f6580" points="435.08,-1440.5 435.08,-1432.5 436.68,-1432.5 436.68,-1440.5 435.08,-1440.5"/>
+<polyline fill="none" stroke="#4f6580" points="434.28,-1436.5 438.28,-1436.5 "/>
+<polygon fill="#4f6580" stroke="#4f6580" points="439.08,-1440.5 439.08,-1432.5 440.68,-1432.5 440.68,-1440.5 439.08,-1440.5"/>
+<polyline fill="none" stroke="#4f6580" points="438.28,-1436.5 442.28,-1436.5 "/>
+<polygon fill="#4f6580" stroke="#4f6580" points="601.4,-1436.5 609.4,-1440.1 605.4,-1436.5 609.4,-1436.5 609.4,-1436.5 609.4,-1436.5 605.4,-1436.5 609.4,-1432.9 601.4,-1436.5 601.4,-1436.5"/>
+<text text-anchor="middle" x="510.5" y="-1439.3" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="9.00" fill="#4f6580">receives</text>
+</g>
+
+<g id="node9" class="node">
+<title>TB_R_H0253_ORDER_CONTROL_PRE</title>
+<path fill="#ffffff" stroke="transparent" d="M607,-1550C607,-1550 755,-1550 755,-1550 761,-1550 767,-1556 767,-1562 767,-1562 767,-1795 767,-1795 767,-1801 761,-1807 755,-1807 755,-1807 607,-1807 607,-1807 601,-1807 595,-1801 595,-1795 595,-1795 595,-1562 595,-1562 595,-1556 601,-1550 607,-1550"/>
+<polygon fill="#5b4a8b" stroke="transparent" points="596,-1788.5 596,-1805.5 766,-1805.5 766,-1788.5 596,-1788.5"/>
+<text text-anchor="start" x="599" y="-1795.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00" fill="#ffffff">Customer Order Line</text>
+<text text-anchor="start" x="599" y="-1778.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Customer Code</text>
+<text text-anchor="start" x="735" y="-1777.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id</text>
+<text text-anchor="start" x="599" y="-1761.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Customer Order No.</text>
+<text text-anchor="start" x="735" y="-1760.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id</text>
+<text text-anchor="start" x="599" y="-1744.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Order Date</text>
+<text text-anchor="start" x="735" y="-1743.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id</text>
+<text text-anchor="start" x="599" y="-1727.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Order Time</text>
+<text text-anchor="start" x="735" y="-1726.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id</text>
+<text text-anchor="start" x="599" y="-1710.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Destination Code</text>
+<text text-anchor="start" x="735" y="-1709.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id · ref</text>
+<text text-anchor="start" x="599" y="-1693.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Detailed Item No.</text>
+<text text-anchor="start" x="735" y="-1692.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id</text>
+<text text-anchor="start" x="599" y="-1676.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Serial No.</text>
+<text text-anchor="start" x="735" y="-1675.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id</text>
+<text text-anchor="start" x="599" y="-1659.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-style="italic" font-size="10.00">Shipping Part No.</text>
+<text text-anchor="start" x="735" y="-1658.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">ref</text>
+<text text-anchor="start" x="599" y="-1641.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Topas Order Type</text>
+<text text-anchor="start" x="599" y="-1624.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Demand History Update Date</text>
+<text text-anchor="start" x="599" y="-1607.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Shipping Maker Code</text>
+<text text-anchor="start" x="599" y="-1590.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Original Shipping Qty</text>
+<text text-anchor="start" x="599" y="-1573.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Order Status Qty</text>
+<text text-anchor="start" x="599" y="-1556.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">+ 32 more attributes</text>
+<path fill="none" stroke="#c9dcef" d="M607,-1550C607,-1550 755,-1550 755,-1550 761,-1550 767,-1556 767,-1562 767,-1562 767,-1795 767,-1795 767,-1801 761,-1807 755,-1807 755,-1807 607,-1807 607,-1807 601,-1807 595,-1801 595,-1795 595,-1795 595,-1562 595,-1562 595,-1556 601,-1550 607,-1550"/>
+</g>
+
+<g id="edge9" class="edge">
+<title>TB_M_H0125_DESTINATION&#45;&gt;TB_R_H0253_ORDER_CONTROL_PRE</title>
+<path fill="none" stroke="#4f6580" d="M440.79,-1498.44C483.32,-1530.46 535.57,-1569.78 580.37,-1603.51"/>
+<polygon fill="#4f6580" stroke="#4f6580" points="432.52,-1497.22 437.33,-1490.83 438.61,-1491.79 433.8,-1498.18 432.52,-1497.22"/>
+<polyline fill="none" stroke="#4f6580" points="434.28,-1493.54 437.48,-1495.95 "/>
+<polygon fill="#4f6580" stroke="#4f6580" points="435.71,-1499.63 440.52,-1493.24 441.8,-1494.2 436.99,-1500.59 435.71,-1499.63"/>
+<polyline fill="none" stroke="#4f6580" points="437.48,-1495.95 440.68,-1498.36 "/>
+<polygon fill="#4f6580" stroke="#4f6580" points="580.53,-1603.63 584.76,-1611.32 583.73,-1606.04 586.93,-1608.44 586.93,-1608.44 586.93,-1608.44 583.73,-1606.04 589.09,-1605.57 580.53,-1603.63 580.53,-1603.63"/>
+<text text-anchor="middle" x="510.5" y="-1574.3" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="9.00" fill="#4f6580">orders</text>
+</g>
+
+<g id="edge8" class="edge">
+<title>TB_M_PART_CANDIDATE&#45;&gt;TB_R_ACTUAL_DEMAND_SUMMARY</title>
+<path fill="none" stroke="#4f6580" stroke-dasharray="5,2" d="M433.97,-1080.07C469.21,-1092.29 511.18,-1108.62 547,-1127.5 564.01,-1136.47 581.4,-1147.27 597.77,-1158.28"/>
+<polygon fill="#4f6580" stroke="#4f6580" points="429.6,-1082.79 432.21,-1075.23 433.72,-1075.75 431.11,-1083.32 429.6,-1082.79"/>
+<polyline fill="none" stroke="#4f6580" points="430.15,-1078.75 433.93,-1080.06 "/>
+<polygon fill="#4f6580" stroke="#4f6580" points="598.1,-1158.5 602.69,-1165.98 601.41,-1160.76 604.71,-1163.01 604.71,-1163.01 604.71,-1163.01 601.41,-1160.76 606.74,-1160.03 598.1,-1158.5 598.1,-1158.5"/>
+<text text-anchor="middle" x="510.5" y="-1130.3" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="9.00" fill="#4f6580">is measured by</text>
+</g>
+
+<g id="edge2" class="edge">
+<title>TB_M_PART_CANDIDATE&#45;&gt;TB_M_PART_CANDIDATE_DEST</title>
+<path fill="none" stroke="#4f6580" d="M436.44,-1118.06C481,-1154.57 531.1,-1198.31 547,-1222.5 578.58,-1270.53 556.69,-1296.65 587,-1345.5 591.98,-1353.52 597.81,-1361.35 604.08,-1368.84"/>
+<polygon fill="#4f6580" stroke="#4f6580" points="428.29,-1116.56 433.35,-1110.37 434.59,-1111.38 429.53,-1117.57 428.29,-1116.56"/>
+<polyline fill="none" stroke="#4f6580" points="430.2,-1112.96 433.3,-1115.49 "/>
+<polygon fill="#4f6580" stroke="#4f6580" points="431.38,-1119.09 436.45,-1112.9 437.68,-1113.91 432.62,-1120.1 431.38,-1119.09"/>
+<polyline fill="none" stroke="#4f6580" points="433.3,-1115.49 436.39,-1118.02 "/>
+<polygon fill="#4f6580" stroke="#4f6580" points="604.21,-1368.99 606.73,-1377.39 606.83,-1372.01 609.45,-1375.04 609.45,-1375.04 609.45,-1375.04 606.83,-1372.01 612.17,-1372.68 604.21,-1368.99 604.21,-1368.99"/>
+<text text-anchor="middle" x="510.5" y="-1225.3" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="9.00" fill="#4f6580">is mapped to</text>
+</g>
+
+<g id="node6" class="node">
+<title>TB_R_PART_DAD_RESULT</title>
+<path fill="#ffffff" stroke="transparent" d="M639.5,-918C639.5,-918 722.5,-918 722.5,-918 728.5,-918 734.5,-924 734.5,-930 734.5,-930 734.5,-1061 734.5,-1061 734.5,-1067 728.5,-1073 722.5,-1073 722.5,-1073 639.5,-1073 639.5,-1073 633.5,-1073 627.5,-1067 627.5,-1061 627.5,-1061 627.5,-930 627.5,-930 627.5,-924 633.5,-918 639.5,-918"/>
+<polygon fill="#123a6b" stroke="transparent" points="629,-1054.5 629,-1071.5 734,-1071.5 734,-1054.5 629,-1054.5"/>
+<text text-anchor="start" x="632" y="-1061.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00" fill="#ffffff">DAD Volume Result</text>
+<text text-anchor="start" x="632" y="-1044.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Period</text>
+<text text-anchor="start" x="703" y="-1043.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id</text>
+<text text-anchor="start" x="632" y="-1027.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Part No.</text>
+<text text-anchor="start" x="703" y="-1026.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id · ref</text>
+<text text-anchor="start" x="632" y="-1009.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Month From</text>
+<text text-anchor="start" x="632" y="-992.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Month To</text>
+<text text-anchor="start" x="632" y="-975.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Num Of Month</text>
+<text text-anchor="start" x="632" y="-958.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Total MAD</text>
+<text text-anchor="start" x="632" y="-941.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Avg MAD</text>
+<text text-anchor="start" x="632" y="-924.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">+ 3 more attributes</text>
+<path fill="none" stroke="#c9dcef" d="M639.5,-918C639.5,-918 722.5,-918 722.5,-918 728.5,-918 734.5,-924 734.5,-930 734.5,-930 734.5,-1061 734.5,-1061 734.5,-1067 728.5,-1073 722.5,-1073 722.5,-1073 639.5,-1073 639.5,-1073 633.5,-1073 627.5,-1067 627.5,-1061 627.5,-1061 627.5,-930 627.5,-930 627.5,-924 633.5,-918 639.5,-918"/>
+</g>
+
+<g id="edge4" class="edge">
+<title>TB_M_PART_CANDIDATE&#45;&gt;TB_R_PART_DAD_RESULT</title>
+<path fill="none" stroke="#4f6580" d="M438.38,-1041.34C491.53,-1031.26 560.62,-1018.15 611.3,-1008.53"/>
+<polygon fill="#4f6580" stroke="#4f6580" points="431.78,-1046.67 430.29,-1038.81 431.86,-1038.51 433.35,-1046.37 431.78,-1046.67"/>
+<polyline fill="none" stroke="#4f6580" points="430.25,-1042.89 434.18,-1042.14 "/>
+<polygon fill="#4f6580" stroke="#4f6580" points="435.71,-1045.92 434.22,-1038.06 435.79,-1037.76 437.28,-1045.62 435.71,-1045.92"/>
+<polyline fill="none" stroke="#4f6580" points="434.18,-1042.14 438.11,-1041.39 "/>
+<polygon fill="#4f6580" stroke="#4f6580" points="611.41,-1008.51 619.94,-1010.56 615.34,-1007.77 619.27,-1007.02 619.27,-1007.02 619.27,-1007.02 615.34,-1007.77 618.6,-1003.49 611.41,-1008.51 611.41,-1008.51"/>
+<text text-anchor="middle" x="510.5" y="-1035.3" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="9.00" fill="#4f6580">is calculated in</text>
+</g>
+
+<g id="node7" class="node">
+<title>TB_H_PART_CANDIDATE</title>
+<path fill="#ffffff" stroke="transparent" d="M634.5,-701.5C634.5,-701.5 727.5,-701.5 727.5,-701.5 733.5,-701.5 739.5,-707.5 739.5,-713.5 739.5,-713.5 739.5,-861.5 739.5,-861.5 739.5,-867.5 733.5,-873.5 727.5,-873.5 727.5,-873.5 634.5,-873.5 634.5,-873.5 628.5,-873.5 622.5,-867.5 622.5,-861.5 622.5,-861.5 622.5,-713.5 622.5,-713.5 622.5,-707.5 628.5,-701.5 634.5,-701.5"/>
+<polygon fill="#123a6b" stroke="transparent" points="624,-855.5 624,-872.5 739,-872.5 739,-855.5 624,-855.5"/>
+<text text-anchor="start" x="627" y="-862.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00" fill="#ffffff">Crossdock Part History</text>
+<text text-anchor="start" x="627" y="-845.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Part No.</text>
+<text text-anchor="start" x="696" y="-844.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id · ref</text>
+<text text-anchor="start" x="627" y="-828.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Period</text>
+<text text-anchor="start" x="696" y="-827.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id</text>
+<text text-anchor="start" x="627" y="-811.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Field Name</text>
+<text text-anchor="start" x="696" y="-810.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id</text>
+<text text-anchor="start" x="627" y="-793.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Hist Id</text>
+<text text-anchor="start" x="627" y="-776.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Event Type</text>
+<text text-anchor="start" x="627" y="-759.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Source</text>
+<text text-anchor="start" x="627" y="-742.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Upload Id</text>
+<text text-anchor="start" x="627" y="-725.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Dest Code</text>
+<text text-anchor="start" x="627" y="-708.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">+ 3 more attributes</text>
+<path fill="none" stroke="#c9dcef" d="M634.5,-701.5C634.5,-701.5 727.5,-701.5 727.5,-701.5 733.5,-701.5 739.5,-707.5 739.5,-713.5 739.5,-713.5 739.5,-861.5 739.5,-861.5 739.5,-867.5 733.5,-873.5 727.5,-873.5 727.5,-873.5 634.5,-873.5 634.5,-873.5 628.5,-873.5 622.5,-867.5 622.5,-861.5 622.5,-861.5 622.5,-713.5 622.5,-713.5 622.5,-707.5 628.5,-701.5 634.5,-701.5"/>
+</g>
+
+<g id="edge5" class="edge">
+<title>TB_M_PART_CANDIDATE&#45;&gt;TB_H_PART_CANDIDATE</title>
+<path fill="none" stroke="#4f6580" d="M436.47,-991.26C488.74,-947.53 557.07,-890.36 608.04,-847.71"/>
+<polygon fill="#4f6580" stroke="#4f6580" points="433.43,-999.02 428.3,-992.88 429.52,-991.86 434.66,-997.99 433.43,-999.02"/>
+<polyline fill="none" stroke="#4f6580" points="430.25,-996.47 433.32,-993.9 "/>
+<polygon fill="#4f6580" stroke="#4f6580" points="436.5,-996.45 431.37,-990.32 432.59,-989.29 437.73,-995.43 436.5,-996.45"/>
+<polyline fill="none" stroke="#4f6580" points="433.32,-993.9 436.39,-991.33 "/>
+<polygon fill="#4f6580" stroke="#4f6580" points="608.35,-847.45 616.79,-845.08 611.42,-844.88 614.48,-842.32 614.48,-842.32 614.48,-842.32 611.42,-844.88 612.17,-839.56 608.35,-847.45 608.35,-847.45"/>
+<text text-anchor="middle" x="510.5" y="-956.3" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="9.00" fill="#4f6580">keeps changes in</text>
+</g>
+
+<g id="node8" class="node">
+<title>TB_R_CROSSDOCK_IF_RESULT</title>
+<path fill="#ffffff" stroke="transparent" d="M640,-519.5C640,-519.5 722,-519.5 722,-519.5 728,-519.5 734,-525.5 734,-531.5 734,-531.5 734,-645.5 734,-645.5 734,-651.5 728,-657.5 722,-657.5 722,-657.5 640,-657.5 640,-657.5 634,-657.5 628,-651.5 628,-645.5 628,-645.5 628,-531.5 628,-531.5 628,-525.5 634,-519.5 640,-519.5"/>
+<polygon fill="#123a6b" stroke="transparent" points="629,-639.5 629,-656.5 733,-656.5 733,-639.5 629,-639.5"/>
+<text text-anchor="start" x="632" y="-646.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00" fill="#ffffff">Interface Result</text>
+<text text-anchor="start" x="632" y="-629.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Part No.</text>
+<text text-anchor="start" x="702" y="-628.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id · ref</text>
+<text text-anchor="start" x="632" y="-612.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Target System</text>
+<text text-anchor="start" x="702" y="-611.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id</text>
+<text text-anchor="start" x="632" y="-594.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Period</text>
+<text text-anchor="start" x="632" y="-577.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">IF Status</text>
+<text text-anchor="start" x="632" y="-560.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">IF Date</text>
+<text text-anchor="start" x="632" y="-543.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">IF File Name</text>
+<text text-anchor="start" x="632" y="-526.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">IF Message</text>
+<path fill="none" stroke="#c9dcef" d="M640,-519.5C640,-519.5 722,-519.5 722,-519.5 728,-519.5 734,-525.5 734,-531.5 734,-531.5 734,-645.5 734,-645.5 734,-651.5 728,-657.5 722,-657.5 722,-657.5 640,-657.5 640,-657.5 634,-657.5 628,-651.5 628,-645.5 628,-645.5 628,-531.5 628,-531.5 628,-525.5 634,-519.5 640,-519.5"/>
+</g>
+
+<g id="edge6" class="edge">
+<title>TB_M_PART_CANDIDATE&#45;&gt;TB_R_CROSSDOCK_IF_RESULT</title>
+<path fill="none" stroke="#4f6580" d="M404.06,-967.65C446.5,-888.55 514.05,-771.46 587,-679.5 595.21,-669.14 604.53,-658.77 614.02,-648.92"/>
+<polygon fill="#4f6580" stroke="#4f6580" points="404.19,-975.89 397.13,-972.12 397.89,-970.7 404.94,-974.48 404.19,-975.89"/>
+<polyline fill="none" stroke="#4f6580" points="400.28,-974.71 402.17,-971.18 "/>
+<polygon fill="#4f6580" stroke="#4f6580" points="406.07,-972.36 399.02,-968.59 399.77,-967.18 406.83,-970.95 406.07,-972.36"/>
+<polyline fill="none" stroke="#4f6580" points="402.17,-971.18 404.05,-967.65 "/>
+<polygon fill="#4f6580" stroke="#4f6580" points="614.03,-648.91 622.2,-645.71 616.82,-646.05 619.62,-643.19 619.62,-643.19 619.62,-643.19 616.82,-646.05 617.04,-640.67 614.03,-648.91 614.03,-648.91"/>
+<text text-anchor="middle" x="510.5" y="-841.3" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="9.00" fill="#4f6580">is sent as</text>
+</g>
+
+<g id="edge10" class="edge">
+<title>TB_M_PART_CANDIDATE&#45;&gt;TB_R_H0253_ORDER_CONTROL_PRE</title>
+<path fill="none" stroke="#4f6580" stroke-dasharray="5,2" d="M399.62,-1141.79C421.21,-1185.88 448.43,-1240.39 474,-1288.5 504.91,-1346.67 519.43,-1357.67 547,-1417.5 568.77,-1464.74 564.35,-1480.67 587,-1527.5 588.8,-1531.22 590.66,-1534.96 592.58,-1538.71"/>
+<polygon fill="#4f6580" stroke="#4f6580" points="394.57,-1140.58 401.76,-1137.06 402.46,-1138.5 395.27,-1142.01 394.57,-1140.58"/>
+<polyline fill="none" stroke="#4f6580" points="397.81,-1138.1 399.57,-1141.69 "/>
+<polygon fill="#4f6580" stroke="#4f6580" points="592.65,-1538.84 593.14,-1547.6 594.49,-1542.39 596.33,-1545.94 596.33,-1545.94 596.33,-1545.94 594.49,-1542.39 599.53,-1544.28 592.65,-1538.84 592.65,-1538.84"/>
+<text text-anchor="middle" x="510.5" y="-1420.3" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="9.00" fill="#4f6580">is ordered in</text>
+</g>
+
+<g id="node10" class="node">
+<title>TB_R_INSTRUCTION</title>
+<path fill="#ffffff" stroke="transparent" d="M927,-124C927,-124 1018,-124 1018,-124 1024,-124 1030,-130 1030,-136 1030,-136 1030,-403 1030,-403 1030,-409 1024,-415 1018,-415 1018,-415 927,-415 927,-415 921,-415 915,-409 915,-403 915,-403 915,-136 915,-136 915,-130 921,-124 927,-124"/>
+<polygon fill="#123a6b" stroke="transparent" points="916.5,-396.5 916.5,-413.5 1029.5,-413.5 1029.5,-396.5 916.5,-396.5"/>
+<text text-anchor="start" x="919.5" y="-403.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00" fill="#ffffff">Crossdock Instruction</text>
+<text text-anchor="start" x="919.5" y="-386.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Instruction Id</text>
+<text text-anchor="start" x="1014.5" y="-385.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id</text>
+<text text-anchor="start" x="919.5" y="-369.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-style="italic" font-size="10.00">Order Date</text>
+<text text-anchor="start" x="1014.5" y="-368.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">ref</text>
+<text text-anchor="start" x="919.5" y="-352.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-style="italic" font-size="10.00">Destination Code</text>
+<text text-anchor="start" x="1014.5" y="-351.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">ref</text>
+<text text-anchor="start" x="919.5" y="-335.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-style="italic" font-size="10.00">Customer Code</text>
+<text text-anchor="start" x="1014.5" y="-334.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">ref</text>
+<text text-anchor="start" x="919.5" y="-318.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-style="italic" font-size="10.00">Customer Order No.</text>
+<text text-anchor="start" x="1014.5" y="-317.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">ref</text>
+<text text-anchor="start" x="919.5" y="-301.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-style="italic" font-size="10.00">Detailed Item No.</text>
+<text text-anchor="start" x="1014.5" y="-300.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">ref</text>
+<text text-anchor="start" x="919.5" y="-284.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-style="italic" font-size="10.00">Serial No.</text>
+<text text-anchor="start" x="1014.5" y="-283.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">ref</text>
+<text text-anchor="start" x="919.5" y="-267.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-style="italic" font-size="10.00">Manifest No.</text>
+<text text-anchor="start" x="1014.5" y="-266.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">ref</text>
+<text text-anchor="start" x="919.5" y="-250.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-style="italic" font-size="10.00">Manifest Item</text>
+<text text-anchor="start" x="1014.5" y="-249.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">ref</text>
+<text text-anchor="start" x="919.5" y="-233.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-style="italic" font-size="10.00">Case No.</text>
+<text text-anchor="start" x="1014.5" y="-232.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">ref</text>
+<text text-anchor="start" x="919.5" y="-215.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Supplier Code</text>
+<text text-anchor="start" x="919.5" y="-198.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Supplier Plant</text>
+<text text-anchor="start" x="919.5" y="-181.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Case Seq</text>
+<text text-anchor="start" x="919.5" y="-164.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Line Seq</text>
+<text text-anchor="start" x="919.5" y="-147.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Part No.</text>
+<text text-anchor="start" x="919.5" y="-130.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">+ 8 more attributes</text>
+<path fill="none" stroke="#c9dcef" d="M927,-124C927,-124 1018,-124 1018,-124 1024,-124 1030,-130 1030,-136 1030,-136 1030,-403 1030,-403 1030,-409 1024,-415 1018,-415 1018,-415 927,-415 927,-415 921,-415 915,-409 915,-403 915,-403 915,-136 915,-136 915,-130 921,-124 927,-124"/>
+</g>
+
+<g id="edge11" class="edge">
+<title>TB_R_H0253_ORDER_CONTROL_PRE&#45;&gt;TB_R_INSTRUCTION</title>
+<path fill="none" stroke="#4f6580" d="M770.75,-1538.32C772.25,-1534.71 773.67,-1531.1 775,-1527.5 914.69,-1148.92 955.08,-670.57 966.75,-427.25"/>
+<polygon fill="#4f6580" stroke="#4f6580" points="771.56,-1546.56 764.21,-1543.4 764.84,-1541.93 772.19,-1545.09 771.56,-1546.56"/>
+<polyline fill="none" stroke="#4f6580" points="767.57,-1545.72 769.15,-1542.04 "/>
+<polygon fill="#4f6580" stroke="#4f6580" points="773.14,-1542.89 765.79,-1539.73 766.42,-1538.26 773.77,-1541.42 773.14,-1542.89"/>
+<polyline fill="none" stroke="#4f6580" points="769.15,-1542.04 770.73,-1538.37 "/>
+<polygon fill="#4f6580" stroke="#4f6580" points="966.76,-427.04 970.74,-419.22 966.95,-423.05 967.14,-419.05 967.14,-419.05 967.14,-419.05 966.95,-423.05 963.54,-418.88 966.76,-427.04 966.76,-427.04"/>
+<text text-anchor="middle" x="841" y="-1399.3" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="9.00" fill="#4f6580">is packed by</text>
+</g>
+
+<g id="node11" class="node">
+<title>TB_H_CROSSDOCK_ORDER_CHANGE</title>
+<path fill="#ffffff" stroke="transparent" d="M1187,-192C1187,-192 1304,-192 1304,-192 1310,-192 1316,-198 1316,-204 1316,-204 1316,-335 1316,-335 1316,-341 1310,-347 1304,-347 1304,-347 1187,-347 1187,-347 1181,-347 1175,-341 1175,-335 1175,-335 1175,-204 1175,-204 1175,-198 1181,-192 1187,-192"/>
+<polygon fill="#123a6b" stroke="transparent" points="1176.5,-328.5 1176.5,-345.5 1315.5,-345.5 1315.5,-328.5 1176.5,-328.5"/>
+<text text-anchor="start" x="1179.5" y="-335.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00" fill="#ffffff">Order Change History</text>
+<text text-anchor="start" x="1179.5" y="-318.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Hist Id</text>
+<text text-anchor="start" x="1300.5" y="-317.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id</text>
+<text text-anchor="start" x="1179.5" y="-301.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-style="italic" font-size="10.00">From Instruction Id</text>
+<text text-anchor="start" x="1300.5" y="-300.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">ref</text>
+<text text-anchor="start" x="1179.5" y="-283.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">ASN No.</text>
+<text text-anchor="start" x="1179.5" y="-266.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Case No.</text>
+<text text-anchor="start" x="1179.5" y="-249.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Part No.</text>
+<text text-anchor="start" x="1179.5" y="-232.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">From Customer Code</text>
+<text text-anchor="start" x="1179.5" y="-215.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">From Customer Order No.</text>
+<text text-anchor="start" x="1179.5" y="-198.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">+ 12 more attributes</text>
+<path fill="none" stroke="#c9dcef" d="M1187,-192C1187,-192 1304,-192 1304,-192 1310,-192 1316,-198 1316,-204 1316,-204 1316,-335 1316,-335 1316,-341 1310,-347 1304,-347 1304,-347 1187,-347 1187,-347 1181,-347 1175,-341 1175,-335 1175,-335 1175,-204 1175,-204 1175,-198 1181,-192 1187,-192"/>
+</g>
+
+<g id="edge12" class="edge">
+<title>TB_R_INSTRUCTION&#45;&gt;TB_H_CROSSDOCK_ORDER_CHANGE</title>
+<path fill="none" stroke="#4f6580" d="M1046.38,-269.5C1081.02,-269.5 1122.67,-269.5 1158.82,-269.5"/>
+<polygon fill="#4f6580" stroke="#4f6580" points="1038.87,-273.5 1038.87,-265.5 1040.47,-265.5 1040.47,-273.5 1038.87,-273.5"/>
+<polyline fill="none" stroke="#4f6580" points="1038.07,-269.5 1042.07,-269.5 "/>
+<polygon fill="#4f6580" stroke="#4f6580" points="1042.87,-273.5 1042.87,-265.5 1044.47,-265.5 1044.47,-273.5 1042.87,-273.5"/>
+<polyline fill="none" stroke="#4f6580" points="1042.07,-269.5 1046.07,-269.5 "/>
+<polygon fill="#4f6580" stroke="#4f6580" points="1158.92,-269.5 1166.92,-273.1 1162.92,-269.5 1166.92,-269.5 1166.92,-269.5 1166.92,-269.5 1162.92,-269.5 1166.92,-265.9 1158.92,-269.5 1158.92,-269.5"/>
+<text text-anchor="middle" x="1102.5" y="-272.3" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="9.00" fill="#4f6580">is moved by</text>
+</g>
+
+<g id="node12" class="node">
+<title>TB_R_PRA_DAILY_ORDER_MANIFEST</title>
+<path fill="#ffffff" stroke="transparent" d="M31,-201.5C31,-201.5 115,-201.5 115,-201.5 121,-201.5 127,-207.5 127,-213.5 127,-213.5 127,-327.5 127,-327.5 127,-333.5 121,-339.5 115,-339.5 115,-339.5 31,-339.5 31,-339.5 25,-339.5 19,-333.5 19,-327.5 19,-327.5 19,-213.5 19,-213.5 19,-207.5 25,-201.5 31,-201.5"/>
+<polygon fill="#595959" stroke="transparent" points="20,-321.5 20,-338.5 126,-338.5 126,-321.5 20,-321.5"/>
+<text text-anchor="start" x="23" y="-328.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00" fill="#ffffff">Supplier PO Manifest</text>
+<text text-anchor="start" x="23" y="-311.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Manifest No.</text>
+<text text-anchor="start" x="107" y="-310.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id</text>
+<text text-anchor="start" x="23" y="-293.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Depot Code</text>
+<text text-anchor="start" x="23" y="-276.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Supplier Code</text>
+<text text-anchor="start" x="23" y="-259.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Supplier Plant</text>
+<text text-anchor="start" x="23" y="-242.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Sub Supp Code</text>
+<text text-anchor="start" x="23" y="-225.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Sub Supp Plant</text>
+<text text-anchor="start" x="23" y="-208.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">+ 44 more attributes</text>
+<path fill="none" stroke="#c9dcef" d="M31,-201.5C31,-201.5 115,-201.5 115,-201.5 121,-201.5 127,-207.5 127,-213.5 127,-213.5 127,-327.5 127,-327.5 127,-333.5 121,-339.5 115,-339.5 115,-339.5 31,-339.5 31,-339.5 25,-339.5 19,-333.5 19,-327.5 19,-327.5 19,-213.5 19,-213.5 19,-207.5 25,-201.5 31,-201.5"/>
+</g>
+
+<g id="node13" class="node">
+<title>TB_R_PRA_DAILY_ORDER_PART</title>
+<path fill="#ffffff" stroke="transparent" d="M304,-237C304,-237 411,-237 411,-237 417,-237 423,-243 423,-249 423,-249 423,-380 423,-380 423,-386 417,-392 411,-392 411,-392 304,-392 304,-392 298,-392 292,-386 292,-380 292,-380 292,-249 292,-249 292,-243 298,-237 304,-237"/>
+<polygon fill="#595959" stroke="transparent" points="293.5,-373.5 293.5,-390.5 422.5,-390.5 422.5,-373.5 293.5,-373.5"/>
+<text text-anchor="start" x="296.5" y="-380.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00" fill="#ffffff">Supplier PO Manifest Item</text>
+<text text-anchor="start" x="296.5" y="-363.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Manifest No.</text>
+<text text-anchor="start" x="377.5" y="-362.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id · ref</text>
+<text text-anchor="start" x="296.5" y="-346.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Manifest Item</text>
+<text text-anchor="start" x="377.5" y="-345.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id</text>
+<text text-anchor="start" x="296.5" y="-328.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">PO No.</text>
+<text text-anchor="start" x="296.5" y="-311.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">PO Item</text>
+<text text-anchor="start" x="296.5" y="-294.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Ori Part No.</text>
+<text text-anchor="start" x="296.5" y="-277.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Part No.</text>
+<text text-anchor="start" x="296.5" y="-260.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Part Name</text>
+<text text-anchor="start" x="296.5" y="-243.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">+ 27 more attributes</text>
+<path fill="none" stroke="#c9dcef" d="M304,-237C304,-237 411,-237 411,-237 417,-237 423,-243 423,-249 423,-249 423,-380 423,-380 423,-386 417,-392 411,-392 411,-392 304,-392 304,-392 298,-392 292,-386 292,-380 292,-380 292,-249 292,-249 292,-243 298,-237 304,-237"/>
+</g>
+
+<g id="edge13" class="edge">
+<title>TB_R_PRA_DAILY_ORDER_MANIFEST&#45;&gt;TB_R_PRA_DAILY_ORDER_PART</title>
+<path fill="none" stroke="#4f6580" d="M143.39,-281.31C183.45,-287.55 234.02,-295.42 275.84,-301.94"/>
+<polygon fill="#4f6580" stroke="#4f6580" points="135.47,-284.12 136.7,-276.22 138.29,-276.46 137.05,-284.37 135.47,-284.12"/>
+<polyline fill="none" stroke="#4f6580" points="135.3,-280.05 139.25,-280.66 "/>
+<polygon fill="#4f6580" stroke="#4f6580" points="139.43,-284.74 140.66,-276.83 142.24,-277.08 141.01,-284.98 139.43,-284.74"/>
+<polyline fill="none" stroke="#4f6580" points="139.25,-280.66 143.2,-281.28 "/>
+<polygon fill="#4f6580" stroke="#4f6580" points="275.91,-301.95 283.26,-306.74 279.86,-302.56 283.82,-303.18 283.82,-303.18 283.82,-303.18 279.86,-302.56 284.37,-299.62 275.91,-301.95 275.91,-301.95"/>
+<text text-anchor="middle" x="213.5" y="-299.3" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="9.00" fill="#4f6580">contains</text>
+</g>
+
+<g id="node15" class="node">
+<title>TB_R_DAILY_ORDER_MANIFEST</title>
+<path fill="#ffffff" stroke="transparent" d="M310,-4C310,-4 405,-4 405,-4 411,-4 417,-10 417,-16 417,-16 417,-181 417,-181 417,-187 411,-193 405,-193 405,-193 310,-193 310,-193 304,-193 298,-187 298,-181 298,-181 298,-16 298,-16 298,-10 304,-4 310,-4"/>
+<polygon fill="#595959" stroke="transparent" points="299.5,-174.5 299.5,-191.5 416.5,-191.5 416.5,-174.5 299.5,-174.5"/>
+<text text-anchor="start" x="302.5" y="-181.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00" fill="#ffffff">ASN Manifest</text>
+<text text-anchor="start" x="302.5" y="-164.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Sub Manifest No.</text>
+<text text-anchor="start" x="385.5" y="-163.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id</text>
+<text text-anchor="start" x="302.5" y="-147.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Manifest No.</text>
+<text text-anchor="start" x="385.5" y="-146.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id · ref</text>
+<text text-anchor="start" x="302.5" y="-130.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-style="italic" font-size="10.00">Supplier Code</text>
+<text text-anchor="start" x="385.5" y="-129.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">ref</text>
+<text text-anchor="start" x="302.5" y="-113.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-style="italic" font-size="10.00">Supplier Plant</text>
+<text text-anchor="start" x="385.5" y="-112.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">ref</text>
+<text text-anchor="start" x="302.5" y="-95.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Depot Code</text>
+<text text-anchor="start" x="302.5" y="-78.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Sub Supp Code</text>
+<text text-anchor="start" x="302.5" y="-61.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Sub Supp Plant</text>
+<text text-anchor="start" x="302.5" y="-44.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Supplier Name</text>
+<text text-anchor="start" x="302.5" y="-27.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">PO No.</text>
+<text text-anchor="start" x="302.5" y="-10.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">+ 46 more attributes</text>
+<path fill="none" stroke="#c9dcef" d="M310,-4C310,-4 405,-4 405,-4 411,-4 417,-10 417,-16 417,-16 417,-181 417,-181 417,-187 411,-193 405,-193 405,-193 310,-193 310,-193 304,-193 298,-187 298,-181 298,-181 298,-16 298,-16 298,-10 304,-4 310,-4"/>
+</g>
+
+<g id="edge16" class="edge">
+<title>TB_R_PRA_DAILY_ORDER_MANIFEST&#45;&gt;TB_R_DAILY_ORDER_MANIFEST</title>
+<path fill="none" stroke="#4f6580" d="M142.37,-228.87C184.9,-202.98 239.57,-169.69 283.02,-143.24"/>
+<polygon fill="#4f6580" stroke="#4f6580" points="138.06,-236.18 133.9,-229.35 135.27,-228.51 139.43,-235.35 138.06,-236.18"/>
+<polyline fill="none" stroke="#4f6580" points="135.3,-233.18 138.71,-231.1 "/>
+<polygon fill="#4f6580" stroke="#4f6580" points="141.48,-234.1 137.32,-227.27 138.68,-226.43 142.84,-233.27 141.48,-234.1"/>
+<polyline fill="none" stroke="#4f6580" points="138.71,-231.1 142.13,-229.02 "/>
+<polygon fill="#4f6580" stroke="#4f6580" points="283.06,-143.21 291.77,-142.13 286.48,-141.13 289.9,-139.05 289.9,-139.05 289.9,-139.05 286.48,-141.13 288.02,-135.98 283.06,-143.21 283.06,-143.21"/>
+<text text-anchor="middle" x="213.5" y="-203.3" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="9.00" fill="#4f6580">is shipped as</text>
+</g>
+
+<g id="edge15" class="edge">
+<title>TB_R_PRA_DAILY_ORDER_PART&#45;&gt;TB_R_INSTRUCTION</title>
+<path fill="none" stroke="#4f6580" d="M439.2,-303.55C482.87,-297.98 537.81,-291.55 587,-287.5 695.28,-278.58 821.1,-273.73 898.51,-271.38"/>
+<polygon fill="#4f6580" stroke="#4f6580" points="432.48,-308.45 431.46,-300.51 433.05,-300.31 434.06,-308.24 432.48,-308.45"/>
+<polyline fill="none" stroke="#4f6580" points="431.18,-304.58 435.14,-304.07 "/>
+<polygon fill="#4f6580" stroke="#4f6580" points="436.45,-307.94 435.43,-300 437.01,-299.8 438.03,-307.73 436.45,-307.94"/>
+<polyline fill="none" stroke="#4f6580" points="435.14,-304.07 439.11,-303.56 "/>
+<polygon fill="#4f6580" stroke="#4f6580" points="898.78,-271.37 906.89,-274.73 902.78,-271.25 906.78,-271.13 906.78,-271.13 906.78,-271.13 902.78,-271.25 906.67,-267.53 898.78,-271.37 898.78,-271.37"/>
+<text text-anchor="middle" x="681" y="-290.3" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="9.00" fill="#4f6580">supplies the PO of</text>
+</g>
+
+<g id="node14" class="node">
+<title>TB_R_PRA_DAILY_ORDER_MAPPED</title>
+<path fill="#ffffff" stroke="transparent" d="M640.5,-320C640.5,-320 721.5,-320 721.5,-320 727.5,-320 733.5,-326 733.5,-332 733.5,-332 733.5,-463 733.5,-463 733.5,-469 727.5,-475 721.5,-475 721.5,-475 640.5,-475 640.5,-475 634.5,-475 628.5,-469 628.5,-463 628.5,-463 628.5,-332 628.5,-332 628.5,-326 634.5,-320 640.5,-320"/>
+<polygon fill="#123a6b" stroke="transparent" points="630,-456.5 630,-473.5 733,-473.5 733,-456.5 630,-456.5"/>
+<text text-anchor="start" x="633" y="-463.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00" fill="#ffffff">PO Mapped Quantity</text>
+<text text-anchor="start" x="633" y="-446.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">PO No.</text>
+<text text-anchor="start" x="701" y="-445.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id</text>
+<text text-anchor="start" x="633" y="-429.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Manifest No.</text>
+<text text-anchor="start" x="701" y="-428.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id · ref</text>
+<text text-anchor="start" x="633" y="-412.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Manifest Item</text>
+<text text-anchor="start" x="701" y="-411.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id · ref</text>
+<text text-anchor="start" x="633" y="-394.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Part No.</text>
+<text text-anchor="start" x="633" y="-377.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Supplier Code</text>
+<text text-anchor="start" x="633" y="-360.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Supplier Plant</text>
+<text text-anchor="start" x="633" y="-343.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Order Qty</text>
+<text text-anchor="start" x="633" y="-326.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Mapped Qty</text>
+<path fill="none" stroke="#c9dcef" d="M640.5,-320C640.5,-320 721.5,-320 721.5,-320 727.5,-320 733.5,-326 733.5,-332 733.5,-332 733.5,-463 733.5,-463 733.5,-469 727.5,-475 721.5,-475 721.5,-475 640.5,-475 640.5,-475 634.5,-475 628.5,-469 628.5,-463 628.5,-463 628.5,-332 628.5,-332 628.5,-326 634.5,-320 640.5,-320"/>
+</g>
+
+<g id="edge14" class="edge">
+<title>TB_R_PRA_DAILY_ORDER_PART&#45;&gt;TB_R_PRA_DAILY_ORDER_MAPPED</title>
+<path fill="none" stroke="#4f6580" d="M438.88,-335.25C492.34,-349.05 561.78,-366.98 612.4,-380.05"/>
+<polygon fill="#4f6580" stroke="#4f6580" points="430.83,-337.3 432.83,-329.56 434.38,-329.96 432.38,-337.7 430.83,-337.3"/>
+<polyline fill="none" stroke="#4f6580" points="431.05,-333.23 434.92,-334.23 "/>
+<polygon fill="#4f6580" stroke="#4f6580" points="434.7,-338.3 436.7,-330.56 438.25,-330.96 436.25,-338.7 434.7,-338.3"/>
+<polyline fill="none" stroke="#4f6580" points="434.92,-334.23 438.8,-335.23 "/>
+<polygon fill="#4f6580" stroke="#4f6580" points="612.61,-380.1 619.46,-385.59 616.48,-381.1 620.36,-382.1 620.36,-382.1 620.36,-382.1 616.48,-381.1 621.26,-378.62 612.61,-380.1 612.61,-380.1"/>
+<text text-anchor="middle" x="510.5" y="-364.3" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="9.00" fill="#4f6580">is used by</text>
+</g>
+
+<g id="node16" class="node">
+<title>TB_R_DAILY_ORDER_PART</title>
+<path fill="#ffffff" stroke="transparent" d="M631.5,-4C631.5,-4 730.5,-4 730.5,-4 736.5,-4 742.5,-10 742.5,-16 742.5,-16 742.5,-181 742.5,-181 742.5,-187 736.5,-193 730.5,-193 730.5,-193 631.5,-193 631.5,-193 625.5,-193 619.5,-187 619.5,-181 619.5,-181 619.5,-16 619.5,-16 619.5,-10 625.5,-4 631.5,-4"/>
+<polygon fill="#595959" stroke="transparent" points="621,-174.5 621,-191.5 742,-191.5 742,-174.5 621,-174.5"/>
+<text text-anchor="start" x="624" y="-181.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00" fill="#ffffff">ASN Manifest Item</text>
+<text text-anchor="start" x="624" y="-164.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Sub Manifest No.</text>
+<text text-anchor="start" x="711" y="-163.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id · ref</text>
+<text text-anchor="start" x="624" y="-147.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Manifest No.</text>
+<text text-anchor="start" x="711" y="-146.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id · ref</text>
+<text text-anchor="start" x="624" y="-130.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Manifest Item</text>
+<text text-anchor="start" x="711" y="-129.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id</text>
+<text text-anchor="start" x="624" y="-113.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Case No.</text>
+<text text-anchor="start" x="711" y="-112.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id</text>
+<text text-anchor="start" x="624" y="-95.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">PO No.</text>
+<text text-anchor="start" x="624" y="-78.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">PO Item</text>
+<text text-anchor="start" x="624" y="-61.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Sub Manifest Item</text>
+<text text-anchor="start" x="624" y="-44.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">ASN No.</text>
+<text text-anchor="start" x="624" y="-27.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">ASN Date</text>
+<text text-anchor="start" x="624" y="-10.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">+ 24 more attributes</text>
+<path fill="none" stroke="#c9dcef" d="M631.5,-4C631.5,-4 730.5,-4 730.5,-4 736.5,-4 742.5,-10 742.5,-16 742.5,-16 742.5,-181 742.5,-181 742.5,-187 736.5,-193 730.5,-193 730.5,-193 631.5,-193 631.5,-193 625.5,-193 619.5,-187 619.5,-181 619.5,-181 619.5,-16 619.5,-16 619.5,-10 625.5,-4 631.5,-4"/>
+</g>
+
+<g id="edge17" class="edge">
+<title>TB_R_DAILY_ORDER_MANIFEST&#45;&gt;TB_R_DAILY_ORDER_PART</title>
+<path fill="none" stroke="#4f6580" d="M433.24,-98.5C484.26,-98.5 551.67,-98.5 603.13,-98.5"/>
+<polygon fill="#4f6580" stroke="#4f6580" points="425.91,-102.5 425.92,-94.5 427.52,-94.5 427.51,-102.5 425.91,-102.5"/>
+<polyline fill="none" stroke="#4f6580" points="425.12,-98.5 429.12,-98.5 "/>
+<polygon fill="#4f6580" stroke="#4f6580" points="429.91,-102.5 429.92,-94.5 431.52,-94.5 431.51,-102.5 429.91,-102.5"/>
+<polyline fill="none" stroke="#4f6580" points="429.12,-98.5 433.12,-98.5 "/>
+<polygon fill="#4f6580" stroke="#4f6580" points="603.25,-98.5 611.25,-102.1 607.25,-98.5 611.25,-98.5 611.25,-98.5 611.25,-98.5 607.25,-98.5 611.25,-94.9 603.25,-98.5 603.25,-98.5"/>
+<text text-anchor="middle" x="510.5" y="-101.3" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="9.00" fill="#4f6580">contains</text>
+</g>
+
+<g id="edge18" class="edge">
+<title>TB_R_DAILY_ORDER_PART&#45;&gt;TB_R_INSTRUCTION</title>
+<path fill="none" stroke="#4f6580" d="M757.64,-143.18C801.55,-169.11 856.53,-201.59 899.75,-227.12"/>
+<polygon fill="#4f6580" stroke="#4f6580" points="749.26,-142.88 753.33,-135.99 754.71,-136.8 750.64,-143.69 749.26,-142.88"/>
+<polyline fill="none" stroke="#4f6580" points="750.61,-139.02 754.05,-141.06 "/>
+<polygon fill="#4f6580" stroke="#4f6580" points="752.71,-144.91 756.77,-138.02 758.15,-138.84 754.08,-145.72 752.71,-144.91"/>
+<polyline fill="none" stroke="#4f6580" points="754.05,-141.06 757.5,-143.09 "/>
+<polygon fill="#4f6580" stroke="#4f6580" points="899.97,-227.25 905.03,-234.42 903.42,-229.28 906.86,-231.32 906.86,-231.32 906.86,-231.32 903.42,-229.28 908.69,-228.22 899.97,-227.25 899.97,-227.25"/>
+<text text-anchor="middle" x="841" y="-207.3" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="9.00" fill="#4f6580">carries</text>
+</g>
+
+<g id="node17" class="node">
+<title>TB_R_CASE_LABEL_LAST_SEQ</title>
+<path fill="#ffffff" stroke="transparent" d="M28,-55C28,-55 118,-55 118,-55 124,-55 130,-61 130,-67 130,-67 130,-130 130,-130 130,-136 124,-142 118,-142 118,-142 28,-142 28,-142 22,-142 16,-136 16,-130 16,-130 16,-67 16,-67 16,-61 22,-55 28,-55"/>
+<polygon fill="#595959" stroke="transparent" points="17,-123.5 17,-140.5 129,-140.5 129,-123.5 17,-123.5"/>
+<text text-anchor="start" x="20" y="-130.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-weight="bold" font-size="10.00" fill="#ffffff">Case Label Sequence</text>
+<text text-anchor="start" x="20" y="-113.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Supplier Code</text>
+<text text-anchor="start" x="118" y="-112.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id</text>
+<text text-anchor="start" x="20" y="-96.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" text-decoration="underline" font-size="10.00">Supplier Plant Code</text>
+<text text-anchor="start" x="118" y="-95.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00" fill="#4f6580">id</text>
+<text text-anchor="start" x="20" y="-78.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">Case Label Last Seq</text>
+<text text-anchor="start" x="20" y="-61.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.00">ASN Last Seq</text>
+<path fill="none" stroke="#c9dcef" d="M28,-55C28,-55 118,-55 118,-55 124,-55 130,-61 130,-67 130,-67 130,-130 130,-130 130,-136 124,-142 118,-142 118,-142 28,-142 28,-142 22,-142 16,-136 16,-130 16,-130 16,-67 16,-67 16,-61 22,-55 28,-55"/>
+</g>
+
+<g id="edge19" class="edge">
+<title>TB_R_CASE_LABEL_LAST_SEQ&#45;&gt;TB_R_DAILY_ORDER_MANIFEST</title>
+<path fill="none" stroke="#4f6580" stroke-dasharray="5,2" d="M142.12,-98.5C184.18,-98.5 238.19,-98.5 281.47,-98.5"/>
+<polygon fill="#4f6580" stroke="#4f6580" points="138.9,-102.5 138.9,-94.5 140.5,-94.5 140.5,-102.5 138.9,-102.5"/>
+<polyline fill="none" stroke="#4f6580" points="138.1,-98.5 142.1,-98.5 "/>
+<polygon fill="#4f6580" stroke="#4f6580" points="281.7,-98.5 289.7,-102.1 285.7,-98.5 289.7,-98.5 289.7,-98.5 289.7,-98.5 285.7,-98.5 289.7,-94.9 281.7,-98.5 281.7,-98.5"/>
+<text text-anchor="middle" x="213.5" y="-101.3" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="9.00" fill="#4f6580">numbers</text>
+</g>
+</g>
+</svg>
+</div><h3>Entity to table</h3><div class="tbl"><table><thead><tr><th>Entity</th><th>Table</th><th>Group</th><th>Identifier</th></tr></thead><tbody><tr><td>Part Master</td><td>TB_M_PART_MASTER</td><td>Existing</td><td class="t">Part No., Supplier Code, Supplier Plant Code, Dock Code, Valid From</td></tr><tr><td>Destination</td><td>TB_M_H0125_DESTINATION</td><td>Replicated</td><td class="t">Destination Code</td></tr><tr><td>Actual Demand Summary</td><td>TB_R_ACTUAL_DEMAND_SUMMARY</td><td>Replicated</td><td class="t">Grouping Buyer Code, Grouping Pd Code, Order Type Group, Demand Month Year, Part No.</td></tr><tr><td>Crossdock Part</td><td>TB_M_PART_CANDIDATE</td><td>New</td><td class="t">Part No., Effective Start Date</td></tr><tr><td>Part Destination Mapping</td><td>TB_M_PART_CANDIDATE_DEST</td><td>New</td><td class="t">Part No., Dest Code, Period, Order Type</td></tr><tr><td>DAD Volume Result</td><td>TB_R_PART_DAD_RESULT</td><td>New</td><td class="t">Period, Part No.</td></tr><tr><td>Crossdock Part History</td><td>TB_H_PART_CANDIDATE</td><td>New</td><td class="t">Part No., Period, Field Name</td></tr><tr><td>Interface Result</td><td>TB_R_CROSSDOCK_IF_RESULT</td><td>New</td><td class="t">Part No., Target System</td></tr><tr><td>Customer Order Line</td><td>TB_R_H0253_ORDER_CONTROL_PRE</td><td>Replicated</td><td class="t">Customer Code, Customer Order No., Order Date, Order Time, Destination Code, Detailed Item No., Serial No.</td></tr><tr><td>Crossdock Instruction</td><td>TB_R_INSTRUCTION</td><td>New</td><td class="t">Instruction Id</td></tr><tr><td>Order Change History</td><td>TB_H_CROSSDOCK_ORDER_CHANGE</td><td>New</td><td class="t">Hist Id</td></tr><tr><td>Supplier PO Manifest</td><td>TB_R_PRA_DAILY_ORDER_MANIFEST</td><td>Existing</td><td class="t">Manifest No.</td></tr><tr><td>Supplier PO Manifest Item</td><td>TB_R_PRA_DAILY_ORDER_PART</td><td>Existing</td><td class="t">Manifest No., Manifest Item</td></tr><tr><td>PO Mapped Quantity</td><td>TB_R_PRA_DAILY_ORDER_MAPPED</td><td>New</td><td class="t">PO No., Manifest No., Manifest Item</td></tr><tr><td>ASN Manifest</td><td>TB_R_DAILY_ORDER_MANIFEST</td><td>Existing</td><td class="t">Sub Manifest No., Manifest No.</td></tr><tr><td>ASN Manifest Item</td><td>TB_R_DAILY_ORDER_PART</td><td>Existing</td><td class="t">Sub Manifest No., Manifest No., Manifest Item, Case No.</td></tr><tr><td>Case Label Sequence</td><td>TB_R_CASE_LABEL_LAST_SEQ</td><td>Existing</td><td class="t">Supplier Code, Supplier Plant Code</td></tr></tbody></table></div></div>
+    <div id="dmp-stg" class="stack" hidden>
+      <p class="note">A save writes the master, then SP_STG_WRITE writes the staging rows. [Sync] sets them to SYNC_STATUS 1 with one SYNC_DT. The robots read the views only. Yellow row = sync columns; dashed box = view.
+      Not in the latest ERD yet: TB_H_STG_APPOLE_KANBAN, TB_H_STG_APPOLE_EXPORT, TB_H_STG_GTOPAS and the three views; the latest ERD still has TB_R_CROSSDOCK_IF_RESULT and SYNC_STATUS / SYNC_DT / SYNC_MESSAGE on TB_M_PART_CANDIDATE, and EFFECTIVE_START_DATE where the proposal uses PERIOD.</p>
+      <div class="tbl erd"><svg role="img" aria-label="ERD: master tables, staging tables, views and AP POLE / GTOPAS targets" style="min-width:1500px;width:100%;height:auto"
  viewBox="0.00 0.00 1854.80 463.30" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(14.4 448.9)">
 <title>ERD</title>
@@ -330,6 +1521,20 @@ pre.calls { margin: 10px 0 0; padding: 10px 12px; font: .78rem/1.6 var(--f-mono)
 </g>
 </svg>
 </div>
+    </div>
+    <script>
+      (function () {
+        var ids = ['erd', 'ldm', 'stg'];
+        ids.forEach(function (k) {
+          document.getElementById('dm-' + k).addEventListener('click', function () {
+            ids.forEach(function (j) {
+              document.getElementById('dm-' + j).setAttribute('aria-pressed', String(j === k));
+              document.getElementById('dmp-' + j).hidden = j !== k;
+            });
+          });
+        });
+      })();
+    </script>
   </section>
   <section aria-labelledby="pk-h">
     <h2 id="pk-h">Scenarios</h2>
